@@ -225,7 +225,11 @@ func (d *Debian) deploy(
 	}
 
 	// A file the kernel did not take is a failure: the value is not set.
-	if _, execErr := d.execManager.RunPrivilegedCmd(ctx, "sysctl", []string{"-p", confPath}); execErr != nil {
+	if _, execErr := d.execManager.RunPrivilegedCmd(
+		ctx,
+		"sysctl",
+		[]string{"-p", confPath},
+	); execErr != nil {
 		return nil, fmt.Errorf("sysctl %s: apply %s: %w", opName, confPath, execErr)
 	}
 
@@ -272,7 +276,11 @@ func (d *Debian) Delete(
 
 	// Reload sysctl defaults.
 	if changed {
-		if _, execErr := d.execManager.RunPrivilegedCmd(ctx, "sysctl", []string{"--system"}); execErr != nil {
+		if _, execErr := d.execManager.RunPrivilegedCmd(
+			ctx,
+			"sysctl",
+			[]string{"--system"},
+		); execErr != nil {
 			return nil, fmt.Errorf("sysctl delete: reload: %w", execErr)
 		}
 	}

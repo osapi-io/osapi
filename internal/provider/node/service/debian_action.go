@@ -46,7 +46,11 @@ func (d *Debian) Start(
 		return &ActionResult{Name: name, Changed: false}, nil
 	}
 
-	if _, err := d.execManager.RunPrivilegedCmd(ctx, "systemctl", []string{"start", unitName}); err != nil {
+	if _, err := d.execManager.RunPrivilegedCmd(
+		ctx,
+		"systemctl",
+		[]string{"start", unitName},
+	); err != nil {
 		return nil, fmt.Errorf("service start: %w", err)
 	}
 
@@ -72,7 +76,11 @@ func (d *Debian) Stop(
 		return &ActionResult{Name: name, Changed: false}, nil
 	}
 
-	if _, err := d.execManager.RunPrivilegedCmd(ctx, "systemctl", []string{"stop", unitName}); err != nil {
+	if _, err := d.execManager.RunPrivilegedCmd(
+		ctx,
+		"systemctl",
+		[]string{"stop", unitName},
+	); err != nil {
 		return nil, fmt.Errorf("service stop: %w", err)
 	}
 
@@ -92,7 +100,11 @@ func (d *Debian) Restart(
 
 	d.logger.Debug("executing service.Restart", slog.String("name", unitName))
 
-	if _, err := d.execManager.RunPrivilegedCmd(ctx, "systemctl", []string{"restart", unitName}); err != nil {
+	if _, err := d.execManager.RunPrivilegedCmd(
+		ctx,
+		"systemctl",
+		[]string{"restart", unitName},
+	); err != nil {
 		return nil, fmt.Errorf("service restart: %w", err)
 	}
 
@@ -118,7 +130,11 @@ func (d *Debian) Enable(
 		return &ActionResult{Name: name, Changed: false}, nil
 	}
 
-	if _, err := d.execManager.RunPrivilegedCmd(ctx, "systemctl", []string{"enable", unitName}); err != nil {
+	if _, err := d.execManager.RunPrivilegedCmd(
+		ctx,
+		"systemctl",
+		[]string{"enable", unitName},
+	); err != nil {
 		return nil, fmt.Errorf("service enable: %w", err)
 	}
 
@@ -144,7 +160,11 @@ func (d *Debian) Disable(
 		return &ActionResult{Name: name, Changed: false}, nil
 	}
 
-	if _, err := d.execManager.RunPrivilegedCmd(ctx, "systemctl", []string{"disable", unitName}); err != nil {
+	if _, err := d.execManager.RunPrivilegedCmd(
+		ctx,
+		"systemctl",
+		[]string{"disable", unitName},
+	); err != nil {
 		return nil, fmt.Errorf("service disable: %w", err)
 	}
 

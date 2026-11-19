@@ -114,7 +114,9 @@ func (s *DispatchPublicTestSuite) TestRun() {
 		wantBody string
 	}{
 		{
-			name: "when a list on one host returns a row per element", method: "list", target: "server1",
+			name:   "when a list on one host returns a row per element",
+			method: "list",
+			target: "server1",
 			setup: func() {
 				s.jobs.EXPECT().
 					Query(gomock.Any(), "server1", job.CategoryBehavior, op+"list", kvIn{}).
@@ -124,7 +126,9 @@ func (s *DispatchPublicTestSuite) TestRun() {
 				`{"hostname":"server1","key":"b","status":"ok"}]}`,
 		},
 		{
-			name: "when a read's host answers nothing, it is one row", method: "get", target: "server1",
+			name:   "when a read's host answers nothing, it is one row",
+			method: "get",
+			target: "server1",
 			setup: func() {
 				s.jobs.EXPECT().
 					Query(gomock.Any(), "server1", job.CategoryBehavior, op+"get", kvIn{}).
@@ -133,7 +137,9 @@ func (s *DispatchPublicTestSuite) TestRun() {
 			wantBody: `{"job_id":"job-1","results":[{"hostname":"server1","status":"ok"}]}`,
 		},
 		{
-			name: "when a write's output has no changed, the job's is used", method: "set", target: "server1",
+			name:   "when a write's output has no changed, the job's is used",
+			method: "set",
+			target: "server1",
 			setup: func() {
 				s.jobs.EXPECT().
 					Modify(gomock.Any(), "server1", job.CategoryBehavior, op+"set", kvIn{}).
@@ -142,7 +148,9 @@ func (s *DispatchPublicTestSuite) TestRun() {
 			wantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","key":"a","status":"ok"}]}`,
 		},
 		{
-			name: "when a write's output and job have no changed, the row has none", method: "set", target: "server1",
+			name:   "when a write's output and job have no changed, the row has none",
+			method: "set",
+			target: "server1",
 			setup: func() {
 				s.jobs.EXPECT().
 					Modify(gomock.Any(), "server1", job.CategoryBehavior, op+"set", kvIn{}).
@@ -151,7 +159,9 @@ func (s *DispatchPublicTestSuite) TestRun() {
 			wantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"a","status":"ok"}]}`,
 		},
 		{
-			name: "when a read is broadcast, each host's answer is its own row", method: "get", target: "_all",
+			name:   "when a read is broadcast, each host's answer is its own row",
+			method: "get",
+			target: "_all",
 			setup: func() {
 				s.jobs.EXPECT().
 					QueryBroadcast(gomock.Any(), "_all", job.CategoryBehavior, op+"get", kvIn{}).
@@ -162,7 +172,9 @@ func (s *DispatchPublicTestSuite) TestRun() {
 			wantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"a","status":"ok"}]}`,
 		},
 		{
-			name: "when a broadcast reaches no host, there are no rows", method: "set", target: "_all",
+			name:   "when a broadcast reaches no host, there are no rows",
+			method: "set",
+			target: "_all",
 			setup: func() {
 				s.jobs.EXPECT().
 					ModifyBroadcast(gomock.Any(), "_all", job.CategoryBehavior, op+"set", kvIn{}).
@@ -171,7 +183,9 @@ func (s *DispatchPublicTestSuite) TestRun() {
 			wantBody: `{"job_id":"job-1","results":[]}`,
 		},
 		{
-			name: "when a host fails, skips or times out, its row says so", method: "set", target: "_all",
+			name:   "when a host fails, skips or times out, its row says so",
+			method: "set",
+			target: "_all",
 			setup: func() {
 				s.jobs.EXPECT().
 					ModifyBroadcast(gomock.Any(), "_all", job.CategoryBehavior, op+"set", kvIn{}).
@@ -204,7 +218,9 @@ func (s *DispatchPublicTestSuite) TestRun() {
 			},
 		},
 		{
-			name: "when the host does not have it, it is ErrNotFound", method: "get", target: "server1",
+			name:   "when the host does not have it, it is ErrNotFound",
+			method: "get",
+			target: "server1",
 			setup: func() {
 				s.jobs.EXPECT().
 					Query(gomock.Any(), "server1", job.CategoryBehavior, op+"get", kvIn{}).
@@ -225,8 +241,9 @@ func (s *DispatchPublicTestSuite) TestRun() {
 			},
 		},
 		{
-			name:   "when a template reads a var it does not have, it is ErrInvalid and no job is sent",
-			method: "set", target: "server1",
+			name:    "when a template reads a var it does not have, it is ErrInvalid and no job is sent",
+			method:  "set",
+			target:  "server1",
 			input:   kvIn{Content: "{{.Vars.missing}}"},
 			setup:   func() {},
 			wantErr: func(err error) { s.ErrorIs(err, dispatch.ErrInvalid) },

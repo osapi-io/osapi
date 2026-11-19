@@ -107,7 +107,11 @@ func (d *Debian) Update(
 		}, nil
 	}
 
-	if _, setErr := d.execManager.RunPrivilegedCmd(ctx, "timedatectl", []string{"set-timezone", timezone}); setErr != nil {
+	if _, setErr := d.execManager.RunPrivilegedCmd(
+		ctx,
+		"timedatectl",
+		[]string{"set-timezone", timezone},
+	); setErr != nil {
 		return nil, fmt.Errorf("timezone: set-timezone: %w", setErr)
 	}
 

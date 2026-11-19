@@ -83,7 +83,10 @@ func run(
 		// Every behavior has a docs page, internal ones included, so the
 		// docs list everything the binary has.
 		dir := command.DocsDir(b)
-		if err := w.Write(filepath.Join(dir, b.Name+".md"), []byte(command.IndexPage(b))); err != nil {
+		if err := w.Write(
+			filepath.Join(dir, b.Name+".md"),
+			[]byte(command.IndexPage(b)),
+		); err != nil {
 			return err
 		}
 		if !b.API && !b.CLI {
@@ -117,7 +120,7 @@ func run(
 		return err
 	}
 
-	return w.Format()
+	return nil
 }
 
 // behavior writes b's gen directory.

@@ -417,8 +417,10 @@ pages.
 
 `internal/behavior/gen` writes them. It builds Go with jen
 (`github.com/dave/jennifer`), not with text templates. Thus the output always
-parses, and jen manages its imports. Then it formats the output with goimports,
-gofumpt and golines, like the rest of the repository. It builds the spec with
-the `openapi3` types of kin-openapi, the library that oapi-codegen uses to read
-specs. A test loads and validates the result. To change a generated file, change
-the behavior or the generator, and run `go generate`.
+parses, and jen manages its imports. goimports puts the imports in the
+repository's three groups. The output gets no other format: each file starts
+with a `Code generated` line, so golangci-lint skips it in the format check and
+in the lint. It builds the spec with the `openapi3` types of kin-openapi, the
+library that oapi-codegen uses to read specs. A test loads and validates the
+result. To change a generated file, change the behavior or the generator, and
+run `go generate`.

@@ -628,7 +628,9 @@ func (s *ValidationPublicTestSuite) TestGoDuration() {
 				)
 			} else if tt.field == "" {
 				// Test empty string with omitempty — validation should pass.
-				tt.validateFunc(validation.Var(context.Background(), tt.field, "omitempty,go_duration"))
+				tt.validateFunc(
+					validation.Var(context.Background(), tt.field, "omitempty,go_duration"),
+				)
 			} else {
 				tt.validateFunc(validation.Var(context.Background(), tt.field, "go_duration"))
 			}

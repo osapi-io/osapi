@@ -293,9 +293,14 @@ func (s *MethodsPublicTestSuite) TestPending() {
 			validateFunc: func(got agent.ListPendingAgentsResponse, err error) {
 				s.Require().NoError(err)
 				s.Equal(agent.ListPendingAgentsResponse{
-					Items: []agent.PendingAgentInfo{{
-						MachineID: "m-1", Hostname: "web-01", Fingerprint: "SHA256:x", RequestedAt: at,
-					}},
+					Items: []agent.PendingAgentInfo{
+						{
+							MachineID:   "m-1",
+							Hostname:    "web-01",
+							Fingerprint: "SHA256:x",
+							RequestedAt: at,
+						},
+					},
 					TotalItems: 1,
 				}, got)
 			},

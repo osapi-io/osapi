@@ -184,8 +184,10 @@ module versions. `go.mod` has no `replace` directive.
 
 ## Code style
 
-[gofumpt] formats the Go code. [golangci-lint] examines the Go code for
-problems. CI makes sure that both pass.
+[golangci-lint] formats the Go code with the formatters that `.golangci.yml`
+enables: [gofumpt], goimports and golines. It also examines the Go code for
+problems. `just go-fmt` formats, and `just go-fmt-check` checks. CI makes sure
+that the format and the lint pass.
 
 ```bash
 just go-fmt-check   # Check formatting

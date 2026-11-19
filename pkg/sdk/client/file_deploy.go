@@ -102,7 +102,13 @@ func (s *FileDeployService) Deploy(
 		return nil, fmt.Errorf("file deploy: %w", err)
 	}
 
-	if err := checkError(resp.StatusCode(), resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON500); err != nil {
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON400,
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON500,
+	); err != nil {
 		return nil, err
 	}
 
@@ -130,7 +136,13 @@ func (s *FileDeployService) Undeploy(
 		return nil, fmt.Errorf("file undeploy: %w", err)
 	}
 
-	if err := checkError(resp.StatusCode(), resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON500); err != nil {
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON400,
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON500,
+	); err != nil {
 		return nil, err
 	}
 
@@ -161,7 +173,13 @@ func (s *FileDeployService) Status(
 		return nil, fmt.Errorf("file status: %w", err)
 	}
 
-	if err := checkError(resp.StatusCode(), resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON500); err != nil {
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON400,
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON500,
+	); err != nil {
 		return nil, err
 	}
 

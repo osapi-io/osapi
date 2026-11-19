@@ -29,7 +29,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"sort"
 
@@ -44,7 +43,6 @@ const module = "github.com/osapi-io/osapi"
 // directory, such as ../../.. from a go:generate line.
 type Writer struct {
 	Root string
-	gofs []string
 }
 
 // Clean removes each file of dir that a generator made, by the comment that
@@ -91,8 +89,9 @@ func (w *Writer) Write(
 }
 
 // Go renders f to rel, with its imports in the repository's three groups:
-// the standard library, then other modules, then this one. Format formats
-// it at the end.
+// the standard library, then other modules, then this one. That is all the
+// format it gets: golangci-lint skips a generated file, so no check reads its
+// format.
 func (w *Writer) Go(
 	rel string,
 	f *jen.File,
@@ -108,7 +107,6 @@ func (w *Writer) Go(
 	if err != nil {
 		return fmt.Errorf("%s: %w", rel, err)
 	}
-	w.gofs = append(w.gofs, rel)
 
 	return w.Write(rel, src)
 }
@@ -120,25 +118,6 @@ func (w *Writer) Remove(
 	if err := os.Remove(filepath.Join(w.Root, rel)); err != nil &&
 		!errors.Is(err, os.ErrNotExist) {
 		return err
-	}
-
-	return nil
-}
-
-// Format runs the repository's formatters, golines with gofumpt, over every
-// Go file written, once.
-func (w *Writer) Format() error {
-	if len(w.gofs) == 0 {
-		return nil
-	}
-	args := append([]string{
-		"tool", "github.com/segmentio/golines",
-		"--base-formatter=go tool mvdan.cc/gofumpt", "-w",
-	}, w.gofs...)
-	cmd := exec.Command("go", args...)
-	cmd.Dir = w.Root
-	if out, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("format: %w: %s", err, out)
 	}
 
 	return nil

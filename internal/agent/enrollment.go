@@ -266,7 +266,13 @@ func (a *Agent) handleEnrollmentResponse(
 		Bytes: controllerPubKey,
 	})
 
-	if err := atomicfile.Write(context.Background(), a.appFs, controllerPubPath, pubPEM, 0o644); err != nil {
+	if err := atomicfile.Write(
+		context.Background(),
+		a.appFs,
+		controllerPubPath,
+		pubPEM,
+		0o644,
+	); err != nil {
 		a.pkiLogger.Error(
 			"failed to save controller public key",
 			slog.String("path", controllerPubPath),

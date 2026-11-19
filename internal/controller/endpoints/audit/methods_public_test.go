@@ -108,12 +108,19 @@ func (s *MethodsPublicTestSuite) TestList() {
 				s.Equal(150, got.TotalItems)
 				s.Require().Len(got.Items, 2)
 				s.Equal(audit.AuditEntry{
-					ID: entryID, Timestamp: when, User: "ops@example.com",
-					Roles: []string{"admin"}, Method: "POST",
-					Path: "/api/node/web-01/command/exec", OperationID: "PostNodeCommandExec",
-					SourceIP: "192.168.1.100", ResponseCode: 202, DurationMs: 42,
-					TraceID: "4bf92f3577b34da6a3ce929d0e0e4736",
-					JobID:   "7c9e6679-7425-40de-944b-e07fc1f90ae7", RequestSummary: `{"command":"uptime"}`,
+					ID:             entryID,
+					Timestamp:      when,
+					User:           "ops@example.com",
+					Roles:          []string{"admin"},
+					Method:         "POST",
+					Path:           "/api/node/web-01/command/exec",
+					OperationID:    "PostNodeCommandExec",
+					SourceIP:       "192.168.1.100",
+					ResponseCode:   202,
+					DurationMs:     42,
+					TraceID:        "4bf92f3577b34da6a3ce929d0e0e4736",
+					JobID:          "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+					RequestSummary: `{"command":"uptime"}`,
 				}, got.Items[0])
 				s.Empty(got.Items[1].OperationID)
 				s.Empty(got.Items[1].TraceID)

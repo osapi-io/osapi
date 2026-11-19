@@ -89,7 +89,11 @@ func ApplyConfig(
 	}
 
 	// Validate with netplan generate (validates without applying).
-	if _, genErr := execManager.RunPrivilegedCmd(ctx, "netplan", []string{"generate"}); genErr != nil {
+	if _, genErr := execManager.RunPrivilegedCmd(
+		ctx,
+		"netplan",
+		[]string{"generate"},
+	); genErr != nil {
 		// Roll back: remove the invalid file.
 		_ = atomicfile.Remove(ctx, fs, path)
 
@@ -100,7 +104,11 @@ func ApplyConfig(
 	}
 
 	// Apply the configuration.
-	if _, applyErr := execManager.RunPrivilegedCmd(ctx, "netplan", []string{"apply"}); applyErr != nil {
+	if _, applyErr := execManager.RunPrivilegedCmd(
+		ctx,
+		"netplan",
+		[]string{"apply"},
+	); applyErr != nil {
 		return false, fmt.Errorf("netplan apply: %w", applyErr)
 	}
 
@@ -156,7 +164,11 @@ func RemoveConfig(
 	}
 
 	// Apply the configuration change.
-	if _, applyErr := execManager.RunPrivilegedCmd(ctx, "netplan", []string{"apply"}); applyErr != nil {
+	if _, applyErr := execManager.RunPrivilegedCmd(
+		ctx,
+		"netplan",
+		[]string{"apply"},
+	); applyErr != nil {
 		return false, fmt.Errorf("netplan remove: apply: %w", applyErr)
 	}
 
@@ -171,7 +183,12 @@ func RemoveConfig(
 
 			stateBytes, marshalErr := marshalJSON(state)
 			if marshalErr == nil {
-				if _, putErr := stateKV.KVPut(ctx, stateBucket, stateKey, stateBytes); putErr != nil {
+				if _, putErr := stateKV.KVPut(
+					ctx,
+					stateBucket,
+					stateKey,
+					stateBytes,
+				); putErr != nil {
 					logger.Warn(
 						"netplan remove: failed to update state",
 						slog.String("path", path),

@@ -47,8 +47,13 @@ linters:
 
 formatters:
   enable:
-    - gofmt
+    - gofumpt
     - goimports
+    - golines
+  exclusions:
+    paths:
+      # Go shipped inside a JS package. Not ours, and not tracked in git.
+      - node_modules
 
 issues:
   # Defaults truncate: 50 findings per linter, and one per line.

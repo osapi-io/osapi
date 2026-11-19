@@ -72,7 +72,12 @@ func (n note) set(
 
 		return noteOut{}, err
 	}
-	if _, err := n.h.FileState.KVPut(ctx, n.h.FileStateBucket, notePath, []byte(in.Text)); err != nil {
+	if _, err := n.h.FileState.KVPut(
+		ctx,
+		n.h.FileStateBucket,
+		notePath,
+		[]byte(in.Text),
+	); err != nil {
 		return noteOut{}, err
 	}
 	if in.Mode != "nowrite" {
@@ -153,7 +158,11 @@ func installPkg(
 	if out == "installed" {
 		return pkgOut{}, nil
 	}
-	if _, err := p.h.Exec.RunPrivilegedCmd(ctx, "apt-get", []string{"install", "--", in.Name}); err != nil {
+	if _, err := p.h.Exec.RunPrivilegedCmd(
+		ctx,
+		"apt-get",
+		[]string{"install", "--", in.Name},
+	); err != nil {
 		return pkgOut{}, err
 	}
 

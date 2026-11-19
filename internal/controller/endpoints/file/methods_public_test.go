@@ -261,7 +261,8 @@ func (s *MethodsPublicTestSuite) TestUploadAndUpdate() {
 			changed: true,
 		},
 		{
-			name: "when an upload has the same content, nothing is written: 200", fileName: "nginx.conf",
+			name:     "when an upload has the same content, nothing is written: 200",
+			fileName: "nginx.conf",
 			setup: func() {
 				s.objects.EXPECT().Info(gomock.Any(), "nginx.conf").Return(exists, nil)
 			},
@@ -291,7 +292,9 @@ func (s *MethodsPublicTestSuite) TestUploadAndUpdate() {
 			wantErr: errBoom,
 		},
 		{
-			name: "when an update names a new file, it is stored: 201", update: true, fileName: "nginx.conf",
+			name:     "when an update names a new file, it is stored: 201",
+			update:   true,
+			fileName: "nginx.conf",
 			setup: func() {
 				s.objects.EXPECT().
 					Info(gomock.Any(), "nginx.conf").
@@ -303,25 +306,33 @@ func (s *MethodsPublicTestSuite) TestUploadAndUpdate() {
 			changed: true,
 		},
 		{
-			name: "when an update has other content, it is replaced: 200", update: true, fileName: "nginx.conf",
+			name:     "when an update has other content, it is replaced: 200",
+			update:   true,
+			fileName: "nginx.conf",
 			setup: func() {
 				s.objects.EXPECT().Info(gomock.Any(), "nginx.conf").Return(other, nil)
 				s.objects.EXPECT().
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(&jetstream.ObjectInfo{}, nil)
 			},
-			wantCode: http.StatusOK, changed: true,
+			wantCode: http.StatusOK,
+			changed:  true,
 		},
 		{
-			name: "when an update has the same content, nothing is written: 200", update: true, fileName: "nginx.conf",
+			name:     "when an update has the same content, nothing is written: 200",
+			update:   true,
+			fileName: "nginx.conf",
 			setup: func() {
 				s.objects.EXPECT().Info(gomock.Any(), "nginx.conf").Return(exists, nil)
 			},
 			wantCode: http.StatusOK,
 		},
 		{
-			name: "when an update names an osapi file, it is ErrProtected", update: true, fileName: "osapi/x",
-			setup: func() {}, wantErr: file.ErrProtected,
+			name:     "when an update names an osapi file, it is ErrProtected",
+			update:   true,
+			fileName: "osapi/x",
+			setup:    func() {},
+			wantErr:  file.ErrProtected,
 		},
 		{
 			name: "when the store fails, the update is a 500", update: true, fileName: "nginx.conf",
@@ -567,10 +578,14 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 		wantLoc  string
 	}{
 		{
-			name: "when an upload is new, it is a 201 with Location", method: http.MethodPost, path: "/api/file",
+			name:   "when an upload is new, it is a 201 with Location",
+			method: http.MethodPost,
+			path:   "/api/file",
 			fields: map[string]string{
 				"name": "nginx.conf",
-			}, data: content, token: token("file:write"),
+			},
+			data:  content,
+			token: token("file:write"),
 			setup: func() {
 				s.objects.EXPECT().
 					Info(gomock.Any(), "nginx.conf").
@@ -579,16 +594,25 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 					Put(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(&jetstream.ObjectInfo{}, nil)
 			},
-			wantCode: http.StatusCreated, wantLoc: "/api/file/nginx.conf",
+			wantCode: http.StatusCreated,
+			wantLoc:  "/api/file/nginx.conf",
 		},
 		{
-			name: "when an upload has no file, it is a 400", method: http.MethodPost, path: "/api/file",
-			fields: map[string]string{"name": "nginx.conf"}, token: token("file:write"),
-			setup: func() {}, wantCode: http.StatusBadRequest,
+			name:     "when an upload has no file, it is a 400",
+			method:   http.MethodPost,
+			path:     "/api/file",
+			fields:   map[string]string{"name": "nginx.conf"},
+			token:    token("file:write"),
+			setup:    func() {},
+			wantCode: http.StatusBadRequest,
 		},
 		{
-			name: "when an upload is not a form, it is a 400", method: http.MethodPost, path: "/api/file",
-			token: token("file:write"), setup: func() {}, wantCode: http.StatusBadRequest,
+			name:     "when an upload is not a form, it is a 400",
+			method:   http.MethodPost,
+			path:     "/api/file",
+			token:    token("file:write"),
+			setup:    func() {},
+			wantCode: http.StatusBadRequest,
 		},
 		{
 			name:   "when an upload has a content type that is not raw or template, it is a 400",
@@ -597,10 +621,14 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 			token: token("file:write"), setup: func() {}, wantCode: http.StatusBadRequest,
 		},
 		{
-			name: "when an upload has other content, it is a 409", method: http.MethodPost, path: "/api/file",
+			name:   "when an upload has other content, it is a 409",
+			method: http.MethodPost,
+			path:   "/api/file",
 			fields: map[string]string{
 				"name": "nginx.conf",
-			}, data: content, token: token("file:write"),
+			},
+			data:  content,
+			token: token("file:write"),
 			setup: func() {
 				s.objects.EXPECT().Info(gomock.Any(), "nginx.conf").
 					Return(&jetstream.ObjectInfo{Digest: "SHA-256=old"}, nil)
@@ -608,13 +636,21 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 			wantCode: http.StatusConflict,
 		},
 		{
-			name: "when an upload names an osapi file, it is a 403", method: http.MethodPost, path: "/api/file",
-			fields: map[string]string{"name": "osapi/x"}, data: content, token: token("file:write"),
-			setup: func() {}, wantCode: http.StatusForbidden,
+			name:     "when an upload names an osapi file, it is a 403",
+			method:   http.MethodPost,
+			path:     "/api/file",
+			fields:   map[string]string{"name": "osapi/x"},
+			data:     content,
+			token:    token("file:write"),
+			setup:    func() {},
+			wantCode: http.StatusForbidden,
 		},
 		{
-			name: "when an update replaces a file, it is a 200", method: http.MethodPut, path: "/api/file/nginx.conf",
-			data: content, token: token("file:write"),
+			name:   "when an update replaces a file, it is a 200",
+			method: http.MethodPut,
+			path:   "/api/file/nginx.conf",
+			data:   content,
+			token:  token("file:write"),
 			setup: func() {
 				s.objects.EXPECT().Info(gomock.Any(), "nginx.conf").
 					Return(&jetstream.ObjectInfo{Digest: "SHA-256=old"}, nil)
@@ -630,14 +666,21 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 			setup: func() {}, wantCode: http.StatusForbidden,
 		},
 		{
-			name: "when there is no Object Store, a list is a 503", method: http.MethodGet, path: "/api/file",
+			name:   "when there is no Object Store, a list is a 503",
+			method: http.MethodGet,
+			path:   "/api/file",
 			token: token(
 				"file:read",
-			), noStore: true, setup: func() {}, wantCode: http.StatusServiceUnavailable,
+			),
+			noStore:  true,
+			setup:    func() {},
+			wantCode: http.StatusServiceUnavailable,
 		},
 		{
-			name: "when a delete succeeds, it is a 204", method: http.MethodDelete, path: "/api/file/nginx.conf",
-			token: token("file:write"),
+			name:   "when a delete succeeds, it is a 204",
+			method: http.MethodDelete,
+			path:   "/api/file/nginx.conf",
+			token:  token("file:write"),
 			setup: func() {
 				s.objects.EXPECT().
 					Info(gomock.Any(), "nginx.conf").
@@ -647,8 +690,11 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 			wantCode: http.StatusNoContent,
 		},
 		{
-			name: "when there is no token, it is a 401", method: http.MethodGet, path: "/api/file/stale",
-			setup: func() {}, wantCode: http.StatusUnauthorized,
+			name:     "when there is no token, it is a 401",
+			method:   http.MethodGet,
+			path:     "/api/file/stale",
+			setup:    func() {},
+			wantCode: http.StatusUnauthorized,
 		},
 	}
 	for _, tc := range tests {

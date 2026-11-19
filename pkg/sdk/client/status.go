@@ -108,7 +108,13 @@ func (s *StatusService) Get(
 		return nil, fmt.Errorf("get status: %w", err)
 	}
 
-	if err := checkError(resp.StatusCode(), resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON500); err != nil {
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON400,
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON500,
+	); err != nil {
 		return nil, err
 	}
 

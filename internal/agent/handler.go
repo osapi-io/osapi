@@ -367,11 +367,16 @@ func (a *Agent) handleJobMessage(
 	}
 
 	// Write acknowledged event
-	if err := a.writeStatusEvent(ctx, jobKey, string(job.StatusAcknowledged), map[string]interface{}{
-		"subject":   msg.Subject(),
-		"category":  jobRequest.Category,
-		"operation": jobRequest.Operation,
-	}); err != nil {
+	if err := a.writeStatusEvent(
+		ctx,
+		jobKey,
+		string(job.StatusAcknowledged),
+		map[string]interface{}{
+			"subject":   msg.Subject(),
+			"category":  jobRequest.Category,
+			"operation": jobRequest.Operation,
+		},
+	); err != nil {
 		a.logger.ErrorContext(
 			ctx,
 			"failed to write acknowledged event",
@@ -523,10 +528,15 @@ func (a *Agent) handleJobMessage(
 			slog.String("job_id", jobKey),
 			slog.String("error", err.Error()),
 		)
-		if statusErr := a.writeStatusEvent(ctx, jobKey, string(job.StatusFailed), map[string]interface{}{
-			"error":       fmt.Sprintf("failed to store job response: %s", err.Error()),
-			"duration_ms": time.Since(startTime).Milliseconds(),
-		}); statusErr != nil {
+		if statusErr := a.writeStatusEvent(
+			ctx,
+			jobKey,
+			string(job.StatusFailed),
+			map[string]interface{}{
+				"error":       fmt.Sprintf("failed to store job response: %s", err.Error()),
+				"duration_ms": time.Since(startTime).Milliseconds(),
+			},
+		); statusErr != nil {
 			a.logger.ErrorContext(
 				ctx,
 				"failed to write failed event after response storage failure",
@@ -561,10 +571,15 @@ func (a *Agent) handleJobMessage(
 			)
 		}
 	default:
-		if err := a.writeStatusEvent(ctx, jobKey, string(job.StatusCompleted), map[string]interface{}{
-			"duration_ms": time.Since(startTime).Milliseconds(),
-			"result_size": len(result),
-		}); err != nil {
+		if err := a.writeStatusEvent(
+			ctx,
+			jobKey,
+			string(job.StatusCompleted),
+			map[string]interface{}{
+				"duration_ms": time.Since(startTime).Milliseconds(),
+				"result_size": len(result),
+			},
+		); err != nil {
 			a.logger.ErrorContext(
 				ctx,
 				"failed to write completed event",

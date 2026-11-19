@@ -127,7 +127,13 @@ func (s *ProvidersPublicTestSuite) TestProviders() {
 					filemocks.NewMockProvider(ctrl),
 				)
 			} else {
-				providers = agent.ExportProviders(slog.Default(), tc.platform, tc.container, nil, nil)
+				providers = agent.ExportProviders(
+					slog.Default(),
+					tc.platform,
+					tc.container,
+					nil,
+					nil,
+				)
 			}
 
 			for _, area := range areas {

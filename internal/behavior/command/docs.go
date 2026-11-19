@@ -186,7 +186,11 @@ func IndexPage(
 	if len(settings) == 0 {
 		sb.WriteString("None. A behavior declares settings with `behavior.Config`.\n")
 	} else {
-		fmt.Fprintf(&sb, "Read by the agent, under `%s` in the config. Each can also be set\n", b.SettingsKey())
+		fmt.Fprintf(
+			&sb,
+			"Read by the agent, under `%s` in the config. Each can also be set\n",
+			b.SettingsKey(),
+		)
 		sb.WriteString("with its environment variable or its `osapi agent start` flag.\n\n")
 		sb.WriteString("| Key | Flag | Environment | Type | Default | Description |\n")
 		sb.WriteString("| --- | ---- | ----------- | ---- | ------- | ----------- |\n")
