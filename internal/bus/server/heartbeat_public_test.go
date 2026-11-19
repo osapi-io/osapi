@@ -80,7 +80,7 @@ func (s *HeartbeatPublicTestSuite) TestStartHeartbeat() {
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			srv.StartHeartbeat(ctx, config.ProcessConditions{})
+			srv.StartHeartbeat(ctx, "v1.2.3-test", config.ProcessConditions{})
 
 			if tc.wantKey == "" {
 				return
@@ -89,6 +89,8 @@ func (s *HeartbeatPublicTestSuite) TestStartHeartbeat() {
 			s.Eventually(func() bool {
 				return slices.Contains(keys(), tc.wantKey)
 			}, 5*time.Second, 50*time.Millisecond)
+			s.Equal("v1.2.3-test", registryVersion(s.T(), cfg, tc.wantKey),
+				"the registration has the build version it was given")
 		})
 	}
 }

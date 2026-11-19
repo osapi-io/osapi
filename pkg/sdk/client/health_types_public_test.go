@@ -142,6 +142,7 @@ func (suite *HealthTypesPublicTestSuite) TestSystemStatusFromGen() {
 						apiAge := "1h"
 						var apiCPU float32 = 2.1
 						var apiMem int64 = 52428800
+						agentVersion := "v1.2.3-abc"
 
 						entries := []gen.ComponentEntry{
 							{
@@ -152,6 +153,7 @@ func (suite *HealthTypesPublicTestSuite) TestSystemStatusFromGen() {
 								CpuPercent: &agentCPU,
 								MemBytes:   &agentMem,
 								Conditions: &agentConditions,
+								Version:    &agentVersion,
 							},
 							{
 								Type:       &apiType,
@@ -239,6 +241,8 @@ func (suite *HealthTypesPublicTestSuite) TestSystemStatusFromGen() {
 				suite.InDelta(12.5, s.Registry[0].CPUPercent, 0.001)
 				suite.Equal(int64(104857600), s.Registry[0].MemBytes)
 				suite.Equal([]string{"MemoryPressure"}, s.Registry[0].Conditions)
+				suite.Equal("v1.2.3-abc", s.Registry[0].Version)
+				suite.Empty(s.Registry[1].Version, "an entry with no version has none")
 				suite.Equal("api", s.Registry[1].Type)
 				suite.Equal("api-server-01", s.Registry[1].Hostname)
 				suite.Equal("Ready", s.Registry[1].Status)

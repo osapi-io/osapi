@@ -58,11 +58,15 @@ func buildVersion(
 	)
 }
 
+// appVersion is the build version of this binary, such as
+// v0.2.1-0.20261119003517-f6bc5af55ceb, which each component reports.
+func appVersion() string {
+	return buildVersion(version, commit, date, builtBy, treeState).GitVersion
+}
+
 // versionAttr is the version of this binary, for the resource of each span.
 func versionAttr() attribute.KeyValue {
-	return semconv.ServiceVersion(
-		buildVersion(version, commit, date, builtBy, treeState).GitVersion,
-	)
+	return semconv.ServiceVersion(appVersion())
 }
 
 // versionCmd represents the version command.

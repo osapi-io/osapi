@@ -37,10 +37,11 @@ import (
 var hostnameFn = os.Hostname
 
 // StartHeartbeat writes the registration of the server to the registry KV
-// bucket until ctx ends. If the config names no registry bucket, it logs a
+// bucket until ctx ends, with version, the build version of the binary. If the config names no registry bucket, it logs a
 // warning and returns, because the server runs without a heartbeat.
 func (s *Server) StartHeartbeat(
 	ctx context.Context,
+	version string,
 	conditions config.ProcessConditions,
 ) {
 	if s.registryBucket == "" {
@@ -61,7 +62,7 @@ func (s *Server) StartHeartbeat(
 		KV:             s.nc,
 		RegistryBucket: s.registryBucket,
 		Hostname:       hostname,
-		Version:        "0.1.0",
+		Version:        version,
 		Component:      "nats",
 		Process:        process.New(),
 		Interval:       10 * time.Second,

@@ -70,6 +70,10 @@ components:
           description: Component type (agent, api, nats).
           example: agent
           type: string
+        version:
+          description: Build version of the component's binary.
+          example: v0.2.1-0.20261119003517-f6bc5af55ceb
+          type: string
       type: object
     ComponentHealth:
       properties:

@@ -20,4 +20,6 @@ export interface ComponentEntry {
   status?: string;
   /** Component type (agent, api, nats). */
   type?: string;
+  /** Build version of the component's binary. */
+  version?: string;
 }

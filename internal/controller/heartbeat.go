@@ -44,6 +44,7 @@ func startHeartbeat(
 	log *slog.Logger,
 	registry heartbeat.RegistryStore,
 	registryBucket string,
+	version string,
 	subs map[string]job.SubComponentInfo,
 	conditions config.ProcessConditions,
 ) {
@@ -60,7 +61,7 @@ func startHeartbeat(
 		KV:             registry,
 		RegistryBucket: registryBucket,
 		Hostname:       hostname,
-		Version:        "0.1.0",
+		Version:        version,
 		Component:      "controller",
 		Process:        process.New(),
 		Interval:       10 * time.Second,

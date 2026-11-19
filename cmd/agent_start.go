@@ -64,7 +64,7 @@ var agentStartCmd = &cobra.Command{
 		if err != nil {
 			cli.LogFatal(log, "failed to start the agent", err)
 		}
-		a.SetVersion(buildVersion(version, commit, date, builtBy, treeState).GitVersion)
+		a.SetVersion(appVersion())
 
 		if metricsServer != nil {
 			metricsServer.SetReadinessFunc(func() error {

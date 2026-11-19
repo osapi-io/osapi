@@ -170,6 +170,7 @@ func displayComponentTable(
 			e.Age,
 			cpu,
 			mem,
+			e.Version,
 		})
 
 		// Show sub-components indented under their parent.
@@ -195,6 +196,7 @@ func displayComponentTable(
 				"",
 				"",
 				"",
+				"",
 			})
 
 			// The url goes on a line of its own, so a long one is never cut
@@ -214,14 +216,24 @@ func displayComponentTable(
 					"",
 					"",
 					"",
+					"",
 				})
 			}
 		}
 	}
 
 	cli.PrintCompactTable([]cli.Section{{
-		Headers: []string{"TYPE", "HOSTNAME", "STATUS", "CONDITIONS", "AGE", "CPU", "MEM"},
-		Rows:    rows,
+		Headers: []string{
+			"TYPE",
+			"HOSTNAME",
+			"STATUS",
+			"CONDITIONS",
+			"AGE",
+			"CPU",
+			"MEM",
+			"VERSION",
+		},
+		Rows: rows,
 	}})
 }
 

@@ -59,6 +59,8 @@ type RegistryEntry struct {
 	Age        string   `json:"age"`
 	CPUPercent float64  `json:"cpu_percent"`
 	MemBytes   int64    `json:"mem_bytes"`
+	// Version is the build version of the component's binary.
+	Version string `json:"version,omitempty"`
 }
 
 // ComponentHealth represents a component's health.
@@ -314,6 +316,9 @@ func systemStatusFromGen(
 			}
 			if e.Status != nil {
 				entry.Status = *e.Status
+			}
+			if e.Version != nil {
+				entry.Version = *e.Version
 			}
 			if e.Age != nil {
 				entry.Age = *e.Age

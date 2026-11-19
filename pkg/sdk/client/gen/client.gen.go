@@ -2006,6 +2006,9 @@ type ComponentEntry struct {
 
 	// Type Component type (agent, api, nats).
 	Type *string `json:"type,omitempty"`
+
+	// Version Build version of the component's binary.
+	Version *string `json:"version,omitempty"`
 }
 
 // ComponentHealth defines model for ComponentHealth.
