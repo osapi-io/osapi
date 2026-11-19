@@ -88,7 +88,7 @@ var startCmd = &cobra.Command{
 
 		// The controller metrics server also serves the HTTP metrics of the
 		// otelecho middleware.
-		var controllerOpts []controller.Option
+		controllerOpts := []controller.Option{controller.WithVersion(appVersion())}
 		if controllerMetrics != nil {
 			controllerOpts = append(
 				controllerOpts,
@@ -110,7 +110,7 @@ var startCmd = &cobra.Command{
 			metricsServers = append(metricsServers, controllerMetrics)
 		}
 
-		natsServer.StartHeartbeat(ctx, appConfig.Agent.ProcessConditions)
+		natsServer.StartHeartbeat(ctx, appVersion(), appConfig.Agent.ProcessConditions)
 
 		agentServer, agentBundle, err := agent.Setup(
 			ctx,

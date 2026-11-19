@@ -54,6 +54,18 @@ type Option func(*options)
 
 type options struct {
 	meterProvider *sdkmetric.MeterProvider
+	version       string
+}
+
+// WithVersion is the build version of the binary, such as
+// v0.2.1-0.20261119003517-f6bc5af55ceb. The heartbeat and the health status
+// report it; the UI, which the controller serves, shows it.
+func WithVersion(
+	version string,
+) Option {
+	return func(o *options) {
+		o.version = version
+	}
 }
 
 // WithMeterProvider sends the HTTP metrics, the NATS metrics and the job
@@ -168,10 +180,19 @@ func newController(
 		objBucket:       objBucket,
 		fileStateBucket: fileStateBucket,
 		enrollment:      watcher,
+		version:         o.version,
 	}))
 
 	subs := subComponents(cfg)
-	startHeartbeat(ctx, log, conn.NATS, conn.RegistryBucket, subs, cfg.Agent.ProcessConditions)
+	startHeartbeat(
+		ctx,
+		log,
+		conn.NATS,
+		conn.RegistryBucket,
+		o.version,
+		subs,
+		cfg.Agent.ProcessConditions,
+	)
 	startConditionWatcher(ctx, log, conn.NATS, conn.RegistryBucket, cfg.Controller.Notifications)
 
 	return &Controller{

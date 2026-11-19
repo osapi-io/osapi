@@ -55,7 +55,7 @@ var natsServerStartCmd = &cobra.Command{
 			cli.LogFatal(log, "failed to start NATS server", err)
 		}
 
-		s.StartHeartbeat(ctx, appConfig.Agent.ProcessConditions)
+		s.StartHeartbeat(ctx, appVersion(), appConfig.Agent.ProcessConditions)
 
 		if metricsServer != nil {
 			metricsServer.SetReadinessFunc(func() error {

@@ -57,14 +57,15 @@ The `/health/status` response has a `components` table that puts these heartbeat
 records together. If the registry key of a component expired (the TTL ended
 without a new heartbeat), osapi reports the component as unreachable.
 
-Example registry output:
+Each row has the build version of the component's binary, so a mixed fleet shows
+which hosts run an older build. Example registry output:
 
 ```
-TYPE        HOSTNAME      STATUS  CONDITIONS  AGE     CPU    MEM
-agent       web-01        Ready   -           7h 6m   1.2%   96 MB
-agent       web-02        Ready   -           3h 2m   0.8%   82 MB
-controller  api-server    Ready   -           7h 6m   2.1%   128 MB
-nats        nats-server   Ready   -           7h 6m   0.3%   64 MB
+TYPE        HOSTNAME      STATUS  CONDITIONS  AGE     CPU    MEM     VERSION
+agent       web-01        Ready   -           7h 6m   1.2%   96 MB   v0.2.1-0.20261119003517-f6bc5af55ceb
+agent       web-02        Ready   -           3h 2m   0.8%   82 MB   v0.2.1-0.20261119003517-f6bc5af55ceb
+controller  api-server    Ready   -           7h 6m   2.1%   128 MB  v0.2.1-0.20261119003517-f6bc5af55ceb
+nats        nats-server   Ready   -           7h 6m   0.3%   64 MB   v0.2.1-0.20261119003517-f6bc5af55ceb
 ```
 
 ## Sub-Component health

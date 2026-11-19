@@ -268,6 +268,7 @@ func newMetricsProvider(
 						Hostname: reg.Hostname,
 						Status:   status,
 						Age:      cli.FormatAge(time.Since(reg.StartedAt)),
+						Version:  reg.AgentVersion,
 					}
 					for _, c := range reg.Conditions {
 						if c.Status {
@@ -289,6 +290,7 @@ func newMetricsProvider(
 						Hostname: reg.Hostname,
 						Status:   "Ready",
 						Age:      cli.FormatAge(time.Since(reg.StartedAt)),
+						Version:  reg.Version,
 					}
 					for _, c := range reg.Conditions {
 						if c.Status {

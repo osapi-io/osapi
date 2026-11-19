@@ -78,6 +78,8 @@ type handlerDeps struct {
 	objBucket       string
 	fileStateBucket string
 	enrollment      *enrollment.Watcher
+	// version is the build version of the binary.
+	version string
 }
 
 // handlers returns each REST API handler. The UI handler is only there
@@ -100,7 +102,7 @@ func handlers(
 	// The same sub-components the heartbeat reports, so the two copies in the
 	// health response cannot disagree.
 	healthSubs := convertSubComponents(subComponents(d.cfg))
-	reporter := health.New(d.log, d.checker, startTime, "0.1.0", d.metricsProvider, healthSubs)
+	reporter := health.New(d.log, d.checker, startTime, d.version, d.metricsProvider, healthSubs)
 	reporter.StartMetricsRefresh(context.Background())
 
 	handlers := make([]func(e *echo.Echo), 0, 16)

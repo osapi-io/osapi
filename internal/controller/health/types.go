@@ -112,13 +112,15 @@ type AgentDetail struct {
 
 // ComponentEntry holds unified component registration details for the registry.
 type ComponentEntry struct {
-	Type          string
-	Hostname      string
-	Status        string
-	Conditions    []string
-	Age           string
-	CPUPercent    float64
-	MemBytes      int64
+	Type       string
+	Hostname   string
+	Status     string
+	Conditions []string
+	Age        string
+	CPUPercent float64
+	MemBytes   int64
+	// Version is the build version of the component's binary.
+	Version       string
 	SubComponents map[string]SubComponentInfo
 }
 

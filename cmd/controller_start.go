@@ -57,7 +57,7 @@ var controllerStartCmd = &cobra.Command{
 		// Create the metrics server before the API server so the
 		// MeterProvider can be injected into otelecho middleware.
 		var metricsServer *metrics.Server
-		var controllerOpts []controller.Option
+		controllerOpts := []controller.Option{controller.WithVersion(appVersion())}
 
 		if appConfig.Controller.Metrics.Enabled {
 			metricsServer = metrics.New(

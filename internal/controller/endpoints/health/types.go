@@ -117,13 +117,14 @@ type AgentDetail struct {
 
 // ComponentEntry is one registered component, with its health.
 type ComponentEntry struct {
-	Type       string   `json:"type,omitempty"        doc:"Component type (agent, api, nats)." example:"agent"`
-	Hostname   string   `json:"hostname,omitempty"    doc:"Component hostname."                example:"web-01"`
-	Status     string   `json:"status,omitempty"      doc:"Component status."                  example:"Ready"`
+	Type       string   `json:"type,omitempty"        doc:"Component type (agent, api, nats)."       example:"agent"`
+	Hostname   string   `json:"hostname,omitempty"    doc:"Component hostname."                      example:"web-01"`
+	Status     string   `json:"status,omitempty"      doc:"Component status."                        example:"Ready"`
 	Conditions []string `json:"conditions,omitempty"  doc:"Active conditions."`
-	Age        string   `json:"age,omitempty"         doc:"Time since component started."      example:"7h 6m"`
-	CPUPercent float32  `json:"cpu_percent,omitempty" doc:"Process CPU usage percentage."      example:"2.1"`
-	MemBytes   int64    `json:"mem_bytes,omitempty"   doc:"Process RSS memory in bytes."       example:"134217728"`
+	Age        string   `json:"age,omitempty"         doc:"Time since component started."            example:"7h 6m"`
+	CPUPercent float32  `json:"cpu_percent,omitempty" doc:"Process CPU usage percentage."            example:"2.1"`
+	MemBytes   int64    `json:"mem_bytes,omitempty"   doc:"Process RSS memory in bytes."             example:"134217728"`
+	Version    string   `json:"version,omitempty"     doc:"Build version of the component's binary." example:"v0.2.1-0.20261119003517-f6bc5af55ceb"`
 }
 
 // ConsumerStats is the count of the JetStream consumers, with each one.

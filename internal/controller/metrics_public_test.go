@@ -332,6 +332,7 @@ func (s *MetricsPublicTestSuite) TestComponentRegistry() {
 			KVGet(gomock.Any(), "registry", "agents.web-01").
 			Return(s.entry(job.AgentRegistration{
 				Hostname:      "web-01",
+				AgentVersion:  "v1.2.3-agent",
 				StartedAt:     started,
 				Conditions:    conditions,
 				Process:       process,
@@ -349,6 +350,7 @@ func (s *MetricsPublicTestSuite) TestComponentRegistry() {
 			Return(s.entry(job.ComponentRegistration{
 				Type:          "controller",
 				Hostname:      "ctl-01",
+				Version:       "v1.2.3-ctl",
 				StartedAt:     started,
 				Conditions:    conditions,
 				Process:       process,
@@ -369,6 +371,7 @@ func (s *MetricsPublicTestSuite) TestComponentRegistry() {
 		s.Equal("web-01", got[1].Hostname)
 		s.Equal("Ready", got[1].Status, "an agent with no state is Ready")
 		s.Equal([]string{"HighCPU"}, got[1].Conditions)
+		s.Equal("v1.2.3-agent", got[1].Version, "an agent's entry has its binary's version")
 		s.Equal(1.5, got[1].CPUPercent)
 		s.Equal(int64(2048), got[1].MemBytes)
 		s.Equal(
@@ -379,6 +382,7 @@ func (s *MetricsPublicTestSuite) TestComponentRegistry() {
 		s.Equal("ctl-01", got[2].Hostname)
 		s.Equal("Ready", got[2].Status)
 		s.Equal([]string{"HighCPU"}, got[2].Conditions)
+		s.Equal("v1.2.3-ctl", got[2].Version, "a controller's entry has its binary's version")
 	})
 
 	s.Run("when the registry is empty returns no components", func() {

@@ -208,6 +208,7 @@ schema ComponentEntry.hostname = string
 schema ComponentEntry.mem_bytes = integer/int64
 schema ComponentEntry.status = string
 schema ComponentEntry.type = string
+schema ComponentEntry.version = string
 schema ComponentHealth.address = string
 schema ComponentHealth.error = string
 schema ComponentHealth.status! = string

@@ -22,6 +22,7 @@ package server_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"net"
@@ -193,4 +194,32 @@ func registryKeys(
 		keys, _ := nc.KVKeys(context.Background(), bucket)
 		return keys
 	}
+}
+
+// registryVersion is the version in the registration under key.
+func registryVersion(
+	t *testing.T,
+	cfg config.NATS,
+	key string,
+) string {
+	nc, err := bus.Dial(slog.Default(), &natsclient.Options{
+		Host: cfg.Server.Host,
+		Port: cfg.Server.Port,
+		Auth: natsclient.AuthOptions{AuthType: natsclient.NoAuth},
+		Name: "test",
+	})
+	require.NoError(t, err)
+	defer nc.Close()
+	entry, err := nc.KVGet(
+		context.Background(),
+		bus.RegistryKV(cfg.Server.Namespace, cfg.Registry).Bucket,
+		key,
+	)
+	require.NoError(t, err)
+	var reg struct {
+		Version string `json:"version"`
+	}
+	require.NoError(t, json.Unmarshal(entry.Value(), &reg))
+
+	return reg.Version
 }

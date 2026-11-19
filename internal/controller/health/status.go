@@ -344,6 +344,7 @@ func (h *Health) populateMetrics(
 				Age:        e.Age,
 				CPUPercent: float32(e.CPUPercent),
 				MemBytes:   e.MemBytes,
+				Version:    e.Version,
 			}
 			if len(e.Conditions) > 0 {
 				entry.Conditions = append([]string(nil), e.Conditions...)

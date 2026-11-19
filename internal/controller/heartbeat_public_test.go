@@ -22,6 +22,7 @@ package controller_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"slices"
@@ -54,7 +55,7 @@ func (s *HeartbeatPublicTestSuite) TestStartHeartbeat() {
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		c, err := controller.New(ctx, slog.Default(), cfg)
+		c, err := controller.New(ctx, slog.Default(), cfg, controller.WithVersion("v1.2.3-test"))
 		s.Require().NoError(err)
 		defer c.Stop(context.Background())
 
@@ -66,6 +67,15 @@ func (s *HeartbeatPublicTestSuite) TestStartHeartbeat() {
 			keys, _ := nc.KVKeys(context.Background(), bucket)
 			return slices.Contains(keys, "controller.unknown")
 		}, 5*time.Second, 50*time.Millisecond)
+
+		// The registration has the build version that WithVersion gave.
+		entry, err := nc.KVGet(context.Background(), bucket, "controller.unknown")
+		s.Require().NoError(err)
+		var reg struct {
+			Version string `json:"version"`
+		}
+		s.Require().NoError(json.Unmarshal(entry.Value(), &reg))
+		s.Equal("v1.2.3-test", reg.Version)
 	})
 }
 

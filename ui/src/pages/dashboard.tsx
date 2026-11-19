@@ -48,7 +48,8 @@ function groupComponents(
 }
 
 // RegistryHeader is one row of osapi client health status's component
-// table: hostname, status, conditions, age, CPU and memory, in that order.
+// table: hostname, status, conditions, age, CPU, memory and version, in that
+// order.
 function RegistryHeader({ entry }: { entry?: ComponentEntry }) {
   if (!entry) return null;
   return (
@@ -70,6 +71,7 @@ function RegistryHeader({ entry }: { entry?: ComponentEntry }) {
           <span>{entry.cpu_percent.toFixed(1)}%</span>
         )}
         {entry.mem_bytes != null && <span>{formatBytes(entry.mem_bytes)}</span>}
+        {entry.version && <span className="font-mono">{entry.version}</span>}
       </div>
     </div>
   );
