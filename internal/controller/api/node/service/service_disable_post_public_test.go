@@ -96,8 +96,10 @@ func (s *ServiceDisablePostPublicTestSuite) TestPostNodeServiceDisable() {
 				s.mockJobClient.EXPECT().
 					Modify(gomock.Any(), "server1", "node", job.OperationServiceDisable, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
-						JobID: "550e8400-e29b-41d4-a716-446655440000", Hostname: "agent1", Changed: ptr.To(true),
-						Data: json.RawMessage(`{"name":"nginx.service","changed":true}`),
+						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+						Hostname: "agent1",
+						Changed:  ptr.To(true),
+						Data:     json.RawMessage(`{"name":"nginx.service","changed":true}`),
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeServiceDisableResponseObject) {
@@ -120,7 +122,10 @@ func (s *ServiceDisablePostPublicTestSuite) TestPostNodeServiceDisable() {
 				s.mockJobClient.EXPECT().
 					Modify(gomock.Any(), "server1", "node", job.OperationServiceDisable, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
-						JobID: "550e8400-e29b-41d4-a716-446655440000", Hostname: "agent1", Changed: ptr.To(true), Data: nil,
+						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+						Hostname: "agent1",
+						Changed:  ptr.To(true),
+						Data:     nil,
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeServiceDisableResponseObject) {
@@ -161,7 +166,9 @@ func (s *ServiceDisablePostPublicTestSuite) TestPostNodeServiceDisable() {
 				s.mockJobClient.EXPECT().
 					Modify(gomock.Any(), "server1", "node", job.OperationServiceDisable, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
-						Status: job.StatusSkipped, Hostname: "server1", Error: "service: operation not supported on this OS family",
+						Status:   job.StatusSkipped,
+						Hostname: "server1",
+						Error:    "service: operation not supported on this OS family",
 					}, nil)
 			},
 			validateFunc: func(resp gen.PostNodeServiceDisableResponseObject) {
@@ -354,8 +361,10 @@ func (s *ServiceDisablePostPublicTestSuite) TestPostNodeServiceDisableValidation
 				mock.EXPECT().
 					Modify(gomock.Any(), "server1", "node", job.OperationServiceDisable, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
-						JobID: "550e8400-e29b-41d4-a716-446655440000", Hostname: "agent1", Changed: ptr.To(true),
-						Data: json.RawMessage(`{"name":"nginx.service","changed":true}`),
+						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+						Hostname: "agent1",
+						Changed:  ptr.To(true),
+						Data:     json.RawMessage(`{"name":"nginx.service","changed":true}`),
 					}, nil)
 				return mock
 			},
@@ -448,8 +457,10 @@ func (s *ServiceDisablePostPublicTestSuite) TestPostNodeServiceDisableRBACHTTP()
 				mock.EXPECT().
 					Modify(gomock.Any(), "server1", "node", job.OperationServiceDisable, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
-						JobID: "550e8400-e29b-41d4-a716-446655440000", Hostname: "agent1", Changed: ptr.To(true),
-						Data: json.RawMessage(`{"name":"nginx.service","changed":true}`),
+						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+						Hostname: "agent1",
+						Changed:  ptr.To(true),
+						Data:     json.RawMessage(`{"name":"nginx.service","changed":true}`),
 					}, nil)
 				return mock
 			},

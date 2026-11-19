@@ -28,7 +28,7 @@ type Config struct {
 	NATS       NATS        `mapstructure:"nats"`
 	Telemetry  Telemetry   `mapstructure:"telemetry"`
 	// Debug enable or disable debug option set from CLI.
-	Debug bool `mapstructure:"debug"                         doc:"Enable verbose logging."`
+	Debug bool `mapstructure:"debug" doc:"Enable verbose logging."`
 }
 
 // NotificationsConfig holds settings for the pluggable condition notification
@@ -36,9 +36,9 @@ type Config struct {
 // dispatches ConditionEvents via the configured Notifier.
 type NotificationsConfig struct {
 	// Enabled activates the condition watcher and notifier.
-	Enabled bool `mapstructure:"enabled"           doc:"Enable the condition watcher and notifier (default: true)."`
+	Enabled bool `mapstructure:"enabled" doc:"Enable the condition watcher and notifier (default: true)."`
 	// Notifier selects the notification backend: "log" (default).
-	Notifier string `mapstructure:"notifier"          doc:"Notifier backend: 'log' (default)."`
+	Notifier string `mapstructure:"notifier" doc:"Notifier backend: 'log' (default)."`
 	// RenotifyInterval is how often to re-fire active conditions.
 	// Uses Go duration format (e.g., "1m", "5m", "1h"). Zero disables.
 	RenotifyInterval string `mapstructure:"renotify_interval" doc:"How often to re-fire active conditions (Go duration). Zero disables re-notification." validate:"omitempty,go_duration"`
@@ -54,38 +54,38 @@ type MetricsServer struct {
 	// Enabled activates the metrics server.
 	Enabled bool `mapstructure:"enabled" doc:"Enable the metrics endpoint (default: true)."`
 	// Host the metrics server binds to.
-	Host string `mapstructure:"host"    doc:"Host the metrics server binds to."`
+	Host string `mapstructure:"host" doc:"Host the metrics server binds to."`
 	// Port the metrics server listens on.
-	Port int `mapstructure:"port"    doc:"Port the metrics server listens on."                                                 validate:"omitempty,min=1,max=65535"`
+	Port int `mapstructure:"port" doc:"Port the metrics server listens on." validate:"omitempty,min=1,max=65535"`
 	// URL is where a person opens the metrics endpoint. Health shows it
 	// beside the bind address; osapi never requests it.
-	URL string `mapstructure:"url"     doc:"Where a person opens the metrics endpoint, shown by health beside the bind address." validate:"omitempty,http_url"`
+	URL string `mapstructure:"url" doc:"Where a person opens the metrics endpoint, shown by health beside the bind address." validate:"omitempty,http_url"`
 }
 
 // TracingConfig configuration settings for distributed tracing.
 type TracingConfig struct {
 	// Enabled enables or disables tracing.
-	Enabled bool `mapstructure:"enabled"       doc:"Enable distributed tracing (default: false)."`
+	Enabled bool `mapstructure:"enabled" doc:"Enable distributed tracing (default: false)."`
 	// Exporter selects the trace exporter: "stdout" or "otlp".
-	Exporter string `mapstructure:"exporter"      doc:"Trace exporter: 'stdout' or 'otlp'."`
+	Exporter string `mapstructure:"exporter" doc:"Trace exporter: 'stdout' or 'otlp'."`
 	// OTLPEndpoint is the gRPC endpoint for the OTLP exporter (e.g., "localhost:4317").
 	OTLPEndpoint string `mapstructure:"otlp_endpoint" doc:"gRPC endpoint for the OTLP exporter, such as 'localhost:4317'."`
 	// URL is where a person views the traces, such as a Jaeger UI. Health
 	// links to it, and the controller reads a trace from its query API for
 	// osapi client telemetry trace get. osapi does not run the backend.
-	URL string `mapstructure:"url"           doc:"Where a person views the traces, such as a Jaeger UI. Health links to it, and the controller reads traces from its query API. osapi does not run the backend." validate:"omitempty,http_url"`
+	URL string `mapstructure:"url" doc:"Where a person views the traces, such as a Jaeger UI. Health links to it, and the controller reads traces from its query API. osapi does not run the backend." validate:"omitempty,http_url"`
 }
 
 // NATSAuth holds client-side authentication settings for connecting to NATS.
 type NATSAuth struct {
 	// Type is the auth method: "none", "user_pass", "nkey", or "creds".
-	Type string `mapstructure:"type"       doc:"Authentication type: 'none', 'user_pass', 'nkey', or 'creds'."`
+	Type string `mapstructure:"type" doc:"Authentication type: 'none', 'user_pass', 'nkey', or 'creds'."`
 	// Username for user_pass auth.
-	Username string `mapstructure:"username"   doc:"Username for user_pass auth."`
+	Username string `mapstructure:"username" doc:"Username for user_pass auth."`
 	// Password for user_pass auth.
-	Password string `mapstructure:"password"   doc:"Password for user_pass auth."                                        mask:"password"`
+	Password string `mapstructure:"password" doc:"Password for user_pass auth." mask:"password"`
 	// NKeyFile path to the NKey seed file for nkey auth.
-	NKeyFile string `mapstructure:"nkey_file"  doc:"Path to the NKey seed file for nkey auth."`
+	NKeyFile string `mapstructure:"nkey_file" doc:"Path to the NKey seed file for nkey auth."`
 	// CredsFile path to a NATS credentials file, a user JWT and its seed, for
 	// creds auth against a server in operator (JWT) mode.
 	CredsFile string `mapstructure:"creds_file" doc:"Path to a NATS credentials file (user JWT and seed) for creds auth."`
@@ -94,21 +94,21 @@ type NATSAuth struct {
 // NATSServerAuth holds server-side authentication settings for the embedded NATS server.
 type NATSServerAuth struct {
 	// Type is the auth method: "none", "user_pass", "nkey", or "operator".
-	Type string `mapstructure:"type"          doc:"Auth method: 'none', 'user_pass', 'nkey' or 'operator'."`
+	Type string `mapstructure:"type" doc:"Auth method: 'none', 'user_pass', 'nkey' or 'operator'."`
 	// ResolverFile is, for operator auth, the server's half of an operator:
 	// its JWT, the system account and each account's JWT, as
 	// `nsc generate config --mem-resolver` writes it.
 	ResolverFile string `mapstructure:"resolver_file" doc:"For operator auth: the operator, system account and account JWTs, as nsc generate config --mem-resolver writes them."`
 	// NKeyFile is, for nkey auth, a seed whose public key is in NKeys: the
 	// identity the server's own setup and heartbeat connect with.
-	NKeyFile string `mapstructure:"nkey_file"     doc:"For nkey auth: a seed among nkeys, which the server's own setup and heartbeat connect with."`
+	NKeyFile string `mapstructure:"nkey_file" doc:"For nkey auth: a seed among nkeys, which the server's own setup and heartbeat connect with."`
 	// CredsFile is, for operator auth, the credentials the server's own setup
 	// and heartbeat connect with: a user in an account with JetStream.
-	CredsFile string `mapstructure:"creds_file"    doc:"For operator auth: a credentials file the server's own setup and heartbeat connect with."`
+	CredsFile string `mapstructure:"creds_file" doc:"For operator auth: a credentials file the server's own setup and heartbeat connect with."`
 	// Users allowed to connect (for user_pass auth).
-	Users []NATSServerUser `mapstructure:"users"         doc:"Users allowed to connect (for user_pass auth)."`
+	Users []NATSServerUser `mapstructure:"users" doc:"Users allowed to connect (for user_pass auth)."`
 	// NKeys is a list of allowed public NKeys (for nkey auth).
-	NKeys []string `mapstructure:"nkeys"         doc:"Allowed public NKeys, for nkey auth."`
+	NKeys []string `mapstructure:"nkeys" doc:"Allowed public NKeys, for nkey auth."`
 }
 
 // NATSServerUser represents an allowed username/password pair for the NATS server.
@@ -146,7 +146,7 @@ type NATSEnrollment struct {
 // NATSAudit configuration for the audit log stream.
 type NATSAudit struct {
 	// Stream is the JetStream stream name for audit log entries.
-	Stream string `mapstructure:"stream"    doc:"JetStream stream name for audit log entries."`
+	Stream string `mapstructure:"stream" doc:"JetStream stream name for audit log entries."`
 	// Subject is the base subject prefix for audit messages.
 	Subject  string `mapstructure:"subject"   doc:"Base subject prefix for audit messages."`
 	MaxAge   string `mapstructure:"max_age"   doc:"Maximum age of audit entries (Go duration). Default 30 days." validate:"omitempty,go_duration"` // e.g. "720h" (30 days)
@@ -202,16 +202,16 @@ type NATSFileState struct {
 // NATSServer configuration settings for the embedded NATS server.
 type NATSServer struct {
 	// Host the server will bind to.
-	Host string `mapstructure:"host"           doc:"Host the embedded NATS server binds to."`
+	Host string `mapstructure:"host" doc:"Host the embedded NATS server binds to."`
 	// Port the server will bind to.
-	Port int `mapstructure:"port"           doc:"Port the embedded NATS server listens on."`
+	Port int `mapstructure:"port" doc:"Port the embedded NATS server listens on."`
 	// URL is where a person reaches the server, as nats:// or tls://. Health
 	// shows it beside the bind address.
-	URL string `mapstructure:"url"            doc:"Where a person reaches the NATS server, as nats:// or tls://, shown by health beside the bind address." validate:"omitempty,url,startswith=nats://|startswith=tls://"`
+	URL string `mapstructure:"url" doc:"Where a person reaches the NATS server, as nats:// or tls://, shown by health beside the bind address." validate:"omitempty,url,startswith=nats://|startswith=tls://"`
 	// StoreDir the directory for JetStream file storage.
-	StoreDir string `mapstructure:"store_dir"      doc:"Directory for JetStream file storage."`
+	StoreDir string `mapstructure:"store_dir" doc:"Directory for JetStream file storage."`
 	// Namespace is a prefix for all NATS subjects and infrastructure names.
-	Namespace string `mapstructure:"namespace"      doc:"Prefix for all NATS subjects and infrastructure names."                                                 validate:"omitempty,nats_name"`
+	Namespace string `mapstructure:"namespace" doc:"Prefix for all NATS subjects and infrastructure names." validate:"omitempty,nats_name"`
 	// Auth holds server-side authentication configuration.
 	Auth    NATSServerAuth `mapstructure:"auth,omitempty"`
 	Metrics MetricsServer  `mapstructure:"metrics"`
@@ -220,7 +220,7 @@ type NATSServer struct {
 // NATSStream configuration for JetStream stream settings.
 type NATSStream struct {
 	// Name is the JetStream stream name.
-	Name string `mapstructure:"name"     validate:"required"              doc:"JetStream stream name for job notifications."`
+	Name string `mapstructure:"name" validate:"required" doc:"JetStream stream name for job notifications."`
 	// Subjects is the subject filter for the stream.
 	Subjects string `mapstructure:"subjects" validate:"required"              doc:"Subject filter for the stream."`
 	MaxAge   string `mapstructure:"max_age"  validate:"omitempty,go_duration" doc:"Maximum age of messages in the stream (Go duration)."` // e.g. "24h", "1h30m"
@@ -233,7 +233,7 @@ type NATSStream struct {
 // NATSKV configuration for KeyValue bucket settings.
 type NATSKV struct {
 	// Bucket is the KV bucket name for job definitions and status events.
-	Bucket string `mapstructure:"bucket"          validate:"required,nats_name" doc:"KV bucket for immutable job definitions and status events."`
+	Bucket string `mapstructure:"bucket" validate:"required,nats_name" doc:"KV bucket for immutable job definitions and status events."`
 	// ResponseBucket is the KV bucket name for agent result storage.
 	ResponseBucket string `mapstructure:"response_bucket" validate:"required,nats_name" doc:"KV bucket for agent result storage."`
 	TTL            string `mapstructure:"ttl"                                           doc:"TTL for KV entries (Go duration)."` // e.g. "1h", "30m"
@@ -278,13 +278,13 @@ type NATSDLQ struct {
 // NATSConnection is a reusable NATS connection configuration block.
 type NATSConnection struct {
 	// Host the NATS server hostname.
-	Host string `mapstructure:"host"           doc:"NATS server hostname to connect to."`
+	Host string `mapstructure:"host" doc:"NATS server hostname to connect to."`
 	// Port the NATS server port.
-	Port int `mapstructure:"port"           doc:"NATS server port to connect to."                             validate:"min=1,max=65535"`
+	Port int `mapstructure:"port" doc:"NATS server port to connect to." validate:"min=1,max=65535"`
 	// ClientName the NATS client name for identification.
-	ClientName string `mapstructure:"client_name"    doc:"Client name sent to NATS for identification."`
+	ClientName string `mapstructure:"client_name" doc:"Client name sent to NATS for identification."`
 	// Namespace is a prefix for all NATS subjects used by this client.
-	Namespace string `mapstructure:"namespace"      doc:"Subject namespace prefix. Must match nats.server.namespace." validate:"omitempty,nats_name"`
+	Namespace string `mapstructure:"namespace" doc:"Subject namespace prefix. Must match nats.server.namespace." validate:"omitempty,nats_name"`
 	// Auth holds client-side authentication configuration.
 	Auth NATSAuth `mapstructure:"auth,omitempty"`
 }
@@ -308,21 +308,21 @@ type UIConfig struct {
 	Enabled *bool `mapstructure:"enabled" doc:"Serve the embedded UI (default: true)."`
 	// URL is where a person opens the UI. Health shows it beside the bind
 	// address of the API, whose listener serves the UI.
-	URL string `mapstructure:"url"     doc:"Where a person opens the UI, shown by health beside the bind address." validate:"omitempty,http_url"`
+	URL string `mapstructure:"url" doc:"Where a person opens the UI, shown by health beside the bind address." validate:"omitempty,http_url"`
 }
 
 // APIServer holds the HTTP server config (port + security).
 type APIServer struct {
 	// Host the server binds to. Empty binds every interface. The UI uses the
 	// same listener.
-	Host string `mapstructure:"host"        doc:"Host the REST API server, and the UI on its listener, binds to. Empty binds every interface."`
+	Host string `mapstructure:"host" doc:"Host the REST API server, and the UI on its listener, binds to. Empty binds every interface."`
 	// URL is where a person reaches the API. Health shows it beside the bind
 	// address; osapi never requests it.
-	URL string `mapstructure:"url"         doc:"Where a person reaches the API, shown by health beside the bind address."                                  validate:"omitempty,http_url"`
+	URL string `mapstructure:"url" doc:"Where a person reaches the API, shown by health beside the bind address." validate:"omitempty,http_url"`
 	// Port the server will bind to.
-	Port int `mapstructure:"port"        doc:"Port the REST API server listens on."                                                                      validate:"min=1,max=65535"`
+	Port int `mapstructure:"port" doc:"Port the REST API server listens on." validate:"min=1,max=65535"`
 	// Security contains security-related configuration for the server, such as CORS and tokens.
-	Security ServerSecurity `mapstructure:"security"                                                                                                                                                     mask:"struct"`
+	Security ServerSecurity `mapstructure:"security" mask:"struct"`
 	// JobTimeout is how long the controller waits for agent responses
 	// before returning partial results. Uses Go duration format.
 	// Defaults to 30s when empty.
@@ -332,9 +332,9 @@ type APIServer struct {
 // Client configuration settings.
 type Client struct {
 	// URL the client will connect to
-	URL string `mapstructure:"url"      doc:"Base URL the CLI client connects to."`
+	URL string `mapstructure:"url" doc:"Base URL the CLI client connects to."`
 	// Security contains security-related configuration for the client, such as access tokens.
-	Security ClientSecurity `mapstructure:"security"                                            mask:"struct"`
+	Security ClientSecurity `mapstructure:"security" mask:"struct"`
 }
 
 // CustomRole defines a named set of permissions that can be assigned to tokens.
@@ -351,7 +351,7 @@ type ServerSecurity struct {
 	// least validation.MinSigningKeyLen characters (see openssl rand -hex 32).
 	SigningKey string `mapstructure:"signing_key" validate:"required,signing_key" mask:"password" doc:"HS256 signing key for JWT validation (required). Generate with openssl rand -hex 32."`
 	// Roles defines custom roles with fine-grained permissions.
-	Roles map[string]CustomRole `mapstructure:"roles"                                                       doc:"Custom roles with fine-grained permissions."`
+	Roles map[string]CustomRole `mapstructure:"roles" doc:"Custom roles with fine-grained permissions."`
 }
 
 // ClientSecurity represents security-related settings for the client.
@@ -369,17 +369,17 @@ type CORS struct {
 // AgentConsumer configuration for the agent's JetStream consumer settings.
 type AgentConsumer struct {
 	// Name is the durable consumer name.
-	Name string `mapstructure:"name"            doc:"Durable consumer name."`
+	Name string `mapstructure:"name" doc:"Durable consumer name."`
 	// MaxDeliver is the maximum number of redelivery attempts before sending to DLQ.
-	MaxDeliver int `mapstructure:"max_deliver"     doc:"Maximum redelivery attempts before sending to DLQ."`
+	MaxDeliver int `mapstructure:"max_deliver" doc:"Maximum redelivery attempts before sending to DLQ."`
 	// AckWait is the time to wait for an ACK before redelivering.
-	AckWait string `mapstructure:"ack_wait"        doc:"Time to wait for an ACK before redelivering."       validate:"omitempty,go_duration"` // e.g. "30s", "1m"
+	AckWait string `mapstructure:"ack_wait" doc:"Time to wait for an ACK before redelivering." validate:"omitempty,go_duration"` // e.g. "30s", "1m"
 	// MaxAckPending is the maximum outstanding unacknowledged messages.
 	MaxAckPending int `mapstructure:"max_ack_pending" doc:"Maximum outstanding unacknowledged messages."`
 	// ReplayPolicy is "instant" or "original".
-	ReplayPolicy string `mapstructure:"replay_policy"   doc:"Replay policy: 'instant' or 'original'."`
+	ReplayPolicy string `mapstructure:"replay_policy" doc:"Replay policy: 'instant' or 'original'."`
 	// BackOff durations between redelivery attempts.
-	BackOff []string `mapstructure:"back_off"        doc:"Backoff durations between redelivery attempts."` // e.g. ["30s", "2m", "5m"]
+	BackOff []string `mapstructure:"back_off" doc:"Backoff durations between redelivery attempts."` // e.g. ["30s", "2m", "5m"]
 }
 
 // AgentFacts configuration for the agent's facts collection settings.
@@ -400,7 +400,7 @@ type ProcessConditions struct {
 	// MemoryPressureBytes is the RSS threshold in bytes (0 = disabled).
 	MemoryPressureBytes int64 `mapstructure:"memory_pressure_bytes" doc:"Process RSS threshold in bytes (0 = disabled)."`
 	// HighCPUPercent is the CPU usage threshold as a percentage (0 = disabled).
-	HighCPUPercent float64 `mapstructure:"high_cpu_percent"      doc:"Process CPU threshold as percentage (0 = disabled)."`
+	HighCPUPercent float64 `mapstructure:"high_cpu_percent" doc:"Process CPU threshold as percentage (0 = disabled)."`
 }
 
 // PrivilegeEscalation configuration for least-privilege agent mode.
@@ -432,11 +432,11 @@ type AgentPKI struct {
 // ControllerPKI holds PKI configuration for the controller.
 type ControllerPKI struct {
 	// Enabled activates PKI enrollment and job signing.
-	Enabled bool `mapstructure:"enabled"               doc:"Enable PKI enrollment and job signing."`
+	Enabled bool `mapstructure:"enabled" doc:"Enable PKI enrollment and job signing."`
 	// KeyDir is the directory for controller keypair storage.
-	KeyDir string `mapstructure:"key_dir"               doc:"Directory for controller keypair storage."`
+	KeyDir string `mapstructure:"key_dir" doc:"Directory for controller keypair storage."`
 	// AutoAccept automatically accepts all agent enrollment requests.
-	AutoAccept bool `mapstructure:"auto_accept"           doc:"Automatically accept all enrollment requests (dev/test only)."`
+	AutoAccept bool `mapstructure:"auto_accept" doc:"Automatically accept all enrollment requests (dev/test only)."`
 	// RotationGracePeriod is how long both old and new keys are accepted
 	// during key rotation. Uses Go duration format.
 	RotationGracePeriod string `mapstructure:"rotation_grace_period" doc:"Grace period during key rotation where both old and new keys are accepted. Go duration format." validate:"omitempty,go_duration"`
@@ -451,15 +451,15 @@ type AgentConfig struct {
 	// Facts settings for the agent's facts collection.
 	Facts AgentFacts `mapstructure:"facts,omitempty"`
 	// QueueGroup for load balancing multiple agents.
-	QueueGroup string `mapstructure:"queue_group"                    doc:"Queue group for load-balanced (_any) subscriptions."`
+	QueueGroup string `mapstructure:"queue_group" doc:"Queue group for load-balanced (_any) subscriptions."`
 	// Hostname identifies this agent instance for routing.
-	Hostname string `mapstructure:"hostname"                       doc:"Agent hostname for direct routing. Defaults to the system hostname when empty."`
+	Hostname string `mapstructure:"hostname" doc:"Agent hostname for direct routing. Defaults to the system hostname when empty."`
 	// MaxJobs maximum number of concurrent jobs to process.
-	MaxJobs int `mapstructure:"max_jobs"                       doc:"Maximum number of concurrent jobs to process."                                                                                                                                                     validate:"min=1"`
+	MaxJobs int `mapstructure:"max_jobs" doc:"Maximum number of concurrent jobs to process." validate:"min=1"`
 	// Labels are key-value pairs for label-based routing (e.g., role: web, env: prod).
 	// Maximum 5 labels per agent — each label creates multiple NATS consumers
 	// for hierarchical prefix matching.
-	Labels map[string]string `mapstructure:"labels"                         doc:"Key-value labels for label-based routing (max 5). Values can be hierarchical with dot separators. Each label creates NATS consumers for prefix matching. See Job System Architecture for details." validate:"max=5"`
+	Labels map[string]string `mapstructure:"labels" doc:"Key-value labels for label-based routing (max 5). Values can be hierarchical with dot separators. Each label creates NATS consumers for prefix matching. See Job System Architecture for details." validate:"max=5"`
 	// Conditions holds threshold settings for node condition evaluation.
 	Conditions AgentConditions `mapstructure:"conditions,omitempty"`
 	// ProcessConditions holds threshold settings for process-level condition evaluation.

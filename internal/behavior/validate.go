@@ -282,9 +282,12 @@ func ValidateBehavior(
 			for i := range m.In.NumField() {
 				f := m.In.Field(i)
 				if Secret(f) && f.Tag.Get("telemetry") == "attr" {
-					add(m.Name, RuleSecret,
+					add(
+						m.Name,
+						RuleSecret,
 						"input field %s is secret and tagged telemetry:\"attr\"; a secret is never recorded on a span",
-						JSONName(f))
+						JSONName(f),
+					)
 				}
 				if f.IsExported() && !Secret(f) {
 					recordable = true
@@ -294,18 +297,38 @@ func ValidateBehavior(
 				f := m.In.FieldByIndex(tf.index)
 				switch {
 				case f.Type.Kind() != reflect.String:
-					add(m.Name, RuleTemplate, "input field %s is tagged template but is %s, not a string",
-						tf.Field, f.Type)
+					add(
+						m.Name,
+						RuleTemplate,
+						"input field %s is tagged template but is %s, not a string",
+						tf.Field,
+						f.Type,
+					)
 				case tf.vars == nil:
-					add(m.Name, RuleTemplate, "input field %s names %q for its vars, which the input does not have",
-						tf.Field, tf.Vars)
+					add(
+						m.Name,
+						RuleTemplate,
+						"input field %s names %q for its vars, which the input does not have",
+						tf.Field,
+						tf.Vars,
+					)
 				case m.In.FieldByIndex(tf.vars).Type != reflect.TypeFor[map[string]string]():
-					add(m.Name, RuleTemplate, "input field %s is the vars of %s but is %s, not map[string]string",
-						tf.Vars, tf.Field, m.In.FieldByIndex(tf.vars).Type)
+					add(
+						m.Name,
+						RuleTemplate,
+						"input field %s is the vars of %s but is %s, not map[string]string",
+						tf.Vars,
+						tf.Field,
+						m.In.FieldByIndex(tf.vars).Type,
+					)
 				}
 			}
 			if m.Verb == VerbWrite && recordable && len(m.SpanInputs()) == 0 {
-				add(m.Name, RuleSpan, "its span records no input, so a trace cannot say what it changed")
+				add(
+					m.Name,
+					RuleSpan,
+					"its span records no input, so a trace cannot say what it changed",
+				)
 			}
 		}
 

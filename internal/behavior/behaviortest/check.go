@@ -294,8 +294,13 @@ func effects(
 					),
 				)
 			} else if string(got) != e.Content {
-				problems = append(problems,
-					behavior.TestFailure(behavior.TestEffects, fmt.Sprintf("wrote %s as %q, want %q", e.Path, got, e.Content)))
+				problems = append(
+					problems,
+					behavior.TestFailure(
+						behavior.TestEffects,
+						fmt.Sprintf("wrote %s as %q, want %q", e.Path, got, e.Content),
+					),
+				)
 			}
 		case behavior.EffectRemoved:
 			if _, err := h.FS.Stat(e.Path); err == nil {

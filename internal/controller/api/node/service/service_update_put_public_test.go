@@ -132,7 +132,10 @@ func (s *ServiceUpdatePutPublicTestSuite) TestPutNodeService() {
 				s.mockJobClient.EXPECT().
 					Modify(gomock.Any(), "server1", "node", job.OperationServiceUpdate, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
-						JobID: "550e8400-e29b-41d4-a716-446655440000", Hostname: "agent1", Changed: ptr.To(true), Data: nil,
+						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+						Hostname: "agent1",
+						Changed:  ptr.To(true),
+						Data:     nil,
 					}, nil)
 			},
 			validateFunc: func(resp gen.PutNodeServiceResponseObject) {
@@ -429,8 +432,10 @@ func (s *ServiceUpdatePutPublicTestSuite) TestPutNodeServiceValidationHTTP() {
 				mock.EXPECT().
 					Modify(gomock.Any(), "server1", "node", job.OperationServiceUpdate, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
-						JobID: "550e8400-e29b-41d4-a716-446655440000", Hostname: "agent1", Changed: ptr.To(true),
-						Data: json.RawMessage(`{"name":"my-app.service","changed":true}`),
+						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+						Hostname: "agent1",
+						Changed:  ptr.To(true),
+						Data:     json.RawMessage(`{"name":"my-app.service","changed":true}`),
 					}, nil)
 				return mock
 			},
@@ -541,8 +546,10 @@ func (s *ServiceUpdatePutPublicTestSuite) TestPutNodeServiceRBACHTTP() {
 				mock.EXPECT().
 					Modify(gomock.Any(), "server1", "node", job.OperationServiceUpdate, gomock.Any()).
 					Return("550e8400-e29b-41d4-a716-446655440000", &job.Response{
-						JobID: "550e8400-e29b-41d4-a716-446655440000", Hostname: "agent1", Changed: ptr.To(true),
-						Data: json.RawMessage(`{"name":"my-app.service","changed":true}`),
+						JobID:    "550e8400-e29b-41d4-a716-446655440000",
+						Hostname: "agent1",
+						Changed:  ptr.To(true),
+						Data:     json.RawMessage(`{"name":"my-app.service","changed":true}`),
 					}, nil)
 				return mock
 			},

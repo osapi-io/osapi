@@ -94,8 +94,14 @@ func run(
 		}
 		pkgs = append(pkgs, pkg+"/gen")
 	}
-	if err := w.Registry(allGen, generated,
-		[]string{"Package gen registers the routes of every endpoint group that is served."}, pkgs); err != nil {
+	if err := w.Registry(
+		allGen,
+		generated,
+		[]string{
+			"Package gen registers the routes of every endpoint group that is served.",
+		},
+		pkgs,
+	); err != nil {
 		return err
 	}
 

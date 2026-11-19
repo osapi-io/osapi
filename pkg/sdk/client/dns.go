@@ -44,7 +44,13 @@ func (s *DNSService) Get(
 		return nil, fmt.Errorf("get dns: %w", err)
 	}
 
-	if err := checkError(resp.StatusCode(), resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON500); err != nil {
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON400,
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON500,
+	); err != nil {
 		return nil, err
 	}
 
@@ -89,7 +95,13 @@ func (s *DNSService) Update(
 		return nil, fmt.Errorf("update dns: %w", err)
 	}
 
-	if err := checkError(resp.StatusCode(), resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON500); err != nil {
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON400,
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON500,
+	); err != nil {
 		return nil, err
 	}
 
@@ -119,7 +131,13 @@ func (s *DNSService) Delete(
 		return nil, fmt.Errorf("delete dns: %w", err)
 	}
 
-	if err := checkError(resp.StatusCode(), resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON500); err != nil {
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON400,
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON500,
+	); err != nil {
 		return nil, err
 	}
 

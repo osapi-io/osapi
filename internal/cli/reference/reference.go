@@ -101,7 +101,12 @@ func writeTree(
 	written[file] = true
 
 	for _, sub := range subs {
-		if err := writeTree(sub, append(append([]string{}, path...), sub.Name()), dir, written); err != nil {
+		if err := writeTree(
+			sub,
+			append(append([]string{}, path...), sub.Name()),
+			dir,
+			written,
+		); err != nil {
 			return err
 		}
 	}

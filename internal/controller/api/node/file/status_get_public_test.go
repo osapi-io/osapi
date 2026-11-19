@@ -222,7 +222,9 @@ func (s *FileStatusGetPublicTestSuite) TestGetNodeFileStatus() {
 							"agent1": {
 								Hostname: "agent1",
 								Data: marshalStatusResult(providerFile.StatusResult{
-									Path: "/etc/nginx/nginx.conf", Status: "in-sync", SHA256: "abc123",
+									Path:   "/etc/nginx/nginx.conf",
+									Status: "in-sync",
+									SHA256: "abc123",
 								}),
 							},
 							"agent2": {
@@ -263,7 +265,9 @@ func (s *FileStatusGetPublicTestSuite) TestGetNodeFileStatus() {
 							"agent1": {
 								Hostname: "agent1",
 								Data: marshalStatusResult(providerFile.StatusResult{
-									Path: "/etc/nginx/nginx.conf", Status: "in-sync", SHA256: "abc123",
+									Path:   "/etc/nginx/nginx.conf",
+									Status: "in-sync",
+									SHA256: "abc123",
 								}),
 							},
 							"agent2": {

@@ -49,7 +49,14 @@ func (s *JobService) Get(
 		return nil, fmt.Errorf("get job: %w", err)
 	}
 
-	if err := checkError(resp.StatusCode(), resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON500); err != nil {
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON400,
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON404,
+		resp.JSON500,
+	); err != nil {
 		return nil, err
 	}
 
@@ -78,7 +85,14 @@ func (s *JobService) Delete(
 		return fmt.Errorf("delete job: %w", err)
 	}
 
-	if err := checkError(resp.StatusCode(), resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON500); err != nil {
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON400,
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON404,
+		resp.JSON500,
+	); err != nil {
 		return err
 	}
 
@@ -123,7 +137,13 @@ func (s *JobService) List(
 		return nil, fmt.Errorf("list jobs: %w", err)
 	}
 
-	if err := checkError(resp.StatusCode(), resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON500); err != nil {
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON400,
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON500,
+	); err != nil {
 		return nil, err
 	}
 
@@ -158,7 +178,14 @@ func (s *JobService) Retry(
 		return nil, fmt.Errorf("retry job: %w", err)
 	}
 
-	if err := checkError(resp.StatusCode(), resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON500); err != nil {
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON400,
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON404,
+		resp.JSON500,
+	); err != nil {
 		return nil, err
 	}
 

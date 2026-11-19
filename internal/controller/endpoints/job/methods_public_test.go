@@ -301,13 +301,19 @@ func (s *MethodsPublicTestSuite) TestRetry() {
 				s.jobs.EXPECT().
 					RetryJob(gomock.Any(), jobID, "web-01").
 					Return(&client.CreateJobResult{
-						JobID: newJobID, Status: "submitted", Revision: 7, Timestamp: "2026-11-17T08:00:00Z",
+						JobID:     newJobID,
+						Status:    "submitted",
+						Revision:  7,
+						Timestamp: "2026-11-17T08:00:00Z",
 					}, nil)
 			},
 			validateFunc: func(got jobgroup.CreateJobResponse, err error) {
 				s.Require().NoError(err)
 				s.Equal(jobgroup.CreateJobResponse{
-					JobID: newJobID, Status: "submitted", Revision: 7, Timestamp: "2026-11-17T08:00:00Z",
+					JobID:     newJobID,
+					Status:    "submitted",
+					Revision:  7,
+					Timestamp: "2026-11-17T08:00:00Z",
 				}, got)
 			},
 		},
