@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/container/gen"
@@ -92,6 +94,9 @@ func (s *Container) PostNodeContainerDockerExec(
 	)
 	if err != nil {
 		errMsg := err.Error()
+		if apierr.IsMissing(err) {
+			return gen.PostNodeContainerDockerExec404JSONResponse{Error: &errMsg}, nil
+		}
 		return gen.PostNodeContainerDockerExec500JSONResponse{Error: &errMsg}, nil
 	}
 

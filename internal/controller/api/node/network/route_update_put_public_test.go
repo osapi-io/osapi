@@ -168,6 +168,24 @@ func (s *NetworkRouteUpdatePutPublicTestSuite) TestPutNodeNetworkRoute() {
 			},
 		},
 		{
+			name: "when the host does not have it, it is a 404",
+			request: gen.PutNodeNetworkRouteRequestObject{
+				Hostname: "server1", InterfaceName: "eth0",
+				Body: &gen.RouteConfigRequest{
+					Routes: []gen.RouteItem{{To: "10.0.0.0/8", Via: "192.168.1.1"}},
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(gomock.Any(), "server1", "network", job.OperationNetworkRouteUpdate, gomock.Any()).
+					Return("", nil, fmt.Errorf("on server1: %w", job.ErrNotFound))
+			},
+			validateFunc: func(resp gen.PutNodeNetworkRouteResponseObject) {
+				_, ok := resp.(gen.PutNodeNetworkRoute404JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "when job skipped",
 			request: gen.PutNodeNetworkRouteRequestObject{
 				Hostname: "server1", InterfaceName: "eth0",

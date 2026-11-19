@@ -168,6 +168,28 @@ func (s *ContainerStartPublicTestSuite) TestPostNodeContainerDockerStart() {
 			},
 		},
 		{
+			name: "when the host does not have it, it is a 404",
+			request: gen.PostNodeContainerDockerStartRequestObject{
+				Hostname: "server1",
+				Id:       "abc123",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"docker",
+						job.OperationDockerStart,
+						gomock.Any(),
+					).
+					Return("", nil, fmt.Errorf("on server1: %w", job.ErrNotFound))
+			},
+			validateFunc: func(resp gen.PostNodeContainerDockerStartResponseObject) {
+				_, ok := resp.(gen.PostNodeContainerDockerStart404JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "when job skipped",
 			request: gen.PostNodeContainerDockerStartRequestObject{
 				Hostname: "server1",

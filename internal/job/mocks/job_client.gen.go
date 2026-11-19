@@ -408,17 +408,17 @@ func (mr *MockJobClientMockRecorder) WriteAgentTimelineEvent(ctx, hostname, even
 }
 
 // WriteJobResponse mocks base method.
-func (m *MockJobClient) WriteJobResponse(ctx context.Context, jobID, hostname string, responseData []byte, status, errorMsg string, changed *bool) error {
+func (m *MockJobClient) WriteJobResponse(ctx context.Context, jobID, hostname string, responseData []byte, status, errorMsg string, errorCode job.ErrorCode, changed *bool) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "WriteJobResponse", ctx, jobID, hostname, responseData, status, errorMsg, changed)
+	ret := m.ctrl.Call(m, "WriteJobResponse", ctx, jobID, hostname, responseData, status, errorMsg, errorCode, changed)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // WriteJobResponse indicates an expected call of WriteJobResponse.
-func (mr *MockJobClientMockRecorder) WriteJobResponse(ctx, jobID, hostname, responseData, status, errorMsg, changed any) *gomock.Call {
+func (mr *MockJobClientMockRecorder) WriteJobResponse(ctx, jobID, hostname, responseData, status, errorMsg, errorCode, changed any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteJobResponse", reflect.TypeOf((*MockJobClient)(nil).WriteJobResponse), ctx, jobID, hostname, responseData, status, errorMsg, changed)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteJobResponse", reflect.TypeOf((*MockJobClient)(nil).WriteJobResponse), ctx, jobID, hostname, responseData, status, errorMsg, errorCode, changed)
 }
 
 // WriteStatusEvent mocks base method.

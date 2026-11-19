@@ -215,7 +215,7 @@ func (s *SpanPublicTestSuite) TestJobProcessJoinsTheTrace() {
 		Return(nil).
 		AnyTimes()
 	jobs.EXPECT().
-		WriteJobResponse(gomock.Any(), "trace-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any()).
+		WriteJobResponse(gomock.Any(), "trace-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any(), gomock.Any()).
 		Return(nil)
 
 	msg := agentmocks.NewMockMsg(ctrl)

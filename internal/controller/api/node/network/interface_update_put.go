@@ -24,6 +24,8 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/network/gen"
@@ -75,6 +77,9 @@ func (s *Network) PutNodeNetworkInterface(
 	)
 	if err != nil {
 		errMsg := err.Error()
+		if apierr.IsMissing(err) {
+			return gen.PutNodeNetworkInterface404JSONResponse{Error: &errMsg}, nil
+		}
 		return gen.PutNodeNetworkInterface500JSONResponse{
 			Error: &errMsg,
 		}, nil

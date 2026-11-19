@@ -31,6 +31,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	execMocks "github.com/osapi-io/osapi/internal/exec/mocks"
+	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/provider/node/apt"
 )
 
@@ -153,6 +154,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 		setupMock    func()
 		wantErr      bool
 		errContains  string
+		wantIs       error
 		validateFunc func(*apt.Package)
 	}{
 		{
@@ -173,15 +175,18 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			},
 		},
 		{
-			name:    "when package not installed",
+			// dpkg-query prints this and exits 1 for a package it does not
+			// know. That is the answer, not a failure of the command.
+			name:    "when dpkg-query does not know the package, it is not found",
 			pkgName: "nonexistent",
 			setupMock: func() {
 				suite.mockExec.EXPECT().
 					RunCmd(gomock.Any(), "dpkg-query", []string{"-W", "-f", suite.dpkgFormat, "nonexistent"}).
-					Return("", fmt.Errorf("no packages found matching nonexistent"))
+					Return("dpkg-query: no packages found matching nonexistent\n", fmt.Errorf("exit status 1"))
 			},
 			wantErr:     true,
-			errContains: "package: get \"nonexistent\":",
+			errContains: "package \"nonexistent\": not found",
+			wantIs:      provider.ErrNotFound,
 		},
 		{
 			name:    "when package in removed state",
@@ -194,6 +199,7 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			},
 			wantErr:     true,
 			errContains: "package \"removed-pkg\": not found",
+			wantIs:      provider.ErrNotFound,
 		},
 		{
 			name:        "when the name would be read as an option, nothing runs",
@@ -224,6 +230,9 @@ func (suite *DebianPublicTestSuite) TestGet() {
 			if tc.wantErr {
 				suite.Require().Error(err)
 				suite.Contains(err.Error(), tc.errContains)
+				if tc.wantIs != nil {
+					suite.ErrorIs(err, tc.wantIs)
+				}
 
 				return
 			}

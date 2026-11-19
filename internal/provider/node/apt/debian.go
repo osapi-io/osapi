@@ -107,6 +107,12 @@ func (d *Debian) Get(
 		[]string{"-W", "-f", dpkgQueryFormat, name},
 	)
 	if err != nil {
+		// dpkg-query prints this, and exits 1, for a package that it does
+		// not know: the answer is that the package is not here.
+		if strings.Contains(output, "no packages found matching") {
+			return nil, fmt.Errorf("package %q: %w", name, provider.ErrNotFound)
+		}
+
 		return nil, fmt.Errorf("package: get %q: %w", name, err)
 	}
 

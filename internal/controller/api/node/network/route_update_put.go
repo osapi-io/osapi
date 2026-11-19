@@ -24,6 +24,8 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/network/gen"
@@ -72,6 +74,9 @@ func (s *Network) PutNodeNetworkRoute(
 	)
 	if err != nil {
 		errMsg := err.Error()
+		if apierr.IsMissing(err) {
+			return gen.PutNodeNetworkRoute404JSONResponse{Error: &errMsg}, nil
+		}
 		return gen.PutNodeNetworkRoute500JSONResponse{
 			Error: &errMsg,
 		}, nil

@@ -280,6 +280,31 @@ func (s *ContainerExecPublicTestSuite) TestPostNodeContainerDockerExec() {
 			},
 		},
 		{
+			name: "when the host does not have it, it is a 404",
+			request: gen.PostNodeContainerDockerExecRequestObject{
+				Hostname: "server1",
+				Id:       "abc123",
+				Body: &gen.PostNodeContainerDockerExecJSONRequestBody{
+					Command: []string{"ls"},
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(
+						gomock.Any(),
+						"server1",
+						"docker",
+						job.OperationDockerExec,
+						gomock.Any(),
+					).
+					Return("", nil, fmt.Errorf("on server1: %w", job.ErrNotFound))
+			},
+			validateFunc: func(resp gen.PostNodeContainerDockerExecResponseObject) {
+				_, ok := resp.(gen.PostNodeContainerDockerExec404JSONResponse)
+				s.True(ok)
+			},
+		},
+		{
 			name: "when job skipped",
 			request: gen.PostNodeContainerDockerExecRequestObject{
 				Hostname: "server1",

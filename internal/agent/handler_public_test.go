@@ -285,7 +285,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 
 				// Mock response write
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "test-job-123", gomock.Any(), gomock.Any(), "completed", "", gomock.Any()).
+					WriteJobResponse(gomock.Any(), "test-job-123", gomock.Any(), gomock.Any(), "completed", "", gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -326,7 +326,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 
 				// Mock response write for failed job
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "test-job-456", gomock.Any(), gomock.Any(), "failed", gomock.Any(), gomock.Any()).
+					WriteJobResponse(gomock.Any(), "test-job-456", gomock.Any(), gomock.Any(), "failed", gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -510,7 +510,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "ack-err-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any()).
+					WriteJobResponse(gomock.Any(), "ack-err-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -547,7 +547,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "start-err-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any()).
+					WriteJobResponse(gomock.Any(), "start-err-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -584,7 +584,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return(errors.New("completed write failed"))
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "comp-err-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any()).
+					WriteJobResponse(gomock.Any(), "comp-err-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -621,7 +621,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return(errors.New("failed write failed"))
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "fail-err-job", gomock.Any(), gomock.Any(), "failed", gomock.Any(), gomock.Any()).
+					WriteJobResponse(gomock.Any(), "fail-err-job", gomock.Any(), gomock.Any(), "failed", gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -672,7 +672,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "skip-job", gomock.Any(), gomock.Any(), "skipped", gomock.Any(), gomock.Any()).
+					WriteJobResponse(gomock.Any(), "skip-job", gomock.Any(), gomock.Any(), "skipped", gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -719,7 +719,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return(errors.New("skipped write failed"))
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "skip-err-job", gomock.Any(), gomock.Any(), "skipped", gomock.Any(), gomock.Any()).
+					WriteJobResponse(gomock.Any(), "skip-err-job", gomock.Any(), gomock.Any(), "skipped", gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -760,7 +760,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "fact-resolve-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any()).
+					WriteJobResponse(gomock.Any(), "fact-resolve-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -799,7 +799,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "fact-nil-job", gomock.Any(), gomock.Any(), "failed", gomock.Any(), gomock.Any()).
+					WriteJobResponse(gomock.Any(), "fact-nil-job", gomock.Any(), gomock.Any(), "failed", gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -841,7 +841,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "fact-fail-job", gomock.Any(), gomock.Any(), "failed", gomock.Any(), gomock.Any()).
+					WriteJobResponse(gomock.Any(), "fact-fail-job", gomock.Any(), gomock.Any(), "failed", gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -879,7 +879,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 				// Response is written before the status event; failure
 				// here prevents the completed event from being written.
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "storage-fail-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any()).
+					WriteJobResponse(gomock.Any(), "storage-fail-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any(), gomock.Any()).
 					Return(errors.New("storage failure"))
 
 				// The handler falls back to recording the storage failure
@@ -925,7 +925,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "storage-fail-double-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any()).
+					WriteJobResponse(gomock.Any(), "storage-fail-double-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any(), gomock.Any()).
 					Return(errors.New("storage failure"))
 
 				// Even the fallback failed-event write fails; this is only
@@ -1009,7 +1009,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return(nil)
 
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "check-err-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any()).
+					WriteJobResponse(gomock.Any(), "check-err-job", gomock.Any(), gomock.Any(), "completed", "", gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -1081,6 +1081,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageModifyJobs() {
 						gomock.Any(),
 						gomock.Any(),
 						"completed",
+						gomock.Any(),
 						gomock.Any(),
 						gomock.Any(),
 					).
@@ -1405,7 +1406,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 					WriteStatusEvent(gomock.Any(), "signed-job-ok", "completed", gomock.Any(), gomock.Any()).
 					Return(nil)
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "signed-job-ok", gomock.Any(), gomock.Any(), "completed", "", gomock.Any()).
+					WriteJobResponse(gomock.Any(), "signed-job-ok", gomock.Any(), gomock.Any(), "completed", "", gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
