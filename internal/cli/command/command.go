@@ -26,7 +26,9 @@
 // CLI and calls no API: Run checks its input and calls its handler. The
 // layer that sends an endpoint command's request gives the answer to Output,
 // as Run gives a local method's output, and Output prints it: as JSON for
-// --json, or through the group's renderer for the method.
+// --json, or from the method's output type, by the output style of the CLI.
+// A method that the output type cannot print has a renderer, with its
+// reason.
 package command
 
 import (
@@ -83,6 +85,15 @@ type Command interface {
 	PageNotes() string
 	// PageResult is the Result section of the command's page, or "".
 	PageResult() string
+	// Output is the type of the method's output, which the output prints
+	// from.
+	Output() reflect.Type
+	// Key is the json name of the input field that names what the command
+	// acts on, such as machine_id, or "".
+	Key() string
+	// Saying is what the one line of a method with no body says, which Says
+	// set, or "" for the past tense of the method.
+	Saying() string
 }
 
 // Example is an example of a CLI command: its flags, and what it shows,
@@ -92,20 +103,13 @@ type Example struct {
 	Doc   string
 }
 
-// Flag is a flag of the CLI command that is not part of the request: it
+// Flag is a bool flag of the CLI command that is not part of the request: it
 // changes only how the answer prints, such as --all. The renderer reads it.
 type Flag struct {
 	// Name is the flag's name, without the dashes.
 	Name string
 	// Usage is its help.
 	Usage string
-	// String is true for a string flag, which StringFlag adds; false for a
-	// bool flag.
-	String bool
-	// Value is a string flag's value when the caller gives none.
-	Value string
-	// Required is true for a string flag the caller must give.
-	Required bool
 }
 
 // Deps is what the commands need from the CLI.
@@ -116,6 +120,9 @@ type Deps struct {
 	Error func(err error)
 	// PrintJSON prints an answer as it came, for --json.
 	PrintJSON func(body []byte)
+	// Print is what the output of a method with no renderer prints
+	// through: the CLI's headings, blocks, tables and formats.
+	Print Printer
 }
 
 type entry struct {
@@ -126,16 +133,32 @@ type entry struct {
 var (
 	registered []entry
 	deps       Deps
-	renderers  = map[string]renderer{}
+	renderers  = map[string]*Renderer{}
+	// printers print the answers of a kind of group, such as the result
+	// table of each behavior. PrintsGroups adds one.
+	printers []GroupPrinter
 )
 
-// renderer prints a method's answer: fn gets the input and a value of out,
-// the type the answer decodes into.
-type renderer struct {
+// Renderer prints a method's answer in place of the output that its output
+// type gives: fn gets the input and a value of out, the type the answer
+// decodes into. Render makes one.
+type Renderer struct {
 	fn  func(cmd *cobra.Command, in, out any)
 	out reflect.Type
-	// acts is true for a renderer that Acts set, which runs with --json too.
-	acts bool
+	// reason is why the output type cannot print the answer, which Because
+	// set.
+	reason string
+}
+
+// Because is why the output type cannot print the method's answer, such as
+// "the spans are a tree". osapi cli command validate fails a renderer with
+// no reason, and osapi cli command get shows it.
+func (r *Renderer) Because(
+	reason string,
+) *Renderer {
+	r.reason = reason
+
+	return r
 }
 
 // SubKey is the annotation of a generated command that goes under a
@@ -290,38 +313,92 @@ func child(
 	return nil
 }
 
-// Render sets how a method's answer prints without --json. fn gets the
-// command, for a flag that Flag added, the input the command sent and the
-// output the API answered.
+// Render sets how a method's answer prints without --json, in place of the
+// output that its output type gives. fn gets the command, for a flag that
+// Flag added, the input the command sent and the output the API answered.
+// Its Because says why the output type cannot print it.
 func Render[In, Out any](
 	g Group,
 	method string,
 	fn func(cmd *cobra.Command, in In, out Out),
-) {
-	renderers[g.GroupName()+"."+method] = renderer{
+) *Renderer {
+	r := &Renderer{
 		fn:  func(cmd *cobra.Command, in, out any) { fn(cmd, in.(In), out.(Out)) },
 		out: reflect.TypeFor[Out](),
 	}
-}
-
-// Acts sets what a command does with a method's answer, with or without
-// --json: such as export, which writes the answer to a file. fn prints its
-// own output, and reads --json from the command when it prints differently.
-func Acts[In, Out any](
-	g Group,
-	method string,
-	fn func(cmd *cobra.Command, in In, out Out),
-) {
-	Render(g, method, fn)
-	r := renderers[g.GroupName()+"."+method]
-	r.acts = true
 	renderers[g.GroupName()+"."+method] = r
+
+	return r
 }
 
-// Output prints the answer of method of group to the command that sent in:
-// the body as it came for --json, or when the method has no renderer; else
-// the answer decodes into the type of the method's renderer, which prints
-// it. A renderer that Acts set runs with --json too.
+// GroupPrinter prints the answer of method of group, and is true, or is
+// false for a group that it does not print.
+type GroupPrinter func(group string, method string, answer []byte) bool
+
+// PrintsGroups adds p, which prints a kind of group. The behavior runtime
+// adds the result table of each behavior: thus a behavior registers no
+// renderer, and a renderer is only an exception to the output type.
+func PrintsGroups(
+	p GroupPrinter,
+) {
+	printers = append(printers, p)
+}
+
+// Rendered is the renderer of method of group, and true, or nil and false
+// for a method whose output comes from its output type.
+func Rendered(
+	group string,
+	method string,
+) (*Renderer, bool) {
+	r, ok := renderers[group+"."+method]
+
+	return r, ok
+}
+
+// Reason is why the output type cannot print the answer, which Because
+// set, or "".
+func (r *Renderer) Reason() string {
+	return r.reason
+}
+
+// Groups are the registered groups: each endpoint group, behavior and
+// local group whose commands AddCommands added, in the order they were
+// added.
+func Groups() []Group {
+	out := make([]Group, 0, len(registered))
+	for _, e := range registered {
+		out = append(out, e.group)
+	}
+
+	return out
+}
+
+// lookup is the command of the method of the registered group with the
+// name, and its group, or nil.
+func lookup(
+	group string,
+	name string,
+) (Group, Command) {
+	for _, g := range Groups() {
+		if g.GroupName() != group {
+			continue
+		}
+		for _, c := range g.Commands() {
+			if c.MethodName() == name {
+				return g, c
+			}
+		}
+	}
+
+	return nil, nil
+}
+
+// Output prints the answer of method of group to the command that sent in.
+// With --json it prints the body as it came, or, for a method that answered
+// with no body, its key and what it did. Without it, a method with a
+// renderer decodes the answer into the type of its renderer, which prints
+// it; a group that a GroupPrinter prints, such as a behavior, prints its
+// way; and each other method prints from its output type.
 func Output(
 	cmd *cobra.Command,
 	group string,
@@ -330,13 +407,30 @@ func Output(
 	answer []byte,
 ) {
 	render, ok := renderers[group+"."+method]
-	if deps.JSON() && !render.acts {
-		deps.PrintJSON(answer)
+	if deps.JSON() {
+		if len(answer) > 0 {
+			deps.PrintJSON(answer)
+
+			return
+		}
+		// A method that answers with no body still says what occurred, so
+		// a script reads it as it reads any answer.
+		if g, m := lookup(group, method); g != nil {
+			done, _ := json.Marshal(
+				map[string]string{keyName(m): keyOf(g, m, in), "result": said(m)},
+			)
+			deps.PrintJSON(done)
+		}
 
 		return
 	}
 	if !ok {
-		deps.PrintJSON(answer)
+		for _, p := range printers {
+			if p(group, method, answer) {
+				return
+			}
+		}
+		derived(group, method, in, answer)
 
 		return
 	}
@@ -349,6 +443,25 @@ func Output(
 		}
 	}
 	render.fn(cmd, in, out.Elem().Interface())
+}
+
+// derived prints the answer from the output type of the method, or as it
+// came for a method that is not registered.
+func derived(
+	group string,
+	name string,
+	in any,
+	answer []byte,
+) {
+	g, m := lookup(group, name)
+	if m == nil {
+		deps.PrintJSON(answer)
+
+		return
+	}
+	if err := derive(deps.Print, g, m, in, answer); err != nil {
+		deps.Error(err)
+	}
 }
 
 // Report reports a failed call of the running command, through the Error

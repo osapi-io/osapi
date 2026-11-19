@@ -174,21 +174,10 @@ func groupFile(
 	f.Comment("Group is " + b.Name + " as an endpoint group, which its spec comes from.")
 	f.Var().Id("Group").Op("=").Qual(endpointPath, "Define").Add(multi("(", ")", opts...))
 	f.Line()
-	// Each method's answer prints as the behavior's result table.
+	// The behavior runtime prints each method's answer as the result
+	// table, so the group registers no renderer.
 	inits := []jen.Code{
 		jen.Qual(behaviorPkg, "RegisterGroup").Call(jen.Lit(b.Name), jen.Id("Group")),
-	}
-	for _, m := range b.Methods {
-		inits = append(inits, jen.Qual(cliCommandPath, "Render").Call(
-			jen.Id("Group"), jen.Lit(m.Name),
-			jen.Func().Params(
-				jen.Id("_").Op("*").Qual(cobraPath, "Command"),
-				jen.Id("_").Id(title(m.Name)+"Request"),
-				jen.Id("out").Id(responseName(b, m)),
-			).Block(jen.Qual(commandPath, "Print").Call(
-				jen.Qual(pkgPath(b), "Behavior"), jen.Lit(m.Name), jen.Id("out"),
-				jen.Qual(cliCommandPath, "TraceID").Call())),
-		))
 	}
 	f.Func().Id("init").Params().Block(inits...)
 

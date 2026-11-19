@@ -142,18 +142,8 @@ func Commands(
 				Qual(fld.Type.PkgPath(), fld.Type.Name()).Values(inner...))
 		}
 		for _, extra := range m.CommandFlags() {
-			if !extra.String {
-				inits = append(inits, jen.Id(name).Dot("Flags").Call().Dot("Bool").Call(
-					jen.Lit(extra.Name), jen.False(), jen.Lit(extra.Usage)))
-
-				continue
-			}
-			inits = append(inits, jen.Id(name).Dot("Flags").Call().Dot("String").Call(
-				jen.Lit(extra.Name), jen.Lit(extra.Value), jen.Lit(extra.Usage)))
-			if extra.Required {
-				inits = append(inits, jen.Id("_").Op("=").Id(name).Dot("MarkFlagRequired").
-					Call(jen.Lit(extra.Name)))
-			}
+			inits = append(inits, jen.Id(name).Dot("Flags").Call().Dot("Bool").Call(
+				jen.Lit(extra.Name), jen.False(), jen.Lit(extra.Usage)))
 		}
 		in := jen.Qual(m.Input().PkgPath(), m.Input().Name())
 		if len(fields) > 0 {

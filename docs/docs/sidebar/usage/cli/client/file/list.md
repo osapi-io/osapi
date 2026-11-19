@@ -17,8 +17,8 @@ osapi client file list --json
 
 ## Permission
 
-It needs the `file:read` permission. `osapi token roles list` lists the roles
-that grant it.
+It needs the `file:read` permission. `osapi token roles get --name <role>` shows
+what a role grants.
 
 ## Global flags
 

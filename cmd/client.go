@@ -123,6 +123,7 @@ func init() {
 		JSON:      func() bool { return jsonOutput },
 		Error:     func(err error) { cli.HandleError(err, logger) },
 		PrintJSON: cli.PrintJSON,
+		Print:     cli.Printer{},
 	}, clientAgentCmd, clientAuditCmd, clientFactsCmd, clientFactsKeysCmd, clientFileCmd, clientFileStaleCmd, clientHealthCmd, clientJobCmd, clientTelemetryCmd, clientTelemetryTraceCmd); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

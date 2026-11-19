@@ -18,8 +18,8 @@ osapi client admission admit --machine-id d530664edc1c431eb5ef1e9dfd6617a5 --fin
 
 ## Permission
 
-It needs the `admission:write` permission. `osapi token roles list` lists the
-roles that grant it.
+It needs the `admission:write` permission. `osapi token roles get --name <role>`
+shows what a role grants.
 
 ## Flags
 

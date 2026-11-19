@@ -54,8 +54,8 @@ type UpdateInput struct {
 type FileInfo struct { //nolint:revive // the schema name is part of the API
 	Name        string `json:"name"         doc:"The name of the file."                                           example:"nginx.conf"`
 	Sha256      string `json:"sha256"       doc:"SHA-256 hash of the file content."                               example:"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"`
-	Size        int    `json:"size"         doc:"File size in bytes."                                             example:"1024"`
-	ContentType string `json:"content_type" doc:"How the file should be treated during deploy (raw or template)." example:"raw"`
+	Size        int    `json:"size"         doc:"File size in bytes."                                             example:"1024"                                                             render:"bytes"`
+	ContentType string `json:"content_type" doc:"How the file should be treated during deploy (raw or template)." example:"raw"                                                                             table:"-"`
 	Source      string `json:"source"       doc:"Source of the file: 'system' or 'user'."                         example:"user"`
 }
 
@@ -63,38 +63,39 @@ type FileInfo struct { //nolint:revive // the schema name is part of the API
 type FileInfoResponse struct { //nolint:revive // the schema name is part of the API
 	Name        string `json:"name"         doc:"The name of the file."                                           example:"nginx.conf"`
 	Sha256      string `json:"sha256"       doc:"SHA-256 hash of the file content."                               example:"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"`
-	Size        int    `json:"size"         doc:"File size in bytes."                                             example:"1024"`
+	Size        int    `json:"size"         doc:"File size in bytes."                                             example:"1024"                                                             render:"bytes"`
 	ContentType string `json:"content_type" doc:"How the file should be treated during deploy (raw or template)." example:"raw"`
 }
 
 // FileListResponse is each stored file.
 type FileListResponse struct { //nolint:revive // the schema name is part of the API
-	Items      []FileInfo `json:"items"       doc:"List of stored files."`
-	TotalItems int        `json:"total_items" doc:"Total number of files." example:"5"`
+	Items      []FileInfo `json:"items"       doc:"List of stored files."  empty:"Upload one with osapi client file upload."`
+	TotalItems int        `json:"total_items" doc:"Total number of files."                                                   example:"5"`
 }
 
 // FileUploadResponse is the file that an upload or an update wrote.
 type FileUploadResponse struct { //nolint:revive // the schema name is part of the API
 	Name        string `json:"name"         doc:"The name of the uploaded file."                                                                                     example:"nginx.conf"`
 	Sha256      string `json:"sha256"       doc:"SHA-256 hash of the file content."                                                                                  example:"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"`
-	Size        int    `json:"size"         doc:"File size in bytes."                                                                                                example:"1024"`
+	Size        int    `json:"size"         doc:"File size in bytes."                                                                                                example:"1024"                                                             render:"bytes"`
 	Changed     bool   `json:"changed"      doc:"Whether the file content changed. False when the Object Store already held an object with the same SHA-256 digest." example:"true"`
 	ContentType string `json:"content_type" doc:"How the file should be treated during deploy (raw or template)."                                                    example:"raw"`
 }
 
 // StaleDeployment is a deploy whose object changed since.
 type StaleDeployment struct {
-	ObjectName  string `json:"object_name"  doc:"Name of the object in the Object Store."           example:"hello-echo"`
+	ObjectName  string `json:"object_name"  doc:"Name of the object in the Object Store."           example:"hello-echo"                                   label:"Object"`
 	Hostname    string `json:"hostname"     doc:"Host where the file is deployed."                  example:"web-01"`
 	Provider    string `json:"provider"     doc:"Provider that manages this deployment."            example:"service"`
-	Path        string `json:"path"         doc:"Deployment path on the target host."               example:"/etc/systemd/system/osapi-hello-echo.service"`
-	DeployedSha string `json:"deployed_sha" doc:"SHA-256 hash of the currently deployed content."   example:"abc123def456"`
-	CurrentSha  string `json:"current_sha"  doc:"SHA-256 hash of the current object store content." example:"789abc012def"`
-	DeployedAt  string `json:"deployed_at"  doc:"When the file was last deployed."                  example:"2026-04-01T18:00:00Z"`
+	DeployedAt  string `json:"deployed_at"  doc:"When the file was last deployed."                  example:"2026-04-01T18:00:00Z"                         label:"Deployed" render:"time"`
+	Path        string `json:"path"         doc:"Deployment path on the target host."               example:"/etc/systemd/system/osapi-hello-echo.service"                                    table:"-"`
+	DeployedSha string `json:"deployed_sha" doc:"SHA-256 hash of the currently deployed content."   example:"abc123def456"                                                  render:"short=12"`
+	CurrentSha  string `json:"current_sha"  doc:"SHA-256 hash of the current object store content." example:"789abc012def"                                                  render:"short=12"           none:"(deleted)"`
 }
 
 // StaleDeploymentsResponse is each stale deploy.
 type StaleDeploymentsResponse struct {
-	Items      []StaleDeployment `json:"items"       doc:"The stale deployments."`
-	TotalItems int               `json:"total_items" doc:"Total number of stale deployments."`
+	_          struct{}          `title:"Stale deployments"`
+	Items      []StaleDeployment `                          json:"items"       doc:"The stale deployments."             empty:"Every deployment is in sync."`
+	TotalItems int               `                          json:"total_items" doc:"Total number of stale deployments."`
 }

@@ -108,10 +108,6 @@ func (s *CommandPublicTestSuite) TestOutput() {
 	command.Render(g, "get", func(_ *cobra.Command, in input, out thing) {
 		rendered = in.Name + ":" + out.Name
 	})
-	acted := ""
-	command.Acts(g, "export", func(_ *cobra.Command, in input, out thing) {
-		acted = in.Name + ":" + out.Name
-	})
 
 	tests := []struct {
 		name         string
@@ -138,17 +134,6 @@ func (s *CommandPublicTestSuite) TestOutput() {
 			validateFunc: func(printed string, err error) {
 				s.Require().NoError(err)
 				s.Equal(`{"name":"web-01"}`, printed)
-			},
-		},
-		{
-			name:   "when the method acts on its answer, it runs with --json too",
-			method: "export",
-			json:   true,
-			answer: []byte(`{"name":"web-03"}`),
-			validateFunc: func(printed string, err error) {
-				s.Require().NoError(err)
-				s.Equal("web:web-03", acted)
-				s.Empty(printed)
 			},
 		},
 		{

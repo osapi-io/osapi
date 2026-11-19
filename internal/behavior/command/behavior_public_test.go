@@ -26,6 +26,9 @@ import (
 	"reflect"
 	"testing"
 
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
+	"github.com/spf13/cobra"
+
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
@@ -407,6 +410,50 @@ func (s *BehaviorcmdPublicTestSuite) TestPrint() {
 	s.Contains(got, "job-1")
 	s.Contains(got, "4bf92f3577b34da6a3ce929d0e0e4736")
 	s.Contains(got, "web-01")
+}
+
+// TestPrintResults prints a behavior's answer as its result table through
+// the command layer, which registers no renderer for it.
+func (s *BehaviorcmdPublicTestSuite) TestPrintResults() {
+	behavior.Reset()
+	defer behavior.Reset()
+	behavior.Register(
+		behavior.Define("kv", "Key values", behavior.Node, behavior.Read("list", read)),
+	)
+	printed := ""
+	s.Require().NoError(clicommand.Attach(&cobra.Command{Use: "client"}, clicommand.Deps{
+		JSON:      func() bool { return false },
+		PrintJSON: func(body []byte) { printed = string(body) },
+	}))
+	answer := []byte(`{"job_id":"job-1","results":[{"hostname":"web-01","status":"ok","key":"k"}]}`)
+
+	tests := []struct {
+		name   string
+		group  string
+		method string
+		want   string
+	}{
+		{"when the group is a behavior, its result table prints", "kv", "list", "web-01"},
+		{"when the behavior has no such method, the answer prints as JSON", "kv", "get", ""},
+		{"when the group is not a behavior, the answer prints as JSON", "zzother", "list", ""},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			printed = ""
+			got := cli.Capture(func() {
+				clicommand.Output(&cobra.Command{}, tc.group, tc.method, struct{}{}, answer)
+			})
+
+			if tc.want != "" {
+				s.Contains(got, tc.want)
+				s.Empty(printed)
+
+				return
+			}
+			s.Equal(string(answer), printed)
+		})
+	}
 }
 
 // kvSettings is a behavior's settings, one of each kind of flag.

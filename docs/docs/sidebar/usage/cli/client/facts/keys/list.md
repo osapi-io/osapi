@@ -18,8 +18,8 @@ osapi client facts keys list --json
 
 ## Permission
 
-It needs the `agent:read` permission. `osapi token roles list` lists the roles
-that grant it.
+It needs the `agent:read` permission. `osapi token roles get --name <role>`
+shows what a role grants.
 
 ## Global flags
 

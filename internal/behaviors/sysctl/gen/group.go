@@ -5,13 +5,9 @@ package gen
 import (
 	"context"
 
-	cobra "github.com/spf13/cobra"
-
 	"github.com/osapi-io/osapi/internal/behavior"
-	"github.com/osapi-io/osapi/internal/behavior/command"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	sysctl "github.com/osapi-io/osapi/internal/behaviors/sysctl"
-	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
@@ -218,19 +214,4 @@ var Group = endpoint.Define(
 
 func init() {
 	behavior.RegisterGroup("sysctl", Group)
-	clicommand.Render(Group, "list", func(_ *cobra.Command, _ ListRequest, out SysctlCollectionResponse) {
-		command.Print(sysctl.Behavior, "list", out, clicommand.TraceID())
-	})
-	clicommand.Render(Group, "get", func(_ *cobra.Command, _ GetRequest, out SysctlGetResponse) {
-		command.Print(sysctl.Behavior, "get", out, clicommand.TraceID())
-	})
-	clicommand.Render(Group, "create", func(_ *cobra.Command, _ CreateRequest, out SysctlCreateResponse) {
-		command.Print(sysctl.Behavior, "create", out, clicommand.TraceID())
-	})
-	clicommand.Render(Group, "update", func(_ *cobra.Command, _ UpdateRequest, out SysctlUpdateResponse) {
-		command.Print(sysctl.Behavior, "update", out, clicommand.TraceID())
-	})
-	clicommand.Render(Group, "delete", func(_ *cobra.Command, _ DeleteRequest, out SysctlDeleteResponse) {
-		command.Print(sysctl.Behavior, "delete", out, clicommand.TraceID())
-	})
 }

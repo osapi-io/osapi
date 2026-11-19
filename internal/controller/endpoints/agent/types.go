@@ -56,33 +56,33 @@ type ListAgentsResponse struct {
 // spec names its schema for the type, so the name stays AgentInfo, as the
 // hand-written spec and the clients made from it have it.
 type AgentInfo struct { //nolint:revive // the schema name is part of the API
+	Hostname         string                     `json:"hostname"                    doc:"The hostname of the agent."`
 	MachineID        string                     `json:"machine_id,omitempty"        doc:"The permanent machine identifier."`
 	Fingerprint      string                     `json:"fingerprint,omitempty"       doc:"The SHA256 fingerprint of the agent's PKI public key. Empty when PKI is disabled."`
 	Version          string                     `json:"version,omitempty"           doc:"The build version of the agent binary. Absent for an agent that does not report it."                                                                                                                                           example:"v1.4.0"`
-	Hostname         string                     `json:"hostname"                    doc:"The hostname of the agent."`
 	Status           string                     `json:"status"                      doc:"The current status of the agent."                                                                                                                                                                                                                           validate:"oneof=Ready NotReady"`
 	Labels           map[string]string          `json:"labels,omitempty"            doc:"Key-value labels configured on the agent."`
-	RegisteredAt     time.Time                  `json:"registered_at,omitzero"      doc:"When the agent last refreshed its heartbeat."`
-	StartedAt        time.Time                  `json:"started_at,omitzero"         doc:"When the agent process started."`
-	OSInfo           *OSInfoResponse            `json:"os_info,omitempty"`
+	RegisteredAt     time.Time                  `json:"registered_at,omitzero"      doc:"When the agent last refreshed its heartbeat."                                                                                                                                                                                                                                                                label:"Last seen"       render:"age"`
+	StartedAt        time.Time                  `json:"started_at,omitzero"         doc:"When the agent process started."                                                                                                                                                                                                                                                                             label:"Age"             render:"age"`
+	OSInfo           *OSInfoResponse            `json:"os_info,omitempty"                                                                                                                                                                                                                                                                                                                             label:"OS"`
 	Uptime           string                     `json:"uptime,omitempty"            doc:"The system uptime."`
-	LoadAverage      *LoadAverageResponse       `json:"load_average,omitempty"`
+	LoadAverage      *LoadAverageResponse       `json:"load_average,omitempty"                                                                                                                                                                                                                                                                                                                        label:"Load"`
 	Memory           *MemoryResponse            `json:"memory,omitempty"`
 	Architecture     string                     `json:"architecture,omitempty"      doc:"CPU architecture."                                                                                                                                                                                                             example:"amd64"`
 	KernelVersion    string                     `json:"kernel_version,omitempty"    doc:"OS kernel version."                                                                                                                                                                                                            example:"5.15.0-91-generic"`
 	CPUCount         int                        `json:"cpu_count,omitempty"         doc:"Number of logical CPUs."                                                                                                                                                                                                       example:"4"`
 	FQDN             string                     `json:"fqdn,omitempty"              doc:"Fully qualified domain name."                                                                                                                                                                                                  example:"web-01.example.com"`
-	ServiceMgr       string                     `json:"service_mgr,omitempty"       doc:"Init system."                                                                                                                                                                                                                  example:"systemd"`
-	PackageMgr       string                     `json:"package_mgr,omitempty"       doc:"Package manager."                                                                                                                                                                                                              example:"apt"`
+	ServiceMgr       string                     `json:"service_mgr,omitempty"       doc:"Init system."                                                                                                                                                                                                                  example:"systemd"                                                             label:"Service manager"`
+	PackageMgr       string                     `json:"package_mgr,omitempty"       doc:"Package manager."                                                                                                                                                                                                              example:"apt"                                                                 label:"Package manager"`
 	Interfaces       []NetworkInterfaceResponse `json:"interfaces,omitempty"`
 	PrimaryInterface string                     `json:"primary_interface,omitempty" doc:"Name of the interface used for the default route."                                                                                                                                                                             example:"eth0"`
 	Routes           []RouteResponse            `json:"routes,omitempty"            doc:"Network routing table entries."`
-	Facts            map[string]any             `json:"facts,omitempty"             doc:"Extended facts from additional providers."`
+	Facts            map[string]any             `json:"facts,omitempty"             doc:"Extended facts from additional providers."                                                                                                                                                                                                                                                                                           render:"-"`
 	State            string                     `json:"state,omitempty"             doc:"Agent scheduling state."                                                                                                                                                                                                                                    validate:"oneof=Ready Draining Cordoned Pending"`
 	Conditions       []NodeCondition            `json:"conditions,omitempty"        doc:"Evaluated node conditions."`
 	Timeline         []TimelineEvent            `json:"timeline,omitempty"          doc:"Agent state transition history."`
-	KeyStored        *bool                      `json:"key_stored,omitempty"        doc:"Whether the controller holds this agent's public key, recorded when its enrollment was accepted. False for an agent that has not enrolled since the key store existed, which is what to re-enrol before enabling enforcement."`
-	Verified         *bool                      `json:"verified,omitempty"          doc:"Whether this agent's registration was signed by its stored key and claims the hostname it enrolled under. Only a verified registration decides where work is routed. True when the controller is not enforcing verification."`
+	KeyStored        *bool                      `json:"key_stored,omitempty"        doc:"Whether the controller holds this agent's public key, recorded when its enrollment was accepted. False for an agent that has not enrolled since the key store existed, which is what to re-enrol before enabling enforcement."                                                                                                       render:"-"`
+	Verified         *bool                      `json:"verified,omitempty"          doc:"Whether this agent's registration was signed by its stored key and claims the hostname it enrolled under. Only a verified registration decides where work is routed. True when the controller is not enforcing verification."                                                                                                        render:"-"`
 }
 
 // OSInfoResponse is the host's operating system.
@@ -93,16 +93,16 @@ type OSInfoResponse struct {
 
 // LoadAverageResponse is the host's load over 1, 5 and 15 minutes.
 type LoadAverageResponse struct {
-	OneMin     float32 `json:"1min"  doc:"Load average for the last 1 minute."   example:"0.32"`
-	FiveMin    float32 `json:"5min"  doc:"Load average for the last 5 minutes."  example:"0.28"`
-	FifteenMin float32 `json:"15min" doc:"Load average for the last 15 minutes." example:"0.25"`
+	OneMin     float32 `json:"1min"  doc:"Load average for the last 1 minute."   example:"0.32" label:"1 min"`
+	FiveMin    float32 `json:"5min"  doc:"Load average for the last 5 minutes."  example:"0.28" label:"5 min"`
+	FifteenMin float32 `json:"15min" doc:"Load average for the last 15 minutes." example:"0.25" label:"15 min"`
 }
 
 // MemoryResponse is the host's memory, in bytes.
 type MemoryResponse struct {
-	Total int `json:"total" doc:"Total memory in bytes." example:"8388608"`
-	Free  int `json:"free"  doc:"Free memory in bytes."  example:"2097152"`
-	Used  int `json:"used"  doc:"Used memory in bytes."  example:"4194304"`
+	Total int `json:"total" doc:"Total memory in bytes." example:"8388608" render:"bytes"`
+	Free  int `json:"free"  doc:"Free memory in bytes."  example:"2097152" render:"bytes"`
+	Used  int `json:"used"  doc:"Used memory in bytes."  example:"4194304" render:"bytes"`
 }
 
 // NetworkInterfaceResponse is one network interface of the host.
@@ -119,7 +119,7 @@ type NodeCondition struct {
 	Type               string    `json:"type"                 validate:"oneof=MemoryPressure HighLoad DiskPressure"`
 	Status             bool      `json:"status"`
 	Reason             string    `json:"reason,omitempty"`
-	LastTransitionTime time.Time `json:"last_transition_time"`
+	LastTransitionTime time.Time `json:"last_transition_time"                                                       label:"Since" render:"age"`
 }
 
 // RouteResponse is one entry of the host's routing table.

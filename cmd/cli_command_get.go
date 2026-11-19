@@ -40,70 +40,131 @@ type localFlag struct {
 	Doc      string `json:"doc"`
 }
 
-// localCommand is one command in `cli command get --json`.
+// localCommand is one command in `cli command get --json`. Output is
+// derived for a command that prints from its output type, or renderer, with
+// the reason, for one that has a renderer. A local group's command has its
+// flags and the inputs it refuses.
 type localCommand struct {
 	Method  string      `json:"method"`
 	Command string      `json:"command"`
 	Short   string      `json:"short"`
-	Flags   []localFlag `json:"flags"`
-	Fails   []string    `json:"fails"`
+	Output  string      `json:"output"`
+	Reason  string      `json:"reason,omitempty"`
+	Flags   []localFlag `json:"flags,omitempty"`
+	Fails   []string    `json:"fails,omitempty"`
+}
+
+// findGroup is the registered group with the command path, a local group
+// or the group of an endpoint or a behavior, or nil.
+func findGroup(
+	path string,
+) command.Group {
+	if g := command.Lookup(path); g != nil {
+		return g
+	}
+	for _, g := range command.Groups() {
+		if strings.Join(g.CommandPath(), " ") == path {
+			return g
+		}
+	}
+
+	return nil
+}
+
+// describeCommand is c of g, for `cli command get`: its command, its
+// output, and for a local method its flags and the inputs it refuses.
+func describeCommand(
+	g command.Group,
+	c command.Command,
+) localCommand {
+	root := "osapi client"
+	if _, ok := g.(*command.LocalGroup); ok {
+		root = "osapi"
+	}
+	full := strings.Join(
+		[]string{root, strings.Join(g.CommandPath(), " "), c.SubPath(), c.CommandName()},
+		" ",
+	)
+	lc := localCommand{
+		Method:  c.MethodName(),
+		Command: strings.Join(strings.Fields(full), " "),
+		Short:   c.CommandShort(),
+		Output:  "derived",
+	}
+	if r, ok := command.Rendered(g.GroupName(), c.MethodName()); ok {
+		lc.Output, lc.Reason = "renderer", r.Reason()
+	}
+	m, ok := c.(*command.LocalMethod)
+	if !ok {
+		return lc
+	}
+	for f := range m.In.Fields() {
+		if !f.IsExported() {
+			continue
+		}
+		lc.Flags = append(lc.Flags, localFlag{
+			Flag: "--" + command.FlagName(f), Short: f.Tag.Get("short"),
+			Type: f.Type.String(), Validate: f.Tag.Get("validate"), Doc: f.Tag.Get("doc"),
+		})
+	}
+	for _, r := range m.Refusals() {
+		lc.Fails = append(lc.Fails, r.Doc)
+	}
+
+	return lc
 }
 
 var cliCommandGetCmd = &cobra.Command{
 	Use:   "get",
-	Short: "Describe one local group: its commands, their flags and the inputs they refuse",
-	Long: "`--name` is the command path of the group, such as `token`. Each flag has\n" +
-		"the validate tag of its field, and each command has the inputs that its\n" +
-		"`.Fails` declares, which `TestRefusals` runs.",
+	Short: "Describe one group: its commands, their output, and the flags and refusals of a local group",
+	Long: "`--name` is the command path of the group, such as `token` or `agent`: a\n" +
+		"local group, or the group of an endpoint or a behavior. Each command says\n" +
+		"whether it prints from its output type (`derived`) or has a renderer, and\n" +
+		"why. A command of a local group also has its flags, each with the validate\n" +
+		"tag of its field, and the inputs that its `.Fails` declares, which\n" +
+		"`TestRefusals` runs.",
 	Example: `  osapi cli command get --name token
-  osapi cli command get --name token --json`,
+  osapi cli command get --name agent --json`,
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, _ []string) {
 		name, _ := cmd.Flags().GetString("name")
 
-		g := command.Lookup(name)
+		g := findGroup(name)
 		if g == nil {
-			cli.LogFatal(logger, "no local group", fmt.Errorf("no group named %q", name))
+			cli.LogFatal(logger, "no group", fmt.Errorf("no group named %q", name))
 		}
 
 		path := strings.Join(g.CommandPath(), " ")
-		commands := make([]localCommand, 0, len(g.Methods))
-		for _, m := range g.Methods {
-			full := strings.Join([]string{"osapi", path, m.SubPath(), m.Name}, " ")
-			lc := localCommand{
-				Method:  m.Name,
-				Command: strings.Join(strings.Fields(full), " "),
-				Short:   m.CommandShort(),
-				Flags:   []localFlag{},
-				Fails:   []string{},
-			}
-			for f := range m.In.Fields() {
-				if !f.IsExported() {
-					continue
-				}
-				lc.Flags = append(lc.Flags, localFlag{
-					Flag: "--" + command.FlagName(f), Short: f.Tag.Get("short"),
-					Type: f.Type.String(), Validate: f.Tag.Get("validate"), Doc: f.Tag.Get("doc"),
-				})
-			}
-			for _, r := range m.Refusals() {
-				lc.Fails = append(lc.Fails, r.Doc)
-			}
-			commands = append(commands, lc)
+		commands := make([]localCommand, 0, len(g.Commands()))
+		for _, c := range g.Commands() {
+			commands = append(commands, describeCommand(g, c))
 		}
 
 		if jsonOutput {
 			out, _ := json.Marshal(map[string]any{
-				"name": g.Name, "path": path, "doc": g.Doc, "commands": commands,
+				"name": g.GroupName(), "path": path, "doc": g.GroupDoc(), "commands": commands,
 			})
 			cli.PrintJSON(out)
 
 			return
 		}
 
-		cli.PrintHeading("Local group")
-		cli.PrintKV("Name", path, "Description", g.Doc)
+		cli.PrintHeading("Group")
+		cli.PrintKV("Name", path, "Description", g.GroupDoc())
+		rows := make([][]string, 0, len(commands))
 		for _, c := range commands {
+			rows = append(rows, []string{c.Command, c.Output, c.Reason})
+		}
+		cli.PrintCompactTable([]cli.Section{{
+			Title:     fmt.Sprintf("Commands (%d)", len(commands)),
+			Headers:   []string{"COMMAND", "OUTPUT", "REASON"},
+			Rows:      rows,
+			Reference: true,
+		}})
+		for _, c := range commands {
+			if len(c.Flags) == 0 && len(c.Fails) == 0 {
+				continue
+			}
 			rows := make([][]string, 0, len(c.Flags))
 			for _, f := range c.Flags {
 				rows = append(rows, []string{f.Flag, f.Type, f.Validate, f.Doc})
@@ -124,6 +185,6 @@ var cliCommandGetCmd = &cobra.Command{
 func init() {
 	cliCommandCmd.AddCommand(cliCommandGetCmd)
 	cliCommandGetCmd.Flags().
-		String("name", "", "The command path of the local group, such as token")
+		String("name", "", "The command path of the group, such as token or agent")
 	_ = cliCommandGetCmd.MarkFlagRequired("name")
 }

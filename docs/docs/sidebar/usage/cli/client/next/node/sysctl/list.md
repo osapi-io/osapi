@@ -35,8 +35,8 @@ The command fails in these cases:
 
 ## Permission
 
-It needs the `sysctl:read` permission. `osapi token roles list` lists the roles
-that grant it.
+It needs the `sysctl:read` permission. `osapi token roles get --name <role>`
+shows what a role grants.
 
 ## Flags
 

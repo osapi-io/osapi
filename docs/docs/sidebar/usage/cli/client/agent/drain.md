@@ -20,8 +20,8 @@ osapi client agent drain --hostname web-01
 
 ## Permission
 
-It needs the `agent:write` permission. `osapi token roles list` lists the roles
-that grant it.
+It needs the `agent:write` permission. `osapi token roles get --name <role>`
+shows what a role grants.
 
 ## Flags
 

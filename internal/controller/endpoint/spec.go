@@ -214,12 +214,6 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindRefine,
-			Name: `.StringFlag("name", "value", "usage", required)`,
-			Does: "Adds a string flag to the CLI command that the request does not send, with its value when the caller gives none. The renderer reads it from the command.",
-			When: "For a flag that changes only what the command does with the answer, such as --output, the file an export writes.",
-		},
-		{
-			Kind: KindRefine,
 			Name: `.Notes("text")`,
 			Does: "Adds a Notes section to the CLI command's page.",
 			When: "For what a person needs that the help does not say, such as what --json has that the table does not.",
@@ -247,6 +241,12 @@ var Spec = guide.Spec{
 			Name: ".Status(code)",
 			Does: "Sets the status of a success. 204 has no body.",
 			When: "For 201 after a create or a retry, or 204 after a delete with nothing to return.",
+		},
+		{
+			Kind: KindRefine,
+			Name: `.Says("state")`,
+			Does: "Sets what the CLI prints for a method that answers with no body: the key of the input, then the text, such as web-01 draining. Without it, the CLI prints the past tense of the method, such as m-1 admitted for admit.",
+			When: "On a method that answers 204 and whose result is a state, not the past tense of the method, such as drain.",
 		},
 		{
 			Kind: KindRefine,
@@ -428,9 +428,9 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindCheck,
-			Name: "command.Render(Group, \"method\", fn)",
-			Does: "Sets how a method's answer prints without --json: fn gets the input the command sent and the output the API answered. A method without a renderer prints its answer as JSON. The generated command, its flags and its help come from the definition.",
-			When: "In cmd/client_<group>.go, the file of the group's command, for each method a person reads at a shell, such as a table for a list or a detail view for a get.",
+			Name: "command.Render(Group, \"method\", fn).Because(\"...\")",
+			Does: "Sets how a method's answer prints without --json, in place of the output that the output type gives: fn gets the input the command sent and the output the API answered. Because says why the output type cannot print it; osapi cli command validate fails a renderer with no reason. The tags of the output fields, which osapi cli command spec lists, change the output with no renderer.",
+			When: "Almost never: a method prints from its output type, by the output style of the CLI. Only for an answer that the output type cannot print, such as a tree. In cmd/client_<group>.go, the file of the group's command.",
 		},
 		{
 			Kind: KindCheck,

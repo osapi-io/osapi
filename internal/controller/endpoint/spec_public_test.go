@@ -54,6 +54,8 @@ var notDSL = map[string]bool{
 	"SuccessStatus":           true,
 	"LocationField":           true,
 	"Answering":               true,
+	"Saying":                  true,
+	"Output":                  true,
 	"Method:Group":            true,
 	"CommandShort":            true,
 	"CommandLong":             true,

@@ -26,7 +26,7 @@ import "time"
 type GenerateInput struct {
 	Roles       []string `json:"roles"       short:"r" validate:"required,dive,oneof=admin read write" doc:"Roles for the token"`
 	Subject     string   `json:"subject"     short:"u" validate:"required"                             doc:"Subject for the token (e.g., user ID or unique identifier)"`
-	Permissions []string `json:"permissions" short:"p" validate:"omitempty,dive,permission"            doc:"Direct permissions, which override the roles; osapi token roles list lists them"`
+	Permissions []string `json:"permissions" short:"p" validate:"omitempty,dive,permission"            doc:"Direct permissions, which override the roles; osapi token roles get --name admin lists each one"`
 }
 
 // GenerateOutput is a new token, with what it carries.
@@ -42,17 +42,25 @@ type RolesInput struct{}
 
 // Role is one role, with what it grants.
 type Role struct {
+	_ struct{} `title:"Role"`
 	// Name is the role's name, such as admin.
 	Name string `json:"name"`
 	// Source is built-in, or config for a custom role of the config.
 	Source string `json:"source"`
-	// Permissions are what the role grants.
-	Permissions []string `json:"permissions"`
+	// Permissions are what the role grants. roles get shows them; a table
+	// of roles leaves them out, because they are many.
+	Permissions []string `json:"permissions" table:"-"`
+}
+
+// RoleInput names the role to read.
+type RoleInput struct {
+	Name string `json:"name" validate:"required" doc:"The role, such as admin, or a custom role of the config."`
 }
 
 // RolesOutput is each role: the built-in ones, then those of the config.
 type RolesOutput struct {
-	Roles []Role `json:"roles"`
+	_     struct{} `title:"Roles"`
+	Roles []Role   `              json:"roles"`
 }
 
 // ValidateInput is the token to check.
@@ -69,6 +77,6 @@ type Claims struct {
 	// sorted.
 	EffectivePermissions []string  `json:"effective_permissions"`
 	Audience             []string  `json:"audience"`
-	IssuedAt             time.Time `json:"issued_at,omitzero"`
-	ExpiresAt            time.Time `json:"expires_at,omitzero"`
+	IssuedAt             time.Time `json:"issued_at,omitzero"    render:"time"`
+	ExpiresAt            time.Time `json:"expires_at,omitzero"   render:"time"`
 }

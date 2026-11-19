@@ -22,9 +22,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -45,10 +43,10 @@ func init() {
 
 	// osapi client job list, get, delete and retry are generated from the
 	// job group's definition; this is how each answer prints.
-	clicommand.Render(job.Group, "list", renderJobList)
-	clicommand.Render(job.Group, "get", renderJob)
-	clicommand.Acts(job.Group, "delete", renderJobDeleted)
-	clicommand.Render(job.Group, "retry", renderJobRetried)
+	clicommand.Render(job.Group, "list", renderJobList).
+		Because("the heading and the paging hint come from the input, and a line of counts")
+	clicommand.Render(job.Group, "get", renderJob).
+		Because("the job report, which the commands that wait for a job also print")
 }
 
 // renderJobList prints a page of jobs as a table, then the count of each
@@ -129,46 +127,4 @@ func renderJob(
 	_ = json.Unmarshal(raw, &detail)
 
 	cli.DisplayJobDetail(&detail)
-}
-
-// renderJobDeleted prints the job that went. A delete answers with no
-// body, so --json prints what it did.
-func renderJobDeleted(
-	_ *cobra.Command,
-	in job.DeleteInput,
-	_ struct{},
-) {
-	if jsonOutput {
-		result, _ := json.Marshal(map[string]any{
-			"status":    "deleted",
-			"job_id":    in.ID,
-			"timestamp": time.Now().Format(time.RFC3339),
-		})
-		cli.PrintJSON(result)
-
-		return
-	}
-
-	cli.PrintHeading("Job")
-	cli.PrintKV("Job ID", in.ID, "Status", "Deleted")
-	logger.Info("job deleted successfully", slog.String("job_id", in.ID))
-}
-
-// renderJobRetried prints the new job that a retry sent.
-func renderJobRetried(
-	_ *cobra.Command,
-	in job.RetryInput,
-	out job.CreateJobResponse,
-) {
-	cli.PrintHeading("Job")
-	cli.PrintKV("Job ID", out.JobID, "Status", out.Status)
-	if out.Revision != 0 {
-		cli.PrintKV("Revision", fmt.Sprintf("%d", out.Revision))
-	}
-	logger.Info(
-		"job retried successfully",
-		slog.String("original_job_id", in.ID),
-		slog.String("new_job_id", out.JobID),
-		slog.String("target_hostname", in.Body.TargetHostname),
-	)
 }

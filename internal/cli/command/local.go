@@ -222,6 +222,7 @@ type LocalMethod struct {
 	Out reflect.Type
 
 	sub, short, long string
+	says             string
 	examples         []Example
 	refusals         []Refusal
 	handler          any
@@ -276,6 +277,16 @@ func (m *LocalMethod) Sub(
 	segment string,
 ) *LocalMethod {
 	m.sub = segment
+
+	return m
+}
+
+// Says is what the one line of a method with no output says, when it is a
+// state and not the past tense of the method, such as draining for drain.
+func (m *LocalMethod) Says(
+	text string,
+) *LocalMethod {
+	m.says = text
 
 	return m
 }
@@ -370,4 +381,19 @@ func (m *LocalMethod) PageNotes() string {
 // PageResult is "": a local command's page has no Result section.
 func (m *LocalMethod) PageResult() string {
 	return ""
+}
+
+// Output is the method's Out, which its output prints from.
+func (m *LocalMethod) Output() reflect.Type {
+	return m.Out
+}
+
+// Key is "": a local command acts on no item of an API.
+func (m *LocalMethod) Key() string {
+	return ""
+}
+
+// Saying is the text Says set, or "".
+func (m *LocalMethod) Saying() string {
+	return m.says
 }

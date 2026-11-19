@@ -39,7 +39,7 @@ type commandValidateResult struct {
 
 var cliCommandValidateCmd = &cobra.Command{
 	Use:   "validate",
-	Short: "Check every local group against the rules of a definition",
+	Short: "Check every local group against the rules of a definition, and the output of every group",
 	Long: "It exits 1 when a rule fails, and names the group, the method, the rule,\n" +
 		"what is wrong and the fix. Each problem in `--json` has `group`, `method`\n" +
 		"(when the problem is in one), `rule`, `message` and `fix`.\n" +
@@ -53,6 +53,7 @@ var cliCommandValidateCmd = &cobra.Command{
 		for _, g := range command.All() {
 			result.Problems = append(result.Problems, command.Validate(g)...)
 		}
+		result.Problems = append(result.Problems, command.ValidateOutput()...)
 		result.Valid = len(result.Problems) == 0
 
 		switch {
@@ -60,12 +61,11 @@ var cliCommandValidateCmd = &cobra.Command{
 			out, _ := json.Marshal(result)
 			cli.PrintJSON(out)
 		case result.Valid:
-			n := len(command.All())
-			noun := "groups"
-			if n == 1 {
-				noun = "group"
-			}
-			fmt.Println(cli.Success(os.Stdout, fmt.Sprintf("%d local %s valid", n, noun)))
+			fmt.Println(cli.Success(os.Stdout, fmt.Sprintf(
+				"%s valid, and the output of %s",
+				cli.Plural(len(command.All()), "local group", "local groups"),
+				cli.Plural(len(command.Groups()), "group", "groups"),
+			)))
 		default:
 			rows := make([][]string, 0, len(result.Problems))
 			rules := make([]string, 0, len(result.Problems))

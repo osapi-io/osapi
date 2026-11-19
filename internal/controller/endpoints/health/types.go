@@ -30,12 +30,12 @@ type StatusInput struct{}
 
 // HealthResponse is the liveness probe's answer.
 type HealthResponse struct { //nolint:revive // the schema name is part of the API
-	Status string `json:"status" doc:"Health status." example:"ok"`
+	Status string `json:"status" doc:"Health status." example:"ok" render:"status"`
 }
 
 // ReadyResponse is the readiness probe's answer.
 type ReadyResponse struct {
-	Status string `json:"status"          doc:"Readiness status."             example:"ready"`
+	Status string `json:"status"          doc:"Readiness status."             example:"ready" render:"status"`
 	Error  string `json:"error,omitempty" doc:"Error message when not ready."`
 }
 

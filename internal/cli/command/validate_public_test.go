@@ -25,6 +25,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/spf13/cobra"
+
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/cli/command"
@@ -55,6 +57,13 @@ type badFlags struct {
 	Bare    string `                                        json:"bare"`
 	Skipped string `                                        json:"-"`
 	hidden  string //nolint:unused
+}
+
+// badTags breaks each rule of the output's tags.
+type badTags struct {
+	_    struct{} `title:"Bad"`
+	Size int      `             json:"size" render:"nope"`
+	Name string   `title:"Name" json:"name" render:"short=0" empty:"None."`
 }
 
 type ValidatePublicTestSuite struct {
@@ -184,6 +193,44 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 			s.Equal(tc.want, got)
 		})
 	}
+
+	// The rules of the output apply to the registered groups: a renderer
+	// with no Because, a tag the output does not know, and a method that
+	// answers nothing with no past tense.
+	out := command.Define("zzshape", "Output",
+		command.Uses[localDeps](),
+		command.Method[struct{}, greetOut]("list").Short("X").
+			Handle(func(context.Context, localDeps, struct{}) (greetOut, error) {
+				return greetOut{}, nil
+			}),
+		command.Method[struct{}, badTags]("get").Short("X").
+			Handle(func(context.Context, localDeps, struct{}) (badTags, error) {
+				return badTags{}, nil
+			}),
+		command.Method[struct{}, struct{}]("frob").Short("X").
+			Handle(func(context.Context, localDeps, struct{}) (struct{}, error) {
+				return struct{}{}, nil
+			}),
+	)
+	command.AddCommands(out)
+	command.Render(out, "list", func(*cobra.Command, struct{}, greetOut) {})
+	var got []string
+	for _, p := range command.ValidateOutput() {
+		if p.Group != "zzshape" {
+			continue
+		}
+		got = append(got, p.Message)
+		seen[p.Rule] = true
+		s.Equal(command.Checks.Fix(p.Rule), p.Fix, "every rule has a check")
+	}
+	s.Equal([]string{
+		"the renderer has no Because.",
+		`badTags.Size has render:"nope", which the output does not know.`,
+		`badTags.Name has render:"short=0", which the output does not know.`,
+		"badTags.Name has an empty tag and is not a list.",
+		"badTags.Name has a title tag: it goes on the field _ struct{}.",
+		`"frob" has no past tense.`,
+	}, got)
 
 	// Each check is a rule that Validate applies, and each rule has a
 	// check: the cases above trigger every one.

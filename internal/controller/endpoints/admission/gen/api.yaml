@@ -51,9 +51,9 @@ components:
       required:
         - machine_id
         - hostname
-        - fingerprint
         - state
         - online
+        - fingerprint
       type: object
     AdmitRequest:
       properties:

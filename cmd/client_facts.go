@@ -22,10 +22,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/osapi-io/osapi/internal/cli"
-	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/reference"
-	"github.com/osapi-io/osapi/internal/controller/endpoints/facts"
 )
 
 var clientFactsCmd = &cobra.Command{
@@ -50,26 +47,4 @@ func init() {
 
 	// osapi client facts keys list is generated from the facts group's
 	// definition; this is how its answer prints.
-	clicommand.Render(facts.Group, "list", renderFactKeys)
-}
-
-// renderFactKeys prints each fact key with its description.
-func renderFactKeys(
-	_ *cobra.Command,
-	_ facts.KeysInput,
-	out facts.FactKeysResponse,
-) {
-	rows := make([][]string, 0, len(out.Items))
-	for _, k := range out.Items {
-		rows = append(rows, []string{"@fact." + k.Key, k.Description})
-	}
-
-	cli.PrintCompactTable([]cli.Section{
-		{
-			Title:   "Fact keys",
-			Empty:   "None.",
-			Headers: []string{"REFERENCE", "DESCRIPTION"},
-			Rows:    rows,
-		},
-	})
 }

@@ -84,6 +84,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("--hostname web-01").
 		Handle(Drain).
 		Action("drain").
+		Says("draining").
 		ID("DrainAgent").
 		Describe("Drain an agent").
 		Explain("Stop the agent from accepting new jobs. In-flight jobs continue to "+
@@ -101,6 +102,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("--hostname web-01").
 		Handle(Undrain).
 		Action("undrain").
+		Says("ready").
 		ID("UndrainAgent").
 		Describe("Undrain an agent").
 		Explain("Resume accepting jobs on a drained agent.").

@@ -21,7 +21,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -44,29 +43,11 @@ func init() {
 	clientCmd.AddCommand(clientAgentCmd)
 }
 
-// The agent group's commands are generated from its definition. These are
-// how each answer prints without --json.
+// The agent group's commands are generated from its definition, and print
+// from their output types. agent list has a renderer.
 func init() {
-	clicommand.Render(agent.Group, "list", renderAgentList)
-	clicommand.Render(
-		agent.Group,
-		"get",
-		func(_ *cobra.Command, _ agent.GetInput, out agent.AgentInfo) {
-			renderAgentDetail(out)
-		},
-	)
-	// drain and undrain answer 204, with no body:
-	// each prints what it did, with --json too.
-	clicommand.Acts(
-		agent.Group,
-		"drain",
-		func(_ *cobra.Command, in agent.DrainInput, _ struct{}) { agentDone(in.Hostname, "draining") },
-	)
-	clicommand.Acts(
-		agent.Group,
-		"undrain",
-		func(_ *cobra.Command, in agent.UndrainInput, _ struct{}) { agentDone(in.Hostname, "ready") },
-	)
+	clicommand.Render(agent.Group, "list", renderAgentList).
+		Because("five of its nine columns are made from other fields")
 }
 
 func renderAgentList(
@@ -123,152 +104,4 @@ func renderAgentList(
 		},
 		Rows: rows,
 	}})
-}
-
-// renderAgentDetail is one agent, as agent get prints it.
-func renderAgentDetail(
-	data agent.AgentInfo,
-) {
-	cli.PrintHeading("Agent")
-
-	kv := []string{"Hostname", data.Hostname}
-	if data.MachineID != "" {
-		kv = append(kv, "Machine ID", data.MachineID)
-	}
-	if data.Fingerprint != "" {
-		kv = append(kv, "Fingerprint", data.Fingerprint)
-	}
-	if data.Version != "" {
-		kv = append(kv, "Version", data.Version)
-	}
-	kv = append(kv, "Status", data.Status)
-	cli.PrintKV(kv...)
-
-	if data.State != "" && data.State != "Ready" {
-		cli.PrintKV("State", data.State)
-	}
-	if len(data.Labels) > 0 {
-		cli.PrintKV("Labels", cli.FormatLabels(data.Labels))
-	}
-	if data.OSInfo != nil {
-		cli.PrintKV("OS", data.OSInfo.Distribution+" "+cli.DimStyle.Render(data.OSInfo.Version))
-	}
-	if data.Uptime != "" {
-		cli.PrintKV("Uptime", data.Uptime)
-	}
-	if !data.StartedAt.IsZero() {
-		cli.PrintKV("Age", cli.FormatAge(time.Since(data.StartedAt)))
-	}
-	if !data.RegisteredAt.IsZero() {
-		cli.PrintKV("Last seen", cli.FormatAge(time.Since(data.RegisteredAt))+" ago")
-	}
-	if data.Architecture != "" {
-		cli.PrintKV("Arch", data.Architecture)
-	}
-	if data.KernelVersion != "" {
-		cli.PrintKV("Kernel", data.KernelVersion)
-	}
-	if data.CPUCount > 0 {
-		cli.PrintKV("CPUs", fmt.Sprintf("%d", data.CPUCount))
-	}
-	if data.FQDN != "" {
-		cli.PrintKV("FQDN", data.FQDN)
-	}
-	if data.LoadAverage != nil {
-		cli.PrintKV("Load", fmt.Sprintf("%.2f, %.2f, %.2f",
-			data.LoadAverage.OneMin, data.LoadAverage.FiveMin, data.LoadAverage.FifteenMin,
-		)+" "+cli.DimStyle.Render("(1m, 5m, 15m)"))
-	}
-	if data.Memory != nil {
-		mem := []string{cli.FormatBytes(data.Memory.Total) + " total"}
-		if data.Memory.Used > 0 {
-			mem = append(mem, cli.FormatBytes(data.Memory.Used)+" used")
-		}
-		mem = append(mem, cli.FormatBytes(data.Memory.Free)+" free")
-		cli.PrintKV("Memory", strings.Join(mem, ", "))
-	}
-	if data.ServiceMgr != "" {
-		cli.PrintKV("Service manager", data.ServiceMgr)
-	}
-	if data.PackageMgr != "" {
-		cli.PrintKV("Package manager", data.PackageMgr)
-	}
-	if data.PrimaryInterface != "" {
-		cli.PrintKV("Primary interface", data.PrimaryInterface)
-	}
-	for _, iface := range data.Interfaces {
-		var parts []string
-		if iface.IPv4 != "" {
-			parts = append(parts, iface.IPv4)
-		}
-		if iface.IPv6 != "" {
-			parts = append(parts, iface.IPv6)
-		}
-		if iface.MAC != "" {
-			parts = append(parts, cli.DimStyle.Render(iface.MAC))
-		}
-		cli.PrintKV("Interface "+iface.Name, strings.Join(parts, "  "))
-	}
-
-	var sections []cli.Section
-	if len(data.Routes) > 0 {
-		rows := make([][]string, 0, len(data.Routes))
-		for _, r := range data.Routes {
-			rows = append(rows, []string{
-				r.Destination, r.Gateway, r.Interface, r.Mask, fmt.Sprintf("%d", r.Metric),
-			})
-		}
-		sections = append(sections, cli.Section{
-			Title:   "Routes",
-			Headers: []string{"DESTINATION", "GATEWAY", "INTERFACE", "MASK", "METRIC"},
-			Rows:    rows,
-		})
-	}
-	if len(data.Conditions) > 0 {
-		rows := make([][]string, 0, len(data.Conditions))
-		for _, c := range data.Conditions {
-			since := ""
-			if !c.LastTransitionTime.IsZero() {
-				since = cli.FormatAge(time.Since(c.LastTransitionTime)) + " ago"
-			}
-			rows = append(rows, []string{c.Type, fmt.Sprintf("%t", c.Status), c.Reason, since})
-		}
-		sections = append(sections, cli.Section{
-			Title:   "Conditions",
-			Headers: []string{"TYPE", "STATUS", "REASON", "SINCE"},
-			Rows:    rows,
-		})
-	}
-	timeline := make([][]string, 0, len(data.Timeline))
-	for _, te := range data.Timeline {
-		timeline = append(timeline, []string{
-			cli.LocalTime(te.Timestamp), te.Event, te.Hostname, te.Message, te.Error,
-		})
-	}
-	sections = append(sections, cli.Section{
-		Title:   "Timeline",
-		Headers: []string{"TIMESTAMP", "EVENT", "HOSTNAME", "MESSAGE", "ERROR"},
-		Rows:    timeline,
-	})
-
-	for _, sec := range sections {
-		cli.PrintCompactTable([]cli.Section{sec})
-	}
-}
-
-// agentDone prints what a write that answers 204 did to an agent: as JSON
-// with --json, as job and file delete do.
-func agentDone(
-	hostname string,
-	status string,
-) {
-	if jsonOutput {
-		result, _ := json.Marshal(map[string]string{"hostname": hostname, "status": status})
-		cli.PrintJSON(result)
-
-		return
-	}
-
-	cli.PrintHeading("Agent")
-	cli.PrintKV("Hostname", hostname, "Status", strings.ToUpper(status[:1])+status[1:])
 }

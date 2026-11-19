@@ -16,8 +16,8 @@ osapi client job get --id 550e8400-e29b-41d4-a716-446655440000
 
 ## Permission
 
-It needs the `job:read` permission. `osapi token roles list` lists the roles
-that grant it.
+It needs the `job:read` permission. `osapi token roles get --name <role>` shows
+what a role grants.
 
 ## Flags
 

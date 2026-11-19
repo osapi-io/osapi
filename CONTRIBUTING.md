@@ -721,9 +721,11 @@ lists them, and `osapi controller endpoint spec` lists each part of the DSL.
 spec, until the group moves. The agent group is served, and its commands are
 made, from its definition: `go generate ./internal/controller/endpoints/all`
 writes its spec, routes, decoders and CLI commands under `gen/`, and
-`just generate` joins its spec into the main one. How a command prints is
-`command.Render`, from `internal/cli/command`, in `cmd/client_<group>.go`, the
-file of the group's command. A new group starts from
+`just generate` joins its spec into the main one. A command prints from the
+output type of its method. The tags of each field set how the value prints, and
+`osapi cli command spec` has each tag. A renderer, `command.Render` in
+`cmd/client_<group>.go`, is only for a shape that no output type gives, such as
+a tree. It needs `.Because("...")`, which says why. A new group starts from
 `osapi controller endpoint new`, and `just endpoint-scaffold-check` holds what
 it writes to its tests. The `build-an-endpoint` skill has the steps.
 

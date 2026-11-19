@@ -72,12 +72,11 @@ var Group = endpoint.Register(endpoint.Define(
 		Describe("Export all audit log entries").
 		Explain("Returns all audit log entries without pagination for export.").
 		Returns("All audit entries.").
-		Command("Export audit log entries to a file",
-			"The command gets all entries through the export endpoint of the REST API,\n"+
-				"and writes each entry as a JSON line (JSONL).").
-		Example("--output audit.jsonl").
-		StringFlag("output", "", "Output file path", true).
-		StringFlag("type", "file", "Export backend type", false).
+		Command("Show all audit log entries, with no pages",
+			"To save them, send the JSON to a file:\n"+
+				"osapi client audit export --json > audit.json").
+		Example("").
+		Example("--json").
 		Errors(notConfigured503),
 	endpoint.Get[GetInput, AuditEntryResponse]("get").
 		Fails("an ID that is not a UUID", GetInput{ID: "not-a-uuid"}).

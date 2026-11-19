@@ -6690,9 +6690,9 @@ components:
       required:
         - machine_id
         - hostname
-        - fingerprint
         - state
         - online
+        - fingerprint
       type: object
     AdmitRequest:
       properties:
@@ -7101,9 +7101,9 @@ components:
         - roles
         - method
         - path
-        - source_ip
         - response_code
         - duration_ms
+        - source_ip
       type: object
     AuditEntryResponse:
       properties:
@@ -7288,10 +7288,10 @@ components:
         - object_name
         - hostname
         - provider
+        - deployed_at
         - path
         - deployed_sha
         - current_sha
-        - deployed_at
       type: object
     StaleDeploymentsResponse:
       properties:
