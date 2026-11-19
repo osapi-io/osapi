@@ -6,6 +6,11 @@
  */
 
 /**
- * The operation data.
+ * What the job asked for, with each secret masked.
  */
-export type JobDetailResponseOperation = { [key: string]: unknown };
+export type JobDetailResponseOperation = {
+  /** The data of the operation, with each secret masked. */
+  data?: unknown;
+  /** The operation, such as node.hostname.get. */
+  type: string;
+};

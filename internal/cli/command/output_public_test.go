@@ -124,15 +124,17 @@ type (
 		At       time.Time `json:"at"`
 	}
 	counted struct {
-		TotalItems int   `json:"total_items"`
-		Items      []row `json:"items"`
+		TotalItems int            `json:"total_items"`
+		Counts     map[string]int `json:"counts,omitempty"`
+		Items      []row          `json:"items"`
 	}
 	values struct {
-		On    bool           `json:"on,omitempty"`
-		Count int            `json:"count,omitempty"`
-		Tags  []string       `json:"tags,omitempty"`
-		Meta  map[string]any `json:"meta,omitempty"`
-		Name  string         `json:"name,omitempty"`
+		On    bool              `json:"on,omitempty"`
+		Count int               `json:"count,omitempty"`
+		Tags  []string          `json:"tags,omitempty"`
+		Meta  map[string]any    `json:"meta,omitempty"`
+		Env   map[string]string `json:"env,omitempty"`
+		Name  string            `json:"name,omitempty"`
 	}
 	osInfo struct {
 		Name    string `json:"name"`
@@ -260,16 +262,22 @@ func (s *OutputPublicTestSuite) TestOutput() {
 			want:   "# Zzderives (1)\nNAME\na\n",
 		},
 		{
+			name:   "when a list has more fields than its items and its count, they follow the table",
+			method: "count",
+			answer: `{"total_items":1,"counts":{"failed":1},"items":[{"name":"a"}]}`,
+			want:   "# Zzderives (1)\nNAME\na\nCounts: failed:1\n",
+		},
+		{
 			name:   "when a field with omitempty has its zero value, it is left out",
 			method: "values",
-			answer: `{"on":false,"count":0,"tags":[],"meta":{},"name":"x"}`,
+			answer: `{"on":false,"count":0,"tags":[],"meta":{},"env":{},"name":"x"}`,
 			want:   "# Zzderive\nName: x\n",
 		},
 		{
 			name:   "when a field with omitempty has a value, it is shown",
 			method: "values",
-			answer: `{"on":true,"count":2,"tags":["a"],"meta":{"k":"v"},"name":"x"}`,
-			want:   "# Zzderive\nOn: yes\nCount: 2\nTags: a\nMeta: k:v\nName: x\n",
+			answer: `{"on":true,"count":2,"tags":["a"],"meta":{"k":"v"},"env":{"a":"b"},"name":"x"}`,
+			want:   "# Zzderive\nOn: yes\nCount: 2\nTags: a\nEnv: a:b\nName: x\n# Meta\nk: v\n",
 		},
 		{
 			name:   "when the output is not an object or a list, it has only its heading",

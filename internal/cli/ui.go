@@ -32,7 +32,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/google/uuid"
-	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -759,149 +758,6 @@ func HandleError(
 	osExit(ExitError)
 }
 
-// DisplayJobDetail displays detailed job information from domain types.
-// Used by both job get and job run commands.
-func DisplayJobDetail(
-	resp *client.JobDetail,
-) {
-	// Display job metadata
-	PrintHeading("Job")
-	PrintKV("Job ID", resp.ID, "Status", resp.Status)
-	if resp.Hostname != "" {
-		PrintKV("Hostname", resp.Hostname)
-	}
-	if resp.Created != "" {
-		PrintKV("Created", FormatTime(resp.Created))
-	}
-	if resp.UpdatedAt != "" {
-		PrintKV("Updated", FormatTime(resp.UpdatedAt))
-	}
-	if resp.Error != "" {
-		PrintKV("Error", resp.Error)
-	}
-
-	// Add agent summary from agent_states
-	if len(resp.AgentStates) > 0 {
-		completed := 0
-		failed := 0
-		skipped := 0
-		processing := 0
-
-		for _, state := range resp.AgentStates {
-			switch state.Status {
-			case string(job.StatusCompleted):
-				completed++
-			case string(job.StatusFailed):
-				failed++
-			case string(job.StatusSkipped):
-				skipped++
-			case string(job.StatusStarted):
-				processing++
-			}
-		}
-
-		total := len(resp.AgentStates)
-		if total > 1 {
-			summary := fmt.Sprintf(
-				"%d total (%d completed, %d failed, %d processing",
-				total,
-				completed,
-				failed,
-				processing,
-			)
-			if skipped > 0 {
-				summary += fmt.Sprintf(", %d skipped", skipped)
-			}
-			summary += ")"
-			PrintKV("Agents", summary)
-		}
-	}
-
-	// The request, as key-value pairs rather than raw JSON.
-	if resp.Operation != nil {
-		printObject("Request", resp.Operation)
-	}
-
-	var sections []Section
-
-	// Display agent responses (for broadcast jobs)
-	if len(resp.Responses) > 0 {
-		responseRows := make([][]string, 0, len(resp.Responses))
-		for _, hostname := range sortedKeys(resp.Responses) {
-			response := resp.Responses[hostname]
-			row := []string{hostname, response.Status, Summarize(response.Data), response.Error}
-			responseRows = append(responseRows, row)
-		}
-
-		sections = append(sections, Section{
-			Title:   "Agent Responses",
-			Headers: []string{"HOSTNAME", "STATUS", "DATA", "ERROR"},
-			Rows:    responseRows,
-		})
-	}
-
-	// Display agent states (for broadcast jobs)
-	if len(resp.AgentStates) > 0 {
-		stateRows := make([][]string, 0, len(resp.AgentStates))
-		for _, hostname := range sortedKeys(resp.AgentStates) {
-			state := resp.AgentStates[hostname]
-			stateRows = append(
-				stateRows,
-				[]string{hostname, state.Status, FormatDuration(state.Duration), state.Error},
-			)
-		}
-
-		sections = append(sections, Section{
-			Title:   "Agent States",
-			Headers: []string{"HOSTNAME", "STATUS", "DURATION", "ERROR"},
-			Rows:    stateRows,
-		})
-	}
-
-	// Display timeline
-	timelineRows := make([][]string, 0, len(resp.Timeline))
-	for _, te := range resp.Timeline {
-		timelineRows = append(
-			timelineRows,
-			[]string{FormatTime(te.Timestamp), te.Event, te.Hostname, te.Message, te.Error},
-		)
-	}
-	sections = append(sections, Section{
-		Title:   "Timeline",
-		Headers: []string{"TIMESTAMP", "EVENT", "HOSTNAME", "MESSAGE", "ERROR"},
-		Rows:    timelineRows,
-	})
-
-	for _, sec := range sections {
-		PrintCompactTable([]Section{sec})
-	}
-
-	// The result, as key-value pairs rather than raw JSON.
-	if resp.Result != nil {
-		printObject("Result", resp.Result)
-	}
-}
-
-// printObject prints a nested value under a heading as key-value pairs, its
-// fields in name order and each nested value summarized, with a note that
-// --json prints all of it. Human output never shows raw JSON.
-func printObject(
-	title string,
-	v any,
-) {
-	PrintHeading(title)
-
-	m, ok := v.(map[string]any)
-	if !ok {
-		PrintKV("Value", Summarize(v))
-	} else {
-		for _, k := range sortedKeys(m) {
-			PrintKV(k, Summarize(m[k]))
-		}
-	}
-	PrintNote("--json prints all of it.")
-}
-
 // Summarize renders a value for one cell or key-value pair: a scalar as
 // itself, a list by its length and an object by its field count, and nothing
 // as "none".
@@ -982,18 +838,4 @@ func FormatDuration(
 	default:
 		return d.Round(time.Second).String()
 	}
-}
-
-// sortedKeys returns a map's keys in order, so maps print the same way every
-// run.
-func sortedKeys[V any](
-	m map[string]V,
-) []string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	return keys
 }

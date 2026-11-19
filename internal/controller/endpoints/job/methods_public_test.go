@@ -125,9 +125,14 @@ func (s *MethodsPublicTestSuite) TestList() {
 				first := got.Items[0]
 				s.Equal(jobID, first.ID)
 				s.Equal("web-01", first.Hostname)
+				s.Equal(
+					"web-01",
+					first.Target,
+					"a job with no stored target has the host that answered",
+				)
 				s.Equal(map[string]any{"ok": true}, first.Result)
 				s.Equal(ptr(true), first.Changed)
-				data, _ := first.Operation["data"].(map[string]any)
+				data, _ := first.Operation.Data.(map[string]any)
 				s.NotEqual("hunter2", data["password"])
 				s.Nil(got.Items[1].Result)
 				s.Nil(got.Items[1].Operation)
@@ -193,12 +198,19 @@ func (s *MethodsPublicTestSuite) TestGet() {
 			},
 			validateFunc: func(got jobgroup.JobDetailResponse, err error) {
 				s.Require().NoError(err)
-				s.Equal(map[string]any{"uptime": float64(5)}, got.Responses["web-01"].Data)
-				s.Equal(ptr(false), got.Responses["web-01"].Changed)
-				s.Equal("boom", got.Responses["web-02"].Error)
-				s.Nil(got.Responses["web-02"].Data)
-				s.Equal("1.2s", got.AgentStates["web-01"].Duration)
-				s.Equal("boom", got.AgentStates["web-02"].Error)
+				s.Require().Len(got.Responses, 2, "a list, sorted by hostname")
+				s.Equal("web-01", got.Responses[0].Hostname)
+				s.Equal(map[string]any{"uptime": float64(5)}, got.Responses[0].Data)
+				s.Equal(ptr(false), got.Responses[0].Changed)
+				s.Equal("web-02", got.Responses[1].Hostname)
+				s.Equal("boom", got.Responses[1].Error)
+				s.Nil(got.Responses[1].Data)
+				s.Require().Len(got.AgentStates, 2)
+				s.Equal(
+					jobgroup.AgentState{Hostname: "web-01", Status: "completed", Duration: "1.2s"},
+					got.AgentStates[0],
+				)
+				s.Equal("boom", got.AgentStates[1].Error)
 				s.Require().Len(got.Timeline, 2)
 				s.Equal("2026-11-17T08:00:00Z", got.Timeline[0].Timestamp)
 				s.Equal("boom", got.Timeline[1].Error)

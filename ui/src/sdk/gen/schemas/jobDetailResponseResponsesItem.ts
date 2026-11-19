@@ -5,14 +5,11 @@
  * OpenAPI spec version: 1.0.0
  */
 
-/**
- * Per-agent response data for broadcast jobs.
- */
-export type JobDetailResponseResponses = {[key: string]: {
+export type JobDetailResponseResponsesItem = {
   changed?: boolean;
   /** Agent result data. */
   data?: unknown;
   error?: string;
-  hostname?: string;
+  hostname: string;
   status?: string;
-}};
+};

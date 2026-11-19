@@ -371,6 +371,8 @@ func (suite *ThemePublicTestSuite) TestStatusCellStyledInParts() {
 					cli.ExportRenderCell("STATUS", "ok"),
 				)
 				suite.Equal(cli.OKStyle.Render("ok"), cli.RenderStatus("ok"))
+				suite.Equal(cli.ValueStyle.Render("web-01"), cli.RenderStatus("web-01"),
+					"a word that is not a status is plain")
 			},
 		},
 		{

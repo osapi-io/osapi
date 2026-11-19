@@ -34,22 +34,31 @@ type JobCreated struct {
 
 // JobDetail represents a job's full details.
 type JobDetail struct {
-	ID          string                      `json:"id,omitempty"`
-	Status      string                      `json:"status,omitempty"`
-	Hostname    string                      `json:"hostname,omitempty"`
-	Created     string                      `json:"created,omitempty"`
-	UpdatedAt   string                      `json:"updated_at,omitempty"`
-	Error       string                      `json:"error,omitempty"`
-	Changed     *bool                       `json:"changed,omitempty"`
-	Operation   map[string]any              `json:"operation,omitempty"`
-	Result      any                         `json:"result,omitempty"`
-	AgentStates map[string]AgentState       `json:"agent_states,omitempty"`
-	Responses   map[string]AgentJobResponse `json:"responses,omitempty"`
-	Timeline    []TimelineEvent             `json:"timeline,omitempty"`
+	ID          string             `json:"id,omitempty"`
+	Status      string             `json:"status,omitempty"`
+	Hostname    string             `json:"hostname,omitempty"`
+	Target      string             `json:"target,omitempty"`
+	Created     string             `json:"created,omitempty"`
+	UpdatedAt   string             `json:"updated_at,omitempty"`
+	Error       string             `json:"error,omitempty"`
+	Changed     *bool              `json:"changed,omitempty"`
+	Operation   *JobRequest        `json:"operation,omitempty"`
+	Result      any                `json:"result,omitempty"`
+	AgentStates []AgentState       `json:"agent_states,omitempty"`
+	Responses   []AgentJobResponse `json:"responses,omitempty"`
+	Timeline    []TimelineEvent    `json:"timeline,omitempty"`
 }
 
-// AgentState represents an agent's processing state for a broadcast job.
+// JobRequest is what a job asked for: its operation, such as
+// node.hostname.get, and its data, with each secret masked.
+type JobRequest struct {
+	Type JobOperation `json:"type"`
+	Data any          `json:"data,omitempty"`
+}
+
+// AgentState is how far one agent got with a job.
 type AgentState struct {
+	Hostname string `json:"hostname"`
 	Status   string `json:"status,omitempty"`
 	Duration string `json:"duration,omitempty"`
 	Error    string `json:"error,omitempty"`
@@ -121,17 +130,21 @@ func jobDetailFromGen(
 		j.Error = *g.Error
 	}
 
+	if g.Target != nil {
+		j.Target = *g.Target
+	}
+
 	if g.Operation != nil {
-		j.Operation = *g.Operation
+		j.Operation = &JobRequest{Type: JobOperation(g.Operation.Type), Data: g.Operation.Data}
 	}
 
 	j.Result = g.Result
 	j.Changed = g.Changed
 
 	if g.AgentStates != nil {
-		states := make(map[string]AgentState, len(*g.AgentStates))
-		for k, v := range *g.AgentStates {
-			as := AgentState{}
+		states := make([]AgentState, 0, len(*g.AgentStates))
+		for _, v := range *g.AgentStates {
+			as := AgentState{Hostname: v.Hostname}
 
 			if v.Status != nil {
 				as.Status = *v.Status
@@ -145,22 +158,19 @@ func jobDetailFromGen(
 				as.Error = *v.Error
 			}
 
-			states[k] = as
+			states = append(states, as)
 		}
 
 		j.AgentStates = states
 	}
 
 	if g.Responses != nil {
-		responses := make(map[string]AgentJobResponse, len(*g.Responses))
-		for k, v := range *g.Responses {
+		responses := make([]AgentJobResponse, 0, len(*g.Responses))
+		for _, v := range *g.Responses {
 			r := AgentJobResponse{
-				Data:    v.Data,
-				Changed: v.Changed,
-			}
-
-			if v.Hostname != nil {
-				r.Hostname = *v.Hostname
+				Hostname: v.Hostname,
+				Data:     v.Data,
+				Changed:  v.Changed,
 			}
 
 			if v.Status != nil {
@@ -171,7 +181,7 @@ func jobDetailFromGen(
 				r.Error = *v.Error
 			}
 
-			responses[k] = r
+			responses = append(responses, r)
 		}
 
 		j.Responses = responses

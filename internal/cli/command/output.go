@@ -303,7 +303,7 @@ func (c Column) inline(
 	obj map[string]any,
 ) string {
 	parts := []string{}
-	for _, f := range Columns(c.Type) {
+	for _, f := range tableColumns(Columns(c.Type)) {
 		if text := f.FormatKV(p, obj[f.JSON]); text != "" {
 			parts = append(parts, text)
 		}
@@ -581,6 +581,18 @@ func derive(
 			total = int(n)
 		}
 		list(p, heading, *listOf(t), items, total)
+		var pairs []string
+		for _, c := range Columns(t) {
+			if c.JSON == "items" || c.JSON == "total_items" {
+				continue
+			}
+			if text := c.FormatKV(p, obj[c.JSON]); text != "" {
+				pairs = append(pairs, c.Label, text)
+			}
+		}
+		if len(pairs) > 0 {
+			p.KV(pairs...)
+		}
 	default:
 		if heading == "" {
 			heading = name
@@ -627,26 +639,21 @@ func keyName(
 }
 
 // listOf is the Items field of t when t is a list with its count: Items
-// []T, with TotalItems or without, and no other field. It is nil for any
-// other type.
+// []T, with TotalItems or without. Its other fields, such as the count of
+// each status, print after the table. It is nil for any other type.
 func listOf(
 	t reflect.Type,
 ) *Column {
 	if t.Kind() != reflect.Struct {
 		return nil
 	}
-	var items *Column
 	for _, c := range Columns(t) {
-		switch {
-		case c.JSON == "items" && c.Type.Kind() == reflect.Slice:
-			items = &c
-		case c.JSON == "total_items":
-		default:
-			return nil
+		if c.JSON == "items" && c.Type.Kind() == reflect.Slice {
+			return &c
 		}
 	}
 
-	return items
+	return nil
 }
 
 // list prints items, a list of the element of c's type, under its heading
@@ -751,6 +758,7 @@ func object(
 		value, ok := v[c.JSON]
 		switch {
 		case isObject(c.Type) || isList(c.Type):
+		case isFree(c.Type) && isMap(value):
 		case c.OmitEmpty && c.None == "" && (!ok || noValue(c, value) || zero(value)):
 		default:
 			pairs = append(pairs, c.Label, c.FormatKV(p, value))
@@ -773,8 +781,40 @@ func object(
 				continue
 			}
 			list(p, c.Label, c, items, -1)
+		case isFree(c.Type) && isMap(value) && len(value.(map[string]any)) > 0:
+			free(p, c.Label, value.(map[string]any))
 		}
 	}
+}
+
+// isFree reports whether t has no shape of its own: any, or a map of any,
+// such as the data of an operation or the result of a job.
+func isFree(
+	t reflect.Type,
+) bool {
+	return t.Kind() == reflect.Interface ||
+		t.Kind() == reflect.Map && t.Elem().Kind() == reflect.Interface
+}
+
+// free prints obj, an object with no type, under its heading: each key, in
+// order, with its value. A value with more in it is a count, which --json
+// prints all of.
+func free(
+	p Printer,
+	heading string,
+	obj map[string]any,
+) {
+	p.Heading(heading)
+	keys := make([]string, 0, len(obj))
+	for k := range obj {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	pairs := make([]string, 0, 2*len(keys))
+	for _, k := range keys {
+		pairs = append(pairs, k, scalar(obj[k]))
+	}
+	p.KV(pairs...)
 }
 
 // zero reports whether v is the zero value of its JSON kind, which a field

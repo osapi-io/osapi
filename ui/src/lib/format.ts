@@ -130,7 +130,6 @@ export function summarize(v: unknown): string {
 }
 
 /** The type of a job's operation, as osapi client job list prints it. */
-export function operationType(operation?: Record<string, unknown>): string {
-  const t = operation?.type;
-  return typeof t === "string" ? t : "Unknown";
+export function operationType(operation?: { type: string }): string {
+  return operation?.type || "Unknown";
 }
