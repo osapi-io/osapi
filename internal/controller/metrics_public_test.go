@@ -284,6 +284,21 @@ func (s *MetricsPublicTestSuite) TestAgentStats() {
 		})
 	}
 
+	s.Run("when an agent is drained counts it as registered, not ready", func() {
+		s.jobs.EXPECT().ListAgents(gomock.Any()).Return([]job.AgentInfo{
+			{Hostname: "web-01", State: string(job.AgentStateReady)},
+			{Hostname: "web-02", State: string(job.AgentStateCordoned)},
+			{Hostname: "web-03", State: string(job.AgentStateDraining)},
+			{Hostname: "web-04"},
+		}, nil)
+
+		got, err := s.provider("").AgentStatsFn(context.Background())
+
+		s.Require().NoError(err)
+		s.Equal(4, got.Total)
+		s.Equal(2, got.Ready, "Ready and no state are ready; Cordoned and Draining are not")
+	})
+
 	s.Run("when an agent has two labels joins them", func() {
 		s.jobs.EXPECT().ListAgents(gomock.Any()).Return([]job.AgentInfo{{
 			Hostname: "db-01",
