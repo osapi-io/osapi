@@ -18,12 +18,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package command is the runtime of the generated CLI commands of the
-// endpoint groups. Each group's gen/cli.go makes one cobra command for each
-// method and registers it here; Attach puts them under osapi client
-// <group>. Run builds the method's request from its typed input, sends it
-// through the SDK, and prints the answer: the body for --json, or the
-// group's renderer for the method.
+// Package command is the endpoint layer's runner of the generated CLI
+// commands of the endpoint groups. Each group's gen/cli.go makes one cobra
+// command for each method and registers it with the command layer,
+// internal/cli/command, through here. Run builds the method's request from
+// its typed input, sends it through the SDK, and gives the answer to the
+// command layer, which prints it.
 package command
 
 import (
@@ -34,14 +34,13 @@ import (
 	"fmt"
 	"mime/multipart"
 	"net/url"
-	"os"
 	"reflect"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli"
-	"github.com/osapi-io/osapi/internal/cli/reference"
+	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
@@ -67,151 +66,59 @@ type Deps struct {
 	Error func(err error)
 }
 
-type entry struct {
-	group *endpoint.Group
-	cmds  []*cobra.Command
-}
+var deps Deps
 
-var (
-	registered []entry
-	deps       Deps
-	renderers  = map[string]renderer{}
-)
+// SubKey is the command layer's SubKey, which the generated commands name.
+const SubKey = clicommand.SubKey
 
-// renderer prints a method's answer: fn gets the input and a value of out,
-// the type the answer decodes into.
-type renderer struct {
-	fn  func(cmd *cobra.Command, in, out any)
-	out reflect.Type
-	// acts is true for a renderer that Acts set, which runs with --json too.
-	acts bool
-}
-
-// SubKey is the annotation of a generated command that goes under a
-// command of its own: the Sub segment of its method, such as trace in
-// osapi client telemetry trace get.
-const SubKey = "osapi.endpoint.sub"
-
-// Register adds a group's generated commands. Each gen/cli.go calls it from
-// init.
+// Register adds a group's generated commands to the command layer. Each
+// gen/cli.go calls it from init.
 func Register(
 	g *endpoint.Group,
 	cmds ...*cobra.Command,
 ) {
-	registered = append(registered, entry{group: g, cmds: cmds})
+	clicommand.Register(g, cmds...)
 }
 
-// Attach adds every registered group's commands under parent, osapi client,
-// and keeps d for the commands to call through. A group goes under the
-// commands of its command path: next node sysctl is under next, then node,
-// which Attach adds when parent does not have them. A group or a command
-// that is among groups, by name, is that one, so the generated commands
-// join a hand-written command of the same name, such as agent with key and
-// status.
+// Attach keeps d for Run, and attaches every registered group's commands
+// under parent, osapi client, with the command layer's Attach.
 func Attach(
 	parent *cobra.Command,
 	d Deps,
 	groups ...*cobra.Command,
 ) error {
 	deps = d
-	for _, e := range registered {
-		words := e.group.CommandPath()
-		into := parent
-		for _, w := range words[:len(words)-1] {
-			next := child(into, w)
-			if next == nil {
-				next = &cobra.Command{Use: w, Short: strings.ToUpper(w[:1]) + w[1:] + " commands"}
-				into.AddCommand(next)
-			}
-			into = next
-		}
-		group := child(into, e.group.Name)
-		for _, g := range groups {
-			if g.Name() == e.group.Name {
-				group = g
-			}
-		}
-		if group == nil {
-			group = &cobra.Command{Use: e.group.Name, Short: e.group.Doc}
-			if e.group.CommandNotes != "" {
-				group.Annotations = map[string]string{reference.Notes: e.group.CommandNotes}
-			}
-			into.AddCommand(group)
-		}
-		for _, c := range e.cmds {
-			parent := group
-			if sub := c.Annotations[SubKey]; sub != "" {
-				parent = child(group, sub)
-				for _, g := range groups {
-					if g.Name() == sub && g != group {
-						parent = g
-					}
-				}
-				if parent == nil {
-					parent = &cobra.Command{
-						Use:   sub,
-						Short: strings.ToUpper(sub[:1]) + sub[1:] + " commands",
-					}
-					group.AddCommand(parent)
-				}
-			}
-			if child(parent, c.Name()) != nil {
-				return fmt.Errorf(
-					"osapi client %s %s is both a hand-written command and the %s group's: "+
-						"delete the hand-written one from cmd/",
-					strings.Join(words, " "), c.Name(), e.group.Name)
-			}
-			parent.AddCommand(c)
-		}
-	}
 
-	return nil
+	return clicommand.Attach(parent, clicommand.Deps{
+		JSON:      d.JSON,
+		Error:     d.Error,
+		PrintJSON: cli.PrintJSON,
+	}, groups...)
 }
 
-func child(
-	parent *cobra.Command,
-	name string,
-) *cobra.Command {
-	for _, c := range parent.Commands() {
-		if c.Name() == name {
-			return c
-		}
-	}
-
-	return nil
-}
-
-// Render sets how a method's answer prints without --json. fn gets the
-// command, for a flag that Flag added, the input the command sent and the
-// output the API answered.
+// Render sets how a method's answer prints without --json, with the
+// command layer's Render.
 func Render[In, Out any](
 	g *endpoint.Group,
 	method string,
 	fn func(cmd *cobra.Command, in In, out Out),
 ) {
-	renderers[g.Name+"."+method] = renderer{
-		fn:  func(cmd *cobra.Command, in, out any) { fn(cmd, in.(In), out.(Out)) },
-		out: reflect.TypeFor[Out](),
-	}
+	clicommand.Render(g, method, fn)
 }
 
 // Acts sets what a command does with a method's answer, with or without
-// --json: such as export, which writes the answer to a file. fn prints its
-// own output, and reads --json from the command when it prints differently.
+// --json, with the command layer's Acts.
 func Acts[In, Out any](
 	g *endpoint.Group,
 	method string,
 	fn func(cmd *cobra.Command, in In, out Out),
 ) {
-	Render(g, method, fn)
-	r := renderers[g.Name+"."+method]
-	r.acts = true
-	renderers[g.Name+"."+method] = r
+	clicommand.Acts(g, method, fn)
 }
 
-// Run sends method m of g with in, and prints the answer. The answer
-// decodes into the type of the method's renderer, so the generated command
-// does not name its output type.
+// Run sends method m of g with in, and gives the answer to the command
+// layer to print. The answer decodes into the type of the method's
+// renderer, so the generated command does not name its output type.
 func Run[In any](
 	cmd *cobra.Command,
 	g *endpoint.Group,
@@ -236,27 +143,8 @@ func Run[In any](
 	if ok {
 		resp = client.NewResponse(data, []byte(data))
 	}
-	traceID = resp.TraceID()
-	render, ok := renderers[g.Name+"."+method]
-	if deps.JSON() && !render.acts {
-		cli.PrintJSON(resp.RawJSON())
-
-		return
-	}
-	if !ok {
-		cli.PrintJSON(resp.RawJSON())
-
-		return
-	}
-	out := reflect.New(render.out)
-	if len(resp.Data) > 0 {
-		if err := json.Unmarshal(resp.Data, out.Interface()); err != nil {
-			deps.Error(fmt.Errorf("decode %s %s: %w", g.Name, method, err))
-
-			return
-		}
-	}
-	render.fn(cmd, in, out.Elem().Interface())
+	clicommand.SetTraceID(resp.TraceID())
+	clicommand.Output(cmd, g.Name, method, in, resp.RawJSON())
 }
 
 // Build is the request that sends in to method m of g: the key in the path,
@@ -372,28 +260,16 @@ func answered(
 	return nil, false
 }
 
-// ReadFile is the content of the local file at path, for a flag of a []byte
-// field. A file that it cannot read is reported, and ok is false.
+// ReadFile is the command layer's ReadFile, which the generated commands
+// name for a flag of a []byte field.
 func ReadFile(
 	path string,
 ) ([]byte, bool) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		deps.Error(fmt.Errorf("read %s: %w", path, err))
-
-		return nil, false
-	}
-
-	return data, true
+	return clicommand.ReadFile(path)
 }
 
-// traceID is the trace of the call Run made last. A command runs one call,
-// so a renderer reads it with TraceID.
-var traceID string
-
-// TraceID is the trace of the call that the running command made, from the
-// controller's traceresponse header, for a renderer that prints it, as each
-// behavior's result table does. It is "" when the answer had none.
+// TraceID is the command layer's TraceID: the trace of the call that the
+// running command made, for a renderer that prints it.
 func TraceID() string {
-	return traceID
+	return clicommand.TraceID()
 }

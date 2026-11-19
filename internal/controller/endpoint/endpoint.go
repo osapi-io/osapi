@@ -33,6 +33,8 @@ import (
 	"sort"
 	"strings"
 	"sync"
+
+	"github.com/osapi-io/osapi/internal/cli/command"
 )
 
 // Group is a set of endpoints under one path, /api/<name>, such as agent.
@@ -238,6 +240,47 @@ func (g *Group) Permission(
 	default:
 		return g.Name + ":write"
 	}
+}
+
+// A group is a group of the command layer, and a method one of its
+// commands: the CLI's commands are made from them.
+var (
+	_ command.Group  = (*Group)(nil)
+	_ command.Method = (*Method)(nil)
+)
+
+// GroupName is the group's Name, for the command layer.
+func (g *Group) GroupName() string {
+	return g.Name
+}
+
+// GroupDoc is the group's Doc, for the command layer.
+func (g *Group) GroupDoc() string {
+	return g.Doc
+}
+
+// GroupNotes is the Notes section CommandNotes set, or "", for the command
+// layer.
+func (g *Group) GroupNotes() string {
+	return g.CommandNotes
+}
+
+// Commands are the group's methods, for the command layer.
+func (g *Group) Commands() []command.Method {
+	out := make([]command.Method, 0, len(g.Methods))
+	for _, m := range g.Methods {
+		out = append(out, m)
+	}
+
+	return out
+}
+
+// CommandPermission is the permission of method m, which is one of the
+// group's methods, for the command layer.
+func (g *Group) CommandPermission(
+	m command.Method,
+) string {
+	return g.Permission(m.(*Method))
 }
 
 var (
@@ -483,10 +526,7 @@ func (m *Method) Command(
 
 // CommandExample is an example of a CLI command: its flags, and what it
 // shows, which the help writes as a # line above it.
-type CommandExample struct {
-	Flags string
-	Doc   string
-}
+type CommandExample = command.Example
 
 // Example adds an example of the CLI command: its flags, such as
 // --hostname web-01, and, when doc is given, what it shows. The help shows
@@ -550,19 +590,7 @@ func (m *Method) Result(
 
 // Flag is a flag of the CLI command that is not part of the request: it
 // changes only how the answer prints, such as --all. The renderer reads it.
-type Flag struct {
-	// Name is the flag's name, without the dashes.
-	Name string
-	// Usage is its help.
-	Usage string
-	// String is true for a string flag, which StringFlag adds; false for a
-	// bool flag.
-	String bool
-	// Value is a string flag's value when the caller gives none.
-	Value string
-	// Required is true for a string flag the caller must give.
-	Required bool
-}
+type Flag = command.Flag
 
 // Flag adds a bool flag to the CLI command that the request does not send,
 // for the renderer: such as --all, to show what it leaves out.
@@ -609,6 +637,16 @@ func (m *Method) Use(
 	m.cmdUse = name
 
 	return m
+}
+
+// MethodName is the method's Name, for the command layer.
+func (m *Method) MethodName() string {
+	return m.Name
+}
+
+// Input is the method's In, for the command layer.
+func (m *Method) Input() reflect.Type {
+	return m.In
 }
 
 // CommandName is the CLI command's name: the one Use set, or the method's.
