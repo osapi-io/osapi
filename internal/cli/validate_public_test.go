@@ -196,6 +196,15 @@ func (suite *ValidatePublicTestSuite) TestIsOSFamilySupported() {
 			},
 		},
 		{
+			name:       "when ubuntu 26.04 is supported",
+			distro:     "ubuntu",
+			version:    "26.04",
+			wantFamily: "Debian",
+			validateFunc: func(got bool) {
+				suite.Equal(true, got)
+			},
+		},
+		{
 			name:       "when Ubuntu with uppercase is supported",
 			distro:     "Ubuntu",
 			version:    "24.04",
