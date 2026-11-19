@@ -341,6 +341,7 @@ func (s *MetricsPublicTestSuite) TestComponentRegistry() {
 			KVGet(gomock.Any(), "registry", "agents.app-01").
 			Return(s.entry(job.AgentRegistration{
 				Hostname: "app-01",
+				State:    string(job.AgentStateCordoned),
 			}), nil)
 		s.nc.EXPECT().KVGet(gomock.Any(), "registry", "agents.bad-json").Return(s.entry("{"), nil)
 		s.nc.EXPECT().
@@ -363,8 +364,10 @@ func (s *MetricsPublicTestSuite) TestComponentRegistry() {
 		s.Require().Len(got, 3)
 		s.Equal("agent", got[0].Type)
 		s.Equal("app-01", got[0].Hostname)
+		s.Equal("Cordoned", got[0].Status, "a drained agent shows its state")
 		s.Nil(got[0].SubComponents)
 		s.Equal("web-01", got[1].Hostname)
+		s.Equal("Ready", got[1].Status, "an agent with no state is Ready")
 		s.Equal([]string{"HighCPU"}, got[1].Conditions)
 		s.Equal(1.5, got[1].CPUPercent)
 		s.Equal(int64(2048), got[1].MemBytes)
@@ -374,6 +377,7 @@ func (s *MetricsPublicTestSuite) TestComponentRegistry() {
 		)
 		s.Equal("controller", got[2].Type)
 		s.Equal("ctl-01", got[2].Hostname)
+		s.Equal("Ready", got[2].Status)
 		s.Equal([]string{"HighCPU"}, got[2].Conditions)
 	})
 
