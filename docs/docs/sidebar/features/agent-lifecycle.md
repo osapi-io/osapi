@@ -37,7 +37,7 @@ agent, so it also sees when a condition stops.
 ```
 HOSTNAME  MACHINE ID  STATE  CONDITIONS                LABELS  AGE    LOAD            OS            VERSION
 web-01    m-1         Ready  HighLoad, MemoryPressure          3d 4h  4.12 3.90 3.71  Ubuntu 24.04  v1.4.0
-web-02    m-2         Ready                                    12h    0.31 0.28 0.25  Ubuntu 24.04  v1.4.0
+web-02    m-2         Ready  -                                 12h    0.31 0.28 0.25  Ubuntu 24.04  v1.4.0
 db-01     m-3         Ready  DiskPressure                      5d     1.22 1.10 1.05  Ubuntu 24.04  v1.3.2
 ```
 

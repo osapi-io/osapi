@@ -148,6 +148,10 @@ type (
 		OS    *osInfo `json:"os"`
 		Conds []cond  `json:"conds"`
 	}
+	kept struct {
+		Name  string `json:"name"`
+		Conds []cond `json:"conds,omitempty" none:"-"`
+	}
 	nothing  struct{}
 	deleteIn struct {
 		MachineID string `json:"machine_id"`
@@ -184,6 +188,7 @@ func (s *OutputPublicTestSuite) TestOutput() {
 		method("values", reflect.TypeFor[values]()),
 		method("map", reflect.TypeFor[map[string]string]()),
 		method("hosts", reflect.TypeFor[[]host]()),
+		method("kept", reflect.TypeFor[[]kept]()),
 		keyed{method("delete", reflect.TypeFor[nothing]()), "machine_id"},
 		method("drain", reflect.TypeFor[nothing]()).Says("draining"),
 	}
@@ -281,6 +286,12 @@ func (s *OutputPublicTestSuite) TestOutput() {
 			want: "# Zzderives (2)\nNAME | OS | CONDS\n" +
 				"a | Ubuntu 24.04 2048B | HighLoad, DiskPressure\n" +
 				"b | text | text\n",
+		},
+		{
+			name:   "when a column has a none tag, it stays with no value in any row",
+			method: "kept",
+			answer: `[{"name":"a"},{"name":"b"}]`,
+			want:   "# Zzderives (2)\nNAME | CONDS\na | -\nb | -\n",
 		},
 		{
 			name:   "when the method answers nothing, one line names the key and what it did",

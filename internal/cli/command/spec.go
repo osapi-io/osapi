@@ -201,7 +201,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindOutput,
 			Name: `none:"..."`,
-			Does: "Is the text of a field with no value: absent, null, empty or a zero time. A field with omitempty and a none tag is shown, with the text.",
+			Does: "Is the text of a field with no value: absent, null, empty or a zero time. A field with omitempty and a none tag is shown, with the text. A table keeps a column with a none tag, because no cell of it is empty.",
 			When: "When no value means something, such as never for a time or (deleted) for a hash.",
 		},
 		{
