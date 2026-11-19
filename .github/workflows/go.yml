@@ -28,50 +28,16 @@ on:
 permissions:
   contents: read
 
-# Each check is a job of its own, and the unit tests are split across shards,
-# so the slowest job sets the time and not the sum of them. `just test` runs
-# the same checks in series on a laptop.
+# The same jobs in each Go repository of osapi-io. `just go-ci-checks` and
+# `just go-unit-plan` decide the jobs, from the lists that `just test` runs,
+# so a laptop and CI run the same checks. .github/actions/setup has the setup
+# of this repository.
 jobs:
-  check:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        check:
-          # The quick checks share one job: a public repository runs about
-          # twenty jobs at a time, and the unit shards need the room.
-          - just-fmt-check docs-fmt-check react-fmt-check go-mod-check go-pkg-check
-          - behavior-gen-check
-          - go-generate-check
-          - docs-gen-check
-          - cli-docs-gen-check
-          - behavior-scaffold-check
-          - endpoint-scaffold-check
-          - behavior-cover-check
-          - go-fmt-check
-          - go-vet
-    name: ${{ matrix.check }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./.github/actions/setup
-      # golangci-lint keeps the result of each package in its own cache. A
-      # cold run takes about two minutes, a warm one a few seconds.
-      - name: Restore the lint cache
-        if: matrix.check == 'go-vet'
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cache/golangci-lint
-          key: golangci-${{ hashFiles('go.sum', '.golangci.yml') }}-${{ github.sha }}
-          restore-keys: golangci-${{ hashFiles('go.sum', '.golangci.yml') }}-
-      - name: ${{ matrix.check }}
-        run: for check in ${{ matrix.check }}; do just "$check"; done
-
-  # go-unit-plan weighs each package by its tests and balances them across
-  # shards, so the number of shards and what each runs follow the code.
   plan:
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.plan.outputs.matrix }}
+      checks: ${{ steps.plan.outputs.checks }}
+      units: ${{ steps.plan.outputs.units }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up Go
@@ -80,22 +46,46 @@ jobs:
           go-version-file: go.mod
       - name: Install just
         uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
-      - name: Plan the shards
+      - name: Fetch justfiles
+        run: just fetch
+      - name: Plan the jobs
         id: plan
-        run: echo "matrix=$(just go-unit-plan)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "checks=$(just go-ci-checks)" >> "$GITHUB_OUTPUT"
+          echo "units=$(just go-unit-plan)" >> "$GITHUB_OUTPUT"
+
+  check:
+    needs: plan
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.checks) }}
+    name: ${{ matrix.check }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      # golangci-lint keeps the result of each package in a cache. Without it
+      # each run lints and formats every package again.
+      - name: Restore the lint cache
+        if: contains(matrix.check, 'go-vet')
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/golangci-lint
+          key: golangci-${{ hashFiles('go.sum', '.golangci.yml') }}-${{ github.sha }}
+          restore-keys: golangci-${{ hashFiles('go.sum', '.golangci.yml') }}-
+      - name: ${{ matrix.check }}
+        run: for check in ${{ matrix.check }}; do just "$check"; done
 
   unit:
     needs: plan
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+      matrix: ${{ fromJSON(needs.plan.outputs.units) }}
     name: unit ${{ matrix.shard }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
-      - name: Linux tuning
-        run: just linux-tune
       - name: Unit tests, shard ${{ matrix.shard }}
         run: just go-unit-shard ${{ matrix.shard }} "${{ matrix.packages }}"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -122,7 +112,7 @@ jobs:
           pattern: cover-*
           path: .coverage
           merge-multiple: true
-      - name: Merge the shards and check the coverage target
+      - name: Join the shards and check the coverage target
         run: just go-cover-merge
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1

@@ -65,83 +65,15 @@ build:
 # md-fmt-check is deliberately absent: it needs uv, which the Go workflow does
 # not install, and Markdown Lint already runs it with uv available.
 test: linux-tune
-    just just-fmt-check
-    just docs-fmt-check
-    just react-fmt-check
-    just behavior-gen-check
-    just go-generate-check
-    just docs-gen-check
-    just go-pkg-check
     just react-build
-    just cli-docs-gen-check
-    just behavior-scaffold-check
-    just endpoint-scaffold-check
     just go-test
-    just behavior-cover-check
 
-# Plan the shards of the unit tests, as the JSON matrix of a CI job
-#
-# Each package weighs its lines of test code, and one more, so a package with
-# no tests still runs for its coverage. The number of shards is the total
-# weight over weight, from 1 to max. Each package goes to the lightest shard
-# so far, the heaviest package first, so a new package needs no change here.
-# A package is the smallest part that a shard can have, so the heaviest
-# package sets the floor of the slowest shard.
-go-unit-plan weight="20000" max="10":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    go list -e -f '{{{{.Dir}} {{{{.ImportPath}}' ./... | grep -v /node_modules/ |
-        while read -r dir pkg; do
-            lines=$(cat "$dir"/*_test.go 2>/dev/null | wc -l || true)
-            echo "$((lines + 1)) $pkg"
-        done |
-        sort -rn |
-        awk -v w={{ weight }} -v max={{ max }} '
-            { weight[NR] = $1; pkg[NR] = $2; total += $1 }
-            END {
-                n = int((total + w - 1) / w); if (n < 1) n = 1; if (n > max) n = max
-                for (i = 1; i <= NR; i++) {
-                    best = 0
-                    for (s = 1; s < n; s++) if (load[s] < load[best]) best = s
-                    load[best] += weight[i]; list[best] = list[best] " " pkg[i]
-                }
-                printf "{\"include\":["
-                for (s = 0; s < n; s++) {
-                    sub(/^ /, "", list[s])
-                    printf "%s{\"shard\":%d,\"packages\":\"%s\"}", (s ? "," : ""), s, list[s]
-                }
-                print "]}"
-            }'
-
-# Run the unit tests of the packages, with the race detector and coverage
-#
-# CI runs one shard of go-unit-plan in each job. The shard writes
-# .coverage/shard-<shard>.out, and go-cover-merge joins them.
-go-unit-shard shard packages:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    mkdir -p .coverage
-    # The shared go.just defines the tags; just fetch writes it, so it is
-    # read when the recipe runs, not when the justfile is parsed.
-    tags=$(just --evaluate go_os_tags)
-    go test $tags -race -coverprofile=.coverage/shard-{{ shard }}.out {{ packages }}
-
-# Join the coverage of the unit test shards, and fail below the target
-#
-# The profile that it writes is the one that go-unit-cov writes for one run:
-# filtered through .coverignore, at .coverage/cover.out.
-go-cover-merge:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    {
-        echo "mode: atomic"
-        for f in .coverage/shard-*.out; do tail -n +2 "$f"; done
-    } | grep -v -f .coverignore > .coverage/cover.out
-    target=$(just --evaluate go_coverage_target)
-    total=$(go tool cover -func=.coverage/cover.out | awk '$1=="total:"{print $NF}' | tr -d '%')
-    awk -v t="$total" -v g="$target" 'BEGIN{exit !(t+0 < g+0)}' \
-      && { go tool cover -func=.coverage/cover.out | grep -v '100.0%$' >&2; echo "coverage ${total}% is below target ${target}%" >&2; exit 1; } \
-      || echo "coverage ${total}% meets target ${target}%"
+# The checks of `just test`, which the shared go-test runs and CI reads
+# (`just go-ci-checks`): the quick checks share one job, and each slow check is
+# a job. A check added here runs on a laptop and in CI, with no change to the
+# workflow.
+go_quick_checks := "just-fmt-check docs-fmt-check react-fmt-check go-mod-check go-pkg-check"
+go_slow_checks := "behavior-gen-check go-generate-check docs-gen-check cli-docs-gen-check behavior-scaffold-check endpoint-scaffold-check behavior-cover-check go-fmt-check go-vet"
 
 # Fail when a behavior that osapi behavior new writes does not pass its tests
 #

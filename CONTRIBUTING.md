@@ -491,18 +491,21 @@ agree with the gate.
 
 ### How CI runs the tests
 
-`just test` runs each check and the unit tests in series. CI does the same work
-in parallel jobs (`.github/workflows/go.yml`), so the slowest job sets the time:
+`just test` runs the checks of `go_quick_checks` and `go_slow_checks` in the
+justfile, then the unit tests and the coverage gate. CI runs the same checks in
+parallel jobs (`.github/workflows/go.yml`). Thus a check that you add to a list
+runs on your machine and in CI. The recipes are in the shared `go` module of
+osapi-justfiles, and each Go repository of osapi-io has the same workflow:
 
-- Each slow check is a job of its own. The quick checks share one job.
+- `just go-ci-checks` prints the lists as a job matrix. The quick checks share
+  one job, and each slow check is a job.
 - `just go-unit-plan` divides the packages into shards. It weighs each package
   by its lines of test code, and gives each package to the lightest shard,
-  heaviest first. A plan job runs it, and each shard is a job. Thus a new
-  package goes into a shard, and you do not change the workflow.
-- `just go-unit-shard <shard> "<packages>"` runs the tests of one shard with the
-  race detector, and writes `.coverage/shard-<shard>.out`.
-- `just go-cover-merge` joins the profiles of the shards, filters them through
-  `.coverignore`, and fails below the target.
+  heaviest first. Thus a new package goes into a shard, and you do not change
+  the workflow.
+- `just go-unit-shard <shard> "<packages>"` runs one shard with the race
+  detector. `just go-cover-merge` joins the profiles of the shards, and fails
+  below the target.
 - golangci-lint keeps its cache between runs. A run with no cache takes about
   two minutes. A run with the cache takes a few seconds.
 

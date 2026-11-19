@@ -2,8 +2,8 @@
 name: Set up osapi
 description: >-
   Go, Node.js, Bun and just, the shared justfiles, the Go and UI dependencies,
-  and the built UI, which the Go code embeds. Each job of the Go workflow
-  starts with it.
+  the built UI, which the Go code embeds, and the Linux tuning that the tests
+  need. Each job of the Go workflow that compiles Go starts with it.
 
 runs:
   using: composite
@@ -29,3 +29,4 @@ runs:
         just go-deps
         just react-deps
         just react-build
+        just linux-tune
