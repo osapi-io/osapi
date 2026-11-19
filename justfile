@@ -79,21 +79,52 @@ test: linux-tune
     just go-test
     just behavior-cover-check
 
-# Run one shard of the unit tests, with the race detector and coverage
+# Plan the shards of the unit tests, as the JSON matrix of a CI job
 #
-# CI splits the packages into count shards and runs each in a job of its own.
-# A package goes to shard index by its place in go list, so a new package
-# joins a shard with no change here. Each shard writes
-# .coverage/shard-<index>.out, and go-cover-merge joins them.
-go-unit-shard index count:
+# Each package weighs its lines of test code, and one more, so a package with
+# no tests still runs for its coverage. The number of shards is the total
+# weight over weight, from 1 to max. Each package goes to the lightest shard
+# so far, the heaviest package first, so a new package needs no change here.
+# A package is the smallest part that a shard can have, so the heaviest
+# package sets the floor of the slowest shard.
+go-unit-plan weight="20000" max="10":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    go list -e -f '{{{{.Dir}} {{{{.ImportPath}}' ./... | grep -v /node_modules/ |
+        while read -r dir pkg; do
+            lines=$(cat "$dir"/*_test.go 2>/dev/null | wc -l || true)
+            echo "$((lines + 1)) $pkg"
+        done |
+        sort -rn |
+        awk -v w={{ weight }} -v max={{ max }} '
+            { weight[NR] = $1; pkg[NR] = $2; total += $1 }
+            END {
+                n = int((total + w - 1) / w); if (n < 1) n = 1; if (n > max) n = max
+                for (i = 1; i <= NR; i++) {
+                    best = 0
+                    for (s = 1; s < n; s++) if (load[s] < load[best]) best = s
+                    load[best] += weight[i]; list[best] = list[best] " " pkg[i]
+                }
+                printf "{\"include\":["
+                for (s = 0; s < n; s++) {
+                    sub(/^ /, "", list[s])
+                    printf "%s{\"shard\":%d,\"packages\":\"%s\"}", (s ? "," : ""), s, list[s]
+                }
+                print "]}"
+            }'
+
+# Run the unit tests of the packages, with the race detector and coverage
+#
+# CI runs one shard of go-unit-plan in each job. The shard writes
+# .coverage/shard-<shard>.out, and go-cover-merge joins them.
+go-unit-shard shard packages:
     #!/usr/bin/env bash
     set -euo pipefail
     mkdir -p .coverage
     # The shared go.just defines the tags; just fetch writes it, so it is
     # read when the recipe runs, not when the justfile is parsed.
     tags=$(just --evaluate go_os_tags)
-    pkgs=$(go list ./... | grep -v /node_modules/ | awk -v n={{ count }} -v i={{ index }} '(NR - 1) % n == i')
-    go test $tags -race -coverprofile=.coverage/shard-{{ index }}.out $pkgs
+    go test $tags -race -coverprofile=.coverage/shard-{{ shard }}.out {{ packages }}
 
 # Join the coverage of the unit test shards, and fail below the target
 #
