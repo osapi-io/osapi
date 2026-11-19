@@ -189,6 +189,14 @@ func ExportHandleJobMessageJS(
 	return a.handleJobMessageJS(context.Background(), msg)
 }
 
+// ExportStartConsumers exposes startConsumers, the start of the job
+// consumers at startup, for testing.
+func ExportStartConsumers(
+	a *Agent,
+) {
+	a.startConsumers()
+}
+
 // ExportCheckDrainFlag exposes the private checkDrainFlag method for testing.
 func ExportCheckDrainFlag(
 	ctx context.Context,

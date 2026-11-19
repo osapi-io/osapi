@@ -22,7 +22,9 @@ package agent_test
 
 import (
 	"context"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	agentMocks "github.com/osapi-io/osapi/internal/agent/mocks"
 
@@ -134,6 +136,77 @@ func (s *DrainPublicTestSuite) TestCheckDrainFlag() {
 			tt.validateFunc(result)
 		})
 	}
+}
+
+// TestDrainAtStartupThenUndrainThenDrain replays the hang of #876. An
+// agent starts with its drain flag set: the heartbeat finds it before
+// startup starts the consumers. Startup must then start none, so that the
+// undrain starts the only set and the next drain stops it. Before the fix,
+// startup started a set while cordoned, the undrain started a second one
+// over it, and the drain waited for the first set forever.
+func (s *DrainPublicTestSuite) TestDrainAtStartupThenUndrainThenDrain() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	// No consumers yet: startup has not started them.
+	agent.SetAgentLifecycle(ctx, nil, s.testAgent, cancel, nil)
+	agent.SetAgentState(s.testAgent, job.AgentStateReady)
+
+	var started atomic.Int32
+	s.mockJobClient.EXPECT().
+		CreateOrUpdateConsumer(gomock.Any(), gomock.Any(), gomock.Any()).
+		Return(nil).
+		AnyTimes()
+	// A consumer runs until its context is cancelled, as nats-client's does.
+	s.mockJobClient.EXPECT().
+		ConsumeJobs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, _, _ string, _ any, _ any) error {
+			started.Add(1)
+			<-ctx.Done()
+			return ctx.Err()
+		}).
+		AnyTimes()
+	s.mockJobClient.EXPECT().
+		WriteAgentTimelineEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		Return(nil).
+		AnyTimes()
+
+	// The heartbeat finds the drain flag first.
+	s.mockJobClient.EXPECT().CheckDrainFlag(gomock.Any(), "test-machine-id").Return(true)
+	agent.ExportHandleDrainDetection(ctx, s.testAgent, "test-machine-id", "test-agent")
+	s.Equal(job.AgentStateCordoned, s.testAgent.State())
+
+	// Startup then starts no consumers, because the agent is cordoned.
+	agent.ExportStartConsumers(s.testAgent)
+	s.Never(func() bool { return started.Load() > 0 }, 200*time.Millisecond, 20*time.Millisecond,
+		"a cordoned agent takes no jobs")
+
+	// The undrain starts the one set.
+	s.mockJobClient.EXPECT().CheckDrainFlag(gomock.Any(), "test-machine-id").Return(false)
+	agent.ExportHandleDrainDetection(ctx, s.testAgent, "test-machine-id", "test-agent")
+	s.Equal(job.AgentStateReady, s.testAgent.State())
+	s.Eventually(func() bool { return started.Load() > 0 }, time.Second, 10*time.Millisecond)
+
+	// A set starts each consumer on its own goroutine: wait until all of
+	// them have started, so the count is the whole set.
+	n := settled(&started)
+
+	// A second start while it runs adds no second set.
+	agent.ExportStartConsumers(s.testAgent)
+	s.Never(func() bool { return started.Load() > n }, 200*time.Millisecond, 20*time.Millisecond)
+
+	// The next drain stops it, and returns.
+	s.mockJobClient.EXPECT().CheckDrainFlag(gomock.Any(), "test-machine-id").Return(true)
+	done := make(chan struct{})
+	go func() {
+		agent.ExportHandleDrainDetection(ctx, s.testAgent, "test-machine-id", "test-agent")
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(3 * time.Second):
+		s.FailNow("the drain did not return: a consumer set was left running")
+	}
+	s.Equal(job.AgentStateCordoned, s.testAgent.State())
 }
 
 func (s *DrainPublicTestSuite) TestHandleDrainDetection() {
@@ -274,4 +347,19 @@ func TestDrainPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(DrainPublicTestSuite))
+}
+
+// settled is the value of n once it has not changed for 100ms.
+func settled(
+	n *atomic.Int32,
+) int32 {
+	last := n.Load()
+	for {
+		time.Sleep(100 * time.Millisecond)
+		cur := n.Load()
+		if cur == last {
+			return cur
+		}
+		last = cur
+	}
 }

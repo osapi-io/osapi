@@ -253,17 +253,36 @@ func (a *Agent) setState(
 	a.state = state
 }
 
-// startConsumers creates a consumer context and starts all job consumers.
+// startConsumers starts the job consumers at startup, when the agent is
+// Ready. The heartbeat starts before it and can find the drain flag first:
+// then the agent is already Cordoned, and it must not take jobs. Starting
+// the consumers anyway left them running while cordoned, and the undrain
+// started a second set over them, whose cancel replaced the first's; the
+// next drain then waited for the first set forever (#876).
 func (a *Agent) startConsumers() {
 	a.lifecycleMu.Lock()
 	defer a.lifecycleMu.Unlock()
 
+	if a.state != job.AgentStateReady {
+		a.logger.Info(
+			"job consumers not started",
+			slog.String("state", a.state),
+		)
+
+		return
+	}
 	a.startConsumersLocked()
 }
 
 // startConsumersLocked is startConsumers for a caller that already holds
 // lifecycleMu, so a state change and the consumers it implies are one step.
+// When the consumers already run, it does nothing: a second set would
+// replace the cancel of the first, and stopConsumersLocked could not stop
+// it.
 func (a *Agent) startConsumersLocked() {
+	if a.consumerCancel != nil {
+		return
+	}
 	a.consumerCtx, a.consumerCancel = context.WithCancel(a.ctx)
 	_ = a.consumeQueryJobs(a.consumerCtx, a.machineID)
 	_ = a.consumeModifyJobs(a.consumerCtx, a.machineID)
@@ -280,6 +299,7 @@ func (a *Agent) startConsumersLocked() {
 func (a *Agent) stopConsumersLocked() {
 	if a.consumerCancel != nil {
 		a.consumerCancel()
+		a.consumerCancel = nil
 	}
 	a.consumerWg.Wait()
 }
