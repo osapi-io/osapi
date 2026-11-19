@@ -42,10 +42,8 @@ import (
 const signingKey = "test-signing-key-for-the-health-group"
 
 var degraded = health.StatusResponse{
-	Status: "degraded",
-	Components: map[string]health.ComponentHealth{
-		"controller.nats (connectivity)": {Status: "error", Error: "nats down"},
-	},
+	Status:  "degraded",
+	Checks:  []health.Check{{Name: "nats", Status: "error", Error: "nats down"}},
 	Version: "0.1.0",
 	Uptime:  "1m0s",
 }
@@ -195,7 +193,7 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 				})
 			},
 			wantCode: http.StatusOK,
-			wantBody: `{"status":"ok","components":null,"version":"0.1.0","uptime":"1m0s"}`,
+			wantBody: `{"status":"ok","version":"0.1.0","uptime":"1m0s","checks":null,"consumers":0}`,
 		},
 		{
 			name:  "when a component is not healthy, status is a 200 with the degraded status",

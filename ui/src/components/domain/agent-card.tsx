@@ -12,7 +12,7 @@ import { KVList } from "@/components/ui/kv-list";
 import { useAuth } from "@/hooks/use-auth";
 import { formatAgeSince, formatBytes } from "@/lib/format";
 import { Monitor, Clock, Cpu, Pause, Play, Loader2 } from "lucide-react";
-import type { AgentInfo, ComponentHealth } from "@/sdk/gen/schemas";
+import type { AgentInfo, ComponentEntry } from "@/sdk/gen/schemas";
 import {
   drainAgent,
   undrainAgent,
@@ -21,7 +21,9 @@ import { statusDot, statusVariant } from "@/lib/status";
 
 interface AgentCardProps {
   agent: AgentInfo;
-  components?: [string, ComponentHealth][];
+  // components are the agent's sub-components, from its entry in the
+  // health registry.
+  components?: ComponentEntry[];
   onRefresh?: () => void;
 }
 
@@ -227,10 +229,10 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
 
         {components && components.length > 0 && (
           <div className="mt-2 flex items-center gap-3">
-            {components.map(([name, comp]) => (
-              <div key={name} className="flex items-center gap-1 text-xs">
+            {components.map((comp) => (
+              <div key={comp.type} className="flex items-center gap-1 text-xs">
                 <HealthDot status={statusDot(comp.status)} />
-                <span className="text-text-muted">{name}</span>
+                <span className="text-text-muted">{comp.type}</span>
               </div>
             ))}
           </div>

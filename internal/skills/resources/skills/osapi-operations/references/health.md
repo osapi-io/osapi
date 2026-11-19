@@ -1,11 +1,10 @@
 # Health
 
 ```sh
-osapi client health status --json      # every component, and the controller's view of NATS
+osapi client health status --json      # every component, with its sub-components, and the controller's checks
 osapi client health ready --json       # is the controller ready to serve
 osapi client agent list --json         # agents that have checked in, with conditions
 osapi client agent get --hostname <h> --json
-osapi client nats status --json
 osapi client job get --id <job> --json # one job, and each host's result
 ```
 

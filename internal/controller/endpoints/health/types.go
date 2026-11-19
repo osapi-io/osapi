@@ -42,26 +42,27 @@ type ReadyResponse struct {
 // StatusResponse is the health of each component, with the metrics of the
 // system.
 type StatusResponse struct {
-	Status       string                     `json:"status"                  doc:"Overall health status."                         example:"ok"`
-	Components   map[string]ComponentHealth `json:"components"              doc:"Per-component health status."`
-	Version      string                     `json:"version"                 doc:"Application version."                           example:"0.1.0"`
-	Uptime       string                     `json:"uptime"                  doc:"Time since server started."                     example:"2h30m"`
-	NATS         *NATSInfo                  `json:"nats,omitempty"`
-	Streams      []StreamInfo               `json:"streams,omitempty"       doc:"JetStream stream statistics."`
-	KVBuckets    []KVBucketInfo             `json:"kv_buckets,omitempty"    doc:"KV bucket statistics."`
-	ObjectStores []ObjectStoreInfo          `json:"object_stores,omitempty" doc:"Object Store statistics."`
-	Jobs         *JobStats                  `json:"jobs,omitempty"`
-	Agents       *AgentStats                `json:"agents,omitempty"`
-	Consumers    *ConsumerStats             `json:"consumers,omitempty"`
-	Registry     []ComponentEntry           `json:"registry,omitempty"      doc:"All registered components with health details."`
+	_            struct{}          `title:"Controller"`
+	Status       string            `                   json:"status"                  doc:"Overall health status."                                                                                 example:"ok"    render:"status"`
+	Version      string            `                   json:"version"                 doc:"Application version."                                                                                   example:"0.1.0"`
+	Uptime       string            `                   json:"uptime"                  doc:"Time since server started."                                                                             example:"2h30m"`
+	Checks       []Check           `                   json:"checks"                  doc:"What the controller that answered checked for this answer: its connection to NATS and to the KV store."`
+	Registry     []ComponentEntry  `                   json:"registry,omitempty"      doc:"All registered components with health details, each with its sub-components."                                                           label:"Components"`
+	Jobs         *JobStats         `                   json:"jobs,omitempty"`
+	Streams      []StreamInfo      `                   json:"streams,omitempty"       doc:"JetStream stream statistics."`
+	KVBuckets    []KVBucketInfo    `                   json:"kv_buckets,omitempty"    doc:"KV bucket statistics."                                                                                                                  label:"KV buckets"`
+	ObjectStores []ObjectStoreInfo `                   json:"object_stores,omitempty" doc:"Object Store statistics."`
+	Consumers    int               `                   json:"consumers"               doc:"Total number of JetStream consumers: the sum of the consumers of each stream."                                          render:"-"`
+	NATS         *NATSInfo         `                   json:"nats,omitempty"                                                                                                                                       render:"-"`
+	Agents       *AgentStats       `                   json:"agents,omitempty"                                                                                                                                     render:"-"`
 }
 
-// ComponentHealth is the health of one component.
-type ComponentHealth struct {
-	Status  string `json:"status"            doc:"Component health status."                                                                                              example:"ok"`
-	Error   string `json:"error,omitempty"   doc:"Error message when component is unhealthy."`
-	Address string `json:"address,omitempty" doc:"Listen address of the component (if applicable)."                                                                      example:"http://0.0.0.0:8080"`
-	URL     string `json:"url,omitempty"     doc:"Where a person opens the component, from its url config key. Absent when the key is not set. osapi never requests it." example:"https://hub.example.ts.net/"`
+// Check is one check that the controller made for its answer, such as its
+// connection to NATS.
+type Check struct {
+	Name   string `json:"name"            doc:"What was checked, such as nats."             example:"nats"`
+	Status string `json:"status"          doc:"ok, or error."                               example:"ok"   render:"status"`
+	Error  string `json:"error,omitempty" doc:"Why the check failed. Absent when it is ok."`
 }
 
 // NATSInfo is the NATS server the controller is connected to.
@@ -74,7 +75,7 @@ type NATSInfo struct {
 type StreamInfo struct {
 	Name      string `json:"name"      doc:"Stream name."                       example:"JOBS"`
 	Messages  int    `json:"messages"  doc:"Number of messages in the stream."  example:"42"`
-	Bytes     int    `json:"bytes"     doc:"Total bytes in the stream."         example:"1024"`
+	Bytes     int    `json:"bytes"     doc:"Total bytes in the stream."         example:"1024" render:"bytes"`
 	Consumers int    `json:"consumers" doc:"Number of consumers on the stream." example:"1"`
 }
 
@@ -82,13 +83,13 @@ type StreamInfo struct {
 type KVBucketInfo struct {
 	Name  string `json:"name"  doc:"KV bucket name."               example:"job-queue"`
 	Keys  int    `json:"keys"  doc:"Number of keys in the bucket." example:"10"`
-	Bytes int    `json:"bytes" doc:"Total bytes in the bucket."    example:"2048"`
+	Bytes int    `json:"bytes" doc:"Total bytes in the bucket."    example:"2048"      render:"bytes"`
 }
 
 // ObjectStoreInfo is one Object Store bucket.
 type ObjectStoreInfo struct {
 	Name string `json:"name" doc:"Object Store bucket name." example:"file-objects"`
-	Size int    `json:"size" doc:"Total bytes in the store." example:"5242880"`
+	Size int    `json:"size" doc:"Total bytes in the store." example:"5242880"      render:"bytes"`
 }
 
 // JobStats is the count of the jobs in each state.
@@ -117,26 +118,15 @@ type AgentDetail struct {
 
 // ComponentEntry is one registered component, with its health.
 type ComponentEntry struct {
-	Type       string   `json:"type,omitempty"        doc:"Component type (agent, api, nats)."       example:"agent"`
-	Hostname   string   `json:"hostname,omitempty"    doc:"Component hostname."                      example:"web-01"`
-	Status     string   `json:"status,omitempty"      doc:"Component status."                        example:"Ready"`
-	Conditions []string `json:"conditions,omitempty"  doc:"Active conditions."`
-	Age        string   `json:"age,omitempty"         doc:"Time since component started."            example:"7h 6m"`
-	CPUPercent float32  `json:"cpu_percent,omitempty" doc:"Process CPU usage percentage."            example:"2.1"`
-	MemBytes   int64    `json:"mem_bytes,omitempty"   doc:"Process RSS memory in bytes."             example:"134217728"`
-	Version    string   `json:"version,omitempty"     doc:"Build version of the component's binary." example:"v0.2.1-0.20261119003517-f6bc5af55ceb"`
-}
-
-// ConsumerStats is the count of the JetStream consumers, with each one.
-type ConsumerStats struct {
-	Total     int              `json:"total"               doc:"Total number of JetStream consumers." example:"2"`
-	Consumers []ConsumerDetail `json:"consumers,omitempty" doc:"Per-consumer details."`
-}
-
-// ConsumerDetail is one JetStream consumer.
-type ConsumerDetail struct {
-	Name        string `json:"name"        doc:"Consumer name."                                 example:"query_any_web_01"`
-	Pending     int    `json:"pending"     doc:"Messages not yet delivered."                    example:"0"`
-	AckPending  int    `json:"ack_pending" doc:"Messages delivered but not yet acknowledged."   example:"3"`
-	Redelivered int    `json:"redelivered" doc:"Messages redelivered and not yet acknowledged." example:"0"`
+	Type       string           `json:"type,omitempty"        doc:"Component type (agent, controller, nats), or the name of a sub-component, such as api."       example:"agent"`
+	Hostname   string           `json:"hostname,omitempty"    doc:"Component hostname."                                                                          example:"web-01"`
+	Status     string           `json:"status,omitempty"      doc:"Component status."                                                                            example:"Ready"                                render:"status"`
+	Conditions []string         `json:"conditions,omitempty"  doc:"Active conditions."                                                                                                                                          none:"-"`
+	Age        string           `json:"age,omitempty"         doc:"Time since component started."                                                                example:"7h 6m"`
+	CPUPercent float32          `json:"cpu_percent,omitempty" doc:"Process CPU usage percentage."                                                                example:"2.1"                                                           label:"CPU %"`
+	MemBytes   int64            `json:"mem_bytes,omitempty"   doc:"Process RSS memory in bytes."                                                                 example:"134217728"                            render:"bytes"           label:"Mem"`
+	Version    string           `json:"version,omitempty"     doc:"Build version of the component's binary."                                                     example:"v0.2.1-0.20261119003517-f6bc5af55ceb"`
+	Address    string           `json:"address,omitempty"     doc:"Listen address of a sub-component, such as :8080."`
+	URL        string           `json:"url,omitempty"         doc:"Where a person opens a sub-component, from its url config key."`
+	Components []ComponentEntry `json:"components,omitempty"  doc:"The sub-components of the component, such as its api and its metrics server, sorted by name."`
 }

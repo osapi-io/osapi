@@ -13,38 +13,31 @@ import { Text } from "@/components/ui/text";
 import { useHealth } from "@/hooks/use-health";
 import { useAgents } from "@/hooks/use-agents";
 import { Activity } from "lucide-react";
-import type { ComponentHealth, ComponentEntry } from "@/sdk/gen/schemas";
+import type { ComponentEntry } from "@/sdk/gen/schemas";
 import { statusVariant } from "@/lib/status";
 import { Spinner } from "@/components/ui/spinner";
 import { Count } from "@/components/ui/count";
 import { KVList } from "@/components/ui/kv-list";
 import { formatBytes } from "@/lib/format";
 
-type GroupedComponents = {
-  controller: [string, ComponentHealth][];
-  nats: [string, ComponentHealth][];
-  agent: [string, ComponentHealth][];
+// SubRow is one row under a component card: a sub-component of the
+// component, or a check that the controller made, such as its connection
+// to NATS.
+type SubRow = {
+  name: string;
+  status: string;
+  address?: string;
+  url?: string;
 };
 
-function groupComponents(
-  components: Record<string, ComponentHealth>,
-): GroupedComponents {
-  const groups: GroupedComponents = { controller: [], nats: [], agent: [] };
-  for (const [key, comp] of Object.entries(components)) {
-    const lower = key.toLowerCase();
-    // Strip the prefix for display: "Controller.Api" → "Api"
-    const label = key.includes(".") ? key.split(".").slice(1).join(".") : key;
-    if (lower.startsWith("controller.")) {
-      groups.controller.push([label, comp]);
-    } else if (lower.startsWith("nats.")) {
-      groups.nats.push([label, comp]);
-    } else if (lower.startsWith("agent.")) {
-      groups.agent.push([label, comp]);
-    } else {
-      groups.controller.push([label, comp]);
-    }
-  }
-  return groups;
+// subRows are the sub-components of entry, as the API sorts them.
+function subRows(entry?: ComponentEntry): SubRow[] {
+  return (entry?.components ?? []).map((c) => ({
+    name: c.type ?? "",
+    status: c.status ?? "",
+    address: c.address,
+    url: c.url,
+  }));
 }
 
 // RegistryHeader is one row of osapi client health status's component
@@ -118,16 +111,26 @@ export function Dashboard() {
   const loading = healthLoading || agentLoading;
   const error = healthErr || agentErr;
 
-  const components = health?.components;
-  const grouped = useMemo(
-    () => (components ? groupComponents(components) : null),
-    [components],
-  );
-
   const controllerEntry = health?.registry?.find(
     (r) => r.type === "controller",
   );
   const natsEntry = health?.registry?.find((r) => r.type === "nats");
+  const grouped = useMemo(
+    () =>
+      health
+        ? {
+            controller: [
+              ...subRows(controllerEntry),
+              ...(health.checks ?? []).map((c): SubRow => ({
+                name: `${c.name} (connectivity)`,
+                status: c.status,
+              })),
+            ],
+            nats: subRows(natsEntry),
+          }
+        : null,
+    [health, controllerEntry, natsEntry],
+  );
 
   return (
     <ContentArea>
@@ -186,10 +189,10 @@ export function Dashboard() {
                 detail="ready"
               />
             )}
-            {health.consumers && (
+            {health.consumers !== undefined && (
               <StatCard
                 label="Consumers"
-                value={health.consumers.total}
+                value={health.consumers}
                 detail="JetStream"
               />
             )}
@@ -204,13 +207,13 @@ export function Dashboard() {
                   <Card>
                     <CardContent className="p-0">
                       <RegistryHeader entry={controllerEntry} />
-                      {grouped.controller.map(([name, comp], i) => (
+                      {grouped.controller.map((row, i) => (
                         <ComponentRow
-                          key={name}
-                          name={name}
-                          status={comp.status}
-                          address={comp.address}
-                          url={comp.url}
+                          key={row.name}
+                          name={row.name}
+                          status={row.status}
+                          address={row.address}
+                          url={row.url}
                           isLast={i === grouped.controller.length - 1}
                         />
                       ))}
@@ -224,13 +227,13 @@ export function Dashboard() {
                   <Card>
                     <CardContent className="p-0">
                       <RegistryHeader entry={natsEntry} />
-                      {grouped.nats.map(([name, comp], i) => (
+                      {grouped.nats.map((row, i) => (
                         <ComponentRow
-                          key={name}
-                          name={name}
-                          status={comp.status}
-                          address={comp.address}
-                          url={comp.url}
+                          key={row.name}
+                          name={row.name}
+                          status={row.status}
+                          address={row.address}
+                          url={row.url}
                           isLast={i === grouped.nats.length - 1}
                         />
                       ))}
@@ -310,7 +313,12 @@ export function Dashboard() {
                 <AgentCard
                   key={agent.hostname}
                   agent={agent}
-                  components={grouped?.agent}
+                  components={
+                    health?.registry?.find(
+                      (r) =>
+                        r.type === "agent" && r.hostname === agent.hostname,
+                    )?.components
+                  }
                   onRefresh={refreshAgents}
                 />
               ))}

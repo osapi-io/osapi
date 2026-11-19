@@ -79,9 +79,7 @@ func (h *Health) StartMetricsRefresh(
 func (h *Health) refreshMetricsCache(
 	ctx context.Context,
 ) {
-	resp := api.StatusResponse{
-		Components: make(map[string]api.ComponentHealth),
-	}
+	resp := api.StatusResponse{}
 
 	h.populateMetrics(ctx, &resp)
 

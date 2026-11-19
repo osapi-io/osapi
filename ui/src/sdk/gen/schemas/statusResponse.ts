@@ -5,27 +5,27 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { AgentStats } from './agentStats';
+import type { Check } from './check';
 import type { ComponentEntry } from './componentEntry';
-import type { ConsumerStats } from './consumerStats';
 import type { JobStats } from './jobStats';
 import type { KVBucketInfo } from './kVBucketInfo';
 import type { NATSInfo } from './nATSInfo';
 import type { ObjectStoreInfo } from './objectStoreInfo';
-import type { StatusResponseComponents } from './statusResponseComponents';
 import type { StreamInfo } from './streamInfo';
 
 export interface StatusResponse {
   agents?: AgentStats;
-  /** Per-component health status. */
-  components: StatusResponseComponents;
-  consumers?: ConsumerStats;
+  /** What the controller that answered checked for this answer: its connection to NATS and to the KV store. */
+  checks: Check[];
+  /** Total number of JetStream consumers: the sum of the consumers of each stream. */
+  consumers: number;
   jobs?: JobStats;
   /** KV bucket statistics. */
   kv_buckets?: KVBucketInfo[];
   nats?: NATSInfo;
   /** Object Store statistics. */
   object_stores?: ObjectStoreInfo[];
-  /** All registered components with health details. */
+  /** All registered components with health details, each with its sub-components. */
   registry?: ComponentEntry[];
   /** Overall health status. */
   status: string;

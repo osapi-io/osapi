@@ -100,10 +100,9 @@ func handlers(
 		}
 	}
 
-	// The same sub-components the heartbeat reports, so the two copies in the
-	// health response cannot disagree.
-	healthSubs := convertSubComponents(subComponents(d.cfg))
-	reporter := health.New(d.log, d.checker, startTime, d.version, d.metricsProvider, healthSubs)
+	// The controller's sub-components come to the health answer with its
+	// registry entry, from its heartbeat.
+	reporter := health.New(d.log, d.checker, startTime, d.version, d.metricsProvider)
 	reporter.StartMetricsRefresh(context.Background())
 
 	handlers := make([]func(e *echo.Echo), 0, 16)

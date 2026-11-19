@@ -49,19 +49,9 @@ func (suite *HealthTypesPublicTestSuite) TestSystemStatusFromGen() {
 					Status:  "degraded",
 					Version: "1.2.3",
 					Uptime:  "5d 3h",
-					Components: map[string]gen.ComponentHealth{
-						"nats": {
-							Status: "healthy",
-						},
-						"store": {
-							Status: "unhealthy",
-							Error:  &errMsg,
-						},
-						"controller.api": {
-							Status:  "ok",
-							Address: func() *string { s := "http://0.0.0.0:8080"; return &s }(),
-							Url:     func() *string { s := "https://hub.example.ts.net/"; return &s }(),
-						},
+					Checks: []gen.Check{
+						{Name: "nats", Status: "ok"},
+						{Name: "kv", Status: "error", Error: &errMsg},
 					},
 					Nats: &gen.NATSInfo{
 						Url:     "nats://localhost:4222",
@@ -90,17 +80,7 @@ func (suite *HealthTypesPublicTestSuite) TestSystemStatusFromGen() {
 						Unprocessed: 3,
 						Dlq:         2,
 					},
-					Consumers: &gen.ConsumerStats{
-						Total: 2,
-						Consumers: &[]gen.ConsumerDetail{
-							{
-								Name:        "jobs-agent",
-								Pending:     5,
-								AckPending:  2,
-								Redelivered: 1,
-							},
-						},
-					},
+					Consumers: 2,
 					Streams: &[]gen.StreamInfo{
 						{
 							Name:      "JOBS",
@@ -162,6 +142,14 @@ func (suite *HealthTypesPublicTestSuite) TestSystemStatusFromGen() {
 								Age:        &apiAge,
 								CpuPercent: &apiCPU,
 								MemBytes:   &apiMem,
+								Components: &[]gen.ComponentEntry{
+									{
+										Type:    func() *string { s := "server"; return &s }(),
+										Status:  func() *string { s := "ok"; return &s }(),
+										Address: func() *string { s := "http://0.0.0.0:8080"; return &s }(),
+										Url:     func() *string { s := "https://hub.example.ts.net/"; return &s }(),
+									},
+								},
 							},
 						}
 						return &entries
@@ -173,16 +161,10 @@ func (suite *HealthTypesPublicTestSuite) TestSystemStatusFromGen() {
 				suite.Equal("1.2.3", s.Version)
 				suite.Equal("5d 3h", s.Uptime)
 
-				suite.Require().Len(s.Components, 3)
-				suite.Equal("healthy", s.Components["nats"].Status)
-				suite.Empty(s.Components["nats"].Error)
-				suite.Equal("unhealthy", s.Components["store"].Status)
-				suite.Equal("connection timeout", s.Components["store"].Error)
-
-				suite.Equal("ok", s.Components["controller.api"].Status)
-				suite.Equal("http://0.0.0.0:8080", s.Components["controller.api"].Address)
-				suite.Equal("https://hub.example.ts.net/", s.Components["controller.api"].URL)
-				suite.Empty(s.Components["nats"].URL)
+				suite.Equal([]client.Check{
+					{Name: "nats", Status: "ok"},
+					{Name: "kv", Status: "error", Error: "connection timeout"},
+				}, s.Checks)
 
 				suite.Require().NotNil(s.NATS)
 				suite.Equal("nats://localhost:4222", s.NATS.URL)
@@ -207,13 +189,7 @@ func (suite *HealthTypesPublicTestSuite) TestSystemStatusFromGen() {
 				suite.Equal(3, s.Jobs.Unprocessed)
 				suite.Equal(2, s.Jobs.Dlq)
 
-				suite.Require().NotNil(s.Consumers)
-				suite.Equal(2, s.Consumers.Total)
-				suite.Require().Len(s.Consumers.Consumers, 1)
-				suite.Equal("jobs-agent", s.Consumers.Consumers[0].Name)
-				suite.Equal(5, s.Consumers.Consumers[0].Pending)
-				suite.Equal(2, s.Consumers.Consumers[0].AckPending)
-				suite.Equal(1, s.Consumers.Consumers[0].Redelivered)
+				suite.Equal(2, s.Consumers)
 
 				suite.Require().Len(s.Streams, 1)
 				suite.Equal("JOBS", s.Streams[0].Name)
@@ -250,25 +226,30 @@ func (suite *HealthTypesPublicTestSuite) TestSystemStatusFromGen() {
 				suite.InDelta(2.1, s.Registry[1].CPUPercent, 0.001)
 				suite.Equal(int64(52428800), s.Registry[1].MemBytes)
 				suite.Nil(s.Registry[1].Conditions)
+				suite.Equal([]client.RegistryEntry{{
+					Type:    "server",
+					Status:  "ok",
+					Address: "http://0.0.0.0:8080",
+					URL:     "https://hub.example.ts.net/",
+				}}, s.Registry[1].Components)
 			},
 		},
 		{
 			name: "when only required fields are set",
 			input: &gen.StatusResponse{
-				Status:     "ok",
-				Version:    "1.0.0",
-				Uptime:     "1h",
-				Components: map[string]gen.ComponentHealth{},
+				Status:  "ok",
+				Version: "1.0.0",
+				Uptime:  "1h",
 			},
 			validateFunc: func(s client.SystemStatus) {
 				suite.Equal("ok", s.Status)
 				suite.Equal("1.0.0", s.Version)
 				suite.Equal("1h", s.Uptime)
-				suite.Empty(s.Components)
+				suite.Empty(s.Checks)
 				suite.Nil(s.NATS)
 				suite.Nil(s.Agents)
 				suite.Nil(s.Jobs)
-				suite.Nil(s.Consumers)
+				suite.Zero(s.Consumers)
 				suite.Nil(s.Streams)
 				suite.Nil(s.KVBuckets)
 				suite.Nil(s.ObjectStores)
@@ -278,10 +259,9 @@ func (suite *HealthTypesPublicTestSuite) TestSystemStatusFromGen() {
 		{
 			name: "when registry entry has all nil optional fields",
 			input: &gen.StatusResponse{
-				Status:     "ok",
-				Version:    "1.0.0",
-				Uptime:     "1h",
-				Components: map[string]gen.ComponentHealth{},
+				Status:  "ok",
+				Version: "1.0.0",
+				Uptime:  "1h",
 				Registry: &[]gen.ComponentEntry{
 					{
 						// all optional pointer fields left nil
@@ -302,10 +282,9 @@ func (suite *HealthTypesPublicTestSuite) TestSystemStatusFromGen() {
 		{
 			name: "when a component is not healthy, the status is degraded",
 			input: &gen.StatusResponse{
-				Status:     "degraded",
-				Version:    "1.0.0",
-				Uptime:     "30m",
-				Components: map[string]gen.ComponentHealth{},
+				Status:  "degraded",
+				Version: "1.0.0",
+				Uptime:  "30m",
 			},
 			validateFunc: func(s client.SystemStatus) {
 				suite.Equal("degraded", s.Status)
@@ -317,9 +296,6 @@ func (suite *HealthTypesPublicTestSuite) TestSystemStatusFromGen() {
 				Status:  "ok",
 				Version: "1.0.0",
 				Uptime:  "1h",
-				Components: map[string]gen.ComponentHealth{
-					"nats": {Status: "healthy"},
-				},
 				Agents: &gen.AgentStats{
 					Total: 0,
 					Ready: 0,
@@ -330,23 +306,6 @@ func (suite *HealthTypesPublicTestSuite) TestSystemStatusFromGen() {
 				suite.Equal(0, s.Agents.Total)
 				suite.Equal(0, s.Agents.Ready)
 				suite.Nil(s.Agents.Agents)
-			},
-		},
-		{
-			name: "when consumers has nil consumers list",
-			input: &gen.StatusResponse{
-				Status:     "ok",
-				Version:    "1.0.0",
-				Uptime:     "1h",
-				Components: map[string]gen.ComponentHealth{},
-				Consumers: &gen.ConsumerStats{
-					Total: 0,
-				},
-			},
-			validateFunc: func(s client.SystemStatus) {
-				suite.Require().NotNil(s.Consumers)
-				suite.Equal(0, s.Consumers.Total)
-				suite.Nil(s.Consumers.Consumers)
 			},
 		},
 	}

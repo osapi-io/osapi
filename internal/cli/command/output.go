@@ -671,26 +671,93 @@ func list(
 	}
 
 	elem := element(c.Type)
-	cols := tableColumns(Columns(elem))
+	cols, children := treeColumns(tableColumns(Columns(elem)), elem)
 	if !isObject(elem) {
 		cols = []Column{{JSON: "", Header: "VALUE", Type: elem}}
 	}
+	branches := tree(items, children, "", "")
+	all := make([]any, 0, len(branches))
+	for _, b := range branches {
+		all = append(all, b.item)
+	}
 	// A column with no value in any row says nothing, so it is left out.
-	cols = filled(p, cols, items)
+	cols = filled(p, cols, all)
 	headers := make([]string, 0, len(cols))
 	for _, col := range cols {
 		headers = append(headers, col.Header)
 	}
-	rows := make([][]string, 0, len(items))
-	for _, item := range items {
+	rows := make([][]string, 0, len(branches))
+	for _, b := range branches {
 		row := make([]string, 0, len(cols))
-		for _, col := range cols {
-			row = append(row, col.Format(p, cell(col, item)))
+		for i, col := range cols {
+			text := col.Format(p, cell(col, b.item))
+			if i == 0 {
+				text = b.prefix + text
+			}
+			row = append(row, text)
 		}
 		rows = append(rows, row)
 	}
 
 	p.Table(Table{Title: counted, Headers: headers, Rows: rows, Empty: c.Empty})
+}
+
+// treeColumns are cols without the column of the children of each row: a
+// list of elem in elem, such as the sub-components of a component. Its
+// json name is children, or "" when elem has none.
+func treeColumns(
+	cols []Column,
+	elem reflect.Type,
+) ([]Column, string) {
+	out := make([]Column, 0, len(cols))
+	children := ""
+	for _, col := range cols {
+		if col.Type.Kind() == reflect.Slice && element(col.Type) == elem {
+			children = col.JSON
+
+			continue
+		}
+		out = append(out, col)
+	}
+
+	return out, children
+}
+
+// branch is one row of a tree: an item, and the lines in front of its
+// first cell.
+type branch struct {
+	item   any
+	prefix string
+}
+
+// tree is items with the children of each under it, in order: a child's
+// first cell has ├─ or └─ after the lines of its parents. children is the
+// json name of the list of children, or "" for a list with none.
+func tree(
+	items []any,
+	children string,
+	pad string,
+	mark string,
+) []branch {
+	out := []branch{}
+	for i, item := range items {
+		last := i == len(items)-1
+		prefix, under := "", ""
+		if mark != "" {
+			prefix, under = pad+"├─ ", pad+"│  "
+			if last {
+				prefix, under = pad+"└─ ", pad+"   "
+			}
+		}
+		out = append(out, branch{item: item, prefix: prefix})
+		obj, _ := item.(map[string]any)
+		kids, _ := obj[children].([]any)
+		if children != "" && len(kids) > 0 {
+			out = append(out, tree(kids, children, under, "branch")...)
+		}
+	}
+
+	return out
 }
 
 // cell is the value of col in item: the field of an object item, or the

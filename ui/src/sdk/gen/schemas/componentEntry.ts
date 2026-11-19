@@ -6,8 +6,12 @@
  */
 
 export interface ComponentEntry {
+  /** Listen address of a sub-component, such as :8080. */
+  address?: string;
   /** Time since component started. */
   age?: string;
+  /** The sub-components of the component, such as its api and its metrics server, sorted by name. */
+  components?: ComponentEntry[];
   /** Active conditions. */
   conditions?: string[];
   /** Process CPU usage percentage. */
@@ -18,8 +22,10 @@ export interface ComponentEntry {
   mem_bytes?: number;
   /** Component status. */
   status?: string;
-  /** Component type (agent, api, nats). */
+  /** Component type (agent, controller, nats), or the name of a sub-component, such as api. */
   type?: string;
+  /** Where a person opens a sub-component, from its url config key. */
+  url?: string;
   /** Build version of the component's binary. */
   version?: string;
 }

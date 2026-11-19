@@ -1965,6 +1965,18 @@ type CertificateCAUpdateRequest struct {
 	Object string `json:"object" validate:"required,min=1"`
 }
 
+// Check defines model for Check.
+type Check struct {
+	// Error Why the check failed. Absent when it is ok.
+	Error *string `json:"error,omitempty"`
+
+	// Name What was checked, such as nats.
+	Name string `json:"name"`
+
+	// Status ok, or error.
+	Status string `json:"status"`
+}
+
 // CommandExecRequest defines model for CommandExecRequest.
 type CommandExecRequest struct {
 	// Args Command arguments.
@@ -2031,8 +2043,14 @@ type CommandShellRequest struct {
 
 // ComponentEntry defines model for ComponentEntry.
 type ComponentEntry struct {
+	// Address Listen address of a sub-component, such as :8080.
+	Address *string `json:"address,omitempty"`
+
 	// Age Time since component started.
 	Age *string `json:"age,omitempty"`
+
+	// Components The sub-components of the component, such as its api and its metrics server, sorted by name.
+	Components *[]ComponentEntry `json:"components,omitempty"`
 
 	// Conditions Active conditions.
 	Conditions *[]string `json:"conditions,omitempty"`
@@ -2049,50 +2067,14 @@ type ComponentEntry struct {
 	// Status Component status.
 	Status *string `json:"status,omitempty"`
 
-	// Type Component type (agent, api, nats).
+	// Type Component type (agent, controller, nats), or the name of a sub-component, such as api.
 	Type *string `json:"type,omitempty"`
+
+	// Url Where a person opens a sub-component, from its url config key.
+	Url *string `json:"url,omitempty"`
 
 	// Version Build version of the component's binary.
 	Version *string `json:"version,omitempty"`
-}
-
-// ComponentHealth defines model for ComponentHealth.
-type ComponentHealth struct {
-	// Address Listen address of the component (if applicable).
-	Address *string `json:"address,omitempty"`
-
-	// Error Error message when component is unhealthy.
-	Error *string `json:"error,omitempty"`
-
-	// Status Component health status.
-	Status string `json:"status"`
-
-	// Url Where a person opens the component, from its url config key. Absent when the key is not set. osapi never requests it.
-	Url *string `json:"url,omitempty"`
-}
-
-// ConsumerDetail defines model for ConsumerDetail.
-type ConsumerDetail struct {
-	// AckPending Messages delivered but not yet acknowledged.
-	AckPending int `json:"ack_pending"`
-
-	// Name Consumer name.
-	Name string `json:"name"`
-
-	// Pending Messages not yet delivered.
-	Pending int `json:"pending"`
-
-	// Redelivered Messages redelivered and not yet acknowledged.
-	Redelivered int `json:"redelivered"`
-}
-
-// ConsumerStats defines model for ConsumerStats.
-type ConsumerStats struct {
-	// Consumers Per-consumer details.
-	Consumers *[]ConsumerDetail `json:"consumers,omitempty"`
-
-	// Total Total number of JetStream consumers.
-	Total int `json:"total"`
 }
 
 // CreateJobResponse defines model for CreateJobResponse.
@@ -4338,10 +4320,12 @@ type StaleDeploymentsResponse struct {
 type StatusResponse struct {
 	Agents *AgentStats `json:"agents,omitempty"`
 
-	// Components Per-component health status.
-	Components map[string]ComponentHealth `json:"components"`
-	Consumers  *ConsumerStats             `json:"consumers,omitempty"`
-	Jobs       *JobStats                  `json:"jobs,omitempty"`
+	// Checks What the controller that answered checked for this answer: its connection to NATS and to the KV store.
+	Checks []Check `json:"checks"`
+
+	// Consumers Total number of JetStream consumers: the sum of the consumers of each stream.
+	Consumers int       `json:"consumers"`
+	Jobs      *JobStats `json:"jobs,omitempty"`
 
 	// KvBuckets KV bucket statistics.
 	KvBuckets *[]KVBucketInfo `json:"kv_buckets,omitempty"`
@@ -4350,7 +4334,7 @@ type StatusResponse struct {
 	// ObjectStores Object Store statistics.
 	ObjectStores *[]ObjectStoreInfo `json:"object_stores,omitempty"`
 
-	// Registry All registered components with health details.
+	// Registry All registered components with health details, each with its sub-components.
 	Registry *[]ComponentEntry `json:"registry,omitempty"`
 
 	// Status Overall health status.
