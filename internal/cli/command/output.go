@@ -42,6 +42,8 @@ type Printer interface {
 	Table(t Table)
 	// Verdict prints one line at the left margin, such as m-1 admitted.
 	Verdict(text string)
+	// Text prints text as it is, such as a document a field holds.
+	Text(text string)
 	// Status is a status word in its color.
 	Status(word string) string
 	// Bytes is a size, such as 3.4 GB.
@@ -81,6 +83,9 @@ const (
 	RenderDurationMs = "duration=ms"
 	// RenderStatus prints a status word in its color.
 	RenderStatus = "status"
+	// RenderBody makes the field the whole output, as it is: a document,
+	// such as the text of a skill. The other fields are only in --json.
+	RenderBody = "body"
 	// RenderShort is the prefix of short=N, which prints the first N
 	// characters, with ... after them.
 	RenderShort = "short="
@@ -538,6 +543,16 @@ func derive(
 	var v any
 	if err := json.Unmarshal(answer, &v); err != nil {
 		return fmt.Errorf("decode %s %s: %w", g.GroupName(), m.MethodName(), err)
+	}
+	// A field tagged render:"body" is the whole output, such as a document.
+	for _, c := range Columns(t) {
+		if c.Render == RenderBody {
+			obj, _ := v.(map[string]any)
+			text, _ := obj[c.JSON].(string)
+			p.Text(text)
+
+			return nil
+		}
 	}
 
 	heading := title(t)

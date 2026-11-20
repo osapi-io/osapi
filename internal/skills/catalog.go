@@ -34,11 +34,11 @@ type Skill struct {
 	// Name is the directory of the skill, and the name in its frontmatter.
 	Name string `json:"name"`
 	// Description is the description in its frontmatter.
-	Description string `json:"description"`
+	Description string `json:"description" table:"-"`
 	// Init is true when `osapi init` installs the skill.
-	Init bool `json:"init"`
+	Init bool `json:"init" label:"Installed by init"`
 	// References are the other files of the skill, relative to its directory.
-	References []string `json:"references"`
+	References []string `json:"references" table:"-"`
 }
 
 // ErrNotFound is the error for a skill or a reference that the binary does not

@@ -31,9 +31,12 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/command"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/all/gen"
 	configcmd "github.com/osapi-io/osapi/internal/cli/commands/config"
+	"github.com/osapi-io/osapi/internal/cli/commands/initcmd"
+	"github.com/osapi-io/osapi/internal/cli/commands/skill"
 	"github.com/osapi-io/osapi/internal/cli/commands/token"
 	versioncmd "github.com/osapi-io/osapi/internal/cli/commands/version"
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/skills"
 )
 
 // The commands of the local groups, which run in the CLI with no API, go
@@ -45,6 +48,12 @@ func init() {
 	})
 	command.Provide(configcmd.Group, func() configcmd.Deps {
 		return configcmd.Deps{File: func() string { return viper.GetString("osapiFile") }}
+	})
+	command.Provide(skill.Group, func() skill.Deps {
+		return skill.Deps{Installed: skills.Installed(), Dev: skills.Dev()}
+	})
+	command.Provide(initcmd.Group, func() initcmd.Deps {
+		return initcmd.Deps{FS: appFs, Source: skills.Installed(), Version: displayVersion}
 	})
 	command.Provide(versioncmd.Group, func() versioncmd.Deps {
 		return versioncmd.Deps{Build: buildInfo}

@@ -2,6 +2,9 @@
 
 Print a skill, or one of its reference files.
 
+It prints the file as it is. `--json` has the name, the reference and the
+content.
+
 ```bash
 osapi skill get [flags]
 ```

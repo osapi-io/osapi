@@ -6,8 +6,12 @@ The command writes the skills in this binary for each `--tool`. It also writes a
 short section, with links to the skills, in the instructions file of that tool:
 `CLAUDE.md` or `AGENTS.md`. It does not change text outside the osapi section.
 
+Run it again after you upgrade osapi. It writes the skills again to agree with
+the binary. It removes the files that an older version installed. Thus the agent
+does not read a skill about operations that the binary does not have now.
+
 ```bash
-osapi init [path] [flags]
+osapi init [flags]
 ```
 
 ## Examples
@@ -15,20 +19,15 @@ osapi init [path] [flags]
 ```bash
 osapi init
 osapi init --tool claude --tool codex
-osapi init ./ops-repo --json
+osapi init --path ./ops-repo --json
 ```
-
-## Notes
-
-Run it again after you upgrade osapi. It writes the skills again to agree with
-the binary. It removes the files that an older version installed. Thus the agent
-does not read a skill about operations that the binary does not have now.
 
 ## Flags
 
-| Flag     | Description                                           | Default    |
-| -------- | ----------------------------------------------------- | ---------- |
-| `--tool` | Agent tool to install for: claude, codex (repeatable) | `[claude]` |
+| Flag     | Description                                                                              | Default |
+| -------- | ---------------------------------------------------------------------------------------- | ------- |
+| `--path` | The repository to install into; the current directory without it                         | `.`     |
+| `--tool` | Agent tool to install for: claude, codex (repeatable); claude without it (claude, codex) |         |
 
 ## Global flags
 

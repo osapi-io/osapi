@@ -78,7 +78,7 @@ const (
 
 // Result is one file Install looked at.
 type Result struct {
-	Path   string `json:"path"`
+	Path   string `json:"path"   label:"File"`
 	Status Status `json:"status"`
 }
 
