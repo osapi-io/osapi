@@ -32,10 +32,10 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osapi-io/gohai/pkg/gohai/family"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/command"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all"
-	"github.com/osapi-io/osapi/pkg/sdk/platform"
 )
 
 // BehaviorSmokeSuite runs every registered behavior's generated commands
@@ -86,7 +86,7 @@ func (s *BehaviorSmokeSuite) results(
 // what is missing.
 func (s *BehaviorSmokeSuite) TestPrograms() {
 	for _, b := range behavior.All() {
-		sudo, runs := b.Programs(platform.Detect())
+		sudo, runs := b.Programs(family.Detect())
 		for _, p := range append(sudo, runs...) {
 			_, err := exec.LookPath(p)
 			s.NoError(err,

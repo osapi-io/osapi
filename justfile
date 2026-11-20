@@ -198,7 +198,8 @@ examples-check:
     #!/usr/bin/env bash
     set -euo pipefail
     broken=0
-    for dir in examples/sdk/client examples/sdk/platform; do
+    for dir in examples/sdk/*/; do
+        dir=${dir%/}
         for f in "$dir"/*.go; do
             if ! (cd "$dir" && go vet "$(basename "$f")"); then
                 echo "the SDK example $f does not build against this SDK" >&2

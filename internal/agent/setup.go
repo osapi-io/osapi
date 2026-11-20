@@ -31,6 +31,7 @@ import (
 	"github.com/avfs/avfs"
 	"github.com/nats-io/nats.go/jetstream"
 
+	"github.com/osapi-io/gohai/pkg/gohai/family"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/config"
@@ -52,7 +53,7 @@ import (
 // detectFn and containerFn tell the platform of the host (injectable for
 // testing).
 var (
-	detectFn    = platform.Detect
+	detectFn    = family.Detect
 	containerFn = platform.IsContainer
 )
 
