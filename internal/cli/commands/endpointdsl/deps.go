@@ -17,28 +17,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-package cmd
 
-import (
-	"github.com/spf13/cobra"
+package endpointdsl
 
-	// Register every endpoint group, so the endpoint commands see them.
-	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all"
-)
+import "github.com/osapi-io/osapi/internal/controller/endpoint"
 
-var endpointCmd = &cobra.Command{
-	Use:   "endpoint",
-	Short: "List, describe and validate the controller's own endpoints, and print their DSL",
-	Long: "An endpoint is one operation of the controller itself, such as\n" +
-		"`GET /api/agent`. It runs on the controller, not on a host. Work on a host\n" +
-		"is a behavior: see `osapi behavior`. These commands read the definitions in\n" +
-		"the binary. Thus they need no config file and no running controller.\n\n" +
-		"`spec` lists each part of the DSL. The groups are defined, and their specs\n" +
-		"are compared with the hand-written specs. The controller still serves the\n" +
-		"hand-written specs.",
-}
-
-func init() {
-	controllerCmd.AddCommand(endpointCmd)
-	skipConfigCmds["endpoint"] = true
+// Deps is what the methods use: the endpoint groups, what makes a group's
+// part of the OpenAPI spec, and the directory of the osapi checkout that
+// create writes into.
+type Deps struct {
+	Groups  func() []*endpoint.Group
+	OpenAPI func(g *endpoint.Group) (any, error)
+	Dir     string
 }

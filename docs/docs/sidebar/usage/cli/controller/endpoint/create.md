@@ -5,9 +5,9 @@ Write a new endpoint group that builds and passes its tests.
 It writes `internal/controller/endpoints/<name>/` in the osapi checkout in the
 current directory, and adds its import to `internal/controller/endpoints/all`.
 The group has a list and a get, an empty `Deps` and the tests of its methods.
-Then run `go generate ./internal/controller/endpoints/all` and `just generate`.
-While its `Deps` is empty, the controller needs no wiring.
-`osapi controller endpoint spec get` lists each part of the DSL.
+Then run the steps that it prints. While its `Deps` is empty, the controller
+needs no wiring. `osapi controller endpoint spec get` lists each part of the
+DSL.
 
 ```bash
 osapi controller endpoint create [flags]

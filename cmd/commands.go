@@ -41,6 +41,7 @@ import (
 	configcmd "github.com/osapi-io/osapi/internal/cli/commands/config"
 	"github.com/osapi-io/osapi/internal/cli/commands/controllercmd"
 	"github.com/osapi-io/osapi/internal/cli/commands/controllerkey"
+	"github.com/osapi-io/osapi/internal/cli/commands/endpointdsl"
 	"github.com/osapi-io/osapi/internal/cli/commands/initcmd"
 	"github.com/osapi-io/osapi/internal/cli/commands/natsserver"
 	"github.com/osapi-io/osapi/internal/cli/commands/natssetup"
@@ -49,6 +50,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/commands/token"
 	versioncmd "github.com/osapi-io/osapi/internal/cli/commands/version"
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/skills"
 )
 
@@ -93,6 +95,15 @@ func init() {
 			Root:       rootCmd,
 			Dir:        ".",
 			IsBehavior: func(name string) bool { return behavior.Lookup(name) != nil },
+		}
+	})
+	command.Provide(endpointdsl.Group, func() endpointdsl.Deps {
+		return endpointdsl.Deps{
+			Groups: endpoint.All,
+			OpenAPI: func(g *endpoint.Group) (any, error) {
+				return endpoint.OpenAPI(g, endpoint.ErrorRef)
+			},
+			Dir: ".",
 		}
 	})
 	command.Provide(startcmd.Group, func() startcmd.Deps {

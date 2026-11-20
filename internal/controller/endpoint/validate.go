@@ -141,7 +141,7 @@ type Problem struct {
 	// Message says what is wrong.
 	Message string `json:"message"`
 	// Fix is how to fix it, from the check of Rule.
-	Fix string `json:"fix"`
+	Fix string `json:"fix" table:"-"`
 }
 
 func (p Problem) String() string {

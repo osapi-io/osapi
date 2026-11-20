@@ -9,7 +9,7 @@ The binary describes them as endpoint groups:
 ```sh
 osapi controller endpoint list --json                 # the groups the binary defines, and their methods
 osapi controller endpoint get --name agent --json     # each method's verb, path, permission and operationId
-osapi controller endpoint get --name agent --openapi  # the group's part of the OpenAPI spec
+osapi controller endpoint openapi get --name agent  # the group's part of the OpenAPI spec
 ```
 
 Only some groups are defined yet. `controller endpoint list` shows which. For a group that

@@ -54,7 +54,7 @@ Ask the code and the binary before you read prose:
 | Each rule a definition must pass, with its fix | `go run . controller endpoint validate --help` |
 | Which groups exist, and their methods | `go run . controller endpoint list` |
 | The routes, permissions and operationIds of a group | `go run . controller endpoint get --name <group>` |
-| The spec that the definition makes | `go run . controller endpoint get --name <group> --openapi` |
+| The spec that the definition makes | `go run . controller endpoint openapi get --name <group>` |
 | Whether a definition breaks a rule | `go run . controller endpoint validate` |
 | A complete group | `internal/controller/endpoints/agent` |
 | The hand-written spec of a group | `internal/controller/api/<group>/gen/api.yaml` |
