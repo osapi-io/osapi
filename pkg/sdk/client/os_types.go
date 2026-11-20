@@ -29,7 +29,6 @@ type OSInfoResult struct {
 	Hostname string  `json:"hostname"`
 	Status   string  `json:"status"`
 	Error    string  `json:"error,omitempty"`
-	Changed  bool    `json:"changed"`
 	OSInfo   *OSInfo `json:"os_info,omitempty"`
 }
 
@@ -49,7 +48,7 @@ func osInfoFromGen(
 
 // osInfoCollectionFromGen converts a gen.OSInfoCollectionResponse to a Collection[OSInfoResult].
 func osInfoCollectionFromGen(
-	g *gen.OSInfoCollectionResponse,
+	g *gen.OsGetResponse,
 ) Collection[OSInfoResult] {
 	results := make([]OSInfoResult, 0, len(g.Results))
 	for _, r := range g.Results {
@@ -57,8 +56,7 @@ func osInfoCollectionFromGen(
 			Hostname: r.Hostname,
 			Status:   string(r.Status),
 			Error:    derefString(r.Error),
-			Changed:  derefBool(r.Changed),
-			OSInfo:   osInfoFromGen(r.OsInfo),
+			OSInfo:   osReleaseFromGen(r.OsInfo),
 		})
 	}
 
@@ -66,4 +64,15 @@ func osInfoCollectionFromGen(
 		Results: results,
 		JobID:   jobIDFromGen(g.JobId),
 	}
+}
+
+// osReleaseFromGen converts the os behavior's gen.Release to an OSInfo.
+func osReleaseFromGen(
+	g *gen.Release,
+) *OSInfo {
+	if g == nil {
+		return nil
+	}
+
+	return &OSInfo{Distribution: g.Distribution, Version: g.Version}
 }

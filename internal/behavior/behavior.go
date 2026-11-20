@@ -211,6 +211,14 @@ type Method struct {
 	// Refusals are calls the method fails, for the docs pages and the
 	// provider's tests.
 	Refusals []Refusal
+	// Platforms limits the method to these of its behavior's platforms. Empty
+	// means every platform the behavior declares. On any other platform the
+	// method reports skipped, and its examples do not run there.
+	Platforms []string
+	// SudoPrograms and RunsPrograms are the programs only this method runs,
+	// with and without sudo. A host needs them only where the method runs.
+	SudoPrograms []string
+	RunsPrograms []string
 
 	provider reflect.Type
 	owner    *Behavior
@@ -236,6 +244,55 @@ func (m *Method) Key(
 	m.KeyField = field
 
 	return m
+}
+
+// On limits the method to platforms, as Platform names them: a hostname
+// read can run on every platform its behavior declares while the update runs
+// only on debian. Elsewhere the method reports skipped.
+func (m *Method) On(
+	platforms ...string,
+) *Method {
+	m.Platforms = append(m.Platforms, platforms...)
+
+	return m
+}
+
+// Sudo declares programs only this method runs with sudo, such as
+// hostnamectl for a hostname update limited with On. The behavior's Sudo is
+// for programs every method can run.
+func (m *Method) Sudo(
+	programs ...string,
+) *Method {
+	m.SudoPrograms = append(m.SudoPrograms, programs...)
+
+	return m
+}
+
+// Runs declares programs only this method runs without sudo.
+func (m *Method) Runs(
+	programs ...string,
+) *Method {
+	m.RunsPrograms = append(m.RunsPrograms, programs...)
+
+	return m
+}
+
+// RunsOn reports whether the method runs on a host whose platform is
+// platform: every platform without On, else one On names, or any platform
+// but darwin when On names PlatformLinux.
+func (m *Method) RunsOn(
+	platform string,
+) bool {
+	if len(m.Platforms) == 0 {
+		return true
+	}
+	for _, p := range m.Platforms {
+		if p == platform || (p == PlatformLinux && platform != PlatformDarwin) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // Explain sets the method's longer description, for its command's help and

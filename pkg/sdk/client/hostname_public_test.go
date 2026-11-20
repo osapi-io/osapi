@@ -163,7 +163,7 @@ func (suite *HostnamePublicTestSuite) TestUpdate() {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"new-host","status":"ok","changed":true}]}`,
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"web-01","status":"ok","name":"new-host","changed":true}]}`,
 					),
 				)
 			},
@@ -172,7 +172,8 @@ func (suite *HostnamePublicTestSuite) TestUpdate() {
 				suite.NotNil(resp)
 				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
 				suite.Len(resp.Data.Results, 1)
-				suite.Equal("new-host", resp.Data.Results[0].Hostname)
+				suite.Equal("web-01", resp.Data.Results[0].Hostname)
+				suite.Equal("new-host", resp.Data.Results[0].Name)
 				suite.Equal("ok", resp.Data.Results[0].Status)
 				suite.True(resp.Data.Results[0].Changed)
 			},

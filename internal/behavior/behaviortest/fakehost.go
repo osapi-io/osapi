@@ -49,6 +49,10 @@ import (
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 )
 
+// Now is the fake host's time, for each example: an output that reads the
+// clock, such as an uptime, is computed from it.
+var Now = time.Date(2026, time.January, 2, 3, 4, 5, 0, time.UTC)
+
 // Hostname is the fake host's name.
 const Hostname = "test-host"
 
@@ -113,7 +117,7 @@ func newHost(
 		values:  map[string][]byte{},
 		writes:  b.Writes,
 	}
-	h.declare(b)
+	h.declare(b, platform)
 	ctrl := gomock.NewController(h)
 	h.Host = host.Host{
 		Platform:  platform,
@@ -122,20 +126,30 @@ func newHost(
 		FS:        h.filesystem(),
 		Exec:      h.commands(ctrl),
 		FileState: fileState{h: h, ctrl: ctrl},
+		Now:       func() time.Time { return Now },
 	}
 
 	return h
 }
 
-// declare adds the programs b and every behavior it requires declare.
+// declare adds the programs b declares for the methods platform's provider
+// serves, and every program of each behavior b requires. An empty platform
+// is every method.
 func (h *fakeHost) declare(
 	b *behavior.Behavior,
+	platform string,
 ) {
 	h.sudo = append(h.sudo, b.Sudo...)
 	h.runs = append(h.runs, b.Runs...)
+	for _, m := range b.Methods {
+		if platform == "" || b.Serves(m, platform) {
+			h.sudo = append(h.sudo, m.SudoPrograms...)
+			h.runs = append(h.runs, m.RunsPrograms...)
+		}
+	}
 	h.keepsState = h.keepsState || b.KeepsState
 	for _, r := range b.Requires {
-		h.declare(r)
+		h.declare(r, "")
 	}
 }
 

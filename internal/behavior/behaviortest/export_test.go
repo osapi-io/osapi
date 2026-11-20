@@ -20,6 +20,12 @@
 
 package behaviortest
 
+import (
+	"time"
+
+	"github.com/osapi-io/osapi/internal/behavior"
+)
+
 // ExportReport calls the mock reporter of a fake host, as the mock
 // controller would for a call that the host has no answer for.
 func ExportReport(
@@ -41,4 +47,9 @@ func SetSourceDir(
 	sourceDir = dir
 
 	return func() { sourceDir = previous }
+}
+
+// ExportClock is the time the fake host's clock gives.
+func ExportClock() time.Time {
+	return newHost(&behavior.Behavior{Name: "clock"}, "linux").Time()
 }

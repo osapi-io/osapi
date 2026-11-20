@@ -40,7 +40,10 @@ import (
 	agentmocks "github.com/osapi-io/osapi/internal/agent/mocks"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/mocks"
+	diskMocks "github.com/osapi-io/osapi/internal/provider/node/disk/mocks"
 	hostMocks "github.com/osapi-io/osapi/internal/provider/node/host/mocks"
+	loadMocks "github.com/osapi-io/osapi/internal/provider/node/load/mocks"
+	memoryMocks "github.com/osapi-io/osapi/internal/provider/node/memory/mocks"
 )
 
 type SpanPublicTestSuite struct {
@@ -200,15 +203,18 @@ func (s *SpanPublicTestSuite) TestJobProcessJoinsTheTrace() {
 	ctrl := gomock.NewController(s.T())
 	jobs := mocks.NewMockJobClient(ctrl)
 	a := newTestAgent(newTestAgentParams{
-		jobClient:    jobs,
-		hostProvider: hostMocks.NewDefaultMockProvider(ctrl),
+		jobClient:      jobs,
+		hostProvider:   hostMocks.NewDefaultMockProvider(ctrl),
+		diskProvider:   diskMocks.NewDefaultMockProvider(ctrl),
+		memoryProvider: memoryMocks.NewDefaultMockProvider(ctrl),
+		loadProvider:   loadMocks.NewDefaultMockProvider(ctrl),
 	})
 	agent.ExportIdentityAttrs(a, "web-01", "abc123", nil)
 
 	jobs.EXPECT().HasJobResponse(gomock.Any(), "trace-job", gomock.Any()).Return(false, nil)
 	jobs.EXPECT().GetJobData(gomock.Any(), "jobs.trace-job").Return([]byte(`{
 		"id": "trace-job",
-		"operation": {"type": "node.hostname.get", "data": {}}
+		"operation": {"type": "node.status.get", "data": {}}
 	}`), nil)
 	jobs.EXPECT().
 		WriteStatusEvent(gomock.Any(), "trace-job", gomock.Any(), gomock.Any(), gomock.Any()).
@@ -239,5 +245,5 @@ func (s *SpanPublicTestSuite) TestJobProcessJoinsTheTrace() {
 	s.Equal("web-01", got["osapi.agent.hostname"])
 	s.Equal("abc123", got["osapi.agent.machine_id"])
 	s.Equal("completed", got["job.status"])
-	s.Equal("hostname.get", got["job.operation"])
+	s.Equal("status.get", got["job.operation"])
 }

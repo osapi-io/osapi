@@ -145,6 +145,12 @@ func TestFakeHostPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(FakeHostPublicTestSuite))
 }
 
+// TestClock holds the fake host's clock to Now, so an example that reads
+// the time has one answer.
+func (s *FakeHostPublicTestSuite) TestClock() {
+	s.Equal(behaviortest.Now, behaviortest.ExportClock())
+}
+
 func (s *FakeHostPublicTestSuite) TestReport() {
 	for _, fatal := range []bool{false, true} {
 		s.PanicsWithValue(

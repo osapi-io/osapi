@@ -23,6 +23,7 @@ package behavior
 import (
 	"fmt"
 	"reflect"
+	"slices"
 )
 
 // PlatformProvider is how a behavior's provider is built on one platform.
@@ -115,6 +116,9 @@ const (
 	PlatformLinux = "linux"
 	// PlatformDarwin is macOS.
 	PlatformDarwin = "darwin"
+	// PlatformDebian is the Debian family: Debian, Ubuntu and Raspbian, as
+	// platform.Detect groups them.
+	PlatformDebian = "debian"
 )
 
 // Provider builds b's provider for platform with h, the host.Host the agent
@@ -126,10 +130,7 @@ func (b *Behavior) Provider(
 	platform string,
 	h any,
 ) (any, error) {
-	pp := b.platform(platform)
-	if pp == nil && platform != PlatformDarwin {
-		pp = b.platform(PlatformLinux)
-	}
+	pp := b.resolve(platform)
 	if pp == nil {
 		return nil, nil
 	}
@@ -153,4 +154,63 @@ func (b *Behavior) platform(
 	}
 
 	return nil
+}
+
+// Serves reports whether the provider b declares for platform builds the
+// provider m runs with on some platform: every provider without On, else
+// the one each platform On names resolves to, as Provider resolves it.
+func (b *Behavior) Serves(
+	m *Method,
+	platform string,
+) bool {
+	if len(m.Platforms) == 0 {
+		return true
+	}
+	for _, p := range m.Platforms {
+		if pp := b.resolve(p); pp != nil && pp.Name == platform {
+			return true
+		}
+	}
+
+	return false
+}
+
+// resolve is the provider b declares for platform itself, or else, on a
+// platform other than macOS, the one declared for PlatformLinux, or nil.
+func (b *Behavior) resolve(
+	platform string,
+) *PlatformProvider {
+	pp := b.platform(platform)
+	if pp == nil && platform != PlatformDarwin {
+		pp = b.platform(PlatformLinux)
+	}
+
+	return pp
+}
+
+// Programs are the programs b runs on platform, with sudo and without: the
+// behavior's own, and each method's that runs there, once each. An empty
+// platform is every platform.
+func (b *Behavior) Programs(
+	platform string,
+) (sudo []string, runs []string) {
+	add := func(to []string, programs []string) []string {
+		for _, p := range programs {
+			if !slices.Contains(to, p) {
+				to = append(to, p)
+			}
+		}
+
+		return to
+	}
+	sudo = add(sudo, b.Sudo)
+	runs = add(runs, b.Runs)
+	for _, m := range b.Methods {
+		if platform == "" || m.RunsOn(platform) {
+			sudo = add(sudo, m.SudoPrograms)
+			runs = add(runs, m.RunsPrograms)
+		}
+	}
+
+	return sudo, runs
 }

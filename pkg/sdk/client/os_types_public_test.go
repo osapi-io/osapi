@@ -68,6 +68,12 @@ func (suite *OSTypesPublicTestSuite) TestOSInfoFromGen() {
 	}
 }
 
+func (suite *OSTypesPublicTestSuite) TestOSReleaseFromGen() {
+	suite.Nil(client.ExportOSReleaseFromGen(nil))
+	got := client.ExportOSReleaseFromGen(&gen.Release{Distribution: "ubuntu", Version: "24.04"})
+	suite.Equal(&client.OSInfo{Distribution: "ubuntu", Version: "24.04"}, got)
+}
+
 func TestOSTypesPublicTestSuite(
 	t *testing.T,
 ) {

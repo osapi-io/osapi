@@ -77,7 +77,7 @@ func (a *Agent) Start() {
 		}
 	}
 
-	for _, p := range MissingPrograms() {
+	for _, p := range MissingPrograms(detectFn()) {
 		a.logger.Warn(
 			"a behavior's program is not installed; the behavior fails until it is",
 			slog.String("program", p),
@@ -93,7 +93,7 @@ func (a *Agent) Start() {
 	// Run preflight checks when privilege escalation is enabled.
 	pe := a.appConfig.Agent.PrivilegeEscalation
 	if pe.Enabled {
-		results, ok := RunPreflight(a.ctx, a.logger, a.execManager)
+		results, ok := RunPreflight(a.ctx, a.logger, a.execManager, detectFn())
 		for _, r := range results {
 			if r.Passed {
 				continue

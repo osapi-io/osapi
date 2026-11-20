@@ -23,10 +23,8 @@ package agent_test
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log/slog"
 	"testing"
-	"time"
 
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
@@ -36,7 +34,6 @@ import (
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/mocks"
-	"github.com/osapi-io/osapi/internal/provider"
 	commandMocks "github.com/osapi-io/osapi/internal/provider/command/mocks"
 	fileMocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
 	netinfoMocks "github.com/osapi-io/osapi/internal/provider/network/netinfo/mocks"
@@ -45,7 +42,6 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/network/ping"
 	pingMocks "github.com/osapi-io/osapi/internal/provider/network/ping/mocks"
 	diskMocks "github.com/osapi-io/osapi/internal/provider/node/disk/mocks"
-	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	hostMocks "github.com/osapi-io/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/osapi-io/osapi/internal/provider/node/load/mocks"
 	memoryMocks "github.com/osapi-io/osapi/internal/provider/node/memory/mocks"
@@ -78,14 +74,6 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 
 	// Create mock providers
 	hostMock := hostMocks.NewDefaultMockProvider(s.mockCtrl)
-	hostMock.EXPECT().
-		UpdateHostname(gomock.Any(), "success-host").
-		Return(&nodeHost.UpdateHostnameResult{Changed: true}, nil).
-		AnyTimes()
-	hostMock.EXPECT().
-		UpdateHostname(gomock.Any(), gomock.Any()).
-		Return(nil, fmt.Errorf("host: %w", provider.ErrUnsupported)).
-		AnyTimes()
 	diskMock := diskMocks.NewDefaultMockProvider(s.mockCtrl)
 	memMock := memoryMocks.NewDefaultMockProvider(s.mockCtrl)
 	loadMock := loadMocks.NewDefaultMockProvider(s.mockCtrl)
@@ -150,26 +138,6 @@ func (s *ProcessorPublicTestSuite) TestProcessJobOperation() {
 		validateFunc func(json.RawMessage, error)
 	}{
 		{
-			name: "successful node hostname operation",
-			jobRequest: job.Request{
-				Type:      job.TypeQuery,
-				Category:  "node",
-				Operation: "hostname.get",
-				Data:      json.RawMessage(`{}`),
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Contains(response, "hostname")
-				s.IsType("", response["hostname"])
-				s.Equal(false, response["changed"])
-			},
-		},
-		{
 			name: "successful node status operation",
 			jobRequest: job.Request{
 				Type:      job.TypeQuery,
@@ -185,99 +153,6 @@ func (s *ProcessorPublicTestSuite) TestProcessJobOperation() {
 				decodeErr := json.Unmarshal(result, &response)
 				s.NoError(decodeErr)
 				s.Contains(response, "hostname")
-				s.Equal(false, response["changed"])
-			},
-		},
-		{
-			name: "successful system uptime operation",
-			jobRequest: job.Request{
-				Type:      job.TypeQuery,
-				Category:  "node",
-				Operation: "uptime.get",
-				Data:      json.RawMessage(`{}`),
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Contains(response, "uptime_seconds")
-				s.Contains(response, "uptime")
-				s.Equal(false, response["changed"])
-			},
-		},
-		{
-			name: "successful system OS info operation",
-			jobRequest: job.Request{
-				Type:      job.TypeQuery,
-				Category:  "node",
-				Operation: "osinfo.get",
-				Data:      json.RawMessage(`{}`),
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Equal(false, response["changed"])
-			},
-		},
-		{
-			name: "successful system disk operation",
-			jobRequest: job.Request{
-				Type:      job.TypeQuery,
-				Category:  "node",
-				Operation: "disk.get",
-				Data:      json.RawMessage(`{}`),
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Contains(response, "disks")
-				s.Equal(false, response["changed"])
-			},
-		},
-		{
-			name: "successful system memory operation",
-			jobRequest: job.Request{
-				Type:      job.TypeQuery,
-				Category:  "node",
-				Operation: "memory.get",
-				Data:      json.RawMessage(`{}`),
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Equal(false, response["changed"])
-			},
-		},
-		{
-			name: "successful system load operation",
-			jobRequest: job.Request{
-				Type:      job.TypeQuery,
-				Category:  "node",
-				Operation: "load.get",
-				Data:      json.RawMessage(`{}`),
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
 				s.Equal(false, response["changed"])
 			},
 		},
@@ -535,39 +410,6 @@ func (s *ProcessorPublicTestSuite) TestSystemOperations() {
 		validateFunc func(json.RawMessage, error)
 	}{
 		{
-			name:      "get hostname",
-			operation: "hostname.get",
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Contains(response, "hostname")
-				s.Equal(false, response["changed"])
-			},
-		},
-		{
-			name:      "get hostname with labels",
-			operation: "hostname.get",
-			labels:    map[string]string{"group": "web.dev.us-east"},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Contains(response, "hostname")
-				s.Contains(response, "labels")
-				labels, ok := response["labels"].(map[string]interface{})
-				s.True(ok)
-				s.Equal("web.dev.us-east", labels["group"])
-				s.Equal(false, response["changed"])
-			},
-		},
-		{
 			name:      "get node status",
 			operation: "status.get",
 			validateFunc: func(result json.RawMessage, err error) {
@@ -579,214 +421,6 @@ func (s *ProcessorPublicTestSuite) TestSystemOperations() {
 				s.NoError(decodeErr)
 				s.Contains(response, "hostname")
 				s.Equal(false, response["changed"])
-			},
-		},
-		{
-			name:      "get uptime",
-			operation: "uptime.get",
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Contains(response, "uptime_seconds")
-				s.Equal(false, response["changed"])
-			},
-		},
-		{
-			name:      "update hostname returns unsupported",
-			jobType:   job.TypeModify,
-			operation: "hostname.update",
-			data:      `{"hostname": "new-host"}`,
-			validateFunc: func(_ json.RawMessage, err error) {
-				s.Error(err)
-				s.Contains(err.Error(), "operation not supported")
-			},
-		},
-		{
-			name:      "update hostname succeeds",
-			jobType:   job.TypeModify,
-			operation: "hostname.update",
-			data:      `{"hostname": "success-host"}`,
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Equal("success-host", response["hostname"])
-				s.Equal(true, response["changed"])
-			},
-		},
-		{
-			name:      "update hostname with invalid data",
-			jobType:   job.TypeModify,
-			operation: "hostname.update",
-			data:      `invalid json`,
-			validateFunc: func(_ json.RawMessage, err error) {
-				s.Error(err)
-				s.Contains(err.Error(), "invalid hostname update data")
-			},
-		},
-		{
-			name:      "hostname provider error",
-			operation: "hostname.get",
-			createAgent: func() *agent.Agent {
-				hostMock := hostMocks.NewPlainMockProvider(s.mockCtrl)
-				hostMock.EXPECT().GetHostname().Return("", errors.New("hostname unavailable"))
-				return newTestAgent(newTestAgentParams{
-					appFs:           memfs.New(),
-					appConfig:       config.Config{},
-					jobClient:       s.mockJobClient,
-					hostProvider:    hostMock,
-					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memoryProvider:  memoryMocks.NewPlainMockProvider(s.mockCtrl),
-					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
-					dnsProvider:     dnsMocks.NewPlainMockProvider(s.mockCtrl),
-					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
-					netinfoProvider: netinfoMocks.NewPlainMockProvider(s.mockCtrl),
-					commandProvider: commandMocks.NewPlainMockProvider(s.mockCtrl),
-				})
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.Error(err)
-				s.Contains(err.Error(), "hostname unavailable")
-				s.Nil(result)
-			},
-		},
-		{
-			name:      "uptime provider error",
-			operation: "uptime.get",
-			createAgent: func() *agent.Agent {
-				hostMock := hostMocks.NewPlainMockProvider(s.mockCtrl)
-				hostMock.EXPECT().
-					GetUptime().
-					Return(time.Duration(0), errors.New("uptime unavailable"))
-				return newTestAgent(newTestAgentParams{
-					appFs:           memfs.New(),
-					appConfig:       config.Config{},
-					jobClient:       s.mockJobClient,
-					hostProvider:    hostMock,
-					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memoryProvider:  memoryMocks.NewPlainMockProvider(s.mockCtrl),
-					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
-					dnsProvider:     dnsMocks.NewPlainMockProvider(s.mockCtrl),
-					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
-					netinfoProvider: netinfoMocks.NewPlainMockProvider(s.mockCtrl),
-					commandProvider: commandMocks.NewPlainMockProvider(s.mockCtrl),
-				})
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.Error(err)
-				s.Contains(err.Error(), "uptime unavailable")
-				s.Nil(result)
-			},
-		},
-		{
-			name:      "OS info provider error",
-			operation: "os.get",
-			createAgent: func() *agent.Agent {
-				hostMock := hostMocks.NewPlainMockProvider(s.mockCtrl)
-				hostMock.EXPECT().GetOSInfo().Return(nil, errors.New("os info unavailable"))
-				return newTestAgent(newTestAgentParams{
-					appFs:           memfs.New(),
-					appConfig:       config.Config{},
-					jobClient:       s.mockJobClient,
-					hostProvider:    hostMock,
-					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memoryProvider:  memoryMocks.NewPlainMockProvider(s.mockCtrl),
-					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
-					dnsProvider:     dnsMocks.NewPlainMockProvider(s.mockCtrl),
-					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
-					netinfoProvider: netinfoMocks.NewPlainMockProvider(s.mockCtrl),
-					commandProvider: commandMocks.NewPlainMockProvider(s.mockCtrl),
-				})
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.Error(err)
-				s.Contains(err.Error(), "os info unavailable")
-				s.Nil(result)
-			},
-		},
-		{
-			name:      "disk provider error",
-			operation: "disk.get",
-			createAgent: func() *agent.Agent {
-				diskMock := diskMocks.NewPlainMockProvider(s.mockCtrl)
-				diskMock.EXPECT().GetLocalUsageStats().Return(nil, errors.New("disk unavailable"))
-				return newTestAgent(newTestAgentParams{
-					appFs:           memfs.New(),
-					appConfig:       config.Config{},
-					jobClient:       s.mockJobClient,
-					hostProvider:    hostMocks.NewPlainMockProvider(s.mockCtrl),
-					diskProvider:    diskMock,
-					memoryProvider:  memoryMocks.NewPlainMockProvider(s.mockCtrl),
-					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
-					dnsProvider:     dnsMocks.NewPlainMockProvider(s.mockCtrl),
-					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
-					netinfoProvider: netinfoMocks.NewPlainMockProvider(s.mockCtrl),
-					commandProvider: commandMocks.NewPlainMockProvider(s.mockCtrl),
-				})
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.Error(err)
-				s.Contains(err.Error(), "disk unavailable")
-				s.Nil(result)
-			},
-		},
-		{
-			name:      "memory provider error",
-			operation: "memory.get",
-			createAgent: func() *agent.Agent {
-				memMock := memoryMocks.NewPlainMockProvider(s.mockCtrl)
-				memMock.EXPECT().GetStats().Return(nil, errors.New("memory unavailable"))
-				return newTestAgent(newTestAgentParams{
-					appFs:           memfs.New(),
-					appConfig:       config.Config{},
-					jobClient:       s.mockJobClient,
-					hostProvider:    hostMocks.NewPlainMockProvider(s.mockCtrl),
-					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memoryProvider:  memMock,
-					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
-					dnsProvider:     dnsMocks.NewPlainMockProvider(s.mockCtrl),
-					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
-					netinfoProvider: netinfoMocks.NewPlainMockProvider(s.mockCtrl),
-					commandProvider: commandMocks.NewPlainMockProvider(s.mockCtrl),
-				})
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.Error(err)
-				s.Contains(err.Error(), "memory unavailable")
-				s.Nil(result)
-			},
-		},
-		{
-			name:      "load provider error",
-			operation: "load.get",
-			createAgent: func() *agent.Agent {
-				loadMock := loadMocks.NewPlainMockProvider(s.mockCtrl)
-				loadMock.EXPECT().GetAverageStats().Return(nil, errors.New("load unavailable"))
-				return newTestAgent(newTestAgentParams{
-					appFs:           memfs.New(),
-					appConfig:       config.Config{},
-					jobClient:       s.mockJobClient,
-					hostProvider:    hostMocks.NewPlainMockProvider(s.mockCtrl),
-					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memoryProvider:  memoryMocks.NewPlainMockProvider(s.mockCtrl),
-					loadProvider:    loadMock,
-					dnsProvider:     dnsMocks.NewPlainMockProvider(s.mockCtrl),
-					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
-					netinfoProvider: netinfoMocks.NewPlainMockProvider(s.mockCtrl),
-					commandProvider: commandMocks.NewPlainMockProvider(s.mockCtrl),
-				})
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.Error(err)
-				s.Contains(err.Error(), "load unavailable")
-				s.Nil(result)
 			},
 		},
 	}

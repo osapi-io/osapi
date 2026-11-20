@@ -55,7 +55,7 @@ func main() {
 	}
 
 	for _, r := range resp.Data.Results {
-		fmt.Printf("Hostname: %s\n", r.Hostname)
+		fmt.Printf("Hostname (%s): %s\n", r.Hostname, r.Name)
 	}
 
 	// Update hostname.

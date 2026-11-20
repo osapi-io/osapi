@@ -69,7 +69,7 @@ func (s *HostnameService) Update(
 	name string,
 ) (*Response[Collection[HostnameUpdateResult]], error) {
 	body := gen.HostnameUpdateRequest{
-		Hostname: name,
+		Name: name,
 	}
 
 	resp, err := s.client.PutNodeHostnameWithResponse(ctx, target, body)

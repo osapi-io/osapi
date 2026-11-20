@@ -42,29 +42,20 @@ func (suite *HostnameTypesPublicTestSuite) TestHostnameCollectionFromGen() {
 
 	tests := []struct {
 		name         string
-		input        *gen.HostnameCollectionResponse
+		input        *gen.HostnameGetResponse
 		validateFunc func(client.Collection[client.HostnameResult])
 	}{
 		{
 			name: "when all fields are populated",
-			input: func() *gen.HostnameCollectionResponse {
-				labels := map[string]string{"group": "web", "env": "prod"}
+			input: func() *gen.HostnameGetResponse {
+				name := "web-01"
 				errMsg := "timeout"
-				changed := false
 
-				return &gen.HostnameCollectionResponse{
+				return &gen.HostnameGetResponse{
 					JobId: &testUUID,
-					Results: []gen.HostnameResponse{
-						{
-							Hostname: "web-01",
-							Labels:   &labels,
-							Changed:  &changed,
-						},
-						{
-							Hostname: "web-02",
-							Error:    &errMsg,
-							Changed:  &changed,
-						},
+					Results: []gen.HostnameEntry{
+						{Hostname: "web-01", Name: &name},
+						{Hostname: "web-02", Error: &errMsg},
 					},
 				}
 			}(),
@@ -73,30 +64,25 @@ func (suite *HostnameTypesPublicTestSuite) TestHostnameCollectionFromGen() {
 				suite.Require().Len(c.Results, 2)
 
 				suite.Equal("web-01", c.Results[0].Hostname)
-				suite.Equal(map[string]string{"group": "web", "env": "prod"}, c.Results[0].Labels)
+				suite.Equal("web-01", c.Results[0].Name)
 				suite.Empty(c.Results[0].Error)
-				suite.False(c.Results[0].Changed)
 
 				suite.Equal("web-02", c.Results[1].Hostname)
 				suite.Equal("timeout", c.Results[1].Error)
-				suite.Nil(c.Results[1].Labels)
-				suite.False(c.Results[1].Changed)
+				suite.Empty(c.Results[1].Name)
 			},
 		},
 		{
 			name: "when minimal",
-			input: &gen.HostnameCollectionResponse{
-				Results: []gen.HostnameResponse{
-					{Hostname: "minimal-host"},
-				},
+			input: &gen.HostnameGetResponse{
+				Results: []gen.HostnameEntry{{Hostname: "minimal-host"}},
 			},
 			validateFunc: func(c client.Collection[client.HostnameResult]) {
 				suite.Empty(c.JobID)
 				suite.Require().Len(c.Results, 1)
 				suite.Equal("minimal-host", c.Results[0].Hostname)
 				suite.Empty(c.Results[0].Error)
-				suite.Nil(c.Results[0].Labels)
-				suite.False(c.Results[0].Changed)
+				suite.Empty(c.Results[0].Name)
 			},
 		},
 	}

@@ -31,7 +31,6 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/agent"
-	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider/node/process"
 	processMocks "github.com/osapi-io/osapi/internal/provider/node/process/mocks"
@@ -120,7 +119,6 @@ func (s *ProcessorProcessPublicTestSuite) TestProcessProcessOperation() {
 				nil,
 				nil,
 				nil,
-				config.Config{},
 				slog.Default())
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
@@ -202,7 +200,6 @@ func (s *ProcessorProcessPublicTestSuite) TestProcessProcessList() {
 				nil,
 				nil,
 				nil,
-				config.Config{},
 				slog.Default())
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
@@ -293,7 +290,6 @@ func (s *ProcessorProcessPublicTestSuite) TestProcessProcessGet() {
 				nil,
 				nil,
 				nil,
-				config.Config{},
 				slog.Default())
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
@@ -384,7 +380,6 @@ func (s *ProcessorProcessPublicTestSuite) TestProcessProcessSignal() {
 				nil,
 				nil,
 				nil,
-				config.Config{},
 				slog.Default())
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})

@@ -27,7 +27,6 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider/node/apt"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
@@ -71,33 +70,17 @@ func NewNodeProcessor(
 	packageProvider apt.Provider,
 	logProvider logProv.Provider,
 	serviceProvider serviceProv.Provider,
-	appConfig config.Config,
 	logger *slog.Logger,
 ) ProcessorFunc {
 	logger = logger.With(slog.String("subsystem", "agent.processor.node"))
 
 	return func(ctx context.Context, req job.Request) (json.RawMessage, error) {
-		// Extract base operation from dotted operation (e.g., "hostname.get" -> "hostname")
+		// Extract base operation from dotted operation (e.g., "ntp.get" -> "ntp")
 		baseOperation := strings.Split(req.Operation, ".")[0]
 
 		switch baseOperation {
-		case "hostname":
-			if req.Type == job.TypeModify {
-				return setNodeHostname(ctx, hostProvider, req, logger)
-			}
-			return getNodeHostname(hostProvider, appConfig, logger)
 		case "status":
 			return getNodeStatus(hostProvider, diskProvider, memoryProvider, loadProvider, logger)
-		case "uptime":
-			return getNodeUptime(hostProvider, logger)
-		case "os", "osinfo":
-			return getNodeOSInfo(hostProvider, logger)
-		case "disk":
-			return getNodeDisk(diskProvider, logger)
-		case "memory", "mem":
-			return getNodeMemory(memoryProvider, logger)
-		case "load":
-			return getNodeLoad(loadProvider, logger)
 		case "ntp":
 			return processNtpOperation(ctx, ntpProvider, logger, req)
 		case "timezone":
@@ -122,60 +105,6 @@ func NewNodeProcessor(
 			return nil, fmt.Errorf("unsupported node operation: %s", req.Operation)
 		}
 	}
-}
-
-// getNodeHostname retrieves the node hostname and agent labels.
-func getNodeHostname(
-	hostProvider nodeHost.Provider,
-	appConfig config.Config,
-	logger *slog.Logger,
-) (json.RawMessage, error) {
-	logger.Debug("executing host.GetHostname")
-
-	hostname, err := hostProvider.GetHostname()
-	if err != nil {
-		return nil, err
-	}
-
-	result := map[string]interface{}{
-		"hostname": hostname,
-		"changed":  false,
-	}
-
-	if len(appConfig.Agent.Labels) > 0 {
-		result["labels"] = appConfig.Agent.Labels
-	}
-
-	return json.Marshal(result)
-}
-
-// setNodeHostname sets the node hostname via the host provider.
-func setNodeHostname(
-	ctx context.Context,
-	hostProvider nodeHost.Provider,
-	req job.Request,
-	logger *slog.Logger,
-) (json.RawMessage, error) {
-	logger.Debug("executing host.UpdateHostname")
-
-	var data struct {
-		Hostname string `json:"hostname"`
-	}
-	if err := json.Unmarshal(req.Data, &data); err != nil {
-		return nil, fmt.Errorf("invalid hostname update data: %w", err)
-	}
-
-	result, err := hostProvider.UpdateHostname(ctx, data.Hostname)
-	if err != nil {
-		return nil, err
-	}
-
-	resp := map[string]interface{}{
-		"hostname": data.Hostname,
-		"changed":  result.Changed,
-	}
-
-	return json.Marshal(resp)
 }
 
 // getNodeStatus retrieves comprehensive node status.
@@ -238,90 +167,4 @@ func getNodeStatus(
 	}
 
 	return json.Marshal(result)
-}
-
-// getNodeUptime retrieves the system uptime.
-func getNodeUptime(
-	hostProvider nodeHost.Provider,
-	logger *slog.Logger,
-) (json.RawMessage, error) {
-	logger.Debug("executing host.GetUptime")
-
-	uptime, err := hostProvider.GetUptime()
-	if err != nil {
-		return nil, err
-	}
-
-	result := map[string]interface{}{
-		"uptime_seconds": uptime.Seconds(),
-		"uptime":         uptime.String(),
-		"changed":        false,
-	}
-
-	return json.Marshal(result)
-}
-
-// getNodeOSInfo retrieves the operating system information.
-func getNodeOSInfo(
-	hostProvider nodeHost.Provider,
-	logger *slog.Logger,
-) (json.RawMessage, error) {
-	logger.Debug("executing host.GetOSInfo")
-
-	osInfo, err := hostProvider.GetOSInfo()
-	if err != nil {
-		return nil, err
-	}
-
-	return json.Marshal(osInfo)
-}
-
-// getNodeDisk retrieves disk usage statistics.
-func getNodeDisk(
-	diskProvider disk.Provider,
-	logger *slog.Logger,
-) (json.RawMessage, error) {
-	logger.Debug("executing disk.GetLocalUsageStats")
-
-	diskUsage, err := diskProvider.GetLocalUsageStats()
-	if err != nil {
-		return nil, err
-	}
-
-	result := map[string]interface{}{
-		"disks":   diskUsage,
-		"changed": false,
-	}
-
-	return json.Marshal(result)
-}
-
-// getNodeMemory retrieves memory statistics.
-func getNodeMemory(
-	memoryProvider memory.Provider,
-	logger *slog.Logger,
-) (json.RawMessage, error) {
-	logger.Debug("executing memory.GetStats")
-
-	memInfo, err := memoryProvider.GetStats()
-	if err != nil {
-		return nil, err
-	}
-
-	return json.Marshal(memInfo)
-}
-
-// getNodeLoad retrieves load average statistics.
-func getNodeLoad(
-	loadProvider load.Provider,
-	logger *slog.Logger,
-) (json.RawMessage, error) {
-	logger.Debug("executing load.GetAverageStats")
-
-	loadAvg, err := loadProvider.GetAverageStats()
-	if err != nil {
-		return nil, err
-	}
-
-	return json.Marshal(loadAvg)
 }

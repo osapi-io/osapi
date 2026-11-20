@@ -31,7 +31,6 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/agent"
-	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider/node/timezone"
 	timezoneMocks "github.com/osapi-io/osapi/internal/provider/node/timezone/mocks"
@@ -124,7 +123,6 @@ func (s *ProcessorTimezonePublicTestSuite) TestProcessTimezoneOperation() {
 				nil,
 				nil,
 				nil,
-				config.Config{},
 				slog.Default())
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
@@ -195,7 +193,6 @@ func (s *ProcessorTimezonePublicTestSuite) TestProcessTimezoneGet() {
 				nil,
 				nil,
 				nil,
-				config.Config{},
 				slog.Default())
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
@@ -285,7 +282,6 @@ func (s *ProcessorTimezonePublicTestSuite) TestProcessTimezoneUpdate() {
 				nil,
 				nil,
 				nil,
-				config.Config{},
 				slog.Default())
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})

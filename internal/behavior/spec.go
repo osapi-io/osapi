@@ -177,6 +177,24 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindRefine,
+			Name: `.On(platform...)`,
+			Does: "Limits the method to some of the platforms the behavior declares, such as " +
+				"behavior.PlatformDebian. Elsewhere it reports skipped, and its examples run only " +
+				"with the providers that serve it.",
+			When: "When one method cannot run where the others do: a hostname read works on " +
+				"macOS, but its update runs only on debian.",
+		},
+		{
+			Kind: KindRefine,
+			Name: "`.Sudo(program...)` and `.Runs(program...)` on a method",
+			Does: "Programs only this method runs, with sudo or without. A host needs them only " +
+				"where the method runs, so the agent's startup check and the integration test " +
+				"ask for them there only.",
+			When: "With On, for a program the other platforms do not have, such as hostnamectl " +
+				"for a hostname update.",
+		},
+		{
+			Kind: KindRefine,
 			Name: `.Explain("text")`,
 			Does: "The longer description: what the method touches, and what a second call does.",
 			When: "When one line does not say what the method changes.",

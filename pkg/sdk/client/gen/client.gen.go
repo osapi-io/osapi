@@ -208,24 +208,24 @@ func (e DNSUpdateResultItemStatus) Valid() bool {
 	}
 }
 
-// Defines values for DiskResultItemStatus.
+// Defines values for DiskEntryStatus.
 const (
-	DiskResultItemStatusFailed  DiskResultItemStatus = "failed"
-	DiskResultItemStatusOk      DiskResultItemStatus = "ok"
-	DiskResultItemStatusSkipped DiskResultItemStatus = "skipped"
-	DiskResultItemStatusTimeout DiskResultItemStatus = "timeout"
+	DiskEntryStatusFailed  DiskEntryStatus = "failed"
+	DiskEntryStatusOk      DiskEntryStatus = "ok"
+	DiskEntryStatusSkipped DiskEntryStatus = "skipped"
+	DiskEntryStatusTimeout DiskEntryStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the DiskResultItemStatus enum.
-func (e DiskResultItemStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the DiskEntryStatus enum.
+func (e DiskEntryStatus) Valid() bool {
 	switch e {
-	case DiskResultItemStatusFailed:
+	case DiskEntryStatusFailed:
 		return true
-	case DiskResultItemStatusOk:
+	case DiskEntryStatusOk:
 		return true
-	case DiskResultItemStatusSkipped:
+	case DiskEntryStatusSkipped:
 		return true
-	case DiskResultItemStatusTimeout:
+	case DiskEntryStatusTimeout:
 		return true
 	default:
 		return false
@@ -490,48 +490,48 @@ func (e GroupMutationResultStatus) Valid() bool {
 	}
 }
 
-// Defines values for HostnameResponseStatus.
+// Defines values for HostnameEntryStatus.
 const (
-	HostnameResponseStatusFailed  HostnameResponseStatus = "failed"
-	HostnameResponseStatusOk      HostnameResponseStatus = "ok"
-	HostnameResponseStatusSkipped HostnameResponseStatus = "skipped"
-	HostnameResponseStatusTimeout HostnameResponseStatus = "timeout"
+	HostnameEntryStatusFailed  HostnameEntryStatus = "failed"
+	HostnameEntryStatusOk      HostnameEntryStatus = "ok"
+	HostnameEntryStatusSkipped HostnameEntryStatus = "skipped"
+	HostnameEntryStatusTimeout HostnameEntryStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the HostnameResponseStatus enum.
-func (e HostnameResponseStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the HostnameEntryStatus enum.
+func (e HostnameEntryStatus) Valid() bool {
 	switch e {
-	case HostnameResponseStatusFailed:
+	case HostnameEntryStatusFailed:
 		return true
-	case HostnameResponseStatusOk:
+	case HostnameEntryStatusOk:
 		return true
-	case HostnameResponseStatusSkipped:
+	case HostnameEntryStatusSkipped:
 		return true
-	case HostnameResponseStatusTimeout:
+	case HostnameEntryStatusTimeout:
 		return true
 	default:
 		return false
 	}
 }
 
-// Defines values for HostnameUpdateResultItemStatus.
+// Defines values for HostnameResultStatus.
 const (
-	HostnameUpdateResultItemStatusFailed  HostnameUpdateResultItemStatus = "failed"
-	HostnameUpdateResultItemStatusOk      HostnameUpdateResultItemStatus = "ok"
-	HostnameUpdateResultItemStatusSkipped HostnameUpdateResultItemStatus = "skipped"
-	HostnameUpdateResultItemStatusTimeout HostnameUpdateResultItemStatus = "timeout"
+	HostnameResultStatusFailed  HostnameResultStatus = "failed"
+	HostnameResultStatusOk      HostnameResultStatus = "ok"
+	HostnameResultStatusSkipped HostnameResultStatus = "skipped"
+	HostnameResultStatusTimeout HostnameResultStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the HostnameUpdateResultItemStatus enum.
-func (e HostnameUpdateResultItemStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the HostnameResultStatus enum.
+func (e HostnameResultStatus) Valid() bool {
 	switch e {
-	case HostnameUpdateResultItemStatusFailed:
+	case HostnameResultStatusFailed:
 		return true
-	case HostnameUpdateResultItemStatusOk:
+	case HostnameResultStatusOk:
 		return true
-	case HostnameUpdateResultItemStatusSkipped:
+	case HostnameResultStatusSkipped:
 		return true
-	case HostnameUpdateResultItemStatusTimeout:
+	case HostnameResultStatusTimeout:
 		return true
 	default:
 		return false
@@ -610,24 +610,24 @@ func (e InterfaceMutationEntryStatus) Valid() bool {
 	}
 }
 
-// Defines values for LoadResultItemStatus.
+// Defines values for LoadEntryStatus.
 const (
-	LoadResultItemStatusFailed  LoadResultItemStatus = "failed"
-	LoadResultItemStatusOk      LoadResultItemStatus = "ok"
-	LoadResultItemStatusSkipped LoadResultItemStatus = "skipped"
-	LoadResultItemStatusTimeout LoadResultItemStatus = "timeout"
+	LoadEntryStatusFailed  LoadEntryStatus = "failed"
+	LoadEntryStatusOk      LoadEntryStatus = "ok"
+	LoadEntryStatusSkipped LoadEntryStatus = "skipped"
+	LoadEntryStatusTimeout LoadEntryStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the LoadResultItemStatus enum.
-func (e LoadResultItemStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the LoadEntryStatus enum.
+func (e LoadEntryStatus) Valid() bool {
 	switch e {
-	case LoadResultItemStatusFailed:
+	case LoadEntryStatusFailed:
 		return true
-	case LoadResultItemStatusOk:
+	case LoadEntryStatusOk:
 		return true
-	case LoadResultItemStatusSkipped:
+	case LoadEntryStatusSkipped:
 		return true
-	case LoadResultItemStatusTimeout:
+	case LoadEntryStatusTimeout:
 		return true
 	default:
 		return false
@@ -682,24 +682,24 @@ func (e LogSourceEntryStatus) Valid() bool {
 	}
 }
 
-// Defines values for MemoryResultItemStatus.
+// Defines values for MemoryEntryStatus.
 const (
-	MemoryResultItemStatusFailed  MemoryResultItemStatus = "failed"
-	MemoryResultItemStatusOk      MemoryResultItemStatus = "ok"
-	MemoryResultItemStatusSkipped MemoryResultItemStatus = "skipped"
-	MemoryResultItemStatusTimeout MemoryResultItemStatus = "timeout"
+	MemoryEntryStatusFailed  MemoryEntryStatus = "failed"
+	MemoryEntryStatusOk      MemoryEntryStatus = "ok"
+	MemoryEntryStatusSkipped MemoryEntryStatus = "skipped"
+	MemoryEntryStatusTimeout MemoryEntryStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the MemoryResultItemStatus enum.
-func (e MemoryResultItemStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the MemoryEntryStatus enum.
+func (e MemoryEntryStatus) Valid() bool {
 	switch e {
-	case MemoryResultItemStatusFailed:
+	case MemoryEntryStatusFailed:
 		return true
-	case MemoryResultItemStatusOk:
+	case MemoryEntryStatusOk:
 		return true
-	case MemoryResultItemStatusSkipped:
+	case MemoryEntryStatusSkipped:
 		return true
-	case MemoryResultItemStatusTimeout:
+	case MemoryEntryStatusTimeout:
 		return true
 	default:
 		return false
@@ -820,24 +820,24 @@ func (e NtpStatusEntryStatus) Valid() bool {
 	}
 }
 
-// Defines values for OSInfoResultItemStatus.
+// Defines values for OsEntryStatus.
 const (
-	OSInfoResultItemStatusFailed  OSInfoResultItemStatus = "failed"
-	OSInfoResultItemStatusOk      OSInfoResultItemStatus = "ok"
-	OSInfoResultItemStatusSkipped OSInfoResultItemStatus = "skipped"
-	OSInfoResultItemStatusTimeout OSInfoResultItemStatus = "timeout"
+	OsEntryStatusFailed  OsEntryStatus = "failed"
+	OsEntryStatusOk      OsEntryStatus = "ok"
+	OsEntryStatusSkipped OsEntryStatus = "skipped"
+	OsEntryStatusTimeout OsEntryStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the OSInfoResultItemStatus enum.
-func (e OSInfoResultItemStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the OsEntryStatus enum.
+func (e OsEntryStatus) Valid() bool {
 	switch e {
-	case OSInfoResultItemStatusFailed:
+	case OsEntryStatusFailed:
 		return true
-	case OSInfoResultItemStatusOk:
+	case OsEntryStatusOk:
 		return true
-	case OSInfoResultItemStatusSkipped:
+	case OsEntryStatusSkipped:
 		return true
-	case OSInfoResultItemStatusTimeout:
+	case OsEntryStatusTimeout:
 		return true
 	default:
 		return false
@@ -1504,24 +1504,24 @@ func (e UpdateEntryStatus) Valid() bool {
 	}
 }
 
-// Defines values for UptimeResponseStatus.
+// Defines values for UptimeEntryStatus.
 const (
-	UptimeResponseStatusFailed  UptimeResponseStatus = "failed"
-	UptimeResponseStatusOk      UptimeResponseStatus = "ok"
-	UptimeResponseStatusSkipped UptimeResponseStatus = "skipped"
-	UptimeResponseStatusTimeout UptimeResponseStatus = "timeout"
+	UptimeEntryStatusFailed  UptimeEntryStatus = "failed"
+	UptimeEntryStatusOk      UptimeEntryStatus = "ok"
+	UptimeEntryStatusSkipped UptimeEntryStatus = "skipped"
+	UptimeEntryStatusTimeout UptimeEntryStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the UptimeResponseStatus enum.
-func (e UptimeResponseStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the UptimeEntryStatus enum.
+func (e UptimeEntryStatus) Valid() bool {
 	switch e {
-	case UptimeResponseStatusFailed:
+	case UptimeEntryStatusFailed:
 		return true
-	case UptimeResponseStatusOk:
+	case UptimeEntryStatusOk:
 		return true
-	case UptimeResponseStatusSkipped:
+	case UptimeEntryStatusSkipped:
 		return true
-	case UptimeResponseStatusTimeout:
+	case UptimeEntryStatusTimeout:
 		return true
 	default:
 		return false
@@ -1882,6 +1882,18 @@ type AuditEntryResponse struct {
 	Entry AuditEntry `json:"entry"`
 }
 
+// Averages defines model for Averages.
+type Averages struct {
+	// N15min The load average over 15 minutes
+	N15min float64 `json:"15min"`
+
+	// N1min The load average over 1 minute
+	N1min float64 `json:"1min"`
+
+	// N5min The load average over 5 minutes
+	N5min float64 `json:"5min"`
+}
+
 // CertificateCACollectionResponse defines model for CertificateCACollectionResponse.
 type CertificateCACollectionResponse struct {
 	// JobId The job ID used to process this request.
@@ -2197,11 +2209,44 @@ type DNSUpdateResultItem struct {
 // DNSUpdateResultItemStatus defines model for DNSUpdateResultItem.Status.
 type DNSUpdateResultItemStatus string
 
-// DiskCollectionResponse defines model for DiskCollectionResponse.
-type DiskCollectionResponse struct {
+// Disk defines model for Disk.
+type Disk struct {
+	// Free The bytes free to use
+	Free int `json:"free"`
+
+	// Name Where the filesystem is mounted
+	Name string `json:"name"`
+
+	// Total The size of the filesystem in bytes
+	Total int `json:"total"`
+
+	// Used The bytes in use
+	Used int `json:"used"`
+}
+
+// DiskEntry defines model for DiskEntry.
+type DiskEntry struct {
+	// Disks Each local filesystem
+	Disks *[]Disk `json:"disks,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that produced this result.
+	Hostname string `json:"hostname"`
+
+	// Status The status of the operation for this host.
+	Status DiskEntryStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
+}
+
+// DiskEntryStatus The status of the operation for this host.
+type DiskEntryStatus string
+
+// DiskGetResponse defines model for DiskGetResponse.
+type DiskGetResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []DiskResultItem    `json:"results"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []DiskEntry         `json:"results"`
 }
 
 // DiskResponse Local disk usage information.
@@ -2218,27 +2263,6 @@ type DiskResponse struct {
 	// Used Used disk space in bytes.
 	Used int `json:"used"`
 }
-
-// DiskResultItem defines model for DiskResultItem.
-type DiskResultItem struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Disks List of local disk usage information.
-	Disks *DisksResponse `json:"disks,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname The hostname of the agent.
-	Hostname string `json:"hostname"`
-
-	// Status The status of the operation for this host.
-	Status DiskResultItemStatus `json:"status"`
-}
-
-// DiskResultItemStatus The status of the operation for this host.
-type DiskResultItemStatus string
 
 // DisksResponse List of local disk usage information.
 type DisksResponse = []DiskResponse
@@ -2830,60 +2854,64 @@ type HealthResponse struct {
 	Status string `json:"status"`
 }
 
-// HostnameCollectionResponse defines model for HostnameCollectionResponse.
-type HostnameCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []HostnameResponse  `json:"results"`
+// HostnameEntry defines model for HostnameEntry.
+type HostnameEntry struct {
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that produced this result.
+	Hostname string `json:"hostname"`
+
+	// Name The hostname of the host
+	Name *string `json:"name,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status HostnameEntryStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
 }
 
-// HostnameResponse The hostname of the system.
-type HostnameResponse struct {
-	// Changed Whether the operation modified system state.
+// HostnameEntryStatus The status of the operation for this host.
+type HostnameEntryStatus string
+
+// HostnameGetResponse defines model for HostnameGetResponse.
+type HostnameGetResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []HostnameEntry     `json:"results"`
+}
+
+// HostnameResult defines model for HostnameResult.
+type HostnameResult struct {
+	// Changed Whether the host changed
 	Changed *bool `json:"changed,omitempty"`
 
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
-	// Hostname The system's hostname.
+	// Hostname Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
-	// Labels Key-value labels configured on the agent.
-	Labels *map[string]string `json:"labels,omitempty"`
+	// Name The hostname of the host
+	Name *string `json:"name,omitempty"`
 
 	// Status The status of the operation for this host.
-	Status HostnameResponseStatus `json:"status"`
+	Status HostnameResultStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
 }
 
-// HostnameResponseStatus The status of the operation for this host.
-type HostnameResponseStatus string
-
-// HostnameUpdateCollectionResponse defines model for HostnameUpdateCollectionResponse.
-type HostnameUpdateCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID        `json:"job_id,omitempty"`
-	Results []HostnameUpdateResultItem `json:"results"`
-}
+// HostnameResultStatus The status of the operation for this host.
+type HostnameResultStatus string
 
 // HostnameUpdateRequest defines model for HostnameUpdateRequest.
 type HostnameUpdateRequest struct {
-	// Hostname The new hostname to set.
-	Hostname string `json:"hostname" validate:"required,min=1,max=253"`
+	// Name The hostname to set, such as web-01
+	Name string `json:"name" validate:"required,max=253,hostname"`
 }
 
-// HostnameUpdateResultItem defines model for HostnameUpdateResultItem.
-type HostnameUpdateResultItem struct {
-	// Changed Whether the hostname was actually modified.
-	Changed *bool   `json:"changed,omitempty"`
-	Error   *string `json:"error,omitempty"`
-
-	// Hostname The hostname of the agent.
-	Hostname string                         `json:"hostname"`
-	Status   HostnameUpdateResultItemStatus `json:"status"`
+// HostnameUpdateResponse defines model for HostnameUpdateResponse.
+type HostnameUpdateResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []HostnameResult    `json:"results"`
 }
-
-// HostnameUpdateResultItemStatus defines model for HostnameUpdateResultItem.Status.
-type HostnameUpdateResultItemStatus string
 
 // InterfaceConfigRequest defines model for InterfaceConfigRequest.
 type InterfaceConfigRequest struct {
@@ -3182,33 +3210,28 @@ type LoadAverageResponse struct {
 	N5min float32 `json:"5min"`
 }
 
-// LoadCollectionResponse defines model for LoadCollectionResponse.
-type LoadCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []LoadResultItem    `json:"results"`
-}
-
-// LoadResultItem defines model for LoadResultItem.
-type LoadResultItem struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
+// LoadEntry defines model for LoadEntry.
+type LoadEntry struct {
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
-	// Hostname The hostname of the agent.
-	Hostname string `json:"hostname"`
-
-	// LoadAverage The system load averages for 1, 5, and 15 minutes.
-	LoadAverage *LoadAverageResponse `json:"load_average,omitempty"`
+	// Hostname Hostname of the agent that produced this result.
+	Hostname    string    `json:"hostname"`
+	LoadAverage *Averages `json:"load_average,omitempty"`
 
 	// Status The status of the operation for this host.
-	Status LoadResultItemStatus `json:"status"`
+	Status LoadEntryStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
 }
 
-// LoadResultItemStatus The status of the operation for this host.
-type LoadResultItemStatus string
+// LoadEntryStatus The status of the operation for this host.
+type LoadEntryStatus string
+
+// LoadGetResponse defines model for LoadGetResponse.
+type LoadGetResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []LoadEntry         `json:"results"`
+}
 
 // LogCollectionResponse defines model for LogCollectionResponse.
 type LogCollectionResponse struct {
@@ -3281,11 +3304,27 @@ type LogSourceEntry struct {
 // LogSourceEntryStatus The status of the operation for this host.
 type LogSourceEntryStatus string
 
-// MemoryCollectionResponse defines model for MemoryCollectionResponse.
-type MemoryCollectionResponse struct {
+// MemoryEntry defines model for MemoryEntry.
+type MemoryEntry struct {
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that produced this result.
+	Hostname string `json:"hostname"`
+	Memory   *Usage `json:"memory,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status MemoryEntryStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
+}
+
+// MemoryEntryStatus The status of the operation for this host.
+type MemoryEntryStatus string
+
+// MemoryGetResponse defines model for MemoryGetResponse.
+type MemoryGetResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []MemoryResultItem  `json:"results"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []MemoryEntry       `json:"results"`
 }
 
 // MemoryResponse Memory usage information.
@@ -3299,27 +3338,6 @@ type MemoryResponse struct {
 	// Used Used memory in bytes.
 	Used int `json:"used"`
 }
-
-// MemoryResultItem defines model for MemoryResultItem.
-type MemoryResultItem struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname The hostname of the agent.
-	Hostname string `json:"hostname"`
-
-	// Memory Memory usage information.
-	Memory *MemoryResponse `json:"memory,omitempty"`
-
-	// Status The status of the operation for this host.
-	Status MemoryResultItemStatus `json:"status"`
-}
-
-// MemoryResultItemStatus The status of the operation for this host.
-type MemoryResultItemStatus string
 
 // NATSInfo defines model for NATSInfo.
 type NATSInfo struct {
@@ -3487,13 +3505,6 @@ type NtpUpdateResponse struct {
 	Results []NtpMutationResult `json:"results"`
 }
 
-// OSInfoCollectionResponse defines model for OSInfoCollectionResponse.
-type OSInfoCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []OSInfoResultItem  `json:"results"`
-}
-
 // OSInfoResponse Operating system information.
 type OSInfoResponse struct {
 	// Distribution The name of the Linux distribution.
@@ -3503,27 +3514,6 @@ type OSInfoResponse struct {
 	Version string `json:"version"`
 }
 
-// OSInfoResultItem defines model for OSInfoResultItem.
-type OSInfoResultItem struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname The hostname of the agent.
-	Hostname string `json:"hostname"`
-
-	// OsInfo Operating system information.
-	OsInfo *OSInfoResponse `json:"os_info,omitempty"`
-
-	// Status The status of the operation for this host.
-	Status OSInfoResultItemStatus `json:"status"`
-}
-
-// OSInfoResultItemStatus The status of the operation for this host.
-type OSInfoResultItemStatus string
-
 // ObjectStoreInfo defines model for ObjectStoreInfo.
 type ObjectStoreInfo struct {
 	// Name Object Store bucket name.
@@ -3531,6 +3521,29 @@ type ObjectStoreInfo struct {
 
 	// Size Total bytes in the store.
 	Size int `json:"size"`
+}
+
+// OsEntry defines model for OsEntry.
+type OsEntry struct {
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that produced this result.
+	Hostname string   `json:"hostname"`
+	OsInfo   *Release `json:"os_info,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status OsEntryStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
+}
+
+// OsEntryStatus The status of the operation for this host.
+type OsEntryStatus string
+
+// OsGetResponse defines model for OsGetResponse.
+type OsGetResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []OsEntry           `json:"results"`
 }
 
 // PackageCollectionResponse defines model for PackageCollectionResponse.
@@ -3833,6 +3846,15 @@ type ReadyResponse struct {
 type RejectRequest struct {
 	// Reason Why the machine is rejected; the machine and the record keep it.
 	Reason string `json:"reason" validate:"omitempty,max=1024"`
+}
+
+// Release defines model for Release.
+type Release struct {
+	// Distribution The distribution, such as ubuntu, or darwin
+	Distribution string `json:"distribution"`
+
+	// Version The version of the distribution, such as 24.04
+	Version string `json:"version"`
 }
 
 // RetryJobRequest defines model for RetryJobRequest.
@@ -4662,33 +4684,45 @@ type UpdateInfo struct {
 	NewVersion *string `json:"new_version,omitempty"`
 }
 
-// UptimeCollectionResponse defines model for UptimeCollectionResponse.
-type UptimeCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []UptimeResponse    `json:"results"`
-}
-
-// UptimeResponse System uptime information.
-type UptimeResponse struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
+// UptimeEntry defines model for UptimeEntry.
+type UptimeEntry struct {
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
-	// Hostname The hostname of the agent.
+	// Hostname Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
-	// Status The status of the operation for this host.
-	Status UptimeResponseStatus `json:"status"`
+	// Seconds How long the host has run, in seconds
+	Seconds *int `json:"seconds,omitempty"`
 
-	// Uptime The uptime of the system.
+	// Status The status of the operation for this host.
+	Status UptimeEntryStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
+
+	// Uptime How long the host has run, in days, hours and minutes
 	Uptime *string `json:"uptime,omitempty"`
 }
 
-// UptimeResponseStatus The status of the operation for this host.
-type UptimeResponseStatus string
+// UptimeEntryStatus The status of the operation for this host.
+type UptimeEntryStatus string
+
+// UptimeGetResponse defines model for UptimeGetResponse.
+type UptimeGetResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []UptimeEntry       `json:"results"`
+}
+
+// Usage defines model for Usage.
+type Usage struct {
+	// Free Free memory in bytes
+	Free int `json:"free"`
+
+	// Total Total memory in bytes
+	Total int `json:"total"`
+
+	// Used Used memory in bytes: the total less what is available
+	Used int `json:"used"`
+}
 
 // UserCollectionResponse defines model for UserCollectionResponse.
 type UserCollectionResponse struct {
@@ -5480,8 +5514,8 @@ type ClientInterface interface {
 
 	PutNodeNtp(ctx context.Context, hostname Hostname, body PutNodeNtpJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetNodeOS request
-	GetNodeOS(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetNodeOs request
+	GetNodeOs(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNodePackage request
 	GetNodePackage(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -6906,8 +6940,8 @@ func (c *Client) PutNodeNtp(ctx context.Context, hostname Hostname, body PutNode
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetNodeOS(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetNodeOSRequest(c.Server, hostname)
+func (c *Client) GetNodeOs(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeOsRequest(c.Server, hostname)
 	if err != nil {
 		return nil, err
 	}
@@ -11052,8 +11086,8 @@ func NewPutNodeNtpRequestWithBody(server string, hostname Hostname, contentType 
 	return req, nil
 }
 
-// NewGetNodeOSRequest generates requests for GetNodeOS
-func NewGetNodeOSRequest(server string, hostname Hostname) (*http.Request, error) {
+// NewGetNodeOsRequest generates requests for GetNodeOs
+func NewGetNodeOsRequest(server string, hostname Hostname) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -13346,8 +13380,8 @@ type ClientWithResponsesInterface interface {
 
 	PutNodeNtpWithResponse(ctx context.Context, hostname Hostname, body PutNodeNtpJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeNtpResponse, error)
 
-	// GetNodeOSWithResponse request
-	GetNodeOSWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeOSResponse, error)
+	// GetNodeOsWithResponse request
+	GetNodeOsWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeOsResponse, error)
 
 	// GetNodePackageWithResponse request
 	GetNodePackageWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodePackageResponse, error)
@@ -15098,7 +15132,7 @@ func (r PostNodeContainerDockerStopResponse) ContentType() string {
 type GetNodeDiskResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *DiskCollectionResponse
+	JSON200      *DiskGetResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -15407,7 +15441,7 @@ func (r PutNodeGroupResponse) ContentType() string {
 type GetNodeHostnameResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *HostnameCollectionResponse
+	JSON200      *HostnameGetResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -15441,7 +15475,7 @@ func (r GetNodeHostnameResponse) ContentType() string {
 type PutNodeHostnameResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *HostnameUpdateCollectionResponse
+	JSON200      *HostnameUpdateResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -15475,7 +15509,7 @@ func (r PutNodeHostnameResponse) ContentType() string {
 type GetNodeLoadResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *LoadCollectionResponse
+	JSON200      *LoadGetResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -15611,7 +15645,7 @@ func (r GetNodeLogUnitResponse) ContentType() string {
 type GetNodeMemoryResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *MemoryCollectionResponse
+	JSON200      *MemoryGetResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -16261,10 +16295,10 @@ func (r PutNodeNtpResponse) ContentType() string {
 	return ""
 }
 
-type GetNodeOSResponse struct {
+type GetNodeOsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *OSInfoCollectionResponse
+	JSON200      *OsGetResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -16272,7 +16306,7 @@ type GetNodeOSResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetNodeOSResponse) Status() string {
+func (r GetNodeOsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -16280,7 +16314,7 @@ func (r GetNodeOSResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetNodeOSResponse) StatusCode() int {
+func (r GetNodeOsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -16288,7 +16322,7 @@ func (r GetNodeOSResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetNodeOSResponse) ContentType() string {
+func (r GetNodeOsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -17437,7 +17471,7 @@ func (r PutNodeTimezoneResponse) ContentType() string {
 type GetNodeUptimeResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *UptimeCollectionResponse
+	JSON200      *UptimeGetResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -18734,13 +18768,13 @@ func (c *ClientWithResponses) PutNodeNtpWithResponse(ctx context.Context, hostna
 	return ParsePutNodeNtpResponse(rsp)
 }
 
-// GetNodeOSWithResponse request returning *GetNodeOSResponse
-func (c *ClientWithResponses) GetNodeOSWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeOSResponse, error) {
-	rsp, err := c.GetNodeOS(ctx, hostname, reqEditors...)
+// GetNodeOsWithResponse request returning *GetNodeOsResponse
+func (c *ClientWithResponses) GetNodeOsWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeOsResponse, error) {
+	rsp, err := c.GetNodeOs(ctx, hostname, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetNodeOSResponse(rsp)
+	return ParseGetNodeOsResponse(rsp)
 }
 
 // GetNodePackageWithResponse request returning *GetNodePackageResponse
@@ -21891,7 +21925,7 @@ func ParseGetNodeDiskResponse(rsp *http.Response) (*GetNodeDiskResponse, error) 
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest DiskCollectionResponse
+		var dest DiskGetResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -22398,7 +22432,7 @@ func ParseGetNodeHostnameResponse(rsp *http.Response) (*GetNodeHostnameResponse,
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest HostnameCollectionResponse
+		var dest HostnameGetResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -22452,7 +22486,7 @@ func ParsePutNodeHostnameResponse(rsp *http.Response) (*PutNodeHostnameResponse,
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest HostnameUpdateCollectionResponse
+		var dest HostnameUpdateResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -22506,7 +22540,7 @@ func ParseGetNodeLoadResponse(rsp *http.Response) (*GetNodeLoadResponse, error) 
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest LoadCollectionResponse
+		var dest LoadGetResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -22722,7 +22756,7 @@ func ParseGetNodeMemoryResponse(rsp *http.Response) (*GetNodeMemoryResponse, err
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest MemoryCollectionResponse
+		var dest MemoryGetResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -23782,22 +23816,22 @@ func ParsePutNodeNtpResponse(rsp *http.Response) (*PutNodeNtpResponse, error) {
 	return response, nil
 }
 
-// ParseGetNodeOSResponse parses an HTTP response from a GetNodeOSWithResponse call
-func ParseGetNodeOSResponse(rsp *http.Response) (*GetNodeOSResponse, error) {
+// ParseGetNodeOsResponse parses an HTTP response from a GetNodeOsWithResponse call
+func ParseGetNodeOsResponse(rsp *http.Response) (*GetNodeOsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetNodeOSResponse{
+	response := &GetNodeOsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest OSInfoCollectionResponse
+		var dest OsGetResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -25752,7 +25786,7 @@ func ParseGetNodeUptimeResponse(rsp *http.Response) (*GetNodeUptimeResponse, err
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest UptimeCollectionResponse
+		var dest UptimeGetResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

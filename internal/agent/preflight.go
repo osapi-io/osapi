@@ -52,7 +52,6 @@ var sudoCommands = []string{
 	"systemctl",
 	"sysctl",
 	"timedatectl",
-	"hostnamectl",
 	"chronyc",
 	"useradd",
 	"usermod",
@@ -92,8 +91,9 @@ func RunPreflight(
 	ctx context.Context,
 	logger *slog.Logger,
 	execManager exec.Manager,
+	platform string,
 ) ([]PreflightResult, bool) {
-	results := checkSudoAccess(ctx, logger, execManager)
+	results := checkSudoAccess(ctx, logger, execManager, platform)
 	results = append(results, checkCapabilities(logger)...)
 
 	for _, r := range results {
@@ -114,6 +114,7 @@ func checkSudoAccess(
 	ctx context.Context,
 	logger *slog.Logger,
 	execManager exec.Manager,
+	platform string,
 ) []PreflightResult {
 	out, err := execManager.RunCmd(ctx, "sudo", []string{"-n", "-l"})
 	if err != nil {
@@ -133,7 +134,7 @@ func checkSudoAccess(
 	all, granted := parseSudoList(out)
 	results := []PreflightResult{{Name: "sudo", Passed: true, Fatal: true}}
 
-	for _, cmd := range requiredSudo() {
+	for _, cmd := range requiredSudo(platform) {
 		if _, err := lookPath(cmd); err != nil {
 			continue
 		}
@@ -290,10 +291,13 @@ func readCapEff() (uint64, error) {
 
 // requiredSudo is every program the agent runs with sudo: the hand-written
 // domains', then each registered behavior's, without repeats.
-func requiredSudo() []string {
+func requiredSudo(
+	platform string,
+) []string {
 	all := slices.Clone(sudoCommands)
 	for _, b := range behavior.All() {
-		for _, p := range b.Sudo {
+		sudo, _ := b.Programs(platform)
+		for _, p := range sudo {
 			if !slices.Contains(all, p) {
 				all = append(all, p)
 			}
@@ -311,10 +315,13 @@ var lookPath = osexec.LookPath
 // behavior.Runs that is not on the agent's PATH, once. A missing one fails
 // only the behavior that runs it, so the agent warns rather than refusing to
 // start.
-func MissingPrograms() []string {
+func MissingPrograms(
+	platform string,
+) []string {
 	var missing []string
 	for _, b := range behavior.All() {
-		for _, p := range b.Runs {
+		_, runs := b.Programs(platform)
+		for _, p := range runs {
 			if slices.Contains(missing, p) {
 				continue
 			}

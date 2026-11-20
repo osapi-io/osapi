@@ -120,7 +120,7 @@ import {
 import {
   getNodeHostname,
   putNodeHostname,
-} from "@/sdk/gen/hostname-management-api-hostname-operations/hostname-management-api-hostname-operations";
+} from "@/sdk/gen/hostname-api-hostname-operations/hostname-api-hostname-operations";
 import {
   postNodePowerReboot,
   postNodePowerShutdown,
@@ -178,13 +178,11 @@ import {
   postNodeFileUndeploy,
   getNodeFileStatus,
 } from "@/sdk/gen/node-file-operations-api-node-file-operations/node-file-operations-api-node-file-operations";
-import {
-  getNodeDisk,
-  getNodeMemory,
-  getNodeLoad,
-  getNodeOS,
-  getNodeUptime,
-} from "@/sdk/gen/node-management-api-node-operations/node-management-api-node-operations";
+import { getNodeDisk } from "@/sdk/gen/disk-api-disk-operations/disk-api-disk-operations";
+import { getNodeLoad } from "@/sdk/gen/load-api-load-operations/load-api-load-operations";
+import { getNodeMemory } from "@/sdk/gen/memory-api-memory-operations/memory-api-memory-operations";
+import { getNodeOs } from "@/sdk/gen/os-api-os-operations/os-api-os-operations";
+import { getNodeUptime } from "@/sdk/gen/uptime-api-uptime-operations/uptime-api-uptime-operations";
 import { getNodeStatus } from "@/sdk/gen/node-management-api-node-status/node-management-api-node-status";
 import {
   getAuditLogs,
@@ -774,7 +772,7 @@ export function Configure() {
             break;
           case "hostname-set":
             result = await putNodeHostname(t, {
-              hostname: block.data.hostname as string,
+              name: block.data.hostname as string,
             });
             break;
           case "power-reboot":
@@ -931,7 +929,7 @@ export function Configure() {
             result = await getNodeUptime(t);
             break;
           case "node-os":
-            result = await getNodeOS(t);
+            result = await getNodeOs(t);
             break;
           case "disk-info":
             result = await getNodeDisk(t);

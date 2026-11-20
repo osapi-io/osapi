@@ -30,3 +30,7 @@ import-mapping:
 output-options:
   # to make sure that all types are generated
   skip-prune: true
+compatibility:
+  # Name each enum value for its type, such as NodeStatusResponseStatusOk,
+  # so a name does not change when another enum leaves the spec.
+  always-prefix-enum-values: true

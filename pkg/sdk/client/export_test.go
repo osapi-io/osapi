@@ -78,7 +78,7 @@ func ExportDisksFromGen(
 }
 
 func ExportHostnameCollectionFromGen(
-	input *gen.HostnameCollectionResponse,
+	input *gen.HostnameGetResponse,
 ) Collection[HostnameResult] {
 	return hostnameCollectionFromGen(input)
 }
@@ -625,4 +625,32 @@ func ExportNewResponse[T any](
 	httpResp *http.Response,
 ) *Response[T] {
 	return newResponse(data, rawJSON, httpResp)
+}
+
+// ExportDiskListFromGen exposes the private diskListFromGen for testing.
+func ExportDiskListFromGen(
+	input *[]gen.Disk,
+) []Disk {
+	return diskListFromGen(input)
+}
+
+// ExportLoadAveragesFromGen exposes the private loadAveragesFromGen for testing.
+func ExportLoadAveragesFromGen(
+	input *gen.Averages,
+) *LoadAverage {
+	return loadAveragesFromGen(input)
+}
+
+// ExportMemoryUsageFromGen exposes the private memoryUsageFromGen for testing.
+func ExportMemoryUsageFromGen(
+	input *gen.Usage,
+) *Memory {
+	return memoryUsageFromGen(input)
+}
+
+// ExportOSReleaseFromGen exposes the private osReleaseFromGen for testing.
+func ExportOSReleaseFromGen(
+	input *gen.Release,
+) *OSInfo {
+	return osReleaseFromGen(input)
 }

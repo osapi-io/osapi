@@ -38,4 +38,4 @@ for a complete working example.
 
 ## Permissions
 
-Requires `node:read` permission.
+Requires the `load:read` permission.

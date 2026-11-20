@@ -29,7 +29,6 @@ type MemoryResult struct {
 	Hostname string  `json:"hostname"`
 	Status   string  `json:"status"`
 	Error    string  `json:"error,omitempty"`
-	Changed  bool    `json:"changed"`
 	Memory   *Memory `json:"memory,omitempty"`
 }
 
@@ -48,9 +47,20 @@ func memoryFromGen(
 	}
 }
 
-// memoryCollectionFromGen converts a gen.MemoryCollectionResponse to a Collection[MemoryResult].
+// memoryUsageFromGen converts the memory behavior's gen.Usage to a Memory.
+func memoryUsageFromGen(
+	g *gen.Usage,
+) *Memory {
+	if g == nil {
+		return nil
+	}
+
+	return &Memory{Total: g.Total, Used: g.Used, Free: g.Free}
+}
+
+// memoryCollectionFromGen converts a gen.MemoryGetResponse to a Collection[MemoryResult].
 func memoryCollectionFromGen(
-	g *gen.MemoryCollectionResponse,
+	g *gen.MemoryGetResponse,
 ) Collection[MemoryResult] {
 	results := make([]MemoryResult, 0, len(g.Results))
 	for _, r := range g.Results {
@@ -58,8 +68,7 @@ func memoryCollectionFromGen(
 			Hostname: r.Hostname,
 			Status:   string(r.Status),
 			Error:    derefString(r.Error),
-			Changed:  derefBool(r.Changed),
-			Memory:   memoryFromGen(r.Memory),
+			Memory:   memoryUsageFromGen(r.Memory),
 		})
 	}
 

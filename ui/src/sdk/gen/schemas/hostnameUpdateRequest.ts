@@ -6,6 +6,9 @@
  */
 
 export interface HostnameUpdateRequest {
-  /** The new hostname to set. */
-  hostname: string;
+  /**
+     * The hostname to set, such as web-01
+     * @maxLength 253
+     */
+  name: string;
 }

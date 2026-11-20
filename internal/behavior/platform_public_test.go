@@ -158,6 +158,96 @@ func (s *PlatformPublicTestSuite) TestProviderPrefersOwnPlatform() {
 	}
 }
 
+func (s *PlatformPublicTestSuite) TestOn() {
+	linux := func(host.Host) (fakeProvider, error) { return fakeProvider{}, nil }
+	tests := []struct {
+		name       string
+		on         []string
+		platforms  []string
+		host       string
+		wantRuns   bool
+		serves     string
+		wantServes bool
+	}{
+		{
+			name: "when the method names no platform", platforms: []string{"linux"},
+			host: "fedora", wantRuns: true, serves: "linux", wantServes: true,
+		},
+		{
+			name: "when the host is the platform On names", on: []string{"debian"},
+			platforms: []string{"linux"}, host: "debian", wantRuns: true,
+			serves: "linux", wantServes: true,
+		},
+		{
+			name: "when the host is another distribution", on: []string{"debian"},
+			platforms: []string{"linux"}, host: "fedora", wantRuns: false,
+			serves: "darwin", wantServes: false,
+		},
+		{
+			name: "when On names linux and the host is a distribution", on: []string{"linux"},
+			platforms: []string{"linux", "darwin"}, host: "fedora", wantRuns: true,
+			serves: "darwin", wantServes: false,
+		},
+		{
+			name: "when On names linux and the host is macOS", on: []string{"linux"},
+			platforms: []string{"linux"}, host: "darwin", wantRuns: false,
+			serves: "linux", wantServes: true,
+		},
+		{
+			name: "when On names a platform with no provider", on: []string{"darwin"},
+			platforms: []string{"linux"}, host: "darwin", wantRuns: true,
+			serves: "linux", wantServes: false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			opts := []behavior.Option{behavior.Node, behavior.Read("get", get).On(tc.on...)}
+			for _, p := range tc.platforms {
+				opts = append(opts, behavior.Platform(p, linux))
+			}
+			b := behavior.Define("sysctl", "Kernel parameters", opts...)
+
+			s.Equal(tc.wantRuns, b.Methods[0].RunsOn(tc.host))
+			s.Equal(tc.wantServes, b.Serves(b.Methods[0], tc.serves))
+		})
+	}
+}
+
+func (s *PlatformPublicTestSuite) TestPrograms() {
+	b := behavior.Define("hostname", "Hostname", behavior.Node,
+		behavior.Sudo("tee"), behavior.Runs("sysctl"),
+		behavior.Read("get", get).Runs("cat"),
+		behavior.Write("update", get).On("debian").Sudo("hostnamectl", "tee"),
+	)
+	tests := []struct {
+		name     string
+		platform string
+		wantSudo []string
+		wantRuns []string
+	}{
+		{
+			name: "when the method runs on the platform", platform: "debian",
+			wantSudo: []string{"tee", "hostnamectl"}, wantRuns: []string{"sysctl", "cat"},
+		},
+		{
+			name: "when the method does not run on the platform", platform: "darwin",
+			wantSudo: []string{"tee"}, wantRuns: []string{"sysctl", "cat"},
+		},
+		{
+			name: "when the platform is empty", platform: "",
+			wantSudo: []string{"tee", "hostnamectl"}, wantRuns: []string{"sysctl", "cat"},
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			sudo, runs := b.Programs(tc.platform)
+			s.Equal(tc.wantSudo, sudo)
+			s.Equal(tc.wantRuns, runs)
+		})
+	}
+}
+
 func (s *PlatformPublicTestSuite) TestSudo() {
 	b := behavior.Define("sysctl", "Kernel parameters", behavior.Node,
 		behavior.Sudo("sysctl"), behavior.Sudo("modprobe", "tee"),

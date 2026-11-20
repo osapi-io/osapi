@@ -637,7 +637,7 @@ func (s *ConsumerPublicTestSuite) TestHandleJobMessageJS() {
 					Return([]byte(`{
 						"id": "test-job-123",
 						"operation": {
-							"type": "node.hostname.get",
+							"type": "node.status.get",
 							"data": {}
 						}
 					}`), nil)

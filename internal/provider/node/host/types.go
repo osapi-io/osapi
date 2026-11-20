@@ -20,10 +20,7 @@
 
 package host
 
-import (
-	"context"
-	"time"
-)
+import "time"
 
 // Provider implements the methods to interact with various Host components.
 type Provider interface {
@@ -46,8 +43,6 @@ type Provider interface {
 	GetServiceManager() (string, error)
 	// GetPackageManager detects the system's package manager (e.g., apt, dnf, yum).
 	GetPackageManager() (string, error)
-	// UpdateHostname sets the system hostname.
-	UpdateHostname(ctx context.Context, name string) (*UpdateHostnameResult, error)
 }
 
 // Result represents the operating system information.
@@ -57,11 +52,5 @@ type Result struct {
 	// The version of the Linux distribution (e.g., 20.04, 8.3).
 	Version string
 	// Changed indicates whether system state was modified.
-	Changed bool `json:"changed"`
-}
-
-// UpdateHostnameResult represents the outcome of a hostname set operation.
-type UpdateHostnameResult struct {
-	// Changed indicates whether the hostname was actually modified.
 	Changed bool `json:"changed"`
 }

@@ -7,7 +7,6 @@ export type Permission =
   | "agent:read"
   | "agent:write"
   | "node:read"
-  | "node:write"
   | "network:read"
   | "network:write"
   | "job:read"
@@ -41,7 +40,14 @@ export type Permission =
   | "certificate:read"
   | "certificate:write"
   | "service:read"
-  | "service:write";
+  | "service:write"
+  | "disk:read"
+  | "hostname:read"
+  | "hostname:write"
+  | "load:read"
+  | "memory:read"
+  | "os:read"
+  | "uptime:read";
 
 export const ALL_PERMISSIONS: Permission[] = [
   "admission:read",
@@ -49,7 +55,6 @@ export const ALL_PERMISSIONS: Permission[] = [
   "agent:read",
   "agent:write",
   "node:read",
-  "node:write",
   "network:read",
   "network:write",
   "job:read",
@@ -84,6 +89,13 @@ export const ALL_PERMISSIONS: Permission[] = [
   "certificate:write",
   "service:read",
   "service:write",
+  "disk:read",
+  "hostname:read",
+  "hostname:write",
+  "load:read",
+  "memory:read",
+  "os:read",
+  "uptime:read",
 ];
 
 /** The permissions of each built-in role, by its JWT role. */
@@ -94,7 +106,6 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "agent:read",
     "agent:write",
     "node:read",
-    "node:write",
     "network:read",
     "network:write",
     "job:read",
@@ -129,12 +140,18 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "certificate:write",
     "service:read",
     "service:write",
+    "disk:read",
+    "hostname:read",
+    "hostname:write",
+    "load:read",
+    "memory:read",
+    "os:read",
+    "uptime:read",
   ],
   write: [
     "admission:read",
     "agent:read",
     "node:read",
-    "node:write",
     "network:read",
     "network:write",
     "job:read",
@@ -163,6 +180,13 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "certificate:write",
     "service:read",
     "service:write",
+    "disk:read",
+    "hostname:read",
+    "hostname:write",
+    "load:read",
+    "memory:read",
+    "os:read",
+    "uptime:read",
   ],
   read: [
     "admission:read",
@@ -184,5 +208,11 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "log:read",
     "certificate:read",
     "service:read",
+    "disk:read",
+    "hostname:read",
+    "load:read",
+    "memory:read",
+    "os:read",
+    "uptime:read",
   ],
 };

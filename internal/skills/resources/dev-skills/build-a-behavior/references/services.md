@@ -14,6 +14,7 @@ In tests, no real program runs. The filesystem of the fake host is in memory. It
 | `h.FS`, never the `os` package | An in-memory filesystem | `Exists` before the call; `Wrote`, `Removed` after |
 | `h.Exec`, with each program declared by `behavior.Runs`, or `behavior.Sudo` if it runs as root | A mock that records each command line and answers with what the example declares | `Prints` for an output, `PrintsAfter` for one that changes once a command has run; `Ran` after |
 | A building block, through `behavior.Requires` and `host.Require` | The building block's real provider, on the same fake host | Whatever that provider's own calls need; its `behavior get` lists them |
+| `h.Time()`, never `time.Now` | `behaviortest.Now`, 2026-01-02 03:04:05 UTC | An output computed from that time, such as an uptime from a boot time |
 | `host.Settings[Settings](h)` | The defaults | |
 | `h.Platform`, `h.Hostname` | Each platform the behavior declares; `behaviortest.Hostname` | |
 

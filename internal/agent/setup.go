@@ -288,7 +288,6 @@ func buildRegistry(
 			packageProvider,
 			logProvider,
 			serviceProvider,
-			cfg,
 			e.log,
 		),
 		hostProvider,
@@ -344,6 +343,7 @@ func buildRegistry(
 		Exec:            e.exec,
 		FileState:       e.fileState,
 		FileStateBucket: e.fileStateBucket,
+		Now:             time.Now,
 	}, e.log)
 	r.Register(
 		job.CategoryBehavior,

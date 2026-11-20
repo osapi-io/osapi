@@ -219,6 +219,19 @@ func ValidateBehavior(
 		}
 	}
 
+	for _, m := range b.Methods {
+		for _, p := range m.Platforms {
+			if b.resolve(p) == nil {
+				add(
+					m.Name,
+					RulePlatform,
+					"On names %q, but the behavior declares no provider for it; add behavior.Platform",
+					p,
+				)
+			}
+		}
+	}
+
 	seen := map[string]bool{}
 	routes := map[string]string{}
 	for _, m := range b.Methods {

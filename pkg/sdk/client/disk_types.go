@@ -37,7 +37,6 @@ type DiskResult struct {
 	Hostname string `json:"hostname"`
 	Status   string `json:"status"`
 	Error    string `json:"error,omitempty"`
-	Changed  bool   `json:"changed"`
 	Disks    []Disk `json:"disks,omitempty"`
 }
 
@@ -62,9 +61,24 @@ func disksFromGen(
 	return disks
 }
 
-// diskCollectionFromGen converts a gen.DiskCollectionResponse to a Collection[DiskResult].
+// diskListFromGen converts the disk behavior's []gen.Disk to a slice of Disk.
+func diskListFromGen(
+	g *[]gen.Disk,
+) []Disk {
+	if g == nil {
+		return nil
+	}
+	disks := make([]Disk, 0, len(*g))
+	for _, d := range *g {
+		disks = append(disks, Disk{Name: d.Name, Total: d.Total, Used: d.Used, Free: d.Free})
+	}
+
+	return disks
+}
+
+// diskCollectionFromGen converts a gen.DiskGetResponse to a Collection[DiskResult].
 func diskCollectionFromGen(
-	g *gen.DiskCollectionResponse,
+	g *gen.DiskGetResponse,
 ) Collection[DiskResult] {
 	results := make([]DiskResult, 0, len(g.Results))
 	for _, r := range g.Results {
@@ -72,8 +86,7 @@ func diskCollectionFromGen(
 			Hostname: r.Hostname,
 			Status:   string(r.Status),
 			Error:    derefString(r.Error),
-			Changed:  derefBool(r.Changed),
-			Disks:    disksFromGen(r.Disks),
+			Disks:    diskListFromGen(r.Disks),
 		})
 	}
 

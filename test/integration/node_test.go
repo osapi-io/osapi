@@ -58,8 +58,7 @@ func (s *NodeSmokeSuite) TestNodeHostnameGet() {
 				first, ok := results[0].(map[string]any)
 				s.Require().True(ok)
 				s.NotEmpty(first["hostname"])
-				s.Contains(first, "changed")
-				s.Equal(false, first["changed"])
+				s.NotEmpty(first["name"])
 			},
 		},
 	}
@@ -129,7 +128,7 @@ func (s *NodeSmokeSuite) TestNodeHostnameUpdate() {
 	first, ok := results[0].(map[string]any)
 	s.Require().True(ok)
 
-	currentHostname, ok := first["hostname"].(string)
+	currentHostname, ok := first["name"].(string)
 	s.Require().True(ok)
 
 	tests := []struct {
@@ -161,7 +160,8 @@ func (s *NodeSmokeSuite) TestNodeHostnameUpdate() {
 				first, ok := results[0].(map[string]any)
 				s.Require().True(ok)
 				s.Contains(first, "hostname")
-				s.Contains(first, "changed")
+				s.Equal(currentHostname, first["name"])
+				s.Equal(false, first["changed"])
 			},
 		},
 	}

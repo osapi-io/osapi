@@ -47,9 +47,6 @@ tags:
   - description: Telemetry endpoints, such as the spans of a trace.
     name: Telemetry_API_telemetry
     x-displayName: Telemetry
-  - name: Node_Management_API_node_operations
-    x-displayName: Node
-    description: Operations related to the node endpoint.
   - name: Node_Management_API_node_status
     x-displayName: Node/Status
     description: Operations related to node status endpoint.
@@ -71,9 +68,6 @@ tags:
   - name: Node_File_Operations_API_node_file_operations
     x-displayName: Node/File
     description: File deploy, undeploy, and status operations on a target node.
-  - name: Hostname_Management_API_hostname_operations
-    x-displayName: Node/Hostname
-    description: Hostname operations on a target node.
   - name: Log_Management_API_log_operations
     x-displayName: Node/Log
     description: Log viewing operations on a target node.
@@ -116,9 +110,27 @@ tags:
   - name: User_and_Group_Management_API_group_operations
     x-displayName: Node/Group
     description: Group management on a target node.
+  - description: Get the disk usage of target hosts
+    name: Disk_API_disk_operations
+    x-displayName: Node/Disk
+  - description: Get or set the hostname of target hosts
+    name: Hostname_API_hostname_operations
+    x-displayName: Node/Hostname
+  - description: Get the load averages of target hosts
+    name: Load_API_load_operations
+    x-displayName: Node/Load
+  - description: Get the memory usage of target hosts
+    name: Memory_API_memory_operations
+    x-displayName: Node/Memory
+  - description: Get the operating system of target hosts
+    name: Os_API_os_operations
+    x-displayName: Node/Os
   - description: Kernel parameters, written to sysctl.d files and applied
     name: Sysctl_API_sysctl_operations
     x-displayName: Node/Sysctl
+  - description: Get the uptime of target hosts
+    name: Uptime_API_uptime_operations
+    x-displayName: Node/Uptime
 paths:
   /api/admission:
     servers: []
@@ -1946,226 +1958,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/disk:
-    servers: []
-    get:
-      summary: Retrieve disk usage
-      description: Get disk usage information for the target node.
-      tags:
-        - Node_Management_API_node_operations
-      operationId: GetNodeDisk
-      security:
-        - BearerAuth:
-            - node:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      responses:
-        '200':
-          description: Disk usage information.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DiskCollectionResponse'
-        '400':
-          description: Invalid request parameters.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error retrieving disk usage.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/memory:
-    servers: []
-    get:
-      summary: Retrieve memory stats
-      description: Get memory usage information for the target node.
-      tags:
-        - Node_Management_API_node_operations
-      operationId: GetNodeMemory
-      security:
-        - BearerAuth:
-            - node:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      responses:
-        '200':
-          description: Memory usage information.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MemoryCollectionResponse'
-        '400':
-          description: Invalid request parameters.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error retrieving memory stats.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/load:
-    servers: []
-    get:
-      summary: Retrieve load averages
-      description: Get load average information for the target node.
-      tags:
-        - Node_Management_API_node_operations
-      operationId: GetNodeLoad
-      security:
-        - BearerAuth:
-            - node:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      responses:
-        '200':
-          description: Load average information.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LoadCollectionResponse'
-        '400':
-          description: Invalid request parameters.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error retrieving load averages.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/os:
-    servers: []
-    get:
-      summary: Retrieve OS info
-      description: Get operating system information for the target node.
-      tags:
-        - Node_Management_API_node_operations
-      operationId: GetNodeOS
-      security:
-        - BearerAuth:
-            - node:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      responses:
-        '200':
-          description: Operating system information.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OSInfoCollectionResponse'
-        '400':
-          description: Invalid request parameters.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error retrieving OS info.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/uptime:
-    servers: []
-    get:
-      summary: Retrieve uptime
-      description: Get uptime information for the target node.
-      tags:
-        - Node_Management_API_node_operations
-      operationId: GetNodeUptime
-      security:
-        - BearerAuth:
-            - node:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      responses:
-        '200':
-          description: Uptime information.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UptimeCollectionResponse'
-        '400':
-          description: Invalid request parameters.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error retrieving uptime.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /api/node/{hostname}/certificate/ca:
     servers: []
     get:
@@ -3139,98 +2931,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/hostname:
-    servers: []
-    get:
-      summary: Retrieve node hostname
-      description: Get the current hostname and labels of the node.
-      tags:
-        - Hostname_Management_API_hostname_operations
-      operationId: GetNodeHostname
-      security:
-        - BearerAuth:
-            - node:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      responses:
-        '200':
-          description: A JSON object containing the node's hostname.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HostnameCollectionResponse'
-        '400':
-          description: Invalid request parameters.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error retrieving hostname.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    put:
-      summary: Update node hostname
-      description: Set the system hostname on the target node.
-      tags:
-        - Hostname_Management_API_hostname_operations
-      operationId: PutNodeHostname
-      security:
-        - BearerAuth:
-            - node:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/HostnameUpdateRequest'
-      responses:
-        '200':
-          description: Hostname update accepted.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HostnameUpdateCollectionResponse'
-        '400':
-          description: Invalid input.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error updating hostname.
           content:
             application/json:
               schema:
@@ -6488,6 +6188,290 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /api/node/{hostname}/disk:
+    servers: []
+    get:
+      description: >-
+        Reads the size, the used space and the free space of each local
+        filesystem, in bytes, from df: ext4, xfs and btrfs on Linux, and apfs
+        and hfs on macOS. Network and special filesystems are left out.
+      operationId: GetNodeDisk
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiskGetResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - disk:read
+      summary: Get the disk usage of the host
+      tags:
+        - Disk_API_disk_operations
+  /api/node/{hostname}/hostname:
+    servers: []
+    get:
+      description: >-
+        Reads the kernel's hostname: /proc/sys/kernel/hostname on Linux, and
+        kern.hostname on macOS.
+      operationId: GetNodeHostname
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HostnameGetResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - hostname:read
+      summary: Get the hostname of the host
+      tags:
+        - Hostname_API_hostname_operations
+    put:
+      description: >-
+        Sets the static hostname with hostnamectl set-hostname, which keeps it
+        after a reboot. A host that already has the name does not change and
+        reports changed: false. It runs on the Debian family only, and elsewhere
+        reports skipped. In a container the runtime owns the hostname, so there
+        it also reports skipped.
+      operationId: PutNodeHostname
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HostnameUpdateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HostnameUpdateResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - hostname:write
+      summary: Set the hostname of the host
+      tags:
+        - Hostname_API_hostname_operations
+  /api/node/{hostname}/load:
+    servers: []
+    get:
+      description: Reads the averages of the run queue over 1, 5 and 15 minutes.
+      operationId: GetNodeLoad
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoadGetResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - load:read
+      summary: Get the load averages of the host
+      tags:
+        - Load_API_load_operations
+  /api/node/{hostname}/memory:
+    servers: []
+    get:
+      description: >-
+        Reads the total, the free and the used memory, in bytes. Used is the
+        total less what is available, which includes the cache, as free(1)
+        reports it.
+      operationId: GetNodeMemory
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemoryGetResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - memory:read
+      summary: Get the memory usage of the host
+      tags:
+        - Memory_API_memory_operations
+  /api/node/{hostname}/os:
+    servers: []
+    get:
+      description: >-
+        Reads the distribution and its version: the ID and VERSION_ID of
+        /etc/os-release on Linux, and the system type and product version that
+        sysctl gives on macOS, such as darwin 15.5.
+      operationId: GetNodeOs
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OsGetResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - os:read
+      summary: Get the operating system of the host
+      tags:
+        - Os_API_os_operations
   /api/node/{hostname}/sysctl:
     servers: []
     get:
@@ -6760,6 +6744,53 @@ paths:
       summary: Set a kernel parameter, manage it, and apply it
       tags:
         - Sysctl_API_sysctl_operations
+  /api/node/{hostname}/uptime:
+    servers: []
+    get:
+      description: >-
+        Reads how long the host has run since it booted: /proc/uptime on Linux,
+        and the boot time that sysctl gives on macOS. The uptime is in days,
+        hours and minutes, and in seconds.
+      operationId: GetNodeUptime
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UptimeGetResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - uptime:read
+      summary: Get the uptime of the host
+      tags:
+        - Uptime_API_uptime_operations
 components:
   schemas:
     ErrorResponse:
@@ -8078,34 +8109,6 @@ components:
       description: List of local disk usage information.
       items:
         $ref: '#/components/schemas/DiskResponse'
-    UptimeResponse:
-      type: object
-      description: System uptime information.
-      properties:
-        hostname:
-          type: string
-          description: The hostname of the agent.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        uptime:
-          type: string
-          description: The uptime of the system.
-          example: 0 days, 4 hours, 1 minute
-        changed:
-          type: boolean
-          description: Whether the operation modified system state.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
     NodeStatusResponse:
       type: object
       properties:
@@ -8158,106 +8161,6 @@ components:
       required:
         - hostname
         - status
-    DiskResultItem:
-      type: object
-      properties:
-        hostname:
-          type: string
-          description: The hostname of the agent.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        disks:
-          $ref: '#/components/schemas/DisksResponse'
-        changed:
-          type: boolean
-          description: Whether the operation modified system state.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    MemoryResultItem:
-      type: object
-      properties:
-        hostname:
-          type: string
-          description: The hostname of the agent.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        memory:
-          $ref: '#/components/schemas/MemoryResponse'
-        changed:
-          type: boolean
-          description: Whether the operation modified system state.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    LoadResultItem:
-      type: object
-      properties:
-        hostname:
-          type: string
-          description: The hostname of the agent.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        load_average:
-          $ref: '#/components/schemas/LoadAverageResponse'
-        changed:
-          type: boolean
-          description: Whether the operation modified system state.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    OSInfoResultItem:
-      type: object
-      properties:
-        hostname:
-          type: string
-          description: The hostname of the agent.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        os_info:
-          $ref: '#/components/schemas/OSInfoResponse'
-        changed:
-          type: boolean
-          description: Whether the operation modified system state.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
     NodeStatusCollectionResponse:
       type: object
       properties:
@@ -8270,76 +8173,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/NodeStatusResponse'
-      required:
-        - results
-    DiskCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/DiskResultItem'
-      required:
-        - results
-    MemoryCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/MemoryResultItem'
-      required:
-        - results
-    LoadCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/LoadResultItem'
-      required:
-        - results
-    OSInfoCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/OSInfoResultItem'
-      required:
-        - results
-    UptimeCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/UptimeResponse'
       required:
         - results
     CertificateCACreateRequest:
@@ -9216,96 +9049,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FileUndeployResult'
-      required:
-        - results
-    HostnameResponse:
-      type: object
-      description: The hostname of the system.
-      properties:
-        hostname:
-          type: string
-          description: The system's hostname.
-          example: my-linux-server
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        labels:
-          type: object
-          additionalProperties:
-            type: string
-          description: Key-value labels configured on the agent.
-        changed:
-          type: boolean
-          description: Whether the operation modified system state.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    HostnameCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/HostnameResponse'
-      required:
-        - results
-    HostnameUpdateRequest:
-      type: object
-      properties:
-        hostname:
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1,max=253
-          description: The new hostname to set.
-          example: web-01
-      required:
-        - hostname
-    HostnameUpdateResultItem:
-      type: object
-      properties:
-        hostname:
-          type: string
-          description: The hostname of the agent.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-        changed:
-          type: boolean
-          description: Whether the hostname was actually modified.
-        error:
-          type: string
-      required:
-        - hostname
-        - status
-    HostnameUpdateCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/HostnameUpdateResultItem'
       required:
         - results
     LogEntryInfo:
@@ -11553,6 +11296,333 @@ components:
             $ref: '#/components/schemas/GroupMutationResult'
       required:
         - results
+    Disk:
+      properties:
+        free:
+          description: The bytes free to use
+          type: integer
+        name:
+          description: Where the filesystem is mounted
+          type: string
+        total:
+          description: The size of the filesystem in bytes
+          type: integer
+        used:
+          description: The bytes in use
+          type: integer
+      required:
+        - name
+        - total
+        - used
+        - free
+      type: object
+    DiskEntry:
+      properties:
+        disks:
+          description: Each local filesystem
+          items:
+            $ref: '#/components/schemas/Disk'
+          type: array
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
+      type: object
+    DiskGetResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/DiskEntry'
+          type: array
+      required:
+        - results
+      type: object
+    HostnameEntry:
+      properties:
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        name:
+          description: The hostname of the host
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
+      type: object
+    HostnameGetResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/HostnameEntry'
+          type: array
+      required:
+        - results
+      type: object
+    HostnameResult:
+      properties:
+        changed:
+          description: Whether the host changed
+          type: boolean
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        name:
+          description: The hostname of the host
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
+      type: object
+    HostnameUpdateRequest:
+      properties:
+        name:
+          description: The hostname to set, such as web-01
+          format: hostname
+          maxLength: 253
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,max=253,hostname
+      required:
+        - name
+      type: object
+    HostnameUpdateResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/HostnameResult'
+          type: array
+      required:
+        - results
+      type: object
+    Averages:
+      properties:
+        1min:
+          description: The load average over 1 minute
+          format: double
+          type: number
+        5min:
+          description: The load average over 5 minutes
+          format: double
+          type: number
+        15min:
+          description: The load average over 15 minutes
+          format: double
+          type: number
+      required:
+        - 1min
+        - 5min
+        - 15min
+      type: object
+    LoadEntry:
+      properties:
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        load_average:
+          $ref: '#/components/schemas/Averages'
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
+      type: object
+    LoadGetResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/LoadEntry'
+          type: array
+      required:
+        - results
+      type: object
+    MemoryEntry:
+      properties:
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        memory:
+          $ref: '#/components/schemas/Usage'
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
+      type: object
+    MemoryGetResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/MemoryEntry'
+          type: array
+      required:
+        - results
+      type: object
+    Usage:
+      properties:
+        free:
+          description: Free memory in bytes
+          type: integer
+        total:
+          description: Total memory in bytes
+          type: integer
+        used:
+          description: 'Used memory in bytes: the total less what is available'
+          type: integer
+      required:
+        - total
+        - free
+        - used
+      type: object
+    OsEntry:
+      properties:
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        os_info:
+          $ref: '#/components/schemas/Release'
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
+      type: object
+    OsGetResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/OsEntry'
+          type: array
+      required:
+        - results
+      type: object
+    Release:
+      properties:
+        distribution:
+          description: The distribution, such as ubuntu, or darwin
+          type: string
+        version:
+          description: The version of the distribution, such as 24.04
+          type: string
+      required:
+        - distribution
+        - version
+      type: object
     SysctlCollectionResponse:
       properties:
         job_id:
@@ -11718,6 +11788,50 @@ components:
         results:
           items:
             $ref: '#/components/schemas/SysctlMutationResult'
+          type: array
+      required:
+        - results
+      type: object
+    UptimeEntry:
+      properties:
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        seconds:
+          description: How long the host has run, in seconds
+          type: integer
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+        uptime:
+          description: How long the host has run, in days, hours and minutes
+          type: string
+      required:
+        - hostname
+        - status
+      type: object
+    UptimeGetResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/UptimeEntry'
           type: array
       required:
         - results
@@ -11934,7 +12048,6 @@ x-tagGroups:
       - Telemetry_API_telemetry
   - name: Node Management API
     tags:
-      - Node_Management_API_node_operations
       - Node_Management_API_node_status
   - name: Certificate Management API
     tags:
@@ -11950,9 +12063,6 @@ x-tagGroups:
   - name: Node File Operations API
     tags:
       - Node_File_Operations_API_node_file_operations
-  - name: Hostname Management API
-    tags:
-      - Hostname_Management_API_hostname_operations
   - name: Log Management API
     tags:
       - Log_Management_API_log_operations
@@ -11987,6 +12097,24 @@ x-tagGroups:
     tags:
       - User_and_Group_Management_API_user_operations
       - User_and_Group_Management_API_group_operations
+  - name: Disk API
+    tags:
+      - Disk_API_disk_operations
+  - name: Hostname API
+    tags:
+      - Hostname_API_hostname_operations
+  - name: Load API
+    tags:
+      - Load_API_load_operations
+  - name: Memory API
+    tags:
+      - Memory_API_memory_operations
+  - name: Os API
+    tags:
+      - Os_API_os_operations
   - name: Sysctl API
     tags:
       - Sysctl_API_sysctl_operations
+  - name: Uptime API
+    tags:
+      - Uptime_API_uptime_operations

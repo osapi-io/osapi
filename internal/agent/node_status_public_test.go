@@ -33,7 +33,6 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/agent"
-	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
 	aptMocks "github.com/osapi-io/osapi/internal/provider/node/apt/mocks"
 	diskMocks "github.com/osapi-io/osapi/internal/provider/node/disk/mocks"
@@ -89,7 +88,6 @@ func (s *NodeStatusPublicTestSuite) processorWith(
 		aptMocks.NewMockProvider(s.mockCtrl),
 		logMocks.NewMockProvider(s.mockCtrl),
 		serviceMocks.NewMockProvider(s.mockCtrl),
-		config.Config{},
 		s.logger,
 	)
 }

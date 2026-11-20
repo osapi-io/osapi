@@ -76,17 +76,11 @@ type hostEnv struct {
 }
 
 func (e hostEnv) host() nodeHost.Provider {
-	switch e.platform {
-	case "debian":
-		if e.container {
-			return nodeHost.NewDebianDockerProvider()
-		}
-		return nodeHost.NewDebianProvider(e.exec)
-	case "darwin":
+	if e.platform == "darwin" {
 		return nodeHost.NewDarwinProvider()
-	default:
-		return nodeHost.NewLinuxProvider()
 	}
+
+	return nodeHost.NewLinuxProvider()
 }
 
 func (e hostEnv) disk() disk.Provider {

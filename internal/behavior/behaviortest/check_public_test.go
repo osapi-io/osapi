@@ -199,6 +199,15 @@ func (s *CheckPublicTestSuite) TestCheck() {
 			},
 		},
 		{
+			name:     "when a method runs only on a platform its provider does not serve",
+			platform: onDebian(nil),
+			methods: []behavior.Option{
+				behavior.Read("get", getNote).Describe("Get it").On(behavior.PlatformDarwin).
+					Example("A wrong output it does not check", getIn{}, noteOut{Text: "nope"},
+						behavior.Prints("cat /etc/note", "hello")),
+			},
+		},
+		{
 			name:     "when the programs are declared by a behavior it requires",
 			platform: onDebian(nil),
 			programs: []behavior.Option{

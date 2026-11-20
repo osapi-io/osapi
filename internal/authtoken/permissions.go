@@ -37,7 +37,6 @@ const (
 	PermAgentRead        = client.PermAgentRead
 	PermAgentWrite       = client.PermAgentWrite
 	PermNodeRead         = client.PermNodeRead
-	PermNodeWrite        = client.PermNodeWrite
 	PermNetworkRead      = client.PermNetworkRead
 	PermNetworkWrite     = client.PermNetworkWrite
 	PermJobRead          = client.PermJobRead
@@ -82,7 +81,6 @@ var builtinPermissions = []Permission{
 	PermAgentRead,
 	PermAgentWrite,
 	PermNodeRead,
-	PermNodeWrite,
 	PermNetworkRead,
 	PermNetworkWrite,
 	PermJobRead,
@@ -129,7 +127,6 @@ var builtinRolePermissions = map[string][]Permission{
 		PermAgentRead,
 		PermAgentWrite,
 		PermNodeRead,
-		PermNodeWrite,
 		PermNetworkRead,
 		PermNetworkWrite,
 		PermJobRead,
@@ -169,7 +166,6 @@ var builtinRolePermissions = map[string][]Permission{
 		PermAdmissionRead,
 		PermAgentRead,
 		PermNodeRead,
-		PermNodeWrite,
 		PermNetworkRead,
 		PermNetworkWrite,
 		PermJobRead,

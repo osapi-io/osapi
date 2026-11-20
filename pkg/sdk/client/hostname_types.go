@@ -26,11 +26,11 @@ import (
 
 // HostnameResult represents a hostname query result from a single agent.
 type HostnameResult struct {
-	Hostname string            `json:"hostname"`
-	Status   string            `json:"status"`
-	Error    string            `json:"error,omitempty"`
-	Changed  bool              `json:"changed"`
-	Labels   map[string]string `json:"labels,omitempty"`
+	Hostname string `json:"hostname"`
+	Status   string `json:"status"`
+	Error    string `json:"error,omitempty"`
+	// Name is the host's hostname, as the host reads it.
+	Name string `json:"name,omitempty"`
 }
 
 // HostnameUpdateResult represents a hostname update result from a single agent.
@@ -38,27 +38,23 @@ type HostnameUpdateResult struct {
 	Hostname string `json:"hostname"`
 	Status   string `json:"status"`
 	Error    string `json:"error,omitempty"`
-	Changed  bool   `json:"changed"`
+	// Name is the hostname the update set.
+	Name    string `json:"name,omitempty"`
+	Changed bool   `json:"changed"`
 }
 
-// hostnameCollectionFromGen converts a gen.HostnameCollectionResponse to a Collection[HostnameResult].
+// hostnameCollectionFromGen converts a gen.HostnameGetResponse to a Collection[HostnameResult].
 func hostnameCollectionFromGen(
-	g *gen.HostnameCollectionResponse,
+	g *gen.HostnameGetResponse,
 ) Collection[HostnameResult] {
 	results := make([]HostnameResult, 0, len(g.Results))
 	for _, r := range g.Results {
-		hr := HostnameResult{
+		results = append(results, HostnameResult{
 			Hostname: r.Hostname,
 			Status:   string(r.Status),
 			Error:    derefString(r.Error),
-			Changed:  derefBool(r.Changed),
-		}
-
-		if r.Labels != nil {
-			hr.Labels = *r.Labels
-		}
-
-		results = append(results, hr)
+			Name:     derefString(r.Name),
+		})
 	}
 
 	return Collection[HostnameResult]{
@@ -67,19 +63,19 @@ func hostnameCollectionFromGen(
 	}
 }
 
-// hostnameUpdateCollectionFromGen converts a gen.HostnameUpdateCollectionResponse to a Collection[HostnameUpdateResult].
+// hostnameUpdateCollectionFromGen converts a gen.HostnameUpdateResponse to a Collection[HostnameUpdateResult].
 func hostnameUpdateCollectionFromGen(
-	r *gen.HostnameUpdateCollectionResponse,
+	r *gen.HostnameUpdateResponse,
 ) Collection[HostnameUpdateResult] {
 	results := make([]HostnameUpdateResult, 0, len(r.Results))
 	for _, item := range r.Results {
-		result := HostnameUpdateResult{
+		results = append(results, HostnameUpdateResult{
 			Hostname: item.Hostname,
 			Status:   string(item.Status),
-			Changed:  derefBool(item.Changed),
 			Error:    derefString(item.Error),
-		}
-		results = append(results, result)
+			Name:     derefString(item.Name),
+			Changed:  derefBool(item.Changed),
+		})
 	}
 
 	return Collection[HostnameUpdateResult]{
