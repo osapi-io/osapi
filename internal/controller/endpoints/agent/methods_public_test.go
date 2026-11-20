@@ -169,7 +169,7 @@ func (s *MethodsPublicTestSuite) TestBuildAgentInfo() {
 				PrimaryInterface: "eth0",
 				Routes: []job.Route{{
 					Destination: "0.0.0.0", Gateway: "10.0.0.1", Interface: "eth0",
-					Mask: "/0", Metric: 100, Flags: "UG",
+					Mask: "/0", Metric: 100,
 				}},
 				Facts: map[string]any{"rack": "a1"},
 				State: job.AgentStateDraining,

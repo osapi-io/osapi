@@ -35,7 +35,6 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/provider"
-	"github.com/osapi-io/osapi/internal/provider/network/netinfo"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
@@ -54,7 +53,6 @@ func New(
 	diskProvider disk.Provider,
 	memoryProvider memory.Provider,
 	loadProvider load.Provider,
-	netinfoProvider netinfo.Provider,
 	processProvider process.Provider,
 	registry *ProviderRegistry,
 	registryBucket string,
@@ -72,7 +70,6 @@ func New(
 		diskProvider:    diskProvider,
 		memoryProvider:  memoryProvider,
 		loadProvider:    loadProvider,
-		netinfoProvider: netinfoProvider,
 		processProvider: processProvider,
 		registry:        registry,
 		registryBucket:  registryBucket,

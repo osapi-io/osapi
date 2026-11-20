@@ -29,6 +29,14 @@ import (
 	osexec "os/exec"
 	"time"
 
+	"github.com/osapi-io/gohai/pkg/gohai/collectors/cpu"
+	"github.com/osapi-io/gohai/pkg/gohai/collectors/hostname"
+	"github.com/osapi-io/gohai/pkg/gohai/collectors/initd"
+	"github.com/osapi-io/gohai/pkg/gohai/collectors/kernel"
+	"github.com/osapi-io/gohai/pkg/gohai/collectors/network"
+	"github.com/osapi-io/gohai/pkg/gohai/collectors/packagemgr"
+	"github.com/osapi-io/gohai/pkg/gohai/collectors/virtualization"
+
 	"github.com/osapi-io/gohai/pkg/gohai"
 	"github.com/osapi-io/gohai/pkg/gohai/source"
 
@@ -49,7 +57,6 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/command"
 	dockerProv "github.com/osapi-io/osapi/internal/provider/container/docker"
 	fileProv "github.com/osapi-io/osapi/internal/provider/file"
-	"github.com/osapi-io/osapi/internal/provider/network/netinfo"
 	"github.com/osapi-io/osapi/internal/provider/network/netplan/dns"
 	"github.com/osapi-io/osapi/internal/provider/network/ping"
 	diskProv "github.com/osapi-io/osapi/internal/provider/node/disk"
@@ -575,21 +582,6 @@ func SetAgentProcessorOnce(
 	}
 }
 
-// GetAgentNetinfoProvider returns the agent's netinfoProvider field for testing.
-func GetAgentNetinfoProvider(
-	a *Agent,
-) netinfo.Provider {
-	return a.netinfoProvider
-}
-
-// SetAgentNetinfoProvider sets the agent's netinfoProvider field for testing.
-func SetAgentNetinfoProvider(
-	a *Agent,
-	p netinfo.Provider,
-) {
-	a.netinfoProvider = p
-}
-
 // ExportGetHostProvider returns the host provider from the registry for testing.
 // Satisfies the TestProviderFactoryMethods suite.
 func ExportGetHostProvider(
@@ -877,7 +869,6 @@ func ExportProviders(
 		"load":        e.load(),
 		"dns":         e.dns(),
 		"ping":        e.ping(),
-		"netinfo":     e.netinfo(),
 		"cron":        e.cron(),
 		"ntp":         e.ntp(),
 		"timezone":    e.timezone(),
@@ -937,6 +928,78 @@ func ExportGohaiFacts(
 	opts ...gohai.Option,
 ) (*gohai.Facts, error) {
 	return gohaiFacts(opts...)
+}
+
+// SetCollectFactsFn replaces how the agent collects facts.
+func SetCollectFactsFn(
+	fn func() (*gohai.Facts, error),
+) {
+	collectFactsFn = fn
+}
+
+// ResetCollectFactsFn puts back the fake facts that agent tests collect.
+func ResetCollectFactsFn() {
+	collectFactsFn = FakeFacts
+}
+
+// ExportCollectFacts collects the facts of this host with gohai.
+func ExportCollectFacts() (*gohai.Facts, error) {
+	return collectFacts()
+}
+
+// FakeFacts are the facts an agent test collects: a Linux host with eth0
+// up, eth1 down and lo, a default route, and two IPv6 routes. No agent
+// test reads the host it runs on.
+func FakeFacts() (*gohai.Facts, error) {
+	return &gohai.Facts{
+		Kernel:     &kernel.Info{Machine: "x86_64", Release: "5.15.0-91-generic"},
+		Hostname:   &hostname.Info{FQDN: "default-hostname.local"},
+		CPU:        &cpu.Info{Count: 4},
+		Init:       &initd.Info{Name: "systemd"},
+		PackageMgr: &packagemgr.Info{Name: "apt"},
+		Virtualization: &virtualization.Info{
+			Systems: map[string]string{"docker": "guest"},
+		},
+		Network: &network.Info{
+			DefaultInterface: "eth0",
+			Interfaces: []network.Interface{
+				{Name: "lo", State: "up", Flags: []string{"up", "loopback"}},
+				{
+					Name: "eth0", State: "up", MAC: "02:42:ac:11:00:02", Flags: []string{"up"},
+					Addresses: []network.Address{
+						{Addr: "10.0.0.5", Family: "inet"},
+						{Addr: "10.0.0.6", Family: "inet"},
+						{Addr: "fe80::1", Family: "inet6"},
+					},
+				},
+				{Name: "eth1", State: "down"},
+				{
+					Name: "wg0", State: "up",
+					Addresses: []network.Address{{Addr: "fd00::2", Family: "inet6"}},
+				},
+				{
+					Name: "eth2", State: "up",
+					Addresses: []network.Address{{Addr: "192.168.1.2", Family: "inet"}},
+				},
+			},
+			Routes: []network.Route{
+				{
+					Destination: "default",
+					Family:      "inet",
+					Gateway:     "10.0.0.1",
+					Interface:   "eth0",
+					Metric:      100,
+				},
+				{Destination: "10.0.0.0/24", Family: "inet", Interface: "eth0"},
+				{Destination: "127", Family: "inet", Gateway: "127.0.0.1", Interface: "lo"},
+				{Destination: "default", Family: "inet6", Gateway: "fe80::1", Interface: "eth0"},
+			},
+		},
+	}, nil
+}
+
+func init() {
+	collectFactsFn = FakeFacts
 }
 
 // ResetPlatformFns puts back the functions that tell the platform of the host.

@@ -38,7 +38,6 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/pki"
-	"github.com/osapi-io/osapi/internal/provider/network/netinfo"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	"github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
@@ -75,11 +74,10 @@ type Agent struct {
 	// Providers used directly by the heartbeat and facts collection.
 	// These must remain as direct fields so the heartbeat can read
 	// system info independently of job processing.
-	hostProvider    host.Provider
-	diskProvider    disk.Provider
-	memoryProvider  memory.Provider
-	loadProvider    load.Provider
-	netinfoProvider netinfo.Provider
+	hostProvider   host.Provider
+	diskProvider   disk.Provider
+	memoryProvider memory.Provider
+	loadProvider   load.Provider
 
 	// Process provider for self-metrics in heartbeat.
 	processProvider process.Provider

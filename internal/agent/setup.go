@@ -42,7 +42,6 @@ import (
 	"github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/provider/command"
 	fileProv "github.com/osapi-io/osapi/internal/provider/file"
-	"github.com/osapi-io/osapi/internal/provider/network/netinfo"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
@@ -143,7 +142,6 @@ func Setup(
 	diskProvider := e.disk()
 	memoryProvider := e.memory()
 	loadProvider := e.load()
-	netinfoProvider := e.netinfo()
 
 	a := New(
 		fs,
@@ -155,7 +153,6 @@ func Setup(
 		diskProvider,
 		memoryProvider,
 		loadProvider,
-		netinfoProvider,
 		process.New(),
 		buildRegistry(
 			ctx,
@@ -165,7 +162,6 @@ func Setup(
 			diskProvider,
 			memoryProvider,
 			loadProvider,
-			netinfoProvider,
 		),
 		conn.RegistryBucket,
 		conn.FactsBucket,
@@ -278,7 +274,6 @@ func buildRegistry(
 	diskProvider disk.Provider,
 	memoryProvider memory.Provider,
 	loadProvider load.Provider,
-	netinfoProvider netinfo.Provider,
 ) *ProviderRegistry {
 	ntpProvider := e.ntp()
 	timezoneProvider := e.timezone()
@@ -332,7 +327,7 @@ func buildRegistry(
 	r.Register(
 		"network",
 		NewNetworkProcessor(dnsProvider, pingProvider, interfaceProvider, routeProvider, e.log),
-		dnsProvider, pingProvider, netinfoProvider, interfaceProvider, routeProvider,
+		dnsProvider, pingProvider, interfaceProvider, routeProvider,
 	)
 
 	r.Register(

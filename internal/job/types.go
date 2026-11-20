@@ -523,7 +523,6 @@ type Route struct {
 	Interface   string `json:"interface"`
 	Mask        string `json:"mask,omitempty"`
 	Metric      int    `json:"metric,omitempty"`
-	Flags       string `json:"flags,omitempty"`
 }
 
 // FactsRegistration represents an agent's facts entry in the facts KV bucket.

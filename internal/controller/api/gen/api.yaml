@@ -7222,10 +7222,6 @@ components:
           description: Destination network address.
           example: 0.0.0.0
           type: string
-        flags:
-          description: Route flags.
-          example: '0003'
-          type: string
         gateway:
           description: Gateway address.
           example: 192.168.1.1

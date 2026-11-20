@@ -127,7 +127,6 @@ type RouteResponse struct {
 	Interface   string `json:"interface"        doc:"Network interface name."        example:"eth0"`
 	Mask        string `json:"mask,omitempty"   doc:"Network mask in CIDR notation." example:"/0"`
 	Metric      int    `json:"metric,omitempty" doc:"Route metric."                  example:"100"`
-	Flags       string `json:"flags,omitempty"  doc:"Route flags."                   example:"0003"`
 }
 
 // TimelineEvent is one change of the agent's state.

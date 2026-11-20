@@ -55,7 +55,6 @@ func (suite *AgentTypesPublicTestSuite) TestAgentFromGen() {
 				serviceMgr := "systemd"
 				primaryIface := "eth0"
 				routeMask := "255.255.255.0"
-				routeFlags := "UG"
 				routeMetric := 100
 				uptime := "5d 3h 22m"
 				family := gen.NetworkInterfaceResponseFamily("inet")
@@ -116,7 +115,6 @@ func (suite *AgentTypesPublicTestSuite) TestAgentFromGen() {
 							Gateway:     "192.168.1.1",
 							Interface:   "eth0",
 							Mask:        &routeMask,
-							Flags:       &routeFlags,
 							Metric:      &routeMetric,
 						},
 					},
@@ -190,7 +188,6 @@ func (suite *AgentTypesPublicTestSuite) TestAgentFromGen() {
 				suite.Equal("192.168.1.1", a.Routes[0].Gateway)
 				suite.Equal("eth0", a.Routes[0].Interface)
 				suite.Equal("255.255.255.0", a.Routes[0].Mask)
-				suite.Equal("UG", a.Routes[0].Flags)
 				suite.Equal(100, a.Routes[0].Metric)
 
 				suite.Equal("5d 3h 22m", a.Uptime)

@@ -31,7 +31,6 @@ import (
 	"github.com/osapi-io/osapi/internal/exec"
 	dockerProv "github.com/osapi-io/osapi/internal/provider/container/docker"
 	fileProv "github.com/osapi-io/osapi/internal/provider/file"
-	"github.com/osapi-io/osapi/internal/provider/network/netinfo"
 	"github.com/osapi-io/osapi/internal/provider/network/netplan/dns"
 	ifaceProv "github.com/osapi-io/osapi/internal/provider/network/netplan/iface"
 	routeProv "github.com/osapi-io/osapi/internal/provider/network/netplan/route"
@@ -146,14 +145,6 @@ func (e hostEnv) ping() ping.Provider {
 	default:
 		return ping.NewLinuxProvider()
 	}
-}
-
-func (e hostEnv) netinfo() netinfo.Provider {
-	if e.platform == "darwin" {
-		return netinfo.NewDarwinProvider(e.exec)
-	}
-
-	return netinfo.NewLinuxProvider()
 }
 
 // docker returns the Docker provider, or nil if Docker does not answer. The

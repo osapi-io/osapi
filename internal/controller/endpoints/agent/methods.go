@@ -203,7 +203,7 @@ func buildAgentInfo(
 	for _, r := range a.Routes {
 		info.Routes = append(info.Routes, RouteResponse{
 			Destination: r.Destination, Gateway: r.Gateway, Interface: r.Interface,
-			Mask: r.Mask, Metric: r.Metric, Flags: r.Flags,
+			Mask: r.Mask, Metric: r.Metric,
 		})
 	}
 	// A condition that does not hold is not in the answer. The registry

@@ -23,10 +23,28 @@ package agent
 import (
 	"context"
 	"log/slog"
+	"slices"
+	"strings"
 	"time"
+
+	"github.com/osapi-io/gohai/pkg/gohai"
+	"github.com/osapi-io/gohai/pkg/gohai/collectors/network"
 
 	"github.com/osapi-io/osapi/internal/job"
 )
+
+// factCollectors are the gohai collectors whose facts the agent stores.
+var factCollectors = []string{
+	"kernel", "hostname", "cpu", "init", "package_mgr", "network", "virtualization",
+}
+
+// collectFactsFn collects the facts of the host (injectable for testing).
+var collectFactsFn = collectFacts
+
+// collectFacts collects the facts of the host with gohai's factCollectors.
+func collectFacts() (*gohai.Facts, error) {
+	return gohaiFacts(gohai.WithCollectors(factCollectors...))
+}
 
 // defaultFactsInterval is the fallback fact refresh period when no config
 // value is set or the configured value is unparseable.
@@ -79,65 +97,15 @@ func (a *Agent) writeFacts(
 	hostname string,
 ) {
 	reg := job.FactsRegistration{}
-	reg.Containerized = containerFn()
-
-	// Call providers — errors are non-fatal
-	if arch, err := a.hostProvider.GetArchitecture(); err == nil {
-		reg.Architecture = arch
-	}
-
-	if kv, err := a.hostProvider.GetKernelVersion(); err == nil {
-		reg.KernelVersion = kv
-	}
-
-	if fqdn, err := a.hostProvider.GetFQDN(); err == nil {
-		reg.FQDN = fqdn
-	}
-
-	if count, err := a.hostProvider.GetCPUCount(); err == nil {
-		reg.CPUCount = count
-		a.cpuCount = count
-	}
-
-	if mgr, err := a.hostProvider.GetServiceManager(); err == nil {
-		reg.ServiceMgr = mgr
-	}
-
-	if mgr, err := a.hostProvider.GetPackageManager(); err == nil {
-		reg.PackageMgr = mgr
-	}
-
-	if providerIfaces, err := a.netinfoProvider.GetInterfaces(); err == nil {
-		ifaces := make([]job.NetworkInterface, len(providerIfaces))
-		for i, iface := range providerIfaces {
-			ifaces[i] = job.NetworkInterface{
-				Name:   iface.Name,
-				IPv4:   iface.IPv4,
-				IPv6:   iface.IPv6,
-				MAC:    iface.MAC,
-				Family: iface.Family,
-			}
-		}
-		reg.Interfaces = ifaces
-	}
-
-	if providerRoutes, err := a.netinfoProvider.GetRoutes(ctx); err == nil {
-		routes := make([]job.Route, len(providerRoutes))
-		for i, r := range providerRoutes {
-			routes[i] = job.Route{
-				Destination: r.Destination,
-				Gateway:     r.Gateway,
-				Interface:   r.Interface,
-				Mask:        r.Mask,
-				Metric:      r.Metric,
-				Flags:       r.Flags,
-			}
-		}
-		reg.Routes = routes
-	}
-
-	if primary, err := a.netinfoProvider.GetPrimaryInterface(ctx); err == nil {
-		reg.PrimaryInterface = primary
+	if f, err := collectFactsFn(); err == nil {
+		reg = factsFromGohai(f)
+		a.cpuCount = reg.CPUCount
+	} else {
+		a.factsLogger.Warn(
+			"failed to collect facts",
+			slog.String("machine_id", machineID),
+			slog.String("error", err.Error()),
+		)
 	}
 
 	a.cachedFacts.Store(&reg)
@@ -194,4 +162,93 @@ func factsKey(
 	machineID string,
 ) string {
 	return "facts." + job.SanitizeHostname(machineID)
+}
+
+// factsFromGohai is the facts entry of gohai's facts. A collector that
+// failed leaves its fields empty.
+func factsFromGohai(
+	f *gohai.Facts,
+) job.FactsRegistration {
+	reg := job.FactsRegistration{Containerized: f.Virtualization.InContainer()}
+	if f.Kernel != nil {
+		reg.Architecture, reg.KernelVersion = f.Kernel.Machine, f.Kernel.Release
+	}
+	if f.Hostname != nil {
+		reg.FQDN = f.Hostname.FQDN
+	}
+	if f.CPU != nil {
+		reg.CPUCount = f.CPU.Count
+	}
+	if f.Init != nil {
+		reg.ServiceMgr = f.Init.Name
+	}
+	if f.PackageMgr != nil {
+		reg.PackageMgr = f.PackageMgr.Name
+	}
+	if f.Network != nil {
+		reg.Interfaces = interfacesFromGohai(f.Network.Interfaces)
+		reg.Routes = routesFromGohai(f.Network.Routes)
+		reg.PrimaryInterface = f.Network.DefaultInterface
+	}
+
+	return reg
+}
+
+// interfacesFromGohai is each interface that is up and not loopback, with
+// its first IPv4 and first IPv6 address.
+func interfacesFromGohai(
+	ifs []network.Interface,
+) []job.NetworkInterface {
+	var out []job.NetworkInterface
+	for _, i := range ifs {
+		if i.State != "up" || slices.Contains(i.Flags, "loopback") {
+			continue
+		}
+		ni := job.NetworkInterface{Name: i.Name, MAC: i.MAC}
+		for _, a := range i.Addresses {
+			switch {
+			case a.Family == "inet" && ni.IPv4 == "":
+				ni.IPv4 = a.Addr
+			case a.Family == "inet6" && ni.IPv6 == "":
+				ni.IPv6 = a.Addr
+			}
+		}
+		switch {
+		case ni.IPv4 != "" && ni.IPv6 != "":
+			ni.Family = "dual"
+		case ni.IPv6 != "":
+			ni.Family = "inet6"
+		case ni.IPv4 != "":
+			ni.Family = "inet"
+		}
+		out = append(out, ni)
+	}
+
+	return out
+}
+
+// routesFromGohai is each IPv4 route, its destination split from its
+// mask: "10.0.0.0/24" is "10.0.0.0" and "/24", and the default route is
+// "0.0.0.0" and "/0".
+func routesFromGohai(
+	routes []network.Route,
+) []job.Route {
+	var out []job.Route
+	for _, r := range routes {
+		if r.Family != "inet" {
+			continue
+		}
+		dest, mask := r.Destination, ""
+		if dest == "default" {
+			dest, mask = "0.0.0.0", "/0"
+		} else if d, bits, ok := strings.Cut(dest, "/"); ok {
+			dest, mask = d, "/"+bits
+		}
+		out = append(out, job.Route{
+			Destination: dest, Gateway: r.Gateway, Interface: r.Interface,
+			Mask: mask, Metric: r.Metric,
+		})
+	}
+
+	return out
 }
