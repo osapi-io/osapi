@@ -128,6 +128,12 @@ func (s *LocalPublicTestSuite) TestDefine() {
 	s.Empty(g.GroupNotes())
 	s.Empty(g.GroupLong())
 	s.Empty(g.SubDoc("roles"))
+	documented := command.Define("zzdoc", "Doc",
+		command.SubDoc("roles", "Read the roles"),
+		command.SubDoc("keys", "Read the keys"),
+	)
+	s.Equal("Read the roles", documented.SubDoc("roles"))
+	s.Equal("Read the keys", documented.SubDoc("keys"))
 	s.Equal([]string{"zzparent", "zzchild", "zzdefine"}, g.CommandPath())
 	s.Equal([]string{"zzparent", "zzchild"}, g.Parents, "CommandPath does not change Parents")
 	s.Equal(reflect.TypeFor[localDeps](), g.Deps)

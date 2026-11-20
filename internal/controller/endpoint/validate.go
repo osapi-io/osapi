@@ -51,6 +51,7 @@ const (
 	RuleRoute   = "route"
 	RuleSchema  = "schema"
 	RuleHandler = "handler"
+	RuleSubDoc  = "subdoc"
 	// RuleValidate is the same check in the behavior DSL, from package rule.
 	RuleValidate = "validate"
 	// RuleFails is the same check in the behavior DSL, from package rule.
@@ -106,6 +107,11 @@ var Checks = guide.Checks{
 		Rule:     RuleHandler,
 		Requires: "A group that Uses a type gives each method a handler, func(context.Context, D, In) (Out, error), with D that type and In and Out the method's types. A group with a handler Uses a type.",
 		Fix:      "Add .Handle(fn) to each method, with the signature that the message names, and endpoint.Uses[Deps]() to Define.",
+	},
+	{
+		Rule:     RuleSubDoc,
+		Requires: "Each Sub segment that makes a command of its own, such as trace in osapi client telemetry trace get, has a SubDoc: the one line of help of that command.",
+		Fix:      "Add endpoint.SubDoc(\"segment\", \"...\") to Define, with what the segment's commands do, such as Read a trace from the tracing backend.",
 	},
 	{
 		Rule:     RuleValidate,
@@ -182,6 +188,9 @@ func Validate(
 		}
 		if m.action != "" && m.Key() == "" {
 			add(m.Name, RuleAction, "the method has an action but no key.")
+		}
+		if seg := m.sub; seg != "" && seg != m.CommandName() && g.SubDocs[seg] == "" {
+			add(m.Name, RuleSubDoc, fmt.Sprintf("the Sub segment %q has no SubDoc.", seg))
 		}
 
 		keys := 0

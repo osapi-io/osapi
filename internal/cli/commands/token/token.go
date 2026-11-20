@@ -37,6 +37,7 @@ import (
 var Group = command.Register(command.Define(
 	"token", "Generate and validate API tokens",
 	command.Uses[Deps](),
+	command.SubDoc("roles", "Read the roles and what each grants"),
 	command.Method[GenerateInput, GenerateOutput]("generate").
 		Short("Generate a new token").
 		Example("--subject user123 --roles=read").
