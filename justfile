@@ -346,11 +346,18 @@ ready:
 # Run every behavior's integration tests, writes included, against a real
 # agent on Debian, in a throwaway container from Dockerfile.dev's image. CI's
 # agent cannot write /etc, so this is where the write examples run on Linux.
+#
+# The sysctl examples write kernel parameters, so the container is privileged:
+# without it /proc/sys is read-only. Some of those parameters, such as
+# vm.swappiness, are not per container. On macOS they change only Docker's
+# VM; on a Linux machine they would change that machine's kernel. Thus the
+# recipe runs on macOS only.
+[macos]
 behavior-int-linux:
     #!/usr/bin/env bash
     set -euo pipefail
     image=$(sed -n 's/^FROM //p' Dockerfile.dev | head -1)
-    docker run --rm -v "$PWD":/src:ro -w /src \
+    docker run --rm --privileged -v "$PWD":/src:ro -w /src \
         -v osapi-int-gomod:/go/pkg/mod -v osapi-int-gocache:/root/.cache/go-build \
         -e OSAPI_INTEGRATION_WRITE_BEHAVIORS=1 -e GOFLAGS=-buildvcs=false \
         "$image" sh -c '

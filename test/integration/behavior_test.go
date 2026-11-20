@@ -23,6 +23,7 @@
 package integration_test
 
 import (
+	"encoding/json"
 	"os"
 	"os/exec"
 	"reflect"
@@ -126,6 +127,7 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 			}
 			for _, ex := range m.Examples {
 				s.Run(b.Name+" "+m.Name+" "+ex.Doc, func() {
+					s.reset(b, ex.Input)
 					for _, g := range ex.Given {
 						if g.Kind != behavior.GivenCall {
 							continue
@@ -151,6 +153,35 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 				})
 			}
 		}
+	}
+}
+
+// reset starts a write example from the state the fake host gives it, with
+// the item the example names absent. Each example on the fake host gets a
+// new host, but here every example shares one: an earlier example can leave
+// the item managed, and this one then changes nothing. Thus reset runs the
+// behavior's delete, when it has one, with the key the example's input
+// carries.
+func (s *BehaviorSmokeSuite) reset(
+	b *behavior.Behavior,
+	input any,
+) {
+	for _, del := range b.Methods {
+		if del.Name != "delete" || del.KeyField == "" {
+			continue
+		}
+		data, err := json.Marshal(input)
+		s.Require().NoError(err)
+		var fields map[string]any
+		s.Require().NoError(json.Unmarshal(data, &fields))
+		if fields[del.KeyField] == nil || fields[del.KeyField] == "" {
+			continue
+		}
+		key, err := json.Marshal(map[string]any{del.KeyField: fields[del.KeyField]})
+		s.Require().NoError(err)
+		in := reflect.New(del.In)
+		s.Require().NoError(json.Unmarshal(key, in.Interface()))
+		s.results(commandLine(b, del, in.Elem().Interface()))
 	}
 }
 

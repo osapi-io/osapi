@@ -154,7 +154,7 @@ go test ./internal/apicontract/   # the contract of the API; -update when the ch
 go run . behavior validate
 go test ./internal/behaviors/<name>/... ./internal/behaviors/all/
 mise exec -- just test
-mise exec -- just behavior-int-linux   # its examples against a real agent on Debian
+mise exec -- just behavior-int-linux   # its examples against a real agent on Debian (macOS only)
 ```
 
 A failure of `behavior validate` or of a behavior's tests ends with its fix.
