@@ -18,18 +18,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmd
+package controllerkey
 
-import (
-	"github.com/spf13/cobra"
-)
+// FingerprintInput is the input of fingerprint, which has none.
+type FingerprintInput struct{}
 
-// clientControllerCmd represents the controller parent command.
-var clientControllerCmd = &cobra.Command{
-	Use:   "controller",
-	Short: "Read the health and the key of the controller",
-}
-
-func init() {
-	clientCmd.AddCommand(clientControllerCmd)
+// FingerprintOutput is the fingerprint of the controller's key, and where
+// the key is.
+type FingerprintOutput struct {
+	_           struct{} `title:"Controller key"`
+	Fingerprint string   `                       json:"fingerprint"`
+	KeyDir      string   `                       json:"key_dir"     label:"Key dir"`
 }

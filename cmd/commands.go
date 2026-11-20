@@ -24,6 +24,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/avfs/avfs/vfs/osfs"
+
 	"github.com/spf13/viper"
 
 	"github.com/osapi-io/osapi/internal/authtoken"
@@ -33,6 +35,7 @@ import (
 	_ "github.com/osapi-io/osapi/internal/cli/commands/all/gen"
 	configcmd "github.com/osapi-io/osapi/internal/cli/commands/config"
 	"github.com/osapi-io/osapi/internal/cli/commands/controllercmd"
+	"github.com/osapi-io/osapi/internal/cli/commands/controllerkey"
 	"github.com/osapi-io/osapi/internal/cli/commands/initcmd"
 	"github.com/osapi-io/osapi/internal/cli/commands/natsserver"
 	"github.com/osapi-io/osapi/internal/cli/commands/skill"
@@ -62,6 +65,9 @@ func init() {
 	command.Provide(natsserver.Group, natsDeps)
 	command.Provide(agentcmd.Group, agentDeps)
 	command.Provide(controllercmd.Group, controllerDeps)
+	command.Provide(controllerkey.Group, func() controllerkey.Deps {
+		return controllerkey.Deps{FS: osfs.NewWithNoIdm(), KeyDir: appConfig.Controller.PKI.KeyDir}
+	})
 	command.Provide(startcmd.Group, func() startcmd.Deps {
 		return startcmd.Deps{NATS: natsDeps(), Controller: controllerDeps(), Agent: agentDeps()}
 	})

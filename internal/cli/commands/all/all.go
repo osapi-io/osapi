@@ -26,6 +26,7 @@ import (
 	_ "github.com/osapi-io/osapi/internal/cli/commands/agentcmd"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/config"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/controllercmd"
+	_ "github.com/osapi-io/osapi/internal/cli/commands/controllerkey"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/initcmd"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/natsserver"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/skill"
