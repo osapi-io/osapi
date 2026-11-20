@@ -22,7 +22,6 @@ package command_test
 
 import (
 	"context"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -126,6 +125,35 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 			},
 		},
 		{
+			name: "when a flat group's command is at the root, its word is one of Roots",
+			group: command.Define("zzflatv", "Flat",
+				command.Uses[localDeps](),
+				command.Flat(),
+				command.Method[struct{}, greetOut]("version").Short("X").
+					Handle(func(context.Context, localDeps, struct{}) (greetOut, error) {
+						return greetOut{}, nil
+					}),
+				command.Method[struct{}, greetOut]("frob").Short("X").
+					Handle(func(context.Context, localDeps, struct{}) (greetOut, error) {
+						return greetOut{}, nil
+					}),
+			),
+			want: []string{`"frob" is not a word of Roots, for a command of the root.`},
+		},
+		{
+			name: "when a flat group is under a parent, its words are verbs or actions",
+			group: command.Define("zzflatu", "Flat",
+				command.Uses[localDeps](),
+				command.Flat(),
+				command.Under("zzpar"),
+				command.Method[struct{}, greetOut]("version").Short("X").
+					Handle(func(context.Context, localDeps, struct{}) (greetOut, error) {
+						return greetOut{}, nil
+					}),
+			),
+			want: []string{`"version" is not a verb or an action.`},
+		},
+		{
 			name: "when the input breaks the rules of flags, docs and tags",
 			group: command.Define("zzflags", "Flags",
 				command.Uses[localDeps](),
@@ -186,7 +214,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 				s.Equal(command.Checks.Fix(p.Rule), p.Fix, "every rule has a check")
 				s.NotEmpty(p.Fix)
 				s.Equal(p.Message+" Fix: "+p.Fix, p.String())
-				s.Equal(strings.Join(tc.group.CommandPath(), " "), p.Group)
+				s.Equal(tc.group.Path(), p.Group)
 			}
 
 			s.Equal(tc.want, got)

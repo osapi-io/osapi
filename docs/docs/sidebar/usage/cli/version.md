@@ -2,6 +2,9 @@
 
 Display the version of osapi.
 
+The build of this binary: the version that each component reports, the commit
+and the tree it was built from, and the Go that built it.
+
 ```bash
 osapi version
 ```

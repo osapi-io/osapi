@@ -70,6 +70,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindOption,
+			Name: `Flat()`,
+			Does: "Makes the group add no word of its own: each method is a command under the group's parent, the root or the words of Under. A command directly under the root has a word of command.Roots, such as version; any other has a verb or an action. The group's name stays its identity, for cli command get --name and its package.",
+			When: "For a command that stands alone, such as osapi version, or that goes under a parent that holds other things, such as osapi controller start. Not for a family of commands under one noun, such as token.",
+		},
+		{
+			Kind: KindOption,
 			Name: `SubDoc("segment", "short")`,
 			Does: "Is the one line of help of the command that a Sub segment makes, such as roles in osapi token roles list. validate fails a Sub segment that makes a command and has none.",
 			When: "For each Sub segment of the group whose word is not the method's.",

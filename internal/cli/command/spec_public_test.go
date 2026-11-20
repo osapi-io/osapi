@@ -74,6 +74,7 @@ var notDSL = map[string]bool{
 	"GroupNotes:LocalGroup":        true,
 	"GroupLong:LocalGroup":         true,
 	"SubDoc:LocalGroup":            true,
+	"Path:LocalGroup":              true,
 	"CommandPath:LocalGroup":       true,
 	"Commands:LocalGroup":          true,
 	"CommandPermission:LocalGroup": true,

@@ -60,6 +60,15 @@ var Actions = map[string]bool{
 	"generate": true, "validate": true,
 }
 
+// Roots are the words of the commands directly under osapi that name what
+// they do for the tool itself, as each command line tool has: osapi version,
+// osapi init. The root is the first thing a person reads, so add a word here
+// only for a command that belongs there, as a decision; any other command is
+// <resource> <verb>.
+var Roots = map[string]bool{
+	"version": true, "init": true, "start": true,
+}
+
 // The rules Validate checks, by the name a Problem reports.
 const (
 	RuleName     = "name"
@@ -99,8 +108,8 @@ var Checks = guide.Checks{
 	},
 	{
 		Rule:     RuleVerb,
-		Requires: "The last word of each command is a verb (list, get, create, update, delete) or an action in command.Actions, as TestCommandShape holds each command to.",
-		Fix:      "Name the method for a verb, and put a noun before it with .Sub, such as roles list. Add a word to command.Actions only for a real action, never for a noun.",
+		Requires: "The last word of each command is a verb (list, get, create, update, delete) or an action in command.Actions, as TestCommandShape holds each command to. A command directly under the root, of a Flat group, has a word of command.Roots instead.",
+		Fix:      "Name the method for a verb, and put a noun before it with .Sub, such as roles list. Add a word to command.Actions only for a real action, never for a noun, and to command.Roots only for a command that belongs at the root.",
 	},
 	{
 		Rule:     RuleHelp,
@@ -183,14 +192,14 @@ func Validate(
 	g *LocalGroup,
 ) []Problem {
 	var out []Problem
-	group := strings.Join(g.CommandPath(), " ")
+	group := g.Path()
 	add := func(method, rule, message string) {
 		out = append(out, Problem{
 			Group: group, Method: method, Rule: rule, Message: message, Fix: Checks.Fix(rule),
 		})
 	}
 
-	for _, w := range g.CommandPath() {
+	for _, w := range append(append([]string(nil), g.Parents...), g.Name) {
 		if !name.MatchString(w) {
 			add("", RuleName, fmt.Sprintf("the word %q is not lowercase letters and digits.", w))
 		}
@@ -213,7 +222,16 @@ func Validate(
 			add(m.Name, RuleUnique, "two methods have the name "+m.Name+".")
 		}
 		seen[m.Name] = true
-		if !Verbs[m.Name] && !Actions[m.Name] {
+		switch {
+		case g.Flat && len(g.Parents) == 0 && m.sub == "":
+			if !Roots[m.Name] {
+				add(
+					m.Name,
+					RuleVerb,
+					fmt.Sprintf("%q is not a word of Roots, for a command of the root.", m.Name),
+				)
+			}
+		case !Verbs[m.Name] && !Actions[m.Name]:
 			add(m.Name, RuleVerb, fmt.Sprintf("%q is not a verb or an action.", m.Name))
 		}
 

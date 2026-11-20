@@ -61,7 +61,7 @@ func (s *HelpStyleTestSuite) TestEveryCommand() {
 
 // TestCommandShape holds each command under osapi client, and each command
 // of a local group, to <resource> <verb>, with the verbs and actions of the
-// command layer, and each flag's help to its own words: a required flag is
+// command layer, or a command of the root to a word of command.Roots, and each flag's help to its own words: a required flag is
 // marked by MarkFlagRequired, which --help shows, not by its text.
 func (s *HelpStyleTestSuite) TestCommandShape() {
 	client, _, err := rootCmd.Find([]string{"client"})
@@ -70,6 +70,17 @@ func (s *HelpStyleTestSuite) TestCommandShape() {
 	roots = append(roots, client)
 	s.Require().NotEmpty(command.All())
 	for _, g := range command.All() {
+		// A flat group adds no word: each of its commands is under its
+		// parent, so each is a root of the walk.
+		if g.Flat {
+			for _, m := range g.Methods {
+				c, _, err := rootCmd.Find(append(g.CommandPath(), m.Name))
+				s.Require().NoError(err)
+				roots = append(roots, c)
+			}
+
+			continue
+		}
 		c, _, err := rootCmd.Find(g.CommandPath())
 		s.Require().NoError(err)
 		roots = append(roots, c)
@@ -89,7 +100,11 @@ func (s *HelpStyleTestSuite) TestCommandShape() {
 				f.Name,
 			)
 		})
-		if len(c.Commands()) == 0 && c.Runnable() {
+		if len(c.Commands()) == 0 && c.Runnable() && c.Parent() == rootCmd {
+			s.Truef(command.Roots[c.Name()],
+				"%s: %q is not a word of command.Roots, for a command of the root",
+				c.CommandPath(), c.Name())
+		} else if len(c.Commands()) == 0 && c.Runnable() {
 			s.Truef(command.Verbs[c.Name()] || command.Actions[c.Name()],
 				"%s: %q is not a verb; a command is <resource> <verb>, such as facts keys list",
 				c.CommandPath(), c.Name())

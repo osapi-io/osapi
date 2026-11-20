@@ -116,8 +116,8 @@ func layerOf(
 		return layerHandWritten, ""
 	}
 	group := strings.Join(g.CommandPath(), " ")
-	if _, ok := g.(*command.LocalGroup); ok {
-		return layerCommand, group
+	if lg, ok := g.(*command.LocalGroup); ok {
+		return layerCommand, lg.Path()
 	}
 	// A behavior's group is an endpoint group that the behavior DSL makes,
 	// with the behavior's name.

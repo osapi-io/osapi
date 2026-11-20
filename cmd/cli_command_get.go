@@ -127,6 +127,9 @@ var cliCommandGetCmd = &cobra.Command{
 		}
 
 		path := strings.Join(g.CommandPath(), " ")
+		if lg, ok := g.(*command.LocalGroup); ok {
+			path = lg.Path()
+		}
 		commands := make([]localCommand, 0, len(g.Commands()))
 		for _, c := range g.Commands() {
 			commands = append(commands, describeCommand(g, c))
