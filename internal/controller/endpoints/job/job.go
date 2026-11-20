@@ -37,7 +37,7 @@ var (
 
 // Group is the job group's definition.
 var Group = endpoint.Register(endpoint.Define(
-	"job", "The job queue",
+	"job", "Manage the jobs in the queue",
 	endpoint.Title("Job Management API"),
 	endpoint.Tag("job_operations", "Job", "Operations related to the job queue."),
 	endpoint.Uses[Deps](),

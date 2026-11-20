@@ -70,6 +70,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindOption,
+			Name: `SubDoc("segment", "short")`,
+			Does: "Is the one line of help of the command that a Sub segment makes, such as roles in osapi token roles list. validate fails a Sub segment that makes a command and has none.",
+			When: "For each Sub segment of the group whose word is not the method's.",
+		},
+		{
+			Kind: KindOption,
 			Name: `Under("word", ...)`,
 			Does: "Puts the group's command under the command of the words, such as controller for osapi controller endpoint. Attach makes a word that has no command, and uses a hand-written one that cmd/commands.go names.",
 			When: "When the commands belong to a command that is there already, such as controller. Without it, the group is under the root.",

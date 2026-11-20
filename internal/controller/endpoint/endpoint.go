@@ -44,6 +44,12 @@ type Group struct {
 	// CommandNotes is the Notes section of the page of the group's command,
 	// which CommandNotes sets.
 	CommandNotes string
+	// CommandLong is the rest of the help of the group's command, which
+	// CommandLong sets.
+	CommandLong string
+	// SubDocs are the one line of help of each command that a Sub makes,
+	// such as trace in osapi client telemetry trace, which SubDoc sets.
+	SubDocs map[string]string
 	// Prefix is the part of each path between /api/ and the name, such as
 	// next/node/{hostname}. Each {field} in it is a path field of each
 	// method's input, besides the method's key.
@@ -168,6 +174,28 @@ func Prefix(
 	return optionFunc(func(g *Group) { g.Prefix = strings.Trim(path, "/") })
 }
 
+// CommandLong is the rest of the help of the group's command, after its one
+// line, such as what most of its commands read.
+func CommandLong(
+	text string,
+) Option {
+	return optionFunc(func(g *Group) { g.CommandLong = text })
+}
+
+// SubDoc is the one line of help of the command that the Sub segment makes,
+// such as trace in osapi client telemetry trace.
+func SubDoc(
+	segment string,
+	short string,
+) Option {
+	return optionFunc(func(g *Group) {
+		if g.SubDocs == nil {
+			g.SubDocs = map[string]string{}
+		}
+		g.SubDocs[segment] = short
+	})
+}
+
 // CommandNotes adds a Notes section to the page of the group's own command,
 // such as a link to the page that tells more about the group.
 func CommandNotes(
@@ -257,6 +285,19 @@ func (g *Group) GroupName() string {
 // GroupDoc is the group's Doc, for the command layer.
 func (g *Group) GroupDoc() string {
 	return g.Doc
+}
+
+// GroupLong is the help CommandLong set, or "", for the command layer.
+func (g *Group) GroupLong() string {
+	return g.CommandLong
+}
+
+// SubDoc is the help SubDoc set for the segment, or "", for the command
+// layer.
+func (g *Group) SubDoc(
+	segment string,
+) string {
+	return g.SubDocs[segment]
 }
 
 // GroupNotes is the Notes section CommandNotes set, or "", for the command

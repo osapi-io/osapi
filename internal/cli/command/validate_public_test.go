@@ -119,6 +119,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 				`"List" is not lowercase letters and digits.`,
 				`"Bad" is not lowercase letters and digits.`,
 				`"List" is not a verb or an action.`,
+				`the Sub segment "Bad" has no SubDoc.`,
 				`"frob" is not a verb or an action.`,
 				"the method has no Short.",
 				"the method has input and no Example.",

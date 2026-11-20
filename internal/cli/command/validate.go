@@ -75,6 +75,7 @@ const (
 	RuleReason   = "reason"
 	RuleTag      = "tag"
 	RuleSays     = "says"
+	RuleSubDoc   = "subdoc"
 )
 
 // Checks are the rules Validate applies. osapi cli command validate --help
@@ -126,6 +127,11 @@ var Checks = guide.Checks{
 		Rule:     RuleFails,
 		Requires: "Each rule of an input field has a .Fails input that breaks it, which the command refuses with a usage error, required included. A min of 1 on a string that is required or optional needs none: its only bad value is empty.",
 		Fix:      rule.FailsFix,
+	},
+	{
+		Rule:     RuleSubDoc,
+		Requires: "Each Sub segment that makes a command of its own, such as roles in osapi token roles list, has a SubDoc: the one line of help of that command.",
+		Fix:      "Add command.SubDoc(\"segment\", \"...\") to Define, with what the segment's commands do, such as Read the roles and what each grants.",
 	},
 	{
 		Rule:     RuleHandler,
@@ -220,6 +226,9 @@ func Validate(
 		fields := structFields(m.In)
 		if m.short == "" {
 			add(m.Name, RuleHelp, "the method has no Short.")
+		}
+		if seg := m.sub; seg != "" && seg != m.Name && g.SubDocs[seg] == "" {
+			add(m.Name, RuleSubDoc, fmt.Sprintf("the Sub segment %q has no SubDoc.", seg))
 		}
 		if len(fields) > 0 && len(m.examples) == 0 {
 			add(m.Name, RuleHelp, "the method has input and no Example.")

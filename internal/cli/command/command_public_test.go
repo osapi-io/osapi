@@ -35,13 +35,16 @@ import (
 
 // group is a group of commands with no endpoint under it.
 type group struct {
-	name, doc, notes string
-	path             []string
+	name, doc, notes, long string
+	path                   []string
+	subs                   map[string]string
 }
 
 func (g group) GroupName() string                        { return g.name }
 func (g group) GroupDoc() string                         { return g.doc }
 func (g group) GroupNotes() string                       { return g.notes }
+func (g group) GroupLong() string                        { return g.long }
+func (g group) SubDoc(segment string) string             { return g.subs[segment] }
 func (g group) Commands() []command.Command              { return nil }
 func (g group) CommandPermission(command.Command) string { return "" }
 
@@ -183,6 +186,79 @@ func (s *CommandPublicTestSuite) TestOutput() {
 
 // TestAttachUnderPrefix puts a group under the commands of its path, made
 // when the parent has none and found when it has, with its notes.
+// permGroup is a group whose commands each need the permission of their
+// method name.
+type permGroup struct {
+	group
+	cmds  []command.Command
+	perms map[string]string
+}
+
+func (g permGroup) Commands() []command.Command { return g.cmds }
+
+func (g permGroup) CommandPermission(m command.Command) string {
+	return g.perms[m.MethodName()]
+}
+
+// TestAttachHelp gives the commands that Attach makes the help of their
+// group: the group's Long, the one line of a Sub, and the permission that
+// covers each command under it.
+func (s *CommandPublicTestSuite) TestAttachHelp() {
+	sub := func(name string) *cobra.Command {
+		return &cobra.Command{Use: name, Annotations: map[string]string{command.SubKey: "trace"}}
+	}
+	same := permGroup{
+		group: group{
+			name: "zzhelp",
+			doc:  "Help",
+			long: "More.",
+			subs: map[string]string{"trace": "Read a trace"},
+		},
+		cmds: []command.Command{
+			command.Method[struct{}, struct{}]("get").Sub("trace"),
+			command.Method[struct{}, struct{}]("list").Sub("trace"),
+			command.Method[struct{}, struct{}]("info"),
+		},
+		perms: map[string]string{"get": "trace:read", "list": "trace:read", "info": "trace:read"},
+	}
+	command.AddCommands(same, sub("get"), sub("list"))
+	mixed := permGroup{
+		group: group{name: "zzmixed", doc: "Mixed"},
+		cmds: []command.Command{
+			command.Method[struct{}, struct{}]("get"),
+			command.Method[struct{}, struct{}]("set"),
+			command.Method[struct{}, struct{}]("ping"),
+		},
+		perms: map[string]string{"get": "x:read", "set": "x:write"},
+	}
+	command.AddCommands(mixed, &cobra.Command{Use: "get"})
+	open := permGroup{
+		group: group{name: "zzopen", doc: "Open"},
+		cmds:  []command.Command{command.Method[struct{}, struct{}]("ping")},
+	}
+	command.AddCommands(open, &cobra.Command{Use: "ping"})
+
+	parent := &cobra.Command{Use: "client"}
+	s.Require().NoError(command.Attach(parent, command.Deps{}))
+
+	found, _, err := parent.Find([]string{"zzhelp", "trace", "get"})
+	s.Require().NoError(err)
+	trace := found.Parent()
+	s.Equal("Read a trace", trace.Short)
+	s.Equal("trace:read", trace.Annotations[reference.Permission])
+	s.Equal("More.", trace.Parent().Long)
+	s.Equal("trace:read", trace.Parent().Annotations[reference.Permission],
+		"one permission covers each command of the group")
+
+	found, _, err = parent.Find([]string{"zzmixed", "get"})
+	s.Require().NoError(err)
+	s.Empty(found.Parent().Annotations[reference.Permission], "the commands need different ones")
+
+	found, _, err = parent.Find([]string{"zzopen", "ping"})
+	s.Require().NoError(err)
+	s.Empty(found.Parent().Annotations[reference.Permission], "the command needs none")
+}
+
 func (s *CommandPublicTestSuite) TestAttachUnderPrefix() {
 	g := group{
 		name:  "zzbehavior",

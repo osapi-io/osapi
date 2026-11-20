@@ -89,7 +89,8 @@ The design is `components/osapi/commands.md` in osapi-io/specs. Read it first.
 
 - Each value is a flag. A command takes no positional argument.
 - The last word of each command is a verb or an action. A noun goes before the
-  verb with `.Sub`, such as `token roles list`. Add a word to
+  verb with `.Sub`, such as `token roles list`. Give the noun's command its
+  help with `command.SubDoc("roles", "...")`; validate fails a Sub without one. Add a word to
   `command.Actions` only for a real action, never for a noun.
 - Give each rule of each input field a `.Fails` input that breaks it: the
   input with the other fields valid and one value wrong. A required field needs

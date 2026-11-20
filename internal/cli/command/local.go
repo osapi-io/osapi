@@ -43,6 +43,9 @@ type LocalGroup struct {
 	Deps reflect.Type
 	// Methods are the group's commands, in the order they were declared.
 	Methods []*LocalMethod
+	// SubDocs are the one line of help of each command that a Sub makes,
+	// such as roles in osapi token roles list, which SubDoc sets.
+	SubDocs map[string]string
 
 	provide func() any
 }
@@ -79,6 +82,20 @@ func Define(
 // test gives one with fakes. Each handler takes it as its second argument.
 func Uses[D any]() Option {
 	return optionFunc(func(g *LocalGroup) { g.Deps = reflect.TypeFor[D]() })
+}
+
+// SubDoc is the one line of help of the command that the Sub segment makes,
+// such as roles in osapi token roles list.
+func SubDoc(
+	segment string,
+	short string,
+) Option {
+	return optionFunc(func(g *LocalGroup) {
+		if g.SubDocs == nil {
+			g.SubDocs = map[string]string{}
+		}
+		g.SubDocs[segment] = short
+	})
 }
 
 // Under puts the group's command under the command of words, such as
@@ -184,6 +201,18 @@ func (g *LocalGroup) GroupDoc() string {
 // GroupNotes is "": a local group's page has no Notes section.
 func (g *LocalGroup) GroupNotes() string {
 	return ""
+}
+
+// GroupLong is "": a local group's help is its one line.
+func (g *LocalGroup) GroupLong() string {
+	return ""
+}
+
+// SubDoc is the help SubDoc set for the segment, or "".
+func (g *LocalGroup) SubDoc(
+	segment string,
+) string {
+	return g.SubDocs[segment]
 }
 
 // CommandPath is the words of the group's command under the root: the words

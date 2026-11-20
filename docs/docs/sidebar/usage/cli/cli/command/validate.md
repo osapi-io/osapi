@@ -43,6 +43,10 @@ The rules:
   Fix: Add .Fails("&lt;what is wrong&gt;", &lt;Input&gt;&#123;...&#125;) to the
   method, with the other fields valid and the field's value breaking the rule
   that the message names, such as a name of 256 characters for max=255.
+- `subdoc`: Each Sub segment that makes a command of its own, such as roles in
+  osapi token roles list, has a SubDoc: the one line of help of that command.
+  Fix: Add command.SubDoc("segment", "...") to Define, with what the segment's
+  commands do, such as Read the roles and what each grants.
 - `handler`: The group Uses a type, and each method has a handler,
   func(context.Context, D, In) (Out, error), with D that type and In and Out the
   method's types. Fix: Add command.Uses[Deps](<>) to Define, and .Handle(fn) to
