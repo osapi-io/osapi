@@ -201,6 +201,24 @@ func CountValue(
 	return ValueStyle.Render(s)
 }
 
+// treeLines are the tree lines at the start of cell, such as "│  └─ ", or ""
+// for a cell that has none.
+func treeLines(
+	cell string,
+) string {
+	if !strings.HasPrefix(cell, "├─ ") && !strings.HasPrefix(cell, "└─ ") &&
+		!strings.HasPrefix(cell, "│  ") && !strings.HasPrefix(cell, "   ") {
+		return ""
+	}
+
+	lines := cell[:len(cell)-len(strings.TrimLeft(cell, "│├└─ "))]
+	if !strings.Contains(lines, "─") {
+		return ""
+	}
+
+	return lines
+}
+
 // treeBranches are the prefixes a nested row's first cells start with.
 var treeBranches = []string{"├─ ", "└─ ", "│  "}
 
@@ -223,6 +241,11 @@ func renderCell(
 	cell string,
 ) string {
 	h := strings.ToUpper(header)
+	// The tree lines of a nested row are dim, and the rest of the cell has
+	// the style of its column.
+	if lines := treeLines(cell); lines != "" && h != "HOSTNAME" && h != "ON" {
+		return DimStyle.Render(lines) + renderCell(header, cell[len(lines):])
+	}
 
 	switch {
 	case h == "STATUS":
@@ -247,14 +270,6 @@ func renderCell(
 		}
 
 		return NameStyle.Render(cell)
-	case h == "SPAN":
-		// The tree lines of a span tree are dim, and the span name is not.
-		name := strings.TrimLeft(cell, "│├└─ ")
-		if lines := cell[:len(cell)-len(name)]; lines != "" {
-			return DimStyle.Render(lines) + ValueStyle.Render(name)
-		}
-
-		return ValueStyle.Render(cell)
 	case h == "CONDITIONS":
 		if strings.TrimSpace(cell) == "" || cell == "-" {
 			return DimStyle.Render(cell)

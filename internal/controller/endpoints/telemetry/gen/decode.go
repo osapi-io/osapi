@@ -17,6 +17,9 @@ func decodeGet(
 	if msg, ok := server.Param(c, "id", &in.ID); !ok {
 		return in, msg, false
 	}
+	if msg, ok := server.Query(c, "all", &in.All); !ok {
+		return in, msg, false
+	}
 	if msg, ok := server.Valid(c, in); !ok {
 		return in, msg, false
 	}

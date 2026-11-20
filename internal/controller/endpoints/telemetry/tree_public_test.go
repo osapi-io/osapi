@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cli_test
+package telemetry_test
 
 import (
 	"strings"
@@ -27,8 +27,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osapi-io/osapi/internal/cli"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/internal/controller/endpoints/telemetry"
 )
 
 type TracePublicTestSuite struct {
@@ -37,97 +36,100 @@ type TracePublicTestSuite struct {
 
 // traceSpans is a request with a job on one agent, a failed command under
 // it, and a span whose parent is not in the trace.
-func traceSpans() []client.TraceSpan {
+func traceSpans() []telemetry.TraceSpan {
 	at := func(ms int) time.Time {
 		return time.Date(2026, 11, 15, 12, 0, 0, 0, time.UTC).
 			Add(time.Duration(ms) * time.Millisecond)
 	}
 
-	return []client.TraceSpan{
+	return []telemetry.TraceSpan{
 		{
-			ID:         "c",
-			ParentID:   "b",
-			Name:       "job.process",
-			Service:    "osapi-agent",
-			Start:      at(2),
-			Duration:   20 * time.Millisecond,
-			Attributes: map[string]string{"osapi.agent.hostname": "web-01", "job.status": "failed"},
+			SpanID:       "c",
+			ParentSpanID: "b",
+			Name:         "job.process",
+			Service:      "osapi-agent",
+			StartTime:    at(2),
+			DurationMs:   20,
+			Attributes: map[string]string{
+				"osapi.agent.hostname": "web-01",
+				"job.status":           "failed",
+			},
 		},
 		{
-			ID:       "a",
-			Name:     "GET /api/x",
-			Service:  "osapi-controller",
-			Start:    at(0),
-			Duration: 50 * time.Millisecond,
+			SpanID:     "a",
+			Name:       "GET /api/x",
+			Service:    "osapi-controller",
+			StartTime:  at(0),
+			DurationMs: 50,
 			Attributes: map[string]string{
 				"http.response.status_code": "200", "http.response.body.size": "1536",
 			},
 		},
 		{
-			ID:         "b",
-			ParentID:   "a",
-			Name:       "job.publish",
-			Service:    "osapi-controller",
-			Start:      at(1),
-			Duration:   30 * time.Millisecond,
-			Attributes: map[string]string{"messaging.destination.name": "jobs.query.web-01"},
+			SpanID:       "b",
+			ParentSpanID: "a",
+			Name:         "job.publish",
+			Service:      "osapi-controller",
+			StartTime:    at(1),
+			DurationMs:   30,
+			Attributes:   map[string]string{"messaging.destination.name": "jobs.query.web-01"},
 		},
 		{
-			ID:            "d",
-			ParentID:      "c",
+			SpanID:        "d",
+			ParentSpanID:  "c",
 			Name:          "exec apt-get",
 			Service:       "osapi-agent",
-			Start:         at(3),
-			Duration:      10 * time.Millisecond,
-			Failed:        true,
+			StartTime:     at(3),
+			DurationMs:    10,
+			Status:        "error",
 			StatusMessage: "exit status 100",
 			Attributes:    map[string]string{},
 		},
 		{
-			ID:         "e",
-			ParentID:   "c",
-			Name:       "file.write",
-			Service:    "osapi-agent",
-			Start:      at(4),
-			Duration:   time.Millisecond,
-			Attributes: map[string]string{"file.path": "/etc/x.conf"},
+			SpanID:       "e",
+			ParentSpanID: "c",
+			Name:         "file.write",
+			Service:      "osapi-agent",
+			StartTime:    at(4),
+			DurationMs:   1,
+			Attributes:   map[string]string{"file.path": "/etc/x.conf"},
 		},
 		{
-			ID:         "f",
-			ParentID:   "a",
-			Name:       "job.collect",
-			Service:    "osapi-controller",
-			Start:      at(31),
-			Duration:   19 * time.Millisecond,
-			Attributes: map[string]string{},
+			SpanID:       "f",
+			ParentSpanID: "a",
+			Name:         "job.collect",
+			Service:      "osapi-controller",
+			StartTime:    at(31),
+			DurationMs:   19,
+			Attributes:   map[string]string{},
 		},
 		{
-			ID:         "h",
-			ParentID:   "a",
-			Name:       "response.encode",
-			Service:    "osapi-controller",
-			Start:      at(50),
-			Duration:   time.Millisecond,
-			Attributes: map[string]string{},
+			SpanID:       "h",
+			ParentSpanID: "a",
+			Name:         "response.encode",
+			Service:      "osapi-controller",
+			StartTime:    at(50),
+			DurationMs:   1,
+			Attributes:   map[string]string{},
 		},
 		{
-			ID:         "i",
-			ParentID:   "a",
-			Name:       "response.write",
-			Service:    "osapi-controller",
-			Start:      at(51),
-			Duration:   2 * time.Millisecond,
-			Attributes: map[string]string{"http.response.body.size": "1536"},
+			SpanID:       "i",
+			ParentSpanID: "a",
+			Name:         "response.write",
+			Service:      "osapi-controller",
+			StartTime:    at(51),
+			DurationMs:   2,
+			Attributes:   map[string]string{"http.response.body.size": "1536"},
 		},
 		{
-			ID:         "g",
-			ParentID:   "missing",
-			Name:       "orphan",
-			Service:    "osapi-cli",
-			Start:      at(60),
-			Duration:   time.Millisecond,
-			Failed:     true,
-			Attributes: map[string]string{},
+			SpanID:       "g",
+			ParentSpanID: "missing",
+			Name:         "orphan",
+			Service:      "osapi-cli",
+			StartTime:    at(60),
+			DurationMs:   1,
+			Status:       "error",
+			Attributes:   map[string]string{},
 		},
 	}
 }
@@ -141,27 +143,27 @@ func (s *TracePublicTestSuite) TestTraceRows() {
 		{"│     └─ file.write", "agent", "1ms", "ok", "path=/etc/x.conf"},
 		{"├─ job.collect", "controller", "19ms", "ok", ""},
 		{"├─ response.encode", "controller", "1ms", "ok", ""},
-		{"└─ response.write", "controller", "2ms", "ok", `size="1.5 KB"`},
+		{"└─ response.write", "controller", "2ms", "ok", "size=1536"},
 		{"orphan", "cli", "1ms", "error", ""},
-	}, cli.TraceRows(traceSpans(), true))
+	}, telemetry.ExportRows(traceSpans(), true))
 }
 
 // natsTrace is a job on one agent through the queue, with NATS calls of each
 // key shape, a behavior write that requires another, and a command.
-func natsTrace() []client.TraceSpan {
+func natsTrace() []telemetry.TraceSpan {
 	at := func(ms int) time.Time {
 		return time.Date(2026, 11, 15, 12, 0, 0, 0, time.UTC).
 			Add(time.Duration(ms) * time.Millisecond)
 	}
-	span := func(id, parent, name string, ms int, attrs map[string]string) client.TraceSpan {
-		return client.TraceSpan{
-			ID: id, ParentID: parent, Name: name, Start: at(ms),
-			Duration: time.Millisecond, Attributes: attrs,
+	span := func(id, parent, name string, ms int, attrs map[string]string) telemetry.TraceSpan {
+		return telemetry.TraceSpan{
+			SpanID: id, ParentSpanID: parent, Name: name, StartTime: at(ms),
+			DurationMs: 1, Attributes: attrs,
 		}
 	}
 	kv := func(key string) map[string]string { return map[string]string{"nats.kv.key": key} }
 
-	return []client.TraceSpan{
+	return []telemetry.TraceSpan{
 		span("root", "", "POST /api/x", 0, map[string]string{"http.response.status_code": "200"}),
 		span("pub", "root", "job.publish", 1, map[string]string{}),
 		span("put", "pub", "kv.put", 2, kv("jobs.j1")),
@@ -207,8 +209,8 @@ func natsTrace() []client.TraceSpan {
 
 func (s *TracePublicTestSuite) TestJobPublishDetail() {
 	publish := func(attrs map[string]string) string {
-		rows := cli.TraceRows([]client.TraceSpan{{
-			ID: "p", Name: "job.publish", Start: time.Now(), Attributes: attrs,
+		rows := telemetry.ExportRows([]telemetry.TraceSpan{{
+			SpanID: "p", Name: "job.publish", StartTime: time.Now(), Attributes: attrs,
 		}}, true)
 
 		return rows[0][4]
@@ -248,8 +250,8 @@ func (s *TracePublicTestSuite) TestJobPublishDetail() {
 // job.list page has, and the job of a job.get.
 func (s *TracePublicTestSuite) TestJobReadDetail() {
 	detail := func(name string, attrs map[string]string) string {
-		rows := cli.TraceRows([]client.TraceSpan{{
-			ID: "r", Name: name, Start: time.Now(), Attributes: attrs,
+		rows := telemetry.ExportRows([]telemetry.TraceSpan{{
+			SpanID: "r", Name: name, StartTime: time.Now(), Attributes: attrs,
 		}}, true)
 
 		return rows[0][4]
@@ -332,9 +334,9 @@ func (s *TracePublicTestSuite) TestTraceRowsWithoutNATS() {
 		},
 		{"│        └─ behavior.managedfile.get", "", "1ms", "unchanged", ""},
 		{"└─ job.collect", "", "1ms", "ok", ""},
-	}, cli.TraceRows(natsTrace(), false), "a span under a NATS span moves up to the span above it")
+	}, telemetry.ExportRows(natsTrace(), false), "a span under a NATS span moves up to the span above it")
 
-	n, took := cli.NATSCalls(natsTrace())
+	n, took := telemetry.ExportNATSCalls(natsTrace())
 	s.Equal(13, n)
 	s.Equal(13*time.Millisecond, took)
 }
@@ -344,46 +346,50 @@ func (s *TracePublicTestSuite) TestTraceRowsWithoutNATS() {
 // kind of thing.
 func (s *TracePublicTestSuite) TestSpanOn() {
 	at := time.Now()
-	rows := cli.TraceRows([]client.TraceSpan{
+	rows := telemetry.ExportRows([]telemetry.TraceSpan{
 		{
-			ID:         "a",
+			SpanID:     "a",
 			Name:       "POST /api/x",
 			Service:    "osapi-controller",
-			Start:      at,
+			StartTime:  at,
 			Attributes: map[string]string{},
 		},
 		{
-			ID:         "b",
-			ParentID:   "a",
-			Name:       "nats.publish",
-			Service:    "osapi-controller",
-			Start:      at.Add(1),
-			Attributes: map[string]string{},
+			SpanID:       "b",
+			ParentSpanID: "a",
+			Name:         "nats.publish",
+			Service:      "osapi-controller",
+			StartTime:    at.Add(1),
+			Attributes:   map[string]string{},
 		},
 		{
-			ID:         "c",
-			ParentID:   "b",
-			Name:       "nats.process",
-			Service:    "osapi-agent",
-			Start:      at.Add(2),
-			Attributes: map[string]string{},
+			SpanID:       "c",
+			ParentSpanID: "b",
+			Name:         "nats.process",
+			Service:      "osapi-agent",
+			StartTime:    at.Add(2),
+			Attributes:   map[string]string{},
 		},
 		{
-			ID: "d", ParentID: "c", Name: "job.process", Service: "osapi-agent", Start: at.Add(3),
-			Attributes: map[string]string{"osapi.agent.hostname": "web-01"},
+			SpanID:       "d",
+			ParentSpanID: "c",
+			Name:         "job.process",
+			Service:      "osapi-agent",
+			StartTime:    at.Add(3),
+			Attributes:   map[string]string{"osapi.agent.hostname": "web-01"},
 		},
 		{
-			ID:         "e",
+			SpanID:     "e",
 			Name:       "osapi client node hostname get",
 			Service:    "osapi-cli",
-			Start:      at.Add(4),
+			StartTime:  at.Add(4),
 			Attributes: map[string]string{},
 		},
 		{
-			ID:         "f",
+			SpanID:     "f",
 			Name:       "other",
 			Service:    "jaeger",
-			Start:      at.Add(5),
+			StartTime:  at.Add(5),
 			Attributes: map[string]string{},
 		},
 	}, true)
@@ -404,7 +410,7 @@ func (s *TracePublicTestSuite) TestSpanOn() {
 
 func (s *TracePublicTestSuite) TestKeyMeanings() {
 	details := map[string]string{}
-	for _, r := range cli.TraceRows(natsTrace(), true) {
+	for _, r := range telemetry.ExportRows(natsTrace(), true) {
 		details[strings.TrimLeft(r[0], "│├└─ ")+" "+r[4]] = r[4]
 	}
 	for _, want := range []string{
@@ -418,59 +424,18 @@ func (s *TracePublicTestSuite) TestKeyMeanings() {
 
 func (s *TracePublicTestSuite) TestIsNATSSpan() {
 	for _, name := range []string{"kv.get", "objectstore.put", "stream.read", "nats.publish"} {
-		s.True(cli.IsNATSSpan(name), name)
+		s.True(telemetry.ExportIsNATSSpan(name), name)
 	}
 	for _, name := range []string{"job.process", "file.write", "exec kv"} {
-		s.False(cli.IsNATSSpan(name), name)
+		s.False(telemetry.ExportIsNATSSpan(name), name)
 	}
 }
 
 func (s *TracePublicTestSuite) TestTraceServices() {
 	s.Equal(
 		[]string{"osapi-agent", "osapi-controller", "osapi-cli"},
-		cli.TraceServices(append(traceSpans(), client.TraceSpan{Name: "no service"})),
+		telemetry.ExportServices(append(traceSpans(), telemetry.TraceSpan{Name: "no service"})),
 	)
-}
-
-func (s *TracePublicTestSuite) TestSpanCell() {
-	s.Equal("job.publish", ansi(cli.ExportRenderCell("SPAN", "job.publish")))
-	s.Equal("│  └─ job.process", ansi(cli.ExportRenderCell("SPAN", "│  └─ job.process")))
-}
-
-func (s *TracePublicTestSuite) TestTreeSpacingIsKept() {
-	out := cli.Capture(func() {
-		cli.PrintCompactTable([]cli.Section{{
-			Title:     "Spans",
-			Headers:   []string{"SPAN", "DETAIL"},
-			Rows:      [][]string{{"│     └─ file.write", "a  b"}, {"two\nlines", "x"}},
-			Reference: true,
-		}})
-	})
-
-	plain := ansi(out)
-	s.Contains(plain, "│     └─ file.write")
-	s.Contains(plain, "a b", "other cells are still flattened")
-	s.Contains(plain, "two lines")
-}
-
-// ansi drops the color codes of s.
-func ansi(
-	s string,
-) string {
-	var b strings.Builder
-	skip := false
-	for _, r := range s {
-		switch {
-		case r == '\x1b':
-			skip = true
-		case skip && r == 'm':
-			skip = false
-		case !skip:
-			b.WriteRune(r)
-		}
-	}
-
-	return b.String()
 }
 
 func TestTracePublicTestSuite(t *testing.T) {

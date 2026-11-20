@@ -70,5 +70,5 @@ func Get(
 		})
 	}
 
-	return TraceResponse{TraceID: trace.ID, Spans: spans}, nil
+	return tree(trace.ID, spans, in.All), nil
 }

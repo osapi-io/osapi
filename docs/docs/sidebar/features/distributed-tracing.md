@@ -131,12 +131,14 @@ osapi client telemetry trace get --id 26e448c9dbe1c4a8d216a98c675079c9
 
 ```text
 Trace:
-  ID:        26e448c9dbe1c4a8d216a98c675079c9
-  Started:   2026-11-15 15:18:49
-  Duration:  20ms
-  Services:  osapi-controller, osapi-agent
+  ID:                   26e448c9dbe1c4a8d216a98c675079c9
+  Started:              2026-11-15 15:18:49
+  Duration:             20ms
+  Services:             osapi-controller, osapi-agent
+  NATS calls left out:  11
+  NATS call time:       20ms
 
-Spans (8):
+Spans (1):
   SPAN                                     ON          DURATION  STATUS     DETAIL
   POST /api/next/node/:hostname/sysctl     controller  20ms      ok         status=200
   ├─ job.publish                           controller  2ms       ok         op=behavior.sysctl.create target=debian-1
@@ -146,7 +148,6 @@ Spans (8):
   │        │  └─ file.write                agent       147µs     ok         path=/etc/sysctl.d/osapi-vm.swappiness.conf
   │        └─ exec sysctl                  agent       3ms       ok
   └─ job.collect                           controller  12ms      ok
-  11 NATS calls left out, 20ms in all; --all shows them.
 ```
 
 - **ON** is what ran the span, the role of the service that made it:
@@ -160,9 +161,15 @@ Spans (8):
   `--json` gives each span's whole `attributes` map instead.
 
 The NATS calls are the bookkeeping of the job queue: the agent reads the job,
-writes its status as it goes, and writes its answer. The command leaves them out
-and counts them. `--all` shows them, and says what each key is for, for example
-`status: started`, `response` or `file record`, instead of the key.
+writes its status as it goes, and writes its answer. The controller leaves them
+out of the tree and counts them. `--all`, the `all` query parameter of the API,
+shows them, and says what each key is for, for example `status: started`,
+`response` or `file record`, instead of the key.
+
+The controller makes the tree, so the CLI, the UI and the SDK show the same one.
+The answer has the summary of the trace, then each root span with its children.
+Each span has its ON, STATUS and DETAIL, and the span as the backend has it,
+with its attributes. `Spans (1)` counts the root spans.
 
 The **Traces** page of the UI, in the Admin menu, shows the same tree with a
 timing bar for each span, and a check box that shows the NATS calls.

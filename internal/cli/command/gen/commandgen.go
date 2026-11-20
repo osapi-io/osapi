@@ -141,10 +141,6 @@ func Commands(
 			fields = append(fields, jen.Id(fld.Name).Op(":").
 				Qual(fld.Type.PkgPath(), fld.Type.Name()).Values(inner...))
 		}
-		for _, extra := range m.CommandFlags() {
-			inits = append(inits, jen.Id(name).Dot("Flags").Call().Dot("Bool").Call(
-				jen.Lit(extra.Name), jen.False(), jen.Lit(extra.Usage)))
-		}
 		in := jen.Qual(m.Input().PkgPath(), m.Input().Name())
 		if len(fields) > 0 {
 			in = in.Values(fields...)

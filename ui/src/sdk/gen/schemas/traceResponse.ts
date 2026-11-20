@@ -4,11 +4,23 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { TraceSpan } from './traceSpan';
+import type { TraceNode } from './traceNode';
 
 export interface TraceResponse {
-  /** Each span of the trace, ordered by start time. */
-  spans: TraceSpan[];
+  /** From the start of the first span to the end of the last, as a Go duration. */
+  duration?: string;
+  /** The number of spans that failed. */
+  failed_spans?: number;
+  /** The number of NATS calls left out, the bookkeeping of the job queue. all shows them. */
+  nats_calls?: number;
+  /** The time that the NATS calls left out took, as a Go duration. */
+  nats_time?: string;
+  /** The services that made the spans, in the order each first appears. */
+  services?: string[];
+  /** The spans that have no parent in the trace, each with its children, in start order. */
+  spans: TraceNode[];
+  /** When the first span started. */
+  started?: string;
   /** The trace ID. */
   trace_id: string;
 }

@@ -64,7 +64,6 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("--id 26e448c9dbe1c4a8d216a98c675079c9").
 		Example("--id 26e448c9dbe1c4a8d216a98c675079c9 --all").
 		Example("--id 26e448c9dbe1c4a8d216a98c675079c9 --json").
-		Flag("all", "Show the NATS calls too, the reads and writes of the job queue").
 		Errors(
 			endpoint.NotFound(ErrNotFound,
 				"The backend has no trace with this ID, or not yet."),

@@ -250,9 +250,8 @@ func PrintCompactTable(
 		for r, row := range section.Rows {
 			flat := make([]string, len(row))
 			for c, cell := range row {
-				// The tree lines of a SPAN cell are spaced on purpose.
-				if c < len(section.Headers) && strings.EqualFold(section.Headers[c], "SPAN") &&
-					!strings.Contains(cell, "\n") {
+				// The tree lines of a nested row are spaced on purpose.
+				if treeLines(cell) != "" && !strings.Contains(cell, "\n") {
 					flat[c] = cell
 					continue
 				}

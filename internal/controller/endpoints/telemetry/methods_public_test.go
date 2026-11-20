@@ -91,15 +91,19 @@ func (s *MethodsPublicTestSuite) TestGet() {
 			validateFunc: func(got telemetry.TraceResponse, err error) {
 				s.Require().NoError(err)
 				s.Equal(traceID, got.TraceID)
-				s.Require().Len(got.Spans, 2)
+				s.Require().Len(got.Spans, 1, "the root, with the job under it")
 				s.Equal(telemetry.TraceSpan{
 					SpanID: "a", Name: "GET /api/agent", Service: "osapi-controller",
 					Kind: "server", StartTime: start, DurationMs: 1.5, Status: "ok",
 					Attributes: map[string]string{"http.status": "200"},
-				}, got.Spans[0])
-				s.Equal("a", got.Spans[1].ParentSpanID)
-				s.Equal("error", got.Spans[1].Status)
-				s.Equal("boom", got.Spans[1].StatusMessage)
+				}, got.Spans[0].Span)
+				s.Equal(start, got.Started)
+				s.Equal(1, got.FailedSpans)
+				s.Require().Len(got.Spans[0].Children, 1)
+				job := got.Spans[0].Children[0]
+				s.Equal("a", job.Span.ParentSpanID)
+				s.Equal("error", job.Status)
+				s.Equal(`error=boom`, job.Detail)
 			},
 		},
 		{

@@ -65,7 +65,6 @@ var notDSL = map[string]bool{
 	"Scaffold":                true,
 	"PageNotes":               true,
 	"PageResult":              true,
-	"CommandFlags":            true,
 	"SubPath":                 true,
 	"CommandName":             true,
 	"MethodName":              true,

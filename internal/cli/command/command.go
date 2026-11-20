@@ -79,8 +79,6 @@ type Command interface {
 	CommandLong() string
 	// Examples are the command's examples.
 	Examples() []Example
-	// CommandFlags are the command's flags that are not part of the input.
-	CommandFlags() []Flag
 	// PageNotes is the Notes section of the command's page, or "".
 	PageNotes() string
 	// PageResult is the Result section of the command's page, or "".
@@ -101,15 +99,6 @@ type Command interface {
 type Example struct {
 	Flags string
 	Doc   string
-}
-
-// Flag is a bool flag of the CLI command that is not part of the request: it
-// changes only how the answer prints, such as --all. The renderer reads it.
-type Flag struct {
-	// Name is the flag's name, without the dashes.
-	Name string
-	// Usage is its help.
-	Usage string
 }
 
 // Deps is what the commands need from the CLI.

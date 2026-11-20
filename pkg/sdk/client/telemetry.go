@@ -33,14 +33,17 @@ type TelemetryService struct {
 	client *gen.ClientWithResponses
 }
 
-// Trace returns the spans of the trace id, which a command prints after its
-// job ID. The tracing backend gets the spans a few seconds after the request,
-// so a trace of a request that just ran can be a NotFoundError until then.
+// Trace returns the trace id, which a command prints after its job ID: its
+// summary and its span tree. Without all, the tree leaves out the NATS
+// calls, the bookkeeping of the job queue, and counts them. The tracing
+// backend gets the spans a few seconds after the request, so a trace of a
+// request that just ran can be a NotFoundError until then.
 func (s *TelemetryService) Trace(
 	ctx context.Context,
 	id string,
+	all bool,
 ) (*Response[Trace], error) {
-	resp, err := s.client.GetTraceWithResponse(ctx, id)
+	resp, err := s.client.GetTraceWithResponse(ctx, id, &gen.GetTraceParams{All: &all})
 	if err != nil {
 		return nil, fmt.Errorf("get trace %s: %w", id, err)
 	}

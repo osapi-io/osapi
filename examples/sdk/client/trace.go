@@ -51,17 +51,24 @@ func main() {
 
 	// A trace reaches the backend a few seconds after its request, so a
 	// NotFoundError right after a command means: try again shortly.
-	resp, err := c.Telemetry.Trace(context.Background(), os.Args[1])
+	resp, err := c.Telemetry.Trace(context.Background(), os.Args[1], false)
 	if err != nil {
 		log.Fatalf("get trace: %v", err)
 	}
 
-	fmt.Printf("Trace %s: %d spans\n", resp.Data.ID, len(resp.Data.Spans))
-	for _, s := range resp.Data.Spans {
-		status := "ok"
-		if s.Failed {
-			status = "error: " + s.StatusMessage
-		}
-		fmt.Printf("  %-18s %-28s %10s  %s\n", s.Service, s.Name, s.Duration, status)
+	t := resp.Data
+	fmt.Printf("Trace %s: %s, %d NATS calls left out\n", t.ID, t.Duration, t.NATSCalls)
+	printSpans(t.Spans, "")
+}
+
+// printSpans prints each span under its parent, indented.
+func printSpans(
+	nodes []client.TraceNode,
+	indent string,
+) {
+	for _, n := range nodes {
+		fmt.Printf("  %s%-28s %-10s %10s  %s %s\n",
+			indent, n.Name, n.On, n.Span.Duration, n.Status, n.Detail)
+		printSpans(n.Children, indent+"  ")
 	}
 }

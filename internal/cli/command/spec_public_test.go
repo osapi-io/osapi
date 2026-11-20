@@ -66,7 +66,6 @@ var notDSL = map[string]bool{
 	"CommandShort":                 true,
 	"CommandLong":                  true,
 	"Examples":                     true,
-	"CommandFlags":                 true,
 	"PageNotes":                    true,
 	"PageResult":                   true,
 	"Method:LocalGroup":            true,
