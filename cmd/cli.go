@@ -25,7 +25,7 @@ import (
 )
 
 // cliCmd is the parent of the commands about the CLI itself. Its command
-// group is a definition of the command DSL; its cli-docs is written here.
+// and docs groups are definitions of the command DSL.
 var cliCmd = &cobra.Command{
 	Use:   "cli",
 	Short: "Describe and check the commands of this binary",

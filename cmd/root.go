@@ -58,7 +58,6 @@ var (
 		"completion": true,
 		"config":     true,
 		"roles":      true,
-		"cli-docs":   true,
 		"skill":      true,
 		"init":       true,
 		"endpoint":   true,

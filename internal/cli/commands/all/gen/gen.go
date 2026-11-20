@@ -7,6 +7,7 @@ import (
 	_ "github.com/osapi-io/osapi/internal/cli/commands/admission/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/agentcmd/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/behaviordsl/gen"
+	_ "github.com/osapi-io/osapi/internal/cli/commands/clidocs/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/commanddsl/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/config/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/controllercmd/gen"

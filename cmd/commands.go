@@ -38,6 +38,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/commands/agentcmd"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/all/gen"
 	"github.com/osapi-io/osapi/internal/cli/commands/behaviordsl"
+	"github.com/osapi-io/osapi/internal/cli/commands/clidocs"
 	"github.com/osapi-io/osapi/internal/cli/commands/commanddsl"
 	configcmd "github.com/osapi-io/osapi/internal/cli/commands/config"
 	"github.com/osapi-io/osapi/internal/cli/commands/controllercmd"
@@ -117,6 +118,7 @@ func init() {
 			Spec:      func() guide.Spec { return behavior.CurrentSpec(job.FactKeys()...) },
 		}
 	})
+	command.Provide(clidocs.Group, func() clidocs.Deps { return clidocs.Deps{Root: rootCmd} })
 	command.Provide(startcmd.Group, func() startcmd.Deps {
 		return startcmd.Deps{NATS: natsDeps(), Controller: controllerDeps(), Agent: agentDeps()}
 	})

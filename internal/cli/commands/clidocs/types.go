@@ -18,33 +18,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmd
+package clidocs
 
-import (
-	"github.com/spf13/cobra"
-
-	"github.com/osapi-io/osapi/internal/cli"
-	"github.com/osapi-io/osapi/internal/cli/reference"
-)
-
-// cliDocsCmd writes the CLI reference pages of the docs site. just
-// cli-docs-generate runs it, and just test checks that the pages match.
-var cliDocsCmd = &cobra.Command{
-	Use:    "cli-docs",
-	Short:  "Write the CLI reference pages of the docs site",
-	Hidden: true,
-	Run: func(cmd *cobra.Command, _ []string) {
-		dir, _ := cmd.Flags().GetString("dir")
-
-		if err := reference.Write(rootCmd, dir); err != nil {
-			cli.LogFatal(logger, "failed to write the CLI reference", err)
-		}
-	},
+// GenerateInput is where to write the pages.
+type GenerateInput struct {
+	Dir string `json:"dir" validate:"omitempty" doc:"Directory of the CLI reference pages" default:"docs/docs/sidebar/usage/cli"`
 }
 
-func init() {
-	rootCmd.AddCommand(cliDocsCmd)
-
-	cliDocsCmd.Flags().
-		String("dir", "docs/docs/sidebar/usage/cli", "Directory of the CLI reference pages")
+// GenerateOutput is where the pages are, and how many there are.
+type GenerateOutput struct {
+	_     struct{} `title:"CLI reference"`
+	Dir   string   `                      json:"dir"`
+	Pages int      `                      json:"pages"`
 }
