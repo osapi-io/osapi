@@ -25,8 +25,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/spf13/cobra"
-
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/cli/command"
@@ -195,9 +193,9 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 		})
 	}
 
-	// The rules of the output apply to the registered groups: a renderer
-	// with no Because, a tag the output does not know, and a method that
-	// answers nothing with no past tense.
+	// The rules of the output apply to the registered groups: a tag the
+	// output does not know, and a method that answers nothing with no past
+	// tense.
 	out := command.Define("zzshape", "Output",
 		command.Uses[localDeps](),
 		command.Method[struct{}, greetOut]("list").Short("X").
@@ -214,7 +212,6 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 			}),
 	)
 	command.AddCommands(out)
-	command.Render(out, "list", func(*cobra.Command, struct{}, greetOut) {})
 	var got []string
 	for _, p := range command.ValidateOutput() {
 		if p.Group != "zzshape" {
@@ -225,7 +222,6 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 		s.Equal(command.Checks.Fix(p.Rule), p.Fix, "every rule has a check")
 	}
 	s.Equal([]string{
-		"the renderer has no Because.",
 		`badTags.Size has render:"nope", which the output does not know.`,
 		`badTags.Name has render:"short=0", which the output does not know.`,
 		"badTags.Name has an empty tag and is not a list.",

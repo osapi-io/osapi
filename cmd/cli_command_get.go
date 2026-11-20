@@ -40,16 +40,12 @@ type localFlag struct {
 	Doc      string `json:"doc"`
 }
 
-// localCommand is one command in `cli command get --json`. Output is
-// derived for a command that prints from its output type, or renderer, with
-// the reason, for one that has a renderer. A local group's command has its
-// flags and the inputs it refuses.
+// localCommand is one command in `cli command get --json`. A local group's
+// command has its flags and the inputs it refuses.
 type localCommand struct {
 	Method  string      `json:"method"`
 	Command string      `json:"command"`
 	Short   string      `json:"short"`
-	Output  string      `json:"output"`
-	Reason  string      `json:"reason,omitempty"`
 	Flags   []localFlag `json:"flags,omitempty"`
 	Fails   []string    `json:"fails,omitempty"`
 }
@@ -89,10 +85,6 @@ func describeCommand(
 		Method:  c.MethodName(),
 		Command: strings.Join(strings.Fields(full), " "),
 		Short:   c.CommandShort(),
-		Output:  "derived",
-	}
-	if r, ok := command.Rendered(g.GroupName(), c.MethodName()); ok {
-		lc.Output, lc.Reason = "renderer", r.Reason()
 	}
 	m, ok := c.(*command.LocalMethod)
 	if !ok {
@@ -116,11 +108,11 @@ func describeCommand(
 
 var cliCommandGetCmd = &cobra.Command{
 	Use:   "get",
-	Short: "Describe one group: its commands, their output, and the flags and refusals of a local group",
+	Short: "Describe one group: its commands, and the flags and refusals of a local group",
 	Long: "`--name` is the command path of the group, such as `token` or `agent`: a\n" +
-		"local group, or the group of an endpoint or a behavior. Each command says\n" +
-		"whether it prints from its output type (`derived`) or has a renderer, and\n" +
-		"why. A command of a local group also has its flags, each with the validate\n" +
+		"local group, or the group of an endpoint or a behavior. Each command prints\n" +
+		"from the output type of its method. A command of a local group also has\n" +
+		"its flags, each with the validate\n" +
 		"tag of its field, and the inputs that its `.Fails` declares, which\n" +
 		"`TestRefusals` runs.",
 	Example: `  osapi cli command get --name token
@@ -153,11 +145,11 @@ var cliCommandGetCmd = &cobra.Command{
 		cli.PrintKV("Name", path, "Description", g.GroupDoc())
 		rows := make([][]string, 0, len(commands))
 		for _, c := range commands {
-			rows = append(rows, []string{c.Command, c.Output, c.Reason})
+			rows = append(rows, []string{c.Command, c.Short})
 		}
 		cli.PrintCompactTable([]cli.Section{{
 			Title:     fmt.Sprintf("Commands (%d)", len(commands)),
-			Headers:   []string{"COMMAND", "OUTPUT", "REASON"},
+			Headers:   []string{"COMMAND", "DESCRIPTION"},
 			Rows:      rows,
 			Reference: true,
 		}})

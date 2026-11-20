@@ -1,13 +1,12 @@
 # Get
 
-Describe one group: its commands, their output, and the flags and refusals of a
-local group.
+Describe one group: its commands, and the flags and refusals of a local group.
 
 `--name` is the command path of the group, such as `token` or `agent`: a local
-group, or the group of an endpoint or a behavior. Each command says whether it
-prints from its output type (`derived`) or has a renderer, and why. A command of
-a local group also has its flags, each with the validate tag of its field, and
-the inputs that its `.Fails` declares, which `TestRefusals` runs.
+group, or the group of an endpoint or a behavior. Each command prints from the
+output type of its method. A command of a local group also has its flags, each
+with the validate tag of its field, and the inputs that its `.Fails` declares,
+which `TestRefusals` runs.
 
 ```bash
 osapi cli command get [flags]

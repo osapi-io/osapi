@@ -72,7 +72,6 @@ const (
 	RuleValidate = "validate"
 	RuleFails    = "fails"
 	RuleHandler  = "handler"
-	RuleReason   = "reason"
 	RuleTag      = "tag"
 	RuleSays     = "says"
 	RuleSubDoc   = "subdoc"
@@ -95,7 +94,7 @@ var Checks = guide.Checks{
 	},
 	{
 		Rule:     RuleUnique,
-		Requires: "No two methods of a group have one name: the name is the key of the method's renderer.",
+		Requires: "No two methods of a group have one name.",
 		Fix:      "Give each method its own name.",
 	},
 	{
@@ -137,11 +136,6 @@ var Checks = guide.Checks{
 		Rule:     RuleHandler,
 		Requires: "The group Uses a type, and each method has a handler, func(context.Context, D, In) (Out, error), with D that type and In and Out the method's types.",
 		Fix:      "Add command.Uses[Deps]() to Define, and .Handle(fn) to each method, with the signature that the message names.",
-	},
-	{
-		Rule:     RuleReason,
-		Requires: "A method of any group, endpoint, behavior or local, prints from its output type. A renderer that Render sets in its place says why the output type cannot print the answer, with .Because.",
-		Fix:      "Delete the renderer, and give the output fields the tags that osapi cli command spec lists. When the output type cannot print the answer, such as a tree, add .Because(\"<why>\") to the renderer.",
 	},
 	{
 		Rule:     RuleTag,
@@ -365,8 +359,8 @@ var renderValues = map[string]bool{
 
 // ValidateOutput is each rule that the output of a registered group breaks:
 // each group whose commands AddCommands added, endpoint, behavior and local.
-// A renderer has a reason, each tag of an output type has a value that the
-// output knows, and a method with no body says what occurred.
+// Each tag of an output type has a value that the output knows, and a method
+// with no body says what occurred.
 func ValidateOutput() []Problem {
 	var out []Problem
 	for _, g := range Groups() {
@@ -377,15 +371,11 @@ func ValidateOutput() []Problem {
 			})
 		}
 		for _, m := range g.Commands() {
-			r, rendered := Rendered(g.GroupName(), m.MethodName())
-			if rendered && r.Reason() == "" {
-				add(m.MethodName(), RuleReason, "the renderer has no Because.")
-			}
 			for _, msg := range tagProblems(m.Output(), map[reflect.Type]bool{}) {
 				add(m.MethodName(), RuleTag, msg)
 			}
 			t := m.Output()
-			if !rendered && t.Kind() == reflect.Struct && answersNothing(t) && said(m) == "" {
+			if t.Kind() == reflect.Struct && answersNothing(t) && said(m) == "" {
 				add(m.MethodName(), RuleSays, fmt.Sprintf("%q has no past tense.", m.MethodName()))
 			}
 		}

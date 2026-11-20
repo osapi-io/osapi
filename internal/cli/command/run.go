@@ -83,7 +83,7 @@ func Run(
 	if err != nil {
 		return fmt.Errorf("encode %s %s: %w", g.Name, method, err)
 	}
-	Output(cmd, g.Name, method, in, body)
+	Output(g.Name, method, in, body)
 
 	return nil
 }

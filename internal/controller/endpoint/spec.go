@@ -434,12 +434,6 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindCheck,
-			Name: "command.Render(Group, \"method\", fn).Because(\"...\")",
-			Does: "Sets how a method's answer prints without --json, in place of the output that the output type gives: fn gets the input the command sent and the output the API answered. Because says why the output type cannot print it; osapi cli command validate fails a renderer with no reason. The tags of the output fields, which osapi cli command spec lists, change the output with no renderer.",
-			When: "Almost never: a method prints from its output type, by the output style of the CLI. Only for an answer that the output type cannot print, such as a tree. In cmd/client_<group>.go, the file of the group's command.",
-		},
-		{
-			Kind: KindCheck,
 			Name: "osapi controller endpoint new --name <group> --description \"...\"",
 			Does: "Writes a new group under internal/controller/endpoints/<group>: a list and a get, an empty Deps, its types and the tests of its methods, and adds its import to internal/controller/endpoints/all. It builds, validates and passes its tests; endpoint-scaffold-check in just test holds it to that.",
 			When: "To start a new group. Then run go generate ./internal/controller/endpoints/all and just generate, and change it.",

@@ -60,10 +60,6 @@ type input struct {
 	Name string
 }
 
-type thing struct {
-	Name string `json:"name"`
-}
-
 type CommandPublicTestSuite struct {
 	suite.Suite
 }
@@ -107,10 +103,6 @@ func (s *CommandPublicTestSuite) TestTraceID() {
 
 func (s *CommandPublicTestSuite) TestOutput() {
 	g := group{name: "zzoutput"}
-	rendered := ""
-	command.Render(g, "get", func(_ *cobra.Command, in input, out thing) {
-		rendered = in.Name + ":" + out.Name
-	})
 
 	tests := []struct {
 		name         string
@@ -119,16 +111,6 @@ func (s *CommandPublicTestSuite) TestOutput() {
 		answer       []byte
 		validateFunc func(printed string, err error)
 	}{
-		{
-			name:   "when the method has a renderer, it gets the input and the output",
-			method: "get",
-			answer: []byte(`{"name":"web-01"}`),
-			validateFunc: func(printed string, err error) {
-				s.Require().NoError(err)
-				s.Empty(printed)
-				s.Equal("web:web-01", rendered)
-			},
-		},
 		{
 			name:   "when --json is given, the body prints as it came",
 			method: "get",
@@ -140,29 +122,12 @@ func (s *CommandPublicTestSuite) TestOutput() {
 			},
 		},
 		{
-			name:   "when the method has no renderer, the body prints as JSON",
+			name:   "when the method is not registered, the body prints as JSON",
 			method: "set",
 			answer: []byte(`{"name":"web-02"}`),
 			validateFunc: func(printed string, err error) {
 				s.Require().NoError(err)
 				s.Equal(`{"name":"web-02"}`, printed)
-			},
-		},
-		{
-			name:   "when the answer does not decode, the error is reported",
-			method: "get",
-			answer: []byte(`{"name":3}`),
-			validateFunc: func(_ string, err error) {
-				s.ErrorContains(err, "decode zzoutput get")
-			},
-		},
-		{
-			name:   "when the answer is empty, the renderer gets a zero output",
-			method: "get",
-			answer: nil,
-			validateFunc: func(_ string, err error) {
-				s.Require().NoError(err)
-				s.Equal("web:", rendered)
 			},
 		},
 	}
@@ -177,7 +142,7 @@ func (s *CommandPublicTestSuite) TestOutput() {
 				PrintJSON: func(body []byte) { printed = string(body) },
 			}))
 
-			command.Output(&cobra.Command{}, g.name, tc.method, input{Name: "web"}, tc.answer)
+			command.Output(g.name, tc.method, input{Name: "web"}, tc.answer)
 
 			tc.validateFunc(printed, gotErr)
 		})

@@ -27,8 +27,7 @@
 // layer that sends an endpoint command's request gives the answer to Output,
 // as Run gives a local method's output, and Output prints it: as JSON for
 // --json, or from the method's output type, by the output style of the CLI.
-// A method that the output type cannot print has a renderer, with its
-// reason.
+// No command writes its own output.
 package command
 
 import (
@@ -46,7 +45,7 @@ import (
 // Group is a group of commands, osapi client <group>, with one command for
 // each of its methods. An endpoint group is one.
 type Group interface {
-	// GroupName is the group's command, and the key of its renderers.
+	// GroupName is the group's command.
 	GroupName() string
 	// GroupDoc says what the group is, in one line: its command's help.
 	GroupDoc() string
@@ -70,7 +69,7 @@ type Group interface {
 
 // Command is one method of a group: one command.
 type Command interface {
-	// MethodName is the method's name in its group, the key of its renderer.
+	// MethodName is the method's name in its group.
 	MethodName() string
 	// Input is the type of the method's input: a flag for each field.
 	Input() reflect.Type
@@ -114,8 +113,8 @@ type Deps struct {
 	Error func(err error)
 	// PrintJSON prints an answer as it came, for --json.
 	PrintJSON func(body []byte)
-	// Print is what the output of a method with no renderer prints
-	// through: the CLI's headings, blocks, tables and formats.
+	// Print is what the output of a method prints through: the CLI's
+	// headings, blocks, tables and formats.
 	Print Printer
 }
 
@@ -127,33 +126,10 @@ type entry struct {
 var (
 	registered []entry
 	deps       Deps
-	renderers  = map[string]*Renderer{}
 	// printers print the answers of a kind of group, such as the result
 	// table of each behavior. PrintsGroups adds one.
 	printers []GroupPrinter
 )
-
-// Renderer prints a method's answer in place of the output that its output
-// type gives: fn gets the input and a value of out, the type the answer
-// decodes into. Render makes one.
-type Renderer struct {
-	fn  func(cmd *cobra.Command, in, out any)
-	out reflect.Type
-	// reason is why the output type cannot print the answer, which Because
-	// set.
-	reason string
-}
-
-// Because is why the output type cannot print the method's answer, such as
-// "the spans are a tree". osapi cli command validate fails a renderer with
-// no reason, and osapi cli command get shows it.
-func (r *Renderer) Because(
-	reason string,
-) *Renderer {
-	r.reason = reason
-
-	return r
-}
 
 // SubKey is the annotation of a generated command that goes under a
 // command of its own: the Sub segment of its method, such as trace in
@@ -350,52 +326,16 @@ func child(
 	return nil
 }
 
-// Render sets how a method's answer prints without --json, in place of the
-// output that its output type gives. fn gets the command, for a flag that
-// Flag added, the input the command sent and the output the API answered.
-// Its Because says why the output type cannot print it.
-func Render[In, Out any](
-	g Group,
-	method string,
-	fn func(cmd *cobra.Command, in In, out Out),
-) *Renderer {
-	r := &Renderer{
-		fn:  func(cmd *cobra.Command, in, out any) { fn(cmd, in.(In), out.(Out)) },
-		out: reflect.TypeFor[Out](),
-	}
-	renderers[g.GroupName()+"."+method] = r
-
-	return r
-}
-
 // GroupPrinter prints the answer of method of group, and is true, or is
 // false for a group that it does not print.
 type GroupPrinter func(group string, method string, answer []byte) bool
 
 // PrintsGroups adds p, which prints a kind of group. The behavior runtime
-// adds the result table of each behavior: thus a behavior registers no
-// renderer, and a renderer is only an exception to the output type.
+// adds the result table of each behavior.
 func PrintsGroups(
 	p GroupPrinter,
 ) {
 	printers = append(printers, p)
-}
-
-// Rendered is the renderer of method of group, and true, or nil and false
-// for a method whose output comes from its output type.
-func Rendered(
-	group string,
-	method string,
-) (*Renderer, bool) {
-	r, ok := renderers[group+"."+method]
-
-	return r, ok
-}
-
-// Reason is why the output type cannot print the answer, which Because
-// set, or "".
-func (r *Renderer) Reason() string {
-	return r.reason
 }
 
 // Groups are the registered groups: each endpoint group, behavior and
@@ -430,20 +370,17 @@ func lookup(
 	return nil, nil
 }
 
-// Output prints the answer of method of group to the command that sent in.
-// With --json it prints the body as it came, or, for a method that answered
-// with no body, its key and what it did. Without it, a method with a
-// renderer decodes the answer into the type of its renderer, which prints
-// it; a group that a GroupPrinter prints, such as a behavior, prints its
-// way; and each other method prints from its output type.
+// Output prints the answer of method of group, to the input in. With --json
+// it prints the body as it came, or, for a method that answered with no
+// body, its key and what it did. Without it, a group that a GroupPrinter
+// prints, such as a behavior, prints its way, and each other method prints
+// from its output type.
 func Output(
-	cmd *cobra.Command,
 	group string,
 	method string,
 	in any,
 	answer []byte,
 ) {
-	render, ok := renderers[group+"."+method]
 	if deps.JSON() {
 		if len(answer) > 0 {
 			deps.PrintJSON(answer)
@@ -461,25 +398,12 @@ func Output(
 
 		return
 	}
-	if !ok {
-		for _, p := range printers {
-			if p(group, method, answer) {
-				return
-			}
-		}
-		derived(group, method, in, answer)
-
-		return
-	}
-	out := reflect.New(render.out)
-	if len(answer) > 0 {
-		if err := json.Unmarshal(answer, out.Interface()); err != nil {
-			deps.Error(fmt.Errorf("decode %s %s: %w", group, method, err))
-
+	for _, p := range printers {
+		if p(group, method, answer) {
 			return
 		}
 	}
-	render.fn(cmd, in, out.Elem().Interface())
+	derived(group, method, in, answer)
 }
 
 // derived prints the answer from the output type of the method, or as it
@@ -525,7 +449,7 @@ func ReadFile(
 }
 
 // traceID is the trace of the call the running command made last. A
-// command runs one call, so a renderer reads it with TraceID.
+// command runs one call, so its printer reads it with TraceID.
 var traceID string
 
 // SetTraceID keeps the trace of the call the running command made, for
@@ -537,7 +461,7 @@ func SetTraceID(
 }
 
 // TraceID is the trace of the call that the running command made, from the
-// controller's traceresponse header, for a renderer that prints it, as each
+// controller's traceresponse header, for a printer that prints it, as each
 // behavior's result table does. It is "" when the answer had none.
 func TraceID() string {
 	return traceID

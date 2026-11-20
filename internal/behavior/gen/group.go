@@ -175,7 +175,7 @@ func groupFile(
 	f.Var().Id("Group").Op("=").Qual(endpointPath, "Define").Add(multi("(", ")", opts...))
 	f.Line()
 	// The behavior runtime prints each method's answer as the result
-	// table, so the group registers no renderer.
+	// table, so the group registers no printer of its own.
 	inits := []jen.Code{
 		jen.Qual(behaviorPkg, "RegisterGroup").Call(jen.Lit(b.Name), jen.Id("Group")),
 	}
