@@ -174,6 +174,30 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 			},
 		},
 		{
+			name: "when a process is valid",
+			group: command.Define("zzproc", "Process",
+				command.Uses[localDeps](),
+				command.Process("start").Short("Start it").
+					Setup(func(context.Context, localDeps) (command.Running, error) {
+						return command.Running{}, nil
+					}),
+			),
+		},
+		{
+			name: "when a process's Setup is not its signature, and it Fails",
+			group: command.Define("zzproc", "Process",
+				command.Uses[localDeps](),
+				command.Process("start").Short("Start it").
+					Fails("an input", struct{}{}).
+					Setup(greet),
+			),
+			want: []string{
+				"a process has no input, so nothing Fails.",
+				"the Setup is func(context.Context, command_test.localDeps, command_test.greetIn) (command_test.greetOut, error); " +
+					"it must be func(context.Context, command_test.localDeps) (command.Running, error).",
+			},
+		},
+		{
 			name: "when a rule has no Fails, or a Fails is not the input",
 			group: command.Define("zzfails", "Fails",
 				command.Uses[localDeps](),

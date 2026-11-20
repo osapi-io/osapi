@@ -105,6 +105,15 @@ The design is `components/osapi/commands.md` in osapi-io/specs. Read it first.
 - A rule that the standard tags cannot say is a custom rule. Declare it with
   `rule.Declare`, with its check and its message.
 - `--json` prints the output of the method. Do not make a second shape for it.
+- A command that runs until a signal, such as `nats server start`, is
+  `command.Process("start").Setup(fn)`. `fn` gets the command's context and the
+  deps, makes each component and starts nothing, and returns
+  `command.Running{Components, Cleanup}`. `command.Serve` starts them, waits
+  until the context ends, then stops them with `context.WithoutCancel` and
+  `command.ShutdownTimeout`. Never make a context of your own.
+- A group that goes `Under` a command written by hand, such as `nats`, needs
+  that command given to `AttachLocal` in `cmd/commands.go`. Without it, the
+  definition makes a second command of that name, and a test fails.
 - A check whose answer is its report, such as `config validate`, returns its
   output with `command.Fail()` when the check fails: the report prints, then
   the command exits 1, so a script or CI fails on it.

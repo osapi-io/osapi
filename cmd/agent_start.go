@@ -59,8 +59,8 @@ var agentStartCmd = &cobra.Command{
 		log := logger.With("component", "agent")
 		// The metrics server is made before the NATS connection, so that
 		// nats-client records the calls of the agent on it.
-		metricsServer := newMetricsServer(appConfig.Agent.Metrics, log)
-		a, b, err := agent.Setup(ctx, log, appFs, appConfig, meterProviderOf(metricsServer))
+		metricsServer := metrics.FromConfig(appConfig.Agent.Metrics, log)
+		a, b, err := agent.Setup(ctx, log, appFs, appConfig, metricsServer.MeterProvider())
 		if err != nil {
 			cli.LogFatal(log, "failed to start the agent", err)
 		}

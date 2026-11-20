@@ -18,37 +18,23 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmd
+package metrics
 
 import (
 	"log/slog"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"github.com/osapi-io/osapi/internal/config"
 )
 
-// natsServerCmd represents the natsServer command.
-var natsServerCmd = &cobra.Command{
-	Use:   "server",
-	Short: "Run the embedded NATS server",
-	PersistentPreRun: func(_ *cobra.Command, _ []string) {
-		logger.Debug(
-			"nats server configuration",
-			slog.String("config_file", viper.ConfigFileUsed()),
-			slog.Bool("debug", appConfig.Debug),
-			slog.String("nats.server.host", appConfig.NATS.Server.Host),
-			slog.Int("nats.server.port", appConfig.NATS.Server.Port),
-			slog.String("nats.server.store_dir", appConfig.NATS.Server.StoreDir),
-			slog.String("nats.server.namespace", appConfig.NATS.Server.Namespace),
-			slog.String("nats.server.auth.type", appConfig.NATS.Server.Auth.Type),
-			slog.String("nats.stream.name", appConfig.NATS.Stream.Name),
-			slog.String("nats.stream.subjects", appConfig.NATS.Stream.Subjects),
-			slog.String("nats.kv.bucket", appConfig.NATS.KV.Bucket),
-			slog.String("nats.kv.response_bucket", appConfig.NATS.KV.ResponseBucket),
-		)
-	},
-}
+// FromConfig makes the metrics server that cfg turns on, and does not start
+// it. It is nil when cfg turns it off.
+func FromConfig(
+	cfg config.MetricsServer,
+	log *slog.Logger,
+) *Server {
+	if !cfg.Enabled {
+		return nil
+	}
 
-func init() {
-	natsCmd.AddCommand(natsServerCmd)
+	return New(cfg.Host, cfg.Port, log)
 }

@@ -53,6 +53,8 @@ var notDSL = map[string]bool{
 	"Lookup":                       true,
 	"All":                          true,
 	"Run":                          true,
+	"Serve":                        true,
+	"IsProcess":                    true,
 	"Check":                        true,
 	"FlagName":                     true,
 	"Validate":                     true,

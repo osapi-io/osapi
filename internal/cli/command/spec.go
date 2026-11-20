@@ -101,6 +101,18 @@ var Spec = guide.Spec{
 
 		{
 			Kind: KindMethod,
+			Name: `Process("name")`,
+			Does: "A command, osapi <group> <name>, that runs a process until the command's context ends, such as osapi nats server start. It has no input and prints no output; .Setup sets what it runs. The context is the one the root makes and cancels on SIGINT or SIGTERM.",
+			When: "For a command that starts a component and runs until a signal. Its name is an action, such as start.",
+		},
+		{
+			Kind: KindMethod,
+			Name: `.Setup(fn)`,
+			Does: "Is func(ctx context.Context, d D) (command.Running, error): it makes the process's components with ctx, the command's context, so a signal stops a setup that waits. Running is the components, each with Start() and Stop(ctx), and a Cleanup. command.Serve starts them, waits until ctx ends, stops them together, then runs Cleanup; the stop and the cleanup get context.WithoutCancel(ctx), which keeps its values, with command.ShutdownTimeout, 10 seconds. An error is the command's error, and it exits 1.",
+			When: "On each Process, in place of .Handle. Make each component in Setup and start nothing: Serve starts them.",
+		},
+		{
+			Kind: KindMethod,
 			Name: `Method[In, Out]("name")`,
 			Does: "A command, osapi <group> <name>, that takes In and prints Out. Each field of In is a flag. Out prints as JSON with --json, and from its type without it, by the output style of the CLI.",
 			When: "For each command of the group. Its name is the command's last word: a verb (list, get, create, update, delete) or an action in command.Actions, never a noun.",

@@ -159,6 +159,11 @@ func Commands(
 			call = jen.Return(jen.Qual(commandPath, "Run").Call(
 				jen.Id("cmd"), jen.Qual(pkg, "Group"), jen.Lit(m.MethodName()), in))
 		}
+		// A process has no input: it runs until the command's context ends.
+		if lm, ok := m.(*command.LocalMethod); ok && lm.IsProcess() {
+			call = jen.Return(jen.Qual(commandPath, "Serve").Call(
+				jen.Id("cmd"), jen.Qual(pkg, "Group"), jen.Lit(m.MethodName())))
+		}
 		run = append(run, call)
 
 		examples := make([]string, 0, len(m.Examples()))
