@@ -29,7 +29,7 @@ import (
 
 // Group is the health group's definition.
 var Group = endpoint.Register(endpoint.Define(
-	"health", "The controller's health",
+	"health", "Check the health of the controller",
 	endpoint.Title("Health Check API"),
 	endpoint.Tag("health", "Health",
 		"Health check endpoints for liveness, readiness, and detailed status."),

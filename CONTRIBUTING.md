@@ -725,7 +725,9 @@ writes its spec, routes, decoders and CLI commands under `gen/`, and
 output type of its method. The tags of each field set how the value prints, and
 `osapi cli command spec` has each tag. A renderer, `command.Render` in
 `cmd/client_<group>.go`, is only for a shape that no output type gives, such as
-a tree. It needs `.Because("...")`, which says why. A new group starts from
+a tree. It needs `.Because("...")`, which says why. The group's commands need no
+file in `cmd/`: the group's one line, `CommandLong` and `SubDoc` give the help
+of its command and of each `.Sub` segment. A new group starts from
 `osapi controller endpoint new`, and `just endpoint-scaffold-check` holds what
 it writes to its tests. The `build-an-endpoint` skill has the steps.
 

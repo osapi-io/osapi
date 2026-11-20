@@ -186,6 +186,19 @@ func (g *LocalGroup) GroupNotes() string {
 	return ""
 }
 
+// GroupLong is "": a local group's help is its one line.
+func (g *LocalGroup) GroupLong() string {
+	return ""
+}
+
+// SubDoc is "": the command of a local group's Sub segment, such as roles
+// in osapi token roles list, says <Segment> commands.
+func (g *LocalGroup) SubDoc(
+	_ string,
+) string {
+	return ""
+}
+
 // CommandPath is the words of the group's command under the root: the words
 // Under set, then its name.
 func (g *LocalGroup) CommandPath() []string {

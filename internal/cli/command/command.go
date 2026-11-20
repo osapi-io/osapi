@@ -53,6 +53,11 @@ type Group interface {
 	// GroupNotes is the Notes section of the page of the group's command,
 	// or "".
 	GroupNotes() string
+	// GroupLong is the rest of the help of the group's command, or "".
+	GroupLong() string
+	// SubDoc is the one line of help of the command that a Sub segment
+	// makes, such as trace, or "".
+	SubDoc(segment string) string
 	// CommandPath is the words of the group's command under osapi client,
 	// such as next node sysctl.
 	CommandPath() []string
@@ -164,6 +169,44 @@ func AddCommands(
 	registered = append(registered, entry{group: g, cmds: cmds})
 }
 
+// annotate sets the annotation key of cmd to value, when value is not "".
+func annotate(
+	cmd *cobra.Command,
+	key string,
+	value string,
+) {
+	if value == "" {
+		return
+	}
+	if cmd.Annotations == nil {
+		cmd.Annotations = map[string]string{}
+	}
+	cmd.Annotations[key] = value
+}
+
+// permissionOf is the permission that each command of g under the Sub
+// segment needs, or each command of g for "", when they all need the same
+// one. It is "" when they need different ones, or none: the page of a
+// parent names a permission only when one covers each command under it.
+func permissionOf(
+	g Group,
+	sub string,
+) string {
+	perm := ""
+	for _, c := range g.Commands() {
+		if sub != "" && c.SubPath() != sub {
+			continue
+		}
+		p := g.CommandPermission(c)
+		if p == "" || perm != "" && p != perm {
+			return ""
+		}
+		perm = p
+	}
+
+	return perm
+}
+
 // Attach adds every registered group's commands under parent, osapi client,
 // and keeps d for the commands to call through. A group goes under the
 // commands of its command path: next node sysctl is under next, then node,
@@ -227,10 +270,13 @@ func attach(
 			}
 		}
 		if group == nil {
-			group = &cobra.Command{Use: name, Short: e.group.GroupDoc()}
-			if notes := e.group.GroupNotes(); notes != "" {
-				group.Annotations = map[string]string{reference.Notes: notes}
+			group = &cobra.Command{
+				Use:   name,
+				Short: e.group.GroupDoc(),
+				Long:  e.group.GroupLong(),
 			}
+			annotate(group, reference.Notes, e.group.GroupNotes())
+			annotate(group, reference.Permission, permissionOf(e.group, ""))
 			into.AddCommand(group)
 		}
 		for _, c := range e.cmds {
@@ -243,10 +289,12 @@ func attach(
 					}
 				}
 				if parent == nil {
-					parent = &cobra.Command{
-						Use:   sub,
-						Short: strings.ToUpper(sub[:1]) + sub[1:] + " commands",
+					short := e.group.SubDoc(sub)
+					if short == "" {
+						short = strings.ToUpper(sub[:1]) + sub[1:] + " commands"
 					}
+					parent = &cobra.Command{Use: sub, Short: short}
+					annotate(parent, reference.Permission, permissionOf(e.group, sub))
 					group.AddCommand(parent)
 				}
 			}

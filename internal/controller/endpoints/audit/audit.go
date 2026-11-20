@@ -41,7 +41,7 @@ var notConfigured503 = endpoint.Unavailable(ErrNotConfigured,
 
 // Group is the audit group's definition.
 var Group = endpoint.Register(endpoint.Define(
-	"audit", "The audit log",
+	"audit", "Read the audit log",
 	endpoint.Title("Audit Log API"),
 	endpoint.Tag("audit", "Audit", "Audit log endpoints for viewing API activity."),
 	endpoint.Uses[Deps](),

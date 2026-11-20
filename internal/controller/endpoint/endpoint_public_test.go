@@ -599,12 +599,19 @@ func (s *EndpointPublicTestSuite) TestCommandPath() {
 func (s *EndpointPublicTestSuite) TestCommandLayer() {
 	g := endpoint.Define("sysctl", "Kernel parameters",
 		endpoint.CommandNotes("See the sysctl page."),
+		endpoint.CommandLong("Each parameter is a file under sysctl.d."),
+		endpoint.SubDoc("files", "Read the files"),
+		endpoint.SubDoc("keys", "Read the keys"),
 		endpoint.Get[noInput, Node]("list"),
 		endpoint.Put[noInput, Node]("set").Permission("sysctl:admin"),
 	)
 	s.Equal("sysctl", g.GroupName())
 	s.Equal("Kernel parameters", g.GroupDoc())
 	s.Equal("See the sysctl page.", g.GroupNotes())
+	s.Equal("Each parameter is a file under sysctl.d.", g.GroupLong())
+	s.Equal("Read the files", g.SubDoc("files"))
+	s.Equal("Read the keys", g.SubDoc("keys"))
+	s.Empty(g.SubDoc("other"))
 
 	methods := g.Commands()
 	s.Require().Len(methods, 2)

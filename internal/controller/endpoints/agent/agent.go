@@ -46,7 +46,11 @@ var (
 
 // Group is the agent group's definition.
 var Group = endpoint.Register(endpoint.Define(
-	"agent", "The agents of the fleet",
+	"agent",
+	"Manage the agents in the fleet: discovery, drain and PKI enrollment",
+	endpoint.CommandLong(
+		"Most commands read the NATS KV heartbeat registry directly, and make no job.",
+	),
 	endpoint.Title("Agent Management API"),
 	endpoint.Tag("agent_operations", "Agent",
 		"Operations related to agent discovery and details."),

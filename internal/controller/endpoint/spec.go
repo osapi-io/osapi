@@ -92,6 +92,18 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindOption,
+			Name: `CommandLong("text")`,
+			Does: "Is the rest of the help of the group's command, after its one line.",
+			When: "When the group's command needs more than its one line, such as what most of its commands read.",
+		},
+		{
+			Kind: KindOption,
+			Name: `SubDoc("segment", "short")`,
+			Does: "Is the one line of help of the command that a Sub segment makes, such as trace in osapi client telemetry trace. Without it, the command says <Segment> commands.",
+			When: "For each Sub segment of the group, so its command says what it holds.",
+		},
+		{
+			Kind: KindOption,
 			Name: `CommandNotes("text")`,
 			Does: "Adds a Notes section to the page of the group's own command, such as a link to a page that tells more about the group.",
 			When: "When the group's command has a page of its own to point at, as each behavior's does.",

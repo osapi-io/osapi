@@ -126,6 +126,8 @@ func (s *LocalPublicTestSuite) TestDefine() {
 	s.Equal("zzdefine", g.GroupName())
 	s.Equal("Greetings", g.GroupDoc())
 	s.Empty(g.GroupNotes())
+	s.Empty(g.GroupLong())
+	s.Empty(g.SubDoc("roles"))
 	s.Equal([]string{"zzparent", "zzchild", "zzdefine"}, g.CommandPath())
 	s.Equal([]string{"zzparent", "zzchild"}, g.Parents, "CommandPath does not change Parents")
 	s.Equal(reflect.TypeFor[localDeps](), g.Deps)

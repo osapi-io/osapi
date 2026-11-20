@@ -163,8 +163,11 @@ The CLI:
    Each command is `<group> <resource> <verb>`, such as `telemetry trace get`:
    the verb is `list`, `get`, `create`, `update`, `delete`, or an action such
    as `retry`, never a noun. A verb that the group has as a method already
-   gets `.Use`, such as `facts keys list`. A command that `.Sub` makes has
-   a hand-written parent, so its help says what it holds.
+   gets `.Use`, such as `facts keys list`. The group's one line is the help
+   of its command, and `CommandLong` adds more. Give each `.Sub` segment a
+   `SubDoc("segment", "...")`, so its command says what it holds. The page of
+   each names the permission that covers its commands. Delete the hand-written
+   parent in `cmd/`.
 2. Tag the fields of each output type until the command prints as the
    hand-written command did. Delete the output code of the hand-written
    command. If no tag gives the shape, change the output type: the CLI, the UI

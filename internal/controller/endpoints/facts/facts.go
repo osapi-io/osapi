@@ -25,7 +25,8 @@ import "github.com/osapi-io/osapi/internal/controller/endpoint"
 
 // Group is the facts group's definition.
 var Group = endpoint.Register(endpoint.Define(
-	"facts", "The fact keys",
+	"facts", "Read the facts that an input can refer to",
+	endpoint.SubDoc("keys", "Read the keys of @fact references"),
 	endpoint.Title("Facts API"),
 	endpoint.Tag("facts", "Facts", "Fact key discovery for @fact. references."),
 	endpoint.Uses[Deps](),
