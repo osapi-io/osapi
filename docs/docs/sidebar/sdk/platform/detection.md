@@ -4,46 +4,40 @@ sidebar_position: 4
 
 # Detection
 
-The `platform` package detects the OS family of the running system. The agent
-uses it to select the correct provider implementation (Debian, Darwin, or
-generic Linux). SDK consumers can use it to make platform-aware decisions.
-
-## Usage
+The agent selects the provider of each operation from the OS family of its host.
+osapi does not detect the family itself. It uses
+[gohai](https://github.com/osapi-io/gohai), the library that osapi reads hosts
+through: `family.Detect()` in `github.com/osapi-io/gohai/pkg/gohai/family`.
 
 ```go
-import "github.com/osapi-io/osapi/pkg/sdk/platform"
+import "github.com/osapi-io/gohai/pkg/gohai/family"
 
-family := platform.Detect()
-// Returns: "debian", "darwin", or "" (unknown/unsupported)
+f := family.Detect()
+// "darwin" on macOS; "debian", "rhel", "fedora", "amazon", ... on Linux
 ```
 
-## OS Families
+## OS families
 
-OSAPI follows
-[Ansible's OS family naming](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#ansible-facts-distribution):
+gohai names the families as
+[Chef's Ohai](https://github.com/chef/ohai/blob/main/lib/ohai/plugins/linux/platform.rb)
+does. The platform is the `ID` of `/etc/os-release`, with a few IDs remapped
+(`rhel` → `redhat`, `amzn` → `amazon`). The family follows from the platform.
 
-| Family   | Distributions            | Provider Files |
-| -------- | ------------------------ | -------------- |
-| `debian` | Ubuntu, Debian, Raspbian | `debian_*.go`  |
-| `darwin` | macOS                    | `darwin_*.go`  |
+| Family   | Platforms                                                        |
+| -------- | ---------------------------------------------------------------- |
+| `debian` | ubuntu, debian, raspbian, linuxmint, cumulus, kali, pop          |
+| `rhel`   | redhat, centos, rocky, almalinux, oracle, scientific, and others |
+| `fedora` | fedora, and other RPM distributions that do not track RHEL       |
+| `amazon` | Amazon Linux                                                     |
+| `darwin` | macOS                                                            |
 
-Distributions within the same family share the same provider implementations.
-For example, Ubuntu 24.04 and Debian 12 both use the `debian_*.go` providers
-because they use the same system interfaces (`/proc`, `/sys`, `ip`).
+gohai also names `suse`, `arch`, `gentoo`, `alpine` and others. A Linux host
+whose platform has no family gets its platform name, such as `nixos`. On macOS,
+the family is `darwin`, not Ohai's `mac_os_x`.
 
-## How It Works
+## Provider selection
 
-`Detect()` calls `gopsutil/host.Info()` to get the platform name, then maps it
-to an OS family:
-
-- `"ubuntu"`, `"debian"`, `"raspbian"` → `"debian"`
-- `"darwin"` (or empty platform with `OS=darwin`) → `"darwin"`
-- Anything else → returned as-is (falls through to generic Linux providers)
-
-## Provider Selection
-
-The agent uses the family name to select providers, in
-`internal/agent/providers.go`:
+The agent selects providers with the family, in `internal/agent/providers.go`:
 
 ```go
 switch e.platform {
@@ -56,15 +50,22 @@ default:
 }
 ```
 
-A [behavior](../../behaviors/behaviors.mdx) names the family with
+A family with no case gets the Linux provider. A
+[behavior](../../behaviors/behaviors.mdx) names a family with
 `behavior.Platform`, and can limit one method to a family with `.On`.
+`behavior.PlatformDebian` and `behavior.PlatformDarwin` are gohai's values.
 
-## Adding a New OS Family
+## Containers
 
-1. Add the family to `supportedFamilies` in `internal/cli/validate.go`
-2. Add the distribution mapping to `debianFamily` (or create a new map) in
-   `pkg/sdk/platform/platform.go`
-3. Create provider files: `{family}_*.go` (for example `redhat_get_disk.go`). A
+`IsContainer()` in `github.com/osapi-io/osapi/pkg/sdk/platform` reports whether
+the agent runs in a container, from `/.dockerenv`. The agent leaves out what a
+container cannot do, such as setting the hostname.
+
+## Adding a new OS family
+
+1. If gohai does not name the family yet, add it to gohai first.
+2. Create provider files: `{family}_*.go`, for example `rhel_get_disk.go`. A
    provider can embed `Linux`, which has the reads that are the same on each
-   distribution, and add or override only what differs
-4. Add a `case` to each provider switch in `internal/agent/providers.go`
+   distribution, and add or override only what differs.
+3. Add a `case` to each provider switch in `internal/agent/providers.go`, or
+   `behavior.Platform(family.RHEL, ...)` to a behavior.

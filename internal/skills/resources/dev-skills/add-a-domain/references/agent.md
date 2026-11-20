@@ -82,8 +82,8 @@ r.Register("{domain}",
 ```
 
 Platform selection happens in `internal/agent/providers.go`, not in the
-provider. `Setup` reads `Detect` and `IsContainer` from `pkg/sdk/platform` one
-time, and gives them to `hostEnv`. Add one method for the domain:
+provider. `Setup` reads the family from gohai's `family.Detect` and
+`IsContainer` from `pkg/sdk/platform` one time, and gives them to `hostEnv`. Add one method for the domain:
 
 ```go
 func (e hostEnv) {domain}() {domain}.Provider {

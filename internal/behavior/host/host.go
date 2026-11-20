@@ -40,7 +40,7 @@ import (
 
 // Host is one agent's host, as a provider builder sees it.
 type Host struct {
-	// Platform is the agent's platform as platform.Detect names it, such as
+	// Platform is the agent's platform as gohai's family.Detect names it, such as
 	// debian or darwin.
 	Platform string
 	// Container is true when the agent runs in a container.

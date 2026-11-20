@@ -36,6 +36,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/avfs/avfs/vfs/memfs"
+	"github.com/osapi-io/gohai/pkg/gohai/family"
 	"github.com/osapi-io/osapi/internal/agent/identity"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/exec"
@@ -924,7 +925,7 @@ func SetPlatformFns(
 
 // ResetPlatformFns puts back the functions that tell the platform of the host.
 func ResetPlatformFns() {
-	detectFn = platform.Detect
+	detectFn = family.Detect
 	containerFn = platform.IsContainer
 }
 

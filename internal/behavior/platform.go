@@ -24,11 +24,13 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+
+	"github.com/osapi-io/gohai/pkg/gohai/family"
 )
 
 // PlatformProvider is how a behavior's provider is built on one platform.
 type PlatformProvider struct {
-	// Name is the platform, as platform.Detect names it.
+	// Name is the platform, as gohai's family.Detect names it.
 	Name string
 	// Type is the provider type the builder returns.
 	Type  reflect.Type
@@ -36,7 +38,7 @@ type PlatformProvider struct {
 }
 
 // Platform declares how the behavior's provider is built on one platform, as
-// platform.Detect names it: debian, darwin and so on, or PlatformLinux for
+// gohai's family.Detect names it: debian, darwin and so on, or PlatformLinux for
 // every Linux host without a provider of its own. build takes the
 // host.Host from internal/behavior/host, which is kept out of this package so the
 // SDK does not import what only the agent needs. The agent builds the provider
@@ -115,10 +117,10 @@ const (
 	// declares it once.
 	PlatformLinux = "linux"
 	// PlatformDarwin is macOS.
-	PlatformDarwin = "darwin"
-	// PlatformDebian is the Debian family: Debian, Ubuntu and Raspbian, as
-	// platform.Detect groups them.
-	PlatformDebian = "debian"
+	PlatformDarwin = family.Darwin
+	// PlatformDebian is the Debian family, as gohai names it: Debian,
+	// Ubuntu, Raspbian, Linux Mint and the others of Ohai's table.
+	PlatformDebian = family.Debian
 )
 
 // Provider builds b's provider for platform with h, the host.Host the agent
