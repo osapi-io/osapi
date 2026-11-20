@@ -58,25 +58,41 @@ func (suite *TelemetryPublicTestSuite) TestTrace() {
 	}{
 		{
 			name: "returns the spans",
-			handler: reply(http.StatusOK, `{"trace_id":"`+id+`","spans":[
-				{"span_id":"a","name":"GET /api/x","service":"osapi-controller","kind":"server",
+			handler: reply(http.StatusOK, `{"trace_id":"`+id+`",
+				"started":"2026-11-15T12:00:00Z","duration":"8.5ms","services":["osapi-controller","osapi-agent"],
+				"failed_spans":1,"nats_calls":3,"nats_time":"1.2ms","spans":[
+				{"name":"GET /api/x","on":"controller","duration":"8.5ms","status":"ok","detail":"status=200",
+				 "span":{"span_id":"a","name":"GET /api/x","service":"osapi-controller","kind":"server",
 				 "start_time":"2026-11-15T12:00:00Z","duration_ms":8.5,"status":"ok","attributes":{}},
-				{"span_id":"b","parent_span_id":"a","name":"job.process","service":"osapi-agent",
+				 "children":[{"name":"job.process","on":"agent","duration":"1ms","status":"failed",
+				 "span":{"span_id":"b","parent_span_id":"a","name":"job.process","service":"osapi-agent",
 				 "start_time":"2026-11-15T12:00:00Z","duration_ms":1,"status":"error",
-				 "status_message":"boom","attributes":{"job.status":"failed"}}]}`),
+				 "status_message":"boom","attributes":{"job.status":"failed"}}}]}]}`),
 			validate: func(resp *client.Response[client.Trace], err error) {
 				suite.Require().NoError(err)
 				t := resp.Data
 				suite.Equal(id, t.ID)
-				suite.Require().Len(t.Spans, 2)
-				suite.Equal("server", t.Spans[0].Kind)
-				suite.Empty(t.Spans[0].ParentID)
-				suite.Equal(8500*time.Microsecond, t.Spans[0].Duration)
-				suite.False(t.Spans[0].Failed)
-				suite.Equal("a", t.Spans[1].ParentID)
-				suite.True(t.Spans[1].Failed)
-				suite.Equal("boom", t.Spans[1].StatusMessage)
-				suite.Equal("failed", t.Spans[1].Attributes["job.status"])
+				suite.Equal(8500*time.Microsecond, t.Duration)
+				suite.Equal([]string{"osapi-controller", "osapi-agent"}, t.Services)
+				suite.Equal(1, t.FailedSpans)
+				suite.Equal(3, t.NATSCalls)
+				suite.Equal(1200*time.Microsecond, t.NATSTime)
+				suite.False(t.Started.IsZero())
+				suite.Require().Len(t.Spans, 1)
+				root := t.Spans[0]
+				suite.Equal("controller", root.On)
+				suite.Equal("status=200", root.Detail)
+				suite.Equal("server", root.Span.Kind)
+				suite.Empty(root.Span.ParentID)
+				suite.Equal(8500*time.Microsecond, root.Span.Duration)
+				suite.False(root.Span.Failed)
+				suite.Require().Len(root.Children, 1)
+				job := root.Children[0]
+				suite.Equal("failed", job.Status)
+				suite.Equal("a", job.Span.ParentID)
+				suite.True(job.Span.Failed)
+				suite.Equal("boom", job.Span.StatusMessage)
+				suite.Equal("failed", job.Span.Attributes["job.status"])
 				suite.NotEmpty(resp.RawJSON())
 			},
 		},
@@ -129,7 +145,7 @@ func (suite *TelemetryPublicTestSuite) TestTrace() {
 			}
 
 			sut := client.New(url, "test-token", client.WithLogger(slog.Default()))
-			tc.validate(sut.Telemetry.Trace(context.Background(), id))
+			tc.validate(sut.Telemetry.Trace(context.Background(), id, false))
 		})
 	}
 }

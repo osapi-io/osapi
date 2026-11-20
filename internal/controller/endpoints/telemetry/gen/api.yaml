@@ -3,13 +3,65 @@ components:
   schemas:
     ErrorResponse:
       $ref: ../../../api/components/gen/api.yaml#/components/schemas/ErrorResponse
+    TraceNode:
+      properties:
+        children:
+          description: The spans under this one, in start order.
+          items:
+            $ref: '#/components/schemas/TraceNode'
+          type: array
+        detail:
+          description: What the span acted on, as key=value pairs, led by error= on a failed span.
+          type: string
+        duration:
+          description: How long the span took, as a Go duration.
+          type: string
+        name:
+          description: The name of the span, such as job.process.
+          type: string
+        "on":
+          description: 'What ran the span: the role of its service, such as controller, agent or cli.'
+          type: string
+        span:
+          $ref: '#/components/schemas/TraceSpan'
+        status:
+          description: The job's status on a job.process, changed or unchanged on a behavior write, and ok or error on other spans.
+          type: string
+      required:
+        - name
+        - "on"
+        - duration
+        - status
+        - span
+      type: object
     TraceResponse:
       properties:
-        spans:
-          description: Each span of the trace, ordered by start time.
+        duration:
+          description: From the start of the first span to the end of the last, as a Go duration.
+          type: string
+        failed_spans:
+          description: The number of spans that failed.
+          type: integer
+        nats_calls:
+          description: The number of NATS calls left out, the bookkeeping of the job queue. all shows them.
+          type: integer
+        nats_time:
+          description: The time that the NATS calls left out took, as a Go duration.
+          type: string
+        services:
+          description: The services that made the spans, in the order each first appears.
           items:
-            $ref: '#/components/schemas/TraceSpan'
+            type: string
           type: array
+        spans:
+          description: The spans that have no parent in the trace, each with its children, in start order.
+          items:
+            $ref: '#/components/schemas/TraceNode'
+          type: array
+        started:
+          description: When the first span started.
+          format: date-time
+          type: string
         trace_id:
           description: The trace ID.
           type: string
@@ -91,6 +143,13 @@ paths:
             type: string
           x-oapi-codegen-extra-tags:
             validate: required
+        - description: Show the NATS calls too, the reads and writes of the job queue
+          in: query
+          name: all
+          schema:
+            type: boolean
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
       responses:
         "200":
           content:

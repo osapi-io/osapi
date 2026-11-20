@@ -221,9 +221,8 @@ func (s *EndpointPublicTestSuite) TestCommandHelp() {
 	s.Equal("Fails twice.", paged.PageResult())
 }
 
-func (s *EndpointPublicTestSuite) TestFlagAndInternal() {
-	m := endpoint.Get[noInput, Node]("get").Sub("trace").Flag("all", "Show everything")
-	s.Equal([]endpoint.Flag{{Name: "all", Usage: "Show everything"}}, m.CommandFlags())
+func (s *EndpointPublicTestSuite) TestInternal() {
+	m := endpoint.Get[noInput, Node]("get").Sub("trace")
 	s.Empty(m.Saying())
 	s.Equal("draining", endpoint.Post[noInput, struct{}]("drain").Says("draining").Saying())
 	s.Equal(reflect.TypeFor[Node](), m.Output())

@@ -141,7 +141,6 @@ func (s *LocalPublicTestSuite) TestDefine() {
 	s.Equal("Greet someone", m.CommandShort())
 	s.Equal("It greets.", m.CommandLong())
 	s.Equal([]command.Example{{Flags: "--name ann", Doc: "Greet Ann"}}, m.Examples())
-	s.Nil(m.CommandFlags())
 	s.Empty(m.PageNotes())
 	s.Empty(m.PageResult())
 	s.Equal([]command.Refusal{{Doc: "no name", Input: greetIn{}}}, m.Refusals())

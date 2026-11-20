@@ -4537,10 +4537,50 @@ type TimezoneUpdateResponse struct {
 	Results []TimezoneMutationResult `json:"results"`
 }
 
+// TraceNode defines model for TraceNode.
+type TraceNode struct {
+	// Children The spans under this one, in start order.
+	Children *[]TraceNode `json:"children,omitempty"`
+
+	// Detail What the span acted on, as key=value pairs, led by error= on a failed span.
+	Detail *string `json:"detail,omitempty"`
+
+	// Duration How long the span took, as a Go duration.
+	Duration string `json:"duration"`
+
+	// Name The name of the span, such as job.process.
+	Name string `json:"name"`
+
+	// On What ran the span: the role of its service, such as controller, agent or cli.
+	On   string    `json:"on"`
+	Span TraceSpan `json:"span"`
+
+	// Status The job's status on a job.process, changed or unchanged on a behavior write, and ok or error on other spans.
+	Status string `json:"status"`
+}
+
 // TraceResponse defines model for TraceResponse.
 type TraceResponse struct {
-	// Spans Each span of the trace, ordered by start time.
-	Spans []TraceSpan `json:"spans"`
+	// Duration From the start of the first span to the end of the last, as a Go duration.
+	Duration *string `json:"duration,omitempty"`
+
+	// FailedSpans The number of spans that failed.
+	FailedSpans *int `json:"failed_spans,omitempty"`
+
+	// NatsCalls The number of NATS calls left out, the bookkeeping of the job queue. all shows them.
+	NatsCalls *int `json:"nats_calls,omitempty"`
+
+	// NatsTime The time that the NATS calls left out took, as a Go duration.
+	NatsTime *string `json:"nats_time,omitempty"`
+
+	// Services The services that made the spans, in the order each first appears.
+	Services *[]string `json:"services,omitempty"`
+
+	// Spans The spans that have no parent in the trace, each with its children, in start order.
+	Spans []TraceNode `json:"spans"`
+
+	// Started When the first span started.
+	Started *time.Time `json:"started,omitempty"`
 
 	// TraceId The trace ID.
 	TraceId string `json:"trace_id"`
@@ -4934,6 +4974,12 @@ type GetNodeLogUnitParams struct {
 type PostNodeNetworkPingJSONBody struct {
 	// Address The IP address of the server to ping. Supports both IPv4 and IPv6. Also accepts @fact. references that are resolved agent-side.
 	Address string `json:"address" validate:"required,ip_or_fact"`
+}
+
+// GetTraceParams defines parameters for GetTrace.
+type GetTraceParams struct {
+	// All Show the NATS calls too, the reads and writes of the job queue
+	All *bool `form:"all,omitempty" json:"all,omitempty" validate:"omitempty"`
 }
 
 // AdmitMachineJSONRequestBody defines body for AdmitMachine for application/json ContentType.
@@ -5588,7 +5634,7 @@ type ClientInterface interface {
 	DeleteNodeUserSSHKey(ctx context.Context, hostname Hostname, name UserName, fingerprint SSHKeyFingerprint, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetTrace request
-	GetTrace(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetTrace(ctx context.Context, id string, params *GetTraceParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) GetAdmissions(ctx context.Context, params *GetAdmissionsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -7559,8 +7605,8 @@ func (c *Client) DeleteNodeUserSSHKey(ctx context.Context, hostname Hostname, na
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetTrace(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetTraceRequest(c.Server, id)
+func (c *Client) GetTrace(ctx context.Context, id string, params *GetTraceParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTraceRequest(c.Server, id, params)
 	if err != nil {
 		return nil, err
 	}
@@ -12871,7 +12917,7 @@ func NewDeleteNodeUserSSHKeyRequest(server string, hostname Hostname, name UserN
 }
 
 // NewGetTraceRequest generates requests for GetTrace
-func NewGetTraceRequest(server string, id string) (*http.Request, error) {
+func NewGetTraceRequest(server string, id string, params *GetTraceParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -12894,6 +12940,33 @@ func NewGetTraceRequest(server string, id string) (*http.Request, error) {
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.All != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "all", *params.All, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
 	}
 
 	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
@@ -13400,7 +13473,7 @@ type ClientWithResponsesInterface interface {
 	DeleteNodeUserSSHKeyWithResponse(ctx context.Context, hostname Hostname, name UserName, fingerprint SSHKeyFingerprint, reqEditors ...RequestEditorFn) (*DeleteNodeUserSSHKeyResponse, error)
 
 	// GetTraceWithResponse request
-	GetTraceWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetTraceResponse, error)
+	GetTraceWithResponse(ctx context.Context, id string, params *GetTraceParams, reqEditors ...RequestEditorFn) (*GetTraceResponse, error)
 }
 
 type GetAdmissionsResponse struct {
@@ -19142,8 +19215,8 @@ func (c *ClientWithResponses) DeleteNodeUserSSHKeyWithResponse(ctx context.Conte
 }
 
 // GetTraceWithResponse request returning *GetTraceResponse
-func (c *ClientWithResponses) GetTraceWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetTraceResponse, error) {
-	rsp, err := c.GetTrace(ctx, id, reqEditors...)
+func (c *ClientWithResponses) GetTraceWithResponse(ctx context.Context, id string, params *GetTraceParams, reqEditors ...RequestEditorFn) (*GetTraceResponse, error) {
+	rsp, err := c.GetTrace(ctx, id, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}

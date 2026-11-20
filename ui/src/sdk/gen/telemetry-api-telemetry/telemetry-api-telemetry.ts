@@ -6,6 +6,7 @@
  */
 import type {
   ErrorResponse,
+  GetTraceParams,
   TraceResponse
 } from '../schemas';
 
@@ -55,21 +56,30 @@ export type getTraceResponseError = (getTraceResponse400 | getTraceResponse401 |
 
 export type getTraceResponse = (getTraceResponseSuccess | getTraceResponseError)
 
-export const getGetTraceUrl = (id: string,) => {
+export const getGetTraceUrl = (id: string,
+    params?: GetTraceParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/telemetry/trace/${id}`
+  return stringifiedParams.length > 0 ? `/api/telemetry/trace/${id}?${stringifiedParams}` : `/api/telemetry/trace/${id}`
 }
 
 /**
  * Returns each span of a trace, read from the tracing backend at telemetry.tracing.url. The backend gets the spans a few seconds after the request, so a trace of a request that just ran can be not found yet.
  * @summary Get the spans of a trace
  */
-export const getTrace = async (id: string, options?: Parameters<typeof apiFetch>[1]): Promise<getTraceResponse> => {
+export const getTrace = async (id: string,
+    params?: GetTraceParams, options?: Parameters<typeof apiFetch>[1]): Promise<getTraceResponse> => {
 
-  return apiFetch<getTraceResponse>(getGetTraceUrl(id),
+  return apiFetch<getTraceResponse>(getGetTraceUrl(id,params),
   {
     ...options,
     method: 'GET'

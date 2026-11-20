@@ -26,12 +26,43 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
-// Trace is the spans of one trace, ordered by start time.
+// Trace is one trace: its summary, then its spans as a tree.
 type Trace struct {
 	// ID is the trace ID.
 	ID string `json:"trace_id"`
-	// Spans are its spans, ordered by start time.
-	Spans []TraceSpan `json:"spans"`
+	// Started is when the first span started, and Duration the time from
+	// it to the end of the last span.
+	Started  time.Time     `json:"started"`
+	Duration time.Duration `json:"duration"`
+	// Services are the services that made the spans, in the order each
+	// first appears.
+	Services []string `json:"services,omitempty"`
+	// FailedSpans is the number of spans that failed.
+	FailedSpans int `json:"failed_spans,omitempty"`
+	// NATSCalls is the number of NATS calls left out, and NATSTime the time
+	// they took. Asking for all of the trace leaves none out.
+	NATSCalls int           `json:"nats_calls,omitempty"`
+	NATSTime  time.Duration `json:"nats_time,omitempty"`
+	// Spans are the spans with no parent in the trace, each with its
+	// children, in start order.
+	Spans []TraceNode `json:"spans"`
+}
+
+// TraceNode is one span of the tree of a trace.
+type TraceNode struct {
+	// Name is the name of the span, such as job.process, and On what ran
+	// it: controller, agent or cli.
+	Name string `json:"name"`
+	On   string `json:"on"`
+	// Status is the job's status on a job.process, changed or unchanged on
+	// a behavior write, and ok or error on other spans.
+	Status string `json:"status"`
+	// Detail is what the span acted on, as key=value pairs.
+	Detail string `json:"detail,omitempty"`
+	// Span is the span as the backend has it.
+	Span TraceSpan `json:"span"`
+	// Children are the spans under this one, in start order.
+	Children []TraceNode `json:"children,omitempty"`
 }
 
 // TraceSpan is one span of a trace.
@@ -60,21 +91,52 @@ type TraceSpan struct {
 func traceFromGen(
 	g *gen.TraceResponse,
 ) Trace {
-	t := Trace{ID: g.TraceId, Spans: make([]TraceSpan, 0, len(g.Spans))}
-	for _, s := range g.Spans {
-		t.Spans = append(t.Spans, TraceSpan{
-			ID:            s.SpanId,
-			ParentID:      derefString(s.ParentSpanId),
-			Name:          s.Name,
-			Service:       s.Service,
-			Kind:          derefString(s.Kind),
-			Start:         s.StartTime,
-			Duration:      time.Duration(s.DurationMs * float64(time.Millisecond)),
-			Failed:        s.Status == gen.TraceSpanStatusError,
-			StatusMessage: derefString(s.StatusMessage),
-			Attributes:    s.Attributes,
-		})
+	t := Trace{
+		ID:          g.TraceId,
+		Services:    derefStringSlice(g.Services),
+		FailedSpans: derefInt(g.FailedSpans),
+		NATSCalls:   derefInt(g.NatsCalls),
+		Spans:       nodesFromGen(g.Spans),
 	}
+	if g.Started != nil {
+		t.Started = *g.Started
+	}
+	t.Duration, _ = time.ParseDuration(derefString(g.Duration))
+	t.NATSTime, _ = time.ParseDuration(derefString(g.NatsTime))
 
 	return t
+}
+
+// nodesFromGen converts the generated span tree, with the children of each.
+func nodesFromGen(
+	in []gen.TraceNode,
+) []TraceNode {
+	out := make([]TraceNode, 0, len(in))
+	for _, n := range in {
+		s := n.Span
+		node := TraceNode{
+			Name:   n.Name,
+			On:     n.On,
+			Status: n.Status,
+			Detail: derefString(n.Detail),
+			Span: TraceSpan{
+				ID:            s.SpanId,
+				ParentID:      derefString(s.ParentSpanId),
+				Name:          s.Name,
+				Service:       s.Service,
+				Kind:          derefString(s.Kind),
+				Start:         s.StartTime,
+				Duration:      time.Duration(s.DurationMs * float64(time.Millisecond)),
+				Failed:        s.Status == gen.TraceSpanStatusError,
+				StatusMessage: derefString(s.StatusMessage),
+				Attributes:    s.Attributes,
+			},
+		}
+		if n.Children != nil {
+			node.Children = nodesFromGen(*n.Children)
+		}
+		out = append(out, node)
+	}
+
+	return out
 }

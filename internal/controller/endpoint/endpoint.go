@@ -354,7 +354,6 @@ type Method struct {
 	prefix           []string
 	refusals         []Refusal
 	notes, result    string
-	flags            []Flag
 	status           int
 	says             string
 	errors           []Error
@@ -608,26 +607,6 @@ func (m *Method) Result(
 	m.result = text
 
 	return m
-}
-
-// Flag is a flag of the CLI command that is not part of the request: it
-// changes only how the answer prints, such as --all. The renderer reads it.
-type Flag = command.Flag
-
-// Flag adds a bool flag to the CLI command that the request does not send,
-// for the renderer: such as --all, to show what it leaves out.
-func (m *Method) Flag(
-	name string,
-	usage string,
-) *Method {
-	m.flags = append(m.flags, Flag{Name: name, Usage: usage})
-
-	return m
-}
-
-// CommandFlags are the flags Flag added.
-func (m *Method) CommandFlags() []Flag {
-	return m.flags
 }
 
 // Use names the CLI command apart from the method, whose name is the key of

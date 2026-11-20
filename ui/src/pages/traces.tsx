@@ -14,13 +14,43 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { getTrace } from "@/sdk/gen/telemetry-api-telemetry/telemetry-api-telemetry";
-import type { TraceResponse } from "@/sdk/gen/schemas";
-import { traceRows, natsCalls, type TraceRow } from "@/lib/trace-tree";
+import type { TraceNode, TraceResponse } from "@/sdk/gen/schemas";
 import { statusVariant } from "@/lib/status";
 import { PermissionDenied } from "@/components/layout/permission-denied";
 import { Spinner } from "@/components/ui/spinner";
 import { KVList } from "@/components/ui/kv-list";
 import { formatDurationMs, formatTime } from "@/lib/format";
+
+// TraceRow is one span of the tree the API answers, with the tree lines
+// before its name and the place of its bar in the timing column.
+interface TraceRow {
+  node: TraceNode;
+  // lines are the tree lines before the name, such as "│  └─ ".
+  lines: string;
+  // offset and width place the span's bar, as fractions of the trace.
+  offset: number;
+  width: number;
+}
+
+const startOf = (n: TraceNode) => new Date(n.span.start_time).getTime();
+
+// flatten is the rows of the span tree, each child under its parent, in
+// the order the API gives them.
+function flatten(
+  nodes: TraceNode[],
+  lead = "",
+  root = true,
+): [TraceNode, string][] {
+  return nodes.flatMap((n, i): [TraceNode, string][] => {
+    const last = i === nodes.length - 1;
+    const mark = root ? "" : last ? "└─ " : "├─ ";
+    const under = root ? "" : last ? "   " : "│  ";
+    return [
+      [n, lead + mark],
+      ...flatten(n.children ?? [], lead + under, false),
+    ];
+  });
+}
 
 export function Traces() {
   const { can } = useAuth();
@@ -39,7 +69,7 @@ export function Traces() {
   useEffect(() => {
     if (!id) return;
     let mounted = true;
-    getTrace(id)
+    getTrace(id, { all: showNATS })
       .then((r) => {
         if (!mounted) return;
         if (r.status === 200) {
@@ -59,7 +89,7 @@ export function Traces() {
     return () => {
       mounted = false;
     };
-  }, [id]);
+  }, [id, showNATS]);
 
   const current = id && result?.id === id ? result : null;
   const loading = !!id && !current;
@@ -70,22 +100,22 @@ export function Traces() {
     return <PermissionDenied title="Traces" what="traces" />;
   }
 
-  const rows = trace ? traceRows(trace.spans, showNATS) : [];
-  const nats = trace ? natsCalls(trace.spans) : { count: 0, ms: 0 };
-  const failed = trace?.spans.filter((s) => s.status === "error").length ?? 0;
-  const services = [...new Set(trace?.spans.map((s) => s.service) ?? [])];
-  // The trace's start and its whole duration, as osapi client telemetry
-  // trace get prints them: from the first span's start to the last end.
-  const starts =
-    trace?.spans.map((s) => new Date(s.start_time).getTime()) ?? [];
-  const start = starts.length ? Math.min(...starts) : 0;
-  const end = trace?.spans.length
-    ? Math.max(
-        ...trace.spans.map(
-          (s) => new Date(s.start_time).getTime() + s.duration_ms,
-        ),
-      )
-    : 0;
+  // The API answers the tree and the summary; the page only lays out the
+  // rows and the bar of each span against the whole trace.
+  const flat = trace ? flatten(trace.spans) : [];
+  const start = trace?.started ? new Date(trace.started).getTime() : 0;
+  const end = Math.max(
+    start,
+    ...flat.map(([n]) => startOf(n) + n.span.duration_ms),
+  );
+  const total = Math.max(end - start, 1);
+  const rows: TraceRow[] = flat.map(([n, lines]) => ({
+    node: n,
+    lines,
+    offset: (startOf(n) - start) / total,
+    width: Math.max(n.span.duration_ms / total, 0.005),
+  }));
+  const natsCount = trace?.nats_calls ?? 0;
 
   return (
     <ContentArea>
@@ -135,8 +165,8 @@ export function Traces() {
                   ["ID", <span className="font-mono">{id}</span>],
                   ["Started", formatTime(new Date(start).toISOString())],
                   ["Duration", formatDurationMs(end - start)],
-                  ["Services", services.join(", ")],
-                  ["Failed spans", failed > 0 && failed],
+                  ["Services", (trace.services ?? []).join(", ")],
+                  ["Failed spans", trace.failed_spans],
                 ]}
               />
             </CardContent>
@@ -148,12 +178,16 @@ export function Traces() {
         <div className="mb-4">
           <div className="flex items-center justify-between">
             <SectionLabel icon={GitBranch}>Spans ({rows.length})</SectionLabel>
-            {nats.count > 0 && (
+            {(natsCount > 0 || showNATS) && (
               <Checkbox
                 id="show-nats"
                 checked={showNATS}
                 onChange={(e) => setShowNATS(e.target.checked)}
-                label={`Show ${nats.count} NATS calls (${formatDurationMs(nats.ms)}), the bookkeeping of the job queue`}
+                label={
+                  showNATS
+                    ? "Show the NATS calls, the bookkeeping of the job queue"
+                    : `Show ${natsCount} NATS calls (${trace.nats_time}), the bookkeeping of the job queue`
+                }
               />
             )}
           </div>
@@ -164,20 +198,20 @@ export function Traces() {
                 cell: (r: TraceRow) => (
                   <span className="whitespace-pre font-mono">
                     <span className="text-text-muted">{r.lines}</span>
-                    <span className="text-text">{r.span.name}</span>
+                    <span className="text-text">{r.node.name}</span>
                   </span>
                 ),
               },
               {
                 header: "On",
-                cell: (r: TraceRow) => <Text variant="mono">{r.on}</Text>,
+                cell: (r: TraceRow) => <Text variant="mono">{r.node.on}</Text>,
               },
               {
                 header: "Duration",
                 align: "right",
                 cell: (r: TraceRow) => (
                   <Text variant="muted">
-                    {formatDurationMs(r.span.duration_ms)}
+                    {formatDurationMs(r.node.span.duration_ms)}
                   </Text>
                 ),
               },
@@ -188,7 +222,7 @@ export function Traces() {
                   <div className="relative h-2 w-48 rounded bg-white/5">
                     <div
                       className={
-                        r.span.status === "error"
+                        r.node.span.status === "error"
                           ? "absolute h-2 rounded bg-status-error"
                           : "absolute h-2 rounded bg-primary"
                       }
@@ -204,20 +238,22 @@ export function Traces() {
                 header: "Status",
                 align: "center",
                 cell: (r: TraceRow) => (
-                  <Badge variant={statusVariant(r.status)}>{r.status}</Badge>
+                  <Badge variant={statusVariant(r.node.status)}>
+                    {r.node.status}
+                  </Badge>
                 ),
               },
               {
                 header: "Detail",
                 cell: (r: TraceRow) => (
                   <Text variant="mono-muted" truncate className="max-w-md">
-                    {r.detail}
+                    {r.node.detail}
                   </Text>
                 ),
               },
             ]}
             rows={rows}
-            getRowKey={(r) => r.span.span_id}
+            getRowKey={(r) => r.node.span.span_id}
           />
         </div>
       )}

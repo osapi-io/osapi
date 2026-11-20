@@ -368,11 +368,6 @@ func (m *LocalMethod) Examples() []Example {
 	return m.examples
 }
 
-// CommandFlags is nil: each flag of a local command is a field of its input.
-func (m *LocalMethod) CommandFlags() []Flag {
-	return nil
-}
-
 // PageNotes is "": a local command's page has no Notes section.
 func (m *LocalMethod) PageNotes() string {
 	return ""

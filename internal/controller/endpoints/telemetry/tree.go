@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -17,18 +17,147 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-
-package cli
+// Package telemetry is the endpoint group for what the controller reads
+// from the telemetry backends, such as the spans of a trace.
+package telemetry
 
 import (
-	"slices"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
+
+// tree is the answer of a trace from its spans: each span under its
+// parent, in start order, with what ran it, its status and what it acted
+// on, and the summary of the trace. Without all, it leaves out the spans of
+// NATS calls, the bookkeeping of the queue, and counts them: a span under
+// one moves up to the span above it. A span whose parent is not in the
+// trace, such as one under the span of a CLI that sent none, is a root.
+func tree(
+	id string,
+	spans []TraceSpan,
+	all bool,
+) TraceResponse {
+	out := TraceResponse{TraceID: id, Spans: []TraceNode{}}
+	if len(spans) == 0 {
+		return out
+	}
+
+	byID := make(map[string]TraceSpan, len(spans))
+	start, end := spans[0].StartTime, spans[0].StartTime
+	var hidden time.Duration
+	for _, s := range spans {
+		byID[s.SpanID] = s
+		if s.StartTime.Before(start) {
+			start = s.StartTime
+		}
+		if e := s.StartTime.Add(duration(s)); e.After(end) {
+			end = e
+		}
+		if s.Status == "error" {
+			out.FailedSpans++
+		}
+		if s.Service != "" && !contains(out.Services, s.Service) {
+			out.Services = append(out.Services, s.Service)
+		}
+		if isNATSSpan(s.Name) {
+			out.NATSCalls++
+			hidden += duration(s)
+		}
+	}
+	out.Started = start
+	out.Duration = end.Sub(start).String()
+	if all {
+		out.NATSCalls, hidden = 0, 0
+	}
+	if out.NATSCalls > 0 {
+		out.NATSTime = hidden.Round(time.Microsecond).String()
+	}
+
+	// parentOf is the nearest ancestor that is shown.
+	parentOf := func(s TraceSpan) string {
+		p := s.ParentSpanID
+		for {
+			ps, ok := byID[p]
+			if !ok {
+				return ""
+			}
+			if all || !isNATSSpan(ps.Name) {
+				return p
+			}
+			p = ps.ParentSpanID
+		}
+	}
+	children := map[string][]TraceSpan{}
+	var roots []TraceSpan
+	for _, s := range spans {
+		if !all && isNATSSpan(s.Name) {
+			continue
+		}
+		if p := parentOf(s); p != "" {
+			children[p] = append(children[p], s)
+
+			continue
+		}
+		roots = append(roots, s)
+	}
+
+	var node func(s TraceSpan) TraceNode
+	node = func(s TraceSpan) TraceNode {
+		n := TraceNode{
+			Name:     s.Name,
+			On:       spanOn(s),
+			Duration: duration(s).Round(time.Microsecond).String(),
+			Status:   spanStatus(s),
+			Detail:   spanDetail(s),
+			Span:     s,
+		}
+		kids := children[s.SpanID]
+		byStart(kids)
+		for _, k := range kids {
+			n.Children = append(n.Children, node(k))
+		}
+
+		return n
+	}
+	byStart(roots)
+	for _, r := range roots {
+		out.Spans = append(out.Spans, node(r))
+	}
+
+	return out
+}
+
+// duration is how long a span took.
+func duration(
+	s TraceSpan,
+) time.Duration {
+	return time.Duration(s.DurationMs * float64(time.Millisecond))
+}
+
+// byStart sorts spans by their start, the first first.
+func byStart(
+	list []TraceSpan,
+) {
+	sort.SliceStable(list, func(a, b int) bool {
+		return list[a].StartTime.Before(list[b].StartTime)
+	})
+}
+
+// contains reports whether list has s.
+func contains(
+	list []string,
+	s string,
+) bool {
+	for _, v := range list {
+		if v == s {
+			return true
+		}
+	}
+
+	return false
+}
 
 // traceDetail are the attributes a span's DETAIL cell shows, the first one it
 // has: what the span acted on. A KV key is shown by what it means.
@@ -68,105 +197,15 @@ var opCounts = []struct{ attr, key string }{
 	{"osapi.trace.spans", "spans"},
 }
 
-// TraceRows returns the rows of a trace's span tree, each with its SPAN,
-// ON, DURATION, STATUS and DETAIL. Without all, it leaves out the
-// spans of NATS calls, the bookkeeping of the queue, and NATSCalls counts
-// them. A child is under its parent, in
-// start order, behind tree lines. A span whose parent is not in the trace,
-// such as one under the span of a CLI that sent none, is a root.
-//
-// ON is what ran the span, the role of its service: controller, agent or
-// cli. STATUS is the job's status on a job.process, changed or unchanged on
-// a behavior write, and ok or error on other spans. DETAIL is what the span
-// acted on as key=value pairs, led by error= on a failed span: host= on a
-// job.process, a behavior's recorded inputs, a key, a file or a subject.
-func TraceRows(
-	spans []client.TraceSpan,
-	all bool,
-) [][]string {
-	byID := make(map[string]client.TraceSpan, len(spans))
-	for _, s := range spans {
-		byID[s.ID] = s
-	}
-	// parentOf is the nearest ancestor that is shown: a span under a hidden
-	// NATS span, such as job.process under nats.process, moves up to the
-	// span above it.
-	parentOf := func(s client.TraceSpan) string {
-		p := s.ParentID
-		for {
-			ps, ok := byID[p]
-			if !ok || all || !IsNATSSpan(ps.Name) {
-				if ok {
-					return p
-				}
-
-				return ""
-			}
-			p = ps.ParentID
-		}
-	}
-	children := map[string][]client.TraceSpan{}
-	var roots []client.TraceSpan
-	for _, s := range spans {
-		if !all && IsNATSSpan(s.Name) {
-			continue
-		}
-		p := parentOf(s)
-		if p == "" {
-			roots = append(roots, s)
-			continue
-		}
-		children[p] = append(children[p], s)
-	}
-	byStart := func(list []client.TraceSpan) {
-		sort.SliceStable(list, func(a, b int) bool { return list[a].Start.Before(list[b].Start) })
-	}
-	byStart(roots)
-
-	var rows [][]string
-	var walk func(s client.TraceSpan, lead, branch string)
-	walk = func(s client.TraceSpan, lead, branch string) {
-		rows = append(rows, []string{
-			lead + branch + s.Name,
-			spanOn(s),
-			FormatDuration(s.Duration.Round(time.Microsecond).String()),
-			spanStatus(s),
-			spanDetail(s),
-		})
-
-		kids := children[s.ID]
-		byStart(kids)
-		next := lead
-		switch branch {
-		case "├─ ":
-			next += "│  "
-		case "└─ ":
-			next += "   "
-		}
-		for i, k := range kids {
-			b := "├─ "
-			if i == len(kids)-1 {
-				b = "└─ "
-			}
-			walk(k, next, b)
-		}
-	}
-	for _, r := range roots {
-		walk(r, "", "")
-	}
-
-	return rows
-}
-
 // spanStatus is the job's status on a job.process, and ok or error on other
 // spans.
 func spanStatus(
-	s client.TraceSpan,
+	s TraceSpan,
 ) string {
 	if st := s.Attributes["job.status"]; s.Name == "job.process" && st != "" {
 		return st
 	}
-	if s.Failed {
+	if s.Status == "error" {
 		return "error"
 	}
 	// A behavior write says whether it changed the host.
@@ -185,7 +224,7 @@ func spanStatus(
 // on is host= in its job.process's DETAIL, not here, so each column says one
 // kind of thing.
 func spanOn(
-	s client.TraceSpan,
+	s TraceSpan,
 ) string {
 	return strings.TrimPrefix(s.Service, "osapi-")
 }
@@ -194,10 +233,10 @@ func spanOn(
 // says what it is: target=_all, agents=3, host=debian-1. A failed span
 // leads with error=. A value with a space is quoted, as in logfmt.
 func spanDetail(
-	s client.TraceSpan,
+	s TraceSpan,
 ) string {
 	var pairs [][2]string
-	if s.Failed && s.StatusMessage != "" {
+	if s.Status == "error" && s.StatusMessage != "" {
 		pairs = append(pairs, [2]string{"error", s.StatusMessage})
 	}
 	pairs = append(pairs, actedOn(s)...)
@@ -213,7 +252,7 @@ func spanDetail(
 // actedOn is what a span acted on, as key and value, by the first rule that
 // fits it.
 func actedOn(
-	s client.TraceSpan,
+	s TraceSpan,
 ) [][2]string {
 	a := s.Attributes
 	if inputs := behaviorInputs(a); len(inputs) > 0 {
@@ -243,7 +282,7 @@ func actedOn(
 	// The request span has the size too, from otelecho; it shows its status.
 	if size, err := strconv.Atoi(a["http.response.body.size"]); err == nil &&
 		s.Name == "response.write" {
-		return [][2]string{{"size", FormatBytes(size)}}
+		return [][2]string{{"size", strconv.Itoa(size)}}
 	}
 	// A job's subject names a host by its machine ID; the operation and the
 	// target that the caller gave say the same thing in words.
@@ -337,9 +376,9 @@ func keyMeaning(
 	}
 }
 
-// IsNATSSpan reports whether name is the span of a NATS call, which
+// isNATSSpan reports whether name is the span of a NATS call, which
 // nats-client makes: kv.*, objectstore.*, stream.* and nats.*.
-func IsNATSSpan(
+func isNATSSpan(
 	name string,
 ) bool {
 	for _, p := range []string{"kv.", "objectstore.", "stream.", "nats."} {
@@ -349,35 +388,4 @@ func IsNATSSpan(
 	}
 
 	return false
-}
-
-// NATSCalls counts the spans of NATS calls, and the time they took.
-func NATSCalls(
-	spans []client.TraceSpan,
-) (int, time.Duration) {
-	var n int
-	var d time.Duration
-	for _, s := range spans {
-		if IsNATSSpan(s.Name) {
-			n++
-			d += s.Duration
-		}
-	}
-
-	return n, d
-}
-
-// TraceServices are the services of the spans, in the order each first
-// appears.
-func TraceServices(
-	spans []client.TraceSpan,
-) []string {
-	var out []string
-	for _, s := range spans {
-		if s.Service != "" && !slices.Contains(out, s.Service) {
-			out = append(out, s.Service)
-		}
-	}
-
-	return out
 }

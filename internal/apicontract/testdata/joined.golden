@@ -71,7 +71,7 @@ op GET /api/node/{hostname}/uptime id=GetNodeUptime tags=[Node_Management_API_no
 op GET /api/node/{hostname}/user id=GetNodeUser tags=[User_and_Group_Management_API_user_operations] auth=BearerAuth:user:read params=[path:hostname!:string] body= responses=[200=application/json:UserCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/user/{name} id=GetNodeUserByName tags=[User_and_Group_Management_API_user_operations] auth=BearerAuth:user:read params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:UserCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/user/{name}/ssh-key id=GetNodeUserSSHKey tags=[User_and_Group_Management_API_user_operations] auth=BearerAuth:user:read params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:SSHKeyCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op GET /api/telemetry/trace/{id} id=GetTrace tags=[Telemetry_API_telemetry] auth=BearerAuth:trace:read params=[path:id!:string] body= responses=[200=application/json:TraceResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
+op GET /api/telemetry/trace/{id} id=GetTrace tags=[Telemetry_API_telemetry] auth=BearerAuth:trace:read params=[path:id!:string query:all:boolean] body= responses=[200=application/json:TraceResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
 op POST /api/admission/{machine_id}/admit id=AdmitMachine tags=[Admission_API_admission] auth=BearerAuth:admission:write params=[path:machine_id!:string] body=application/json:AdmitRequest! responses=[204=- 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
 op POST /api/admission/{machine_id}/reject id=RejectMachine tags=[Admission_API_admission] auth=BearerAuth:admission:write params=[path:machine_id!:string] body=application/json:RejectRequest! responses=[204=- 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
 op POST /api/admission/{machine_id}/revoke id=RevokeMachine tags=[Admission_API_admission] auth=BearerAuth:admission:write params=[path:machine_id!:string] body= responses=[204=- 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
@@ -866,7 +866,20 @@ schema TimezoneMutationResult.timezone = string
 schema TimezoneUpdateRequest.timezone! = string
 schema TimezoneUpdateResponse.job_id = string/uuid
 schema TimezoneUpdateResponse.results! = [TimezoneMutationResult]
-schema TraceResponse.spans! = [TraceSpan]
+schema TraceNode.children = [TraceNode]
+schema TraceNode.detail = string
+schema TraceNode.duration! = string
+schema TraceNode.name! = string
+schema TraceNode.on! = string
+schema TraceNode.span! = TraceSpan
+schema TraceNode.status! = string
+schema TraceResponse.duration = string
+schema TraceResponse.failed_spans = integer
+schema TraceResponse.nats_calls = integer
+schema TraceResponse.nats_time = string
+schema TraceResponse.services = [string]
+schema TraceResponse.spans! = [TraceNode]
+schema TraceResponse.started = string/date-time
 schema TraceResponse.trace_id! = string
 schema TraceSpan.attributes! = map[string]
 schema TraceSpan.duration_ms! = number/double
