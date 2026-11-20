@@ -68,6 +68,9 @@ func greet(
 	if in.Name == "fail" {
 		return greetOut{}, errors.New("greet failed")
 	}
+	if in.Name == "bad" {
+		return greetOut{Text: d.Prefix + in.Name}, command.Fail()
+	}
 
 	return greetOut{Text: d.Prefix + in.Name}, nil
 }
@@ -129,10 +132,12 @@ func (s *LocalPublicTestSuite) TestDefine() {
 	s.Empty(g.GroupLong())
 	s.Empty(g.SubDoc("roles"))
 	documented := command.Define("zzdoc", "Doc",
+		command.Long("More."),
 		command.SubDoc("roles", "Read the roles"),
 		command.SubDoc("keys", "Read the keys"),
 	)
 	s.Equal("Read the roles", documented.SubDoc("roles"))
+	s.Equal("More.", documented.GroupLong())
 	s.Equal("Read the keys", documented.SubDoc("keys"))
 	s.Equal([]string{"zzparent", "zzchild", "zzdefine"}, g.CommandPath())
 	s.Equal([]string{"zzparent", "zzchild"}, g.Parents, "CommandPath does not change Parents")
@@ -323,6 +328,14 @@ func (s *LocalPublicTestSuite) TestRun() {
 			wantErr: "greet failed",
 		},
 		{
+			name:    "when the handler fails its output, the output prints and the command fails",
+			group:   provided,
+			method:  "get",
+			in:      greetIn{Name: "bad"},
+			want:    `{"text":"hi bad"}`,
+			wantErr: "the command failed: its output says why",
+		},
+		{
 			name:    "when the output does not encode",
 			group:   provided,
 			method:  "bad",
@@ -346,6 +359,7 @@ func (s *LocalPublicTestSuite) TestRun() {
 				s.Contains(err.Error(), tc.wantErr)
 				var ue *command.UsageError
 				s.Equal(tc.usage, errors.As(err, &ue))
+				s.Equal(tc.want, printed)
 
 				return
 			}

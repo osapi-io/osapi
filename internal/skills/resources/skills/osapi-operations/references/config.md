@@ -1,7 +1,7 @@
 # Configuration
 
 ```sh
-osapi config list --json                      # every setting: value, source, env, type, default, description
+osapi config list --json                      # {file, items}: each setting's value, source, env, type, default, description
 osapi config get --key controller.api.port --json  # one setting
 osapi config validate --json                  # the checks start runs, without starting
 ```

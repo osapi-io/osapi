@@ -79,6 +79,7 @@ var notDSL = map[string]bool{
 	"Commands:LocalGroup":          true,
 	"CommandPermission:LocalGroup": true,
 	"Error:UsageError":             true,
+	"Error:FailedError":            true,
 	"String:Problem":               true,
 	"Rendered":                     true,
 	"Reason":                       true,

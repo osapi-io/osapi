@@ -46,6 +46,9 @@ type LocalGroup struct {
 	// Flat is true for a group that adds no word of its own, which Flat
 	// sets: its commands are under its parent, such as osapi version.
 	Flat bool
+	// Long is the rest of the help of the group's command, which Long
+	// sets.
+	Long string
 	// SubDocs are the one line of help of each command that a Sub makes,
 	// such as roles in osapi token roles list, which SubDoc sets.
 	SubDocs map[string]string
@@ -99,6 +102,14 @@ func SubDoc(
 		}
 		g.SubDocs[segment] = short
 	})
+}
+
+// Long is the rest of the help of the group's command, after its one line,
+// such as what each of its commands reads.
+func Long(
+	text string,
+) Option {
+	return optionFunc(func(g *LocalGroup) { g.Long = text })
 }
 
 // Flat makes the group add no word of its own: each method is a command
@@ -216,9 +227,9 @@ func (g *LocalGroup) GroupNotes() string {
 	return ""
 }
 
-// GroupLong is "": a local group's help is its one line.
+// GroupLong is the help Long set, or "".
 func (g *LocalGroup) GroupLong() string {
-	return ""
+	return g.Long
 }
 
 // SubDoc is the help SubDoc set for the segment, or "".

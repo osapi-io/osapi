@@ -30,6 +30,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/cli/command"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/all/gen"
+	configcmd "github.com/osapi-io/osapi/internal/cli/commands/config"
 	"github.com/osapi-io/osapi/internal/cli/commands/token"
 	versioncmd "github.com/osapi-io/osapi/internal/cli/commands/version"
 	"github.com/osapi-io/osapi/internal/config"
@@ -41,6 +42,9 @@ import (
 func init() {
 	command.Provide(token.Group, func() token.Deps {
 		return token.Deps{Tokens: authtoken.New(logger), Config: tokenConfig{}}
+	})
+	command.Provide(configcmd.Group, func() configcmd.Deps {
+		return configcmd.Deps{File: func() string { return viper.GetString("osapiFile") }}
 	})
 	command.Provide(versioncmd.Group, func() versioncmd.Deps {
 		return versioncmd.Deps{Build: buildInfo}

@@ -18,21 +18,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmd
+// Package token is the token group of local commands: osapi token generate,
+// roles list and validate, which sign and read the bearer tokens of the API
+// with the signing key of the config. They run in the CLI, and call no API.
+package config
 
-import (
-	"github.com/spf13/cobra"
-)
-
-// configCmd groups the commands that describe osapi's own settings. They load
-// the config themselves, so a broken file is reported rather than fatal.
-var configCmd = &cobra.Command{
-	Use:   "config",
-	Short: "List, get and validate osapi's settings",
-	Long: "These commands load the config themselves. Thus they report a broken file,\n" +
-		"and the command does not stop.",
-}
-
-func init() {
-	rootCmd.AddCommand(configCmd)
+// Deps is what the config group's methods use.
+type Deps struct {
+	// File is the config file that -f names, which the root reads.
+	File func() string
 }
