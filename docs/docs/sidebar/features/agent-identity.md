@@ -125,7 +125,7 @@ osapi client admission revoke --machine-id <machine-id>
 osapi client admission delete --machine-id <machine-id>
 
 # Show the local controller key fingerprint
-osapi client controller key fingerprint
+osapi controller key fingerprint
 ```
 
 ## Job signing

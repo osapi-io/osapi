@@ -7,6 +7,7 @@ import (
 	_ "github.com/osapi-io/osapi/internal/cli/commands/agentcmd/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/config/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/controllercmd/gen"
+	_ "github.com/osapi-io/osapi/internal/cli/commands/controllerkey/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/initcmd/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/natsserver/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/skill/gen"
