@@ -112,7 +112,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlList() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusForbidden, target.StatusCode)
 			},
 		},
@@ -131,7 +131,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlList() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusUnauthorized, target.StatusCode)
 			},
 		},
@@ -150,7 +150,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlList() {
 				suite.Nil(resp)
 
 				var target *client.ServerError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusInternalServerError, target.StatusCode)
 			},
 		},
@@ -179,7 +179,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlList() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
@@ -282,7 +282,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlGet() {
 				suite.Nil(resp)
 
 				var target *client.NotFoundError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusNotFound, target.StatusCode)
 			},
 		},
@@ -301,7 +301,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlGet() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusForbidden, target.StatusCode)
 			},
 		},
@@ -330,7 +330,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlGet() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
@@ -446,7 +446,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlCreate() {
 				suite.Nil(resp)
 
 				var target *client.ValidationError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusBadRequest, target.StatusCode)
 			},
 		},
@@ -469,7 +469,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlCreate() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusForbidden, target.StatusCode)
 			},
 		},
@@ -506,7 +506,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlCreate() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
@@ -619,7 +619,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlUpdate() {
 				suite.Nil(resp)
 
 				var target *client.ValidationError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusBadRequest, target.StatusCode)
 			},
 		},
@@ -641,7 +641,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlUpdate() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusUnauthorized, target.StatusCode)
 			},
 		},
@@ -663,7 +663,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlUpdate() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusForbidden, target.StatusCode)
 			},
 		},
@@ -685,7 +685,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlUpdate() {
 				suite.Nil(resp)
 
 				var target *client.NotFoundError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusNotFound, target.StatusCode)
 			},
 		},
@@ -707,7 +707,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlUpdate() {
 				suite.Nil(resp)
 
 				var target *client.ServerError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusInternalServerError, target.StatusCode)
 			},
 		},
@@ -742,7 +742,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlUpdate() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
@@ -843,7 +843,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlDelete() {
 				suite.Nil(resp)
 
 				var target *client.NotFoundError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusNotFound, target.StatusCode)
 			},
 		},
@@ -862,7 +862,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlDelete() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusForbidden, target.StatusCode)
 			},
 		},
@@ -891,7 +891,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlDelete() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},

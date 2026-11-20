@@ -128,7 +128,7 @@ func (suite *FilePublicTestSuite) TestUpload() {
 				suite.Nil(resp)
 
 				var target *client.ConflictError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusConflict, target.StatusCode)
 			},
 		},
@@ -149,7 +149,7 @@ func (suite *FilePublicTestSuite) TestUpload() {
 				suite.Nil(resp)
 
 				var target *client.ValidationError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusBadRequest, target.StatusCode)
 			},
 		},
@@ -165,7 +165,7 @@ func (suite *FilePublicTestSuite) TestUpload() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusForbidden, target.StatusCode)
 			},
 		},
@@ -191,7 +191,7 @@ func (suite *FilePublicTestSuite) TestUpload() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusCreated, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
@@ -300,7 +300,7 @@ func (suite *FilePublicTestSuite) TestUpdate() {
 			validateFunc: func(resp *client.Response[client.FileUpload], err error) {
 				suite.Nil(resp)
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 			},
 		},
 		{
@@ -319,7 +319,7 @@ func (suite *FilePublicTestSuite) TestUpdate() {
 			validateFunc: func(resp *client.Response[client.FileUpload], err error) {
 				suite.Nil(resp)
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 			},
 		},
 	}
@@ -393,7 +393,7 @@ func (suite *FilePublicTestSuite) TestList() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusForbidden, target.StatusCode)
 			},
 		},
@@ -416,7 +416,7 @@ func (suite *FilePublicTestSuite) TestList() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
@@ -494,7 +494,7 @@ func (suite *FilePublicTestSuite) TestGet() {
 				suite.Nil(resp)
 
 				var target *client.ValidationError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusBadRequest, target.StatusCode)
 			},
 		},
@@ -511,7 +511,7 @@ func (suite *FilePublicTestSuite) TestGet() {
 				suite.Nil(resp)
 
 				var target *client.NotFoundError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusNotFound, target.StatusCode)
 			},
 		},
@@ -528,7 +528,7 @@ func (suite *FilePublicTestSuite) TestGet() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusForbidden, target.StatusCode)
 			},
 		},
@@ -553,7 +553,7 @@ func (suite *FilePublicTestSuite) TestGet() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
@@ -619,7 +619,7 @@ func (suite *FilePublicTestSuite) TestDelete() {
 				suite.Error(err)
 
 				var target *client.ValidationError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusBadRequest, target.StatusCode)
 			},
 		},
@@ -635,7 +635,7 @@ func (suite *FilePublicTestSuite) TestDelete() {
 				suite.Error(err)
 
 				var target *client.NotFoundError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusNotFound, target.StatusCode)
 			},
 		},
@@ -651,7 +651,7 @@ func (suite *FilePublicTestSuite) TestDelete() {
 				suite.Error(err)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusForbidden, target.StatusCode)
 			},
 		},
@@ -759,7 +759,7 @@ func (suite *FilePublicTestSuite) TestStale() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusUnauthorized, target.StatusCode)
 			},
 		},
@@ -775,7 +775,7 @@ func (suite *FilePublicTestSuite) TestStale() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusForbidden, target.StatusCode)
 			},
 		},
@@ -791,7 +791,7 @@ func (suite *FilePublicTestSuite) TestStale() {
 				suite.Nil(resp)
 
 				var target *client.ServerError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusInternalServerError, target.StatusCode)
 			},
 		},
@@ -805,7 +805,7 @@ func (suite *FilePublicTestSuite) TestStale() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},

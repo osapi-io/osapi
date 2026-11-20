@@ -109,7 +109,7 @@ func (suite *JobPublicTestSuite) TestGet() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Contains(target.Message, "nil response body")
 			},
 		},
@@ -126,7 +126,7 @@ func (suite *JobPublicTestSuite) TestGet() {
 				suite.Nil(resp)
 
 				var target *client.NotFoundError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusNotFound, target.StatusCode)
 				suite.Equal("job not found", target.Message)
 			},
@@ -210,7 +210,7 @@ func (suite *JobPublicTestSuite) TestDelete() {
 				suite.Error(err)
 
 				var target *client.NotFoundError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusNotFound, target.StatusCode)
 				suite.Equal("job not found", target.Message)
 			},
@@ -307,7 +307,7 @@ func (suite *JobPublicTestSuite) TestList() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusUnauthorized, target.StatusCode)
 			},
 		},
@@ -322,7 +322,7 @@ func (suite *JobPublicTestSuite) TestList() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Contains(target.Message, "nil response body")
 			},
 		},
@@ -446,7 +446,7 @@ func (suite *JobPublicTestSuite) TestRetry() {
 				suite.Nil(resp)
 
 				var target *client.NotFoundError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusNotFound, target.StatusCode)
 			},
 		},
@@ -462,7 +462,7 @@ func (suite *JobPublicTestSuite) TestRetry() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Contains(target.Message, "nil response body")
 			},
 		},

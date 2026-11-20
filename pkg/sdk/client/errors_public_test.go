@@ -168,7 +168,7 @@ func (suite *ErrorsPublicTestSuite) TestErrorsAsUnwrap() {
 			}),
 			validateFunc: func(err error) {
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(403, target.StatusCode)
 				suite.Equal("forbidden", target.Message)
 			},
@@ -183,7 +183,7 @@ func (suite *ErrorsPublicTestSuite) TestErrorsAsUnwrap() {
 			}),
 			validateFunc: func(err error) {
 				var target *client.NotFoundError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(404, target.StatusCode)
 				suite.Equal("not found", target.Message)
 			},
@@ -198,7 +198,7 @@ func (suite *ErrorsPublicTestSuite) TestErrorsAsUnwrap() {
 			}),
 			validateFunc: func(err error) {
 				var target *client.ValidationError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(400, target.StatusCode)
 				suite.Equal("bad request", target.Message)
 			},
@@ -213,7 +213,7 @@ func (suite *ErrorsPublicTestSuite) TestErrorsAsUnwrap() {
 			}),
 			validateFunc: func(err error) {
 				var target *client.ServerError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(500, target.StatusCode)
 				suite.Equal("server failure", target.Message)
 			},
@@ -228,7 +228,7 @@ func (suite *ErrorsPublicTestSuite) TestErrorsAsUnwrap() {
 			}),
 			validateFunc: func(err error) {
 				var target *client.ConflictError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(409, target.StatusCode)
 				suite.Equal("already draining", target.Message)
 			},
@@ -243,7 +243,7 @@ func (suite *ErrorsPublicTestSuite) TestErrorsAsUnwrap() {
 			}),
 			validateFunc: func(err error) {
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(502, target.StatusCode)
 				suite.Equal("bad gateway", target.Message)
 			},
@@ -273,7 +273,7 @@ func (suite *ErrorsPublicTestSuite) TestErrorsAsAPIError() {
 			}),
 			validateFunc: func(err error) {
 				var target *client.APIError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(401, target.StatusCode)
 				suite.Equal("unauthorized", target.Message)
 			},
@@ -288,7 +288,7 @@ func (suite *ErrorsPublicTestSuite) TestErrorsAsAPIError() {
 			}),
 			validateFunc: func(err error) {
 				var target *client.APIError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(404, target.StatusCode)
 				suite.Equal("not found", target.Message)
 			},
@@ -303,7 +303,7 @@ func (suite *ErrorsPublicTestSuite) TestErrorsAsAPIError() {
 			}),
 			validateFunc: func(err error) {
 				var target *client.APIError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(400, target.StatusCode)
 				suite.Equal("invalid", target.Message)
 			},
@@ -318,7 +318,7 @@ func (suite *ErrorsPublicTestSuite) TestErrorsAsAPIError() {
 			}),
 			validateFunc: func(err error) {
 				var target *client.APIError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(500, target.StatusCode)
 				suite.Equal("internal error", target.Message)
 			},
@@ -333,7 +333,7 @@ func (suite *ErrorsPublicTestSuite) TestErrorsAsAPIError() {
 			}),
 			validateFunc: func(err error) {
 				var target *client.APIError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(409, target.StatusCode)
 				suite.Equal("conflict", target.Message)
 			},
@@ -348,7 +348,7 @@ func (suite *ErrorsPublicTestSuite) TestErrorsAsAPIError() {
 			}),
 			validateFunc: func(err error) {
 				var target *client.APIError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(418, target.StatusCode)
 				suite.Equal("teapot", target.Message)
 			},

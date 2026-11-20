@@ -101,7 +101,7 @@ func (suite *TelemetryPublicTestSuite) TestTrace() {
 			handler: reply(http.StatusNotFound, `{"error":"trace not found"}`),
 			validate: func(resp *client.Response[client.Trace], err error) {
 				var target *client.NotFoundError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Nil(resp)
 			},
 		},
@@ -123,7 +123,7 @@ func (suite *TelemetryPublicTestSuite) TestTrace() {
 			},
 			validate: func(_ *client.Response[client.Trace], err error) {
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 			},
 		},
 		{

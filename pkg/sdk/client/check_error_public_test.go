@@ -74,7 +74,7 @@ func (suite *CheckErrorPublicTestSuite) TestCheckError() {
 			validateFunc: func(err error) {
 				suite.Error(err)
 				var target *client.ValidationError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(400, target.StatusCode)
 			},
 		},
@@ -84,7 +84,7 @@ func (suite *CheckErrorPublicTestSuite) TestCheckError() {
 			validateFunc: func(err error) {
 				suite.Error(err)
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(401, target.StatusCode)
 			},
 		},
@@ -94,7 +94,7 @@ func (suite *CheckErrorPublicTestSuite) TestCheckError() {
 			validateFunc: func(err error) {
 				suite.Error(err)
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(403, target.StatusCode)
 			},
 		},
@@ -104,7 +104,7 @@ func (suite *CheckErrorPublicTestSuite) TestCheckError() {
 			validateFunc: func(err error) {
 				suite.Error(err)
 				var target *client.NotFoundError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(404, target.StatusCode)
 			},
 		},
@@ -114,7 +114,7 @@ func (suite *CheckErrorPublicTestSuite) TestCheckError() {
 			validateFunc: func(err error) {
 				suite.Error(err)
 				var target *client.ConflictError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(409, target.StatusCode)
 			},
 		},
@@ -124,7 +124,7 @@ func (suite *CheckErrorPublicTestSuite) TestCheckError() {
 			validateFunc: func(err error) {
 				suite.Error(err)
 				var target *client.ServerError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(500, target.StatusCode)
 			},
 		},
@@ -134,7 +134,7 @@ func (suite *CheckErrorPublicTestSuite) TestCheckError() {
 			validateFunc: func(err error) {
 				suite.Error(err)
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(503, target.StatusCode)
 			},
 		},
