@@ -127,10 +127,7 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 			}
 			for _, ex := range m.Examples {
 				s.Run(b.Name+" "+m.Name+" "+ex.Doc, func() {
-					if scripted(ex) {
-						s.T().Skip("the example scripts a file or a command's output, " +
-							"which a live host does not have")
-					}
+					defer s.restore(b)()
 					s.reset(b, ex.Input)
 					for _, g := range ex.Given {
 						if g.Kind != behavior.GivenCall {
@@ -160,21 +157,6 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 	}
 }
 
-// scripted reports whether ex sets up the host with a file or a command's
-// output. The fake host gives an example that state; a live host has its
-// own, so such an example cannot run here.
-func scripted(
-	ex behavior.Example,
-) bool {
-	for _, g := range ex.Given {
-		if g.Kind == behavior.GivenFile || g.Kind == behavior.GivenOutput {
-			return true
-		}
-	}
-
-	return false
-}
-
 // reset starts a write example from the state the fake host gives it, with
 // the item the example names absent. Each example on the fake host gets a
 // new host, but here every example shares one: an earlier example can leave
@@ -201,6 +183,47 @@ func (s *BehaviorSmokeSuite) reset(
 		in := reflect.New(del.In)
 		s.Require().NoError(json.Unmarshal(key, in.Interface()))
 		s.results(commandLine(b, del, in.Elem().Interface()))
+	}
+}
+
+// restore reads the item of a behavior that has no delete, such as the
+// host's name, and returns a func that writes it back with update. Thus a
+// write example on a live host, which renames the runner or a lab VM, leaves
+// it as it found it. A behavior with a delete is reset with it instead.
+func (s *BehaviorSmokeSuite) restore(
+	b *behavior.Behavior,
+) func() {
+	var get, update *behavior.Method
+	for _, m := range b.Methods {
+		switch {
+		case m.Name == "delete":
+			return func() {}
+		case m.Name == "get" && m.KeyField == "":
+			get = m
+		case m.Name == "update" && m.KeyField == "":
+			update = m
+		}
+	}
+	if get == nil || update == nil {
+		return func() {}
+	}
+
+	var inputs []any
+	for _, r := range s.results(commandLine(b, get, nil)) {
+		if r["status"] != "ok" {
+			continue
+		}
+		data, err := json.Marshal(r)
+		s.Require().NoError(err)
+		in := reflect.New(update.In)
+		s.Require().NoError(json.Unmarshal(data, in.Interface()))
+		inputs = append(inputs, in.Elem().Interface())
+	}
+
+	return func() {
+		for _, in := range inputs {
+			s.results(commandLine(b, update, in))
+		}
 	}
 }
 
