@@ -21,7 +21,7 @@ builds:
       - -X {{ .ModulePath }}/cmd.commit={{ .Commit }}
       - -X {{ .ModulePath }}/cmd.version={{ .Version }}
       - -X {{ .ModulePath }}/cmd.builtBy=goreleaser
-      - -X {{ .ModulePath }}/cmd.treestate={{ .IsGitDirty }}
+      - -X {{ .ModulePath }}/cmd.treeState={{ .GitTreeState }}
 
 archives:
   - formats:
