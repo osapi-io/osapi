@@ -590,6 +590,26 @@ For a new API domain, add a `{domain}_test.go` smoke suite under
 `skipWrite(s.T())`. Then CI runs only the read-only tests by default. To enable
 the tests that write, set `OSAPI_INTEGRATION_WRITES=1`.
 
+`just go-unit-int` runs the suite. These variables change what it does:
+
+| Variable                            | Effect                                                                                                                                    |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `OSAPI_INTEGRATION_OSAPIFILE`       | An osapi client config. The suite starts nothing, and tests the controller that the file's `controller.client` URL and bearer token name  |
+| `OSAPI_INTEGRATION_TARGET`          | The host that a test sends one host's job to. The default is `_any`. Against several agents, name one host, so a read and its write match |
+| `OSAPI_INTEGRATION_WRITE_BEHAVIORS` | `1` runs the write examples of each behavior. CI sets it, and runs the suite as root on its runner                                        |
+| `OSAPI_INTEGRATION_WRITES`          | `1` runs the write tests of the hand-written domains                                                                                      |
+
+To test the lab from this checkout:
+
+```bash
+OSAPI_INTEGRATION_OSAPIFILE=../osapi-lab/.lab/config/client.yaml \
+OSAPI_INTEGRATION_TARGET=ubuntu-1 \
+just go-unit-int
+```
+
+Against the lab, the agents keep their own config. A command test skips when the
+agent has `agent.command.enabled` off, as the lab's agents do.
+
 ### Test helpers
 
 - Use `export_test.go` to give the `_test` package access to an unexported

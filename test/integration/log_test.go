@@ -44,7 +44,7 @@ func (s *LogSmokeSuite) TestLogList() {
 			name: "query endpoint responds",
 			args: []string{
 				"client", "node", "log", "list",
-				"--target", "_any",
+				"--target", target,
 				"--json",
 			},
 			validateFunc: func(
@@ -84,7 +84,7 @@ func (s *LogSmokeSuite) TestLogListUnit() {
 			name: "unit endpoint responds",
 			args: []string{
 				"client", "node", "log", "list",
-				"--target", "_any",
+				"--target", target,
 				"--unit", "sshd.service",
 				"--json",
 			},

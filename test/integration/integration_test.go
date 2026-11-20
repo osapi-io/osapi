@@ -36,6 +36,7 @@ import (
 	"time"
 
 	"github.com/osapi-io/osapi/internal/authtoken"
+	"gopkg.in/yaml.v3"
 )
 
 const signingKey = "1dcf49fb9ad538f8b70fdb4ccb73c78692022e3191dba86f63308f0c3ee0e3c3"
@@ -50,6 +51,14 @@ var (
 	tempDir    string
 	storeDir   string
 	runWrites  bool
+	// controllerURL is the controller the suite calls: its own, or the one
+	// that OSAPI_INTEGRATION_OSAPIFILE names, such as the lab's.
+	controllerURL string
+	// target is where a test that names one host sends its job:
+	// OSAPI_INTEGRATION_TARGET, or _any. Against several agents, such as the
+	// lab's, it must be one host, so a read and the write after it reach the
+	// same agent.
+	target string
 	// proxyPort is the port of the spec proxy, which the CLI calls.
 	proxyPort int
 	proxy     *specProxy
@@ -61,6 +70,10 @@ func TestMain(
 	var err error
 
 	runWrites = os.Getenv("OSAPI_INTEGRATION_WRITES") == "1"
+	target = os.Getenv("OSAPI_INTEGRATION_TARGET")
+	if target == "" {
+		target = "_any"
+	}
 
 	tempDir, err = os.MkdirTemp("", "osapi-integration-*")
 	if err != nil {
@@ -92,6 +105,16 @@ func TestMain(
 		os.Exit(1)
 	}
 
+	configPath, err = filepath.Abs(filepath.Join(repoRoot(), "test", "integration", "osapi.yaml"))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "resolve config path: %v\n", err)
+		os.Exit(1)
+	}
+
+	if file := os.Getenv("OSAPI_INTEGRATION_OSAPIFILE"); file != "" {
+		os.Exit(runAgainst(m, file))
+	}
+
 	t := authtoken.New(nil)
 	token, err = t.Generate(signingKey, []string{"admin"}, "integration@test", nil)
 	if err != nil {
@@ -99,12 +122,7 @@ func TestMain(
 		os.Exit(1)
 	}
 
-	configPath, err = filepath.Abs(filepath.Join(repoRoot(), "test", "integration", "osapi.yaml"))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "resolve config path: %v\n", err)
-		os.Exit(1)
-	}
-
+	controllerURL = fmt.Sprintf("http://127.0.0.1:%d", apiPort)
 	fmt.Fprintf(os.Stderr, "integration: api=%d nats=%d dir=%s\n", apiPort, natsPort, tempDir)
 
 	serverCmd = exec.Command(binaryPath, "start", "-f", configPath)
@@ -122,7 +140,7 @@ func TestMain(
 		os.Exit(1)
 	}
 
-	proxy, proxyPort, err = startSpecProxy(fmt.Sprintf("http://127.0.0.1:%d", apiPort))
+	proxy, proxyPort, err = startSpecProxy(controllerURL)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "start the spec proxy: %v\n", err)
 		stopServer()
@@ -204,7 +222,7 @@ func waitForReady(
 	timeout time.Duration,
 ) error {
 	deadline := time.Now().Add(timeout)
-	url := fmt.Sprintf("http://127.0.0.1:%d/health/ready", apiPort)
+	url := controllerURL + "/health/ready"
 
 	for time.Now().Before(deadline) {
 		resp, err := http.Get(url) //nolint:gosec
@@ -318,4 +336,81 @@ func writeTempFile(
 	}
 
 	return path
+}
+
+// runAgainst runs the suite against a controller that is already running,
+// such as the lab's, and returns its exit code. file is an osapi client
+// config: its controller.client URL and bearer token are the controller and
+// the token. Nothing starts here, and nothing stops: the controller and its
+// agents are the ones the file names. The spec proxy still checks every
+// request and response.
+func runAgainst(
+	m *testing.M,
+	file string,
+) int {
+	var cfg struct {
+		Controller struct {
+			Client struct {
+				URL      string `yaml:"url"`
+				Security struct {
+					BearerToken string `yaml:"bearer_token"`
+				} `yaml:"security"`
+			} `yaml:"client"`
+		} `yaml:"controller"`
+	}
+	data, err := os.ReadFile(file)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "read %s: %v\n", file, err)
+		return 1
+	}
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		fmt.Fprintf(os.Stderr, "parse %s: %v\n", file, err)
+		return 1
+	}
+	controllerURL = strings.TrimSuffix(cfg.Controller.Client.URL, "/")
+	token = cfg.Controller.Client.Security.BearerToken
+	if controllerURL == "" || token == "" {
+		fmt.Fprintf(os.Stderr, "%s has no controller.client url or bearer_token\n", file)
+		return 1
+	}
+	fmt.Fprintf(os.Stderr, "integration: against %s, target %s\n", controllerURL, target)
+
+	if err := waitForReady(15 * time.Second); err != nil {
+		fmt.Fprintf(os.Stderr, "wait for ready: %v\n", err)
+		return 1
+	}
+	proxy, proxyPort, err = startSpecProxy(controllerURL)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "start the spec proxy: %v\n", err)
+		return 1
+	}
+	if err := waitForAgent(30 * time.Second); err != nil {
+		fmt.Fprintf(os.Stderr, "wait for agent: %v\n", err)
+		return 1
+	}
+
+	code := m.Run()
+	if v := proxy.Violations(); len(v) > 0 {
+		fmt.Fprintf(os.Stderr, "\n%d requests or responses break the joined spec:\n", len(v))
+		for _, line := range v {
+			fmt.Fprintln(os.Stderr, "  "+line)
+		}
+		code = 1
+	}
+	os.RemoveAll(tempDir)
+
+	return code
+}
+
+// skipIfCommandOff skips a command test when the agent has
+// agent.command.enabled off, as the lab's agents do. The suite's own agent
+// has it on.
+func skipIfCommandOff(
+	t *testing.T,
+	output string,
+) {
+	t.Helper()
+	if strings.Contains(output, "command execution is disabled") {
+		t.Skip("the agent has agent.command.enabled off")
+	}
 }

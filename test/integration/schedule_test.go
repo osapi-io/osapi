@@ -44,7 +44,7 @@ func (s *ScheduleSmokeSuite) TestScheduleList() {
 			name: "list endpoint responds",
 			args: []string{
 				"client", "node", "schedule", "list",
-				"--target", "_any",
+				"--target", target,
 				"--json",
 			},
 			validateFunc: func(
@@ -87,7 +87,7 @@ func (s *ScheduleSmokeSuite) TestScheduleValidationRejectsBeforeQueueing() {
 			name: "a malformed cron expression",
 			args: []string{
 				"client", "node", "schedule", "create",
-				"--target", "_any",
+				"--target", target,
 				"--name", "osapi-int-invalid",
 				"--object", "osapi-int-schedule.sh",
 				"--schedule", "not-a-cron",
@@ -98,7 +98,7 @@ func (s *ScheduleSmokeSuite) TestScheduleValidationRejectsBeforeQueueing() {
 			name: "neither schedule nor interval",
 			args: []string{
 				"client", "node", "schedule", "create",
-				"--target", "_any",
+				"--target", target,
 				"--name", "osapi-int-invalid",
 				"--object", "osapi-int-schedule.sh",
 				"--json",
@@ -108,7 +108,7 @@ func (s *ScheduleSmokeSuite) TestScheduleValidationRejectsBeforeQueueing() {
 			name: "a name the provider would refuse as a file name",
 			args: []string{
 				"client", "node", "schedule", "get",
-				"--target", "_any",
+				"--target", target,
 				"--name", "../../etc/passwd",
 				"--json",
 			},
@@ -156,14 +156,14 @@ func (s *ScheduleSmokeSuite) TestScheduleCreateGetUpdateDelete() {
 
 	s.T().Cleanup(func() {
 		runCLI("client", "node", "schedule", "delete",
-			"--target", "_any", "--name", name, "--json")
+			"--target", target, "--name", name, "--json")
 		runCLI("client", "file", "delete", "--name", object, "--json")
 	})
 
 	// Create
 	createOut, _, createCode := runCLI(
 		"client", "node", "schedule", "create",
-		"--target", "_any",
+		"--target", target,
 		"--name", name,
 		"--object", object,
 		"--schedule", "0 3 * * *",
@@ -189,7 +189,7 @@ func (s *ScheduleSmokeSuite) TestScheduleCreateGetUpdateDelete() {
 	// given rather than under the object's.
 	getOut, _, getCode := runCLI(
 		"client", "node", "schedule", "get",
-		"--target", "_any",
+		"--target", target,
 		"--name", name,
 		"--json",
 	)
@@ -200,7 +200,7 @@ func (s *ScheduleSmokeSuite) TestScheduleCreateGetUpdateDelete() {
 	// Update
 	updateOut, _, updateCode := runCLI(
 		"client", "node", "schedule", "update",
-		"--target", "_any",
+		"--target", target,
 		"--name", name,
 		"--schedule", "30 4 * * *",
 		"--json",
@@ -215,7 +215,7 @@ func (s *ScheduleSmokeSuite) TestScheduleCreateGetUpdateDelete() {
 	// Delete
 	deleteOut, _, deleteCode := runCLI(
 		"client", "node", "schedule", "delete",
-		"--target", "_any",
+		"--target", target,
 		"--name", name,
 		"--json",
 	)
@@ -230,7 +230,7 @@ func (s *ScheduleSmokeSuite) TestScheduleCreateGetUpdateDelete() {
 	// the second call reports no change rather than failing.
 	secondOut, _, secondCode := runCLI(
 		"client", "node", "schedule", "delete",
-		"--target", "_any",
+		"--target", target,
 		"--name", name,
 		"--json",
 	)

@@ -58,7 +58,7 @@ func commandLine(
 	m *behavior.Method,
 	input any,
 ) []string {
-	args := append(strings.Fields(b.Command(m))[1:], "--target", "_any", "--json")
+	args := append(strings.Fields(b.Command(m))[1:], "--target", target, "--json")
 
 	return append(args, command.Args(input)...)
 }
