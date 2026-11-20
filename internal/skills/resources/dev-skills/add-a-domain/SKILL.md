@@ -122,8 +122,9 @@ mise exec -- just test                   # format checks, lint, unit, coverage g
 
 The coverage gate is 100%. Thus a branch without tests fails the build, and
 does not merge. `just test` also runs `go-mod-check`, which fails when a nested
-module
-under `examples/` is untidy: a new SDK example adds one.
+module under `examples/` is untidy: a new SDK example adds one. And it runs
+`examples-check`, which vets each SDK example against this SDK: a change to an
+SDK type or method fails there until each example uses the new shape.
 
 Never run `go build ./...` or `go test ./...` directly. The build embeds the UI
 with `//go:embed dist/*`. Thus both fail unless `ui/dist/` has files. The `just`

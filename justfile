@@ -83,7 +83,7 @@ test: linux-tune
 # a job. A check added here runs on a laptop and in CI, with no change to the
 # workflow.
 go_quick_checks := "just-fmt-check docs-fmt-check react-fmt-check go-mod-check go-pkg-check"
-go_slow_checks := "behavior-gen-check go-generate-check docs-gen-check cli-docs-gen-check behavior-scaffold-check endpoint-scaffold-check command-scaffold-check behavior-cover-check go-fmt-check go-vet"
+go_slow_checks := "behavior-gen-check go-generate-check docs-gen-check cli-docs-gen-check behavior-scaffold-check endpoint-scaffold-check command-scaffold-check behavior-cover-check go-fmt-check go-vet examples-check"
 
 # Fail when a behavior that osapi behavior create writes does not pass its tests
 #
@@ -170,6 +170,28 @@ go-pkg-check:
     if [ -n "$leaks" ]; then
         echo "pkg/ imports internal/:" >&2
         echo "$leaks" >&2
+        exit 1
+    fi
+
+# Vet each SDK example. The examples build against this checkout's SDK through
+# the replace in their go.mod, so a change to the SDK that breaks one fails
+# here (#820 broke three, and CI passed). Each file is a separate main, so a
+# build of the whole directory fails on the duplicate main: each one is vetted
+# alone.
+examples-check:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    broken=0
+    for dir in examples/sdk/client examples/sdk/platform; do
+        for f in "$dir"/*.go; do
+            if ! (cd "$dir" && go vet "$(basename "$f")"); then
+                echo "the SDK example $f does not build against this SDK" >&2
+                broken=$((broken + 1))
+            fi
+        done
+    done
+    if [ "$broken" -gt 0 ]; then
+        echo "$broken SDK examples are broken: change each to the SDK's shapes" >&2
         exit 1
     fi
 

@@ -75,14 +75,14 @@ func main() {
 	fmt.Printf("Version: %s\n", s.Version)
 	fmt.Printf("Uptime:  %s\n", s.Uptime)
 
-	// Components (nats, jetstream).
-	if len(s.Components) > 0 {
-		fmt.Printf("\nComponents:\n")
-		for name, comp := range s.Components {
-			if comp.Error != "" {
-				fmt.Printf("  %-12s %s (error: %s)\n", name, comp.Status, comp.Error)
+	// Checks (nats, jetstream).
+	if len(s.Checks) > 0 {
+		fmt.Printf("\nChecks:\n")
+		for _, c := range s.Checks {
+			if c.Error != "" {
+				fmt.Printf("  %-12s %s (error: %s)\n", c.Name, c.Status, c.Error)
 			} else {
-				fmt.Printf("  %-12s %s\n", name, comp.Status)
+				fmt.Printf("  %-12s %s\n", c.Name, c.Status)
 			}
 		}
 	}
@@ -108,14 +108,8 @@ func main() {
 			s.Jobs.Processing, s.Jobs.Unprocessed, s.Jobs.Dlq)
 	}
 
-	// Consumer stats.
-	if s.Consumers != nil {
-		fmt.Printf("\nConsumers: %d total\n", s.Consumers.Total)
-		for _, c := range s.Consumers.Consumers {
-			fmt.Printf("  %-20s pending=%d ack_pending=%d redelivered=%d\n",
-				c.Name, c.Pending, c.AckPending, c.Redelivered)
-		}
-	}
+	// The count of JetStream consumers.
+	fmt.Printf("\nConsumers: %d\n", s.Consumers)
 
 	// Streams.
 	if len(s.Streams) > 0 {
