@@ -73,7 +73,7 @@ func (suite *HealthPublicTestSuite) TestLiveness() {
 			validateFunc: func(resp *client.Response[client.HealthStatus], err error) {
 				suite.Nil(resp)
 				var target *client.ServerError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusInternalServerError, target.StatusCode)
 			},
 		},
@@ -110,7 +110,7 @@ func (suite *HealthPublicTestSuite) TestLiveness() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Contains(target.Message, "nil response body")
 			},
@@ -148,7 +148,7 @@ func (suite *HealthPublicTestSuite) TestReady() {
 			validateFunc: func(resp *client.Response[client.ReadyStatus], err error) {
 				suite.Nil(resp)
 				var target *client.ServerError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusInternalServerError, target.StatusCode)
 			},
 		},
@@ -186,7 +186,7 @@ func (suite *HealthPublicTestSuite) TestReady() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Contains(target.Message, "nil response body")
 			},
@@ -202,7 +202,7 @@ func (suite *HealthPublicTestSuite) TestReady() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusTeapot, target.StatusCode)
 				suite.Contains(target.Message, "unexpected status")
 			},
@@ -233,7 +233,7 @@ func (suite *HealthPublicTestSuite) TestReady() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusServiceUnavailable, target.StatusCode)
 				suite.Contains(target.Message, "nil response body")
 			},
@@ -271,7 +271,7 @@ func (suite *HealthPublicTestSuite) TestStatus() {
 			validateFunc: func(resp *client.Response[client.SystemStatus], err error) {
 				suite.Nil(resp)
 				var target *client.ServerError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusInternalServerError, target.StatusCode)
 			},
 		},
@@ -310,7 +310,7 @@ func (suite *HealthPublicTestSuite) TestStatus() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Contains(target.Message, "nil response body")
 			},
@@ -326,7 +326,7 @@ func (suite *HealthPublicTestSuite) TestStatus() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusTeapot, target.StatusCode)
 				suite.Contains(target.Message, "unexpected status")
 			},
@@ -356,7 +356,7 @@ func (suite *HealthPublicTestSuite) TestStatus() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusUnauthorized, target.StatusCode)
 			},
 		},
@@ -372,7 +372,7 @@ func (suite *HealthPublicTestSuite) TestStatus() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusForbidden, target.StatusCode)
 			},
 		},

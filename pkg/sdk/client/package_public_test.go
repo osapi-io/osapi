@@ -111,7 +111,7 @@ func (suite *PackagePublicTestSuite) TestPackageList() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusForbidden, target.StatusCode)
 			},
 		},
@@ -130,7 +130,7 @@ func (suite *PackagePublicTestSuite) TestPackageList() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusUnauthorized, target.StatusCode)
 			},
 		},
@@ -149,7 +149,7 @@ func (suite *PackagePublicTestSuite) TestPackageList() {
 				suite.Nil(resp)
 
 				var target *client.ServerError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusInternalServerError, target.StatusCode)
 			},
 		},
@@ -178,7 +178,7 @@ func (suite *PackagePublicTestSuite) TestPackageList() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
@@ -264,7 +264,7 @@ func (suite *PackagePublicTestSuite) TestPackageGet() {
 				suite.Nil(resp)
 
 				var target *client.NotFoundError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusNotFound, target.StatusCode)
 			},
 		},
@@ -283,7 +283,7 @@ func (suite *PackagePublicTestSuite) TestPackageGet() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusForbidden, target.StatusCode)
 			},
 		},
@@ -312,7 +312,7 @@ func (suite *PackagePublicTestSuite) TestPackageGet() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
@@ -415,7 +415,7 @@ func (suite *PackagePublicTestSuite) TestPackageInstall() {
 				suite.Nil(resp)
 
 				var target *client.ValidationError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusBadRequest, target.StatusCode)
 			},
 		},
@@ -434,7 +434,7 @@ func (suite *PackagePublicTestSuite) TestPackageInstall() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusForbidden, target.StatusCode)
 			},
 		},
@@ -463,7 +463,7 @@ func (suite *PackagePublicTestSuite) TestPackageInstall() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
@@ -564,7 +564,7 @@ func (suite *PackagePublicTestSuite) TestPackageRemove() {
 				suite.Nil(resp)
 
 				var target *client.NotFoundError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusNotFound, target.StatusCode)
 			},
 		},
@@ -583,7 +583,7 @@ func (suite *PackagePublicTestSuite) TestPackageRemove() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusForbidden, target.StatusCode)
 			},
 		},
@@ -612,7 +612,7 @@ func (suite *PackagePublicTestSuite) TestPackageRemove() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
@@ -715,7 +715,7 @@ func (suite *PackagePublicTestSuite) TestPackageUpdate() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusForbidden, target.StatusCode)
 			},
 		},
@@ -734,7 +734,7 @@ func (suite *PackagePublicTestSuite) TestPackageUpdate() {
 				suite.Nil(resp)
 
 				var target *client.ServerError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusInternalServerError, target.StatusCode)
 			},
 		},
@@ -763,7 +763,7 @@ func (suite *PackagePublicTestSuite) TestPackageUpdate() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
@@ -868,7 +868,7 @@ func (suite *PackagePublicTestSuite) TestPackageListUpdates() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusForbidden, target.StatusCode)
 			},
 		},
@@ -887,7 +887,7 @@ func (suite *PackagePublicTestSuite) TestPackageListUpdates() {
 				suite.Nil(resp)
 
 				var target *client.ServerError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusInternalServerError, target.StatusCode)
 			},
 		},
@@ -916,7 +916,7 @@ func (suite *PackagePublicTestSuite) TestPackageListUpdates() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},

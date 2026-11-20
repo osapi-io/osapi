@@ -76,7 +76,7 @@ func (suite *AgentPublicTestSuite) TestList() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusUnauthorized, target.StatusCode)
 			},
 		},
@@ -100,7 +100,7 @@ func (suite *AgentPublicTestSuite) TestList() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Contains(target.Message, "nil response body")
 			},
@@ -164,7 +164,7 @@ func (suite *AgentPublicTestSuite) TestGet() {
 				suite.Nil(resp)
 
 				var target *client.NotFoundError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusNotFound, target.StatusCode)
 				suite.Equal("agent not found", target.Message)
 			},
@@ -191,7 +191,7 @@ func (suite *AgentPublicTestSuite) TestGet() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Contains(target.Message, "nil response body")
 			},
@@ -250,7 +250,7 @@ func (suite *AgentPublicTestSuite) TestDrain() {
 				suite.Error(err)
 
 				var target *client.ConflictError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusConflict, target.StatusCode)
 				suite.Equal("agent already draining", target.Message)
 			},
@@ -267,7 +267,7 @@ func (suite *AgentPublicTestSuite) TestDrain() {
 				suite.Error(err)
 
 				var target *client.ServerError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusInternalServerError, target.StatusCode)
 				suite.Equal("nats: timeout", target.Message)
 			},
@@ -284,7 +284,7 @@ func (suite *AgentPublicTestSuite) TestDrain() {
 				suite.Error(err)
 
 				var target *client.NotFoundError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusNotFound, target.StatusCode)
 			},
 		},
@@ -350,7 +350,7 @@ func (suite *AgentPublicTestSuite) TestUndrain() {
 				suite.Error(err)
 
 				var target *client.ConflictError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusConflict, target.StatusCode)
 				suite.Equal("agent not in draining state", target.Message)
 			},
@@ -367,7 +367,7 @@ func (suite *AgentPublicTestSuite) TestUndrain() {
 				suite.Error(err)
 
 				var target *client.ServerError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusInternalServerError, target.StatusCode)
 				suite.Equal("nats: timeout", target.Message)
 			},
@@ -384,7 +384,7 @@ func (suite *AgentPublicTestSuite) TestUndrain() {
 				suite.Error(err)
 
 				var target *client.NotFoundError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusNotFound, target.StatusCode)
 			},
 		},

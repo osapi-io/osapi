@@ -78,7 +78,7 @@ func (suite *AuditPublicTestSuite) TestList() {
 			validateFunc: func(resp *client.Response[client.AuditList], err error) {
 				suite.Nil(resp)
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusServiceUnavailable, target.StatusCode)
 				suite.Contains(err.Error(), "the audit log is not configured")
 			},
@@ -97,7 +97,7 @@ func (suite *AuditPublicTestSuite) TestList() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusUnauthorized, target.StatusCode)
 			},
 		},
@@ -125,7 +125,7 @@ func (suite *AuditPublicTestSuite) TestList() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Contains(target.Message, "nil response body")
 			},
@@ -193,7 +193,7 @@ func (suite *AuditPublicTestSuite) TestGet() {
 			validateFunc: func(resp *client.Response[client.AuditEntry], err error) {
 				suite.Nil(resp)
 				var target *client.ValidationError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusBadRequest, target.StatusCode)
 			},
 		},
@@ -225,7 +225,7 @@ func (suite *AuditPublicTestSuite) TestGet() {
 			validateFunc: func(resp *client.Response[client.AuditEntry], err error) {
 				suite.Nil(resp)
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusServiceUnavailable, target.StatusCode)
 				suite.Contains(err.Error(), "the audit log is not configured")
 			},
@@ -243,7 +243,7 @@ func (suite *AuditPublicTestSuite) TestGet() {
 				suite.Nil(resp)
 
 				var target *client.NotFoundError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusNotFound, target.StatusCode)
 			},
 		},
@@ -269,7 +269,7 @@ func (suite *AuditPublicTestSuite) TestGet() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Contains(target.Message, "nil response body")
 			},
@@ -328,7 +328,7 @@ func (suite *AuditPublicTestSuite) TestExport() {
 			validateFunc: func(resp *client.Response[client.AuditList], err error) {
 				suite.Nil(resp)
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusServiceUnavailable, target.StatusCode)
 				suite.Contains(err.Error(), "the audit log is not configured")
 			},
@@ -345,7 +345,7 @@ func (suite *AuditPublicTestSuite) TestExport() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusUnauthorized, target.StatusCode)
 			},
 		},
@@ -369,7 +369,7 @@ func (suite *AuditPublicTestSuite) TestExport() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Contains(target.Message, "nil response body")
 			},

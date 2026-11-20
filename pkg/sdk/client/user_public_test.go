@@ -91,7 +91,7 @@ func (suite *UserPublicTestSuite) TestUserList() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusForbidden, target.StatusCode)
 			},
 		},
@@ -110,7 +110,7 @@ func (suite *UserPublicTestSuite) TestUserList() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusUnauthorized, target.StatusCode)
 			},
 		},
@@ -129,7 +129,7 @@ func (suite *UserPublicTestSuite) TestUserList() {
 				suite.Nil(resp)
 
 				var target *client.ServerError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusInternalServerError, target.StatusCode)
 			},
 		},
@@ -158,7 +158,7 @@ func (suite *UserPublicTestSuite) TestUserList() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusOK, target.StatusCode)
 				suite.Equal("nil response body", target.Message)
 			},
@@ -239,7 +239,7 @@ func (suite *UserPublicTestSuite) TestUserGet() {
 				suite.Nil(resp)
 
 				var target *client.NotFoundError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusNotFound, target.StatusCode)
 			},
 		},
@@ -258,7 +258,7 @@ func (suite *UserPublicTestSuite) TestUserGet() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusForbidden, target.StatusCode)
 			},
 		},
@@ -287,7 +287,7 @@ func (suite *UserPublicTestSuite) TestUserGet() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 			},
 		},
 	}
@@ -377,7 +377,7 @@ func (suite *UserPublicTestSuite) TestUserCreate() {
 				suite.Nil(resp)
 
 				var target *client.ValidationError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 				suite.Equal(http.StatusBadRequest, target.StatusCode)
 			},
 		},
@@ -397,7 +397,7 @@ func (suite *UserPublicTestSuite) TestUserCreate() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 			},
 		},
 		{
@@ -416,7 +416,7 @@ func (suite *UserPublicTestSuite) TestUserCreate() {
 				suite.Nil(resp)
 
 				var target *client.ServerError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 			},
 		},
 		{
@@ -446,7 +446,7 @@ func (suite *UserPublicTestSuite) TestUserCreate() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 			},
 		},
 	}
@@ -523,7 +523,7 @@ func (suite *UserPublicTestSuite) TestUserUpdate() {
 				suite.Nil(resp)
 
 				var target *client.ValidationError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 			},
 		},
 		{
@@ -541,7 +541,7 @@ func (suite *UserPublicTestSuite) TestUserUpdate() {
 				suite.Nil(resp)
 
 				var target *client.NotFoundError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 			},
 		},
 		{
@@ -569,7 +569,7 @@ func (suite *UserPublicTestSuite) TestUserUpdate() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 			},
 		},
 	}
@@ -652,7 +652,7 @@ func (suite *UserPublicTestSuite) TestUserDelete() {
 				suite.Nil(resp)
 
 				var target *client.NotFoundError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 			},
 		},
 		{
@@ -670,7 +670,7 @@ func (suite *UserPublicTestSuite) TestUserDelete() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 			},
 		},
 		{
@@ -698,7 +698,7 @@ func (suite *UserPublicTestSuite) TestUserDelete() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 			},
 		},
 	}
@@ -775,7 +775,7 @@ func (suite *UserPublicTestSuite) TestUserChangePassword() {
 				suite.Nil(resp)
 
 				var target *client.ValidationError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 			},
 		},
 		{
@@ -793,7 +793,7 @@ func (suite *UserPublicTestSuite) TestUserChangePassword() {
 				suite.Nil(resp)
 
 				var target *client.NotFoundError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 			},
 		},
 		{
@@ -811,7 +811,7 @@ func (suite *UserPublicTestSuite) TestUserChangePassword() {
 				suite.Nil(resp)
 
 				var target *client.AuthError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 			},
 		},
 		{
@@ -839,7 +839,7 @@ func (suite *UserPublicTestSuite) TestUserChangePassword() {
 				suite.Nil(resp)
 
 				var target *client.UnexpectedStatusError
-				suite.True(errors.As(err, &target))
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
 			},
 		},
 	}
