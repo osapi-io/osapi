@@ -229,19 +229,6 @@ func capture(
 }
 
 func (s *CommandPublicTestSuite) TestRun() {
-	rendered := ""
-	clicommand.Render(group, "get", func(_ *cobra.Command, in getInput, out thing) {
-		rendered = in.Name + ":" + out.Name
-	})
-	acted := ""
-	probed := ""
-	clicommand.Render(group, "probe", func(_ *cobra.Command, _ getInput, out thing) {
-		probed = out.Name
-	})
-	clicommand.Render(group, "retry", func(_ *cobra.Command, in retryInput, out thing) {
-		acted = in.Body.Reason + ":" + out.Name
-	})
-
 	tests := []struct {
 		name         string
 		method       string
@@ -251,14 +238,15 @@ func (s *CommandPublicTestSuite) TestRun() {
 		validateFunc func(c *caller, out string, err error)
 	}{
 		{
-			name:   "when the method has a renderer, it gets the input and the output",
+			name:   "when the call answers, it sends the method's verb",
 			method: "get",
 			in:     getInput{Name: "web"},
+			json:   true,
 			caller: &caller{answer: []byte(`{"name":"web-01"}`)},
-			validateFunc: func(c *caller, _ string, err error) {
+			validateFunc: func(c *caller, out string, err error) {
 				s.Require().NoError(err)
 				s.Equal("GET", c.method)
-				s.Equal("web:web-01", rendered)
+				s.Contains(out, `"web-01"`)
 			},
 		},
 		{
@@ -273,26 +261,29 @@ func (s *CommandPublicTestSuite) TestRun() {
 			},
 		},
 		{
-			name:   "when the input has a body, the renderer gets it",
+			name:   "when the input has a body, the request sends it",
 			method: "retry",
 			in:     retryInput{Body: Retry{Reason: "flaky"}},
+			json:   true,
 			caller: &caller{answer: []byte(`{"name":"web-03"}`)},
-			validateFunc: func(_ *caller, _ string, err error) {
+			validateFunc: func(c *caller, out string, err error) {
 				s.Require().NoError(err)
-				s.Equal("flaky:web-03", acted)
+				s.Contains(string(c.body), `"flaky"`)
+				s.Contains(out, `"web-03"`)
 			},
 		},
 		{
-			name:   "when the method answers a status with its output, it renders that output",
+			name:   "when the method answers a status with its output, it prints that output",
 			method: "probe",
 			in:     getInput{Name: "web"},
+			json:   true,
 			caller: &caller{err: &client.APIError{
 				StatusCode: http.StatusServiceUnavailable,
 				Body:       []byte(`{"name":"not ready"}`),
 			}},
-			validateFunc: func(_ *caller, _ string, err error) {
+			validateFunc: func(_ *caller, out string, err error) {
 				s.Require().NoError(err)
-				s.Equal("not ready", probed)
+				s.Contains(out, `"not ready"`)
 			},
 		},
 		{
@@ -305,7 +296,7 @@ func (s *CommandPublicTestSuite) TestRun() {
 			},
 		},
 		{
-			name:   "when the method has no renderer, the body prints as JSON",
+			name:   "when the method answers, a method with no output fields prints the body as JSON",
 			method: "set",
 			in:     setInput{Name: "web"},
 			caller: &caller{answer: []byte(`{"name":"web-02"}`)},
@@ -322,25 +313,6 @@ func (s *CommandPublicTestSuite) TestRun() {
 			caller: &caller{err: errors.New("api error (404): not found")},
 			validateFunc: func(_ *caller, _ string, err error) {
 				s.EqualError(err, "api error (404): not found")
-			},
-		},
-		{
-			name:   "when the answer does not decode, the error is reported",
-			method: "get",
-			in:     getInput{Name: "web"},
-			caller: &caller{answer: []byte(`{"name":3}`)},
-			validateFunc: func(_ *caller, _ string, err error) {
-				s.ErrorContains(err, "decode thing get")
-			},
-		},
-		{
-			name:   "when the answer is empty, the renderer gets a zero output",
-			method: "get",
-			in:     getInput{Name: "web"},
-			caller: &caller{answer: nil},
-			validateFunc: func(_ *caller, _ string, err error) {
-				s.Require().NoError(err)
-				s.Equal("web:", rendered)
 			},
 		},
 		{
@@ -382,7 +354,7 @@ func (s *CommandPublicTestSuite) TestRun() {
 
 			tc.validateFunc(tc.caller, out, gotErr)
 			// The fake answers with no traceresponse header, so the call
-			// has no trace for a renderer to print.
+			// has no trace to print.
 			s.Empty(clicommand.TraceID())
 		})
 	}

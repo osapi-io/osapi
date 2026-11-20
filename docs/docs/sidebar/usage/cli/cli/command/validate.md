@@ -16,8 +16,8 @@ The rules:
   such as generate.
 - `methods`: The group has at least one method. Fix: Add a method with
   command.Method, with its input and output types and its name.
-- `unique`: No two methods of a group have one name: the name is the key of the
-  method's renderer. Fix: Give each method its own name.
+- `unique`: No two methods of a group have one name. Fix: Give each method its
+  own name.
 - `verb`: The last word of each command is a verb (list, get, create, update,
   delete) or an action in command.Actions, as TestCommandShape holds each
   command to. Fix: Name the method for a verb, and put a noun before it with
@@ -51,12 +51,6 @@ The rules:
   func(context.Context, D, In) (Out, error), with D that type and In and Out the
   method's types. Fix: Add command.Uses[Deps](<>) to Define, and .Handle(fn) to
   each method, with the signature that the message names.
-- `reason`: A method of any group, endpoint, behavior or local, prints from its
-  output type. A renderer that Render sets in its place says why the output type
-  cannot print the answer, with .Because. Fix: Delete the renderer, and give the
-  output fields the tags that osapi cli command spec lists. When the output type
-  cannot print the answer, such as a tree, add .Because("&lt;why&gt;") to the
-  renderer.
 - `tag`: Each render tag of an output field is one the output knows: -, bytes,
   age, time, duration, duration=ms, status or short=N with N above 0. An empty
   tag is on a list, and a title tag is on the blank field _ of the output type.

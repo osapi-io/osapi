@@ -442,7 +442,7 @@ func (s *BehaviorcmdPublicTestSuite) TestPrintResults() {
 		s.Run(tc.name, func() {
 			printed = ""
 			got := cli.Capture(func() {
-				clicommand.Output(&cobra.Command{}, tc.group, tc.method, struct{}{}, answer)
+				clicommand.Output(tc.group, tc.method, struct{}{}, answer)
 			})
 
 			if tc.want != "" {

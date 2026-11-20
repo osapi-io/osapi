@@ -723,13 +723,13 @@ made, from its definition: `go generate ./internal/controller/endpoints/all`
 writes its spec, routes, decoders and CLI commands under `gen/`, and
 `just generate` joins its spec into the main one. A command prints from the
 output type of its method. The tags of each field set how the value prints, and
-`osapi cli command spec` has each tag. A renderer, `command.Render` in
-`cmd/client_<group>.go`, is only for a shape that no output type gives, such as
-a tree. It needs `.Because("...")`, which says why. The group's commands need no
-file in `cmd/`: the group's one line, `CommandLong` and `SubDoc` give the help
-of its command and of each `.Sub` segment. A new group starts from
-`osapi controller endpoint new`, and `just endpoint-scaffold-check` holds what
-it writes to its tests. The `build-an-endpoint` skill has the steps.
+`osapi cli command spec` has each tag. No command writes its own output: when
+the type does not have the shape, change the type. A list of the row's own type
+prints as a tree. The group's commands need no file in `cmd/`: the group's one
+line, `CommandLong` and `SubDoc` give the help of its command and of each `.Sub`
+segment. A new group starts from `osapi controller endpoint new`, and
+`just endpoint-scaffold-check` holds what it writes to its tests. The
+`build-an-endpoint` skill has the steps.
 
 ### Rules a domain has to follow
 

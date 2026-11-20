@@ -171,10 +171,9 @@ The CLI:
 2. Tag the fields of each output type until the command prints as the
    hand-written command did. Delete the output code of the hand-written
    command. If no tag gives the shape, change the output type: the CLI, the UI
-   and the SDK then get the same values. Write a renderer,
-   `command.Render` in `cmd/client_<group>.go`, only for a shape that no output
-   type gives, such as a tree, and give it `.Because("...")`. `--json` prints
-   the API's answer, not a shape of its own.
+   and the SDK then get the same values. A tree is a list of the row's own
+   type, such as the sub-components of a component. No command writes its own
+   output. `--json` prints the API's answer, not a shape of its own.
 3. Run `go generate ./internal/controller/endpoints/all`. It writes
    `gen/cli.go`.
 4. Before you delete the hand-written commands, save their help:

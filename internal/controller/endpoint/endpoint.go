@@ -650,9 +650,9 @@ func (m *Method) Result(
 	return m
 }
 
-// Use names the CLI command apart from the method, whose name is the key of
-// its renderer and must be unique in the group: such as list under pending,
-// when the group has a list already.
+// Use names the CLI command apart from the method, whose name must be
+// unique in the group: such as list under pending, when the group has a
+// list already.
 func (m *Method) Use(
 	name string,
 ) *Method {

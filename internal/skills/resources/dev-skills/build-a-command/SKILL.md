@@ -105,9 +105,8 @@ The design is `components/osapi/commands.md` in osapi-io/specs. Read it first.
   with `_ struct{} \`title:"..."\``. `osapi cli command spec` has each tag.
 - If the output type cannot print the output, change the output type first.
   A method that does a different thing with each value, such as a matrix, is
-  two methods: a list and a get. Write a renderer only when no output type can
-  give the shape, such as a tree. Give it `.Because("...")`.
-  `osapi cli command validate` fails a renderer without a reason.
+  two methods: a list and a get. A tree is a list of the row's own type. No
+  command writes its own output, and the DSL has no way to.
 
 ## Decide first
 
@@ -120,7 +119,7 @@ each question.
 | Is it a new command, or one that moves? | A move keeps the name, the flags and the output; tell the user each difference |
 | Where does it go in the tree? | Under the root, or under a command with `Under`, such as `controller` |
 | What does it read from the machine? | A field of `Deps` for each: the config, the file system, a clock |
-| What does a person read at a shell? | The tags of the output type; a renderer only for a shape no type gives, with `.Because` |
+| What does a person read at a shell? | The tags of the output type, and its shape |
 
 ## Check it
 

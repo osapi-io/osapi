@@ -50,7 +50,7 @@ var Spec = guide.Spec{
 		{Kind: KindRefine, Title: "Refinements of a method"},
 		{Kind: KindTag, Title: "Tags on input fields"},
 		{Kind: KindOutput, Title: "Output, from the output type"},
-		{Kind: KindWiring, Title: "Renderers and wiring"},
+		{Kind: KindWiring, Title: "Wiring"},
 		{Kind: KindCheck, Title: "What holds a group to its rules"},
 		{Kind: KindGenerated, Title: "Generated, never edited"},
 	},
@@ -237,12 +237,6 @@ var Spec = guide.Spec{
 
 		{
 			Kind: KindWiring,
-			Name: `Render(Group, "method", fn).Because("...")`,
-			Does: "Prints a method's output without --json in place of the output from its type: fn gets the command, the input and the output. Because says why the output type cannot print it, and osapi cli command get shows it. With --json the output prints as JSON, and the renderer does not run.",
-			When: "Almost never. Only when no output type can give the shape, such as a tree. In the init of the group's file of the CLI. validate fails a renderer with no Because.",
-		},
-		{
-			Kind: KindWiring,
 			Name: "Provide[Deps](Group, fn)",
 			Does: "Gives the group's methods their Deps: fn makes them when a command runs, after osapi read its config. A command of a group whose Deps has a field, and that has no Provide, fails.",
 			When: "In cmd/commands.go, one time for each group whose Deps has a field, with the real config, file system or client.",
@@ -251,7 +245,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindCheck,
 			Name: "osapi cli command validate",
-			Does: "Checks every local group against the rules of a definition, and the output of every group: each renderer has a reason, each output tag is one the output knows, and each method with no output says what occurred. Each problem names the rule and ends with its fix. validate --help lists each rule. go generate fails on a local group that breaks one.",
+			Does: "Checks every local group against the rules of a definition, and the output of every group: each output tag is one the output knows, and each method with no output says what occurred. Each problem names the rule and ends with its fix. validate --help lists each rule. go generate fails on a local group that breaks one.",
 			When: "After each change to a group.",
 		},
 		{
@@ -281,8 +275,8 @@ var Spec = guide.Spec{
 		{
 			Kind: KindCheck,
 			Name: "osapi cli command get --name <group>",
-			Does: "Describes a group, local, endpoint or behavior: each command, and whether it prints from its output type or has a renderer, with the reason. A local group's commands also have their flags and the inputs they refuse.",
-			When: "To see which commands have a renderer, and why.",
+			Does: "Describes a group, local, endpoint or behavior: each command and its one line of help. A local group's commands also have their flags and the inputs they refuse.",
+			When: "To see a group's commands, and the flags and refusals of a local group.",
 		},
 		{
 			Kind: KindCheck,

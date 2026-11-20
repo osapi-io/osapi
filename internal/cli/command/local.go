@@ -242,8 +242,7 @@ func (g *LocalGroup) CommandPermission(
 // LocalMethod is one local command. Method makes one; its methods set the
 // rest and return it, so a definition chains them.
 type LocalMethod struct {
-	// Name is the method's name in its group, the command's last word, and
-	// the key of its renderer.
+	// Name is the method's name in its group, and the command's last word.
 	Name string
 	// In is the input type: each field is a flag.
 	In reflect.Type

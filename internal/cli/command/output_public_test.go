@@ -376,7 +376,7 @@ func (s *OutputPublicTestSuite) TestOutput() {
 				answer = []byte(tc.answer)
 			}
 
-			command.Output(&cobra.Command{}, "zzderive", tc.method, tc.in, answer)
+			command.Output("zzderive", tc.method, tc.in, answer)
 
 			s.Equal(tc.want, r.b.String())
 		})
@@ -470,7 +470,7 @@ func (s *OutputPublicTestSuite) TestPlural() {
 		Print: r,
 	}))
 
-	command.Output(&cobra.Command{}, "zzlogs", "list", struct{}{}, []byte(`["a"]`))
+	command.Output("zzlogs", "list", struct{}{}, []byte(`["a"]`))
 
 	s.Equal("# Zzlogs (1)\nVALUE\na\n", r.b.String(), "a name in s is its own plural")
 }
@@ -494,17 +494,9 @@ func (s *OutputPublicTestSuite) TestPrintsGroups() {
 		JSON: func() bool { return false },
 	}))
 
-	command.Output(&cobra.Command{}, "zzprinted", "list", struct{}{}, []byte(`{}`))
+	command.Output("zzprinted", "list", struct{}{}, []byte(`{}`))
 
 	s.Equal("list:{}", printed)
-}
-
-func (s *OutputPublicTestSuite) TestBecause() {
-	g := group{name: "zzbecause"}
-	command.Render(g, "get", func(*cobra.Command, input, thing) {}).Because("a tree")
-	r, ok := command.Rendered("zzbecause", "get")
-	s.True(ok)
-	s.Equal("a tree", r.Reason())
 }
 
 func TestOutputPublicTestSuite(t *testing.T) {
