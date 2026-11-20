@@ -160,7 +160,7 @@ func (s *MethodsPublicTestSuite) TestBuildAgentInfo() {
 				Uptime:       26*time.Hour + 1*time.Minute,
 				OSInfo:       &host.Result{Distribution: "debian", Version: "13"},
 				LoadAverages: &load.Result{Load1: 0.5, Load5: 0.25, Load15: 0.125},
-				MemoryStats:  &memory.Result{Total: 8, Free: 2, Cached: 3},
+				MemoryStats:  &memory.Result{Total: 8, Available: 5, Free: 2, Cached: 1},
 				Architecture: "arm64", KernelVersion: "6.12", CPUCount: 4,
 				FQDN: "server1.lab", ServiceMgr: "systemd", PackageMgr: "apt",
 				Interfaces: []job.NetworkInterface{{
@@ -193,7 +193,8 @@ func (s *MethodsPublicTestSuite) TestBuildAgentInfo() {
 				s.Equal(&agent.OSInfoResponse{Distribution: "debian", Version: "13"}, got.OSInfo)
 				s.Equal(&agent.LoadAverageResponse{OneMin: 0.5, FiveMin: 0.25, FifteenMin: 0.125},
 					got.LoadAverage)
-				s.Equal(&agent.MemoryResponse{Total: 8, Free: 2, Used: 3}, got.Memory)
+				s.Equal(&agent.MemoryResponse{Total: 8, Free: 2, Used: 3}, got.Memory,
+					"used is the total less the available, not the cached")
 				s.Equal(4, got.CPUCount)
 				s.Equal([]agent.NetworkInterfaceResponse{{
 					Name: "eth0", IPv4: "10.0.0.2", IPv6: "fe80::1", MAC: "aa:bb", Family: "dual",

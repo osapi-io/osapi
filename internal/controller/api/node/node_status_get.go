@@ -199,7 +199,7 @@ func buildNodeStatusResponse(
 		resp.Memory = &gen.MemoryResponse{
 			Total: uint64ToInt(status.MemoryStats.Total),
 			Free:  uint64ToInt(status.MemoryStats.Free),
-			Used:  uint64ToInt(status.MemoryStats.Cached),
+			Used:  uint64ToInt(status.MemoryStats.Used()),
 		}
 	}
 

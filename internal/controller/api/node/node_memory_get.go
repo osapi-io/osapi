@@ -169,7 +169,7 @@ func buildMemoryResultItem(
 		item.Memory = &gen.MemoryResponse{
 			Total: uint64ToInt(memStats.Total),
 			Free:  uint64ToInt(memStats.Free),
-			Used:  uint64ToInt(memStats.Cached),
+			Used:  uint64ToInt(memStats.Used()),
 		}
 	}
 

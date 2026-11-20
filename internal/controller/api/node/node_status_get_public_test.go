@@ -402,9 +402,10 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatusValidationHTTP() {
 						Load15: 0.2,
 					},
 					MemoryStats: &memory.Result{
-						Total:  8388608,
-						Free:   4194304,
-						Cached: 2097152,
+						Total:     8388608,
+						Available: 6291456,
+						Free:      4194304,
+						Cached:    1048576,
 					},
 					DiskUsage: []disk.Result{
 						{
@@ -602,9 +603,10 @@ func (s *NodeStatusGetPublicTestSuite) TestGetNodeStatusRBACHTTP() {
 						Load15: 0.2,
 					},
 					MemoryStats: &memory.Result{
-						Total:  8388608,
-						Free:   4194304,
-						Cached: 2097152,
+						Total:     8388608,
+						Available: 6291456,
+						Free:      4194304,
+						Cached:    1048576,
 					},
 					DiskUsage: []disk.Result{
 						{
