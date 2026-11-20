@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Admission | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/usage/cli/agent/admission"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Admission | OSAPI"><meta data-rh="true" name="description" content="Show what admits this machine."><meta data-rh="true" property="og:description" content="Show what admits this machine."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/agent/admission"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/agent/admission" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/agent/admission" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Usage","item":"https://osapi-io.github.io/osapi/sidebar/usage/"},{"@type":"ListItem","position":2,"name":"CLI","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/"},{"@type":"ListItem","position":3,"name":"Agent","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/agent/"},{"@type":"ListItem","position":4,"name":"Admission","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/agent/admission"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.df861421.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.493d1c4c.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.6ab25248.js" defer="defer"></script>
 </head>
 <body>
@@ -52,62 +52,7 @@ request. If no key exists, the command makes a new key pair.</p>
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<table><thead><tr><th>Flag</th><th>Description</th><th>Default</th></tr></thead><tbody><tr><td><code>--agent-client-name</code></td><td>NATS client name for agent</td><td><code>osapi-agent</code></td></tr><tr><td><code>--agent-host</code></td><td>NATS server hostname for agent</td><td><code>localhost</code></td></tr><tr><td><code>--agent-hostname</code></td><td>Agent hostname (defaults to system hostname)</td><td></td></tr><tr><td><code>--agent-max-jobs</code></td><td>Maximum concurrent jobs per agent</td><td><code>10</code></td></tr><tr><td><code>--agent-port</code></td><td>NATS server port for agent</td><td><code>4222</code></td></tr><tr><td><code>--agent-queue-group</code></td><td>NATS queue group for load balancing</td><td><code>job-agents</code></td></tr><tr><td><code>--consumer-ack-wait</code></td><td>Time to wait for acknowledgment before retry</td><td><code>2m</code></td></tr><tr><td><code>--consumer-back-off</code></td><td>Retry backoff intervals</td><td><code>[30s,2m,5m,15m,30m]</code></td></tr><tr><td><code>--consumer-max-ack-pending</code></td><td>Maximum unacknowledged messages</td><td><code>1000</code></td></tr><tr><td><code>--consumer-max-deliver</code></td><td>Maximum delivery attempts before DLQ</td><td><code>5</code></td></tr><tr><td><code>--consumer-replay-policy</code></td><td>Replay policy: instant or original</td><td><code>instant</code></td></tr><tr><td><code>-d, --debug</code></td><td>Enable or disable debug mode</td><td></td></tr><tr><td><code>-j, --json</code></td><td>Enable JSON output</td><td></td></tr><tr><td><code>-f, --osapi-file</code></td><td>Path to config file</td><td><code>/etc/osapi/osapi.yaml</code></td></tr><tr><td><code>--sysctl-dir</code></td><td>Directory the agent writes osapi&#x27;s kernel parameter files to, one osapi-&lt;key&gt;.conf per key. (behaviors.sysctl.dir)</td><td><code>/etc/sysctl.d</code></td></tr></tbody></table>
+<table><thead><tr><th>Flag</th><th>Description</th><th>Default</th></tr></thead><tbody><tr><td><code>-d, --debug</code></td><td>Enable or disable debug mode</td><td></td></tr><tr><td><code>-j, --json</code></td><td>Enable JSON output</td><td></td></tr><tr><td><code>-f, --osapi-file</code></td><td>Path to config file</td><td><code>/etc/osapi/osapi.yaml</code></td></tr><tr><td><code>--sysctl-dir</code></td><td>Directory the agent writes osapi&#x27;s kernel parameter files to, one osapi-&lt;key&gt;.conf per key (behaviors.sysctl.dir)</td><td><code>/etc/sysctl.d</code></td></tr></tbody></table>
 <p><a class="" href="/osapi/sidebar/usage/cli/output">Output</a> tells how the result is printed, and what <code>--json</code> gives.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/usage/cli/agent"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Agent</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/usage/cli/agent/start"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Start</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#examples" class="table-of-contents__link toc-highlight">Examples</a></li><li><a href="#global-flags" class="table-of-contents__link toc-highlight">Global flags</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
