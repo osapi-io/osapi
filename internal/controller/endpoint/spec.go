@@ -421,7 +421,7 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindCheck,
-			Name: "osapi controller endpoint get --name <group> --openapi",
+			Name: "osapi controller endpoint openapi get --name <group>",
 			Does: "Prints the group's spec, as the definition makes it.",
 			When: "To read the prose beside the hand-written spec.",
 		},

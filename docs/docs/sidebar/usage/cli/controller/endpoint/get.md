@@ -2,9 +2,8 @@
 
 Describe one endpoint group: its routes, permissions and operation IDs.
 
-`--openapi` prints the group's part of the spec, as the definition makes it.
-Read it beside the hand-written spec of the group to compare the prose.
-`TestEndpointParity` compares the rest.
+`osapi controller endpoint openapi get` prints the group's part of the OpenAPI
+spec.
 
 ```bash
 osapi controller endpoint get [flags]
@@ -15,15 +14,13 @@ osapi controller endpoint get [flags]
 ```bash
 osapi controller endpoint get --name agent
 osapi controller endpoint get --name agent --json
-osapi controller endpoint get --name agent --openapi
 ```
 
 ## Flags
 
-| Flag        | Description                                        | Default |
-| ----------- | -------------------------------------------------- | ------- |
-| `--name`    | The endpoint group, such as agent (required)       |         |
-| `--openapi` | Print the group's part of the OpenAPI spec as YAML |         |
+| Flag     | Description                                  | Default |
+| -------- | -------------------------------------------- | ------- |
+| `--name` | The endpoint group, such as agent (required) |         |
 
 ## Global flags
 

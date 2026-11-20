@@ -61,8 +61,8 @@ type ParityPublicTestSuite struct {
 
 // TestEndpointParity holds the generated spec of each group that moves to
 // its hand-written spec: the same operations, parameters, auth, bodies,
-// responses and schemas. Prose is not compared; osapi controller endpoint get --name
-// <group> --openapi prints the generated spec to read beside the old one.
+// responses and schemas. Prose is not compared; osapi controller endpoint
+// openapi get --name <group> prints the generated spec to read beside the old one.
 func (s *ParityPublicTestSuite) TestEndpointParity() {
 	for _, m := range moving {
 		s.Run("when "+m.group+" replaces "+m.spec, func() {
