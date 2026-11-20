@@ -286,6 +286,7 @@ type LocalMethod struct {
 
 	sub, short, long string
 	says             string
+	process          bool
 	examples         []Example
 	refusals         []Refusal
 	handler          any
@@ -303,6 +304,32 @@ func Method[In, Out any](
 	name string,
 ) *LocalMethod {
 	return &LocalMethod{Name: name, In: reflect.TypeFor[In](), Out: reflect.TypeFor[Out]()}
+}
+
+// Process is a local command named name that runs a process until the
+// context ends, such as osapi nats server start: it has no input and no
+// output. Setup sets what it runs.
+func Process(
+	name string,
+) *LocalMethod {
+	return &LocalMethod{Name: name, In: reflect.TypeFor[struct{}](), process: true}
+}
+
+// Setup sets the function that makes a process's components:
+// func(ctx context.Context, d D) (command.Running, error), with D the type
+// the group Uses. Serve calls it with the context of the command, then runs
+// what it returns until that context ends.
+func (m *LocalMethod) Setup(
+	fn any,
+) *LocalMethod {
+	m.handler = fn
+
+	return m
+}
+
+// IsProcess is true for a method that Process made.
+func (m *LocalMethod) IsProcess() bool {
+	return m.process
 }
 
 // Short sets the command's one line of help.

@@ -25,6 +25,7 @@ import (
 	// Each import registers its group.
 	_ "github.com/osapi-io/osapi/internal/cli/commands/config"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/initcmd"
+	_ "github.com/osapi-io/osapi/internal/cli/commands/natsserver"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/skill"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/token"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/version"

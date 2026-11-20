@@ -21,17 +21,22 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/spf13/viper"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/osapi-io/osapi/internal/authtoken"
+	"github.com/osapi-io/osapi/internal/bus/server"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/cli/command"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/all/gen"
 	configcmd "github.com/osapi-io/osapi/internal/cli/commands/config"
 	"github.com/osapi-io/osapi/internal/cli/commands/initcmd"
+	"github.com/osapi-io/osapi/internal/cli/commands/natsserver"
 	"github.com/osapi-io/osapi/internal/cli/commands/skill"
 	"github.com/osapi-io/osapi/internal/cli/commands/token"
 	versioncmd "github.com/osapi-io/osapi/internal/cli/commands/version"
@@ -55,6 +60,22 @@ func init() {
 	command.Provide(initcmd.Group, func() initcmd.Deps {
 		return initcmd.Deps{FS: appFs, Source: skills.Installed(), Version: displayVersion}
 	})
+	command.Provide(natsserver.Group, func() natsserver.Deps {
+		return natsserver.Deps{
+			Config:     appConfig,
+			ConfigFile: viper.ConfigFileUsed(),
+			Logger:     logger,
+			Version:    appVersion(),
+			NewServer: func(
+				ctx context.Context,
+				log *slog.Logger,
+				cfg config.NATS,
+				mp *sdkmetric.MeterProvider,
+			) (natsserver.Server, error) {
+				return server.New(ctx, log, cfg, mp)
+			},
+		}
+	})
 	command.Provide(versioncmd.Group, func() versioncmd.Deps {
 		return versioncmd.Deps{Build: buildInfo}
 	})
@@ -64,7 +85,9 @@ func init() {
 		Error:     func(err error) { cli.HandleError(err, logger) },
 		PrintJSON: cli.PrintJSON,
 		Print:     cli.Printer{},
-	}); err != nil {
+		// natsCmd is written by hand, and its init runs after this one: the
+		// server group goes under it.
+	}, natsCmd); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}

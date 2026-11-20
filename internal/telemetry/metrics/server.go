@@ -181,6 +181,10 @@ func (s *Server) RegisterHeartbeatAge(
 // Components use this to create instruments that appear on this server's
 // /metrics endpoint.
 func (s *Server) MeterProvider() *sdkmetric.MeterProvider {
+	if s == nil {
+		return nil
+	}
+
 	return s.meterProvider
 }
 

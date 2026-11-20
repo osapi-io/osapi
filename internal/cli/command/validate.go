@@ -260,6 +260,9 @@ func Validate(
 		for _, f := range rule.Untagged(m.In) {
 			add(m.Name, RuleValidate, "input field "+f+" has no validate tag.")
 		}
+		if m.process && len(m.refusals) > 0 {
+			add(m.Name, RuleFails, "a process has no input, so nothing Fails.")
+		}
 		for _, msg := range refusalProblems(m) {
 			add(m.Name, RuleFails, msg)
 		}
@@ -327,6 +330,18 @@ func handlerProblem(
 	if g.Deps == nil {
 		return ""
 	}
+	if m.process {
+		want := reflect.FuncOf(
+			[]reflect.Type{reflect.TypeFor[context.Context](), g.Deps},
+			[]reflect.Type{reflect.TypeFor[Running](), reflect.TypeFor[error]()},
+			false,
+		)
+		if got := reflect.TypeOf(m.handler); got != want {
+			return fmt.Sprintf("the Setup is %s; it must be %s.", got, want)
+		}
+
+		return ""
+	}
 	want := reflect.FuncOf(
 		[]reflect.Type{reflect.TypeFor[context.Context](), g.Deps, m.In},
 		[]reflect.Type{m.Out, reflect.TypeFor[error]()},
@@ -389,6 +404,10 @@ func ValidateOutput() []Problem {
 			})
 		}
 		for _, m := range g.Commands() {
+			// A process prints no output.
+			if lm, ok := m.(*LocalMethod); ok && lm.process {
+				continue
+			}
 			for _, msg := range tagProblems(m.Output(), map[reflect.Type]bool{}) {
 				add(m.MethodName(), RuleTag, msg)
 			}

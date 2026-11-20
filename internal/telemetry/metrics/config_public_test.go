@@ -18,38 +18,55 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmd
+package metrics_test
 
 import (
 	"log/slog"
+	"testing"
 
-	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/telemetry/metrics"
 )
 
-// newMetricsServer makes the metrics server that cfg turns on, without
-// starting it. It returns nil when cfg turns it off.
-func newMetricsServer(
-	cfg config.MetricsServer,
-	log *slog.Logger,
-) *metrics.Server {
-	if !cfg.Enabled {
-		return nil
-	}
-
-	return metrics.New(cfg.Host, cfg.Port, log)
+type ConfigPublicTestSuite struct {
+	suite.Suite
 }
 
-// meterProviderOf returns the meter provider of s, or nil when there is no
-// server.
-func meterProviderOf(
-	s *metrics.Server,
-) *sdkmetric.MeterProvider {
-	if s == nil {
-		return nil
+func (s *ConfigPublicTestSuite) TestFromConfig() {
+	tests := []struct {
+		name         string
+		cfg          config.MetricsServer
+		validateFunc func(*metrics.Server)
+	}{
+		{
+			name: "when the config turns it off, there is no server, and no meter provider",
+			cfg:  config.MetricsServer{},
+			validateFunc: func(got *metrics.Server) {
+				s.Nil(got)
+				s.Nil(got.MeterProvider())
+			},
+		},
+		{
+			name: "when the config turns it on, it is made with a meter provider",
+			cfg:  config.MetricsServer{Enabled: true, Host: "127.0.0.1", Port: 0},
+			validateFunc: func(got *metrics.Server) {
+				s.Require().NotNil(got)
+				s.NotNil(got.MeterProvider())
+			},
+		},
 	}
 
-	return s.MeterProvider()
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.validateFunc(metrics.FromConfig(tc.cfg, slog.New(slog.DiscardHandler)))
+		})
+	}
+}
+
+func TestConfigPublicTestSuite(
+	t *testing.T,
+) {
+	suite.Run(t, new(ConfigPublicTestSuite))
 }

@@ -76,12 +76,12 @@ var startCmd = &cobra.Command{
 		natsLog := logger.With("component", "nats")
 		controllerLog := logger.With("component", "controller")
 		agentLog := logger.With("component", "agent")
-		natsMetrics := newMetricsServer(appConfig.NATS.Server.Metrics, natsLog)
-		controllerMetrics := newMetricsServer(appConfig.Controller.Metrics, controllerLog)
-		agentMetrics := newMetricsServer(appConfig.Agent.Metrics, agentLog)
+		natsMetrics := metrics.FromConfig(appConfig.NATS.Server.Metrics, natsLog)
+		controllerMetrics := metrics.FromConfig(appConfig.Controller.Metrics, controllerLog)
+		agentMetrics := metrics.FromConfig(appConfig.Agent.Metrics, agentLog)
 		var metricsServers []*metrics.Server
 
-		natsServer, err := server.New(ctx, natsLog, appConfig.NATS, meterProviderOf(natsMetrics))
+		natsServer, err := server.New(ctx, natsLog, appConfig.NATS, natsMetrics.MeterProvider())
 		if err != nil {
 			cli.LogFatal(natsLog, "failed to start NATS server", err)
 		}
@@ -117,7 +117,7 @@ var startCmd = &cobra.Command{
 			agentLog,
 			appFs,
 			appConfig,
-			meterProviderOf(agentMetrics),
+			agentMetrics.MeterProvider(),
 		)
 		if err != nil {
 			cli.LogFatal(logger, "failed to start the agent", err)
