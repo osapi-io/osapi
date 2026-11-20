@@ -343,20 +343,6 @@ ready:
     just react-lint
     just react-build
 
-# Run the write examples of every behavior against a real agent, as root, on
-# this host. They change kernel parameters and files under /etc, so the recipe
-# runs only in CI, on a runner that is thrown away after the job.
-[linux]
-behavior-int:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [ -z "${CI:-}" ]; then
-        echo "behavior-int changes this machine's kernel parameters and /etc; it runs only in CI" >&2
-        exit 1
-    fi
-    sudo -E env "PATH=$PATH" "HOME=$HOME" OSAPI_INTEGRATION_WRITE_BEHAVIORS=1 \
-        go test -tags integration -count=1 -v -run TestBehaviorSmokeSuite ./test/integration/
-
 [linux]
 linux-tune:
     sudo sysctl -w net.ipv4.ping_group_range="0 2147483647"

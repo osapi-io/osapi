@@ -156,7 +156,7 @@ go test ./internal/behaviors/<name>/... ./internal/behaviors/all/
 mise exec -- just test
 ```
 
-CI also runs the write examples against a real agent on Linux, as root, in its `Behavior writes` step. An example that scripts a file or a command's output is skipped there.
+CI also runs the write examples against a real agent on Linux, as root, in its `Integration` step, with `OSAPI_INTEGRATION_WRITE_BEHAVIORS=1`. An example that scripts a file or a command's output is skipped there.
 
 A failure of `behavior validate` or of a behavior's tests ends with its fix.
 `go run . behavior validate --help` lists each rule and each test check before
