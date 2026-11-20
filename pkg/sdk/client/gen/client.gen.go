@@ -1725,7 +1725,7 @@ type Admission struct {
 
 // AdmitRequest defines model for AdmitRequest.
 type AdmitRequest struct {
-	// Fingerprint The fingerprint that osapi agent admission prints on the machine.
+	// Fingerprint The fingerprint that osapi agent admission get prints on the machine.
 	Fingerprint string `json:"fingerprint" validate:"required,min=1,max=255"`
 }
 

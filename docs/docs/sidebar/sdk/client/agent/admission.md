@@ -34,7 +34,7 @@ for _, a := range resp.Data.Items {
     fmt.Printf("%s  %s  %s\n", a.MachineID, a.Hostname, a.Fingerprint)
 }
 
-// Admit, with the fingerprint that `osapi agent admission` prints on the
+// Admit, with the fingerprint that `osapi agent admission get` prints on the
 // machine
 err := c.Admission.Admit(ctx, "d530664edc1c431eb5ef1e9dfd6617a5", "SHA256:1f53dea6...")
 

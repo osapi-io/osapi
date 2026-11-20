@@ -134,7 +134,7 @@ func (a *Agent) Start() {
 		a.startConsumers()
 	} else {
 		a.logger.Info(
-			"waiting for admission; run osapi agent admission on this machine, and give its fingerprint to osapi client admission admit",
+			"waiting for admission; run osapi agent admission get on this machine, and give its fingerprint to osapi client admission admit",
 			slog.String("machine_id", a.machineID),
 			slog.String("fingerprint", a.pkiManager.Fingerprint()),
 		)

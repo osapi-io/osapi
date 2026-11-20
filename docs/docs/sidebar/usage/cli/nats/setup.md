@@ -6,6 +6,12 @@ It connects as the controller does, with `controller.nats`: its host, port,
 namespace and auth. Run it one time before you start the controller and the
 agents with that server.
 
+Run it again after you change the settings of a stream or a bucket. Each stream
+and bucket is created or updated to match the config, so running it again
+changes nothing. `osapi nats server start` does the same for the embedded server
+when the server starts. Thus a deployment that runs the NATS server of osapi
+does not need this command.
+
 ```bash
 osapi nats setup
 ```
@@ -15,14 +21,6 @@ osapi nats setup
 ```bash
 osapi nats setup -f /etc/osapi/osapi.yaml
 ```
-
-## Notes
-
-Run it again after you change the settings of a stream or a bucket. Each stream
-and bucket is created or updated to match the config, so running it again
-changes nothing. `osapi nats server start` does the same for the embedded server
-when the server starts. Thus a deployment that runs the NATS server of osapi
-does not need this command.
 
 ## Global flags
 

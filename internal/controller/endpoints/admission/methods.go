@@ -105,7 +105,7 @@ func Admit(
 	case errors.Is(err, admission.ErrFingerprintMismatch):
 		return struct{}{}, endpoint.Errorf(
 			ErrMismatch,
-			"fingerprint %s is not the one of machine %s's request; run osapi agent admission on the machine",
+			"fingerprint %s is not the one of machine %s's request; run osapi agent admission get on the machine",
 			in.Body.Fingerprint,
 			in.MachineID,
 		)

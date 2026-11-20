@@ -2,7 +2,7 @@
 
 Admit a pending machine.
 
-Run `osapi agent admission` on the machine, and give the fingerprint that it
+Run `osapi agent admission get` on the machine, and give the fingerprint that it
 prints. The controller admits the machine only when the fingerprint is the one
 of the key in its request.
 
@@ -23,10 +23,10 @@ shows what a role grants.
 
 ## Flags
 
-| Flag            | Description                                                                 | Default |
-| --------------- | --------------------------------------------------------------------------- | ------- |
-| `--fingerprint` | The fingerprint that osapi agent admission prints on the machine (required) |         |
-| `--machine-id`  | The machine ID of the node (required)                                       |         |
+| Flag            | Description                                                                     | Default |
+| --------------- | ------------------------------------------------------------------------------- | ------- |
+| `--fingerprint` | The fingerprint that osapi agent admission get prints on the machine (required) |         |
+| `--machine-id`  | The machine ID of the node (required)                                           |         |
 
 ## Global flags
 
