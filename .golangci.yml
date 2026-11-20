@@ -5,6 +5,10 @@ version: "2"
 
 run:
   timeout: 5m
+  # The integration tests build only with this tag. Without it, the lint
+  # does not read test/integration.
+  build-tags:
+    - integration
 
 linters:
   enable:
