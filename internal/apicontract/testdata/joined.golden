@@ -18,10 +18,12 @@ op DELETE /api/node/{hostname}/user/{name}/ssh-key/{fingerprint} id=DeleteNodeUs
 op GET /api/admission id=GetAdmissions tags=[Admission_API_admission] auth=BearerAuth:admission:read params=[query:state:string(pending|admitted|rejected|revoked)] body= responses=[200=application/json:ListAdmissionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
 op GET /api/admission/{machine_id} id=GetAdmission tags=[Admission_API_admission] auth=BearerAuth:admission:read params=[path:machine_id!:string] body= responses=[200=application/json:Admission 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
 op GET /api/agent id=GetAgents tags=[Agent_Management_API_agent_operations] auth=BearerAuth:agent:read params=[] body= responses=[200=application/json:ListAgentsResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op GET /api/agent/status id=GetAgentStatus tags=[Agent_Management_API_agent_operations] auth=BearerAuth:health:read params=[] body= responses=[200=application/json:ComponentList 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/agent/{hostname} id=GetAgentDetails tags=[Agent_Management_API_agent_operations] auth=BearerAuth:agent:read params=[path:hostname!:string] body= responses=[200=application/json:AgentInfo 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/audit id=GetAuditLogs tags=[Audit_Log_API_audit] auth=BearerAuth:audit:read params=[query:limit:integer query:offset:integer] body= responses=[200=application/json:ListAuditResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
 op GET /api/audit/export id=GetAuditExport tags=[Audit_Log_API_audit] auth=BearerAuth:audit:read params=[] body= responses=[200=application/json:ListAuditResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
 op GET /api/audit/{id} id=GetAuditLogByID tags=[Audit_Log_API_audit] auth=BearerAuth:audit:read params=[path:id!:string/uuid] body= responses=[200=application/json:AuditEntryResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
+op GET /api/controller/status id=GetControllerStatus tags=[Controller_API_controller] auth=BearerAuth:health:read params=[] body= responses=[200=application/json:ComponentList 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/facts/keys id=GetFactKeys tags=[Facts_API_facts] auth=BearerAuth:agent:read params=[] body= responses=[200=application/json:FactKeysResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/file id=GetFiles tags=[File_Management_API_file_operations] auth=BearerAuth:file:read params=[] body= responses=[200=application/json:FileListResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
 op GET /api/file/stale id=GetFileStale tags=[File_Management_API_file_operations] auth=BearerAuth:file:read params=[] body= responses=[200=application/json:StaleDeploymentsResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
@@ -31,6 +33,7 @@ op GET /api/health/ready id=GetHealthReady tags=[Health_Check_API_health] auth=p
 op GET /api/health/status id=GetHealthStatus tags=[Health_Check_API_health] auth=BearerAuth:health:read params=[] body= responses=[200=application/json:StatusResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/job id=GetJobs tags=[Job_Management_API_job_operations] auth=BearerAuth:job:read params=[query:limit:integer query:offset:integer query:status:string(submitted|processing|completed|failed|partial_failure)] body= responses=[200=application/json:ListJobsResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/job/{id} id=GetJobByID tags=[Job_Management_API_job_operations] auth=BearerAuth:job:read params=[path:id!:string/uuid] body= responses=[200=application/json:JobDetailResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op GET /api/nats/status id=GetNATSStatus tags=[NATS_API_nats] auth=BearerAuth:health:read params=[] body= responses=[200=application/json:ComponentList 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname} id=GetNodeStatus tags=[Node_Management_API_node_status] auth=BearerAuth:node:read params=[path:hostname!:string] body= responses=[200=application/json:NodeStatusCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/certificate/ca id=GetNodeCertificateCa tags=[Certificate_Management_API_certificate_operations] auth=BearerAuth:certificate:read params=[path:hostname!:string] body= responses=[200=application/json:CertificateCACollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/container/docker id=GetNodeContainerDocker tags=[Docker_Management_API_docker_operations] auth=BearerAuth:docker:read params=[path:hostname!:string query:limit:integer query:state:string(running|stopped|all)] body= responses=[200=application/json:DockerListCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -229,6 +232,8 @@ schema ComponentEntry.status = string
 schema ComponentEntry.type = string
 schema ComponentEntry.url = string
 schema ComponentEntry.version = string
+schema ComponentList.items! = [ComponentEntry]
+schema ComponentList.total_items! = integer
 schema CreateJobResponse.job_id! = string/uuid
 schema CreateJobResponse.revision = integer/int64
 schema CreateJobResponse.status! = string
@@ -927,6 +932,7 @@ tag Agent_Management_API_agent_operations
 tag Audit_Log_API_audit
 tag Certificate_Management_API_certificate_operations
 tag Command_Execution_API_command_operations
+tag Controller_API_controller
 tag Docker_Management_API_docker_exec
 tag Docker_Management_API_docker_image
 tag Docker_Management_API_docker_operations
@@ -936,6 +942,7 @@ tag Health_Check_API_health
 tag Hostname_Management_API_hostname_operations
 tag Job_Management_API_job_operations
 tag Log_Management_API_log_operations
+tag NATS_API_nats
 tag NTP_Management_API_ntp_operations
 tag Network_Management_API_dns_operations
 tag Network_Management_API_interface_operations

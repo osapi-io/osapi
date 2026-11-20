@@ -22,6 +22,7 @@ package agent
 import (
 	"context"
 
+	"github.com/osapi-io/osapi/internal/controller/endpoints/health"
 	"github.com/osapi-io/osapi/internal/job"
 )
 
@@ -30,6 +31,8 @@ import (
 type Deps struct {
 	// Jobs reads the registry and writes the drain flag and the timeline.
 	Jobs Jobs
+	// Health reports the health of each component, for status.
+	Health health.Reporter
 }
 
 // Jobs is the part of the job client the agent group uses.

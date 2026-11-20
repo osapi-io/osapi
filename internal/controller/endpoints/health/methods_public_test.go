@@ -64,6 +64,51 @@ func (s *MethodsPublicTestSuite) TearDownSubTest() {
 	s.ctrl.Finish()
 }
 
+func (s *MethodsPublicTestSuite) TestComponents() {
+	tests := []struct {
+		name string
+		kind string
+		want []string
+	}{
+		{
+			name: "when components have the type, each is in the list",
+			kind: "agent",
+			want: []string{"web-01", "web-02"},
+		},
+		{
+			name: "when none has the type, the list is empty, not null",
+			kind: "nothing",
+			want: []string{},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.reporter.EXPECT().
+				Status(gomock.Any()).
+				Return(health.StatusResponse{Registry: []health.ComponentEntry{
+					{
+						Type:       "controller",
+						Hostname:   "hub",
+						Components: []health.ComponentEntry{{Type: "api", Status: "ok"}},
+					},
+					{Type: "nats", Hostname: "hub"},
+					{Type: "agent", Hostname: "web-01"},
+					{Type: "agent", Hostname: "web-02"},
+				}})
+
+			got := health.Components(context.Background(), s.reporter, tc.kind)
+
+			s.NotNil(got.Items)
+			hosts := []string{}
+			for _, e := range got.Items {
+				hosts = append(hosts, e.Hostname)
+			}
+			s.Equal(tc.want, hosts)
+		})
+	}
+}
+
 func (s *MethodsPublicTestSuite) TestLiveness() {
 	got, err := health.Liveness(context.Background(), health.Deps{}, health.LivenessInput{})
 	s.Require().NoError(err)

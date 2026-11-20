@@ -26,6 +26,9 @@ tags:
   - description: Audit log endpoints for viewing API activity.
     name: Audit_Log_API_audit
     x-displayName: Audit
+  - description: The controller of the fleet.
+    name: Controller_API_controller
+    x-displayName: Controller
   - description: Fact key discovery for @fact. references.
     name: Facts_API_facts
     x-displayName: Facts
@@ -38,6 +41,9 @@ tags:
   - description: Operations related to the job queue.
     name: Job_Management_API_job_operations
     x-displayName: Job
+  - description: The NATS server of the fleet.
+    name: NATS_API_nats
+    x-displayName: NATS
   - description: Telemetry endpoints, such as the spans of a trace.
     name: Telemetry_API_telemetry
     x-displayName: Telemetry
@@ -733,6 +739,44 @@ paths:
       summary: Undrain an agent
       tags:
         - Agent_Management_API_agent_operations
+  /api/agent/status:
+    servers: []
+    get:
+      description: >-
+        Each agent, with each of its sub-components, from the health status of
+        the controller.
+      operationId: GetAgentStatus
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComponentList'
+          description: Each agent component, with its sub-components.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - health:read
+      summary: Show the health of each agent
+      tags:
+        - Agent_Management_API_agent_operations
   /api/audit:
     servers: []
     get:
@@ -907,6 +951,44 @@ paths:
       summary: Export all audit log entries
       tags:
         - Audit_Log_API_audit
+  /api/controller/status:
+    servers: []
+    get:
+      description: >-
+        Each controller, with each of its sub-components, from the health status
+        of the controller.
+      operationId: GetControllerStatus
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComponentList'
+          description: Each controller component, with its sub-components.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - health:read
+      summary: Show the health of the controller
+      tags:
+        - Controller_API_controller
   /api/facts/keys:
     servers: []
     get:
@@ -1703,6 +1785,44 @@ paths:
       summary: Retry a job
       tags:
         - Job_Management_API_job_operations
+  /api/nats/status:
+    servers: []
+    get:
+      description: >-
+        The NATS server, with each of its sub-components, from the health status
+        of the controller.
+      operationId: GetNATSStatus
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComponentList'
+          description: Each nats component, with its sub-components.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - health:read
+      summary: Show the health of the NATS server
+      tags:
+        - NATS_API_nats
   /api/telemetry/trace/{id}:
     servers: []
     get:
@@ -6859,6 +6979,72 @@ components:
         - hostname
         - state
       type: object
+    ComponentEntry:
+      properties:
+        address:
+          description: Listen address of a sub-component, such as :8080.
+          type: string
+        age:
+          description: Time since component started.
+          example: 7h 6m
+          type: string
+        components:
+          description: >-
+            The sub-components of the component, such as its api and its metrics
+            server, sorted by name.
+          items:
+            $ref: '#/components/schemas/ComponentEntry'
+          type: array
+        conditions:
+          description: Active conditions.
+          items:
+            type: string
+          type: array
+        cpu_percent:
+          description: Process CPU usage percentage.
+          example: 2.1
+          type: number
+        hostname:
+          description: Component hostname.
+          example: web-01
+          type: string
+        mem_bytes:
+          description: Process RSS memory in bytes.
+          example: 134217728
+          format: int64
+          type: integer
+        status:
+          description: Component status.
+          example: Ready
+          type: string
+        type:
+          description: >-
+            Component type (agent, controller, nats), or the name of a
+            sub-component, such as api.
+          example: agent
+          type: string
+        url:
+          description: Where a person opens a sub-component, from its url config key.
+          type: string
+        version:
+          description: Build version of the component's binary.
+          example: v0.2.1-0.20261119003517-f6bc5af55ceb
+          type: string
+      type: object
+    ComponentList:
+      properties:
+        items:
+          description: Each component of the type, with its sub-components.
+          items:
+            $ref: '#/components/schemas/ComponentEntry'
+          type: array
+        total_items:
+          description: The number of components of the type.
+          type: integer
+      required:
+        - total_items
+        - items
+      type: object
     ListAgentsResponse:
       properties:
         items:
@@ -7353,58 +7539,6 @@ components:
       required:
         - name
         - status
-      type: object
-    ComponentEntry:
-      properties:
-        address:
-          description: Listen address of a sub-component, such as :8080.
-          type: string
-        age:
-          description: Time since component started.
-          example: 7h 6m
-          type: string
-        components:
-          description: >-
-            The sub-components of the component, such as its api and its metrics
-            server, sorted by name.
-          items:
-            $ref: '#/components/schemas/ComponentEntry'
-          type: array
-        conditions:
-          description: Active conditions.
-          items:
-            type: string
-          type: array
-        cpu_percent:
-          description: Process CPU usage percentage.
-          example: 2.1
-          type: number
-        hostname:
-          description: Component hostname.
-          example: web-01
-          type: string
-        mem_bytes:
-          description: Process RSS memory in bytes.
-          example: 134217728
-          format: int64
-          type: integer
-        status:
-          description: Component status.
-          example: Ready
-          type: string
-        type:
-          description: >-
-            Component type (agent, controller, nats), or the name of a
-            sub-component, such as api.
-          example: agent
-          type: string
-        url:
-          description: Where a person opens a sub-component, from its url config key.
-          type: string
-        version:
-          description: Build version of the component's binary.
-          example: v0.2.1-0.20261119003517-f6bc5af55ceb
-          type: string
       type: object
     HealthResponse:
       properties:
@@ -11673,6 +11807,9 @@ x-tagGroups:
   - name: Audit Log API
     tags:
       - Audit_Log_API_audit
+  - name: Controller API
+    tags:
+      - Controller_API_controller
   - name: Facts API
     tags:
       - Facts_API_facts
@@ -11685,6 +11822,9 @@ x-tagGroups:
   - name: Job Management API
     tags:
       - Job_Management_API_job_operations
+  - name: NATS API
+    tags:
+      - NATS_API_nats
   - name: Telemetry API
     tags:
       - Telemetry_API_telemetry

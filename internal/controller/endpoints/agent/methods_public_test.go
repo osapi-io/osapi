@@ -31,6 +31,8 @@ import (
 
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent/mocks"
+	"github.com/osapi-io/osapi/internal/controller/endpoints/health"
+	healthmocks "github.com/osapi-io/osapi/internal/controller/endpoints/health/mocks"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
@@ -40,14 +42,16 @@ import (
 type MethodsPublicTestSuite struct {
 	suite.Suite
 
-	ctrl *gomock.Controller
-	jobs *mocks.MockJobs
-	ctx  context.Context
+	ctrl   *gomock.Controller
+	jobs   *mocks.MockJobs
+	health *healthmocks.MockReporter
+	ctx    context.Context
 }
 
 func (s *MethodsPublicTestSuite) SetupSubTest() {
 	s.ctrl = gomock.NewController(s.T())
 	s.jobs = mocks.NewMockJobs(s.ctrl)
+	s.health = healthmocks.NewMockReporter(s.ctrl)
 	s.ctx = context.Background()
 }
 
@@ -56,7 +60,7 @@ func (s *MethodsPublicTestSuite) TearDownSubTest() {
 }
 
 func (s *MethodsPublicTestSuite) deps() agent.Deps {
-	return agent.Deps{Jobs: s.jobs}
+	return agent.Deps{Jobs: s.jobs, Health: s.health}
 }
 
 var errBoom = errors.New("nats: timeout")
@@ -64,6 +68,29 @@ var errBoom = errors.New("nats: timeout")
 // missing is the registry's error for an agent it does not have.
 func missing() error {
 	return fmt.Errorf("agent server9 not found: %w", job.ErrNotFound)
+}
+
+func (s *MethodsPublicTestSuite) TestStatus() {
+	s.Run("when agents are in the registry, each agent is in the list", func() {
+		s.health.EXPECT().
+			Status(gomock.Any()).
+			Return(health.StatusResponse{Registry: []health.ComponentEntry{
+				{
+					Type:       "controller",
+					Hostname:   "hub",
+					Components: []health.ComponentEntry{{Type: "api", Status: "ok"}},
+				},
+				{Type: "nats", Hostname: "hub"},
+				{Type: "agent", Hostname: "web-01"},
+				{Type: "agent", Hostname: "web-02"},
+			}})
+
+		got, err := agent.Status(s.ctx, s.deps(), agent.StatusInput{})
+
+		s.Require().NoError(err)
+		s.Require().Len(got.Items, 2)
+		s.Equal("web-01", got.Items[0].Hostname)
+	})
 }
 
 func (s *MethodsPublicTestSuite) TestList() {

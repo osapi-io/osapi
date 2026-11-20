@@ -2077,6 +2077,15 @@ type ComponentEntry struct {
 	Version *string `json:"version,omitempty"`
 }
 
+// ComponentList defines model for ComponentList.
+type ComponentList struct {
+	// Items Each component of the type, with its sub-components.
+	Items []ComponentEntry `json:"items"`
+
+	// TotalItems The number of components of the type.
+	TotalItems int `json:"total_items"`
+}
+
 // CreateJobResponse defines model for CreateJobResponse.
 type CreateJobResponse struct {
 	// JobId Unique identifier for the created job.
@@ -5151,6 +5160,9 @@ type ClientInterface interface {
 	// GetAgents request
 	GetAgents(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetAgentStatus request
+	GetAgentStatus(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetAgentDetails request
 	GetAgentDetails(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -5168,6 +5180,9 @@ type ClientInterface interface {
 
 	// GetAuditLogByID request
 	GetAuditLogByID(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetControllerStatus request
+	GetControllerStatus(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetFactKeys request
 	GetFactKeys(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -5212,6 +5227,9 @@ type ClientInterface interface {
 	RetryJobByIDWithBody(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	RetryJobByID(ctx context.Context, id openapi_types.UUID, body RetryJobByIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetNATSStatus request
+	GetNATSStatus(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNodeStatus request
 	GetNodeStatus(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -5681,6 +5699,18 @@ func (c *Client) GetAgents(ctx context.Context, reqEditors ...RequestEditorFn) (
 	return c.Client.Do(req)
 }
 
+func (c *Client) GetAgentStatus(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAgentStatusRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) GetAgentDetails(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetAgentDetailsRequest(c.Server, hostname)
 	if err != nil {
@@ -5743,6 +5773,18 @@ func (c *Client) GetAuditExport(ctx context.Context, reqEditors ...RequestEditor
 
 func (c *Client) GetAuditLogByID(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetAuditLogByIDRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetControllerStatus(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetControllerStatusRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -5923,6 +5965,18 @@ func (c *Client) RetryJobByIDWithBody(ctx context.Context, id openapi_types.UUID
 
 func (c *Client) RetryJobByID(ctx context.Context, id openapi_types.UUID, body RetryJobByIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewRetryJobByIDRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetNATSStatus(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNATSStatusRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -7794,6 +7848,33 @@ func NewGetAgentsRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewGetAgentStatusRequest generates requests for GetAgentStatus
+func NewGetAgentStatusRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/agent/status")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetAgentDetailsRequest generates requests for GetAgentDetails
 func NewGetAgentDetailsRequest(server string, hostname string) (*http.Request, error) {
 	var err error
@@ -8006,6 +8087,33 @@ func NewGetAuditLogByIDRequest(server string, id openapi_types.UUID) (*http.Requ
 	}
 
 	operationPath := fmt.Sprintf("/api/audit/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetControllerStatusRequest generates requests for GetControllerStatus
+func NewGetControllerStatusRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/controller/status")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -8507,6 +8615,33 @@ func NewRetryJobByIDRequestWithBody(server string, id openapi_types.UUID, conten
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetNATSStatusRequest generates requests for GetNATSStatus
+func NewGetNATSStatusRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/nats/status")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -12837,6 +12972,9 @@ type ClientWithResponsesInterface interface {
 	// GetAgentsWithResponse request
 	GetAgentsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetAgentsResponse, error)
 
+	// GetAgentStatusWithResponse request
+	GetAgentStatusWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetAgentStatusResponse, error)
+
 	// GetAgentDetailsWithResponse request
 	GetAgentDetailsWithResponse(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*GetAgentDetailsResponse, error)
 
@@ -12854,6 +12992,9 @@ type ClientWithResponsesInterface interface {
 
 	// GetAuditLogByIDWithResponse request
 	GetAuditLogByIDWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetAuditLogByIDResponse, error)
+
+	// GetControllerStatusWithResponse request
+	GetControllerStatusWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetControllerStatusResponse, error)
 
 	// GetFactKeysWithResponse request
 	GetFactKeysWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetFactKeysResponse, error)
@@ -12898,6 +13039,9 @@ type ClientWithResponsesInterface interface {
 	RetryJobByIDWithBodyWithResponse(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RetryJobByIDResponse, error)
 
 	RetryJobByIDWithResponse(ctx context.Context, id openapi_types.UUID, body RetryJobByIDJSONRequestBody, reqEditors ...RequestEditorFn) (*RetryJobByIDResponse, error)
+
+	// GetNATSStatusWithResponse request
+	GetNATSStatusWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetNATSStatusResponse, error)
 
 	// GetNodeStatusWithResponse request
 	GetNodeStatusWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeStatusResponse, error)
@@ -13504,6 +13648,39 @@ func (r GetAgentsResponse) ContentType() string {
 	return ""
 }
 
+type GetAgentStatusResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ComponentList
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAgentStatusResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAgentStatusResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetAgentStatusResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetAgentDetailsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -13708,6 +13885,39 @@ func (r GetAuditLogByIDResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetAuditLogByIDResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetControllerStatusResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ComponentList
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetControllerStatusResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetControllerStatusResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetControllerStatusResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -14187,6 +14397,39 @@ func (r RetryJobByIDResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r RetryJobByIDResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetNATSStatusResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ComponentList
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNATSStatusResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNATSStatusResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetNATSStatusResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -17541,6 +17784,15 @@ func (c *ClientWithResponses) GetAgentsWithResponse(ctx context.Context, reqEdit
 	return ParseGetAgentsResponse(rsp)
 }
 
+// GetAgentStatusWithResponse request returning *GetAgentStatusResponse
+func (c *ClientWithResponses) GetAgentStatusWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetAgentStatusResponse, error) {
+	rsp, err := c.GetAgentStatus(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAgentStatusResponse(rsp)
+}
+
 // GetAgentDetailsWithResponse request returning *GetAgentDetailsResponse
 func (c *ClientWithResponses) GetAgentDetailsWithResponse(ctx context.Context, hostname string, reqEditors ...RequestEditorFn) (*GetAgentDetailsResponse, error) {
 	rsp, err := c.GetAgentDetails(ctx, hostname, reqEditors...)
@@ -17593,6 +17845,15 @@ func (c *ClientWithResponses) GetAuditLogByIDWithResponse(ctx context.Context, i
 		return nil, err
 	}
 	return ParseGetAuditLogByIDResponse(rsp)
+}
+
+// GetControllerStatusWithResponse request returning *GetControllerStatusResponse
+func (c *ClientWithResponses) GetControllerStatusWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetControllerStatusResponse, error) {
+	rsp, err := c.GetControllerStatus(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetControllerStatusResponse(rsp)
 }
 
 // GetFactKeysWithResponse request returning *GetFactKeysResponse
@@ -17727,6 +17988,15 @@ func (c *ClientWithResponses) RetryJobByIDWithResponse(ctx context.Context, id o
 		return nil, err
 	}
 	return ParseRetryJobByIDResponse(rsp)
+}
+
+// GetNATSStatusWithResponse request returning *GetNATSStatusResponse
+func (c *ClientWithResponses) GetNATSStatusWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetNATSStatusResponse, error) {
+	rsp, err := c.GetNATSStatus(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNATSStatusResponse(rsp)
 }
 
 // GetNodeStatusWithResponse request returning *GetNodeStatusResponse
@@ -19307,6 +19577,53 @@ func ParseGetAgentsResponse(rsp *http.Response) (*GetAgentsResponse, error) {
 	return response, nil
 }
 
+// ParseGetAgentStatusResponse parses an HTTP response from a GetAgentStatusWithResponse call
+func ParseGetAgentStatusResponse(rsp *http.Response) (*GetAgentStatusResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAgentStatusResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ComponentList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetAgentDetailsResponse parses an HTTP response from a GetAgentDetailsWithResponse call
 func ParseGetAgentDetailsResponse(rsp *http.Response) (*GetAgentDetailsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -19667,6 +19984,53 @@ func ParseGetAuditLogByIDResponse(rsp *http.Response) (*GetAuditLogByIDResponse,
 			return nil, err
 		}
 		response.JSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetControllerStatusResponse parses an HTTP response from a GetControllerStatusWithResponse call
+func ParseGetControllerStatusResponse(rsp *http.Response) (*GetControllerStatusResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetControllerStatusResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ComponentList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
 
 	}
 
@@ -20437,6 +20801,53 @@ func ParseRetryJobByIDResponse(rsp *http.Response) (*RetryJobByIDResponse, error
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNATSStatusResponse parses an HTTP response from a GetNATSStatusWithResponse call
+func ParseGetNATSStatusResponse(rsp *http.Response) (*GetNATSStatusResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNATSStatusResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ComponentList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

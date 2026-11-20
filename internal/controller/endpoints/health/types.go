@@ -130,3 +130,12 @@ type ComponentEntry struct {
 	URL        string           `json:"url,omitempty"         doc:"Where a person opens a sub-component, from its url config key."`
 	Components []ComponentEntry `json:"components,omitempty"  doc:"The sub-components of the component, such as its api and its metrics server, sorted by name."`
 }
+
+// ComponentList is the components of one type, each with its
+// sub-components: the answer of the status of the controller, NATS and the
+// agents.
+type ComponentList struct {
+	_          struct{}         `title:"Components"`
+	TotalItems int              `                   json:"total_items" doc:"The number of components of the type."`
+	Items      []ComponentEntry `                   json:"items"       doc:"Each component of the type, with its sub-components." empty:"None of this type has registered."`
+}

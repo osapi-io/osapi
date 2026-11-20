@@ -9,6 +9,15 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent"
 )
 
+// decodeStatus reads the status method's input from the request.
+func decodeStatus(
+	c *echo.Context,
+) (agent.StatusInput, string, bool) {
+	var in agent.StatusInput
+
+	return in, "", true
+}
+
 // decodeList reads the list method's input from the request.
 func decodeList(
 	c *echo.Context,

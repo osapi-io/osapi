@@ -30,6 +30,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/controller/endpoints/health"
+
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
@@ -53,6 +55,18 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Doc[MemoryResponse]("Memory usage information."),
 	endpoint.Doc[OSInfoResponse]("Operating system information."),
 	endpoint.Doc[RouteResponse]("A network routing table entry."),
+	endpoint.Get[StatusInput, health.ComponentList]("status").
+		Handle(Status).
+		Sub("status").
+		ID("GetAgentStatus").
+		Describe("Show the health of each agent").
+		Explain("Each agent, with each of its sub-components, from the health status of the controller.").
+		Returns("Each agent component, with its sub-components.").
+		Permission("health:read").
+		Command("Show the health of each agent",
+			"Each agent, with its process CPU and memory and each of its sub-components, from the\nhealth status of the controller. agent list shows the host of each agent.").
+		Example("").
+		Example("--json"),
 	endpoint.Get[ListInput, ListAgentsResponse]("list").
 		Notes("The `--json` output has more system facts that the agent collects:\n"+
 			"architecture, kernel version, FQDN, CPU count, network interfaces, service\n"+

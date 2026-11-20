@@ -5,6 +5,7 @@ osapi client health status --json      # every component, with its sub-component
 osapi client health ready --json       # is the controller ready to serve
 osapi client agent list --json         # agents that have checked in, with conditions
 osapi client agent get --hostname <h> --json
+osapi client nats status --json        # the NATS server, with its sub-components
 osapi client job get --id <job> --json # one job, and each host's result
 ```
 

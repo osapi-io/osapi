@@ -32,6 +32,7 @@ export * from './commandResultItem';
 export * from './commandResultItemStatus';
 export * from './commandShellRequest';
 export * from './componentEntry';
+export * from './componentList';
 export * from './createJobResponse';
 export * from './deleteNodeContainerDockerByIDParams';
 export * from './deleteNodeContainerDockerImageParams';

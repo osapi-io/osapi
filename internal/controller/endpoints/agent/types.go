@@ -138,3 +138,6 @@ type TimelineEvent struct {
 	Message   string    `json:"message,omitempty"`
 	Error     string    `json:"error,omitempty"`
 }
+
+// StatusInput is the input of status, which has none.
+type StatusInput struct{}

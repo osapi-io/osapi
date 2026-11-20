@@ -84,6 +84,12 @@ const sidebar: SidebarsConfig = {
           label: "Undrain an agent",
           className: "api-method post",
         },
+        {
+          type: "doc",
+          id: "gen/api/get-agent-status",
+          label: "Show the health of each agent",
+          className: "api-method get",
+        },
       ],
     },
     {
@@ -110,6 +116,22 @@ const sidebar: SidebarsConfig = {
           type: "doc",
           id: "gen/api/get-audit-export",
           label: "Export all audit log entries",
+          className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Controller",
+      link: {
+        type: "doc",
+        id: "gen/api/controller-api-controller",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-controller-status",
+          label: "Show the health of the controller",
           className: "api-method get",
         },
       ],
@@ -235,6 +257,22 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/retry-job-by-id",
           label: "Retry a job",
           className: "api-method post",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "NATS",
+      link: {
+        type: "doc",
+        id: "gen/api/nats-api-nats",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-nats-status",
+          label: "Show the health of the NATS server",
+          className: "api-method get",
         },
       ],
     },

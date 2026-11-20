@@ -3,6 +3,7 @@ export * from './agent-management-api-agent-operations/agent-management-api-agen
 export * from './audit-log-api-audit/audit-log-api-audit';
 export * from './certificate-management-api-certificate-operations/certificate-management-api-certificate-operations';
 export * from './command-execution-api-command-operations/command-execution-api-command-operations';
+export * from './controller-api-controller/controller-api-controller';
 export * from './docker-management-api-docker-exec/docker-management-api-docker-exec';
 export * from './docker-management-api-docker-image/docker-management-api-docker-image';
 export * from './docker-management-api-docker-operations/docker-management-api-docker-operations';
@@ -12,6 +13,7 @@ export * from './health-check-api-health/health-check-api-health';
 export * from './hostname-management-api-hostname-operations/hostname-management-api-hostname-operations';
 export * from './job-management-api-job-operations/job-management-api-job-operations';
 export * from './log-management-api-log-operations/log-management-api-log-operations';
+export * from './nats-api-nats/nats-api-nats';
 export * from './network-management-api-dns-operations/network-management-api-dns-operations';
 export * from './network-management-api-interface-operations/network-management-api-interface-operations';
 export * from './network-management-api-network-operations/network-management-api-network-operations';

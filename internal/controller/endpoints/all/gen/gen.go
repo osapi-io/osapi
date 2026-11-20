@@ -7,9 +7,11 @@ import (
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/admission/gen"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/agent/gen"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/audit/gen"
+	_ "github.com/osapi-io/osapi/internal/controller/endpoints/controller/gen"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/facts/gen"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/file/gen"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/health/gen"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/job/gen"
+	_ "github.com/osapi-io/osapi/internal/controller/endpoints/nats/gen"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/telemetry/gen"
 )

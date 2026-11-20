@@ -24,6 +24,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/controller/endpoints/health"
+
 	"github.com/osapi-io/osapi/internal/controller/api/apierr"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/job"
@@ -258,4 +260,14 @@ func uint64ToInt(
 	}
 
 	return int(value)
+}
+
+// Status is each agent, with its sub-components, from the health status of
+// the controller.
+func Status(
+	ctx context.Context,
+	d Deps,
+	_ StatusInput,
+) (health.ComponentList, error) {
+	return health.Components(ctx, d.Health, "agent"), nil
 }
