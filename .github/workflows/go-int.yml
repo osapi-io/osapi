@@ -56,5 +56,7 @@ jobs:
         run: just react-build
       - name: Linux tuning
         run: just linux-tune
+      # As root, with the behavior write examples on: the runner is thrown
+      # away after the job, so they may change its kernel parameters and /etc.
       - name: Integration
-        run: just go-unit-int
+        run: sudo -E env "PATH=$PATH" "HOME=$HOME" OSAPI_INTEGRATION_WRITE_BEHAVIORS=1 just go-unit-int
