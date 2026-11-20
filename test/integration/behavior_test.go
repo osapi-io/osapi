@@ -208,22 +208,29 @@ func (s *BehaviorSmokeSuite) restore(
 		return func() {}
 	}
 
-	var inputs []any
-	for _, r := range s.results(commandLine(b, get, nil)) {
-		if r["status"] != "ok" {
-			continue
+	// read is each host's item, as the input that would write it back.
+	read := func() []any {
+		var inputs []any
+		for _, r := range s.results(commandLine(b, get, nil)) {
+			if r["status"] != "ok" {
+				continue
+			}
+			data, err := json.Marshal(r)
+			s.Require().NoError(err)
+			in := reflect.New(update.In)
+			s.Require().NoError(json.Unmarshal(data, in.Interface()))
+			inputs = append(inputs, in.Elem().Interface())
 		}
-		data, err := json.Marshal(r)
-		s.Require().NoError(err)
-		in := reflect.New(update.In)
-		s.Require().NoError(json.Unmarshal(data, in.Interface()))
-		inputs = append(inputs, in.Elem().Interface())
+
+		return inputs
 	}
+	before := read()
 
 	return func() {
-		for _, in := range inputs {
+		for _, in := range before {
 			s.results(commandLine(b, update, in))
 		}
+		s.Equal(before, read(), "%s is back as the example found it", b.Name)
 	}
 }
 
