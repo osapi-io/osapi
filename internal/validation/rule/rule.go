@@ -209,7 +209,7 @@ func Untagged(
 }
 
 // The words of the validate tag and of Register in the spec of each DSL,
-// osapi controller endpoint spec and osapi behavior spec, so an author of
+// osapi controller endpoint spec get and osapi behavior spec get, so an author of
 // either reads the same rule.
 const (
 	TagName = `validate:"..."`

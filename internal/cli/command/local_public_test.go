@@ -144,10 +144,11 @@ func (s *LocalPublicTestSuite) TestDefine() {
 	s.Equal(reflect.TypeFor[localDeps](), g.Deps)
 	s.Equal([]command.Command{m}, g.Commands())
 	s.Empty(g.CommandPermission(m))
-	s.Same(m, g.Method("get"))
+	s.Same(m, g.Method("hello get"), "a method is its Sub and its name")
+	s.Nil(g.Method("get"))
 	s.Nil(g.Method("nosuch"))
 
-	s.Equal("get", m.MethodName())
+	s.Equal("hello get", m.MethodName())
 	s.Equal("get", m.CommandName())
 	s.Equal(reflect.TypeFor[greetIn](), m.Input())
 	s.Equal("hello", m.SubPath())

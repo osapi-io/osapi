@@ -1,4 +1,4 @@
-# Spec
+# Get
 
 Print the command DSL: each option, method, refinement, field tag and check.
 
@@ -8,14 +8,14 @@ Read it before you write a local group, then check the result with
 `osapi cli command validate`.
 
 ```bash
-osapi cli command spec
+osapi cli command spec get
 ```
 
 ## Examples
 
 ```bash
-osapi cli command spec
-osapi cli command spec --json
+osapi cli command spec get
+osapi cli command spec get --json
 ```
 
 ## Global flags
@@ -26,5 +26,5 @@ osapi cli command spec --json
 | `-j, --json`       | Enable JSON output           |                         |
 | `-f, --osapi-file` | Path to config file          | `/etc/osapi/osapi.yaml` |
 
-[Output](../../output.md) tells how the result is printed, and what `--json`
+[Output](../../../output.md) tells how the result is printed, and what `--json`
 gives.

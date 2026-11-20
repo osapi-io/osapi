@@ -75,6 +75,16 @@ func (Printer) Verdict(
 	fmt.Println(Success(os.Stdout, text))
 }
 
+// Block prints one item of a list of blocks: title in the name style, then
+// each pair as a wrapped paragraph under it, "Label: text" muted, or the
+// text alone for a pair with no label. A blank line goes between blocks.
+func (Printer) Block(
+	title string,
+	pairs ...string,
+) {
+	PrintBlock(title, pairs...)
+}
+
 // Text prints text as it is, with one newline at its end.
 func (Printer) Text(
 	text string,

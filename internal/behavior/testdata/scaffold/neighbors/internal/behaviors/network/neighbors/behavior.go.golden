@@ -25,7 +25,7 @@ import "github.com/osapi-io/osapi/internal/behavior"
 
 // Behavior is the neighbors definition. The routes, the agent's dispatch, the
 // CLI commands, the spec, the docs pages and the tests of every layer above
-// the provider are built from it. osapi behavior spec lists every option.
+// the provider are built from it. osapi behavior spec get lists every option.
 var Behavior = behavior.Register(behavior.Define(
 	"neighbors", "The neighbor table",
 	behavior.Node,

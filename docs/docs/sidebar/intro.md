@@ -136,9 +136,9 @@ knows what each field accepts.
 Ask an agent in a checkout of osapi: _"Add a behavior that manages the message
 of the day"_. Its `build-a-behavior` skill writes the behavior. It asks about
 what it must decide, writes the definition and the provider, and runs the
-checks. Or start a behavior yourself with `osapi behavior new`. In both cases,
-the result is one directory, and osapi generates its API, command, docs and
-tests.
+checks. Or start a behavior yourself with `osapi behavior create`. In both
+cases, the result is one directory, and osapi generates its API, command, docs
+and tests.
 [Building a behavior with an agent](development/building-with-an-agent.md) gives
 the prompts and what to expect.
 [Your first behavior](development/your-first-behavior.md) builds one by hand.

@@ -63,6 +63,20 @@ func (s *GuidePublicTestSuite) TestSpecOf() {
 	}
 }
 
+func (s *GuidePublicTestSuite) TestSections() {
+	spec := guide.Spec{
+		Kinds: []guide.Kind{{Kind: "option", Title: "Options"}, {Kind: "tag", Title: "Tags"}},
+		Terms: []guide.Term{{Kind: "option", Name: "Node"}, {Kind: "option", Name: "API"}},
+	}
+
+	got := spec.Sections()
+	s.Require().Len(got, 2)
+	s.Equal("Options", got[0].Title)
+	s.Len(got[0].Terms, 2)
+	s.Equal("Tags", got[1].Title)
+	s.Empty(got[1].Terms)
+}
+
 func (s *GuidePublicTestSuite) TestChecks() {
 	checks := guide.Checks{
 		{Rule: "name", Requires: "A name.", Fix: "Rename it."},

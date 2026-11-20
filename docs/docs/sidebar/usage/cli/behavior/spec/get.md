@@ -1,4 +1,4 @@
-# Spec
+# Get
 
 Print the behavior DSL: each option, method, example part and field tag.
 
@@ -8,14 +8,14 @@ Read it before you write a behavior, then check the result with
 `osapi behavior validate`.
 
 ```bash
-osapi behavior spec
+osapi behavior spec get
 ```
 
 ## Examples
 
 ```bash
-osapi behavior spec
-osapi behavior spec --json
+osapi behavior spec get
+osapi behavior spec get --json
 ```
 
 ## Global flags
@@ -26,4 +26,5 @@ osapi behavior spec --json
 | `-j, --json`       | Enable JSON output           |                         |
 | `-f, --osapi-file` | Path to config file          | `/etc/osapi/osapi.yaml` |
 
-[Output](../output.md) tells how the result is printed, and what `--json` gives.
+[Output](../../output.md) tells how the result is printed, and what `--json`
+gives.

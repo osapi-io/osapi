@@ -18,24 +18,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmd
+package commanddsl
 
-import (
-	"github.com/osapi-io/osapi/internal/cli/command"
-	"github.com/osapi-io/osapi/internal/guide"
-)
+import "github.com/spf13/cobra"
 
-var cliCommandSpecCmd = newSpecCommand(
-	func() guide.Spec { return command.Spec },
-	"Print the command DSL: each option, method, refinement, field tag and check",
-	"Print each part of the command DSL, what it makes osapi do and when to use\n"+
-		"it. The list comes from this binary. Thus it agrees with the build that\n"+
-		"you run. Read it before you write a local group, then check the result\n"+
-		"with `osapi cli command validate`.",
-	`  osapi cli command spec
-  osapi cli command spec --json`,
-)
-
-func init() {
-	cliCommandCmd.AddCommand(cliCommandSpecCmd)
+// Deps is what the methods use: the root command, whose tree list walks,
+// the directory of the osapi checkout that create writes into, and which
+// groups are behaviors.
+type Deps struct {
+	Root *cobra.Command
+	Dir  string
+	// IsBehavior is true for the name of a behavior, whose group made a
+	// command of the behavior layer.
+	IsBehavior func(name string) bool
 }

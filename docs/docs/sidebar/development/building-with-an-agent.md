@@ -64,7 +64,7 @@ before it writes code, with a recommendation for each:
 
 ## What it writes, and how it proves it
 
-It runs `osapi behavior new`. Then it writes the settings, the types, the
+It runs `osapi behavior create`. Then it writes the settings, the types, the
 provider, the methods and the definition, with examples that are also the tests.
 Then it runs the same checks as a person:
 

@@ -29,19 +29,37 @@ import (
 // osapi do, and when to use it.
 type Term struct {
 	// Kind groups the term, as one of the Spec's Kinds names it.
-	Kind string `json:"kind"`
+	Kind string `json:"kind" render:"-"`
 	// Name is how the term is written, such as Key("field").
 	Name string `json:"name"`
 	// Does is what the term makes osapi do.
-	Does string `json:"does"`
+	Does string `json:"does" label:"-"`
 	// When is when to use it.
-	When string `json:"when"`
+	When string `json:"when" label:"Use"`
 }
 
 // Kind is a group of terms, with the title that spec shows above it.
 type Kind struct {
 	Kind  string `json:"kind"`
 	Title string `json:"title"`
+}
+
+// Section is one kind of a Spec and its terms, as the spec command of a
+// group prints them: a section for each kind, a block for each term.
+type Section struct {
+	Kind  string `json:"kind"  render:"-"`
+	Title string `json:"title"`
+	Terms []Term `json:"terms"            table:"blocks"`
+}
+
+// Sections are the kinds of s in order, each with its terms.
+func (s Spec) Sections() []Section {
+	out := make([]Section, 0, len(s.Kinds))
+	for _, k := range s.Kinds {
+		out = append(out, Section{Kind: k.Kind, Title: k.Title, Terms: s.Of(k.Kind)})
+	}
+
+	return out
 }
 
 // Spec is every term of a DSL or format, in groups.

@@ -14,7 +14,7 @@ no target and no result for each host. A group is one directory,
 This skill gives a procedure and decisions. It is not a catalog. The binary tells
 about the DSL:
 
-- `controller endpoint spec` tells each part of the DSL, what it does and when
+- `controller endpoint spec get` tells each part of the DSL, what it does and when
   to use it, and what the DSL cannot do yet.
 - `controller endpoint validate --help` tells each rule, with its fix. Each
   failure also ends with its fix.
@@ -27,7 +27,7 @@ the tool is correct.
 The DSL makes the spec, the routes, the decoders and the CLI commands of a
 group. A group's handlers are typed functions. Each controller group is served,
 and its commands are made, from its definition. If the work needs a part that
-`controller endpoint spec` does not list, stop and say so. That is a platform
+`controller endpoint spec get` does not list, stop and say so. That is a platform
 change, and a person decides it. Do not add code around it.
 
 The design, with what is built and what comes next, is
@@ -50,7 +50,7 @@ Ask the code and the binary before you read prose:
 
 | Question | Ask |
 | --- | --- |
-| Each part of the DSL, what it does and when to use it, and what is not built | `go run . controller endpoint spec` |
+| Each part of the DSL, what it does and when to use it, and what is not built | `go run . controller endpoint spec get` |
 | Each rule a definition must pass, with its fix | `go run . controller endpoint validate --help` |
 | Which groups exist, and their methods | `go run . controller endpoint list` |
 | The routes, permissions and operationIds of a group | `go run . controller endpoint get --name <group>` |
@@ -62,7 +62,7 @@ Ask the code and the binary before you read prose:
 
 ## Build a new group
 
-1. Write it: `go run . controller endpoint new --name <group> --description "<one line>"`,
+1. Write it: `go run . controller endpoint create --name <group> --description "<one line>"`,
    then `go generate ./internal/controller/endpoints/all` and
    `mise exec -- just generate`. The group has a list and a get, an empty
    `Deps`, its types and the tests of its methods. It builds, validates and
@@ -235,17 +235,17 @@ mise exec -- just test
 | `Conflict on components => schemas` from `just generate` | Two specs define one schema in different words: copy the description with `Doc` and each `example` from the other spec |
 | `endpoint: no ... given to the server` at startup | The controller does not give the group's `Deps`: add it in `internal/controller/handlers.go` |
 | `is both a hand-written command and the <group> group's` at startup | Delete the hand-written command of that method |
-| `endpoint-scaffold-check` | A group that `controller endpoint new` writes no longer passes its tests: change the scaffold in `internal/controller/endpoint/scaffold_files.go`, and run its golden test with `-update` |
+| `endpoint-scaffold-check` | A group that `controller endpoint create` writes no longer passes its tests: change the scaffold in `internal/controller/endpoint/scaffold_files.go`, and run its golden test with `-update` |
 | `TestEndpointParity` | A line of the contract differs. `-` is only in the hand-written spec, `+` only in the generated spec. Change the definition until they agree, or see the bug rule above |
 | `TestJoinedSpec` | The joined spec changed. If you changed the API on purpose, write the contract again: `go test ./internal/apicontract -run TestContractPublicTestSuite/TestJoinedSpec -update`, and keep the diff. If you did not, find what changed it |
 | `the spec has no term for` | A new option of the DSL has no entry in `internal/controller/endpoint/spec.go`. Add one |
 
-Never edit a path that `controller endpoint spec` lists under "Generated, never
+Never edit a path that `controller endpoint spec get` lists under "Generated, never
 edited". Change the definition and generate. Do not write CLI docs for an
 endpoint.
 
 ## What the DSL does not do
 
-`controller endpoint spec` lists each part of the DSL. If a request needs a part
+`controller endpoint spec get` lists each part of the DSL. If a request needs a part
 that is not in the list, say so and stop. Do not write a handler for a group,
 and do not wire a group into the controller by hand.

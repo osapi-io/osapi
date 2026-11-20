@@ -71,6 +71,18 @@ func (s *GuidePublicTestSuite) TestPrintTerms() {
 	}
 }
 
+func (s *GuidePublicTestSuite) TestPrintBlock() {
+	got := captureStdout(func() {
+		cli.PrintHeading("Options")
+		cli.PrintBlock("Flat()", "", "Adds no word.", "Use", "Alone.")
+		cli.PrintBlock("Long()", "", "Help.")
+	})
+	s.Equal(
+		"\nOptions:\n  Flat()\n    Adds no word.\n    Use: Alone.\n\n  Long()\n    Help.\n",
+		got,
+	)
+}
+
 func TestGuidePublicTestSuite(
 	t *testing.T,
 ) {

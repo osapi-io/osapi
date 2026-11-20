@@ -29,7 +29,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli"
 )
 
-// newResult is what `behavior new --json` prints.
+// newResult is what `behavior create --json` prints.
 type newResult struct {
 	Name  string   `json:"name"`
 	Files []string `json:"files"`
@@ -37,7 +37,7 @@ type newResult struct {
 }
 
 var behaviorNewCmd = &cobra.Command{
-	Use:   "new",
+	Use:   "create",
 	Short: "Write a new behavior's standard layout in an osapi checkout",
 	Long: "Before you change anything, the result builds, validates and passes every\n" +
 		"test. Then change the types, the provider and the examples to what the\n" +
@@ -52,9 +52,9 @@ var behaviorNewCmd = &cobra.Command{
 		"behavior that the two require: add `behavior.Internal` to it then, and\n" +
 		"`behavior.Requires` to each user. `osapi behavior validate` fails an\n" +
 		"internal behavior that no behavior requires.",
-	Example: `  osapi behavior new --name motd --description "The message shown at login"
-  osapi behavior new --name motd --description "The message shown at login" --root ~/src/osapi
-  osapi behavior new --group network --name neighbors --description "The host's ARP neighbors"`,
+	Example: `  osapi behavior create --name motd --description "The message shown at login"
+  osapi behavior create --name motd --description "The message shown at login" --root ~/src/osapi
+  osapi behavior create --group network --name neighbors --description "The host's ARP neighbors"`,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		name, _ := cmd.Flags().GetString("name")

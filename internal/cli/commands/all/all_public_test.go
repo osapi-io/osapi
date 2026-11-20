@@ -58,8 +58,8 @@ func (s *AllPublicTestSuite) TestRefusals() {
 		for _, m := range g.Methods {
 			for _, r := range m.Refusals() {
 				count++
-				s.Run(g.Name+" "+m.Name+": "+r.Doc, func() {
-					err := command.Run(&cobra.Command{}, g, m.Name, r.Input)
+				s.Run(g.Name+" "+m.MethodName()+": "+r.Doc, func() {
+					err := command.Run(&cobra.Command{}, g, m.MethodName(), r.Input)
 
 					var ue *command.UsageError
 					s.Require().True(errors.As(err, &ue), "a usage error, not %v", err)

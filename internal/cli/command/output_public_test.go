@@ -56,7 +56,14 @@ func (r *recorder) Table(t command.Table) {
 	}
 }
 
-func (r *recorder) Text(text string)                { fmt.Fprintf(&r.b, "%s", text) }
+func (r *recorder) Text(text string) { fmt.Fprintf(&r.b, "%s", text) }
+
+func (r *recorder) Block(title string, pairs ...string) {
+	fmt.Fprintf(&r.b, "* %s\n", title)
+	for i := 0; i+1 < len(pairs); i += 2 {
+		fmt.Fprintf(&r.b, "  %s| %s\n", pairs[i], pairs[i+1])
+	}
+}
 func (r *recorder) Verdict(text string)             { fmt.Fprintf(&r.b, "[ok] %s\n", text) }
 func (r *recorder) Status(word string) string       { return "<" + word + ">" }
 func (r *recorder) Bytes(n int64) string            { return fmt.Sprintf("%dB", n) }
@@ -102,6 +109,34 @@ type (
 	}
 	plain struct {
 		Items []row `json:"items"`
+	}
+	term struct {
+		Name string `json:"name"`
+		Does string `json:"does" label:"-"`
+		When string `json:"when" label:"Use"`
+	}
+	kind struct {
+		Kind  string `json:"kind"  render:"-"`
+		Title string `json:"title"`
+		Terms []term `json:"terms"            table:"blocks"`
+	}
+	spec struct {
+		Kinds []kind `json:"kinds" table:"sections"`
+	}
+	terms struct {
+		Terms []term `json:"terms" table:"blocks"`
+	}
+	flagRow struct {
+		Flag string `json:"flag"`
+	}
+	cmdSection struct {
+		Command string    `json:"command"`
+		Method  string    `json:"method"`
+		Flags   []flagRow `json:"flags"`
+	}
+	described struct {
+		Name     string       `json:"name"`
+		Commands []cmdSection `json:"commands" table:"sections"`
 	}
 	part struct {
 		_     struct{} `title:"Part"`
@@ -201,6 +236,9 @@ func (s *OutputPublicTestSuite) TestOutput() {
 		method("map", reflect.TypeFor[map[string]string]()),
 		method("hosts", reflect.TypeFor[[]host]()),
 		method("doc", reflect.TypeFor[doc]()),
+		method("spec", reflect.TypeFor[spec]()),
+		method("terms", reflect.TypeFor[terms]()),
+		method("described", reflect.TypeFor[described]()),
 		method("nodes", reflect.TypeFor[[]node]()),
 		method("kept", reflect.TypeFor[[]kept]()),
 		keyed{method("delete", reflect.TypeFor[nothing]()), "machine_id"},
@@ -333,6 +371,25 @@ func (s *OutputPublicTestSuite) TestOutput() {
 			method: "doc",
 			answer: `{"name":"a","body":"# Title\n\ntext\n"}`,
 			want:   "# Title\n\ntext\n",
+		},
+		{
+			name:   "when a list is tagged sections and blocks, each item is a section of blocks",
+			method: "spec",
+			answer: `{"kinds":[{"kind":"o","title":"Options","terms":[` +
+				`{"name":"Flat()","does":"Adds no word.","when":"Alone."},{"name":"Long()","does":"Help."}]}]}`,
+			want: "# Options\n* Flat()\n  | Adds no word.\n  Use| Alone.\n* Long()\n  | Help.\n",
+		},
+		{
+			name:   "when a list of blocks is the output, it has its heading with the count",
+			method: "terms",
+			answer: `{"terms":[{"name":"Flat()","does":"Adds no word."}]}`,
+			want:   "# Zzderives (1)\n* Flat()\n  | Adds no word.\n",
+		},
+		{
+			name:   "when a section has more than its list, its values print, then its list",
+			method: "described",
+			answer: `{"name":"token","commands":[{"command":"osapi token list","method":"list","flags":[{"flag":"--x"}]}]}`,
+			want:   "# Zzderive\nName: token\n# osapi token list\nMethod: list\n# Flags (1)\nFLAG\n--x\n",
 		},
 		{
 			name:   "when the method answers nothing, one line names the key and what it did",

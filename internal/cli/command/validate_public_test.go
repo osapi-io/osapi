@@ -61,6 +61,8 @@ type badTags struct {
 	_    struct{} `title:"Bad"`
 	Size int      `             json:"size" render:"nope"`
 	Name string   `title:"Name" json:"name" render:"short=0" empty:"None."`
+	Kind string   `             json:"kind"                                table:"rows"`
+	Text string   `             json:"text"                                table:"blocks"`
 }
 
 type ValidatePublicTestSuite struct {
@@ -120,7 +122,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 				`"frob" is not a verb or an action.`,
 				"the method has no Short.",
 				"the method has input and no Example.",
-				"two methods have the name frob.",
+				"two methods are frob.",
 				`"frob" is not a verb or an action.`,
 			},
 		},
@@ -290,6 +292,8 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 		`badTags.Name has render:"short=0", which the output does not know.`,
 		"badTags.Name has an empty tag and is not a list.",
 		"badTags.Name has a title tag: it goes on the field _ struct{}.",
+		`badTags.Kind has table:"rows", which the output does not know.`,
+		`badTags.Text has table:"blocks" and is not a list of objects.`,
 		`"frob" has no past tense.`,
 	}, got)
 

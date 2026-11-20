@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -44,6 +45,10 @@ type Printer interface {
 	Verdict(text string)
 	// Text prints text as it is, such as a document a field holds.
 	Text(text string)
+	// Block prints one item of a list tagged table:"blocks": its title on
+	// a line, then each pair, a label and a text, as a wrapped paragraph.
+	// A pair with no label is a paragraph alone.
+	Block(title string, pairs ...string)
 	// Status is a status word in its color.
 	Status(word string) string
 	// Bytes is a size, such as 3.4 GB.
@@ -91,6 +96,16 @@ const (
 	RenderShort = "short="
 )
 
+// TableBlocks is the table tag of a list whose items print as blocks of
+// paragraphs: a list of long text, such as the terms of a DSL, which the
+// cells of a table would cut.
+const TableBlocks = "blocks"
+
+// TableSections is the table tag of a list whose items print as sections:
+// each item's first field is its heading, and the rest prints under it as
+// an object does, with each list in it as a table or blocks.
+const TableSections = "sections"
+
 // Column is one field of an output type: a column of a table, or a pair of
 // a key-value block.
 type Column struct {
@@ -114,6 +129,16 @@ type Column struct {
 	// NoTable is true for a field tagged table:"-": a table leaves it out,
 	// and a key-value block shows it.
 	NoTable bool
+	// Blocks is true for a list tagged table:"blocks": each item prints as
+	// a block of paragraphs, not as a row, for a list of long text.
+	Blocks bool
+	// Sections is true for a list tagged table:"sections": each item prints
+	// as a section, headed by its first field, such as a kind of a DSL and
+	// its terms, since a table cannot show the list each item holds.
+	Sections bool
+	// NoLabel is true for a field tagged label:"-": in a block, its text
+	// is a paragraph with no label.
+	NoLabel bool
 	// Type is the field's type.
 	Type reflect.Type
 }
@@ -137,7 +162,8 @@ func Columns(
 			continue
 		}
 		label := f.Tag.Get("label")
-		if label == "" {
+		noLabel := label == "-"
+		if label == "" || noLabel {
 			label = sentence(name)
 		}
 		cols = append(cols, Column{
@@ -150,6 +176,9 @@ func Columns(
 			Prefix:    f.Tag.Get("prefix"),
 			OmitEmpty: strings.Contains(opts, "omitempty") || strings.Contains(opts, "omitzero"),
 			NoTable:   f.Tag.Get("table") == "-",
+			Blocks:    f.Tag.Get("table") == TableBlocks,
+			Sections:  f.Tag.Get("table") == TableSections,
+			NoLabel:   noLabel,
 			Type:      f.Type,
 		})
 	}
@@ -510,7 +539,9 @@ func said(
 		return s
 	}
 
-	return pastTense[m.MethodName()]
+	words := strings.Fields(m.MethodName())
+
+	return pastTense[words[len(words)-1]]
 }
 
 // answersNothing reports whether the output type has no field: the method
@@ -681,11 +712,25 @@ func list(
 	total int,
 ) {
 	counted := fmt.Sprintf("%s (%d)", heading, len(items))
-	if total > len(items) {
+	switch {
+	case heading == "":
+		// A list under a heading of its own, such as a section's, has none.
+		counted = ""
+	case total > len(items):
 		counted = fmt.Sprintf("%s (%d of %d)", heading, len(items), total)
 	}
 
 	elem := element(c.Type)
+	switch {
+	case c.Blocks:
+		blocks(p, counted, elem, items)
+
+		return
+	case c.Sections:
+		sections(p, elem, items)
+
+		return
+	}
 	cols, children := treeColumns(tableColumns(Columns(elem)), elem)
 	if !isObject(elem) {
 		cols = []Column{{JSON: "", Header: "VALUE", Type: elem}}
@@ -715,6 +760,62 @@ func list(
 	}
 
 	p.Table(Table{Title: counted, Headers: headers, Rows: rows, Empty: c.Empty})
+}
+
+// sections prints each item of a list of elem as a section: the value of
+// its first field is the heading, and the rest prints as an object does.
+func sections(
+	p Printer,
+	elem reflect.Type,
+	items []any,
+) {
+	cols := Columns(elem)
+	first := cols[0]
+	for _, item := range items {
+		obj, _ := item.(map[string]any)
+		heading := first.FormatKV(p, obj[first.JSON])
+		// A section that is one list is that list, under the section's
+		// heading, with no heading of its own.
+		if len(cols) == 2 && isList(cols[1].Type) {
+			p.Heading(heading)
+			inner, _ := obj[cols[1].JSON].([]any)
+			list(p, "", cols[1], inner, -1)
+
+			continue
+		}
+		object(p, heading, elem, obj, first.JSON)
+	}
+}
+
+// blocks prints items, a list of elem, under its heading with the count:
+// each item is a block, the value of its first field and then each other
+// field with a value as a paragraph.
+func blocks(
+	p Printer,
+	counted string,
+	elem reflect.Type,
+	items []any,
+) {
+	if counted != "" {
+		p.Heading(counted)
+	}
+	cols := tableColumns(Columns(elem))
+	for _, item := range items {
+		obj, _ := item.(map[string]any)
+		var pairs []string
+		for _, c := range cols[1:] {
+			text := c.FormatKV(p, obj[c.JSON])
+			if text == "" || noValue(c, obj[c.JSON]) {
+				continue
+			}
+			label := c.Label
+			if c.NoLabel {
+				label = ""
+			}
+			pairs = append(pairs, label, text)
+		}
+		p.Block(cols[0].FormatKV(p, obj[cols[0].JSON]), pairs...)
+	}
 }
 
 // treeColumns are cols without the column of the children of each row: a
@@ -826,12 +927,14 @@ func tableColumns(
 
 // object prints v, an object of type t, under its heading: its values as a
 // key-value block, then each object in it as a section and each list in it
-// as a table, in the order of the fields.
+// as a table, in the order of the fields. A field in skip is left out, such
+// as the field that is the heading.
 func object(
 	p Printer,
 	heading string,
 	t reflect.Type,
 	v map[string]any,
+	skip ...string,
 ) {
 	p.Heading(heading)
 	cols := Columns(t)
@@ -839,6 +942,7 @@ func object(
 	for _, c := range cols {
 		value, ok := v[c.JSON]
 		switch {
+		case slices.Contains(skip, c.JSON):
 		case isObject(c.Type) || isList(c.Type):
 		case isFree(c.Type) && isMap(value):
 		case c.OmitEmpty && c.None == "" && (!ok || noValue(c, value) || zero(value)):

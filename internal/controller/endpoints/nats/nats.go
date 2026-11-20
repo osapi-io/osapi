@@ -27,7 +27,7 @@ import (
 )
 
 // Group is the nats group's definition. The routes, the spec, the CLI
-// commands and their pages come from it. osapi controller endpoint spec
+// commands and their pages come from it. osapi controller endpoint spec get
 // lists every option.
 var Group = endpoint.Register(endpoint.Define(
 	"nats", "The NATS server of the fleet",

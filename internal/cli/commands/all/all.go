@@ -25,6 +25,7 @@ import (
 	// Each import registers its group.
 	_ "github.com/osapi-io/osapi/internal/cli/commands/admission"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/agentcmd"
+	_ "github.com/osapi-io/osapi/internal/cli/commands/commanddsl"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/config"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/controllercmd"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/controllerkey"

@@ -192,12 +192,13 @@ func Provide[D any](
 	g.provide = func() any { return fn() }
 }
 
-// Method is the method of g with the name, or nil.
+// Method is the method of g with the name, its MethodName, such as get or
+// spec get, or nil.
 func (g *LocalGroup) Method(
 	name string,
 ) *LocalMethod {
 	for _, m := range g.Methods {
-		if m.Name == name {
+		if m.MethodName() == name {
 			return m
 		}
 	}
@@ -440,9 +441,11 @@ func (m *LocalMethod) Handler() any {
 	return m.handler
 }
 
-// MethodName is the method's Name.
+// MethodName is the method's identity in its group: its Sub and its Name,
+// such as roles list, or its Name for a method with no Sub. Two methods of
+// a group can have one Name under two Subs, such as get and spec get.
 func (m *LocalMethod) MethodName() string {
-	return m.Name
+	return strings.TrimSpace(m.sub + " " + m.Name)
 }
 
 // Input is the method's In.

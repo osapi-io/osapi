@@ -70,7 +70,13 @@ func Commands(
 	methods := g.Commands()
 	names := make([]jen.Code, 0, len(methods))
 	for _, m := range methods {
-		name := g.GroupName() + upperFirst(m.MethodName()) + "Cmd"
+		// The command's variable has each word of the method, such as
+		// tokenRolesListCmd for roles list.
+		name := g.GroupName()
+		for _, w := range strings.Fields(m.MethodName()) {
+			name += upperFirst(w)
+		}
+		name += "Cmd"
 		names = append(names, jen.Id(name))
 
 		var reads []jen.Code

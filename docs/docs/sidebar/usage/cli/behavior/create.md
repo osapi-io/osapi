@@ -1,4 +1,4 @@
-# New
+# Create
 
 Write a new behavior's standard layout in an osapi checkout.
 
@@ -19,15 +19,15 @@ user. `osapi behavior validate` fails an internal behavior that no behavior
 requires.
 
 ```bash
-osapi behavior new [flags]
+osapi behavior create [flags]
 ```
 
 ## Examples
 
 ```bash
-osapi behavior new --name motd --description "The message shown at login"
-osapi behavior new --name motd --description "The message shown at login" --root ~/src/osapi
-osapi behavior new --group network --name neighbors --description "The host's ARP neighbors"
+osapi behavior create --name motd --description "The message shown at login"
+osapi behavior create --name motd --description "The message shown at login" --root ~/src/osapi
+osapi behavior create --group network --name neighbors --description "The host's ARP neighbors"
 ```
 
 ## Flags

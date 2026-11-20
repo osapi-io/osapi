@@ -1,4 +1,4 @@
-# Spec
+# Get
 
 Print the endpoint DSL: each option, method, refinement, error and field tag.
 
@@ -8,14 +8,14 @@ the build that you run. Read it before you write a group, then check the result
 with `osapi controller endpoint validate`.
 
 ```bash
-osapi controller endpoint spec
+osapi controller endpoint spec get
 ```
 
 ## Examples
 
 ```bash
-osapi controller endpoint spec
-osapi controller endpoint spec --json
+osapi controller endpoint spec get
+osapi controller endpoint spec get --json
 ```
 
 ## Global flags
@@ -26,5 +26,5 @@ osapi controller endpoint spec --json
 | `-j, --json`       | Enable JSON output           |                         |
 | `-f, --osapi-file` | Path to config file          | `/etc/osapi/osapi.yaml` |
 
-[Output](../../output.md) tells how the result is printed, and what `--json`
+[Output](../../../output.md) tells how the result is printed, and what `--json`
 gives.

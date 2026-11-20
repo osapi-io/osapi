@@ -30,12 +30,14 @@ import (
 
 	"github.com/osapi-io/osapi/internal/agent/identity"
 	"github.com/osapi-io/osapi/internal/authtoken"
+	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/commands/admission"
 	"github.com/osapi-io/osapi/internal/cli/commands/agentcmd"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/all/gen"
+	"github.com/osapi-io/osapi/internal/cli/commands/commanddsl"
 	configcmd "github.com/osapi-io/osapi/internal/cli/commands/config"
 	"github.com/osapi-io/osapi/internal/cli/commands/controllercmd"
 	"github.com/osapi-io/osapi/internal/cli/commands/controllerkey"
@@ -86,6 +88,13 @@ func init() {
 			},
 		}
 	})
+	command.Provide(commanddsl.Group, func() commanddsl.Deps {
+		return commanddsl.Deps{
+			Root:       rootCmd,
+			Dir:        ".",
+			IsBehavior: func(name string) bool { return behavior.Lookup(name) != nil },
+		}
+	})
 	command.Provide(startcmd.Group, func() startcmd.Deps {
 		return startcmd.Deps{NATS: natsDeps(), Controller: controllerDeps(), Agent: agentDeps()}
 	})
@@ -100,7 +109,7 @@ func init() {
 		Print:     cli.Printer{},
 		// These are written by hand, and their inits run after this one: a
 		// group goes Under them.
-	}, natsCmd, agentCmd, controllerCmd); err != nil {
+	}, natsCmd, agentCmd, controllerCmd, cliCmd); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}

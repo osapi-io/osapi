@@ -58,7 +58,7 @@ behavior similar to `motd` is there, extend it. Do not add a second one.
 ## Create it
 
 ```bash
-go run . behavior new --name motd --description "The message shown at login"
+go run . behavior create --name motd --description "The message shown at login"
 ```
 
 That writes `internal/behaviors/motd/` and registers it with one import in

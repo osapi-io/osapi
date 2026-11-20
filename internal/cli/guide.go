@@ -55,6 +55,36 @@ func PrintTerms(
 	}
 }
 
+// PrintBlock prints one block of a list of blocks under the current
+// heading: title in bold, then each pair, a label and a text, wrapped and
+// indented under it. A pair with a label prints "Label: text" in gray; a
+// pair with none is the text alone. A blank line goes between two blocks,
+// and none after the heading.
+func PrintBlock(
+	title string,
+	pairs ...string,
+) {
+	FlushKV()
+	if !headed {
+		fmt.Println()
+	}
+	headed = false
+	fmt.Println("  " + render(os.Stdout, NameStyle, title))
+	for i := 0; i+1 < len(pairs); i += 2 {
+		label, text := pairs[i], pairs[i+1]
+		if label == "" {
+			for _, line := range wrapWords(text, termWidth-4) {
+				fmt.Println("    " + line)
+			}
+
+			continue
+		}
+		for _, line := range wrapWords(label+": "+text, termWidth-4) {
+			fmt.Println("    " + Mute(os.Stdout, line))
+		}
+	}
+}
+
 // wrapWords breaks s into lines of at most width characters, at spaces. A
 // word longer than width is a line of its own.
 func wrapWords(
