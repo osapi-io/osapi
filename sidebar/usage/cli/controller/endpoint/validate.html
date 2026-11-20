@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Validate | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/usage/cli/controller/endpoint/validate"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Validate | OSAPI"><meta data-rh="true" name="description" content="Check every endpoint group against the rules of a definition."><meta data-rh="true" property="og:description" content="Check every endpoint group against the rules of a definition."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/controller/endpoint/validate"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/controller/endpoint/validate" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/controller/endpoint/validate" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Usage","item":"https://osapi-io.github.io/osapi/sidebar/usage/"},{"@type":"ListItem","position":2,"name":"CLI","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/"},{"@type":"ListItem","position":3,"name":"Controller","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/controller/"},{"@type":"ListItem","position":4,"name":"Endpoint","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/controller/endpoint/"},{"@type":"ListItem","position":5,"name":"Validate","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/controller/endpoint/validate"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.6684b53b.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.97a18ae5.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.6ab25248.js" defer="defer"></script>
 </head>
 <body>
@@ -42,6 +42,10 @@ func(context.Context, D, In) (Out, error), with D that type and In and Out the
 method&#x27;s types. A group with a handler Uses a type. Fix: Add .Handle(fn) to
 each method, with the signature that the message names, and
 endpoint.Uses<a href="" class="">Deps</a> to Define.</li>
+<li class=""><code>subdoc</code>: Each Sub segment that makes a command of its own, such as trace in
+osapi client telemetry trace get, has a SubDoc: the one line of help of that
+command. Fix: Add endpoint.SubDoc(&quot;segment&quot;, &quot;...&quot;) to Define, with what the
+segment&#x27;s commands do, such as Read a trace from the tracing backend.</li>
 <li class=""><code>validate</code>: Each input field has a validate tag: its rules, or omitempty for
 an optional field with none. The spec carries the whole tag, and the server
 answers 400 to a value that breaks it. Fix: Add validate:&quot;...&quot; to the field,
