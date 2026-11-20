@@ -3,7 +3,7 @@
 osapi is a platform, and a behavior is a client of it. The agent gives each provider a `host.Host` with the services that it can use. The platform does the other work: messages, storage, telemetry, permissions and audit. If a behavior uses these services as this page shows, the fake host tests it. You do not write a fake of your own. If a behavior goes around these services, the fake host cannot test it.
 
 In tests, no real program runs. The filesystem of the fake host is in memory. Its command runner is a generated mock. The mock records each command line and gives the output that the example declares. Thus a behavior for Debian that runs `dpkg-query` and writes `/etc` gets tests on macOS and in CI, where neither exists. Only
-`just behavior-int-linux` runs the real commands, in a Debian container.
+CI runs the real commands: its `Behavior writes` step runs the write examples as root on a throwaway Linux runner.
 
 `go doc ./internal/behavior/host Host` tells what each service is. `behavior get --name <name>` tells what a building block accepts. This page tells the two things that they do not tell: how the tests replace each service, and what to copy.
 

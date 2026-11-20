@@ -90,8 +90,8 @@ func (s *BehaviorSmokeSuite) TestPrograms() {
 		for _, p := range append(sudo, runs...) {
 			_, err := exec.LookPath(p)
 			s.NoError(err,
-				"%s runs %s, which this image lacks: add its package to the apt-get "+
-					"install line in the justfile's behavior-int-linux recipe", b.Name, p)
+				"%s runs %s, which this host lacks: install its package on the CI "+
+					"runner in .github/workflows/go-int.yml", b.Name, p)
 		}
 	}
 }
@@ -127,6 +127,10 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 			}
 			for _, ex := range m.Examples {
 				s.Run(b.Name+" "+m.Name+" "+ex.Doc, func() {
+					if scripted(ex) {
+						s.T().Skip("the example scripts a file or a command's output, " +
+							"which a live host does not have")
+					}
 					s.reset(b, ex.Input)
 					for _, g := range ex.Given {
 						if g.Kind != behavior.GivenCall {
@@ -154,6 +158,21 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 			}
 		}
 	}
+}
+
+// scripted reports whether ex sets up the host with a file or a command's
+// output. The fake host gives an example that state; a live host has its
+// own, so such an example cannot run here.
+func scripted(
+	ex behavior.Example,
+) bool {
+	for _, g := range ex.Given {
+		if g.Kind == behavior.GivenFile || g.Kind == behavior.GivenOutput {
+			return true
+		}
+	}
+
+	return false
 }
 
 // reset starts a write example from the state the fake host gives it, with

@@ -58,3 +58,5 @@ jobs:
         run: just linux-tune
       - name: Integration
         run: just go-unit-int
+      - name: Behavior writes
+        run: just behavior-int

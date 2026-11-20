@@ -154,8 +154,9 @@ go test ./internal/apicontract/   # the contract of the API; -update when the ch
 go run . behavior validate
 go test ./internal/behaviors/<name>/... ./internal/behaviors/all/
 mise exec -- just test
-mise exec -- just behavior-int-linux   # its examples against a real agent on Debian (macOS only)
 ```
+
+CI also runs the write examples against a real agent on Linux, as root, in its `Behavior writes` step. An example that scripts a file or a command's output is skipped there.
 
 A failure of `behavior validate` or of a behavior's tests ends with its fix.
 `go run . behavior validate --help` lists each rule and each test check before
@@ -163,7 +164,7 @@ you break one. The failures below come from elsewhere:
 
 | Failure names                         | It means                                                                 |
 | ------------------------------------- | ------------------------------------------------------------------------ |
-| `<name> runs <program>, which this image lacks` | `behavior-int-linux` only: add the program's package to that recipe's `apt-get install` line |
+| `<name> runs <program>, which this host lacks` | CI only: install the program's package on the runner in `.github/workflows/go-int.yml` |
 | `TestAPI<Method>PublicTestSuite/...`  | The API answer for that case in `gen/api_<method>_public_test.go`: the status, the body, or the spec it breaks |
 | `is not mounted` or `is not attached` | Run `go generate ./internal/behaviors/all`; the gen package is missing          |
 | `behavior output is stale`            | Run `go generate ./internal/behaviors/all` and keep the result                 |
@@ -182,4 +183,4 @@ Change the definition and generate. Do not write CLI docs for a behavior.
 `behavior spec get` lists what the platform cannot express yet, under "Not
 supported yet". If a request needs one, say so and stop. Do not build around it.
 
-A behavior needs no edits outside its directory. The only exception is a package that `behavior-int-linux` says is missing from its image. If you must edit other code, for example `cmd/agent_setup.go`, `internal/validation` or `internal/authtoken`, the platform does not have a declaration that you need. Say so. Do not add the code by hand.
+A behavior needs no edits outside its directory. The only exception is a package that CI's integration job says is missing from its runner. If you must edit other code, for example `cmd/agent_setup.go`, `internal/validation` or `internal/authtoken`, the platform does not have a declaration that you need. Say so. Do not add the code by hand.

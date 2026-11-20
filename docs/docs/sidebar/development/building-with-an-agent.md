@@ -73,8 +73,10 @@ go generate ./internal/behaviors/all
 mise exec -- just generate        # the spec, SDK and UI clients, API docs
 go run . behavior validate
 mise exec -- just test            # every check, 100% coverage per behavior
-mise exec -- just behavior-int-linux
 ```
+
+CI then runs the write examples against a real agent, as root, on its Linux
+runner.
 
 Each failure names what to fix: an example with a wrong output, a write that
 changes the host on its second run, a field that lets a path or an option
