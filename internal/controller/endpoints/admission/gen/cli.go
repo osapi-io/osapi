@@ -43,7 +43,7 @@ var admissionAdmitCmd = &cobra.Command{
 	Annotations: map[string]string{reference.Permission: "admission:write"},
 	Args:        cobra.NoArgs,
 	Example:     "  osapi client admission admit --machine-id d530664edc1c431eb5ef1e9dfd6617a5 --fingerprint SHA256:1f53dea6...",
-	Long:        "Run `osapi agent admission` on the machine, and give the fingerprint that it\nprints. The controller admits the machine only when the fingerprint is the\none of the key in its request.",
+	Long:        "Run `osapi agent admission get` on the machine, and give the fingerprint that it\nprints. The controller admits the machine only when the fingerprint is the\none of the key in its request.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		machineID, _ := cmd.Flags().GetString("machine-id")
 		fingerprint, _ := cmd.Flags().GetString("fingerprint")
@@ -103,7 +103,7 @@ func init() {
 	_ = admissionGetCmd.MarkFlagRequired("machine-id")
 	admissionAdmitCmd.Flags().String("machine-id", "", "The machine ID of the node")
 	_ = admissionAdmitCmd.MarkFlagRequired("machine-id")
-	admissionAdmitCmd.Flags().String("fingerprint", "", "The fingerprint that osapi agent admission prints on the machine")
+	admissionAdmitCmd.Flags().String("fingerprint", "", "The fingerprint that osapi agent admission get prints on the machine")
 	_ = admissionAdmitCmd.MarkFlagRequired("fingerprint")
 	admissionRejectCmd.Flags().String("machine-id", "", "The machine ID of the node")
 	_ = admissionRejectCmd.MarkFlagRequired("machine-id")

@@ -7,7 +7,7 @@
 
 export interface AdmitRequest {
   /**
-     * The fingerprint that osapi agent admission prints on the machine.
+     * The fingerprint that osapi agent admission get prints on the machine.
      * @minLength 1
      * @maxLength 255
      */

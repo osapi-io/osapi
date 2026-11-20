@@ -28,9 +28,12 @@ import (
 
 	"github.com/spf13/viper"
 
+	"github.com/osapi-io/osapi/internal/agent/identity"
 	"github.com/osapi-io/osapi/internal/authtoken"
+	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/cli/command"
+	"github.com/osapi-io/osapi/internal/cli/commands/admission"
 	"github.com/osapi-io/osapi/internal/cli/commands/agentcmd"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/all/gen"
 	configcmd "github.com/osapi-io/osapi/internal/cli/commands/config"
@@ -38,6 +41,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/commands/controllerkey"
 	"github.com/osapi-io/osapi/internal/cli/commands/initcmd"
 	"github.com/osapi-io/osapi/internal/cli/commands/natsserver"
+	"github.com/osapi-io/osapi/internal/cli/commands/natssetup"
 	"github.com/osapi-io/osapi/internal/cli/commands/skill"
 	"github.com/osapi-io/osapi/internal/cli/commands/startcmd"
 	"github.com/osapi-io/osapi/internal/cli/commands/token"
@@ -67,6 +71,20 @@ func init() {
 	command.Provide(controllercmd.Group, controllerDeps)
 	command.Provide(controllerkey.Group, func() controllerkey.Deps {
 		return controllerkey.Deps{FS: osfs.NewWithNoIdm(), KeyDir: appConfig.Controller.PKI.KeyDir}
+	})
+	command.Provide(natssetup.Group, func() natssetup.Deps {
+		return natssetup.Deps{Config: appConfig, Logger: logger, Prepare: bus.Prepare}
+	})
+	command.Provide(admission.Group, func() admission.Deps {
+		fs := osfs.NewWithNoIdm()
+
+		return admission.Deps{
+			FS:     fs,
+			KeyDir: appConfig.Agent.PKI.KeyDir,
+			Identity: func() (*identity.Identity, error) {
+				return identity.GetIdentity(fs, appConfig.Agent.Hostname)
+			},
+		}
 	})
 	command.Provide(startcmd.Group, func() startcmd.Deps {
 		return startcmd.Deps{NATS: natsDeps(), Controller: controllerDeps(), Agent: agentDeps()}
