@@ -105,6 +105,9 @@ The design is `components/osapi/commands.md` in osapi-io/specs. Read it first.
 - A rule that the standard tags cannot say is a custom rule. Declare it with
   `rule.Declare`, with its check and its message.
 - `--json` prints the output of the method. Do not make a second shape for it.
+- A check whose answer is its report, such as `config validate`, returns its
+  output with `command.Fail()` when the check fails: the report prints, then
+  the command exits 1, so a script or CI fails on it.
 - The output type prints the output. Give each field the tags that it needs:
   `render`, `label`, `none`, `empty`, `prefix` and `table:"-"`, and a heading
   with `_ struct{} \`title:"..."\``. `osapi cli command spec` has each tag.

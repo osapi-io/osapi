@@ -70,6 +70,18 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindOption,
+			Name: `Long("text")`,
+			Does: "Is the rest of the help of the group's command, after its one line. A method's .Long is the help of its own command.",
+			When: "When the group's command needs more than its one line, such as what each of its commands reads.",
+		},
+		{
+			Kind: KindOption,
+			Name: `Fail()`,
+			Does: "Is the error a handler returns with its output when the output says what failed, such as the problems of a config: return out, command.Fail(). The output prints as it does on success, then the command exits 1 with no message of its own.",
+			When: "For a check whose answer is the report, such as config validate, so a script or CI fails on it. For any other failure, return the error itself.",
+		},
+		{
+			Kind: KindOption,
 			Name: `Flat()`,
 			Does: "Makes the group add no word of its own: each method is a command under the group's parent, the root or the words of Under. A command directly under the root has a word of command.Roots, such as version; any other has a verb or an action. The group's name stays its identity, for cli command get --name and its package.",
 			When: "For a command that stands alone, such as osapi version, or that goes under a parent that holds other things, such as osapi controller start. Not for a family of commands under one noun, such as token.",

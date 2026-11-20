@@ -3,9 +3,10 @@
 Check a config file before osapi starts with it.
 
 The command starts nothing. It exits 1 when the config is not valid, and lists
-each problem with its rule, the key, the message and the fix. Each problem in
-`--json` has `rule`, `key` (when the problem is about one key), `message` and
-`fix`. `osapi config list` shows each key, with its type, rule and default.
+each problem with its rule, the key and the message, then the fix of each rule.
+Each problem in `--json` has `rule`, `key` (when the problem is about one key),
+`message` and `fix`. `osapi config list` shows each key, with its type, rule and
+default.
 
 The rules:
 

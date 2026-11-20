@@ -23,6 +23,7 @@ package all
 
 import (
 	// Each import registers its group.
+	_ "github.com/osapi-io/osapi/internal/cli/commands/config"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/token"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/version"
 )

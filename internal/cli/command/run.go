@@ -46,6 +46,22 @@ func (e *UsageError) Error() string {
 	return e.Msg
 }
 
+// FailedError is the error of a method whose output says what failed, such as the
+// problems of a config: Run prints the output, then the command exits 1 with
+// no message of its own. Fail returns it.
+type FailedError struct{}
+
+func (FailedError) Error() string {
+	return "the command failed: its output says why"
+}
+
+// Fail is the error a handler returns with its output when the output says
+// what failed, so that a script or CI fails on it: return out, command.Fail().
+// The output prints as it does on success, then the command exits 1.
+func Fail() error {
+	return FailedError{}
+}
+
 // Run runs method of g with in, the input that the command's flags made:
 // it checks in against its validate tags, calls the method's handler with
 // the deps that Provide gave, and gives the output to Output, which prints
@@ -76,8 +92,9 @@ func Run(
 	results := reflect.ValueOf(m.handler).Call([]reflect.Value{
 		reflect.ValueOf(ctx), d, reflect.ValueOf(in),
 	})
-	if err, _ := results[1].Interface().(error); err != nil {
-		return err
+	failed, _ := results[1].Interface().(error)
+	if failed != nil && !errors.Is(failed, FailedError{}) {
+		return failed
 	}
 	body, err := json.Marshal(results[0].Interface())
 	if err != nil {
@@ -85,7 +102,7 @@ func Run(
 	}
 	Output(g.Name, method, in, body)
 
-	return nil
+	return failed
 }
 
 // deps is the value of the group's Deps: the one Provide gives, or the zero

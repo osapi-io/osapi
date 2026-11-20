@@ -23,6 +23,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -37,6 +38,7 @@ import (
 	"golang.org/x/term"
 
 	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/telemetry/tracing"
 )
@@ -85,7 +87,10 @@ func Execute() {
 	cmd, err := rootCmd.ExecuteContextC(ctx)
 	cli.FlushKV()
 	if err != nil {
-		cli.PrintError(os.Stderr, cmd, err, jsonOutput)
+		// A command whose output says what failed has printed it already.
+		if !errors.Is(err, command.FailedError{}) {
+			cli.PrintError(os.Stderr, cmd, err, jsonOutput)
+		}
 		os.Exit(cli.ExitCode(err))
 	}
 }

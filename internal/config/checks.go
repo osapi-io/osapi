@@ -122,7 +122,7 @@ type Problem struct {
 	Key     string `json:"key,omitempty"`
 	Message string `json:"message"`
 	// Fix is how to fix it, from the check of Rule.
-	Fix string `json:"fix"`
+	Fix string `json:"fix" table:"-"`
 }
 
 // String is the problem as one line: its key, then its message.
