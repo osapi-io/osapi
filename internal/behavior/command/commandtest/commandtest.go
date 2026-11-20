@@ -61,8 +61,8 @@ func (c caller) Send(
 	return nil, errors.New("not sent")
 }
 
-// Sent runs the command line args under osapi client, such as next node
-// sysctl update --target server1 --key vm.swappiness, through the command
+// Sent runs the command line args under osapi client, such as node sysctl
+// update --target server1 --key vm.swappiness, through the command
 // layer and the endpoint layer's runner, and returns the request the
 // command sent to the API.
 func Sent(

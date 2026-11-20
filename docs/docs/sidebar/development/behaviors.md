@@ -13,11 +13,10 @@ tests of each layer above the provider. A new behavior is one directory under
 
 osapi serves a behavior under `/api` and `osapi client node`, next to the
 hand-written domains that did not move yet. A behavior that replaces a
-hand-written domain has the `behavior.Next` mark while both exist. The mark
-serves it under `/api/next` and `osapi client next`, until the cutover of that
-domain. Today, sysctl has the mark. `internal/behaviors/sysctl` is the
-reference. `osapi behavior spec get` lists each option, and
-`go doc ./internal/behavior` shows the Go API, with examples that run as tests.
+hand-written domain deletes that domain in the same change: the two never run
+side by side. `internal/behaviors/sysctl` is the reference.
+`osapi behavior spec get` lists each option, and `go doc ./internal/behavior`
+shows the Go API, with examples that run as tests.
 
 ## The layout
 
@@ -370,40 +369,21 @@ whose examples and tests miss a line fails CI too. It also runs
 in a copy of the checkout and runs its tests. Thus the behavior that you start
 from passes each check.
 
-A behavior that replaces a hand-written domain also gets a row in the parity
-test until the cutover. `TestParity` is in
-`internal/behaviors/all/spec_public_test.go`. It reads the generated spec of
-each listed behavior. It fails if the operations, scopes, parameters, response
-codes or schema fields are different from the hand-written spec:
-
-```go
-var migrating = []struct {
-    generated string
-    spec      string
-}{
-    {
-        generated: "internal/behaviors/sysctl/gen/api.next.yaml",
-        spec:      "internal/controller/api/node/sysctl/gen/api.yaml",
-    },
-}
-```
-
-Add the row when you build the behavior. Delete it with the hand-written spec at
-the cutover.
+A behavior that replaces a hand-written domain changes the joined spec. The API
+contract test, `TestJoinedSpec` in `internal/apicontract`, then fails, and its
+golden diff is the change to the API: write it again with `-update` and read it.
 
 ## Generated, never edited
 
-| File                                              | From                                                                                                                         |
-| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `internal/behaviors/<name>/gen/*.go`              | the definition, its types and its examples, built with jen                                                                   |
-| `internal/behaviors/<name>/gen/api.yaml`          | `gen/group.go`, by the endpoint layer's spec builder in `internal/behavior/gen/group`; `api.next.yaml` for a `Next` behavior |
-| `internal/controller/api/gen/api.yaml`            | the hand-written specs and every `gen/api.yaml`, by `just generate`                                                          |
-| `internal/behaviors/<name>/mocks/provider.gen.go` | the Provider interface, by mockgen                                                                                           |
-| `internal/behaviors/all/gen/gen.go`               | every behavior with `API` or `CLI`                                                                                           |
-| `internal/controller/api/next/gen/api.yaml`       | the behaviors marked `Next`, while any is                                                                                    |
-| `docs/docs/sidebar/behaviors/<name>/<name>.md`    | the definition and its settings                                                                                              |
-| `docs/docs/sidebar/usage/cli/client/...`          | the generated commands, by `just cli-docs-generate`                                                                          |
-| `docs/docs/gen/api-next/...`                      | the spec, by `just docs-generate`                                                                                            |
+| File                                              | From                                                                                  |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `internal/behaviors/<name>/gen/*.go`              | the definition, its types and its examples, built with jen                            |
+| `internal/behaviors/<name>/gen/api.yaml`          | `gen/group.go`, by the endpoint layer's spec builder in `internal/behavior/gen/group` |
+| `internal/controller/api/gen/api.yaml`            | the hand-written specs and every `gen/api.yaml`, by `just generate`                   |
+| `internal/behaviors/<name>/mocks/provider.gen.go` | the Provider interface, by mockgen                                                    |
+| `internal/behaviors/all/gen/gen.go`               | every behavior with `API` or `CLI`                                                    |
+| `docs/docs/sidebar/behaviors/<name>/<name>.md`    | the definition and its settings                                                       |
+| `docs/docs/sidebar/usage/cli/client/...`          | the generated commands, by `just cli-docs-generate`                                   |
 
 `gen/cli.go` puts the docs of a method on its command. `.Describe` is the
 `Short` of the command, `.Explain` is its `Long`, and the examples are its

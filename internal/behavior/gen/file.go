@@ -146,16 +146,3 @@ func wrap(
 
 	return append(lines, line)
 }
-
-// specFile is the name of b's spec in its gen directory. A Next behavior's is
-// api.next.yaml, so the join, which reads every gen/api.yaml, leaves it out:
-// it describes the same operations as the hand-written spec it replaces.
-func specFile(
-	b *behavior.Behavior,
-) string {
-	if b.Next {
-		return "api.next.yaml"
-	}
-
-	return "api.yaml"
-}

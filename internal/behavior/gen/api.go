@@ -153,7 +153,7 @@ func apiMethodTestFile(
 	f.Func().Params(jen.Id("s").Op("*").Id(name)).Id("SetupSuite").Params().Block(
 		jen.Id("s").Dot("api").Op("=").Qual(servertestPath, "New").Call(
 			jen.Id("s").Dot("T").Call(),
-			jen.Lit(strings.TrimPrefix(pkgPath(b), module+"/")+"/gen/"+specFile(b)),
+			jen.Lit(strings.TrimPrefix(pkgPath(b), module+"/")+"/gen/api.yaml"),
 			jen.Qual(pkgPath(b)+"/gen", "Routes"),
 		),
 	)
@@ -171,7 +171,7 @@ func apiMethodTestFile(
 
 	method("Test"+title(m.Name),
 		fmt.Sprintf("Test%s sends %s %s and checks each answer's response.",
-			title(m.Name), m.HTTPMethod(), b.Route(m)), responses)
+			title(m.Name), m.HTTPMethod(), b.Path(m)), responses)
 	method("Test"+title(m.Name)+"ValidationHTTP",
 		fmt.Sprintf("Test%sValidationHTTP sends requests the API refuses before any job is queued.",
 			title(m.Name)), validations)
@@ -427,7 +427,7 @@ func request(
 		c.token = "Write"
 	}
 
-	path := strings.Replace(b.Route(m), "{hostname}", url.PathEscape(target), 1)
+	path := strings.Replace(b.Path(m), "{hostname}", url.PathEscape(target), 1)
 	v := reflect.ValueOf(input)
 	if m.KeyField != "" {
 		field, _ := fieldByJSON(m.In, m.KeyField)
@@ -681,7 +681,7 @@ func echoRoute(
 	b *behavior.Behavior,
 	m *behavior.Method,
 ) string {
-	p := strings.ReplaceAll(b.Route(m), "{", ":")
+	p := strings.ReplaceAll(b.Path(m), "{", ":")
 
 	return strings.ReplaceAll(p, "}", "")
 }

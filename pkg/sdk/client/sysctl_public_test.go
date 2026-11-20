@@ -209,7 +209,7 @@ func (suite *SysctlPublicTestSuite) TestSysctlList() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Sysctl.List(suite.ctx, "_any")
+			resp, err := sut.Sysctl.List(suite.ctx, "_any", client.SysctlListOpts{})
 			tc.validateFunc(resp, err)
 		})
 	}

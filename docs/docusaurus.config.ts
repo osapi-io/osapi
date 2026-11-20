@@ -662,16 +662,6 @@ const config: Config = {
               groupPathsBy: 'tag',
               categoryLinkSource: 'tag'
             }
-          } satisfies OpenApiPlugin.Options,
-          // Generated from behavior definitions and served under /api/next,
-          // beside the hand-written API above until each domain moves over.
-          next: {
-            specPath: '../internal/controller/api/next/gen/api.yaml',
-            outputDir: 'docs/gen/api-next',
-            sidebarOptions: {
-              groupPathsBy: 'tag',
-              categoryLinkSource: 'tag'
-            }
           } satisfies OpenApiPlugin.Options
         } satisfies Plugin.PluginOptions
       }

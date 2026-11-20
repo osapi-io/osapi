@@ -117,7 +117,7 @@ func (s *ProcessorTimezonePublicTestSuite) TestProcessTimezoneOperation() {
 			}
 
 			processor := agent.NewNodeProcessor(
-				nil, nil, nil, nil, nil, nil,
+				nil, nil, nil, nil, nil,
 				timezoneProvider,
 				nil, nil,
 				nil,
@@ -125,8 +125,7 @@ func (s *ProcessorTimezonePublicTestSuite) TestProcessTimezoneOperation() {
 				nil,
 				nil,
 				config.Config{},
-				slog.Default(),
-			)
+				slog.Default())
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
@@ -189,7 +188,7 @@ func (s *ProcessorTimezonePublicTestSuite) TestProcessTimezoneGet() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := agent.NewNodeProcessor(
-				nil, nil, nil, nil, nil, nil,
+				nil, nil, nil, nil, nil,
 				tt.setupMock(),
 				nil, nil,
 				nil,
@@ -197,8 +196,7 @@ func (s *ProcessorTimezonePublicTestSuite) TestProcessTimezoneGet() {
 				nil,
 				nil,
 				config.Config{},
-				slog.Default(),
-			)
+				slog.Default())
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
@@ -280,7 +278,7 @@ func (s *ProcessorTimezonePublicTestSuite) TestProcessTimezoneUpdate() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := agent.NewNodeProcessor(
-				nil, nil, nil, nil, nil, nil,
+				nil, nil, nil, nil, nil,
 				tt.setupMock(),
 				nil, nil,
 				nil,
@@ -288,8 +286,7 @@ func (s *ProcessorTimezonePublicTestSuite) TestProcessTimezoneUpdate() {
 				nil,
 				nil,
 				config.Config{},
-				slog.Default(),
-			)
+				slog.Default())
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}

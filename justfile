@@ -83,7 +83,7 @@ test: linux-tune
 # a job. A check added here runs on a laptop and in CI, with no change to the
 # workflow.
 go_quick_checks := "just-fmt-check docs-fmt-check react-fmt-check go-mod-check go-pkg-check"
-go_slow_checks := "behavior-gen-check go-generate-check docs-gen-check cli-docs-gen-check behavior-scaffold-check endpoint-scaffold-check command-scaffold-check behavior-cover-check go-fmt-check go-vet examples-check"
+go_slow_checks := "behavior-gen-check go-generate-check docs-gen-check cli-docs-gen-check behavior-scaffold-check endpoint-scaffold-check command-scaffold-check behavior-cover-check go-fmt-check go-vet examples-check spec-client-check"
 
 # Fail when a behavior that osapi behavior create writes does not pass its tests
 #
@@ -170,6 +170,22 @@ go-pkg-check:
     if [ -n "$leaks" ]; then
         echo "pkg/ imports internal/:" >&2
         echo "$leaks" >&2
+        exit 1
+    fi
+
+# Compile a client that oapi-codegen writes from the joined spec with its
+# default options, as a person outside osapi would. The SDK's own client has
+# its config; this holds the spec to a stranger's generator. The package goes
+# in the module, so it builds with osapi's dependencies, and is removed after.
+spec-client-check:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    dir=$(mktemp -d internal/zzspecclientXXXXXX)
+    trap 'rm -rf "$dir"' EXIT
+    go tool oapi-codegen -generate types,client -package specclient \
+        internal/controller/api/gen/api.yaml > "$dir/client.go"
+    if ! go build "./$dir"; then
+        echo "a client that oapi-codegen generates from the joined spec does not compile" >&2
         exit 1
     fi
 
@@ -269,7 +285,7 @@ behavior-gen-check:
     generated() {
         {
             find internal/behaviors -type f -path '*/gen/*'
-            find internal/controller/api/next docs/docs/sidebar/behaviors -type f \
+            find docs/docs/sidebar/behaviors -type f \
                 -not -name behaviors.mdx -not -name _category_.json
         } 2>/dev/null | sort | xargs shasum
     }
@@ -291,10 +307,7 @@ behavior-gen-check:
         exit 1
     fi
 
-# The join reads the hand-written specs and each served behavior's
-# gen/api.yaml. The spec of behaviors marked Next, under next/, stays out: it
-# describes the same operations as the hand-written specs they replace, so
-# joining both would fail on duplicate operationIds.
+# The join reads the hand-written specs and each behavior's gen/api.yaml.
 
 # The endpoint groups' and the behaviors' gen/api.yaml are written by go
 # generate, and the join reads them. The SDK client is generated, in the same
@@ -316,7 +329,7 @@ generate:
 # from the first file. The components spec has the API's own, so it is first.
 # Join the hand-written specs and each served behavior's gen/api.yaml into out
 join-spec out:
-    bunx @redocly/cli@{{ redocly_version }} join --prefix-tags-with-info-prop title -o {{ out }} internal/controller/api/components/gen/api.yaml $(find internal/controller/endpoints -path '*/gen/api.yaml' | sort) $(ls internal/controller/api/*/gen/api.yaml | grep -v -e '/next/' -e '/components/' -e '^internal/controller/api/gen/') internal/controller/api/node/*/gen/api.yaml $(find internal/behaviors -path '*/gen/api.yaml' | sort)
+    bunx @redocly/cli@{{ redocly_version }} join --prefix-tags-with-info-prop title -o {{ out }} internal/controller/api/components/gen/api.yaml $(find internal/controller/endpoints -path '*/gen/api.yaml' | sort) $(ls internal/controller/api/*/gen/api.yaml | grep -v -e '/components/' -e '^internal/controller/api/gen/') internal/controller/api/node/*/gen/api.yaml $(find internal/behaviors -path '*/gen/api.yaml' | sort)
 
 # Format, lint, and generate before committing
 ready:

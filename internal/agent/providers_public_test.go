@@ -48,7 +48,7 @@ func TestProvidersPublicTestSuite(
 func (s *ProvidersPublicTestSuite) TestProviders() {
 	areas := []string{
 		"host", "disk", "memory", "load", "dns", "ping", "netinfo", "cron",
-		"sysctl", "ntp", "timezone", "power", "process", "user", "packages",
+		"ntp", "timezone", "power", "process", "user", "packages",
 		"logs", "certificate", "service", "iface", "route",
 	}
 
@@ -93,7 +93,6 @@ func (s *ProvidersPublicTestSuite) TestProviders() {
 			except: map[string]string{
 				"netinfo":     "Linux",
 				"cron":        "Linux",
-				"sysctl":      "Linux",
 				"certificate": "Linux",
 				"service":     "Linux",
 				"iface":       "Linux",

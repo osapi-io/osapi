@@ -97,8 +97,8 @@ func (s *Network) GetNodeNetworkDNSByInterface(
 		_ = json.Unmarshal(rawResp.Data, &dnsConfig)
 	}
 
-	searchDomains := dnsConfig.SearchDomains
-	servers := dnsConfig.DNSServers
+	searchDomains := orEmpty(dnsConfig.SearchDomains)
+	servers := orEmpty(dnsConfig.DNSServers)
 	changed := false
 
 	jobUUID := uuid.MustParse(jobID)
@@ -161,8 +161,8 @@ func (s *Network) getNodeNetworkDNSBroadcast(
 			if resp.Data != nil {
 				_ = json.Unmarshal(resp.Data, &cfg)
 			}
-			servers := cfg.DNSServers
-			searchDomains := cfg.SearchDomains
+			servers := orEmpty(cfg.DNSServers)
+			searchDomains := orEmpty(cfg.SearchDomains)
 			changed := false
 			item.Servers = &servers
 			item.SearchDomains = &searchDomains
@@ -176,4 +176,16 @@ func (s *Network) getNodeNetworkDNSBroadcast(
 		JobId:   &jobUUID,
 		Results: apiResponses,
 	}, nil
+}
+
+// orEmpty is list, or an empty list for none: the spec's servers and
+// search_domains are lists, and a host with none answers [], not null.
+func orEmpty(
+	list []string,
+) []string {
+	if list == nil {
+		return []string{}
+	}
+
+	return list
 }

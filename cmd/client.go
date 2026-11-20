@@ -37,6 +37,9 @@ import (
 	"github.com/osapi-io/osapi/internal/config"
 	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/internal/telemetry/tracing"
+
+	// Every behavior with a CLI registers its generated commands.
+	_ "github.com/osapi-io/osapi/internal/behaviors/all/gen"
 )
 
 var (
@@ -109,10 +112,9 @@ func init() {
 
 	_ = viper.BindPFlag("controller.client.url", clientCmd.PersistentFlags().Lookup("url"))
 
-	// node, next and next node exist before the groups are attached, so a
-	// behavior's group joins them: sysctl is under next node.
-	clientCmd.AddCommand(clientNodeCmd, clientNextCmd)
-	clientNextCmd.AddCommand(clientNextNodeCmd)
+	// node exists before the groups are attached, so a behavior's group
+	// joins it: sysctl is under node.
+	clientCmd.AddCommand(clientNodeCmd)
 
 	// The generated commands of the endpoint groups go under client. A group
 	// that also has hand-written commands, such as agent with status,

@@ -6,6 +6,9 @@
  */
 
 export interface SysctlUpdateRequest {
-  /** New value for the sysctl parameter. */
+  /**
+     * Value to set
+     * @pattern ^[^\r\n]*$
+     */
   value: string;
 }

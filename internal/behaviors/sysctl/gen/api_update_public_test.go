@@ -20,10 +20,10 @@ type APIUpdatePublicTestSuite struct {
 }
 
 func (s *APIUpdatePublicTestSuite) SetupSuite() {
-	s.api = servertest.New(s.T(), "internal/behaviors/sysctl/gen/api.next.yaml", gen.Routes)
+	s.api = servertest.New(s.T(), "internal/behaviors/sysctl/gen/api.yaml", gen.Routes)
 }
 
-// TestUpdate sends PUT /api/next/node/{hostname}/sysctl/{key} and checks each
+// TestUpdate sends PUT /api/node/{hostname}/sysctl/{key} and checks each
 // answer's response.
 func (s *APIUpdatePublicTestSuite) TestUpdate() {
 	s.api.Run(s.T(), []servertest.Case{
@@ -31,7 +31,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Name: "when the example \"Lower swappiness\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness","value":"10"}`,
 			},
 			Token: servertest.Write,
@@ -51,7 +51,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Name: "when the example \"Lower swappiness\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/next/node/_all/sysctl/vm.swappiness",
+				Path:   "/api/node/_all/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness","value":"10"}`,
 			},
 			Token: servertest.Write,
@@ -73,7 +73,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Name: "when the example \"A parameter osapi did not manage\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness","value":"10"}`,
 			},
 			Token: servertest.Write,
@@ -93,7 +93,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Name: "when the example \"A parameter osapi did not manage\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/next/node/_all/sysctl/vm.swappiness",
+				Path:   "/api/node/_all/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness","value":"10"}`,
 			},
 			Token: servertest.Write,
@@ -115,7 +115,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness","value":"10"}`,
 			},
 			Token: servertest.Write,
@@ -135,7 +135,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Name: "when the host fails it, its row says failed",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness","value":"10"}`,
 			},
 			Token: servertest.Write,
@@ -155,7 +155,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Name: "when the host never answers, its row says timeout",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness","value":"10"}`,
 			},
 			Token: servertest.Write,
@@ -175,7 +175,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Name: "when the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness","value":"10"}`,
 			},
 			Token: servertest.Write,
@@ -193,7 +193,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Name: "when broadcast and the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/next/node/_all/sysctl/vm.swappiness",
+				Path:   "/api/node/_all/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness","value":"10"}`,
 			},
 			Token: servertest.Write,
@@ -211,7 +211,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Name: "when the host does not have it, it is a 404",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness","value":"10"}`,
 			},
 			Token: servertest.Write,
@@ -236,7 +236,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Name: "when the target is not an agent, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/next/node/nowhere/sysctl/vm.swappiness",
+				Path:   "/api/node/nowhere/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness","value":"10"}`,
 			},
 			Token:    servertest.Write,
@@ -246,7 +246,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Name: "when the target is empty, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/next/node//sysctl/vm.swappiness",
+				Path:   "/api/node//sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness","value":"10"}`,
 			},
 			Token:    servertest.Write,
@@ -256,7 +256,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Name: "when value is missing, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness","value":""}`,
 			},
 			Token:    servertest.Write,
@@ -266,7 +266,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Name: "when the body is not JSON, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 				Body:   `{`,
 			},
 			Token:    servertest.Write,
@@ -276,7 +276,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Name: "when value has the wrong type, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 				Body:   `{"value":[]}`,
 			},
 			Token:    servertest.Write,
@@ -286,7 +286,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Name: "when sent a key that is not a parameter name, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness%3Breboot",
+				Path:   "/api/node/server1/sysctl/vm.swappiness%3Breboot",
 				Body:   `{"key":"vm.swappiness;reboot","value":"1"}`,
 			},
 			Token:    servertest.Write,
@@ -296,7 +296,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Name: "when sent a key holding a value, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness=1",
+				Path:   "/api/node/server1/sysctl/vm.swappiness=1",
 				Body:   `{"key":"vm.swappiness=1","value":"1"}`,
 			},
 			Token:    servertest.Write,
@@ -306,7 +306,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Name: "when sent no value, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness","value":""}`,
 			},
 			Token:    servertest.Write,
@@ -316,7 +316,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Name: "when sent a value on two lines, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness","value":"10\nkernel.panic = 0"}`,
 			},
 			Token:    servertest.Write,
@@ -332,7 +332,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateRBACHTTP() {
 			Name: "when there is no token, it is a 401",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness","value":"10"}`,
 			},
 			Token:    servertest.NoToken,
@@ -342,7 +342,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateRBACHTTP() {
 			Name: "when the token lacks sysctl:write, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness","value":"10"}`,
 			},
 			Token:    servertest.Lacking,
@@ -352,7 +352,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateRBACHTTP() {
 			Name: "when the token has only the read role, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness","value":"10"}`,
 			},
 			Token:    servertest.Read,
@@ -362,7 +362,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateRBACHTTP() {
 			Name: "when the token has the admin role, the request runs",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 				Body:   `{"key":"vm.swappiness","value":"10"}`,
 			},
 			Token: servertest.Admin,

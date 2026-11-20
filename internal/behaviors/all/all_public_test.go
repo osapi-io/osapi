@@ -125,7 +125,7 @@ func (s *AllPublicTestSuite) TestEveryCommandIsAttached() {
 			continue
 		}
 		for _, m := range b.Methods {
-			line := b.CLICommand(m)
+			line := b.Command(m)
 			s.Run(line, func() {
 				args := strings.Fields(strings.TrimPrefix(line, "osapi client "))
 				cmd, _, err := root.Find(args)
@@ -162,8 +162,8 @@ func handWritten(
 	for _, spec := range specs {
 		dir := filepath.Dir(filepath.Dir(spec))
 		rel, _ := filepath.Rel(root, dir)
-		// The joined spec and the Next behaviors' spec are not hand-written.
-		if rel == "internal/controller/api" || rel == "internal/controller/api/next" {
+		// The joined spec is not hand-written.
+		if rel == "internal/controller/api" {
 			continue
 		}
 		data, err := os.ReadFile(spec)
@@ -190,11 +190,11 @@ func collisions(
 ) []string {
 	var out []string
 	for _, m := range b.Methods {
-		op := m.HTTPMethod() + " " + b.Route(m)
+		op := m.HTTPMethod() + " " + b.Path(m)
 		if dir, ok := ops[op]; ok {
 			out = append(out, fmt.Sprintf(
 				"%s is served by the %s behavior and by %s: delete the hand-written domain "+
-					"(its cutover), or mark the behavior behavior.Next",
+					"(its cutover)",
 				op, b.Name, dir))
 		}
 	}
@@ -202,15 +202,15 @@ func collisions(
 	return out
 }
 
-// TestNoRouteIsServedTwice fails while a behavior that is not Next shares a
-// route with a hand-written domain, naming the domain's directory, so a
-// cutover is removing behavior.Next and deleting what this names.
+// TestNoRouteIsServedTwice fails while a behavior shares a route with a
+// hand-written domain, naming the domain's directory: a domain's cutover
+// deletes what this names in the change that adds its behavior.
 func (s *AllPublicTestSuite) TestNoRouteIsServedTwice() {
 	ops := handWritten(s.T())
 	s.Require().NotEmpty(ops)
 
 	for _, b := range behavior.All() {
-		if !b.API || b.Next {
+		if !b.API {
 			continue
 		}
 		s.Run(b.Name, func() {
@@ -218,13 +218,13 @@ func (s *AllPublicTestSuite) TestNoRouteIsServedTwice() {
 		})
 	}
 
-	s.Run("when a behavior that is not Next shares a hand-written route", func() {
-		served := behavior.Define("sysctl", "Kernel parameters", behavior.Node, behavior.API,
+	s.Run("when a behavior shares a hand-written route", func() {
+		served := behavior.Define("ntp", "NTP", behavior.Node, behavior.API,
 			behavior.Read("list", sysctl.List).Describe("List"))
 		got := collisions(served, ops)
 		s.Require().Len(got, 1)
-		s.Contains(got[0], "GET /api/node/{hostname}/sysctl is served by the sysctl behavior "+
-			"and by internal/controller/api/node/sysctl")
+		s.Contains(got[0], "GET /api/node/{hostname}/ntp is served by the ntp behavior "+
+			"and by internal/controller/api/node/ntp")
 	})
 }
 

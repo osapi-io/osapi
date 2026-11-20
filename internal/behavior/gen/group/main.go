@@ -20,10 +20,9 @@
 
 // Command group writes what the endpoint layer makes from each behavior's
 // endpoint group: its spec, routes, decoders and commands. For each behavior
-// with an API, from its gen/group.go, which internal/behavior/gen writes: each
-// behavior's gen/api.yaml, or gen/api.next.yaml for a behavior still under
-// /api/next, and the document of every /api/next behavior. It runs after
-// internal/behavior/gen, once the groups compile.
+// with an API, from its gen/group.go, which internal/behavior/gen writes, it
+// writes the behavior's gen/api.yaml. It runs after internal/behavior/gen,
+// once the groups compile.
 package main
 
 import (
@@ -71,7 +70,6 @@ func run(
 	root string,
 ) error {
 	w := &genfile.Writer{Root: root}
-	var next []*endpoint.Group
 	for _, b := range behavior.All() {
 		if !b.API {
 			continue
@@ -81,12 +79,7 @@ func run(
 			return fmt.Errorf("%s has no endpoint group: run internal/behavior/gen first", b.Name)
 		}
 		dir := filepath.Join(strings.TrimPrefix(b.Methods[0].In.PkgPath(), module+"/"), "gen")
-		name := "api.yaml"
-		if b.Next {
-			name = "api.next.yaml"
-			next = append(next, g)
-		}
-		if err := write(w, filepath.Join(dir, name), []*endpoint.Group{g}); err != nil {
+		if err := write(w, filepath.Join(dir, "api.yaml"), []*endpoint.Group{g}); err != nil {
 			return fmt.Errorf("%s: %w", b.Name, err)
 		}
 		if err := routes(w, dir, g); err != nil {
@@ -97,14 +90,6 @@ func run(
 				return fmt.Errorf("%s: %w", b.Name, err)
 			}
 		}
-	}
-
-	if len(next) == 0 {
-		if err := w.Remove(behavior.NextSpecPath); err != nil {
-			return err
-		}
-	} else if err := write(w, behavior.NextSpecPath, next); err != nil {
-		return err
 	}
 
 	return nil
@@ -148,8 +133,7 @@ func write(
 	// files take their names from the result, so the titles stay as the
 	// behavior generator wrote them.
 	doc.Info.Title = "OSAPI behaviors"
-	doc.Info.Description = "Behaviors served under " + behavior.NextRoutePrefix +
-		" beside the hand-written domains they replace."
+	doc.Info.Description = "The behaviors of osapi."
 	if len(gs) == 1 {
 		doc.Info.Title = strings.ToUpper(gs[0].Name[:1]) + gs[0].Name[1:] + " API"
 		doc.Info.Description = gs[0].Doc + "."

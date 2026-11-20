@@ -141,7 +141,7 @@
       "prompt": "Add a read-only behavior to osapi, in the network group, that lists the host's neighbor table (its ARP and NDP entries) from `ip neigh`. Name it neighbors.",
       "behavior": "neighbors",
       "dir": "network/neighbors",
-      "expected_output": "A grouped behavior under internal/behaviors/network/neighbors, declared with Under(\"network\") and served at /api/next/node/{hostname}/network/neighbors, with a list method parsing ip neigh's output.",
+      "expected_output": "A grouped behavior under internal/behaviors/network/neighbors, declared with Under(\"network\") and served at /api/node/{hostname}/network/neighbors, with a list method parsing ip neigh's output.",
       "assertions": [
         "behavior validate passes",
         "the behavior is registered under its name",

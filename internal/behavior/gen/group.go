@@ -189,7 +189,7 @@ func groupFile(
 func groupPrefix(
 	b *behavior.Behavior,
 ) (string, error) {
-	route := b.Route(b.Methods[0])
+	route := b.Path(b.Methods[0])
 	i := strings.LastIndex(route, "/"+b.Name)
 	if i < 0 {
 		return "", fmt.Errorf("route %s does not have /%s", route, b.Name)

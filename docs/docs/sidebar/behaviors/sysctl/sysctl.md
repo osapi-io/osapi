@@ -12,8 +12,8 @@ Kernel parameters, written to sysctl.d files and applied.
 
 | Surface | Where |
 | ------- | ----- |
-| API | `/api/next/node/{hostname}/sysctl`, in [API (next)](/category/api-next) |
-| CLI | `osapi client next node sysctl` |
+| API | `/api/node/{hostname}/sysctl`, in [API](/category/api) |
+| CLI | `osapi client node sysctl` |
 | Jobs | `behavior.sysctl.<method>`, run by the agent |
 
 ## Built on
@@ -39,11 +39,11 @@ Its span records the input `key` (get, create, update, delete).
 
 | Method | Verb | Permission | Description |
 | ------ | ---- | ---------- | ----------- |
-| [`list`](../../usage/cli/client/next/node/sysctl/list.md) | read | `sysctl:read` | List the kernel's parameters and which osapi manages |
-| [`get`](../../usage/cli/client/next/node/sysctl/get.md) | read | `sysctl:read` | Get a kernel parameter's current value, and whether osapi manages it |
-| [`create`](../../usage/cli/client/next/node/sysctl/create.md) | write | `sysctl:write` | Manage a kernel parameter and apply it |
-| [`update`](../../usage/cli/client/next/node/sysctl/update.md) | write | `sysctl:write` | Set a kernel parameter, manage it, and apply it |
-| [`delete`](../../usage/cli/client/next/node/sysctl/delete.md) | write | `sysctl:write` | Stop the management of a kernel parameter |
+| [`list`](../../usage/cli/client/node/sysctl/list.md) | read | `sysctl:read` | List the kernel's parameters and which osapi manages |
+| [`get`](../../usage/cli/client/node/sysctl/get.md) | read | `sysctl:read` | Get a kernel parameter's current value, and whether osapi manages it |
+| [`create`](../../usage/cli/client/node/sysctl/create.md) | write | `sysctl:write` | Manage a kernel parameter and apply it |
+| [`update`](../../usage/cli/client/node/sysctl/update.md) | write | `sysctl:write` | Set a kernel parameter, manage it, and apply it |
+| [`delete`](../../usage/cli/client/node/sysctl/delete.md) | write | `sysctl:write` | Stop the management of a kernel parameter |
 
 ## Settings
 

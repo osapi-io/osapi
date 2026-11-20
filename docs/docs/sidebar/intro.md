@@ -109,7 +109,7 @@ route, command, permission, docs and tests from the definition. No model runs at
 run time. The same input always does the same thing.
 
 ```bash
-$ osapi client next node sysctl get --key vm.swappiness --target _all
+$ osapi client node sysctl get --key vm.swappiness --target _all
 
 Results:
   HOSTNAME  STATUS  KEY            VALUE  MANAGED
@@ -118,8 +118,7 @@ Results:
 ```
 
 A write reports if it changed the host. When you run it again, it reports
-`changed: false`. sysctl is the first behavior. osapi serves it under
-`osapi client next` while it replaces the older sysctl commands.
+`changed: false`. sysctl is the first behavior.
 
 ### 5. See what exists
 

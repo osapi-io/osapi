@@ -6,6 +6,7 @@
  */
 import type {
   ErrorResponse,
+  GetNodeSysctlParams,
   SysctlCollectionResponse,
   SysctlCreateRequest,
   SysctlCreateResponse,
@@ -51,21 +52,30 @@ export type getNodeSysctlResponseError = (getNodeSysctlResponse400 | getNodeSysc
 
 export type getNodeSysctlResponse = (getNodeSysctlResponseSuccess | getNodeSysctlResponseError)
 
-export const getGetNodeSysctlUrl = (hostname: string,) => {
+export const getGetNodeSysctlUrl = (hostname: string,
+    params?: GetNodeSysctlParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/node/${hostname}/sysctl`
+  return stringifiedParams.length > 0 ? `/api/node/${hostname}/sysctl?${stringifiedParams}` : `/api/node/${hostname}/sysctl`
 }
 
 /**
- * List all managed sysctl entries on the target node.
- * @summary List all managed sysctl entries
+ * Lists every parameter the kernel shows under /proc/sys, with its current value, as sysctl -a does, and marks the ones osapi manages. A prefix, such as net.ipv4, limits the list to that part of the tree. The kernel can lack a parameter that osapi manages, for example when its module is not loaded. Then the list shows the value that osapi wrote.
+ * @summary List the kernel's parameters and which osapi manages
  */
-export const getNodeSysctl = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeSysctlResponse> => {
+export const getNodeSysctl = async (hostname: string,
+    params?: GetNodeSysctlParams, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeSysctlResponse> => {
 
-  return apiFetch<getNodeSysctlResponse>(getGetNodeSysctlUrl(hostname),
+  return apiFetch<getNodeSysctlResponse>(getGetNodeSysctlUrl(hostname,params),
   {
     ...options,
     method: 'GET'
@@ -118,8 +128,8 @@ export const getPostNodeSysctlUrl = (hostname: string,) => {
 }
 
 /**
- * Create a new sysctl kernel parameter on the target node. Idempotent: returns changed=false if the key is already managed.
- * @summary Create a sysctl parameter
+ * Writes osapi-<key>.conf to behaviors.sysctl.dir, /etc/sysctl.d by default, and applies it with sysctl -p. It fails when sysctl -p fails, because the value is not set. A second run with the same value changes nothing and reports changed: false. If the kernel has a different value, for example after a failed apply, it applies the value again.
+ * @summary Manage a kernel parameter and apply it
  */
 export const postNodeSysctl = async (hostname: string,
     sysctlCreateRequest: SysctlCreateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeSysctlResponse> => {
@@ -144,6 +154,71 @@ return apiFetch<postNodeSysctlResponse>(getPostNodeSysctlUrl(hostname),
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(sysctlCreateRequest)
+  }
+);}
+
+
+export type deleteNodeSysctlResponse200 = {
+  data: SysctlDeleteResponse
+  status: 200
+}
+
+export type deleteNodeSysctlResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type deleteNodeSysctlResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type deleteNodeSysctlResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type deleteNodeSysctlResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteNodeSysctlResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type deleteNodeSysctlResponseSuccess = (deleteNodeSysctlResponse200) & {
+  headers: Headers;
+};
+export type deleteNodeSysctlResponseError = (deleteNodeSysctlResponse400 | deleteNodeSysctlResponse401 | deleteNodeSysctlResponse403 | deleteNodeSysctlResponse404 | deleteNodeSysctlResponse500) & {
+  headers: Headers;
+};
+
+export type deleteNodeSysctlResponse = (deleteNodeSysctlResponseSuccess | deleteNodeSysctlResponseError)
+
+export const getDeleteNodeSysctlUrl = (hostname: string,
+    key: string,) => {
+
+
+
+
+  return `/api/node/${hostname}/sysctl/${key}`
+}
+
+/**
+ * Removes the file that osapi wrote for it and reloads with sysctl --system. Then a setting for the key in a different file takes effect. If there is no such setting, the parameter keeps its current value until the next reboot. A delete of a parameter that osapi does not manage reports changed: false.
+ * @summary Stop the management of a kernel parameter
+ */
+export const deleteNodeSysctl = async (hostname: string,
+    key: string, options?: Parameters<typeof apiFetch>[1]): Promise<deleteNodeSysctlResponse> => {
+
+  return apiFetch<deleteNodeSysctlResponse>(getDeleteNodeSysctlUrl(hostname,key),
+  {
+    ...options,
+    method: 'DELETE'
+
+
   }
 );}
 
@@ -197,8 +272,7 @@ export const getGetNodeSysctlByKeyUrl = (hostname: string,
 }
 
 /**
- * Get a specific managed sysctl entry by key on the target node.
- * @summary Get a sysctl entry
+ * @summary Get a kernel parameter's current value, and whether osapi manages it
  */
 export const getNodeSysctlByKey = async (hostname: string,
     key: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeSysctlByKeyResponse> => {
@@ -262,8 +336,8 @@ export const getPutNodeSysctlUrl = (hostname: string,
 }
 
 /**
- * Update an existing sysctl kernel parameter on the target node. Fails if the key is not currently managed. This operation is idempotent — updating with the same value results in no change.
- * @summary Update a sysctl parameter
+ * The same as create, addressed by the parameter: osapi manages the parameter from then on whether it did before or not. Setting the value it already has reports changed: false.
+ * @summary Set a kernel parameter, manage it, and apply it
  */
 export const putNodeSysctl = async (hostname: string,
     key: string,
@@ -289,71 +363,6 @@ return apiFetch<putNodeSysctlResponse>(getPutNodeSysctlUrl(hostname,key),
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(sysctlUpdateRequest)
-  }
-);}
-
-
-export type deleteNodeSysctlResponse200 = {
-  data: SysctlDeleteResponse
-  status: 200
-}
-
-export type deleteNodeSysctlResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type deleteNodeSysctlResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-
-export type deleteNodeSysctlResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type deleteNodeSysctlResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type deleteNodeSysctlResponse500 = {
-  data: ErrorResponse
-  status: 500
-}
-
-export type deleteNodeSysctlResponseSuccess = (deleteNodeSysctlResponse200) & {
-  headers: Headers;
-};
-export type deleteNodeSysctlResponseError = (deleteNodeSysctlResponse400 | deleteNodeSysctlResponse401 | deleteNodeSysctlResponse403 | deleteNodeSysctlResponse404 | deleteNodeSysctlResponse500) & {
-  headers: Headers;
-};
-
-export type deleteNodeSysctlResponse = (deleteNodeSysctlResponseSuccess | deleteNodeSysctlResponseError)
-
-export const getDeleteNodeSysctlUrl = (hostname: string,
-    key: string,) => {
-
-
-
-
-  return `/api/node/${hostname}/sysctl/${key}`
-}
-
-/**
- * Delete a managed sysctl entry from the target node.
- * @summary Delete a managed sysctl entry
- */
-export const deleteNodeSysctl = async (hostname: string,
-    key: string, options?: Parameters<typeof apiFetch>[1]): Promise<deleteNodeSysctlResponse> => {
-
-  return apiFetch<deleteNodeSysctlResponse>(getDeleteNodeSysctlUrl(hostname,key),
-  {
-    ...options,
-    method: 'DELETE'
-
-
   }
 );}
 

@@ -42,7 +42,6 @@ func (s *CommandtestPublicTestSuite) TestSent() {
 		{
 			name: "when a command runs, the request it sends is returned",
 			args: []string{
-				"next",
 				"node",
 				"sysctl",
 				"get",
@@ -53,7 +52,7 @@ func (s *CommandtestPublicTestSuite) TestSent() {
 			},
 			want: commandtest.Request{
 				Method: "GET",
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 			},
 		},
 	}

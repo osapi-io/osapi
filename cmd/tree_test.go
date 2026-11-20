@@ -21,10 +21,13 @@
 package cmd
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi/internal/behavior"
 )
 
 // TreeTestSuite holds that no two commands under one parent have one name.
@@ -47,6 +50,24 @@ func (s *TreeTestSuite) TestNamesUnique() {
 		}
 	}
 	walk(rootCmd)
+}
+
+// TestEveryBehaviorCommandIsAttached finds each behavior command in the
+// binary's own tree. The behaviors' generated commands register through
+// the import of internal/behaviors/all/gen in client.go: without it they
+// are in no tree, and a test in their own package still passes.
+func (s *TreeTestSuite) TestEveryBehaviorCommandIsAttached() {
+	for _, b := range behavior.All() {
+		if !b.CLI {
+			continue
+		}
+		for _, m := range b.Methods {
+			words := strings.Fields(b.Command(m))[1:]
+			found, _, err := rootCmd.Find(words)
+			s.Require().NoError(err, b.Command(m))
+			s.Equal(m.Name, found.Name(), "%s is not in the tree", b.Command(m))
+		}
+	}
 }
 
 func TestTreeTestSuite(

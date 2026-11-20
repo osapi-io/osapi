@@ -261,7 +261,7 @@ One directory, one import line, and a behavior with:
 - `GET` and `PUT` routes, permission checks granted to the built-in roles,
   broadcast targeting and the `{job_id, results[]}` envelope
 - `osapi client node motd get` and `update`, with typed flags
-- an OpenAPI spec, under API (next)
+- an OpenAPI spec, under API
 - a docs page under Behaviors, with each example rendered as the CLI prints it
   and what it changes on the host
 - a provider the agent builds on Debian, skipped elsewhere

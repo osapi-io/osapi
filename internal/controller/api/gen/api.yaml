@@ -107,9 +107,6 @@ tags:
   - name: Service_Management_API_service_operations
     x-displayName: Node/Service
     description: Systemd service management on a target node.
-  - name: Sysctl_Management_API_sysctl_operations
-    x-displayName: Node/Sysctl
-    description: Kernel parameter management on a target node.
   - name: Timezone_Management_API_timezone_operations
     x-displayName: Node/Timezone
     description: System timezone management on a target node.
@@ -119,6 +116,9 @@ tags:
   - name: User_and_Group_Management_API_group_operations
     x-displayName: Node/Group
     description: Group management on a target node.
+  - description: Kernel parameters, written to sysctl.d files and applied
+    name: Sysctl_API_sysctl_operations
+    x-displayName: Node/Sysctl
 paths:
   /api/admission:
     servers: []
@@ -5680,263 +5680,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/sysctl:
-    servers: []
-    get:
-      summary: List all managed sysctl entries
-      description: |
-        List all managed sysctl entries on the target node.
-      tags:
-        - Sysctl_Management_API_sysctl_operations
-      operationId: GetNodeSysctl
-      security:
-        - BearerAuth:
-            - sysctl:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      responses:
-        '200':
-          description: List of sysctl entries.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SysctlCollectionResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error listing sysctl entries.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    post:
-      summary: Create a sysctl parameter
-      description: >
-        Create a new sysctl kernel parameter on the target node. Idempotent:
-        returns changed=false if the key is already managed.
-      tags:
-        - Sysctl_Management_API_sysctl_operations
-      operationId: PostNodeSysctl
-      security:
-        - BearerAuth:
-            - sysctl:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      requestBody:
-        description: Sysctl create parameters.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SysctlCreateRequest'
-      responses:
-        '200':
-          description: Sysctl parameter created.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SysctlCreateResponse'
-        '400':
-          description: Invalid request payload.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error creating sysctl parameter.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/sysctl/{key}:
-    servers: []
-    get:
-      summary: Get a sysctl entry
-      description: |
-        Get a specific managed sysctl entry by key on the target node.
-      tags:
-        - Sysctl_Management_API_sysctl_operations
-      operationId: GetNodeSysctlByKey
-      security:
-        - BearerAuth:
-            - sysctl:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/SysctlKey'
-      responses:
-        '200':
-          description: Sysctl entry detail.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SysctlGetResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Sysctl entry not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error retrieving sysctl entry.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    put:
-      summary: Update a sysctl parameter
-      description: >
-        Update an existing sysctl kernel parameter on the target node. Fails if
-        the key is not currently managed. This operation is idempotent —
-        updating with the same value results in no change.
-      tags:
-        - Sysctl_Management_API_sysctl_operations
-      operationId: PutNodeSysctl
-      security:
-        - BearerAuth:
-            - sysctl:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/SysctlKey'
-      requestBody:
-        description: Sysctl update parameters.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SysctlUpdateRequest'
-      responses:
-        '200':
-          description: Sysctl parameter updated.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SysctlUpdateResponse'
-        '400':
-          description: Invalid request payload.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Sysctl entry not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error updating sysctl parameter.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    delete:
-      summary: Delete a managed sysctl entry
-      description: |
-        Delete a managed sysctl entry from the target node.
-      tags:
-        - Sysctl_Management_API_sysctl_operations
-      operationId: DeleteNodeSysctl
-      security:
-        - BearerAuth:
-            - sysctl:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/SysctlKey'
-      responses:
-        '200':
-          description: Sysctl entry deleted.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SysctlDeleteResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Sysctl entry not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error deleting sysctl entry.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /api/node/{hostname}/timezone:
     servers: []
     get:
@@ -6745,6 +6488,278 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /api/node/{hostname}/sysctl:
+    servers: []
+    get:
+      description: >-
+        Lists every parameter the kernel shows under /proc/sys, with its current
+        value, as sysctl -a does, and marks the ones osapi manages. A prefix,
+        such as net.ipv4, limits the list to that part of the tree. The kernel
+        can lack a parameter that osapi manages, for example when its module is
+        not loaded. Then the list shows the value that osapi wrote.
+      operationId: GetNodeSysctl
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - description: Only this parameter and the ones under it, such as net.ipv4
+          in: query
+          name: prefix
+          schema:
+            pattern: ^[a-zA-Z0-9][a-zA-Z0-9._-]*$
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,sysctl_key
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SysctlCollectionResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - sysctl:read
+      summary: List the kernel's parameters and which osapi manages
+      tags:
+        - Sysctl_API_sysctl_operations
+    post:
+      description: >-
+        Writes osapi-<key>.conf to behaviors.sysctl.dir, /etc/sysctl.d by
+        default, and applies it with sysctl -p. It fails when sysctl -p fails,
+        because the value is not set. A second run with the same value changes
+        nothing and reports changed: false. If the kernel has a different value,
+        for example after a failed apply, it applies the value again.
+      operationId: PostNodeSysctl
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SysctlCreateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SysctlCreateResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - sysctl:write
+      summary: Manage a kernel parameter and apply it
+      tags:
+        - Sysctl_API_sysctl_operations
+  /api/node/{hostname}/sysctl/{key}:
+    servers: []
+    delete:
+      description: >-
+        Removes the file that osapi wrote for it and reloads with sysctl
+        --system. Then a setting for the key in a different file takes effect.
+        If there is no such setting, the parameter keeps its current value until
+        the next reboot. A delete of a parameter that osapi does not manage
+        reports changed: false.
+      operationId: DeleteNodeSysctl
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/SysctlKey'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SysctlDeleteResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host has no sysctl with that key.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - sysctl:write
+      summary: Stop the management of a kernel parameter
+      tags:
+        - Sysctl_API_sysctl_operations
+    get:
+      operationId: GetNodeSysctlByKey
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/SysctlKey'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SysctlGetResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host has no sysctl with that key.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - sysctl:read
+      summary: Get a kernel parameter's current value, and whether osapi manages it
+      tags:
+        - Sysctl_API_sysctl_operations
+    put:
+      description: >-
+        The same as create, addressed by the parameter: osapi manages the
+        parameter from then on whether it did before or not. Setting the value
+        it already has reports changed: false.
+      operationId: PutNodeSysctl
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/SysctlKey'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SysctlUpdateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SysctlUpdateResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host has no sysctl with that key.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - sysctl:write
+      summary: Set a kernel parameter, manage it, and apply it
+      tags:
+        - Sysctl_API_sysctl_operations
 components:
   schemas:
     ErrorResponse:
@@ -7880,8 +7895,12 @@ components:
             Count of all jobs by status (submitted, processing, completed,
             failed, partial_failure). Derived from key names during the listing
             pass, with no extra reads.
-          example: >-
-            {"submitted":5,"processing":2,"completed":30,"failed":3,"partial_failure":2}
+          example:
+            completed: 30
+            failed: 3
+            partial_failure: 2
+            processing: 2
+            submitted: 5
           type: object
         total_items:
           description: Total number of jobs matching the filter.
@@ -11004,160 +11023,6 @@ components:
             $ref: '#/components/schemas/ServiceMutationEntry'
       required:
         - results
-    SysctlCreateRequest:
-      type: object
-      required:
-        - key
-        - value
-      properties:
-        key:
-          type: string
-          description: |
-            Sysctl parameter key (e.g., net.ipv4.ip_forward).
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1,sysctl_key
-        value:
-          type: string
-          description: |
-            Value to set for the sysctl parameter.
-          x-oapi-codegen-extra-tags:
-            validate: required,no_linebreak
-    SysctlUpdateRequest:
-      type: object
-      required:
-        - value
-      properties:
-        value:
-          type: string
-          description: |
-            New value for the sysctl parameter.
-          x-oapi-codegen-extra-tags:
-            validate: required,no_linebreak
-    SysctlEntry:
-      type: object
-      description: A managed sysctl entry.
-      properties:
-        hostname:
-          type: string
-          description: Hostname of the agent that reported this entry.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        key:
-          type: string
-          description: Sysctl parameter key.
-        value:
-          type: string
-          description: Current value of the sysctl parameter.
-        error:
-          type: string
-          description: Error message if the agent failed to retrieve this entry.
-      required:
-        - hostname
-        - status
-    SysctlCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/SysctlEntry'
-      required:
-        - results
-    SysctlGetResponse:
-      type: object
-      description: Collection response for a single sysctl entry get operation.
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/SysctlEntry'
-      required:
-        - results
-    SysctlMutationResult:
-      type: object
-      description: Result of a sysctl create, update, or delete operation for one host.
-      properties:
-        hostname:
-          type: string
-          description: Hostname of the agent that processed this operation.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        key:
-          type: string
-          description: Sysctl parameter key.
-        changed:
-          type: boolean
-          description: Whether the operation modified system state.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    SysctlCreateResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/SysctlMutationResult'
-      required:
-        - results
-    SysctlUpdateResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/SysctlMutationResult'
-      required:
-        - results
-    SysctlDeleteResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/SysctlMutationResult'
-      required:
-        - results
     TimezoneUpdateRequest:
       type: object
       required:
@@ -11688,24 +11553,191 @@ components:
             $ref: '#/components/schemas/GroupMutationResult'
       required:
         - results
+    SysctlCollectionResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/SysctlEntry'
+          type: array
+      required:
+        - results
+      type: object
+    SysctlCreateRequest:
+      properties:
+        key:
+          description: Parameter name, such as net.ipv4.ip_forward
+          minLength: 1
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9._-]*$
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,sysctl_key
+        value:
+          description: Value to set
+          pattern: ^[^\r\n]*$
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,no_linebreak
+      required:
+        - key
+        - value
+      type: object
+    SysctlCreateResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/SysctlMutationResult'
+          type: array
+      required:
+        - results
+      type: object
+    SysctlDeleteResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/SysctlMutationResult'
+          type: array
+      required:
+        - results
+      type: object
+    SysctlEntry:
+      properties:
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        key:
+          description: Parameter name
+          type: string
+        managed:
+          description: 'Whether osapi manages it: a file of its own sets it at boot'
+          type: boolean
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+        value:
+          description: Current runtime value
+          type: string
+      required:
+        - hostname
+        - status
+      type: object
+    SysctlGetResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/SysctlEntry'
+          type: array
+      required:
+        - results
+      type: object
+    SysctlMutationResult:
+      properties:
+        changed:
+          description: Whether the host changed
+          type: boolean
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        key:
+          description: Parameter name
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
+      type: object
+    SysctlUpdateRequest:
+      properties:
+        value:
+          description: Value to set
+          pattern: ^[^\r\n]*$
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,no_linebreak
+      required:
+        - value
+      type: object
+    SysctlUpdateResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/SysctlMutationResult'
+          type: array
+      required:
+        - results
+      type: object
   securitySchemes:
     BearerAuth:
-      type: http
-      scheme: bearer
       bearerFormat: JWT
+      scheme: bearer
+      type: http
   parameters:
     Hostname:
-      name: hostname
+      description: 'Target: _all, _any, hostname, or label (group:web.dev).'
       in: path
+      name: hostname
       required: true
-      description: >
-        Target agent hostname, reserved routing value (_any, _all), or label
-        selector (key:value).
+      schema:
+        minLength: 1
+        type: string
       x-oapi-codegen-extra-tags:
         validate: required,min=1,valid_target
-      schema:
-        type: string
-        minLength: 1
     CertName:
       name: name
       in: path
@@ -11816,18 +11848,6 @@ components:
         type: string
         minLength: 1
         pattern: ^[a-zA-Z0-9_@.-]+$
-    SysctlKey:
-      name: key
-      in: path
-      required: true
-      description: |
-        Sysctl parameter key (e.g., net.ipv4.ip_forward).
-      x-oapi-codegen-extra-tags:
-        validate: required,min=1,sysctl_key
-      schema:
-        type: string
-        minLength: 1
-        pattern: ^[a-zA-Z0-9][a-zA-Z0-9._-]*$
     UserName:
       name: name
       in: path
@@ -11870,6 +11890,17 @@ components:
         type: string
         minLength: 1
         pattern: ^SHA256:[A-Za-z0-9+/]+=*$
+    SysctlKey:
+      description: Parameter name, such as net.ipv4.ip_forward
+      in: path
+      name: key
+      required: true
+      schema:
+        minLength: 1
+        pattern: ^[a-zA-Z0-9][a-zA-Z0-9._-]*$
+        type: string
+      x-oapi-codegen-extra-tags:
+        validate: required,min=1,sysctl_key
 x-tagGroups:
   - name: Admission API
     tags:
@@ -11949,9 +11980,6 @@ x-tagGroups:
   - name: Service Management API
     tags:
       - Service_Management_API_service_operations
-  - name: Sysctl Management API
-    tags:
-      - Sysctl_Management_API_sysctl_operations
   - name: Timezone Management API
     tags:
       - Timezone_Management_API_timezone_operations
@@ -11959,3 +11987,6 @@ x-tagGroups:
     tags:
       - User_and_Group_Management_API_user_operations
       - User_and_Group_Management_API_group_operations
+  - name: Sysctl API
+    tags:
+      - Sysctl_API_sysctl_operations

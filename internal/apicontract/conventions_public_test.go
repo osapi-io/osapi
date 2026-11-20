@@ -105,7 +105,7 @@ func (s *ConventionsPublicTestSuite) TestConventions() {
 			"%s: operationId %s starts with a small letter; each is Pascal case", where, id)
 
 		responses, _ := o.body["responses"].(map[string]any)
-		node := strings.HasPrefix(o.path, "/api/node/") || strings.HasPrefix(o.path, "/api/next/")
+		node := strings.HasPrefix(o.path, "/api/node/")
 		for code, r := range responses {
 			switch {
 			case code == "202":

@@ -12,8 +12,8 @@ metadata:
 
 Domains move to [behaviors](https://github.com/osapi-io/specs/blob/main/components/osapi/behaviors.md). A behavior
 is one typed definition under `internal/behaviors/<name>/`. osapi generates the
-routes, agent dispatch, CLI, spec and docs from it. osapi serves it under
-`/api/next` and `osapi client next`, next to the hand-written domains ([the
+routes, agent dispatch, CLI, spec and docs from it, under `/api` and
+`osapi client`, next to the hand-written domains that have not moved yet ([the
 plan](https://github.com/osapi-io/specs/blob/main/components/osapi/behavior-migration.md)).
 
 Before you start, ask which kind of work it is. A new behavior uses the

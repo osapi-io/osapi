@@ -36,8 +36,13 @@ type SysctlService struct {
 func (s *SysctlService) List(
 	ctx context.Context,
 	hostname string,
+	opts SysctlListOpts,
 ) (*Response[Collection[SysctlEntryResult]], error) {
-	resp, err := s.client.GetNodeSysctlWithResponse(ctx, hostname)
+	params := &gen.GetNodeSysctlParams{}
+	if opts.Prefix != "" {
+		params.Prefix = &opts.Prefix
+	}
+	resp, err := s.client.GetNodeSysctlWithResponse(ctx, hostname, params)
 	if err != nil {
 		return nil, fmt.Errorf("sysctl list: %w", err)
 	}

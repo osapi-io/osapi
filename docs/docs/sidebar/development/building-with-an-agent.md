@@ -96,10 +96,8 @@ to the platform, and a person decides it.
 
 ## Moving a hand-written domain
 
-A hand-written domain moves in two steps. First, you build its behavior next to
-it, with the `behavior.Next` mark. Then osapi serves the behavior under
-`/api/next` and `osapi client next` while both run. Then the cutover removes the
-mark, and the checks name the code that is left to delete. The route check names
-the directory of the hand-written domain. The CLI does not start while a
-hand-written command has the name of the behavior. `references/migrating.md` of
-the skill gives the procedure.
+A hand-written domain moves in one change: you build its behavior and delete the
+domain together. The two never run side by side. The checks name the code that
+is left to delete: the route check names the directory of the hand-written
+domain, and a test names each hand-written command that has the name of a
+behavior command. `references/migrating.md` of the skill gives the procedure.

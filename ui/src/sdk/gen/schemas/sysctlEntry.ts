@@ -6,18 +6,17 @@
  */
 import type { SysctlEntryStatus } from './sysctlEntryStatus';
 
-/**
- * A managed sysctl entry.
- */
 export interface SysctlEntry {
-  /** Hostname of the agent that reported this entry. */
+  /** Error message if the agent failed. */
+  error?: string;
+  /** Hostname of the agent that produced this result. */
   hostname: string;
+  /** Parameter name */
+  key?: string;
+  /** Whether osapi manages it: a file of its own sets it at boot */
+  managed?: boolean;
   /** The status of the operation for this host. */
   status: SysctlEntryStatus;
-  /** Sysctl parameter key. */
-  key?: string;
-  /** Current value of the sysctl parameter. */
+  /** Current runtime value */
   value?: string;
-  /** Error message if the agent failed to retrieve this entry. */
-  error?: string;
 }

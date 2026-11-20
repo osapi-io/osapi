@@ -22,7 +22,7 @@ osapi behavior method get --name sysctl --method update --json  # one method's i
 
 And per method, in `methods`:
 
-- `command`: the CLI command to run, such as `osapi client next node sysctl update`.
+- `command`: the CLI command to run, such as `osapi client node sysctl update`.
   Empty when the behavior has no CLI; use `route` and the API instead.
 - `route` and `http_method`: where the API serves it. Empty when it has no API.
 - `permission`: what your token needs, such as `sysctl:write`.

@@ -4377,77 +4377,80 @@ type StreamInfo struct {
 // SysctlCollectionResponse defines model for SysctlCollectionResponse.
 type SysctlCollectionResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
 	Results []SysctlEntry       `json:"results"`
 }
 
 // SysctlCreateRequest defines model for SysctlCreateRequest.
 type SysctlCreateRequest struct {
-	// Key Sysctl parameter key (e.g., net.ipv4.ip_forward).
+	// Key Parameter name, such as net.ipv4.ip_forward
 	Key string `json:"key" validate:"required,min=1,sysctl_key"`
 
-	// Value Value to set for the sysctl parameter.
+	// Value Value to set
 	Value string `json:"value" validate:"required,no_linebreak"`
 }
 
 // SysctlCreateResponse defines model for SysctlCreateResponse.
 type SysctlCreateResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID    `json:"job_id,omitempty"`
+	JobId   *openapi_types.UUID    `json:"job_id,omitempty" validate:"uuid"`
 	Results []SysctlMutationResult `json:"results"`
 }
 
 // SysctlDeleteResponse defines model for SysctlDeleteResponse.
 type SysctlDeleteResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID    `json:"job_id,omitempty"`
+	JobId   *openapi_types.UUID    `json:"job_id,omitempty" validate:"uuid"`
 	Results []SysctlMutationResult `json:"results"`
 }
 
-// SysctlEntry A managed sysctl entry.
+// SysctlEntry defines model for SysctlEntry.
 type SysctlEntry struct {
-	// Error Error message if the agent failed to retrieve this entry.
+	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
-	// Hostname Hostname of the agent that reported this entry.
+	// Hostname Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
-	// Key Sysctl parameter key.
+	// Key Parameter name
 	Key *string `json:"key,omitempty"`
 
-	// Status The status of the operation for this host.
-	Status SysctlEntryStatus `json:"status"`
+	// Managed Whether osapi manages it: a file of its own sets it at boot
+	Managed *bool `json:"managed,omitempty"`
 
-	// Value Current value of the sysctl parameter.
+	// Status The status of the operation for this host.
+	Status SysctlEntryStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
+
+	// Value Current runtime value
 	Value *string `json:"value,omitempty"`
 }
 
 // SysctlEntryStatus The status of the operation for this host.
 type SysctlEntryStatus string
 
-// SysctlGetResponse Collection response for a single sysctl entry get operation.
+// SysctlGetResponse defines model for SysctlGetResponse.
 type SysctlGetResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
 	Results []SysctlEntry       `json:"results"`
 }
 
-// SysctlMutationResult Result of a sysctl create, update, or delete operation for one host.
+// SysctlMutationResult defines model for SysctlMutationResult.
 type SysctlMutationResult struct {
-	// Changed Whether the operation modified system state.
+	// Changed Whether the host changed
 	Changed *bool `json:"changed,omitempty"`
 
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
-	// Hostname Hostname of the agent that processed this operation.
+	// Hostname Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
-	// Key Sysctl parameter key.
+	// Key Parameter name
 	Key *string `json:"key,omitempty"`
 
 	// Status The status of the operation for this host.
-	Status SysctlMutationResultStatus `json:"status"`
+	Status SysctlMutationResultStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
 }
 
 // SysctlMutationResultStatus The status of the operation for this host.
@@ -4455,14 +4458,14 @@ type SysctlMutationResultStatus string
 
 // SysctlUpdateRequest defines model for SysctlUpdateRequest.
 type SysctlUpdateRequest struct {
-	// Value New value for the sysctl parameter.
+	// Value Value to set
 	Value string `json:"value" validate:"required,no_linebreak"`
 }
 
 // SysctlUpdateResponse defines model for SysctlUpdateResponse.
 type SysctlUpdateResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID    `json:"job_id,omitempty"`
+	JobId   *openapi_types.UUID    `json:"job_id,omitempty" validate:"uuid"`
 	Results []SysctlMutationResult `json:"results"`
 }
 
@@ -4974,6 +4977,12 @@ type GetNodeLogUnitParams struct {
 type PostNodeNetworkPingJSONBody struct {
 	// Address The IP address of the server to ping. Supports both IPv4 and IPv6. Also accepts @fact. references that are resolved agent-side.
 	Address string `json:"address" validate:"required,ip_or_fact"`
+}
+
+// GetNodeSysctlParams defines parameters for GetNodeSysctl.
+type GetNodeSysctlParams struct {
+	// Prefix Only this parameter and the ones under it, such as net.ipv4
+	Prefix *string `form:"prefix,omitempty" json:"prefix,omitempty" validate:"omitempty,sysctl_key"`
 }
 
 // GetTraceParams defines parameters for GetTrace.
@@ -5569,7 +5578,7 @@ type ClientInterface interface {
 	PostNodeServiceStop(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNodeSysctl request
-	GetNodeSysctl(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetNodeSysctl(ctx context.Context, hostname Hostname, params *GetNodeSysctlParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostNodeSysctlWithBody request with any body
 	PostNodeSysctlWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -7317,8 +7326,8 @@ func (c *Client) PostNodeServiceStop(ctx context.Context, hostname Hostname, nam
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetNodeSysctl(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetNodeSysctlRequest(c.Server, hostname)
+func (c *Client) GetNodeSysctl(ctx context.Context, hostname Hostname, params *GetNodeSysctlParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeSysctlRequest(c.Server, hostname, params)
 	if err != nil {
 		return nil, err
 	}
@@ -12171,7 +12180,7 @@ func NewPostNodeServiceStopRequest(server string, hostname Hostname, name Servic
 }
 
 // NewGetNodeSysctlRequest generates requests for GetNodeSysctl
-func NewGetNodeSysctlRequest(server string, hostname Hostname) (*http.Request, error) {
+func NewGetNodeSysctlRequest(server string, hostname Hostname, params *GetNodeSysctlParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -12194,6 +12203,33 @@ func NewGetNodeSysctlRequest(server string, hostname Hostname) (*http.Request, e
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Prefix != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "prefix", *params.Prefix, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
 	}
 
 	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
@@ -13408,7 +13444,7 @@ type ClientWithResponsesInterface interface {
 	PostNodeServiceStopWithResponse(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*PostNodeServiceStopResponse, error)
 
 	// GetNodeSysctlWithResponse request
-	GetNodeSysctlWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeSysctlResponse, error)
+	GetNodeSysctlWithResponse(ctx context.Context, hostname Hostname, params *GetNodeSysctlParams, reqEditors ...RequestEditorFn) (*GetNodeSysctlResponse, error)
 
 	// PostNodeSysctlWithBodyWithResponse request with any body
 	PostNodeSysctlWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeSysctlResponse, error)
@@ -19006,8 +19042,8 @@ func (c *ClientWithResponses) PostNodeServiceStopWithResponse(ctx context.Contex
 }
 
 // GetNodeSysctlWithResponse request returning *GetNodeSysctlResponse
-func (c *ClientWithResponses) GetNodeSysctlWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeSysctlResponse, error) {
-	rsp, err := c.GetNodeSysctl(ctx, hostname, reqEditors...)
+func (c *ClientWithResponses) GetNodeSysctlWithResponse(ctx context.Context, hostname Hostname, params *GetNodeSysctlParams, reqEditors ...RequestEditorFn) (*GetNodeSysctlResponse, error) {
+	rsp, err := c.GetNodeSysctl(ctx, hostname, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}

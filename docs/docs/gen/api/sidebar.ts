@@ -932,46 +932,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Sysctl",
-      link: {
-        type: "doc",
-        id: "gen/api/sysctl-management-api-sysctl-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/get-node-sysctl",
-          label: "List all managed sysctl entries",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-node-sysctl",
-          label: "Create a sysctl parameter",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-node-sysctl-by-key",
-          label: "Get a sysctl entry",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/put-node-sysctl",
-          label: "Update a sysctl parameter",
-          className: "api-method put",
-        },
-        {
-          type: "doc",
-          id: "gen/api/delete-node-sysctl",
-          label: "Delete a managed sysctl entry",
-          className: "api-method delete",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Node/Timezone",
       link: {
         type: "doc",
@@ -1093,6 +1053,46 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/delete-node-group",
           label: "Delete a group",
           className: "api-method delete",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Sysctl",
+      link: {
+        type: "doc",
+        id: "gen/api/sysctl-api-sysctl-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-sysctl",
+          label: "List the kernel's parameters and which osapi manages",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-sysctl",
+          label: "Manage a kernel parameter and apply it",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-node-sysctl",
+          label: "Stop the management of a kernel parameter",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-sysctl-by-key",
+          label: "Get a kernel parameter's current value, and whether osapi manages it",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-sysctl",
+          label: "Set a kernel parameter, manage it, and apply it",
+          className: "api-method put",
         },
       ],
     },

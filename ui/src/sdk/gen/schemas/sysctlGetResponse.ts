@@ -6,9 +6,6 @@
  */
 import type { SysctlEntry } from './sysctlEntry';
 
-/**
- * Collection response for a single sysctl entry get operation.
- */
 export interface SysctlGetResponse {
   /** The job ID used to process this request. */
   job_id?: string;
