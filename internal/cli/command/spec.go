@@ -212,8 +212,8 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindOutput,
-			Name: `render:"-|bytes|age|time|duration|duration=ms|status|short=N"`,
-			Does: "Changes how a field prints: - leaves it out (--json has it), bytes is a size such as 3.4 GB, age is the time since a time or a number of seconds, time is a time as text in the one time format, duration is a Go duration, duration=ms is an integer of milliseconds as a duration, status is a status word in its color, and short=N is the first N characters with ... after them, in a table only: a key-value block shows all of the value.",
+			Name: `render:"-|bytes|age|time|duration|duration=ms|status|short=N|body"`,
+			Does: "Changes how a field prints: - leaves it out (--json has it), bytes is a size such as 3.4 GB, age is the time since a time or a number of seconds, time is a time as text in the one time format, duration is a Go duration, duration=ms is an integer of milliseconds as a duration, status is a status word in its color, short=N is the first N characters with ... after them, in a table only: a key-value block shows all of the value, and body makes the field the whole output, as it is, such as the text of a document; the other fields are only in --json.",
 			When: "On an output field whose raw value a person cannot read at a glance. validate fails a value that is not one of these.",
 		},
 		{

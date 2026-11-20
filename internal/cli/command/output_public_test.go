@@ -56,6 +56,7 @@ func (r *recorder) Table(t command.Table) {
 	}
 }
 
+func (r *recorder) Text(text string)                { fmt.Fprintf(&r.b, "%s", text) }
 func (r *recorder) Verdict(text string)             { fmt.Fprintf(&r.b, "[ok] %s\n", text) }
 func (r *recorder) Status(word string) string       { return "<" + word + ">" }
 func (r *recorder) Bytes(n int64) string            { return fmt.Sprintf("%dB", n) }
@@ -159,6 +160,10 @@ type (
 		Status   string `json:"status"`
 		Children []node `json:"children,omitempty"`
 	}
+	doc struct {
+		Name string `json:"name"`
+		Body string `json:"body" render:"body"`
+	}
 	nothing  struct{}
 	deleteIn struct {
 		MachineID string `json:"machine_id"`
@@ -195,6 +200,7 @@ func (s *OutputPublicTestSuite) TestOutput() {
 		method("values", reflect.TypeFor[values]()),
 		method("map", reflect.TypeFor[map[string]string]()),
 		method("hosts", reflect.TypeFor[[]host]()),
+		method("doc", reflect.TypeFor[doc]()),
 		method("nodes", reflect.TypeFor[[]node]()),
 		method("kept", reflect.TypeFor[[]kept]()),
 		keyed{method("delete", reflect.TypeFor[nothing]()), "machine_id"},
@@ -321,6 +327,12 @@ func (s *OutputPublicTestSuite) TestOutput() {
 				"└─ metrics | ok\n" +
 				"   └─ m | ok\n" +
 				"nats | ok\n",
+		},
+		{
+			name:   "when a field is tagged render:\"body\", it is the whole output, as it is",
+			method: "doc",
+			answer: `{"name":"a","body":"# Title\n\ntext\n"}`,
+			want:   "# Title\n\ntext\n",
 		},
 		{
 			name:   "when the method answers nothing, one line names the key and what it did",

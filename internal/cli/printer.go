@@ -23,6 +23,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/osapi-io/osapi/internal/cli/command"
@@ -72,6 +73,14 @@ func (Printer) Verdict(
 ) {
 	FlushKV()
 	fmt.Println(Success(os.Stdout, text))
+}
+
+// Text prints text as it is, with one newline at its end.
+func (Printer) Text(
+	text string,
+) {
+	FlushKV()
+	fmt.Println(strings.TrimRight(text, "\n"))
 }
 
 // Status is word in its status color, as RenderStatus renders it.

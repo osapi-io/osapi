@@ -84,6 +84,11 @@ func (s *PrinterPublicTestSuite) TestPrinter() {
 			want: []string{"None."},
 		},
 		{
+			name: "when text prints, it is as it is, with one newline at its end",
+			do:   func() { p.Text("# Title\n\ntext\n\n") },
+			want: []string{"# Title\n\ntext\n"},
+		},
+		{
 			name: "when a verdict prints, it is one line",
 			do:   func() { p.Verdict("m-1 admitted") },
 			want: []string{"m-1 admitted"},

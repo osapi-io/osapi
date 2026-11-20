@@ -372,7 +372,7 @@ func refusalProblems(
 // renderValues are the render tags that the output knows, besides short=N.
 var renderValues = map[string]bool{
 	RenderHidden: true, RenderBytes: true, RenderAge: true, RenderTime: true,
-	RenderDuration: true, RenderDurationMs: true, RenderStatus: true,
+	RenderDuration: true, RenderDurationMs: true, RenderStatus: true, RenderBody: true,
 }
 
 // ValidateOutput is each rule that the output of a registered group breaks:
