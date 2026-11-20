@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Validate | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/command/validate"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Validate | OSAPI"><meta data-rh="true" name="description" content="Check every local group against the rules of a definition, and the output of"><meta data-rh="true" property="og:description" content="Check every local group against the rules of a definition, and the output of"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/command/validate"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/command/validate" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/command/validate" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Usage","item":"https://osapi-io.github.io/osapi/sidebar/usage/"},{"@type":"ListItem","position":2,"name":"CLI","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/"},{"@type":"ListItem","position":3,"name":"CLI","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/"},{"@type":"ListItem","position":4,"name":"Command","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/command/"},{"@type":"ListItem","position":5,"name":"Validate","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/command/validate"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.f796e46f.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.4330f3ea.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.6ab25248.js" defer="defer"></script>
 </head>
 <body>
@@ -30,9 +30,11 @@ command.Method, with its input and output types and its name.</li>
 own name.</li>
 <li class=""><code>verb</code>: The last word of each command is a verb (list, get, create, update,
 delete) or an action in command.Actions, as TestCommandShape holds each
-command to. Fix: Name the method for a verb, and put a noun before it with
-.Sub, such as roles list. Add a word to command.Actions only for a real
-action, never for a noun.</li>
+command to. A command directly under the root, of a Flat group, has a word of
+command.Roots instead. Fix: Name the method for a verb, and put a noun before
+it with .Sub, such as roles list. Add a word to command.Actions only for a
+real action, never for a noun, and to command.Roots only for a command that
+belongs at the root.</li>
 <li class=""><code>help</code>: Each method has a Short, and a method with input has an Example. Fix:
 Add .Short(&quot;&lt;what it does&gt;&quot;) and .Example(&quot;--flag value&quot;) to the method.</li>
 <li class=""><code>flag</code>: Each value is a flag: the input is a struct, each field has a json
