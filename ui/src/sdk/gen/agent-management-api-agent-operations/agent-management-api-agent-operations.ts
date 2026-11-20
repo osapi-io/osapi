@@ -6,6 +6,7 @@
  */
 import type {
   AgentInfo,
+  ComponentList,
   ErrorResponse,
   ListAgentsResponse
 } from '../schemas';
@@ -258,6 +259,59 @@ export const undrainAgent = async (hostname: string, options?: Parameters<typeof
   {
     ...options,
     method: 'POST'
+
+
+  }
+);}
+
+
+export type getAgentStatusResponse200 = {
+  data: ComponentList
+  status: 200
+}
+
+export type getAgentStatusResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type getAgentStatusResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type getAgentStatusResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type getAgentStatusResponseSuccess = (getAgentStatusResponse200) & {
+  headers: Headers;
+};
+export type getAgentStatusResponseError = (getAgentStatusResponse401 | getAgentStatusResponse403 | getAgentStatusResponse500) & {
+  headers: Headers;
+};
+
+export type getAgentStatusResponse = (getAgentStatusResponseSuccess | getAgentStatusResponseError)
+
+export const getGetAgentStatusUrl = () => {
+
+
+
+
+  return `/api/agent/status`
+}
+
+/**
+ * Each agent, with each of its sub-components, from the health status of the controller.
+ * @summary Show the health of each agent
+ */
+export const getAgentStatus = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getAgentStatusResponse> => {
+
+  return apiFetch<getAgentStatusResponse>(getGetAgentStatusUrl(),
+  {
+    ...options,
+    method: 'GET'
 
 
   }

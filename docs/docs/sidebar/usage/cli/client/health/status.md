@@ -23,13 +23,13 @@ shows what a role grants.
 
 ## Notes
 
-Each sub-component is under its component, with its address and its URL. The
-connectivity rows tell if the controller can reach NATS and the KV buckets. The
-output also has the NATS connection, the streams, the KV buckets, the consumers
-and the counts of the job queue. The command needs a token. Use
-`osapi client agent list` for the labels and the OS of each agent. When a
-component is not healthy, the overall status is `degraded`, and the component
-shows the error.
+Each sub-component is under its component, as a tree, with its address and its
+URL. The checks tell if the controller can reach NATS and the KV buckets. The
+output also has the counts of the job queue, the streams, the KV buckets and the
+Object Stores. The command needs a token. `controller status`, `nats status` and
+`agent status` show one type of component. Use `osapi client agent list` for the
+labels and the OS of each agent. When a check fails, the overall status is
+`degraded`, and the check shows the error.
 
 ## Global flags
 

@@ -35,14 +35,12 @@ func New(
 	startTime time.Time,
 	version string,
 	metrics MetricsProvider,
-	subComponents map[string]SubComponentInfo,
 ) *Health {
 	return &Health{
-		Checker:       checker,
-		StartTime:     startTime,
-		Version:       version,
-		Metrics:       metrics,
-		SubComponents: subComponents,
-		logger:        logger.With(slog.String("subsystem", "controller.health")),
+		Checker:   checker,
+		StartTime: startTime,
+		Version:   version,
+		Metrics:   metrics,
+		logger:    logger.With(slog.String("subsystem", "controller.health")),
 	}
 }

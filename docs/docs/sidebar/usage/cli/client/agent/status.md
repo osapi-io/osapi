@@ -1,6 +1,9 @@
 # Status
 
-Agent component health.
+Show the health of each agent.
+
+Each agent, with its process CPU and memory and each of its sub-components, from
+the health status of the controller. agent list shows the host of each agent.
 
 ```bash
 osapi client agent status
@@ -12,6 +15,11 @@ osapi client agent status
 osapi client agent status
 osapi client agent status --json
 ```
+
+## Permission
+
+It needs the `health:read` permission. `osapi token roles get --name <role>`
+shows what a role grants.
 
 ## Global flags
 

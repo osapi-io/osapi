@@ -35,7 +35,7 @@ var healthReadyCmd = &cobra.Command{
 
 var healthStatusCmd = &cobra.Command{
 	Annotations: map[string]string{
-		reference.Notes:      "Each sub-component is under its component, with its address and its URL.\nThe connectivity rows tell if the controller can reach NATS and the KV\nbuckets. The output also has the NATS connection, the streams, the KV\nbuckets, the consumers and the counts of the job queue. The command needs\na token. Use `osapi client agent list` for the labels and the OS of each\nagent. When a component is not healthy, the overall status is `degraded`,\nand the component shows the error.",
+		reference.Notes:      "Each sub-component is under its component, as a tree, with its address\nand its URL. The checks tell if the controller can reach NATS and the KV\nbuckets. The output also has the counts of the job queue, the streams, the\nKV buckets and the Object Stores. The command needs a token. `controller\nstatus`, `nats status` and `agent status` show one type of component. Use\n`osapi client agent list` for the labels and the OS of each agent. When a\ncheck fails, the overall status is `degraded`, and the check shows the error.",
 		reference.Permission: "health:read",
 	},
 	Args:    cobra.NoArgs,

@@ -61,11 +61,15 @@ Each row has the build version of the component's binary, so a mixed fleet shows
 which hosts run an older build. Example registry output:
 
 ```
-TYPE        HOSTNAME      STATUS  CONDITIONS  AGE     CPU    MEM     VERSION
-agent       web-01        Ready   -           7h 6m   1.2%   96 MB   v0.2.1-0.20261119003517-f6bc5af55ceb
-agent       web-02        Ready   -           3h 2m   0.8%   82 MB   v0.2.1-0.20261119003517-f6bc5af55ceb
-controller  api-server    Ready   -           7h 6m   2.1%   128 MB  v0.2.1-0.20261119003517-f6bc5af55ceb
-nats        nats-server   Ready   -           7h 6m   0.3%   64 MB   v0.2.1-0.20261119003517-f6bc5af55ceb
+Components (3):
+  TYPE          HOSTNAME     STATUS  CONDITIONS  AGE    CPU %  MEM       VERSION  ADDRESS
+  controller    api-server   Ready   -           7h 6m  2.10   128.0 MB  v0.2.1
+  ├─ api                     ok      -                                          http://0.0.0.0:8080
+  └─ heartbeat               ok      -
+  nats          nats-server  Ready   -           7h 6m  0.30   64.0 MB   v0.2.1
+  └─ server                  ok      -                                          nats://localhost:4222
+  agent         web-01       Ready   -           7h 6m  1.20   96.0 MB   v0.2.1
+  └─ heartbeat               ok      -
 ```
 
 ## Sub-Component health
@@ -75,8 +79,9 @@ The `/health/status` endpoint puts these parts together from the registry. Thus
 an operator can see the health of each internal service on all hosts, also in a
 deployment with many nodes.
 
-Sub-components use a `{type}.{name}` naming convention. Each component reports
-only its own sub-components:
+Each component reports only its own sub-components. The answer lists them under
+the component's registry entry, as `components`, sorted by name. The tables name
+each one with its type, as the heartbeat does:
 
 | Component  | Sub-Components                                                                                              |
 | ---------- | ----------------------------------------------------------------------------------------------------------- |
@@ -85,9 +90,10 @@ only its own sub-components:
 | nats       | `nats.server`, `nats.heartbeat`, `nats.metrics`                                                             |
 
 Sub-components report a status (`ok`, `disabled`, or `error`) and an optional
-network address. The controller also performs live connectivity checks against
-NATS and KV, which appear as `controller.nats (connectivity)` and
-`controller.kv (connectivity)` in the response.
+network address and URL. `osapi client health status` prints each one under its
+component, as a tree. The controller also checks its connection to NATS and to
+KV for each answer. These are in `checks`, each with its name (`nats` or `kv`),
+its status and, when it failed, its error.
 
 ## Metrics server health probes
 

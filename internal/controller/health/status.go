@@ -23,6 +23,9 @@ package health
 import (
 	"context"
 	"log/slog"
+	"maps"
+	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -64,30 +67,7 @@ func (h *Health) buildStatusResponse(
 	natsErr error,
 	kvErr error,
 ) api.StatusResponse {
-	natsComponent := api.ComponentHealth{Status: "ok"}
-	if natsErr != nil {
-		natsComponent = api.ComponentHealth{Status: "error", Error: natsErr.Error()}
-	}
-
-	kvComponent := api.ComponentHealth{Status: "ok"}
-	if kvErr != nil {
-		kvComponent = api.ComponentHealth{Status: "error", Error: kvErr.Error()}
-	}
-
 	uptime := time.Since(h.StartTime).Round(time.Second).String()
-
-	components := map[string]api.ComponentHealth{
-		"controller.nats (connectivity)": natsComponent,
-		"controller.kv (connectivity)":   kvComponent,
-	}
-
-	for name, info := range h.SubComponents {
-		components[name] = api.ComponentHealth{
-			Status:  info.Status,
-			Address: info.Address,
-			URL:     info.URL,
-		}
-	}
 
 	overall := "ok"
 	if natsErr != nil || kvErr != nil {
@@ -95,10 +75,10 @@ func (h *Health) buildStatusResponse(
 	}
 
 	resp := api.StatusResponse{
-		Status:     overall,
-		Components: components,
-		Version:    h.Version,
-		Uptime:     uptime,
+		Status:  overall,
+		Version: h.Version,
+		Uptime:  uptime,
+		Checks:  []api.Check{check("nats", natsErr), check("kv", kvErr)},
 	}
 
 	if h.Metrics != nil {
@@ -148,12 +128,19 @@ func copyMetricsFromCache(
 	resp.Agents = cached.resp.Agents
 	resp.Consumers = cached.resp.Consumers
 	resp.Registry = cached.resp.Registry
+}
 
-	for k, v := range cached.resp.Components {
-		if _, exists := resp.Components[k]; !exists {
-			resp.Components[k] = v
-		}
+// check is the result of one check of the controller: ok, or error with
+// why.
+func check(
+	name string,
+	err error,
+) api.Check {
+	if err != nil {
+		return api.Check{Name: name, Status: "error", Error: err.Error()}
 	}
+
+	return api.Check{Name: name, Status: "ok"}
 }
 
 // populateMetrics enriches the response with system metrics. All calls
@@ -287,7 +274,7 @@ func (h *Health) populateMetrics(
 			})
 			totalConsumers += s.Consumers
 		}
-		resp.Consumers = &api.ConsumerStats{Total: totalConsumers}
+		resp.Consumers = totalConsumers
 	}
 
 	if kvBuckets != nil {
@@ -349,15 +336,18 @@ func (h *Health) populateMetrics(
 			if len(e.Conditions) > 0 {
 				entry.Conditions = append([]string(nil), e.Conditions...)
 			}
-			resp.Registry = append(resp.Registry, entry)
-
-			for name, sc := range e.SubComponents {
-				resp.Components[name] = api.ComponentHealth{
+			// A sub-component is named for its component, such as
+			// controller.api; under its component it is api.
+			for _, name := range slices.Sorted(maps.Keys(e.SubComponents)) {
+				sc := e.SubComponents[name]
+				entry.Components = append(entry.Components, api.ComponentEntry{
+					Type:    strings.TrimPrefix(name, e.Type+"."),
 					Status:  sc.Status,
 					Address: sc.Address,
 					URL:     sc.URL,
-				}
+				})
 			}
+			resp.Registry = append(resp.Registry, entry)
 		}
 	}
 }

@@ -11,6 +11,18 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent"
 )
 
+var agentStatusCmd = &cobra.Command{
+	Annotations: map[string]string{reference.Permission: "health:read"},
+	Args:        cobra.NoArgs,
+	Example:     "  osapi client agent status\n  osapi client agent status --json",
+	Long:        "Each agent, with its process CPU and memory and each of its sub-components, from the\nhealth status of the controller. agent list shows the host of each agent.",
+	Run: func(cmd *cobra.Command, _ []string) {
+		endpointcommand.Run(cmd, agent.Group, "status", agent.StatusInput{})
+	},
+	Short: "Show the health of each agent",
+	Use:   "status",
+}
+
 var agentListCmd = &cobra.Command{
 	Annotations: map[string]string{
 		reference.Notes:      "The `--json` output has more system facts that the agent collects:\narchitecture, kernel version, FQDN, CPU count, network interfaces, service\nmanager and package manager. The table view does not show these fields.",
@@ -75,5 +87,5 @@ func init() {
 	_ = agentDrainCmd.MarkFlagRequired("hostname")
 	agentUndrainCmd.Flags().String("hostname", "", "The hostname of the agent to undrain")
 	_ = agentUndrainCmd.MarkFlagRequired("hostname")
-	clicommand.AddCommands(agent.Group, agentListCmd, agentGetCmd, agentDrainCmd, agentUndrainCmd)
+	clicommand.AddCommands(agent.Group, agentStatusCmd, agentListCmd, agentGetCmd, agentDrainCmd, agentUndrainCmd)
 }

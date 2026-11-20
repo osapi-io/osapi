@@ -18,42 +18,20 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmd
+package nats
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/spf13/cobra"
-
-	"github.com/osapi-io/osapi/internal/cli"
+	"github.com/osapi-io/osapi/internal/controller/endpoints/health"
 )
 
-// clientAgentStatusCmd shows health status for agents.
-var clientAgentStatusCmd = &cobra.Command{
-	Use:   "status",
-	Short: "Agent component health",
-	Example: `  osapi client agent status
-  osapi client agent status --json`,
-	Run: func(cmd *cobra.Command, _ []string) {
-		ctx := cmd.Context()
-
-		resp, err := sdkClient.Health.GetStatus(ctx)
-		if err != nil {
-			cli.HandleError(err, logger)
-			return
-		}
-
-		if jsonOutput {
-			cli.PrintJSON(resp.RawJSON())
-			return
-		}
-
-		fmt.Println()
-		cli.PrintHeading("Agents")
-		displayComponentTable(resp.Data.Registry, "agent", resp.Data.Components)
-	},
-}
-
-func init() {
-	clientAgentCmd.AddCommand(clientAgentStatusCmd)
+// Status is each nats component, with its sub-components, from the
+// health status of the controller.
+func Status(
+	ctx context.Context,
+	d Deps,
+	_ StatusInput,
+) (health.ComponentList, error) {
+	return health.Components(ctx, d.Health, "nats"), nil
 }

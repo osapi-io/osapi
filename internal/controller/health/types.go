@@ -153,9 +153,7 @@ type Health struct {
 	Version string
 	// Metrics provides system metrics (optional, can be nil).
 	Metrics MetricsProvider
-	// SubComponents reports the status of internal services.
-	SubComponents map[string]SubComponentInfo
-	logger        *slog.Logger
+	logger  *slog.Logger
 
 	// metricsCache holds the last populateMetrics result to avoid
 	// querying NATS on every poll cycle.

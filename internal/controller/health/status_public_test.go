@@ -76,8 +76,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				ok := healthy
 				s.True(ok)
 				s.Equal("ok", r.Status)
-				s.Equal("ok", r.Components["controller.nats (connectivity)"].Status)
-				s.Equal("ok", r.Components["controller.kv (connectivity)"].Status)
+				s.Equal("ok", checkOf(r, "nats").Status)
+				s.Equal("ok", checkOf(r, "kv").Status)
 				s.Equal("0.1.0", r.Version)
 				s.NotEmpty(r.Uptime)
 			},
@@ -92,13 +92,13 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				ok := !healthy
 				s.True(ok)
 				s.Equal("degraded", r.Status)
-				s.Equal("error", r.Components["controller.nats (connectivity)"].Status)
-				s.Require().NotNil(r.Components["controller.nats (connectivity)"].Error)
+				s.Equal("error", checkOf(r, "nats").Status)
+				s.Require().NotNil(checkOf(r, "nats").Error)
 				s.Contains(
-					r.Components["controller.nats (connectivity)"].Error,
+					checkOf(r, "nats").Error,
 					"nats not connected",
 				)
-				s.Equal("ok", r.Components["controller.kv (connectivity)"].Status)
+				s.Equal("ok", checkOf(r, "kv").Status)
 			},
 		},
 		{
@@ -111,11 +111,11 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				ok := !healthy
 				s.True(ok)
 				s.Equal("degraded", r.Status)
-				s.Equal("ok", r.Components["controller.nats (connectivity)"].Status)
-				s.Equal("error", r.Components["controller.kv (connectivity)"].Status)
-				s.Require().NotNil(r.Components["controller.kv (connectivity)"].Error)
+				s.Equal("ok", checkOf(r, "nats").Status)
+				s.Equal("error", checkOf(r, "kv").Status)
+				s.Require().NotNil(checkOf(r, "kv").Error)
 				s.Contains(
-					r.Components["controller.kv (connectivity)"].Error,
+					checkOf(r, "kv").Error,
 					"kv bucket not accessible",
 				)
 			},
@@ -130,8 +130,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				ok := !healthy
 				s.True(ok)
 				s.Equal("degraded", r.Status)
-				s.Equal("error", r.Components["controller.nats (connectivity)"].Status)
-				s.Equal("error", r.Components["controller.kv (connectivity)"].Status)
+				s.Equal("error", checkOf(r, "nats").Status)
+				s.Equal("error", checkOf(r, "kv").Status)
 			},
 		},
 		{
@@ -158,8 +158,8 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				ok := healthy
 				s.True(ok)
 				s.Equal("ok", r.Status)
-				s.Equal("ok", r.Components["controller.nats (connectivity)"].Status)
-				s.Equal("ok", r.Components["controller.kv (connectivity)"].Status)
+				s.Equal("ok", checkOf(r, "nats").Status)
+				s.Equal("ok", checkOf(r, "kv").Status)
 			},
 		},
 		{
@@ -244,10 +244,9 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Equal("file-objects", r.ObjectStores[0].Name)
 				s.Equal(5242880, r.ObjectStores[0].Size)
 
-				// Consumer count is derived from stream info, not enumerated.
-				s.Require().NotNil(r.Consumers)
-				s.Equal(1, r.Consumers.Total)
-				s.Nil(r.Consumers.Consumers)
+				// The consumer count is the sum of the consumers of each
+				// stream.
+				s.Equal(1, r.Consumers)
 
 				s.Require().NotNil(r.Jobs)
 				s.Equal(100, r.Jobs.Total)
@@ -404,29 +403,23 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				ok := healthy
 				s.True(ok)
 
-				// Sub-components from registry entries merged into components map.
-				natsServer := r.Components["nats.server"]
-				s.Equal("ok", natsServer.Status)
-				s.Require().NotNil(natsServer.Address)
-				s.Equal("nats://localhost:4222", natsServer.Address)
-				s.Require().NotNil(natsServer.URL)
-				s.Equal("nats://hub.example.ts.net:4222", natsServer.URL)
-
-				natsHB := r.Components["nats.heartbeat"]
-				s.Equal("ok", natsHB.Status)
-				s.Empty(natsHB.Address)
-
-				natsMetrics := r.Components["nats.metrics"]
-				s.Equal("ok", natsMetrics.Status)
-				s.Require().NotNil(natsMetrics.Address)
-				s.Equal("http://0.0.0.0:9092", natsMetrics.Address)
-
-				agentHB := r.Components["agent.heartbeat"]
-				s.Equal("ok", agentHB.Status)
-
-				agentMetrics := r.Components["agent.metrics"]
-				s.Equal("disabled", agentMetrics.Status)
-				s.Empty(agentMetrics.Address)
+				// Each registry entry has its sub-components, named without
+				// the component's type, and sorted.
+				s.Require().Len(r.Registry, 2)
+				s.Equal([]endpoints.ComponentEntry{
+					{Type: "heartbeat", Status: "ok"},
+					{Type: "metrics", Status: "ok", Address: "http://0.0.0.0:9092"},
+					{
+						Type:    "server",
+						Status:  "ok",
+						Address: "nats://localhost:4222",
+						URL:     "nats://hub.example.ts.net:4222",
+					},
+				}, r.Registry[0].Components)
+				s.Equal([]endpoints.ComponentEntry{
+					{Type: "heartbeat", Status: "ok"},
+					{Type: "metrics", Status: "disabled"},
+				}, r.Registry[1].Components)
 			},
 		},
 		{
@@ -536,7 +529,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Require().NotNil(r.KVBuckets)
 				s.Len(r.KVBuckets, 1)
 				s.Nil(r.ObjectStores)
-				s.Nil(r.Consumers)
+				s.Zero(r.Consumers)
 				s.Nil(r.Jobs)
 				s.Nil(r.Agents)
 			},
@@ -575,7 +568,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Nil(r.Streams)
 				s.Nil(r.KVBuckets)
 				s.Nil(r.ObjectStores)
-				s.Nil(r.Consumers)
+				s.Zero(r.Consumers)
 				s.Nil(r.Jobs)
 				s.Nil(r.Agents)
 			},
@@ -588,77 +581,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 			if checker == nil && tt.checkerFn != nil {
 				checker = tt.checkerFn()
 			}
-			handler := health.New(slog.Default(), checker, time.Now(), "0.1.0", tt.metrics, nil)
-
-			r := handler.Status(s.ctx)
-			tt.validateFunc(r, r.Status == "ok")
-		})
-	}
-}
-
-func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatusSubComponents() {
-	tests := []struct {
-		name         string
-		subs         map[string]health.SubComponentInfo
-		validateFunc func(r endpoints.StatusResponse, healthy bool)
-	}{
-		{
-			name: "sub-components with ports appear in response",
-			subs: map[string]health.SubComponentInfo{
-				"controller.api": {
-					Status:  "ok",
-					Address: "http://0.0.0.0:8080",
-					URL:     "https://hub.example.ts.net/",
-				},
-				"controller.heartbeat": {Status: "ok"},
-				"controller.metrics":   {Status: "ok", Address: "http://0.0.0.0:9090"},
-				"controller.notifier":  {Status: "disabled"},
-			},
-			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
-				ok := healthy
-				s.True(ok)
-
-				api := r.Components["controller.api"]
-				s.Equal("ok", api.Status)
-				s.Require().NotNil(api.Address)
-				s.Equal("http://0.0.0.0:8080", api.Address)
-				s.Require().NotNil(api.URL)
-				s.Equal("https://hub.example.ts.net/", api.URL)
-
-				hb := r.Components["controller.heartbeat"]
-				s.Equal("ok", hb.Status)
-				s.Empty(hb.Address)
-				s.Empty(hb.URL)
-
-				metrics := r.Components["controller.metrics"]
-				s.Equal("ok", metrics.Status)
-				s.Require().NotNil(metrics.Address)
-				s.Equal("http://0.0.0.0:9090", metrics.Address)
-
-				notifier := r.Components["controller.notifier"]
-				s.Equal("disabled", notifier.Status)
-				s.Empty(notifier.Address)
-			},
-		},
-		{
-			name: "nil sub-components produces no extra keys",
-			subs: nil,
-			validateFunc: func(r endpoints.StatusResponse, healthy bool) {
-				ok := healthy
-				s.True(ok)
-				s.Len(r.Components, 2) // nats + kv only
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			checker := &health.NATSChecker{
-				NATSCheck: func() error { return nil },
-				KVCheck:   func() error { return nil },
-			}
-
-			handler := health.New(slog.Default(), checker, time.Now(), "0.1.0", nil, tt.subs)
+			handler := health.New(slog.Default(), checker, time.Now(), "0.1.0", tt.metrics)
 
 			r := handler.Status(s.ctx)
 			tt.validateFunc(r, r.Status == "ok")
@@ -679,7 +602,7 @@ func (s *HealthStatusGetPublicTestSuite) TestReady() {
 		s.Run(tc.name, func() {
 			checker := healthmocks.NewMockChecker(s.mockCtrl)
 			checker.EXPECT().CheckHealth(gomock.Any()).Return(tc.err)
-			h := health.New(slog.Default(), checker, time.Now(), "0.1.0", nil, nil)
+			h := health.New(slog.Default(), checker, time.Now(), "0.1.0", nil)
 
 			err := h.Ready(s.ctx)
 			if tc.wantErr {
@@ -749,7 +672,7 @@ func (s *HealthStatusGetPublicTestSuite) TestMetricsCache() {
 					}, nil
 				},
 			}
-			handler := health.New(s.logger, checker, time.Now(), "0.1.0", metrics, nil)
+			handler := health.New(s.logger, checker, time.Now(), "0.1.0", metrics)
 
 			tc.validateFunc(handler)
 		})
@@ -760,4 +683,18 @@ func TestHealthStatusGetPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(HealthStatusGetPublicTestSuite))
+}
+
+// checkOf is the check of r with the name, such as nats.
+func checkOf(
+	r endpoints.StatusResponse,
+	name string,
+) endpoints.Check {
+	for _, c := range r.Checks {
+		if c.Name == name {
+			return c
+		}
+	}
+
+	return endpoints.Check{}
 }

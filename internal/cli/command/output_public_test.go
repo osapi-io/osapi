@@ -154,6 +154,11 @@ type (
 		Name  string `json:"name"`
 		Conds []cond `json:"conds,omitempty" none:"-"`
 	}
+	node struct {
+		Name     string `json:"name"`
+		Status   string `json:"status"`
+		Children []node `json:"children,omitempty"`
+	}
 	nothing  struct{}
 	deleteIn struct {
 		MachineID string `json:"machine_id"`
@@ -190,6 +195,7 @@ func (s *OutputPublicTestSuite) TestOutput() {
 		method("values", reflect.TypeFor[values]()),
 		method("map", reflect.TypeFor[map[string]string]()),
 		method("hosts", reflect.TypeFor[[]host]()),
+		method("nodes", reflect.TypeFor[[]node]()),
 		method("kept", reflect.TypeFor[[]kept]()),
 		keyed{method("delete", reflect.TypeFor[nothing]()), "machine_id"},
 		method("drain", reflect.TypeFor[nothing]()).Says("draining"),
@@ -300,6 +306,21 @@ func (s *OutputPublicTestSuite) TestOutput() {
 			method: "kept",
 			answer: `[{"name":"a"},{"name":"b"}]`,
 			want:   "# Zzderives (2)\nNAME | CONDS\na | -\nb | -\n",
+		},
+		{
+			name:   "when a row has children of its own type, they are a tree under it",
+			method: "nodes",
+			answer: `[{"name":"controller","status":"ok","children":[` +
+				`{"name":"api","status":"ok","children":[{"name":"v1","status":"ok"}]},` +
+				`{"name":"metrics","status":"ok","children":[{"name":"m","status":"ok"}]}]},` +
+				`{"name":"nats","status":"ok"}]`,
+			want: "# Zzderives (2)\nNAME | STATUS\n" +
+				"controller | ok\n" +
+				"├─ api | ok\n" +
+				"│  └─ v1 | ok\n" +
+				"└─ metrics | ok\n" +
+				"   └─ m | ok\n" +
+				"nats | ok\n",
 		},
 		{
 			name:   "when the method answers nothing, one line names the key and what it did",

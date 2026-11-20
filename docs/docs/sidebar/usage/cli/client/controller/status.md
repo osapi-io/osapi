@@ -1,6 +1,9 @@
 # Status
 
-Controller component health.
+Show the health of the controller.
+
+Each controller, with each of its sub-components, from the health status of the
+controller.
 
 ```bash
 osapi client controller status
@@ -12,6 +15,11 @@ osapi client controller status
 osapi client controller status
 osapi client controller status --json
 ```
+
+## Permission
+
+It needs the `health:read` permission. `osapi token roles get --name <role>`
+shows what a role grants.
 
 ## Global flags
 

@@ -1,6 +1,9 @@
 # Status
 
-NATS server component health.
+Show the health of the NATS server.
+
+The NATS server, with each of its sub-components, from the health status of the
+controller.
 
 ```bash
 osapi client nats status
@@ -12,6 +15,11 @@ osapi client nats status
 osapi client nats status
 osapi client nats status --json
 ```
+
+## Permission
+
+It needs the `health:read` permission. `osapi token roles get --name <role>`
+shows what a role grants.
 
 ## Global flags
 

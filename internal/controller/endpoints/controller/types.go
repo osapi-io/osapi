@@ -18,18 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmd
+package controller
 
-import (
-	"github.com/spf13/cobra"
-)
-
-// clientNATSCmd represents the nats parent command under client.
-var clientNATSCmd = &cobra.Command{
-	Use:   "nats",
-	Short: "Read the health of the NATS server",
-}
-
-func init() {
-	clientCmd.AddCommand(clientNATSCmd)
-}
+// StatusInput is the input of status, which has none.
+type StatusInput struct{}

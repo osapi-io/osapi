@@ -69,13 +69,13 @@ var Group = endpoint.Register(endpoint.Define(
 		Command("System status and component health",
 			"The table has each component that registered: its status, its active\n"+
 				"conditions, its uptime, and the CPU and memory of its process.").
-		Notes("Each sub-component is under its component, with its address and its URL.\n"+
-			"The connectivity rows tell if the controller can reach NATS and the KV\n"+
-			"buckets. The output also has the NATS connection, the streams, the KV\n"+
-			"buckets, the consumers and the counts of the job queue. The command needs\n"+
-			"a token. Use `osapi client agent list` for the labels and the OS of each\n"+
-			"agent. When a component is not healthy, the overall status is `degraded`,\n"+
-			"and the component shows the error.").
+		Notes("Each sub-component is under its component, as a tree, with its address\n"+
+			"and its URL. The checks tell if the controller can reach NATS and the KV\n"+
+			"buckets. The output also has the counts of the job queue, the streams, the\n"+
+			"KV buckets and the Object Stores. The command needs a token. `controller\n"+
+			"status`, `nats status` and `agent status` show one type of component. Use\n"+
+			"`osapi client agent list` for the labels and the OS of each agent. When a\n"+
+			"check fails, the overall status is `degraded`, and the check shows the error.").
 		Example("").
 		Example("--json"),
 ))

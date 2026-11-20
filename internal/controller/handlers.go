@@ -54,9 +54,11 @@ import (
 	admissionEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/admission"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent"
 	auditEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/audit"
+	controllerEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/controller"
 	factsEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/facts"
 	healthEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/health"
 	jobEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/job"
+	natsEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/nats"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/telemetry"
 	"github.com/osapi-io/osapi/internal/controller/health"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
@@ -100,10 +102,9 @@ func handlers(
 		}
 	}
 
-	// The same sub-components the heartbeat reports, so the two copies in the
-	// health response cannot disagree.
-	healthSubs := convertSubComponents(subComponents(d.cfg))
-	reporter := health.New(d.log, d.checker, startTime, d.version, d.metricsProvider, healthSubs)
+	// The controller's sub-components come to the health answer with its
+	// registry entry, from its heartbeat.
+	reporter := health.New(d.log, d.checker, startTime, d.version, d.metricsProvider)
 	reporter.StartMetricsRefresh(context.Background())
 
 	handlers := make([]func(e *echo.Echo), 0, 16)
@@ -113,12 +114,14 @@ func handlers(
 			d.log,
 			signingKey,
 			customRoles,
-			agent.Deps{Jobs: d.jobs},
+			agent.Deps{Jobs: d.jobs, Health: reporter},
 			admissionDeps(d),
 			telemetry.Deps{Traces: traceReader(d.cfg.Telemetry.Tracing)},
 			auditEndpoint.Deps{Store: d.auditStore},
 			jobEndpoint.Deps{Jobs: d.jobs},
 			healthEndpoint.Deps{Health: reporter},
+			controllerEndpoint.Deps{Health: reporter},
+			natsEndpoint.Deps{Health: reporter},
 			fileDeps(d.nats, d.objBucket, d.fileStateBucket),
 			factsEndpoint.Deps{},
 			// Each behavior's endpoint group, which the gen packages that

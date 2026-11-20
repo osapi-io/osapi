@@ -42,10 +42,8 @@ import (
 const signingKey = "test-signing-key-for-the-health-group"
 
 var degraded = health.StatusResponse{
-	Status: "degraded",
-	Components: map[string]health.ComponentHealth{
-		"controller.nats (connectivity)": {Status: "error", Error: "nats down"},
-	},
+	Status:  "degraded",
+	Checks:  []health.Check{{Name: "nats", Status: "error", Error: "nats down"}},
 	Version: "0.1.0",
 	Uptime:  "1m0s",
 }
@@ -64,6 +62,51 @@ func (s *MethodsPublicTestSuite) SetupSubTest() {
 
 func (s *MethodsPublicTestSuite) TearDownSubTest() {
 	s.ctrl.Finish()
+}
+
+func (s *MethodsPublicTestSuite) TestComponents() {
+	tests := []struct {
+		name string
+		kind string
+		want []string
+	}{
+		{
+			name: "when components have the type, each is in the list",
+			kind: "agent",
+			want: []string{"web-01", "web-02"},
+		},
+		{
+			name: "when none has the type, the list is empty, not null",
+			kind: "nothing",
+			want: []string{},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.reporter.EXPECT().
+				Status(gomock.Any()).
+				Return(health.StatusResponse{Registry: []health.ComponentEntry{
+					{
+						Type:       "controller",
+						Hostname:   "hub",
+						Components: []health.ComponentEntry{{Type: "api", Status: "ok"}},
+					},
+					{Type: "nats", Hostname: "hub"},
+					{Type: "agent", Hostname: "web-01"},
+					{Type: "agent", Hostname: "web-02"},
+				}})
+
+			got := health.Components(context.Background(), s.reporter, tc.kind)
+
+			s.NotNil(got.Items)
+			hosts := []string{}
+			for _, e := range got.Items {
+				hosts = append(hosts, e.Hostname)
+			}
+			s.Equal(tc.want, hosts)
+		})
+	}
 }
 
 func (s *MethodsPublicTestSuite) TestLiveness() {
@@ -195,7 +238,7 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 				})
 			},
 			wantCode: http.StatusOK,
-			wantBody: `{"status":"ok","components":null,"version":"0.1.0","uptime":"1m0s"}`,
+			wantBody: `{"status":"ok","version":"0.1.0","uptime":"1m0s","checks":null,"consumers":0}`,
 		},
 		{
 			name:  "when a component is not healthy, status is a 200 with the degraded status",

@@ -36,18 +36,18 @@ type ReadyStatus struct {
 
 // SystemStatus represents detailed system status.
 type SystemStatus struct {
-	Status       string                     `json:"status"`
-	Version      string                     `json:"version"`
-	Uptime       string                     `json:"uptime"`
-	Components   map[string]ComponentHealth `json:"components,omitempty"`
-	NATS         *NATSInfo                  `json:"nats,omitempty"`
-	Agents       *AgentStats                `json:"agents,omitempty"`
-	Jobs         *JobStats                  `json:"jobs,omitempty"`
-	Consumers    *ConsumerStats             `json:"consumers,omitempty"`
-	Streams      []StreamInfo               `json:"streams,omitempty"`
-	KVBuckets    []KVBucketInfo             `json:"kv_buckets,omitempty"`
-	ObjectStores []ObjectStoreInfo          `json:"object_stores,omitempty"`
-	Registry     []RegistryEntry            `json:"registry,omitempty"`
+	Status       string            `json:"status"`
+	Version      string            `json:"version"`
+	Uptime       string            `json:"uptime"`
+	Checks       []Check           `json:"checks,omitempty"`
+	NATS         *NATSInfo         `json:"nats,omitempty"`
+	Agents       *AgentStats       `json:"agents,omitempty"`
+	Jobs         *JobStats         `json:"jobs,omitempty"`
+	Consumers    int               `json:"consumers"`
+	Streams      []StreamInfo      `json:"streams,omitempty"`
+	KVBuckets    []KVBucketInfo    `json:"kv_buckets,omitempty"`
+	ObjectStores []ObjectStoreInfo `json:"object_stores,omitempty"`
+	Registry     []RegistryEntry   `json:"registry,omitempty"`
 }
 
 // RegistryEntry represents a unified component registration in the health registry.
@@ -61,15 +61,21 @@ type RegistryEntry struct {
 	MemBytes   int64    `json:"mem_bytes"`
 	// Version is the build version of the component's binary.
 	Version string `json:"version,omitempty"`
+	// Address is the listen address of a sub-component.
+	Address string `json:"address,omitempty"`
+	// URL is where a person opens a sub-component; empty when not
+	// configured.
+	URL string `json:"url,omitempty"`
+	// Components are the sub-components of the component, sorted by name.
+	Components []RegistryEntry `json:"components,omitempty"`
 }
 
-// ComponentHealth represents a component's health.
-type ComponentHealth struct {
-	Status  string `json:"status"`
-	Error   string `json:"error,omitempty"`
-	Address string `json:"address,omitempty"`
-	// URL is where a person opens the component; empty when not configured.
-	URL string `json:"url,omitempty"`
+// Check is one check that the controller made for its answer, such as its
+// connection to NATS.
+type Check struct {
+	Name   string `json:"name"`
+	Status string `json:"status"`
+	Error  string `json:"error,omitempty"`
 }
 
 // NATSInfo represents NATS connection info.
@@ -100,20 +106,6 @@ type JobStats struct {
 	Processing  int `json:"processing"`
 	Unprocessed int `json:"unprocessed"`
 	Dlq         int `json:"dlq"`
-}
-
-// ConsumerStats represents JetStream consumer statistics.
-type ConsumerStats struct {
-	Total     int              `json:"total"`
-	Consumers []ConsumerDetail `json:"consumers,omitempty"`
-}
-
-// ConsumerDetail represents a single consumer's details.
-type ConsumerDetail struct {
-	Name        string `json:"name"`
-	Pending     int    `json:"pending"`
-	AckPending  int    `json:"ack_pending"`
-	Redelivered int    `json:"redelivered"`
 }
 
 // StreamInfo represents a JetStream stream's info.
@@ -173,29 +165,12 @@ func systemStatusFromGen(
 		Uptime:  g.Uptime,
 	}
 
-	if g.Components != nil {
-		comps := make(map[string]ComponentHealth, len(g.Components))
-		for k, v := range g.Components {
-			ch := ComponentHealth{
-				Status: v.Status,
-			}
-
-			if v.Error != nil {
-				ch.Error = *v.Error
-			}
-
-			if v.Address != nil {
-				ch.Address = *v.Address
-			}
-
-			if v.Url != nil {
-				ch.URL = *v.Url
-			}
-
-			comps[k] = ch
+	for _, c := range g.Checks {
+		check := Check{Name: c.Name, Status: c.Status}
+		if c.Error != nil {
+			check.Error = *c.Error
 		}
-
-		s.Components = comps
+		s.Checks = append(s.Checks, check)
 	}
 
 	if g.Nats != nil {
@@ -243,27 +218,7 @@ func systemStatusFromGen(
 		}
 	}
 
-	if g.Consumers != nil {
-		cs := &ConsumerStats{
-			Total: g.Consumers.Total,
-		}
-
-		if g.Consumers.Consumers != nil {
-			consumers := make([]ConsumerDetail, 0, len(*g.Consumers.Consumers))
-			for _, c := range *g.Consumers.Consumers {
-				consumers = append(consumers, ConsumerDetail{
-					Name:        c.Name,
-					Pending:     c.Pending,
-					AckPending:  c.AckPending,
-					Redelivered: c.Redelivered,
-				})
-			}
-
-			cs.Consumers = consumers
-		}
-
-		s.Consumers = cs
-	}
+	s.Consumers = g.Consumers
 
 	if g.Streams != nil {
 		streams := make([]StreamInfo, 0, len(*g.Streams))
@@ -305,37 +260,55 @@ func systemStatusFromGen(
 	}
 
 	if g.Registry != nil {
-		entries := make([]RegistryEntry, 0, len(*g.Registry))
-		for _, e := range *g.Registry {
-			entry := RegistryEntry{}
-			if e.Type != nil {
-				entry.Type = *e.Type
-			}
-			if e.Hostname != nil {
-				entry.Hostname = *e.Hostname
-			}
-			if e.Status != nil {
-				entry.Status = *e.Status
-			}
-			if e.Version != nil {
-				entry.Version = *e.Version
-			}
-			if e.Age != nil {
-				entry.Age = *e.Age
-			}
-			if e.CpuPercent != nil {
-				entry.CPUPercent = float64(*e.CpuPercent)
-			}
-			if e.MemBytes != nil {
-				entry.MemBytes = *e.MemBytes
-			}
-			if e.Conditions != nil {
-				entry.Conditions = *e.Conditions
-			}
-			entries = append(entries, entry)
-		}
-		s.Registry = entries
+		s.Registry = registryFromGen(*g.Registry)
 	}
 
 	return s
+}
+
+// registryFromGen converts the registry entries of the answer, with the
+// sub-components under each.
+func registryFromGen(
+	in []gen.ComponentEntry,
+) []RegistryEntry {
+	entries := make([]RegistryEntry, 0, len(in))
+	for _, e := range in {
+		entry := RegistryEntry{}
+		if e.Type != nil {
+			entry.Type = *e.Type
+		}
+		if e.Hostname != nil {
+			entry.Hostname = *e.Hostname
+		}
+		if e.Status != nil {
+			entry.Status = *e.Status
+		}
+		if e.Version != nil {
+			entry.Version = *e.Version
+		}
+		if e.Age != nil {
+			entry.Age = *e.Age
+		}
+		if e.CpuPercent != nil {
+			entry.CPUPercent = float64(*e.CpuPercent)
+		}
+		if e.MemBytes != nil {
+			entry.MemBytes = *e.MemBytes
+		}
+		if e.Conditions != nil {
+			entry.Conditions = *e.Conditions
+		}
+		if e.Address != nil {
+			entry.Address = *e.Address
+		}
+		if e.Url != nil {
+			entry.URL = *e.Url
+		}
+		if e.Components != nil {
+			entry.Components = registryFromGen(*e.Components)
+		}
+		entries = append(entries, entry)
+	}
+
+	return entries
 }

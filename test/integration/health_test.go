@@ -113,7 +113,7 @@ func (s *HealthSmokeSuite) TestHealthStatus() {
 				err := parseJSON(stdout, &result)
 				s.Require().NoError(err)
 				s.Equal("ok", result["status"])
-				s.Contains(result, "components")
+				s.Contains(result, "checks")
 			},
 		},
 	}

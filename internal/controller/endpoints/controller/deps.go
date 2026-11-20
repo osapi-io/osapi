@@ -18,42 +18,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmd
+package controller
 
-import (
-	"fmt"
+import "github.com/osapi-io/osapi/internal/controller/endpoints/health"
 
-	"github.com/spf13/cobra"
-
-	"github.com/osapi-io/osapi/internal/cli"
-)
-
-// clientNATSStatusCmd shows health status for the NATS server.
-var clientNATSStatusCmd = &cobra.Command{
-	Use:   "status",
-	Short: "NATS server component health",
-	Example: `  osapi client nats status
-  osapi client nats status --json`,
-	Run: func(cmd *cobra.Command, _ []string) {
-		ctx := cmd.Context()
-
-		resp, err := sdkClient.Health.GetStatus(ctx)
-		if err != nil {
-			cli.HandleError(err, logger)
-			return
-		}
-
-		if jsonOutput {
-			cli.PrintJSON(resp.RawJSON())
-			return
-		}
-
-		fmt.Println()
-		cli.PrintHeading("NATS")
-		displayComponentTable(resp.Data.Registry, "nats", resp.Data.Components)
-	},
-}
-
-func init() {
-	clientNATSCmd.AddCommand(clientNATSStatusCmd)
+// Deps is what the controller group's handlers use.
+type Deps struct {
+	// Health reports the health of each component.
+	Health health.Reporter
 }
