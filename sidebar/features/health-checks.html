@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Health checks | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/health-checks"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Health checks | OSAPI"><meta data-rh="true" name="description" content="osapi has health endpoints for load balancers, monitoring systems and operations"><meta data-rh="true" property="og:description" content="osapi has health endpoints for load balancers, monitoring systems and operations"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/health-checks"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/health-checks" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/health-checks" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Health checks","item":"https://osapi-io.github.io/osapi/sidebar/features/health-checks"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.4c245e35.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.e66a9d22.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.bb3d2ef6.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.6ab25248.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -92,14 +92,15 @@ records together. If the registry key of a component expired (the TTL ended
 without a new heartbeat), osapi reports the component as unreachable.</p>
 <p>Each row has the build version of the component&#x27;s binary, so a mixed fleet shows
 which hosts run an older build. Example registry output:</p>
-<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">TYPE        HOSTNAME      STATUS  CONDITIONS  AGE     CPU    MEM     VERSION</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">agent       web-01        Ready   -           7h 6m   1.2%   96 MB   v0.2.1-0.20261119003517-f6bc5af55ceb</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">agent       web-02        Ready   -           3h 2m   0.8%   82 MB   v0.2.1-0.20261119003517-f6bc5af55ceb</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">controller  api-server    Ready   -           7h 6m   2.1%   128 MB  v0.2.1-0.20261119003517-f6bc5af55ceb</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">nats        nats-server   Ready   -           7h 6m   0.3%   64 MB   v0.2.1-0.20261119003517-f6bc5af55ceb</span><br></div></code></pre></div></div>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">Components (3):</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  TYPE          HOSTNAME     STATUS  CONDITIONS  AGE    CPU %  MEM       VERSION  ADDRESS</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  controller    api-server   Ready   -           7h 6m  2.10   128.0 MB  v0.2.1</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  ├─ api                     ok      -                                          http://0.0.0.0:8080</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  └─ heartbeat               ok      -</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  nats          nats-server  Ready   -           7h 6m  0.30   64.0 MB   v0.2.1</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  └─ server                  ok      -                                          nats://localhost:4222</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  agent         web-01       Ready   -           7h 6m  1.20   96.0 MB   v0.2.1</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  └─ heartbeat               ok      -</span><br></div></code></pre></div></div>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="sub-component-health">Sub-Component health<a href="#sub-component-health" class="hash-link" aria-label="Direct link to Sub-Component health" title="Direct link to Sub-Component health" translate="no">​</a></h2>
 <p>Each component publishes the status of its internal services with its heartbeat.
 The <code>/health/status</code> endpoint puts these parts together from the registry. Thus
 an operator can see the health of each internal service on all hosts, also in a
 deployment with many nodes.</p>
-<p>Sub-components use a <code>{type}.{name}</code> naming convention. Each component reports
-only its own sub-components:</p>
+<p>Each component reports only its own sub-components. The answer lists them under
+the component&#x27;s registry entry, as <code>components</code>, sorted by name. The tables name
+each one with its type, as the heartbeat does:</p>
 
 
 
@@ -123,9 +124,10 @@ only its own sub-components:</p>
 
 <table><thead><tr><th>Component</th><th>Sub-Components</th></tr></thead><tbody><tr><td>controller</td><td><code>controller.api</code>, <code>controller.heartbeat</code>, <code>controller.metrics</code>, <code>controller.notifier</code>, <code>controller.tracing</code></td></tr><tr><td>agent</td><td><code>agent.heartbeat</code>, <code>agent.metrics</code></td></tr><tr><td>nats</td><td><code>nats.server</code>, <code>nats.heartbeat</code>, <code>nats.metrics</code></td></tr></tbody></table>
 <p>Sub-components report a status (<code>ok</code>, <code>disabled</code>, or <code>error</code>) and an optional
-network address. The controller also performs live connectivity checks against
-NATS and KV, which appear as <code>controller.nats (connectivity)</code> and
-<code>controller.kv (connectivity)</code> in the response.</p>
+network address and URL. <code>osapi client health status</code> prints each one under its
+component, as a tree. The controller also checks its connection to NATS and to
+KV for each answer. These are in <code>checks</code>, each with its name (<code>nats</code> or <code>kv</code>),
+its status and, when it failed, its error.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="metrics-server-health-probes">Metrics server health probes<a href="#metrics-server-health-probes" class="hash-link" aria-label="Direct link to Metrics server health probes" title="Direct link to Metrics server health probes" translate="no">​</a></h2>
 <p>In addition to the controller&#x27;s REST health endpoints, each component&#x27;s metrics
 server also exposes lightweight probes on its own port. These are separate from
