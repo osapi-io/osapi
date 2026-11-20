@@ -23,26 +23,26 @@ var tokenGenerateCmd = &cobra.Command{
 	Use:   "generate",
 }
 
-var tokenListCmd = &cobra.Command{
+var tokenRolesListCmd = &cobra.Command{
 	Annotations: map[string]string{clicommand.SubKey: "roles"},
 	Args:        cobra.NoArgs,
 	Example:     "  osapi token roles list\n  osapi token roles list --json",
 	Long:        "The list has the permissions of each behavior, so it is correct for the\nbinary that you run. A custom role from the config's\n`controller.api.security.roles` gets a column of its own. Without a config\nfile it shows the built-in roles only. A behavior's permissions are\n`<name>:read` and `<name>:write`, or the group's when it is nested under\none. `admin` and `write` grant both, and `read` grants the read permission.\nUse this list, not a table in the docs.",
 	RunE: func(cmd *cobra.Command, _ []string) error {
-		return clicommand.Run(cmd, token.Group, "list", token.RolesInput{})
+		return clicommand.Run(cmd, token.Group, "roles list", token.RolesInput{})
 	},
 	Short: "List the roles and the permissions each grants",
 	Use:   "list",
 }
 
-var tokenGetCmd = &cobra.Command{
+var tokenRolesGetCmd = &cobra.Command{
 	Annotations: map[string]string{clicommand.SubKey: "roles"},
 	Args:        cobra.NoArgs,
 	Example:     "  osapi token roles get --name admin",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		name, _ := cmd.Flags().GetString("name")
 
-		return clicommand.Run(cmd, token.Group, "get", token.RoleInput{Name: name})
+		return clicommand.Run(cmd, token.Group, "roles get", token.RoleInput{Name: name})
 	},
 	Short: "Show a role and each permission it grants",
 	Use:   "get",
@@ -66,9 +66,9 @@ func init() {
 	tokenGenerateCmd.Flags().StringP("subject", "u", "", "Subject for the token (e.g., user ID or unique identifier)")
 	_ = tokenGenerateCmd.MarkFlagRequired("subject")
 	tokenGenerateCmd.Flags().StringSliceP("permissions", "p", nil, "Direct permissions, which override the roles; osapi token roles get --name admin lists each one")
-	tokenGetCmd.Flags().String("name", "", "The role, such as admin, or a custom role of the config")
-	_ = tokenGetCmd.MarkFlagRequired("name")
+	tokenRolesGetCmd.Flags().String("name", "", "The role, such as admin, or a custom role of the config")
+	_ = tokenRolesGetCmd.MarkFlagRequired("name")
 	tokenValidateCmd.Flags().StringP("token", "t", "", "The Token string")
 	_ = tokenValidateCmd.MarkFlagRequired("token")
-	clicommand.AddCommands(token.Group, tokenGenerateCmd, tokenListCmd, tokenGetCmd, tokenValidateCmd)
+	clicommand.AddCommands(token.Group, tokenGenerateCmd, tokenRolesListCmd, tokenRolesGetCmd, tokenValidateCmd)
 }

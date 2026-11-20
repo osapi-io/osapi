@@ -4,8 +4,8 @@ Check every behavior against the rules the platform relies on.
 
 It exits 1 when a rule fails, and names the behavior, the method, the rule and
 the fix. Each problem in `--json` has `behavior`, `method` (when the problem is
-in one), `rule`, `message` and `fix`. `osapi behavior spec` describes each part
-of a behavior.
+in one), `rule`, `message` and `fix`. `osapi behavior spec get` describes each
+part of a behavior.
 
 The rules:
 

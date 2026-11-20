@@ -38,7 +38,7 @@ const (
 	KindGenerated  = "generated"
 )
 
-// Spec is every term of the command DSL. osapi cli command spec prints it,
+// Spec is every term of the command DSL. osapi cli command spec get prints it,
 // so an author, or an agent, learns the DSL from the binary that it builds.
 // A test fails on an exported option, method or refinement of this package
 // without an entry.
@@ -157,7 +157,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindRefine,
 			Name: `.Sub("segment")`,
-			Does: "Puts the command under a command of its own in the group: osapi <group> <segment> <method>, such as token roles list.",
+			Does: "Puts the command under a command of its own in the group: osapi <group> <segment> <method>, such as token roles list. The method's identity is its segment and its name, so a group can have get and spec get.",
 			When: "When the command is about a noun of the group: the noun is the Sub, and the method is the verb.",
 		},
 		{
@@ -310,7 +310,7 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindCheck,
-			Name: "osapi cli command new --name <group> --description \"...\"",
+			Name: "osapi cli command create --name <group> --description \"...\"",
 			Does: "Writes a new group under internal/cli/commands/<group>: a list and a get, an empty Deps, its types and the tests of its methods, and adds its import to internal/cli/commands/all. It builds, validates and passes its tests; command-scaffold-check in just test holds it to that.",
 			When: "To start a new group. Then run go generate ./internal/cli/commands/all and just cli-docs-generate, and change it.",
 		},

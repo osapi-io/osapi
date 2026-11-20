@@ -84,7 +84,7 @@ var notDSL = map[string]bool{
 
 // TestSpecCoversTheDSL fails on an exported function of the package, or an
 // exported method of Method, that the spec has no term for. Thus osapi
-// controller endpoint spec cannot fall behind the code.
+// controller endpoint spec get cannot fall behind the code.
 func (s *SpecPublicTestSuite) TestSpecCoversTheDSL() {
 	entries, err := os.ReadDir(".")
 	s.Require().NoError(err)

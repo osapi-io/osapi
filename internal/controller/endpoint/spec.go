@@ -37,7 +37,7 @@ const (
 	KindGenerated  = "generated"
 )
 
-// Spec is every term of the endpoint DSL. osapi controller endpoint spec
+// Spec is every term of the endpoint DSL. osapi controller endpoint spec get
 // prints it, so an author, or an agent, learns the DSL from the binary that
 // it builds. A test fails on an exported option, method or refinement of
 // this package without an entry.
@@ -434,7 +434,7 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindCheck,
-			Name: "osapi controller endpoint new --name <group> --description \"...\"",
+			Name: "osapi controller endpoint create --name <group> --description \"...\"",
 			Does: "Writes a new group under internal/controller/endpoints/<group>: a list and a get, an empty Deps, its types and the tests of its methods, and adds its import to internal/controller/endpoints/all. It builds, validates and passes its tests; endpoint-scaffold-check in just test holds it to that.",
 			When: "To start a new group. Then run go generate ./internal/controller/endpoints/all and just generate, and change it.",
 		},

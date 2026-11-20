@@ -29,16 +29,16 @@ import (
 )
 
 var endpointNewCmd = &cobra.Command{
-	Use:   "new",
+	Use:   "create",
 	Short: "Write a new endpoint group that builds and passes its tests",
 	Long: "It writes `internal/controller/endpoints/<name>/` in the osapi checkout in\n" +
 		"the current directory, and adds its import to\n" +
 		"`internal/controller/endpoints/all`. The group has a list and a get, an empty\n" +
 		"`Deps` and the tests of its methods. Then run `go generate\n" +
 		"./internal/controller/endpoints/all` and `just generate`. While its `Deps` is\n" +
-		"empty, the controller needs no wiring. `osapi controller endpoint spec` lists\n" +
+		"empty, the controller needs no wiring. `osapi controller endpoint spec get` lists\n" +
 		"each part of the DSL.",
-	Example: `  osapi controller endpoint new --name trace --description "The traces of the controller"`,
+	Example: `  osapi controller endpoint create --name trace --description "The traces of the controller"`,
 	Args:    cobra.NoArgs,
 	Run: func(cmd *cobra.Command, _ []string) {
 		name, _ := cmd.Flags().GetString("name")

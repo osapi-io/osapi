@@ -11,7 +11,7 @@ definition.
 
 This skill gives a procedure and decisions. It is not a catalog. The platform tells about itself:
 
-- `behavior spec` tells each part of the DSL, what it does and when to use it, the generated paths and what the platform cannot do yet.
+- `behavior spec get` tells each part of the DSL, what it does and when to use it, the generated paths and what the platform cannot do yet.
 - `behavior validate --help` tells each rule and each test check, with its fix. Each failure also ends with its fix.
 - `behavior list` and `behavior get` tell what each behavior accepts and does. This includes the building blocks.
 
@@ -33,11 +33,11 @@ Ask the code and the binary before you read prose. Each one answers one question
 
 | Question                                         | Ask                                                       |
 | ------------------------------------------------ | --------------------------------------------------------- |
-| What options, methods, example parts and tags exist, and when to use each | `go run . behavior spec`                                  |
+| What options, methods, example parts and tags exist, and when to use each | `go run . behavior spec get`                                  |
 | What rules and test checks a behavior must pass, and the fix of each | `go run . behavior validate --help`                       |
 | What a provider builder gets from the agent      | `go doc ./internal/behavior/host Host`                         |
 | What behaviors exist already                     | `go run . behavior list`                                  |
-| Which building blocks do generic work, such as a managed file, and when to make a new one | `go run . behavior spec`, under "Building on other behaviors" and "Building blocks" |
+| Which building blocks do generic work, such as a managed file, and when to make a new one | `go run . behavior spec get`, under "Building on other behaviors" and "Building blocks" |
 | What one accepts and does: routes, fields, platforms, sudo, what it uses | `go run . behavior get --name <name> --json`, building blocks included |
 | Whether a definition breaks a rule               | `go run . behavior validate`                              |
 | A complete example of every part                 | `internal/behaviors/sysctl`                                     |
@@ -61,7 +61,7 @@ Decide these with the user before you write code. Each answer becomes a declarat
 | Which programs does it run, which as root, and does it take a secret? | The agent checks each is installed and sudo allows it; secrets are kept out of the audit log and traces | `behavior.Runs("program")`, or `behavior.Sudo("program")` for root; `secret:"true"` on the field |
 | Which files does it write, remove or change the mode of, and does it keep a record in the file-state bucket? | Each one is a span in a trace, and the examples fail on a path or a record that is not declared. Declare the paths even when a required behavior, such as managedfile, does the write | `behavior.Writes("/etc/x.d/osapi-*.conf")`, and `behavior.KeepsState` for a record |
 | Is it one host, one step? | A behavior acts on one host inside one job | If it spans hosts or orders several steps, it is an osapi-orchestrator workflow, not a behavior |
-| Does it need anything that `behavior spec` lists under "Not supported yet"? | The platform cannot express it, and wiring around that breaks the generated layers | Stop and tell the user what is missing |
+| Does it need anything that `behavior spec get` lists under "Not supported yet"? | The platform cannot express it, and wiring around that breaks the generated layers | Stop and tell the user what is missing |
 
 Then decide how it operates. This decides the provider and its examples. Read [references/services.md](references/services.md) first. Then select the pattern that the answers identify:
 
@@ -113,7 +113,7 @@ write the bad value, because a generator cannot know one for a custom rule.
 
 ## Build a new one
 
-1. Write it: `go run . behavior new --name <name> --description "<one line>"`,
+1. Write it: `go run . behavior create --name <name> --description "<one line>"`,
    with `--group <group>` for a behavior nested under one, such as `network`,
    then `go generate ./internal/behaviors/<name>/mocks ./internal/behaviors/all`
    (`<group>/<name>` for a grouped one). The
@@ -123,7 +123,7 @@ write the bad value, because a generator cannot know one for a custom rule.
    then `behavior.go`. Use the host only through `host.Host`. Then the fake host can test it. Compare before you act. Then a second run reports `changed: false`. A building block's own fields, such as what `managedfile`
    accepts, come from `behavior get` on it.
 3. Give each method a useful example. The example names the host that it runs on and the changes on that host. Declare what the method refuses with `.Fails`.
-   `behavior spec` lists the parts of an example. The examples run
+   `behavior spec get` lists the parts of an example. The examples run
    the provider on a fake host and become the generated HTTP and CLI tests.
 4. Keep a test for every file with code, named for it:
    `methods_public_test.go` on the mocked provider, and
@@ -173,12 +173,12 @@ you break one. The failures below come from elsewhere:
 | `is both a hand-written command and a behavior's` | The same, for a command under `osapi client node` |
 | `a behavior is below 100% coverage`   | A branch no test reaches: add an example, or a case to the test named for the file |
 
-Never edit a path that `behavior spec` lists under "Generated, never edited".
+Never edit a path that `behavior spec get` lists under "Generated, never edited".
 Change the definition and generate. Do not write CLI docs for a behavior.
 
 ## Not yet
 
-`behavior spec` lists what the platform cannot express yet, under "Not
+`behavior spec get` lists what the platform cannot express yet, under "Not
 supported yet". If a request needs one, say so and stop. Do not build around it.
 
 A behavior needs no edits outside its directory. The only exception is a package that `behavior-int-linux` says is missing from its image. If you must edit other code, for example `cmd/agent_setup.go`, `internal/validation` or `internal/authtoken`, the platform does not have a declaration that you need. Say so. Do not add the code by hand.

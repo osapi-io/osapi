@@ -271,7 +271,7 @@ func (sc scaffold) behaviorFile() *jen.File {
 	comments(f,
 		"Behavior is the "+sc.name+" definition. The routes, the agent's dispatch, the",
 		"CLI commands, the spec, the docs pages and the tests of every layer above",
-		"the provider are built from it. osapi behavior spec lists every option.",
+		"the provider are built from it. osapi behavior spec get lists every option.",
 	)
 	f.Var().
 		Id("Behavior").
@@ -292,7 +292,7 @@ func (sc scaffold) typesFile() *jen.File {
 	comments(f,
 		"UpdateInput is update's input. update has no key, so the field that says",
 		`what it changes is tagged telemetry:"attr", and the trace shows it.`,
-		"osapi behavior spec lists each tag.",
+		"osapi behavior spec get lists each tag.",
 	)
 	f.Type().Id("UpdateInput").Struct(
 		jen.Id("Value").String().Add(tag("json", "value", "validate", "required",

@@ -1,21 +1,21 @@
-# New
+# Create
 
 Write a new local group that builds and passes its tests.
 
 It writes `internal/cli/commands/<name>/` in the osapi checkout in the current
 directory, and adds its import to `internal/cli/commands/all`. The group has a
-list and a get, an empty `Deps` and the tests of its methods. Then run
-`go generate ./internal/cli/commands/all`. While its `Deps` is empty, the CLI
-needs no wiring. `osapi cli command spec` lists each part of the DSL.
+list and a get, an empty `Deps` and the tests of its methods. Then run the steps
+that it prints. While its `Deps` is empty, the CLI needs no wiring.
+`osapi cli command spec get` lists each part of the DSL.
 
 ```bash
-osapi cli command new [flags]
+osapi cli command create [flags]
 ```
 
 ## Examples
 
 ```bash
-osapi cli command new --name widget --description "The widgets of this host"
+osapi cli command create --name widget --description "The widgets of this host"
 ```
 
 ## Flags

@@ -9,22 +9,22 @@ parameters. You write it one time, as a Go definition. osapi builds these parts
 from the definition: the API routes, the dispatch of the agent, the CLI
 commands, the OpenAPI spec, the docs pages and the telemetry. It also builds the
 tests of each layer above the provider. A new behavior is one directory under
-`internal/behaviors/` and one import line. `osapi behavior new` writes both.
+`internal/behaviors/` and one import line. `osapi behavior create` writes both.
 
 osapi serves a behavior under `/api` and `osapi client node`, next to the
 hand-written domains that did not move yet. A behavior that replaces a
 hand-written domain has the `behavior.Next` mark while both exist. The mark
 serves it under `/api/next` and `osapi client next`, until the cutover of that
 domain. Today, sysctl has the mark. `internal/behaviors/sysctl` is the
-reference. `osapi behavior spec` lists each option, and
+reference. `osapi behavior spec get` lists each option, and
 `go doc ./internal/behavior` shows the Go API, with examples that run as tests.
 
 ## The layout
 
 Every behavior has the same files, so a reader, a reviewer or an agent finds the
 same thing in the same place.
-`osapi behavior new --name <name> --description "..."` writes them, as a working
-behavior that keeps a value in a file:
+`osapi behavior create --name <name> --description "..."` writes them, as a
+working behavior that keeps a value in a file:
 
 ```text
 internal/behaviors/<name>/
@@ -48,7 +48,7 @@ Each file with code has a test with its name. The provider of a platform is
 `<platform>.go`. The definition declares it with `behavior.Platform`. On a
 platform without a provider, the methods report `skipped`.
 
-`osapi behavior new` also registers the behavior with one blank import in
+`osapi behavior create` also registers the behavior with one blank import in
 `internal/behaviors/all/all.go`. Run
 `go generate ./internal/behaviors/<name>/mocks ./internal/behaviors/all` after
 it, for the mock and the `gen/` directory. Nothing else outside the directory
@@ -160,9 +160,9 @@ requirements make a cycle, and when an internal behavior has nothing that
 requires it. sysctl requires `managedfile`, and it is the example.
 
 A behavior is internal when an operator would never call it, and it is a piece
-of work that other behaviors share, such as writing a file. `osapi behavior new`
-writes a behavior that an operator calls. Make shared work internal when a
-second behavior needs it.
+of work that other behaviors share, such as writing a file.
+`osapi behavior create` writes a behavior that an operator calls. Make shared
+work internal when a second behavior needs it.
 
 A behavior declares the paths it writes, also when a required behavior does the
 write. managedfile declares `behavior.Writes("*")`, because it writes the path
@@ -183,15 +183,15 @@ The tags of the input and output types hold all of the contract. Each field of
 an input becomes a request field, a CLI flag and a spec property. Each field of
 an output becomes a JSON field and a table column.
 
-| Tag                | On     | Becomes                                                                                                                                                                                                                          |
-| ------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `json:"key"`       | both   | The name everywhere: request, flag (`--key`), column (`KEY`), `--json` field                                                                                                                                                     |
-| `validate:"..."`   | input  | Checked by the API before a job is queued; the spec's constraints                                                                                                                                                                |
-| `doc:"..."`        | both   | The field's description in the spec, the flag's help and the docs pages                                                                                                                                                          |
-| `render:"..."`     | output | How a column shows: `-` hides it, `bytes`, `age` or `status`                                                                                                                                                                     |
-| `telemetry:"attr"` | input  | Records the field on the method's trace span. The field that `.Key` names is recorded without the tag.                                                                                                                           |
-| `template:"vars"`  | input  | A Go template, whose `.Vars` are in the input field `vars` (a `map[string]string`). The API refuses one that does not parse, or that reads a field or a var it does not have. `osapi behavior spec` lists what a template reads. |
-| `secret:"true"`    | input  | A secret: redacted from the audit log, write-only in the spec, never traced                                                                                                                                                      |
+| Tag                | On     | Becomes                                                                                                                                                                                                                              |
+| ------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `json:"key"`       | both   | The name everywhere: request, flag (`--key`), column (`KEY`), `--json` field                                                                                                                                                         |
+| `validate:"..."`   | input  | Checked by the API before a job is queued; the spec's constraints                                                                                                                                                                    |
+| `doc:"..."`        | both   | The field's description in the spec, the flag's help and the docs pages                                                                                                                                                              |
+| `render:"..."`     | output | How a column shows: `-` hides it, `bytes`, `age` or `status`                                                                                                                                                                         |
+| `telemetry:"attr"` | input  | Records the field on the method's trace span. The field that `.Key` names is recorded without the tag.                                                                                                                               |
+| `template:"vars"`  | input  | A Go template, whose `.Vars` are in the input field `vars` (a `map[string]string`). The API refuses one that does not parse, or that reads a field or a var it does not have. `osapi behavior spec get` lists what a template reads. |
+| `secret:"true"`    | input  | A secret: redacted from the audit log, write-only in the spec, never traced                                                                                                                                                          |
 
 A write's output has a `changed` bool. The table shows it as the row's status,
 `changed` or `ok`, rather than as a column. An output that is a slice becomes
@@ -345,14 +345,14 @@ error that a struct of strings cannot cause.
 ## The checks
 
 ```bash
-go generate ./internal/behaviors/all      # write gen/, the spec and the behavior pages
-just cli-docs-generate              # write the CLI pages of the commands
-osapi behavior spec                 # each part of the DSL, and when to use it
-osapi behavior validate             # the definition's rules, each with its fix
-osapi behavior get --name sysctl  # surfaces, routes, schemas, as registered
-just behavior-gen-check             # fails when generated files are stale
-just behavior-cover-check           # fails when a behavior is below 100% coverage
-just behavior-scaffold-check        # fails when a new behavior fails its tests
+go generate ./internal/behaviors/all  # write gen/, the spec and the behavior pages
+just cli-docs-generate                # write the CLI pages of the commands
+osapi behavior spec get               # each part of the DSL, and when to use it
+osapi behavior validate               # the definition's rules, each with its fix
+osapi behavior get --name sysctl      # surfaces, routes, schemas, as registered
+just behavior-gen-check               # fails when generated files are stale
+just behavior-cover-check             # fails when a behavior is below 100% coverage
+just behavior-scaffold-check          # fails when a new behavior fails its tests
 ```
 
 `osapi behavior validate` checks each definition against its rules. It exits 1
@@ -360,15 +360,15 @@ when one fails, and names the behavior, the method, the rule and the fix. The
 tests of each behavior run its examples on a fake host, and each failure ends
 with its fix too. `osapi behavior validate --help` lists each rule and each test
 check, from the same tables that the checks use. Thus the list cannot be out of
-date. `osapi behavior spec` lists each part of the DSL, the generated paths and
-what the platform cannot do yet.
+date. `osapi behavior spec get` lists each part of the DSL, the generated paths
+and what the platform cannot do yet.
 
 `just test` runs `behavior-gen-check`. Thus a behavior that changed without
 `go generate` fails CI. It also runs `behavior-cover-check`. Thus a behavior
 whose examples and tests miss a line fails CI too. It also runs
-`behavior-scaffold-check`, which makes a behavior with `osapi behavior new` in a
-copy of the checkout and runs its tests. Thus the behavior that you start from
-passes each check.
+`behavior-scaffold-check`, which makes a behavior with `osapi behavior create`
+in a copy of the checkout and runs its tests. Thus the behavior that you start
+from passes each check.
 
 A behavior that replaces a hand-written domain also gets a row in the parity
 test until the cutover. `TestParity` is in

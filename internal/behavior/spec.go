@@ -44,7 +44,7 @@ const (
 	KindNotYet     = "not-yet"
 )
 
-// Spec is every term of the behavior DSL. osapi behavior spec prints it, so
+// Spec is every term of the behavior DSL. osapi behavior spec get prints it, so
 // an author, or an agent, learns the DSL from the binary that it builds. A
 // test fails on an exported option, method, refinement or example part of
 // this package without an entry, and on a field tag that this package reads

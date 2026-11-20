@@ -13,7 +13,7 @@ commands is one directory, `internal/cli/commands/<group>/`, plus one import in
 This skill gives a procedure and decisions. It is not a catalog. The binary tells
 you about the DSL:
 
-- `cli command spec` tells each part of the DSL, what it does and when to use
+- `cli command spec get` tells each part of the DSL, what it does and when to use
   it.
 - `cli command validate --help` tells each rule, with its fix. Each failure
   also ends with its fix.
@@ -26,7 +26,7 @@ the tool is correct.
 
 The DSL makes the cobra command, the flags, the help, the page and the checks of
 each method. The method is a typed function. If the work needs a part that
-`cli command spec` does not list, stop and say so. That is a platform change,
+`cli command spec get` does not list, stop and say so. That is a platform change,
 and a person decides it. Do not add code around it.
 
 The design is `components/osapi/commands.md` in osapi-io/specs. Read it first.
@@ -44,7 +44,7 @@ The design is `components/osapi/commands.md` in osapi-io/specs. Read it first.
 
 | Question | Ask |
 | --- | --- |
-| Each part of the DSL, what it does and when to use it | `go run . cli command spec` |
+| Each part of the DSL, what it does and when to use it | `go run . cli command spec get` |
 | Each rule a definition must pass, with its fix | `go run . cli command validate --help` |
 | Each command of the binary, and the layer that made it | `go run . cli command list` |
 | The commands, flags and refused inputs of a group | `go run . cli command get --name <group>` |
@@ -53,7 +53,7 @@ The design is `components/osapi/commands.md` in osapi-io/specs. Read it first.
 
 ## Build a new group
 
-1. Write it: `go run . cli command new --name <group> --description "<one line>"`,
+1. Write it: `go run . cli command create --name <group> --description "<one line>"`,
    then `go generate ./internal/cli/commands/all`. The group has a list and a
    get, an empty `Deps`, its types and the tests of its methods. It builds,
    validates and passes its tests before you change it.
@@ -124,7 +124,14 @@ The design is `components/osapi/commands.md` in osapi-io/specs. Read it first.
   the command exits 1, so a script or CI fails on it.
 - The output type prints the output. Give each field the tags that it needs:
   `render`, `label`, `none`, `empty`, `prefix` and `table:"-"`, and a heading
-  with `_ struct{} \`title:"..."\``. `osapi cli command spec` has each tag.
+  with `_ struct{} \`title:"..."\``. `osapi cli command spec get` has each tag.
+- A list of long text, which a table cell cuts, is `table:"blocks"`: each item
+  is its first field, then a paragraph for each other field (`label:"-"` for
+  one with no label). A list whose items hold a list is `table:"sections"`:
+  each item is a section headed by its first field.
+- A method is its `Sub` and its name, so a group can have `get` and
+  `spec get`. A noun gets a verb under it with `Sub`; a word goes into
+  `command.Actions` only when no CRUD verb says what the command does.
 - If the output type cannot print the output, change the output type first.
   A method that does a different thing with each value, such as a matrix, is
   two methods: a list and a get. A tree is a list of the row's own type. No
@@ -161,8 +168,8 @@ mise exec -- just test
 | `go-generate-check` | A `gen/` file is stale: run `go generate ./internal/cli/commands/all` |
 | `cli-docs-gen-check` | A CLI page is stale: run `mise exec -- just cli-docs-generate` |
 | `is not given: add command.Provide` when a command runs | The group's `Deps` has a field, and `cmd/commands.go` does not give it |
-| `command-scaffold-check` | A group that `cli command new` writes no longer passes its tests: change `internal/cli/command/scaffold_files.go`, and run its golden test with `-update` |
+| `command-scaffold-check` | A group that `cli command create` writes no longer passes its tests: change `internal/cli/command/scaffold_files.go`, and run its golden test with `-update` |
 | `the spec has no term for` | A new option of the DSL has no entry in `internal/cli/command/spec.go`. Add one |
 
-Never edit a path that `cli command spec` lists under "Generated, never edited".
+Never edit a path that `cli command spec get` lists under "Generated, never edited".
 Change the definition and generate. Do not write CLI docs for a local command.

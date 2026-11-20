@@ -32,8 +32,8 @@ var endpointSpecCmd = newSpecCommand(
 		"it, and what it cannot do yet. The list comes from this binary. Thus it\n"+
 		"agrees with the build that you run. Read it before you write a group, then\n"+
 		"check the result with `osapi controller endpoint validate`.",
-	`  osapi controller endpoint spec
-  osapi controller endpoint spec --json`,
+	`  osapi controller endpoint spec get
+  osapi controller endpoint spec get --json`,
 )
 
 func init() {

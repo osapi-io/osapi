@@ -165,7 +165,7 @@ func (sc groupScaffold) groupFile() *jen.File {
 
 	comments(f,
 		"Group is the "+sc.name+" group's definition. The commands, their flags,",
-		"their help and their pages come from it. osapi cli command spec lists",
+		"their help and their pages come from it. osapi cli command spec get lists",
 		"every option.",
 	)
 	f.Var().Id("Group").Op("=").Add(c("Register").Call(c("Define").Add(multiline("(", ")",

@@ -282,9 +282,9 @@ command, or the command in `cmd/` when no definition makes it, then run
   `go generate ./internal/behaviors/all`, then `just cli-docs-generate`.
 - A new command that runs in the CLI and calls no API is a local command. Write
   it with the command DSL, in a group under `internal/cli/commands/`, not as a
-  file in `cmd/`. Start a group with `osapi cli command new`, then run
+  file in `cmd/`. Start a group with `osapi cli command create`, then run
   `go generate ./internal/cli/commands/all` and `just cli-docs-generate`.
-  `osapi cli command spec` lists each part of the DSL, and
+  `osapi cli command spec get` lists each part of the DSL, and
   `osapi cli command validate` checks each group. The `build-a-command` skill
   has the steps.
 
@@ -392,16 +392,16 @@ The generators that use jen:
 
 - `internal/behavior/gen` writes the routes, the handlers, the CLI commands and
   the tests of each behavior.
-- `osapi behavior new` writes the first files of a new behavior, from
+- `osapi behavior create` writes the first files of a new behavior, from
   `internal/behavior/scaffold_files.go`.
 - `internal/cli/command/gen` writes the CLI commands of each local group, each
   endpoint group and each behavior.
-- `osapi cli command new` writes the first files of a new local group, from
+- `osapi cli command create` writes the first files of a new local group, from
   `internal/cli/command/scaffold_files.go`, with golden copies in
   `internal/cli/command/testdata/scaffold/`.
 
 A generator built with jen is hard to read as the code that it writes. Thus the
-output of `osapi behavior new` has golden copies in
+output of `osapi behavior create` has golden copies in
 `internal/behavior/testdata/scaffold/`, and a test compares them. When you
 change the scaffold, run the test with `-update`. The diff of the golden files
 shows the change to the files that a person gets.
@@ -716,18 +716,18 @@ an operation that breaks one:
 
 The operations of the controller itself, such as the agents and the jobs, move
 to definitions in `internal/controller/endpoints/`. `osapi controller endpoint`
-lists them, and `osapi controller endpoint spec` lists each part of the DSL.
+lists them, and `osapi controller endpoint spec get` lists each part of the DSL.
 `TestEndpointParity` holds the spec of each group that moves to its hand-written
 spec, until the group moves. The agent group is served, and its commands are
 made, from its definition: `go generate ./internal/controller/endpoints/all`
 writes its spec, routes, decoders and CLI commands under `gen/`, and
 `just generate` joins its spec into the main one. A command prints from the
 output type of its method. The tags of each field set how the value prints, and
-`osapi cli command spec` has each tag. No command writes its own output: when
-the type does not have the shape, change the type. A list of the row's own type
-prints as a tree. The group's commands need no file in `cmd/`: the group's one
-line, `CommandLong` and `SubDoc` give the help of its command and of each `.Sub`
-segment. A new group starts from `osapi controller endpoint new`, and
+`osapi cli command spec get` has each tag. No command writes its own output:
+when the type does not have the shape, change the type. A list of the row's own
+type prints as a tree. The group's commands need no file in `cmd/`: the group's
+one line, `CommandLong` and `SubDoc` give the help of its command and of each
+`.Sub` segment. A new group starts from `osapi controller endpoint create`, and
 `just endpoint-scaffold-check` holds what it writes to its tests. The
 `build-an-endpoint` skill has the steps.
 

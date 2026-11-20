@@ -42,7 +42,7 @@ var behaviorValidateCmd = &cobra.Command{
 	Short: "Check every behavior against the rules the platform relies on",
 	Long: "It exits 1 when a rule fails, and names the behavior, the method, the rule\n" +
 		"and the fix. Each problem in `--json` has `behavior`, `method` (when the\n" +
-		"problem is in one), `rule`, `message` and `fix`. `osapi behavior spec`\n" +
+		"problem is in one), `rule`, `message` and `fix`. `osapi behavior spec get`\n" +
 		"describes each part of a behavior.\n\n" +
 		"The rules:\n\n" + behavior.Checks.Help() + "\n" +
 		"`go test` runs the examples and refusals of each behavior on a fake host,\n" +

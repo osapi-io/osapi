@@ -18,7 +18,7 @@ plan](https://github.com/osapi-io/specs/blob/main/components/osapi/behavior-migr
 
 Before you start, ask which kind of work it is. A new behavior uses the
 `build-a-behavior` skill (`go run . skill get --name build-a-behavior`), which
-starts from `osapi behavior new`. It
+starts from `osapi behavior create`. It
 does not use the steps below. This skill covers the hand-written domains: each
 domain that did not move yet.
 

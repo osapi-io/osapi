@@ -84,6 +84,11 @@ func (s *PrinterPublicTestSuite) TestPrinter() {
 			want: []string{"None."},
 		},
 		{
+			name: "when a block prints, it is its title, then each pair under it",
+			do:   func() { p.Block("Flat()", "", "Adds no word.") },
+			want: []string{"Flat()", "Adds no word."},
+		},
+		{
 			name: "when text prints, it is as it is, with one newline at its end",
 			do:   func() { p.Text("# Title\n\ntext\n\n") },
 			want: []string{"# Title\n\ntext\n"},

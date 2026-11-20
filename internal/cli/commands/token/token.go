@@ -32,7 +32,7 @@ import (
 )
 
 // Group is the token group's definition. The commands, their flags, their
-// help and their pages come from it. osapi cli command spec lists every
+// help and their pages come from it. osapi cli command spec get lists every
 // option.
 var Group = command.Register(command.Define(
 	"token", "Generate and validate API tokens",

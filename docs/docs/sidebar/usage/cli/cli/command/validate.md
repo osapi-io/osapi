@@ -3,10 +3,9 @@
 Check every local group against the rules of a definition, and the output of
 every group.
 
-It exits 1 when a rule fails, and names the group, the method, the rule, what is
-wrong and the fix. Each problem in `--json` has `group`, `method` (when the
-problem is in one), `rule`, `message` and `fix`. `osapi cli command spec`
-describes each part of a group.
+It prints each problem with its group, method, rule and message, then the fix of
+each rule, and exits 1 when a rule fails. `osapi cli command spec get` describes
+each part of a group.
 
 The rules:
 
@@ -56,8 +55,8 @@ The rules:
 - `tag`: Each render tag of an output field is one the output knows: -, bytes,
   age, time, duration, duration=ms, status or short=N with N above 0. An empty
   tag is on a list, and a title tag is on the blank field _ of the output type.
-  Fix: Use a render value that osapi cli command spec lists, put empty on a list
-  field, and put title on a field _ struct&#123;&#125; of the output type.
+  Fix: Use a render value that osapi cli command spec get lists, put empty on a
+  list field, and put title on a field _ struct&#123;&#125; of the output type.
 - `says`: A method that answers with no body says what occurred: its name has a
   past tense, such as admitted for admit, or .Says gives the text. Fix: Add
   .Says("&lt;state&gt;") to the method, such as .Says("draining") for drain.

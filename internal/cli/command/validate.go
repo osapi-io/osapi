@@ -149,7 +149,7 @@ var Checks = guide.Checks{
 	{
 		Rule:     RuleTag,
 		Requires: "Each render tag of an output field is one the output knows: -, bytes, age, time, duration, duration=ms, status or short=N with N above 0. An empty tag is on a list, and a title tag is on the blank field _ of the output type.",
-		Fix:      "Use a render value that osapi cli command spec lists, put empty on a list field, and put title on a field _ struct{} of the output type.",
+		Fix:      "Use a render value that osapi cli command spec get lists, put empty on a list field, and put title on a field _ struct{} of the output type.",
 	},
 	{
 		Rule:     RuleSays,
@@ -169,7 +169,7 @@ type Problem struct {
 	// Message says what is wrong.
 	Message string `json:"message"`
 	// Fix is how to fix it, from the check of Rule.
-	Fix string `json:"fix"`
+	Fix string `json:"fix" table:"-"`
 }
 
 func (p Problem) String() string {
@@ -218,10 +218,10 @@ func Validate(
 				add(m.Name, RuleName, fmt.Sprintf("%q is not lowercase letters and digits.", w))
 			}
 		}
-		if seen[m.Name] {
-			add(m.Name, RuleUnique, "two methods have the name "+m.Name+".")
+		if seen[m.MethodName()] {
+			add(m.Name, RuleUnique, "two methods are "+m.MethodName()+".")
 		}
-		seen[m.Name] = true
+		seen[m.MethodName()] = true
 		switch {
 		case g.Flat && len(g.Parents) == 0 && m.sub == "":
 			if !Roots[m.Name] {
@@ -450,6 +450,21 @@ func tagProblems(
 		}
 		if _, ok := f.Tag.Lookup("empty"); ok && f.Type.Kind() != reflect.Slice {
 			out = append(out, where+" has an empty tag and is not a list.")
+		}
+		if tb, ok := f.Tag.Lookup(
+			"table",
+		); ok && tb != "-" && tb != TableBlocks &&
+			tb != TableSections {
+			out = append(
+				out,
+				fmt.Sprintf("%s has table:%q, which the output does not know.", where, tb),
+			)
+		}
+		if tb := f.Tag.Get("table"); (tb == TableBlocks || tb == TableSections) && !isList(f.Type) {
+			out = append(
+				out,
+				fmt.Sprintf("%s has table:%q and is not a list of objects.", where, tb),
+			)
 		}
 		if _, ok := f.Tag.Lookup("title"); ok {
 			out = append(out, where+" has a title tag: it goes on the field _ struct{}.")

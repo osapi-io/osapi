@@ -42,7 +42,7 @@ var endpointValidateCmd = &cobra.Command{
 	Long: "It exits 1 when a rule fails, and names the group, the method, the rule,\n" +
 		"what is wrong and the fix. Each problem in `--json` has `group`, `method`\n" +
 		"(when the problem is in one), `rule`, `message` and `fix`.\n" +
-		"`osapi controller endpoint spec` describes each part of a group.\n\n" +
+		"`osapi controller endpoint spec get` describes each part of a group.\n\n" +
 		"The rules:\n\n" + endpoint.Checks.Help(),
 	Example: `  osapi controller endpoint validate
   osapi controller endpoint validate --json`,

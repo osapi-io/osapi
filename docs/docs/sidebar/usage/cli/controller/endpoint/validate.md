@@ -5,7 +5,7 @@ Check every endpoint group against the rules of a definition.
 It exits 1 when a rule fails, and names the group, the method, the rule, what is
 wrong and the fix. Each problem in `--json` has `group`, `method` (when the
 problem is in one), `rule`, `message` and `fix`.
-`osapi controller endpoint spec` describes each part of a group.
+`osapi controller endpoint spec get` describes each part of a group.
 
 The rules:
 

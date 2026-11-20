@@ -33,8 +33,8 @@ var behaviorSpecCmd = newSpecCommand(
 		"it. The list comes from this binary. Thus it agrees with the build that you\n"+
 		"run. Read it before you write a behavior, then check the result with\n"+
 		"`osapi behavior validate`.",
-	`  osapi behavior spec
-  osapi behavior spec --json`,
+	`  osapi behavior spec get
+  osapi behavior spec get --json`,
 )
 
 func init() {

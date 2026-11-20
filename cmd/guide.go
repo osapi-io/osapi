@@ -29,11 +29,10 @@ import (
 	"github.com/osapi-io/osapi/internal/guide"
 )
 
-// newSpecCommand is the spec command of a command group: it prints the spec
-// that spec returns, the terms of the group's DSL or format, as text under a
-// heading for each kind, or as the whole Spec with --json. A group that
-// teaches an author, or an agent, how to build for it declares a guide.Spec
-// and adds this command. spec is a function, so a part of the spec can come
+// newSpecCommand is the spec command of a command group, with its get: it
+// prints the spec that spec returns, the terms of the group's DSL or
+// format, as text under a heading for each kind, or as each kind with its
+// terms with --json. spec is a function, so a part of the spec can come
 // from what the binary has, such as its building blocks.
 func newSpecCommand(
 	spec func() guide.Spec,
@@ -41,8 +40,9 @@ func newSpecCommand(
 	long string,
 	example string,
 ) *cobra.Command {
-	return &cobra.Command{
-		Use:     "spec",
+	parent := &cobra.Command{Use: "spec", Short: short}
+	parent.AddCommand(&cobra.Command{
+		Use:     "get",
 		Short:   short,
 		Long:    long,
 		Example: example,
@@ -50,7 +50,7 @@ func newSpecCommand(
 		Run: func(_ *cobra.Command, _ []string) {
 			spec := spec()
 			if jsonOutput {
-				out, _ := json.Marshal(spec)
+				out, _ := json.Marshal(map[string]any{"kinds": spec.Sections()})
 				cli.PrintJSON(out)
 
 				return
@@ -60,7 +60,9 @@ func newSpecCommand(
 				cli.PrintTerms(spec.Of(k.Kind))
 			}
 		},
-	}
+	})
+
+	return parent
 }
 
 // printFixes prints, under a Fixes heading, the fix of each rule in rules,

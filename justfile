@@ -85,7 +85,7 @@ test: linux-tune
 go_quick_checks := "just-fmt-check docs-fmt-check react-fmt-check go-mod-check go-pkg-check"
 go_slow_checks := "behavior-gen-check go-generate-check docs-gen-check cli-docs-gen-check behavior-scaffold-check endpoint-scaffold-check command-scaffold-check behavior-cover-check go-fmt-check go-vet"
 
-# Fail when a behavior that osapi behavior new writes does not pass its tests
+# Fail when a behavior that osapi behavior create writes does not pass its tests
 #
 # The scaffold must keep up with the checks of behaviortest, as each behavior
 # must. The recipe writes a behavior in a copy of the checkout, generates it,
@@ -98,11 +98,11 @@ behavior-scaffold-check:
     rsync -a --exclude .git --exclude .worktrees --exclude node_modules \
         --exclude /dist --exclude /examples --exclude /docs/build ./ "$tmp/"
     cd "$tmp"
-    go run . behavior new --name scaffoldcheck --description "A scaffold check" >/dev/null
+    go run . behavior create --name scaffoldcheck --description "A scaffold check" >/dev/null
     go generate ./internal/behaviors/scaffoldcheck/mocks ./internal/behaviors/all
     go test -count=1 ./internal/behaviors/scaffoldcheck/...
 
-# Fail when a group that osapi controller endpoint new writes does not pass
+# Fail when a group that osapi controller endpoint create writes does not pass
 # its tests
 #
 # As behavior-scaffold-check does for behaviors: the recipe writes a group in
@@ -116,12 +116,12 @@ endpoint-scaffold-check:
     rsync -a --exclude .git --exclude .worktrees --exclude node_modules \
         --exclude /dist --exclude /examples --exclude /docs/build ./ "$tmp/"
     cd "$tmp"
-    go run . controller endpoint new --name scaffoldcheck --description "A scaffold check" >/dev/null
+    go run . controller endpoint create --name scaffoldcheck --description "A scaffold check" >/dev/null
     go generate ./internal/controller/endpoints/all
     go run . controller endpoint validate >/dev/null
     go test -count=1 ./internal/controller/endpoints/scaffoldcheck/... ./internal/controller/endpoints/all/ ./internal/controller/
 
-# Fail when a group that osapi cli command new writes does not pass its tests
+# Fail when a group that osapi cli command create writes does not pass its tests
 #
 # As endpoint-scaffold-check does for endpoint groups: the recipe writes a
 # local group in a copy of the checkout, generates it, and runs its tests,
@@ -135,7 +135,7 @@ command-scaffold-check:
     rsync -a --exclude .git --exclude .worktrees --exclude node_modules \
         --exclude /dist --exclude /examples --exclude /docs/build ./ "$tmp/"
     cd "$tmp"
-    go run . cli command new --name scaffoldcheck --description "A scaffold check" >/dev/null
+    go run . cli command create --name scaffoldcheck --description "A scaffold check" >/dev/null
     go generate ./internal/cli/commands/all
     go run . cli command validate >/dev/null
     go test -count=1 ./internal/cli/commands/scaffoldcheck/... ./internal/cli/commands/all/ ./cmd/

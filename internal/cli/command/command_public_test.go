@@ -184,7 +184,11 @@ func (s *CommandPublicTestSuite) TestAttachHelp() {
 			command.Method[struct{}, struct{}]("list").Sub("trace"),
 			command.Method[struct{}, struct{}]("info"),
 		},
-		perms: map[string]string{"get": "trace:read", "list": "trace:read", "info": "trace:read"},
+		perms: map[string]string{
+			"trace get":  "trace:read",
+			"trace list": "trace:read",
+			"info":       "trace:read",
+		},
 	}
 	command.AddCommands(same, sub("get"), sub("list"))
 	mixed := permGroup{
