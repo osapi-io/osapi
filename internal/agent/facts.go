@@ -26,7 +26,6 @@ import (
 	"time"
 
 	"github.com/osapi-io/osapi/internal/job"
-	"github.com/osapi-io/osapi/pkg/sdk/platform"
 )
 
 // defaultFactsInterval is the fallback fact refresh period when no config
@@ -80,7 +79,7 @@ func (a *Agent) writeFacts(
 	hostname string,
 ) {
 	reg := job.FactsRegistration{}
-	reg.Containerized = platform.IsContainer()
+	reg.Containerized = containerFn()
 
 	// Call providers — errors are non-fatal
 	if arch, err := a.hostProvider.GetArchitecture(); err == nil {

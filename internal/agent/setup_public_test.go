@@ -25,10 +25,12 @@ import (
 	"errors"
 	"log/slog"
 	"net"
+	"path/filepath"
 	"testing"
 	"testing/fstest"
 
 	"github.com/avfs/avfs/vfs/memfs"
+	"github.com/osapi-io/gohai/pkg/gohai/source"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -211,6 +213,59 @@ func (s *SetupPublicTestSuite) TestSetup() {
 			defer bus.Close(conn.NATS)
 			s.NotNil(a)
 			s.Contains(a.SubComponents(), "agent.heartbeat")
+		})
+	}
+}
+
+// noCommands is a gohai command runner on a host that has no commands.
+type noCommands struct{}
+
+func (noCommands) Execute(
+	_ context.Context,
+	name string,
+	_ ...string,
+) ([]byte, error) {
+	return nil, errors.New("exec " + name + ": not found")
+}
+
+func (s *SetupPublicTestSuite) TestInContainer() {
+	tests := []struct {
+		name  string
+		files map[string]string
+		want  bool
+	}{
+		{
+			name:  "docker, from /.dockerenv",
+			files: map[string]string{"/.dockerenv": ""},
+			want:  true,
+		},
+		{
+			name:  "podman, which has no /.dockerenv",
+			files: map[string]string{"/proc/1/environ": "PATH=/usr/bin\x00container=podman\x00"},
+			want:  true,
+		},
+		{
+			name:  "lxc",
+			files: map[string]string{"/proc/1/environ": "container=lxc\x00"},
+			want:  true,
+		},
+		{
+			name:  "a host that is not a container",
+			files: map[string]string{"/proc/cpuinfo": "processor\t: 0\n"},
+			want:  false,
+		},
+	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			fs := memfs.New()
+			for path, content := range tt.files {
+				s.Require().NoError(fs.MkdirAll(filepath.Dir(path), 0o755))
+				s.Require().NoError(fs.WriteFile(path, []byte(content), 0o644))
+			}
+			got := agent.ExportInContainer(source.Sources{
+				FS: fs, Exec: noCommands{}, Family: "debian",
+			})
+			s.Equal(tt.want, got)
 		})
 	}
 }

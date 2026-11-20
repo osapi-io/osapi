@@ -31,7 +31,9 @@ import (
 	"github.com/avfs/avfs"
 	"github.com/nats-io/nats.go/jetstream"
 
+	"github.com/osapi-io/gohai/pkg/gohai"
 	"github.com/osapi-io/gohai/pkg/gohai/family"
+	"github.com/osapi-io/gohai/pkg/gohai/source"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/config"
@@ -47,15 +49,32 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/node/memory"
 	"github.com/osapi-io/osapi/internal/telemetry/process"
 	"github.com/osapi-io/osapi/internal/validation"
-	"github.com/osapi-io/osapi/pkg/sdk/platform"
 )
 
 // detectFn and containerFn tell the platform of the host (injectable for
 // testing).
 var (
 	detectFn    = family.Detect
-	containerFn = platform.IsContainer
+	containerFn = func() bool { return inContainer(source.Sources{}) }
 )
+
+// inContainer reports whether the agent runs in a container, from gohai's
+// virtualization collector: docker, podman, lxc, nspawn and the others of
+// Ohai's cascade. A zero src is the real host.
+func inContainer(
+	src source.Sources,
+) bool {
+	g, err := gohai.New(gohai.WithCollectors("virtualization"), gohai.WithSources(src))
+	if err != nil {
+		return false
+	}
+	facts, err := g.Collect(context.Background())
+	if err != nil {
+		return false
+	}
+
+	return facts.Virtualization.InContainer()
+}
 
 // Setup connects to NATS as cfg.Agent.NATS tells, and makes the provider of
 // each operation for this host. The metrics of each call to NATS go to mp,
