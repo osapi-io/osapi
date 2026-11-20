@@ -57,8 +57,8 @@ func main() {
 	fmt.Printf("Agents: %d total\n", list.Data.TotalItems)
 
 	for _, a := range list.Data.Items {
-		fmt.Printf("  %s  status=%s  labels=%v\n",
-			a.Hostname, a.Status, a.Labels)
+		fmt.Printf("  %s  state=%s  labels=%v\n",
+			a.Hostname, a.State, a.Labels)
 	}
 
 	if len(list.Data.Items) == 0 {
@@ -76,7 +76,7 @@ func main() {
 	a := resp.Data
 
 	fmt.Printf("\nAgent: %s\n", a.Hostname)
-	fmt.Printf("  Status:       %s\n", a.Status)
+	fmt.Printf("  State:        %s\n", a.State)
 	fmt.Printf("  Architecture: %s\n", a.Architecture)
 	fmt.Printf("  Kernel:       %s\n", a.KernelVersion)
 	fmt.Printf("  CPUs:         %d\n", a.CPUCount)
