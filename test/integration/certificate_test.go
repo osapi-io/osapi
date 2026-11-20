@@ -46,7 +46,7 @@ func (s *CertificateSmokeSuite) TestCertificateList() {
 			name: "list endpoint responds",
 			args: []string{
 				"client", "node", "certificate", "list",
-				"--target", "_any",
+				"--target", target,
 				"--json",
 			},
 			validateFunc: func(

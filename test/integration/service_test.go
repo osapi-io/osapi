@@ -46,7 +46,7 @@ func (s *ServiceSmokeSuite) TestServiceList() {
 			name: "list endpoint responds",
 			args: []string{
 				"client", "node", "service", "list",
-				"--target", "_any",
+				"--target", target,
 				"--json",
 			},
 			validateFunc: func(

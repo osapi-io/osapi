@@ -64,9 +64,11 @@ func (s *JobSmokeSuite) TestJobList() {
 }
 
 func (s *JobSmokeSuite) TestJobGet() {
+	// A status read makes the job: it runs on every agent, whatever the
+	// agent's config allows, as a command does not.
 	triggerOut, _, triggerCode := runCLI(
-		"client", "node", "command", "shell",
-		"--command", "echo job-test",
+		"client", "node", "status",
+		"--target", target,
 		"--json",
 	)
 	s.Require().Equal(0, triggerCode)
@@ -75,7 +77,7 @@ func (s *JobSmokeSuite) TestJobGet() {
 		JobID string `json:"job_id"`
 	}
 	s.Require().NoError(parseJSON(triggerOut, &triggerResp))
-	s.Require().NotEmpty(triggerResp.JobID, "shell command must return a job_id")
+	s.Require().NotEmpty(triggerResp.JobID, "the status read must return a job_id")
 
 	jobID := triggerResp.JobID
 
@@ -96,7 +98,7 @@ func (s *JobSmokeSuite) TestJobGet() {
 				var result map[string]any
 				s.Require().NoError(parseJSON(stdout, &result))
 				s.Equal(jobID, result["id"])
-				s.Contains(result, "changed")
+				s.Equal("completed", result["status"])
 			},
 		},
 	}

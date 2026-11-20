@@ -42,6 +42,7 @@ func (s *CommandSmokeSuite) TestCommandExec() {
 			name: "returns exec results with stdout and exit code",
 			args: []string{
 				"client", "node", "command", "exec",
+				"--target", target,
 				"--command", "echo",
 				"--args", "hello",
 				"--json",
@@ -72,7 +73,8 @@ func (s *CommandSmokeSuite) TestCommandExec() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			stdout, _, exitCode := runCLI(tt.args...)
+			stdout, stderr, exitCode := runCLI(tt.args...)
+			skipIfCommandOff(s.T(), stdout+stderr)
 			tt.validateFunc(stdout, exitCode)
 		})
 	}
@@ -88,6 +90,7 @@ func (s *CommandSmokeSuite) TestCommandShell() {
 			name: "returns shell results with stdout and exit code",
 			args: []string{
 				"client", "node", "command", "shell",
+				"--target", target,
 				"--command", "echo hello",
 				"--json",
 			},
@@ -117,7 +120,8 @@ func (s *CommandSmokeSuite) TestCommandShell() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			stdout, _, exitCode := runCLI(tt.args...)
+			stdout, stderr, exitCode := runCLI(tt.args...)
+			skipIfCommandOff(s.T(), stdout+stderr)
 			tt.validateFunc(stdout, exitCode)
 		})
 	}
