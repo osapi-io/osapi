@@ -41,7 +41,9 @@ type CatalogPublicTestSuite struct {
 func (s *CatalogPublicTestSuite) SetupTest() {
 	s.installed = fstest.MapFS{
 		"osapi/SKILL.md": {
-			Data: []byte("---\nname: osapi\ndescription: Operate hosts.\n---\nbody\n"),
+			Data: []byte(
+				"---\nname: osapi\ndescription: >\n  Operate hosts,\n  through osapi.\n---\nbody\n",
+			),
 		},
 		"osapi/references/targets.md": {Data: []byte("targets\n")},
 		"stray.txt":                   {Data: []byte("not a skill\n")},
@@ -75,7 +77,7 @@ func (s *CatalogPublicTestSuite) TestCatalog() {
 				},
 				{
 					Name:        "osapi",
-					Description: "Operate hosts.",
+					Description: "Operate hosts, through osapi.",
 					Init:        true,
 					References:  []string{"references/targets.md"},
 				},
@@ -85,6 +87,13 @@ func (s *CatalogPublicTestSuite) TestCatalog() {
 			name:      "when a directory has no SKILL.md returns an error",
 			installed: fstest.MapFS{"broken/README.md": {Data: []byte("x")}},
 			wantErr:   `skill "broken"`,
+		},
+		{
+			name: "when the front matter is not YAML returns an error",
+			installed: fstest.MapFS{"bad/SKILL.md": {
+				Data: []byte("---\nname: bad\ndescription: [unclosed\n---\n"),
+			}},
+			wantErr: `skill "bad": front matter`,
 		},
 	}
 
@@ -132,7 +141,7 @@ func (s *CatalogPublicTestSuite) TestRead() {
 		{
 			name:  "when the skill is installed returns its SKILL.md",
 			skill: "osapi",
-			want:  "---\nname: osapi\ndescription: Operate hosts.\n---\nbody\n",
+			want:  "---\nname: osapi\ndescription: >\n  Operate hosts,\n  through osapi.\n---\nbody\n",
 		},
 		{
 			name:  "when the skill is a dev skill returns its SKILL.md",

@@ -65,6 +65,18 @@ func (s *ResourcesPublicTestSuite) checkFrontmatter(
 	}
 }
 
+// TestEveryDescriptionReads reads each skill through the catalog, as osapi
+// skill list does: the front matter is YAML, and each skill has its whole
+// description. An unquoted ": " in a description is not YAML, and a folded
+// one read line by line was ">".
+func (s *ResourcesPublicTestSuite) TestEveryDescriptionReads() {
+	all, err := skills.Catalog(skills.Installed(), skills.Dev())
+	s.Require().NoError(err)
+	for _, sk := range all {
+		s.Greater(len(sk.Description), 20, "%s has its description", sk.Name)
+	}
+}
+
 func TestResourcesPublicTestSuite(
 	t *testing.T,
 ) {

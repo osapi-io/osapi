@@ -27,6 +27,8 @@ import (
 	"path"
 	"sort"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
 // Skill is one skill that the binary has.
@@ -119,13 +121,18 @@ func describe(
 		return Skill{}, fmt.Errorf("skill %q: %w", name, err)
 	}
 	s := Skill{Name: name, References: []string{}}
-	for _, line := range strings.Split(string(data), "\n") {
-		if d, ok := strings.CutPrefix(line, "description: "); ok {
-			s.Description = d
-
-			break
+	// The front matter is YAML between two --- lines. A description can be
+	// folded over many lines, description: >, which YAML joins.
+	var front struct {
+		Description string `yaml:"description"`
+	}
+	if head, ok := strings.CutPrefix(string(data), "---\n"); ok {
+		head, _, _ = strings.Cut(head, "\n---")
+		if err := yaml.Unmarshal([]byte(head), &front); err != nil {
+			return Skill{}, fmt.Errorf("skill %q: front matter: %w", name, err)
 		}
 	}
+	s.Description = strings.TrimSpace(front.Description)
 	_ = fs.WalkDir(fsys, name, func(p string, d fs.DirEntry, _ error) error {
 		if d != nil && !d.IsDir() && p != path.Join(name, "SKILL.md") {
 			s.References = append(s.References, strings.TrimPrefix(p, name+"/"))
