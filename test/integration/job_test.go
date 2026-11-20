@@ -134,7 +134,7 @@ func (s *JobSmokeSuite) TestJobDelete() {
 			name: "deletes a job by id",
 			args: []string{"client", "job", "delete", "--id", triggerResp.JobID, "--json"},
 			validateFunc: func(
-				stdout string,
+				_ string,
 				exitCode int,
 			) {
 				s.Require().Equal(0, exitCode)
@@ -175,7 +175,7 @@ func (s *JobSmokeSuite) TestJobRetry() {
 			name: "retries a job by id",
 			args: []string{"client", "job", "retry", "--id", triggerResp.JobID, "--json"},
 			validateFunc: func(
-				stdout string,
+				_ string,
 				exitCode int,
 			) {
 				s.Require().Equal(0, exitCode)

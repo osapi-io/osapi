@@ -279,10 +279,10 @@ func skipWriteOp(
 
 	envVar := "OSAPI_INTEGRATION_WRITE_" + op
 	if !runWrites && os.Getenv(envVar) != "1" {
-		t.Skip(fmt.Sprintf(
+		t.Skipf(
 			"skipping write test (set OSAPI_INTEGRATION_WRITES=1 or %s=1)",
 			envVar,
-		))
+		)
 	}
 }
 
