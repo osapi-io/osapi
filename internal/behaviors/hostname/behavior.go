@@ -55,15 +55,24 @@ var Behavior = behavior.Register(behavior.Define(
 			"reports changed: false. It runs on the Debian family only, and elsewhere "+
 			"reports skipped. In a container the runtime owns the hostname, so there "+
 			"it also reports skipped.").
+		// Each example names its host with After, as a live host can run it:
+		// the integration test runs these on CI's runner and puts its name
+		// back. Prints and PrintsAfter are the fake host's hostnamectl.
 		Example("Rename a host", UpdateInput{Name: "web-02"},
 			Result{Name: "web-02", Changed: true},
-			behavior.Prints("hostnamectl hostname", "web-01\n"),
-			behavior.PrintsAfter("hostnamectl set-hostname web-02", "hostnamectl hostname", "web-02\n"),
-			behavior.Ran("hostnamectl", "set-hostname", "web-02"),
+			append(
+				named("web-01"),
+				behavior.PrintsAfter(
+					"hostnamectl set-hostname web-02",
+					"hostnamectl hostname",
+					"web-02\n",
+				),
+				behavior.Ran("hostnamectl", "set-hostname", "web-02"),
+			)...,
 		).
 		Example("A host that already has the name", UpdateInput{Name: "web-01"},
 			Result{Name: "web-01"},
-			behavior.Prints("hostnamectl hostname", "web-01\n"),
+			named("web-01")...,
 		).
 		Fails("A name that is not a hostname", UpdateInput{Name: "web 01;reboot"},
 			"invalid hostname").
@@ -71,3 +80,15 @@ var Behavior = behavior.Register(behavior.Define(
 			"invalid hostname").
 		Fails("No name", UpdateInput{}, "invalid hostname"),
 ))
+
+// named is a host that an earlier update named name: hostnamectl prints
+// localhost until set-hostname name runs, and name after it.
+func named(
+	name string,
+) []behavior.HostOption {
+	return []behavior.HostOption{
+		behavior.After(UpdateInput{Name: name}),
+		behavior.Prints("hostnamectl hostname", "localhost\n"),
+		behavior.PrintsAfter("hostnamectl set-hostname "+name, "hostnamectl hostname", name+"\n"),
+	}
+}

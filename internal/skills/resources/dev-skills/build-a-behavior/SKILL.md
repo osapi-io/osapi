@@ -156,7 +156,7 @@ go test ./internal/behaviors/<name>/... ./internal/behaviors/all/
 mise exec -- just test
 ```
 
-CI also runs the write examples against a real agent on Linux, as root, in its `Integration` step, with `OSAPI_INTEGRATION_WRITE_BEHAVIORS=1`. An example that scripts a file or a command's output is skipped there.
+CI also runs the write examples against a real agent on Linux, as root, in its `Integration` step, with `OSAPI_INTEGRATION_WRITE_BEHAVIORS=1`. So a write example sets its starting state with `After`, not with `Prints` or `Exists` alone: a live host has its own files and programs, and only a call can put it in the state the example needs. A behavior with no `delete` gets its item back after each example, through `get` and `update`.
 
 A failure of `behavior validate` or of a behavior's tests ends with its fix.
 `go run . behavior validate --help` lists each rule and each test check before
