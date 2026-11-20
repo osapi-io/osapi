@@ -64,17 +64,13 @@ func IndexPage(
 		sb.WriteString("| Surface | Where |\n| ------- | ----- |\n")
 	}
 	if b.API {
-		section := "[API](/category/api)"
-		if b.Next {
-			section = "[API (next)](/category/api-next)"
-		}
-		fmt.Fprintf(&sb, "| API | `%s`, in %s |\n", b.Route(b.Methods[0]), section)
+		fmt.Fprintf(&sb, "| API | `%s`, in [API](/category/api) |\n", b.Path(b.Methods[0]))
 	}
 	if b.CLI {
 		fmt.Fprintf(
 			&sb,
 			"| CLI | `%s` |\n",
-			strings.TrimSuffix(b.CLICommand(b.Methods[0]), " "+b.Methods[0].Name),
+			strings.TrimSuffix(b.Command(b.Methods[0]), " "+b.Methods[0].Name),
 		)
 	}
 	if !b.Internal {
@@ -221,7 +217,7 @@ func Example(
 	b *behavior.Behavior,
 	m *behavior.Method,
 ) string {
-	command := b.CLICommand(m)
+	command := b.Command(m)
 	lines := make([]string, 0, 3*len(m.Examples))
 	for i, ex := range m.Examples {
 		if i > 0 {
@@ -309,7 +305,7 @@ func GroupAnnotations(
 ) map[string]string {
 	// The command's page is in the directory of its path under the CLI
 	// reference, usage/cli, which is two levels under the sidebar.
-	words := strings.Fields(strings.TrimPrefix(b.CLICommand(b.Methods[0]), "osapi "))
+	words := strings.Fields(strings.TrimPrefix(b.Command(b.Methods[0]), "osapi "))
 	up := strings.Repeat("../", 2+len(words)-1)
 
 	return map[string]string{
@@ -327,7 +323,7 @@ func CLIPage(
 	b *behavior.Behavior,
 	m *behavior.Method,
 ) string {
-	words := strings.Fields(strings.TrimPrefix(b.CLICommand(m), "osapi "))
+	words := strings.Fields(strings.TrimPrefix(b.Command(m), "osapi "))
 
 	return "../../usage/cli/" + strings.Join(words, "/") + ".md"
 }

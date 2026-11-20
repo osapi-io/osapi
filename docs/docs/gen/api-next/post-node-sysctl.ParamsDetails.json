@@ -1,1 +1,0 @@
-{"parameters":[{"description":"Target: _all, _any, hostname, or label (group:web.dev).","in":"path","name":"hostname","required":true,"schema":{"default":"_all","minLength":1,"type":"string"},"x-oapi-codegen-extra-tags":{"validate":"required,min=1,valid_target"}}]}

@@ -55,16 +55,14 @@ func (s *ProcessorUserPublicTestSuite) newProcessor(
 	userProvider user.Provider,
 ) agent.ProcessorFunc {
 	return agent.NewNodeProcessor(
-		nil, nil, nil, nil,
-		nil, nil, nil, nil,
+		nil, nil, nil, nil, nil, nil, nil,
 		nil,
 		userProvider,
 		nil,
 		nil,
 		nil,
 		config.Config{},
-		slog.Default(),
-	)
+		slog.Default())
 }
 
 func (s *ProcessorUserPublicTestSuite) TestProcessUserOperation() {

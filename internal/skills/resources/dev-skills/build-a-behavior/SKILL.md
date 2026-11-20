@@ -169,7 +169,7 @@ you break one. The failures below come from elsewhere:
 | `the joined spec is stale`            | Run `mise exec -- just generate` and keep the result                           |
 | `TestJoinedSpec`                      | The joined spec changed, as a new served behavior or a cutover changes it. Write the contract again with `go test ./internal/apicontract -run TestContractPublicTestSuite/TestJoinedSpec -update`, and keep the diff: it is the change to the API |
 | `cli-docs-gen-check` fails            | Run `mise exec -- just cli-docs-generate` and keep the result                  |
-| `is served by the <name> behavior and by <dir>` | A route a hand-written domain still serves: this is a cutover, so delete that domain, or mark the behavior `behavior.Next` |
+| `is served by the <name> behavior and by <dir>` | A route a hand-written domain still serves: this is a cutover, so delete that domain in the same change |
 | `is both a hand-written command and a behavior's` | The same, for a command under `osapi client node` |
 | `a behavior is below 100% coverage`   | A branch no test reaches: add an example, or a case to the test named for the file |
 

@@ -255,7 +255,6 @@ func buildRegistry(
 	loadProvider load.Provider,
 	netinfoProvider netinfo.Provider,
 ) *ProviderRegistry {
-	sysctlProvider := e.sysctl()
 	ntpProvider := e.ntp()
 	timezoneProvider := e.timezone()
 	powerProvider := e.power()
@@ -281,7 +280,6 @@ func buildRegistry(
 			diskProvider,
 			memoryProvider,
 			loadProvider,
-			sysctlProvider,
 			ntpProvider,
 			timezoneProvider,
 			powerProvider,
@@ -297,7 +295,6 @@ func buildRegistry(
 		diskProvider,
 		memoryProvider,
 		loadProvider,
-		sysctlProvider,
 		ntpProvider,
 		timezoneProvider,
 		powerProvider,
@@ -336,7 +333,7 @@ func buildRegistry(
 		certificateProvider,
 	)
 
-	// Behaviors run beside the categories above, served under /api/next.
+	// Behaviors run beside the categories above.
 	// Each builds its own provider for this platform from what it declares.
 	behaviorProviders := BuildBehaviorProviders(host.Host{
 		Platform:        e.platform,

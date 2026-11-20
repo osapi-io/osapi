@@ -37,7 +37,6 @@ import (
 
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/osapi-io/osapi/internal/agent/identity"
-	"github.com/osapi-io/osapi/internal/behaviors/sysctl"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/exec"
 	"github.com/osapi-io/osapi/internal/job"
@@ -509,7 +508,6 @@ func SetAgentAppConfig(
 			a.diskProvider,
 			a.memoryProvider,
 			a.loadProvider,
-			sysctl.Provider(nil),
 			ntp.Provider(nil),
 			timezone.Provider(nil),
 			power.Provider(nil),
@@ -547,7 +545,6 @@ func SetAgentHostProvider(
 			a.diskProvider,
 			a.memoryProvider,
 			a.loadProvider,
-			sysctl.Provider(nil),
 			ntp.Provider(nil),
 			timezone.Provider(nil),
 			power.Provider(nil),
@@ -866,7 +863,6 @@ func ExportProviders(
 		"ping":        e.ping(),
 		"netinfo":     e.netinfo(),
 		"cron":        e.cron(),
-		"sysctl":      e.sysctl(),
 		"ntp":         e.ntp(),
 		"timezone":    e.timezone(),
 		"power":       e.power(),

@@ -27,27 +27,27 @@ func (s *APIPublicTestSuite) TestRoutes() {
 	}{
 		{
 			method:     http.MethodGet,
-			path:       "/api/next/node/:hostname/sysctl",
+			path:       "/api/node/:hostname/sysctl",
 			permission: "sysctl:read",
 		},
 		{
 			method:     http.MethodGet,
-			path:       "/api/next/node/:hostname/sysctl/:key",
+			path:       "/api/node/:hostname/sysctl/:key",
 			permission: "sysctl:read",
 		},
 		{
 			method:     http.MethodPost,
-			path:       "/api/next/node/:hostname/sysctl",
+			path:       "/api/node/:hostname/sysctl",
 			permission: "sysctl:write",
 		},
 		{
 			method:     http.MethodPut,
-			path:       "/api/next/node/:hostname/sysctl/:key",
+			path:       "/api/node/:hostname/sysctl/:key",
 			permission: "sysctl:write",
 		},
 		{
 			method:     http.MethodDelete,
-			path:       "/api/next/node/:hostname/sysctl/:key",
+			path:       "/api/node/:hostname/sysctl/:key",
 			permission: "sysctl:write",
 		},
 	}

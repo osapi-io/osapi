@@ -57,10 +57,9 @@ List and get read the kernel, not osapi's records. List returns every parameter
 under `/proc/sys`, as `sysctl -a` does, and get returns any parameter's current
 value, whoever set it. A host has about a thousand parameters.
 
-sysctl is a [behavior](../behaviors/sysctl/sysctl.md), served under
-`osapi client next node sysctl` and `/api/next` beside these commands until its
-cutover. There, each entry also says whether osapi manages it, and list takes a
-`--prefix`, such as `net.ipv4`, to return one part of the tree.
+sysctl is a [behavior](../behaviors/sysctl/sysctl.md). Each entry also says
+whether osapi manages it, and list takes a `--prefix`, such as `net.ipv4`, to
+return one part of the tree.
 
 ## Operations
 

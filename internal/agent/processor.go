@@ -27,7 +27,6 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/osapi-io/osapi/internal/behaviors/sysctl"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider/node/apt"
@@ -64,7 +63,6 @@ func NewNodeProcessor(
 	diskProvider disk.Provider,
 	memoryProvider memory.Provider,
 	loadProvider load.Provider,
-	sysctlProvider sysctl.Provider,
 	ntpProvider ntp.Provider,
 	timezoneProvider timezone.Provider,
 	powerProvider power.Provider,
@@ -100,8 +98,6 @@ func NewNodeProcessor(
 			return getNodeMemory(memoryProvider, logger)
 		case "load":
 			return getNodeLoad(loadProvider, logger)
-		case "sysctl":
-			return processSysctlOperation(ctx, sysctlProvider, logger, req)
 		case "ntp":
 			return processNtpOperation(ctx, ntpProvider, logger, req)
 		case "timezone":

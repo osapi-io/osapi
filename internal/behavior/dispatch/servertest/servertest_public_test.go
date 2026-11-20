@@ -40,13 +40,13 @@ type ServertestPublicTestSuite struct {
 }
 
 func (s *ServertestPublicTestSuite) SetupSuite() {
-	s.api = servertest.New(s.T(), "internal/behaviors/sysctl/gen/api.next.yaml", gen.Routes)
+	s.api = servertest.New(s.T(), "internal/behaviors/sysctl/gen/api.yaml", gen.Routes)
 }
 
 func (s *ServertestPublicTestSuite) TestRun() {
 	get := servertest.Request{
 		Method: http.MethodGet,
-		Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+		Path:   "/api/node/server1/sysctl/vm.swappiness",
 	}
 	key := sysctl.GetInput{Key: "vm.swappiness"}
 
@@ -68,7 +68,7 @@ func (s *ServertestPublicTestSuite) TestRun() {
 			Name: "when a write is broadcast, every reply is a row in hostname order",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/next/node/_all/sysctl/vm.swappiness",
+				Path:   "/api/node/_all/sysctl/vm.swappiness",
 				Body:   `{"value":"10"}`,
 			},
 			Token: servertest.Write,
@@ -88,7 +88,7 @@ func (s *ServertestPublicTestSuite) TestRun() {
 			Name: "when a write completes on one host, its row says whether it changed",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -102,7 +102,7 @@ func (s *ServertestPublicTestSuite) TestRun() {
 		},
 		{
 			Name:    "when a broadcast read fails, it is a 500",
-			Request: servertest.Request{Method: http.MethodGet, Path: "/api/next/node/_all/sysctl"},
+			Request: servertest.Request{Method: http.MethodGet, Path: "/api/node/_all/sysctl"},
 			Token:   servertest.Read,
 			Job: servertest.Query("_all", "sysctl.list", sysctl.ListInput{}).
 				Fails(servertest.ErrUnreachable),

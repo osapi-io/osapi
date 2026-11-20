@@ -46,7 +46,6 @@ import (
 	processAPI "github.com/osapi-io/osapi/internal/controller/api/node/process"
 	scheduleAPI "github.com/osapi-io/osapi/internal/controller/api/node/schedule"
 	serviceAPI "github.com/osapi-io/osapi/internal/controller/api/node/service"
-	sysctlAPI "github.com/osapi-io/osapi/internal/controller/api/node/sysctl"
 	timezoneAPI "github.com/osapi-io/osapi/internal/controller/api/node/timezone"
 	userAPI "github.com/osapi-io/osapi/internal/controller/api/node/user"
 	uihandler "github.com/osapi-io/osapi/internal/controller/api/ui"
@@ -125,8 +124,7 @@ func handlers(
 			fileDeps(d.nats, d.objBucket, d.fileStateBucket),
 			factsEndpoint.Deps{},
 			// Each behavior's endpoint group, which the gen packages that
-			// internal/behaviors/all/gen imports register, served under
-			// /api/next beside the hand-written routes.
+			// internal/behaviors/all/gen imports register.
 			dispatch.Deps{JobClient: d.jobs},
 		)...,
 	)
@@ -134,7 +132,6 @@ func handlers(
 	handlers = append(handlers, hostnameAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, dockerAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, scheduleAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
-	handlers = append(handlers, sysctlAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, ntpAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, powerAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, timezoneAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)

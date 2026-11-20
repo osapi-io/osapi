@@ -26,7 +26,6 @@ import (
 	"fmt"
 	"reflect"
 	"runtime"
-	"strings"
 
 	"github.com/osapi-io/osapi/internal/validation"
 )
@@ -100,9 +99,6 @@ type Behavior struct {
 	// KeepsState is set when its providers keep a record in the file-state
 	// bucket, declared with KeepsState.
 	KeepsState bool
-	// Next serves the behavior under /api/next and osapi client next, beside
-	// the hand-written domain it replaces, until that domain's cutover.
-	Next bool
 }
 
 // Option configures a behavior in Define.
@@ -386,41 +382,8 @@ func (m *Method) HTTPMethod() string {
 	}
 }
 
-// NextRoutePrefix is where a behavior marked Next is served while it runs
-// beside the hand-written domain it replaces: Path's /api/node/... is served
-// at /api/next/node/...
-const NextRoutePrefix = "/api/next"
-
-// NextCommandPrefix is where a Next behavior's commands sit while they run
-// beside the hand-written ones: osapi client next node sysctl get.
-const NextCommandPrefix = "osapi client next"
-
-// CLICommand is the command a method is run with: Command, or under
-// NextCommandPrefix for a Next behavior.
-func (b *Behavior) CLICommand(
-	m *Method,
-) string {
-	if !b.Next {
-		return b.Command(m)
-	}
-
-	return strings.Replace(b.Command(m), "osapi client", NextCommandPrefix, 1)
-}
-
-// Route is the path a method is served at: Path, or under NextRoutePrefix for
-// a Next behavior.
-func (b *Behavior) Route(
-	m *Method,
-) string {
-	if !b.Next {
-		return b.Path(m)
-	}
-
-	return NextRoutePrefix + strings.TrimPrefix(b.Path(m), "/api")
-}
-
-// Path is the method's route once it is not Next: /api/node/{hostname}, the
-// group and name, and the key when the method addresses one item.
+// Path is the method's route: /api/node/{hostname}, the group and name, and
+// the key when the method addresses one item.
 func (b *Behavior) Path(
 	m *Method,
 ) string {

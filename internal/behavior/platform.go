@@ -106,12 +106,6 @@ func Writes(
 // requires one that keeps state gets it from there.
 var KeepsState Option = optionFunc(func(b *Behavior) { b.KeepsState = true })
 
-// Next serves a behavior under /api/next and osapi client next, beside the
-// hand-written domain it replaces, so both can run while it is proven. The
-// cutover removes it, with the hand-written domain. A new behavior that
-// replaces nothing does not use it.
-var Next Option = optionFunc(func(b *Behavior) { b.Next = true })
-
 // The platforms a behavior can name besides a distribution.
 const (
 	// PlatformLinux is any Linux host: the provider for a host whose own

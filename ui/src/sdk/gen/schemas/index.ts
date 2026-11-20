@@ -105,6 +105,7 @@ export * from './getNodeContainerDockerState';
 export * from './getNodeFileStatusParams';
 export * from './getNodeLogParams';
 export * from './getNodeLogUnitParams';
+export * from './getNodeSysctlParams';
 export * from './getTraceParams';
 export * from './groupCollectionResponse';
 export * from './groupCreateRequest';

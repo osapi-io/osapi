@@ -6,18 +6,15 @@
  */
 import type { SysctlMutationResultStatus } from './sysctlMutationResultStatus';
 
-/**
- * Result of a sysctl create, update, or delete operation for one host.
- */
 export interface SysctlMutationResult {
-  /** Hostname of the agent that processed this operation. */
-  hostname: string;
-  /** The status of the operation for this host. */
-  status: SysctlMutationResultStatus;
-  /** Sysctl parameter key. */
-  key?: string;
-  /** Whether the operation modified system state. */
+  /** Whether the host changed */
   changed?: boolean;
   /** Error message if the agent failed. */
   error?: string;
+  /** Hostname of the agent that produced this result. */
+  hostname: string;
+  /** Parameter name */
+  key?: string;
+  /** The status of the operation for this host. */
+  status: SysctlMutationResultStatus;
 }

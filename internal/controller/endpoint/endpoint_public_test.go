@@ -489,6 +489,10 @@ type Sample struct {
 	Limit int     `json:"limit"                                           validate:"min=1,max=100" default:"20"`
 	Ratio float64 `json:"ratio"                                           validate:"min=0"`
 	Small float32 `json:"small"`
+	// An object's and a list's examples are their JSON.
+	Counts map[string]int `json:"counts" example:"{\"ok\":5}"`
+	Tags   []string       `json:"tags"   example:"[\"web\"]"`
+	Odd    map[string]int `json:"odd"    example:"not json"`
 }
 
 func (s *EndpointPublicTestSuite) TestLocation() {
@@ -518,6 +522,10 @@ func (s *EndpointPublicTestSuite) TestExamplesAndDocs() {
 	s.Equal(true, sample.Properties["on"].Value.Example)
 	s.Equal(`{"host":"web-01"}`, sample.Properties["name"].Value.Example)
 	s.Equal("many", sample.Properties["bad"].Value.Example)
+	s.Equal(map[string]any{"ok": float64(5)}, sample.Properties["counts"].Value.Example,
+		"an object's example is an object, not a string")
+	s.Equal([]any{"web"}, sample.Properties["tags"].Value.Example)
+	s.Equal("not json", sample.Properties["odd"].Value.Example)
 	s.Equal("x", sample.Properties["badf"].Value.Example)
 	s.Equal("maybe", sample.Properties["badb"].Value.Example)
 	s.Equal("^[0-9a-f]{32}$", sample.Properties["id"].Value.Pattern)
@@ -538,14 +546,14 @@ func (s *EndpointPublicTestSuite) TestExamplesAndDocs() {
 // TestPrefix puts a group under a prefix whose {field} is a shared path
 // parameter of each method, and keeps the method's own key after the name.
 func (s *EndpointPublicTestSuite) TestPrefix() {
-	g := endpoint.Define("sysctl", "Kernel parameters", endpoint.Prefix("/next/node/{hostname}/"),
+	g := endpoint.Define("sysctl", "Kernel parameters", endpoint.Prefix("/fleet/node/{hostname}/"),
 		endpoint.Get[hostOnly, Node]("list"),
 		endpoint.Get[hostKey, Node]("get"),
 	)
 
-	s.Equal("next/node/{hostname}", g.Prefix)
-	s.Equal("/api/next/node/{hostname}/sysctl", g.Path(g.Method("list")))
-	s.Equal("/api/next/node/{hostname}/sysctl/{key}", g.Path(g.Method("get")))
+	s.Equal("fleet/node/{hostname}", g.Prefix)
+	s.Equal("/api/fleet/node/{hostname}/sysctl", g.Path(g.Method("list")))
+	s.Equal("/api/fleet/node/{hostname}/sysctl/{key}", g.Path(g.Method("get")))
 	s.Empty(g.Method("list").Key(), "the prefix's field is not the key")
 	s.Equal("key", g.Method("get").Key())
 	s.Empty(endpoint.Validate(g))
@@ -561,7 +569,7 @@ func (s *EndpointPublicTestSuite) TestPrefix() {
 
 		return names
 	}())
-	get := doc.Paths.Value("/api/next/node/{hostname}/sysctl/{key}").Get
+	get := doc.Paths.Value("/api/fleet/node/{hostname}/sysctl/{key}").Get
 	s.Equal("#/components/parameters/Hostname", get.Parameters[0].Ref)
 	s.Equal("#/components/parameters/NodeKey", get.Parameters[1].Ref)
 

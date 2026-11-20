@@ -20,18 +20,18 @@ type APIGetPublicTestSuite struct {
 }
 
 func (s *APIGetPublicTestSuite) SetupSuite() {
-	s.api = servertest.New(s.T(), "internal/behaviors/sysctl/gen/api.next.yaml", gen.Routes)
+	s.api = servertest.New(s.T(), "internal/behaviors/sysctl/gen/api.yaml", gen.Routes)
 }
 
-// TestGet sends GET /api/next/node/{hostname}/sysctl/{key} and checks each
-// answer's response.
+// TestGet sends GET /api/node/{hostname}/sysctl/{key} and checks each answer's
+// response.
 func (s *APIGetPublicTestSuite) TestGet() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when the example \"A parameter osapi manages\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -47,7 +47,7 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			Name: "when the example \"A parameter osapi manages\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/_all/sysctl/vm.swappiness",
+				Path:   "/api/node/_all/sysctl/vm.swappiness",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -65,7 +65,7 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			Name: "when the example \"A parameter osapi does not manage\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -81,7 +81,7 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			Name: "when the example \"A parameter osapi does not manage\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/_all/sysctl/vm.swappiness",
+				Path:   "/api/node/_all/sysctl/vm.swappiness",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -99,7 +99,7 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			Name: "when the example \"A value of several fields\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl/net.ipv4.ping_group_range",
+				Path:   "/api/node/server1/sysctl/net.ipv4.ping_group_range",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -115,7 +115,7 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			Name: "when the example \"A value of several fields\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/_all/sysctl/net.ipv4.ping_group_range",
+				Path:   "/api/node/_all/sysctl/net.ipv4.ping_group_range",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -133,7 +133,7 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			Name: "when the example \"A managed parameter the kernel does not have right now\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl/net.bridge.bridge-nf-call-iptables",
+				Path:   "/api/node/server1/sysctl/net.bridge.bridge-nf-call-iptables",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -149,7 +149,7 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			Name: "when the example \"A managed parameter the kernel does not have right now\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/_all/sysctl/net.bridge.bridge-nf-call-iptables",
+				Path:   "/api/node/_all/sysctl/net.bridge.bridge-nf-call-iptables",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -167,7 +167,7 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -183,7 +183,7 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			Name: "when the host fails it, its row says failed",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -199,7 +199,7 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			Name: "when the host never answers, its row says timeout",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -215,7 +215,7 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			Name: "when the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -229,7 +229,7 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			Name: "when broadcast and the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/_all/sysctl/vm.swappiness",
+				Path:   "/api/node/_all/sysctl/vm.swappiness",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -243,7 +243,7 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			Name: "when the host does not have it, it is a 404",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -264,7 +264,7 @@ func (s *APIGetPublicTestSuite) TestGetValidationHTTP() {
 			Name: "when the target is not an agent, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/nowhere/sysctl/vm.swappiness",
+				Path:   "/api/node/nowhere/sysctl/vm.swappiness",
 			},
 			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
@@ -273,7 +273,7 @@ func (s *APIGetPublicTestSuite) TestGetValidationHTTP() {
 			Name: "when the target is empty, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node//sysctl/vm.swappiness",
+				Path:   "/api/node//sysctl/vm.swappiness",
 			},
 			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
@@ -282,7 +282,7 @@ func (s *APIGetPublicTestSuite) TestGetValidationHTTP() {
 			Name: "when sent a key that is not a parameter name, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness%3Breboot",
+				Path:   "/api/node/server1/sysctl/vm.swappiness%3Breboot",
 			},
 			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
@@ -291,7 +291,7 @@ func (s *APIGetPublicTestSuite) TestGetValidationHTTP() {
 			Name: "when sent a key holding a value, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness=1",
+				Path:   "/api/node/server1/sysctl/vm.swappiness=1",
 			},
 			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
@@ -306,7 +306,7 @@ func (s *APIGetPublicTestSuite) TestGetRBACHTTP() {
 			Name: "when there is no token, it is a 401",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 			},
 			Token:    servertest.NoToken,
 			WantCode: http.StatusUnauthorized,
@@ -315,7 +315,7 @@ func (s *APIGetPublicTestSuite) TestGetRBACHTTP() {
 			Name: "when the token lacks sysctl:read, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 			},
 			Token:    servertest.Lacking,
 			WantCode: http.StatusForbidden,
@@ -324,7 +324,7 @@ func (s *APIGetPublicTestSuite) TestGetRBACHTTP() {
 			Name: "when the token has the admin role, the request runs",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl/vm.swappiness",
+				Path:   "/api/node/server1/sysctl/vm.swappiness",
 			},
 			Token: servertest.Admin,
 			Job: servertest.Query(

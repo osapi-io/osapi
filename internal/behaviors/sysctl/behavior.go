@@ -39,9 +39,6 @@ import (
 var Behavior = behavior.Register(behavior.Define(
 	"sysctl", "Kernel parameters, written to sysctl.d files and applied",
 	behavior.Node,
-	// Served under /api/next beside the hand-written sysctl domain until its
-	// cutover.
-	behavior.Next,
 	behavior.Config(defaults),
 	behavior.Requires(managedfile.Behavior),
 	behavior.Platform("debian", newDebian),

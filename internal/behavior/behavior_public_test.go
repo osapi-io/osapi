@@ -284,15 +284,8 @@ func (s *BehaviorPublicTestSuite) TestPath() {
 func (s *BehaviorPublicTestSuite) TestServedAt() {
 	b := top()
 	m := b.Method("get")
-	s.Equal("/api/node/{hostname}/sysctl/{key}", b.Route(m))
-	s.Equal("osapi client node sysctl get", b.CLICommand(m))
-
-	next := behavior.Define("sysctl", "Kernel parameters", behavior.Node, behavior.Next,
-		behavior.Read("get", get).Key("key").Describe("Get one"))
-	m = next.Method("get")
-	s.True(next.Next)
-	s.Equal("/api/next/node/{hostname}/sysctl/{key}", next.Route(m))
-	s.Equal("osapi client next node sysctl get", next.CLICommand(m))
+	s.Equal("/api/node/{hostname}/sysctl/{key}", b.Path(m))
+	s.Equal("osapi client node sysctl get", b.Command(m))
 }
 
 func (s *BehaviorPublicTestSuite) TestExplain() {

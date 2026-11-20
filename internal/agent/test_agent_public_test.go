@@ -26,7 +26,6 @@ import (
 	"github.com/avfs/avfs"
 
 	"github.com/osapi-io/osapi/internal/agent"
-	sysctlProv "github.com/osapi-io/osapi/internal/behaviors/sysctl"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/exec"
 	"github.com/osapi-io/osapi/internal/job/client"
@@ -66,7 +65,6 @@ type newTestAgentParams struct {
 	fileProvider     fileProv.Provider
 	dockerProvider   dockerProv.Provider
 	cronProvider     cronProv.Provider
-	sysctlProvider   sysctlProv.Provider
 	ntpProvider      ntpProv.Provider
 	timezoneProvider timezoneProv.Provider
 	powerProvider    powerProv.Provider
@@ -102,7 +100,6 @@ func newTestAgent(
 			p.diskProvider,
 			p.memoryProvider,
 			p.loadProvider,
-			p.sysctlProvider,
 			p.ntpProvider,
 			p.timezoneProvider,
 			p.powerProvider,

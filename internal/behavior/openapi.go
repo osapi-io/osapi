@@ -22,13 +22,6 @@ package behavior
 
 import "strings"
 
-// NextSpecPath is where the document for the behaviors marked Next is
-// written, relative to the repository root, while any is. It is under next/,
-// which redocly join does not read, so the hand-written spec it would clash
-// with is untouched; the docs site builds its API (next) pages from it. Every
-// other behavior's document is its gen/api.yaml, which the join reads.
-const NextSpecPath = "internal/controller/api/next/gen/api.yaml"
-
 // TypeName is the prefix of every schema, parameter and operation name the
 // spec gives this behavior: sysctl is Sysctl, dns under network is
 // NetworkDns.

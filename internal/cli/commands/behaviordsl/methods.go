@@ -78,7 +78,7 @@ func Get(
 	}
 	out := GetOutput{
 		Name: b.Name, Doc: b.Doc, Placement: b.Placement, Group: b.Group,
-		Internal: b.Internal, API: b.API, CLI: b.CLI, Next: b.Next,
+		Internal: b.Internal, API: b.API, CLI: b.CLI,
 		Platforms:  platformNames(b),
 		Sudo:       append([]string{}, b.Sudo...),
 		Runs:       append([]string{}, b.Runs...),
@@ -123,14 +123,14 @@ func Get(
 		}
 		row := Method{Name: m.Name, Verb: m.Verb, Doc: m.Doc}
 		if b.API {
-			row.HTTPMethod, row.Route, row.Permission = m.HTTPMethod(), b.Route(
+			row.HTTPMethod, row.Route, row.Permission = m.HTTPMethod(), b.Path(
 				m,
 			), b.Permission(
 				m.Verb,
 			)
 		}
 		if b.CLI {
-			row.Command = b.CLICommand(m)
+			row.Command = b.Command(m)
 		}
 		out.Methods = append(out.Methods, row)
 		out.Types = append(out.Types, Type{
@@ -191,10 +191,10 @@ func MethodGet(
 		Input: input, Output: output, Calls: m.Examples, Refusals: m.Refusals,
 	}
 	if b.API {
-		out.HTTPMethod, out.Route, out.Permission = m.HTTPMethod(), b.Route(m), b.Permission(m.Verb)
+		out.HTTPMethod, out.Route, out.Permission = m.HTTPMethod(), b.Path(m), b.Permission(m.Verb)
 	}
 	if b.CLI {
-		out.Command = b.CLICommand(m)
+		out.Command = b.Command(m)
 	}
 	for _, ex := range m.Examples {
 		out.Examples = append(out.Examples, ExampleRow{

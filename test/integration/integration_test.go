@@ -50,6 +50,9 @@ var (
 	tempDir    string
 	storeDir   string
 	runWrites  bool
+	// proxyPort is the port of the spec proxy, which the CLI calls.
+	proxyPort int
+	proxy     *specProxy
 )
 
 func TestMain(
@@ -119,6 +122,13 @@ func TestMain(
 		os.Exit(1)
 	}
 
+	proxy, proxyPort, err = startSpecProxy(fmt.Sprintf("http://127.0.0.1:%d", apiPort))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "start the spec proxy: %v\n", err)
+		stopServer()
+		os.Exit(1)
+	}
+
 	// The controller is ready before the agent's first heartbeat. A suite
 	// that runs first then finds no agent (#806). A failed first heartbeat
 	// is written again after the 10s heartbeat interval.
@@ -129,6 +139,16 @@ func TestMain(
 	}
 
 	code := m.Run()
+
+	// Each request and response went through the spec: one that broke it
+	// fails the run, even when its own test passed.
+	if v := proxy.Violations(); len(v) > 0 {
+		fmt.Fprintf(os.Stderr, "\n%d requests or responses break the joined spec:\n", len(v))
+		for _, line := range v {
+			fmt.Fprintln(os.Stderr, "  "+line)
+		}
+		code = 1
+	}
 
 	stopServer()
 	os.RemoveAll(tempDir)
@@ -175,7 +195,7 @@ func serverEnv() []string {
 func clientEnv() []string {
 	return append(
 		os.Environ(),
-		fmt.Sprintf("OSAPI_CONTROLLER_CLIENT_URL=http://127.0.0.1:%d", apiPort),
+		fmt.Sprintf("OSAPI_CONTROLLER_CLIENT_URL=http://127.0.0.1:%d", proxyPort),
 		fmt.Sprintf("OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN=%s", token),
 	)
 }

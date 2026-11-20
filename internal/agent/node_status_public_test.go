@@ -33,7 +33,6 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/agent"
-	sysctlMocks "github.com/osapi-io/osapi/internal/behaviors/sysctl/mocks"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
 	aptMocks "github.com/osapi-io/osapi/internal/provider/node/apt/mocks"
@@ -82,7 +81,6 @@ func (s *NodeStatusPublicTestSuite) processorWith(
 		diskMock,
 		memMock,
 		loadMock,
-		sysctlMocks.NewMockProvider(s.mockCtrl),
 		ntpMocks.NewMockProvider(s.mockCtrl),
 		timezoneMocks.NewMockProvider(s.mockCtrl),
 		powerMocks.NewMockProvider(s.mockCtrl),

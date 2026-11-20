@@ -28,8 +28,8 @@ graph TD
 - **Methods.** Each method is a read or a write, with an input type and an
   output type. The verb and the name set the HTTP method, the route, the command
   and the permission. For example, the `update` method of sysctl is
-  `PUT /api/next/node/{hostname}/sysctl/{key}` and
-  `osapi client next node sysctl update`, and it needs `sysctl:write`.
+  `PUT /api/node/{hostname}/sysctl/{key}` and `osapi client node sysctl update`,
+  and it needs `sysctl:write`.
 - **Tags on the types.** They give the names, the descriptions and the
   validation rules. osapi makes from them the request fields, the CLI flags, the
   schemas of the spec and the table columns.
@@ -100,15 +100,10 @@ osapi-orchestrator does workflows.
 ## Beside the hand-written domains
 
 Behaviors are new. Most of what osapi manages is still in domains that people
-wrote by hand. Each domain has its own handler, processor and commands. While a
-domain moves to a behavior, the behavior has the `Next` mark. osapi serves it
-next to the domain, under `/api/next` and `osapi client next`. Thus you can
-compare the two on one server.
-
-At the cutover of a domain, the mark goes. The behavior moves to `/api` and
-`osapi client`, and the hand-written code is deleted. Checks name the code that
-is left to delete. sysctl is the first behavior, and it still has the mark. A
-new behavior that replaces no domain is under `/api` from the start.
+wrote by hand. Each domain has its own handler, processor and commands. A domain
+moves to a behavior in one change: the behavior goes to `/api` and
+`osapi client`, and the hand-written code is deleted. The two never run side by
+side. Checks name the code that is left to delete. sysctl is the first behavior.
 
 ## Where to read more
 

@@ -27,7 +27,7 @@ export * from './power-management-api-power-operations/power-management-api-powe
 export * from './process-management-api-process-operations/process-management-api-process-operations';
 export * from './schedule-management-api-schedule-operations/schedule-management-api-schedule-operations';
 export * from './service-management-api-service-operations/service-management-api-service-operations';
-export * from './sysctl-management-api-sysctl-operations/sysctl-management-api-sysctl-operations';
+export * from './sysctl-api-sysctl-operations/sysctl-api-sysctl-operations';
 export * from './telemetry-api-telemetry/telemetry-api-telemetry';
 export * from './timezone-management-api-timezone-operations/timezone-management-api-timezone-operations';
 export * from './user-and-group-management-api-group-operations/user-and-group-management-api-group-operations';

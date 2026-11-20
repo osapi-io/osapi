@@ -91,15 +91,6 @@ const (
 	OpScheduleDelete JobOperation = "schedule.cron.delete"
 )
 
-// Sysctl operations.
-const (
-	OpSysctlList   JobOperation = "node.sysctl.list"
-	OpSysctlGet    JobOperation = "node.sysctl.get"
-	OpSysctlCreate JobOperation = "node.sysctl.create"
-	OpSysctlUpdate JobOperation = "node.sysctl.update"
-	OpSysctlDelete JobOperation = "node.sysctl.delete"
-)
-
 // NTP operations.
 const (
 	OpNtpGet    JobOperation = "node.ntp.get"

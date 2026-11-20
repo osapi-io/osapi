@@ -20,10 +20,10 @@ type APIListPublicTestSuite struct {
 }
 
 func (s *APIListPublicTestSuite) SetupSuite() {
-	s.api = servertest.New(s.T(), "internal/behaviors/sysctl/gen/api.next.yaml", gen.Routes)
+	s.api = servertest.New(s.T(), "internal/behaviors/sysctl/gen/api.yaml", gen.Routes)
 }
 
-// TestList sends GET /api/next/node/{hostname}/sysctl and checks each answer's
+// TestList sends GET /api/node/{hostname}/sysctl and checks each answer's
 // response.
 func (s *APIListPublicTestSuite) TestList() {
 	s.api.Run(s.T(), []servertest.Case{
@@ -31,7 +31,7 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the example \"Every parameter, and which osapi manages\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl",
+				Path:   "/api/node/server1/sysctl",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -47,7 +47,7 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the example \"Every parameter, and which osapi manages\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/_all/sysctl",
+				Path:   "/api/node/_all/sysctl",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -65,7 +65,7 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the example \"One part of the tree\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl?prefix=net.ipv4",
+				Path:   "/api/node/server1/sysctl?prefix=net.ipv4",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -81,7 +81,7 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the example \"One part of the tree\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/_all/sysctl?prefix=net.ipv4",
+				Path:   "/api/node/_all/sysctl?prefix=net.ipv4",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -99,7 +99,7 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the example \"A managed parameter the kernel does not have right now\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl?prefix=net.bridge",
+				Path:   "/api/node/server1/sysctl?prefix=net.bridge",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -115,7 +115,7 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the example \"A managed parameter the kernel does not have right now\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/_all/sysctl?prefix=net.bridge",
+				Path:   "/api/node/_all/sysctl?prefix=net.bridge",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -133,7 +133,7 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl",
+				Path:   "/api/node/server1/sysctl",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -149,7 +149,7 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the host fails it, its row says failed",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl",
+				Path:   "/api/node/server1/sysctl",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -165,7 +165,7 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the host never answers, its row says timeout",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl",
+				Path:   "/api/node/server1/sysctl",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -181,7 +181,7 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl",
+				Path:   "/api/node/server1/sysctl",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -195,7 +195,7 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when broadcast and the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/_all/sysctl",
+				Path:   "/api/node/_all/sysctl",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -216,7 +216,7 @@ func (s *APIListPublicTestSuite) TestListValidationHTTP() {
 			Name: "when the target is not an agent, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/nowhere/sysctl",
+				Path:   "/api/node/nowhere/sysctl",
 			},
 			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
@@ -225,7 +225,7 @@ func (s *APIListPublicTestSuite) TestListValidationHTTP() {
 			Name: "when the target is empty, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node//sysctl",
+				Path:   "/api/node//sysctl",
 			},
 			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
@@ -234,7 +234,7 @@ func (s *APIListPublicTestSuite) TestListValidationHTTP() {
 			Name: "when sent a prefix that is not a parameter name, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl?prefix=..%2Fetc",
+				Path:   "/api/node/server1/sysctl?prefix=..%2Fetc",
 			},
 			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
@@ -249,7 +249,7 @@ func (s *APIListPublicTestSuite) TestListRBACHTTP() {
 			Name: "when there is no token, it is a 401",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl",
+				Path:   "/api/node/server1/sysctl",
 			},
 			Token:    servertest.NoToken,
 			WantCode: http.StatusUnauthorized,
@@ -258,7 +258,7 @@ func (s *APIListPublicTestSuite) TestListRBACHTTP() {
 			Name: "when the token lacks sysctl:read, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl",
+				Path:   "/api/node/server1/sysctl",
 			},
 			Token:    servertest.Lacking,
 			WantCode: http.StatusForbidden,
@@ -267,7 +267,7 @@ func (s *APIListPublicTestSuite) TestListRBACHTTP() {
 			Name: "when the token has the admin role, the request runs",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/next/node/server1/sysctl",
+				Path:   "/api/node/server1/sysctl",
 			},
 			Token: servertest.Admin,
 			Job: servertest.Query(

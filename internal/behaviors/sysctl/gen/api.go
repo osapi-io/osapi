@@ -15,31 +15,31 @@ func Routes(
 	return []server.Route{
 		{
 			Method:     http.MethodGet,
-			Path:       "/api/next/node/:hostname/sysctl",
+			Path:       "/api/node/:hostname/sysctl",
 			Permission: "sysctl:read",
 			Handler:    server.Serve(s, Group, "list", HandleList, decodeList),
 		},
 		{
 			Method:     http.MethodGet,
-			Path:       "/api/next/node/:hostname/sysctl/:key",
+			Path:       "/api/node/:hostname/sysctl/:key",
 			Permission: "sysctl:read",
 			Handler:    server.Serve(s, Group, "get", HandleGet, decodeGet),
 		},
 		{
 			Method:     http.MethodPost,
-			Path:       "/api/next/node/:hostname/sysctl",
+			Path:       "/api/node/:hostname/sysctl",
 			Permission: "sysctl:write",
 			Handler:    server.Serve(s, Group, "create", HandleCreate, decodeCreate),
 		},
 		{
 			Method:     http.MethodPut,
-			Path:       "/api/next/node/:hostname/sysctl/:key",
+			Path:       "/api/node/:hostname/sysctl/:key",
 			Permission: "sysctl:write",
 			Handler:    server.Serve(s, Group, "update", HandleUpdate, decodeUpdate),
 		},
 		{
 			Method:     http.MethodDelete,
-			Path:       "/api/next/node/:hostname/sysctl/:key",
+			Path:       "/api/node/:hostname/sysctl/:key",
 			Permission: "sysctl:write",
 			Handler:    server.Serve(s, Group, "delete", HandleDelete, decodeDelete),
 		},

@@ -12,7 +12,7 @@ through `/etc/sysctl.d/` conf files. Use `client.Sysctl.List()` and
 
 | Method                             | Description                           |
 | ---------------------------------- | ------------------------------------- |
-| `List(ctx, hostname)`              | Every parameter and its current value |
+| `List(ctx, hostname, opts)`        | Every parameter and its current value |
 | `Get(ctx, hostname, key)`          | Any parameter's current value         |
 | `Create(ctx, hostname, opts)`      | Set a parameter and manage it         |
 | `Update(ctx, hostname, key, opts)` | The same, by key                      |
@@ -22,6 +22,7 @@ through `/etc/sysctl.d/` conf files. Use `client.Sysctl.List()` and
 
 | Type               | Fields                           |
 | ------------------ | -------------------------------- |
+| `SysctlListOpts`   | Prefix, such as `net.ipv4`       |
 | `SysctlCreateOpts` | Key (required), Value (required) |
 | `SysctlUpdateOpts` | Value (required)                 |
 
@@ -32,10 +33,10 @@ import "github.com/osapi-io/osapi/pkg/sdk/client"
 
 c := client.New("http://localhost:8080", token)
 
-// List every parameter and its current value
-resp, err := c.Sysctl.List(ctx, "web-01")
+// List the parameters under net.ipv4, and which osapi manages
+resp, err := c.Sysctl.List(ctx, "web-01", client.SysctlListOpts{Prefix: "net.ipv4"})
 for _, entry := range resp.Data.Results {
-    fmt.Printf("%s = %s\n", entry.Key, entry.Value)
+    fmt.Printf("%s = %s (managed: %t)\n", entry.Key, entry.Value, entry.Managed)
 }
 
 // Get a specific parameter

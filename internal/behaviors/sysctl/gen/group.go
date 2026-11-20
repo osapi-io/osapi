@@ -151,10 +151,10 @@ func HandleDelete(
 var Group = endpoint.Define(
 	"sysctl",
 	"Kernel parameters, written to sysctl.d files and applied",
-	endpoint.Prefix("next/node/{hostname}"),
+	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("sysctl_operations", "Node/Sysctl", "Kernel parameters, written to sysctl.d files and applied"),
-	endpoint.CommandNotes("The [sysctl behavior](../../../../../../behaviors/sysctl/sysctl.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.CommandNotes("The [sysctl behavior](../../../../../behaviors/sysctl/sysctl.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[ListRequest, SysctlCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeSysctl").

@@ -149,12 +149,6 @@ var Spec = guide.Spec{
 			Does: "Declares a validate tag of the behavior, with the check that the server runs and its schema in the spec, such as rule.Pattern(re).",
 			When: "When no standard validate tag checks a value.",
 		},
-		{
-			Kind: KindOption,
-			Name: "Next",
-			Does: "Serves the behavior under /api/next and osapi client next, beside the hand-written domain that it replaces.",
-			When: "Only while a behavior replaces a hand-written domain.",
-		},
 
 		{
 			Kind: KindMethod,

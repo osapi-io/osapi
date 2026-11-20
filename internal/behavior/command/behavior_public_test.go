@@ -262,15 +262,6 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 	s.Contains(index, "| API | `/api/node/{hostname}/store/kv`, in [API](/category/api) |")
 	s.Contains(index, "| CLI | `osapi client node store kv` |")
 
-	// A Next behavior is served beside the hand-written domain it replaces.
-	b.Next = true
-	next := command.IndexPage(b)
-	b.Next = false
-	s.Contains(
-		next,
-		"| API | `/api/next/node/{hostname}/store/kv`, in [API (next)](/category/api-next) |",
-	)
-	s.Contains(next, "| CLI | `osapi client next node store kv` |")
 	s.Contains(
 		index,
 		"| [`list`](../../usage/cli/client/node/store/kv/list.md) | read | `store:read` | List &lt;them&gt; |",

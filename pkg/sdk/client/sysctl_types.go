@@ -30,7 +30,10 @@ type SysctlEntryResult struct {
 	Status   string `json:"status"`
 	Key      string `json:"key,omitempty"`
 	Value    string `json:"value,omitempty"`
-	Error    string `json:"error,omitempty"`
+	// Managed is true when osapi manages the parameter: a file of its own
+	// sets it at boot.
+	Managed bool   `json:"managed"`
+	Error   string `json:"error,omitempty"`
 }
 
 // SysctlMutationResult represents the result of a sysctl create, update, or delete.
@@ -40,6 +43,13 @@ type SysctlMutationResult struct {
 	Key      string `json:"key,omitempty"`
 	Changed  bool   `json:"changed"`
 	Error    string `json:"error,omitempty"`
+}
+
+// SysctlListOpts contains options for listing sysctl parameters.
+type SysctlListOpts struct {
+	// Prefix limits the list to this parameter and the ones under it, such
+	// as net.ipv4. Empty lists every parameter.
+	Prefix string
 }
 
 // SysctlCreateOpts contains options for creating a sysctl parameter.
@@ -68,6 +78,7 @@ func sysctlEntryCollectionFromGen(
 			Status:   string(r.Status),
 			Key:      derefString(r.Key),
 			Value:    derefString(r.Value),
+			Managed:  derefBool(r.Managed),
 			Error:    derefString(r.Error),
 		})
 	}
@@ -90,6 +101,7 @@ func sysctlEntryCollectionFromGet(
 			Status:   string(r.Status),
 			Key:      derefString(r.Key),
 			Value:    derefString(r.Value),
+			Managed:  derefBool(r.Managed),
 			Error:    derefString(r.Error),
 		})
 	}

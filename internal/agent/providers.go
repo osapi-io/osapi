@@ -28,8 +28,6 @@ import (
 
 	"github.com/avfs/avfs"
 
-	"github.com/osapi-io/osapi/internal/behavior"
-	sysctlBehavior "github.com/osapi-io/osapi/internal/behaviors/sysctl"
 	"github.com/osapi-io/osapi/internal/exec"
 	dockerProv "github.com/osapi-io/osapi/internal/provider/container/docker"
 	fileProv "github.com/osapi-io/osapi/internal/provider/file"
@@ -203,24 +201,6 @@ func (e hostEnv) cron() cronProv.Provider {
 		return cronProv.NewDarwinProvider()
 	default:
 		return cronProv.NewLinuxProvider()
-	}
-}
-
-func (e hostEnv) sysctl() sysctlBehavior.Provider {
-	switch e.platform {
-	case "debian":
-		if e.fileState == nil {
-			e.log.Warn("file state KV not available, sysctl operations disabled")
-			return sysctlBehavior.NewLinuxProvider()
-		}
-		dir := behavior.Settings[sysctlBehavior.Settings](sysctlBehavior.Behavior).Dir
-
-		return sysctlBehavior.NewDebianProvider(e.log, e.fs, e.fileState, e.fileStateBucket, e.exec, e.hostname).
-			WithDir(dir)
-	case "darwin":
-		return sysctlBehavior.NewDarwinProvider()
-	default:
-		return sysctlBehavior.NewLinuxProvider()
 	}
 }
 

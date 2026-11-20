@@ -55,7 +55,7 @@ func sysctlExample() {
 	// List all sysctl parameters on the target host.
 	// Returns Collection[SysctlEntryResult] with per-host results.
 	fmt.Println("=== Listing sysctl parameters ===")
-	listResp, err := c.Sysctl.List(ctx, hostname)
+	listResp, err := c.Sysctl.List(ctx, hostname, client.SysctlListOpts{})
 	if err != nil {
 		log.Fatalf("list failed: %v", err)
 	}

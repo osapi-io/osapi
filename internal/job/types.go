@@ -198,15 +198,6 @@ const (
 	OperationCronDelete = client.OpScheduleDelete
 )
 
-// Sysctl operations.
-const (
-	OperationSysctlList   = client.OpSysctlList
-	OperationSysctlGet    = client.OpSysctlGet
-	OperationSysctlCreate = client.OpSysctlCreate
-	OperationSysctlUpdate = client.OpSysctlUpdate
-	OperationSysctlDelete = client.OpSysctlDelete
-)
-
 // NTP operations.
 const (
 	OperationNtpGet    = client.OpNtpGet

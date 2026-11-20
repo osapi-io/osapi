@@ -21,6 +21,7 @@
 package endpoint
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -410,7 +411,9 @@ func constrained(
 	if p := f.Tag.Get("pattern"); p != "" {
 		s.Value.Pattern = p
 	}
-	if d, ok := f.Tag.Lookup("default"); ok {
+	// A path parameter is always given, so a default means nothing there:
+	// the CLI's default, such as --target _all, comes from the tag itself.
+	if d, ok := f.Tag.Lookup("default"); ok && f.Tag.Get("in") != "path" {
 		s.Value.Default = example(s.Value, d)
 	}
 	v := f.Tag.Get("validate")
@@ -545,6 +548,13 @@ func example(
 		}
 	case s.Type.Is(openapi3.TypeBoolean):
 		if v, err := strconv.ParseBool(text); err == nil {
+			return v
+		}
+	case s.Type.Is(openapi3.TypeObject) || s.Type.Is(openapi3.TypeArray):
+		// An object or a list is its JSON: a string there is not a valid
+		// example of the schema.
+		var v any
+		if err := json.Unmarshal([]byte(text), &v); err == nil {
 			return v
 		}
 	}

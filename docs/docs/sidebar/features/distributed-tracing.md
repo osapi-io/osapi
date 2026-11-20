@@ -140,7 +140,7 @@ Trace:
 
 Spans (1):
   SPAN                                     ON          DURATION  STATUS     DETAIL
-  POST /api/next/node/:hostname/sysctl     controller  20ms      ok         status=200
+  POST /api/node/:hostname/sysctl          controller  20ms      ok         status=200
   ├─ job.publish                           controller  2ms       ok         op=behavior.sysctl.create target=debian-1
   │  └─ job.process                        agent       11ms      completed  host=debian-1
   │     └─ behavior.sysctl.create          agent       5ms       changed    key=vm.swappiness

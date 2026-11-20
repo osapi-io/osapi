@@ -16,7 +16,7 @@ var sysctlListCmd = &cobra.Command{
 		reference.Result:     "The command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A prefix that is not a parameter name | `--prefix ../etc` | invalid sysctl key |",
 	},
 	Args:    cobra.NoArgs,
-	Example: "  # Every parameter, and which osapi manages\n  osapi client next node sysctl list --target web-01\n\n  # One part of the tree\n  osapi client next node sysctl list --target web-01 --prefix net.ipv4\n\n  # A managed parameter the kernel does not have right now\n  osapi client next node sysctl list --target web-01 --prefix net.bridge",
+	Example: "  # Every parameter, and which osapi manages\n  osapi client node sysctl list --target web-01\n\n  # One part of the tree\n  osapi client node sysctl list --target web-01 --prefix net.ipv4\n\n  # A managed parameter the kernel does not have right now\n  osapi client node sysctl list --target web-01 --prefix net.bridge",
 	Long:    "Lists every parameter the kernel shows under /proc/sys, with its current value, as sysctl -a does, and marks the ones osapi manages. A prefix, such as net.ipv4, limits the list to that part of the tree. The kernel can lack a parameter that osapi manages, for example when its module is not loaded. Then the list shows the value that osapi wrote.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("target")
@@ -34,7 +34,7 @@ var sysctlGetCmd = &cobra.Command{
 		reference.Result:     "The command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A parameter the kernel does not have | `--key vm.nosuch` | not found |\n| No key |  | key must not be empty |\n| A key that is not a parameter name | `--key \"vm.swappiness;reboot\"` | invalid sysctl key |\n| A key holding a value | `--key vm.swappiness=1` | invalid sysctl key |",
 	},
 	Args:    cobra.NoArgs,
-	Example: "  # A parameter osapi manages\n  osapi client next node sysctl get --target web-01 --key vm.swappiness\n\n  # A parameter osapi does not manage\n  osapi client next node sysctl get --target web-01 --key vm.swappiness\n\n  # A value of several fields\n  osapi client next node sysctl get --target web-01 --key net.ipv4.ping_group_range\n\n  # A managed parameter the kernel does not have right now\n  osapi client next node sysctl get --target web-01 --key net.bridge.bridge-nf-call-iptables",
+	Example: "  # A parameter osapi manages\n  osapi client node sysctl get --target web-01 --key vm.swappiness\n\n  # A parameter osapi does not manage\n  osapi client node sysctl get --target web-01 --key vm.swappiness\n\n  # A value of several fields\n  osapi client node sysctl get --target web-01 --key net.ipv4.ping_group_range\n\n  # A managed parameter the kernel does not have right now\n  osapi client node sysctl get --target web-01 --key net.bridge.bridge-nf-call-iptables",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("target")
 		key, _ := cmd.Flags().GetString("key")
@@ -51,7 +51,7 @@ var sysctlCreateCmd = &cobra.Command{
 		reference.Result:     "With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Turn on IP forwarding | writes `/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf`: `net.ipv4.ip_forward = 1`; runs `sysctl -p /etc/sysctl.d/osapi-net.ipv4.ip_forward.conf` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| No key | `--value 1` | key must not be empty |\n| A key that is not a parameter name | `--key ../etc/passwd --value 1` | invalid sysctl key |\n| A key that would read as a flag | `--key -w --value 1` | invalid sysctl key |\n| A key that would be a hidden file | `--key .hidden --value 1` | invalid sysctl key |\n| No value | `--key vm.swappiness` | value must not be empty |\n| A value on two lines | `--key vm.swappiness --value \"10\\nkernel.panic = 0\"` | line breaks |",
 	},
 	Args:    cobra.NoArgs,
-	Example: "  # Turn on IP forwarding\n  osapi client next node sysctl create --target web-01 --key net.ipv4.ip_forward --value 1",
+	Example: "  # Turn on IP forwarding\n  osapi client node sysctl create --target web-01 --key net.ipv4.ip_forward --value 1",
 	Long:    "Writes osapi-<key>.conf to behaviors.sysctl.dir, /etc/sysctl.d by default, and applies it with sysctl -p. It fails when sysctl -p fails, because the value is not set. A second run with the same value changes nothing and reports changed: false. If the kernel has a different value, for example after a failed apply, it applies the value again.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("target")
@@ -70,7 +70,7 @@ var sysctlUpdateCmd = &cobra.Command{
 		reference.Result:     "With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Lower swappiness | writes `/etc/sysctl.d/osapi-vm.swappiness.conf`: `vm.swappiness = 10`; runs `sysctl -p /etc/sysctl.d/osapi-vm.swappiness.conf` |\n| A parameter osapi did not manage | writes `/etc/sysctl.d/osapi-vm.swappiness.conf`: `vm.swappiness = 10`; runs `sysctl -p /etc/sysctl.d/osapi-vm.swappiness.conf` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| No key | `--value 10` | key must not be empty |\n| A key that is not a parameter name | `--key \"vm.swappiness;reboot\" --value 1` | invalid sysctl key |\n| A key holding a value | `--key vm.swappiness=1 --value 1` | invalid sysctl key |\n| No value | `--key vm.swappiness` | value must not be empty |\n| A value on two lines | `--key vm.swappiness --value \"10\\nkernel.panic = 0\"` | line breaks |",
 	},
 	Args:    cobra.NoArgs,
-	Example: "  # Lower swappiness\n  osapi client next node sysctl update --target web-01 --key vm.swappiness --value 10\n\n  # A parameter osapi did not manage\n  osapi client next node sysctl update --target web-01 --key vm.swappiness --value 10",
+	Example: "  # Lower swappiness\n  osapi client node sysctl update --target web-01 --key vm.swappiness --value 10\n\n  # A parameter osapi did not manage\n  osapi client node sysctl update --target web-01 --key vm.swappiness --value 10",
 	Long:    "The same as create, addressed by the parameter: osapi manages the parameter from then on whether it did before or not. Setting the value it already has reports changed: false.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("target")
@@ -89,7 +89,7 @@ var sysctlDeleteCmd = &cobra.Command{
 		reference.Result:     "With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Remove a parameter | removes `/etc/sysctl.d/osapi-vm.swappiness.conf`; runs `sysctl --system` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| No key |  | key must not be empty |\n| A key that is not a parameter name | `--key \"vm.swappiness;reboot\"` | invalid sysctl key |\n| A key holding a value | `--key vm.swappiness=1` | invalid sysctl key |",
 	},
 	Args:    cobra.NoArgs,
-	Example: "  # Remove a parameter\n  osapi client next node sysctl delete --target web-01 --key vm.swappiness\n\n  # A parameter osapi does not manage\n  osapi client next node sysctl delete --target web-01 --key vm.swappiness\n\n  # A parameter osapi already stopped managing\n  osapi client next node sysctl delete --target web-01 --key vm.swappiness",
+	Example: "  # Remove a parameter\n  osapi client node sysctl delete --target web-01 --key vm.swappiness\n\n  # A parameter osapi does not manage\n  osapi client node sysctl delete --target web-01 --key vm.swappiness\n\n  # A parameter osapi already stopped managing\n  osapi client node sysctl delete --target web-01 --key vm.swappiness",
 	Long:    "Removes the file that osapi wrote for it and reloads with sysctl --system. Then a setting for the key in a different file takes effect. If there is no such setting, the parameter keeps its current value until the next reboot. A delete of a parameter that osapi does not manage reports changed: false.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("target")

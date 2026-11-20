@@ -21,11 +21,14 @@
 package apicontract_test
 
 import (
+	"context"
 	"flag"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/getkin/kin-openapi/openapi3"
 
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v3"
@@ -71,21 +74,14 @@ func (s *ContractPublicTestSuite) TestJoinedSpec() {
 	s.Equal(string(want), got)
 }
 
-// TestNextSpec holds the spec of the behaviors under /api/next to its golden
-// contract, as TestJoinedSpec holds the main one. The move of behaviors onto
-// the endpoint layer (osapi#826) changes their wording, not this.
-func (s *ContractPublicTestSuite) TestNextSpec() {
-	data, err := os.ReadFile(filepath.Join("..", "controller", "api", "next", "gen", "api.yaml"))
+// TestJoinedSpecIsValid holds the joined spec to OpenAPI itself: a tool that
+// validates a spec, as kin-openapi's router does, rejects one that breaks
+// it, such as an object field whose example is a string.
+func (s *ContractPublicTestSuite) TestJoinedSpecIsValid() {
+	doc, err := openapi3.NewLoader().
+		LoadFromFile(filepath.Join("..", "controller", "api", "gen", "api.yaml"))
 	s.Require().NoError(err)
-
-	got := strings.Join(apicontract.Lines(s.load(string(data))), "\n") + "\n"
-	golden := filepath.Join("testdata", "next.golden")
-	if *update {
-		s.Require().NoError(os.WriteFile(golden, []byte(got), 0o644))
-	}
-	want, err := os.ReadFile(golden)
-	s.Require().NoError(err, "no golden file; run with -update")
-	s.Equal(string(want), got)
+	s.NoError(doc.Validate(context.Background()))
 }
 
 func (s *ContractPublicTestSuite) TestLines() {

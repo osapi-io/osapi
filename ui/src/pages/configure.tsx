@@ -106,7 +106,7 @@ import {
   postNodeSysctl,
   putNodeSysctl,
   deleteNodeSysctl,
-} from "@/sdk/gen/sysctl-management-api-sysctl-operations/sysctl-management-api-sysctl-operations";
+} from "@/sdk/gen/sysctl-api-sysctl-operations/sysctl-api-sysctl-operations";
 import {
   getNodeNtp,
   postNodeNtp,
