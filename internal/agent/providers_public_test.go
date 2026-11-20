@@ -47,7 +47,7 @@ func TestProvidersPublicTestSuite(
 
 func (s *ProvidersPublicTestSuite) TestProviders() {
 	areas := []string{
-		"host", "disk", "memory", "load", "dns", "ping", "netinfo", "cron",
+		"host", "disk", "memory", "load", "dns", "ping", "cron",
 		"ntp", "timezone", "power", "process", "user", "packages",
 		"logs", "certificate", "service", "iface", "route",
 	}
@@ -67,7 +67,7 @@ func (s *ProvidersPublicTestSuite) TestProviders() {
 			platform: "debian",
 			buckets:  true,
 			want:     "Debian",
-			except:   map[string]string{"host": "Linux", "netinfo": "Linux"},
+			except:   map[string]string{"host": "Linux"},
 		},
 		{
 			name:      "when Debian runs in a container leaves out what a container cannot do",
@@ -78,7 +78,6 @@ func (s *ProvidersPublicTestSuite) TestProviders() {
 			except: map[string]string{
 				"host":     "Linux",
 				"dns":      "DebianDocker",
-				"netinfo":  "Linux",
 				"ntp":      "Linux",
 				"timezone": "Linux",
 				"power":    "Linux",
@@ -92,7 +91,6 @@ func (s *ProvidersPublicTestSuite) TestProviders() {
 			want:     "Debian",
 			except: map[string]string{
 				"host":        "Linux",
-				"netinfo":     "Linux",
 				"cron":        "Linux",
 				"certificate": "Linux",
 				"service":     "Linux",

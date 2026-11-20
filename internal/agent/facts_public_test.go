@@ -28,6 +28,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/gohai/pkg/gohai"
+
 	agentMocks "github.com/osapi-io/osapi/internal/agent/mocks"
 
 	"github.com/stretchr/testify/suite"
@@ -38,7 +40,6 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/mocks"
 	commandMocks "github.com/osapi-io/osapi/internal/provider/command/mocks"
-	netinfoMocks "github.com/osapi-io/osapi/internal/provider/network/netinfo/mocks"
 	dnsMocks "github.com/osapi-io/osapi/internal/provider/network/netplan/dns/mocks"
 	pingMocks "github.com/osapi-io/osapi/internal/provider/network/ping/mocks"
 	diskMocks "github.com/osapi-io/osapi/internal/provider/node/disk/mocks"
@@ -55,7 +56,6 @@ type FactsPublicTestSuite struct {
 	mockJobClient    *mocks.MockJobClient
 	mockFactsKV      *agentMocks.MockNATSClient
 	mockHostProvider *hostMocks.MockProvider
-	mockNetinfo      *netinfoMocks.MockProvider
 	testAgent        *agent.Agent
 }
 
@@ -64,7 +64,6 @@ func (s *FactsPublicTestSuite) SetupTest() {
 	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
 	s.mockFactsKV = agentMocks.NewMockNATSClient(s.mockCtrl)
 	s.mockHostProvider = hostMocks.NewDefaultMockProvider(s.mockCtrl)
-	s.mockNetinfo = netinfoMocks.NewDefaultMockProvider(s.mockCtrl)
 
 	appConfig := config.Config{
 		Agent: config.AgentConfig{
@@ -82,7 +81,6 @@ func (s *FactsPublicTestSuite) SetupTest() {
 		loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
 		dnsProvider:     dnsMocks.NewDefaultMockProvider(s.mockCtrl),
 		pingProvider:    pingMocks.NewDefaultMockProvider(s.mockCtrl),
-		netinfoProvider: s.mockNetinfo,
 		commandProvider: commandMocks.NewDefaultMockProvider(s.mockCtrl),
 		processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
 		factsBucket:     "facts",
@@ -95,6 +93,7 @@ func (s *FactsPublicTestSuite) TearDownTest() {
 	agent.ResetMarshalJSON()
 	agent.ResetUnmarshalJSON()
 	agent.ResetDefaultFactsInterval()
+	agent.ResetCollectFactsFn()
 }
 
 func (s *FactsPublicTestSuite) TestWriteFacts() {
@@ -118,14 +117,36 @@ func (s *FactsPublicTestSuite) TestWriteFacts() {
 						var reg job.FactsRegistration
 						err := json.Unmarshal(data, &reg)
 						s.NoError(err)
-						s.Equal("amd64", reg.Architecture)
+						s.Equal("x86_64", reg.Architecture)
 						s.Equal(4, reg.CPUCount)
 						s.Equal("default-hostname.local", reg.FQDN)
 						s.Equal("5.15.0-91-generic", reg.KernelVersion)
 						s.Equal("systemd", reg.ServiceMgr)
 						s.Equal("apt", reg.PackageMgr)
-						s.Len(reg.Interfaces, 1)
-						s.Equal("eth0", reg.Interfaces[0].Name)
+						s.True(reg.Containerized)
+						s.Equal("eth0", reg.PrimaryInterface)
+						s.Equal([]job.NetworkInterface{
+							{
+								Name:   "eth0",
+								IPv4:   "10.0.0.5",
+								IPv6:   "fe80::1",
+								MAC:    "02:42:ac:11:00:02",
+								Family: "dual",
+							},
+							{Name: "wg0", IPv6: "fd00::2", Family: "inet6"},
+							{Name: "eth2", IPv4: "192.168.1.2", Family: "inet"},
+						}, reg.Interfaces, "up, not loopback; the first address of each family")
+						s.Equal([]job.Route{
+							{
+								Destination: "0.0.0.0",
+								Gateway:     "10.0.0.1",
+								Interface:   "eth0",
+								Mask:        "/0",
+								Metric:      100,
+							},
+							{Destination: "10.0.0.0", Interface: "eth0", Mask: "/24"},
+							{Destination: "127", Gateway: "127.0.0.1", Interface: "lo"},
+						}, reg.Routes, "IPv4 only")
 						return uint64(1), nil
 					})
 			},
@@ -150,36 +171,11 @@ func (s *FactsPublicTestSuite) TestWriteFacts() {
 			},
 		},
 		{
-			name: "when provider errors partial data still written",
+			name: "when gohai fails the entry is still written, empty",
 			setupMock: func() {
-				// Override the default mock expectations with error-returning ones.
-				errHostProvider := func() *hostMocks.MockProvider {
-					m := hostMocks.NewPlainMockProvider(s.mockCtrl)
-					m.EXPECT().GetArchitecture().Return("", errors.New("arch fail")).AnyTimes()
-					m.EXPECT().GetKernelVersion().Return("", errors.New("kernel fail")).AnyTimes()
-					m.EXPECT().GetFQDN().Return("", errors.New("fqdn fail")).AnyTimes()
-					m.EXPECT().GetCPUCount().Return(0, errors.New("cpu fail")).AnyTimes()
-					m.EXPECT().GetServiceManager().Return("", errors.New("svc fail")).AnyTimes()
-					m.EXPECT().GetPackageManager().Return("", errors.New("pkg fail")).AnyTimes()
-					return m
-				}()
-				agent.SetAgentHostProvider(s.testAgent, errHostProvider)
-
-				errNetinfoProvider := func() *netinfoMocks.MockProvider {
-					m := netinfoMocks.NewPlainMockProvider(s.mockCtrl)
-					m.EXPECT().GetInterfaces().Return(nil, errors.New("net fail")).AnyTimes()
-					m.EXPECT().
-						GetRoutes(gomock.Any()).
-						Return(nil, errors.New("routes fail")).
-						AnyTimes()
-					m.EXPECT().
-						GetPrimaryInterface(gomock.Any()).
-						Return("", errors.New("primary fail")).
-						AnyTimes()
-					return m
-				}()
-				agent.SetAgentNetinfoProvider(s.testAgent, errNetinfoProvider)
-
+				agent.SetCollectFactsFn(func() (*gohai.Facts, error) {
+					return nil, errors.New("collect failed")
+				})
 				s.mockFactsKV.EXPECT().
 					KVPut(gomock.Any(), "facts", "facts.test_machine_id", gomock.Any()).
 					DoAndReturn(func(
@@ -189,16 +185,29 @@ func (s *FactsPublicTestSuite) TestWriteFacts() {
 						data []byte,
 					) (uint64, error) {
 						var reg job.FactsRegistration
-						err := json.Unmarshal(data, &reg)
-						s.NoError(err)
-						// All fields should be zero values since providers failed.
-						s.Empty(reg.Architecture)
-						s.Empty(reg.KernelVersion)
-						s.Empty(reg.FQDN)
-						s.Zero(reg.CPUCount)
-						s.Empty(reg.ServiceMgr)
-						s.Empty(reg.PackageMgr)
-						s.Nil(reg.Interfaces)
+						s.NoError(json.Unmarshal(data, &reg))
+						s.Equal(job.FactsRegistration{}, reg)
+						return uint64(1), nil
+					})
+			},
+		},
+		{
+			name: "when a collector failed its fields stay empty",
+			setupMock: func() {
+				agent.SetCollectFactsFn(func() (*gohai.Facts, error) {
+					return &gohai.Facts{}, nil
+				})
+				s.mockFactsKV.EXPECT().
+					KVPut(gomock.Any(), "facts", "facts.test_machine_id", gomock.Any()).
+					DoAndReturn(func(
+						_ context.Context,
+						_ string,
+						_ string,
+						data []byte,
+					) (uint64, error) {
+						var reg job.FactsRegistration
+						s.NoError(json.Unmarshal(data, &reg))
+						s.Equal(job.FactsRegistration{}, reg)
 						return uint64(1), nil
 					})
 			},
@@ -219,6 +228,12 @@ func (s *FactsPublicTestSuite) TestWriteFacts() {
 			)
 		})
 	}
+}
+
+func (s *FactsPublicTestSuite) TestCollectFacts() {
+	f, err := agent.ExportCollectFacts()
+	s.Require().NoError(err, "gohai collects this host's facts")
+	s.NotNil(f.Kernel)
 }
 
 func (s *FactsPublicTestSuite) TestStartFactsRefresh() {

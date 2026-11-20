@@ -21,10 +21,6 @@
 package host
 
 import (
-	"os"
-	"os/exec"
-	"runtime"
-
 	"github.com/shirou/gopsutil/v4/host"
 
 	"github.com/osapi-io/osapi/internal/provider"
@@ -36,20 +32,12 @@ var _ provider.FactsSetter = (*Darwin)(nil)
 type Darwin struct {
 	provider.FactsAware
 
-	InfoFn     func() (*host.InfoStat, error)
-	HostnameFn func() (string, error)
-	NumCPUFn   func() int
-	StatFn     func(name string) (os.FileInfo, error)
-	LookPathFn func(file string) (string, error)
+	InfoFn func() (*host.InfoStat, error)
 }
 
 // NewDarwinProvider factory to create a new Darwin instance.
 func NewDarwinProvider() *Darwin {
 	return &Darwin{
-		InfoFn:     host.Info,
-		HostnameFn: os.Hostname,
-		NumCPUFn:   runtime.NumCPU,
-		StatFn:     os.Stat,
-		LookPathFn: exec.LookPath,
+		InfoFn: host.Info,
 	}
 }

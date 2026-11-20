@@ -11,8 +11,6 @@
 export interface RouteResponse {
   /** Destination network address. */
   destination: string;
-  /** Route flags. */
-  flags?: string;
   /** Gateway address. */
   gateway: string;
   /** Network interface name. */

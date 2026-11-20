@@ -82,7 +82,6 @@ type Route struct {
 	Gateway     string `json:"gateway"`
 	Interface   string `json:"interface"`
 	Mask        string `json:"mask,omitempty"`
-	Flags       string `json:"flags,omitempty"`
 	Metric      int    `json:"metric"`
 }
 
@@ -174,10 +173,6 @@ func agentFromGen(
 
 			if r.Mask != nil {
 				route.Mask = *r.Mask
-			}
-
-			if r.Flags != nil {
-				route.Flags = *r.Flags
 			}
 
 			if r.Metric != nil {

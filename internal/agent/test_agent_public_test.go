@@ -32,7 +32,6 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/command"
 	dockerProv "github.com/osapi-io/osapi/internal/provider/container/docker"
 	fileProv "github.com/osapi-io/osapi/internal/provider/file"
-	"github.com/osapi-io/osapi/internal/provider/network/netinfo"
 	"github.com/osapi-io/osapi/internal/provider/network/netplan/dns"
 	"github.com/osapi-io/osapi/internal/provider/network/ping"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
@@ -60,7 +59,6 @@ type newTestAgentParams struct {
 	loadProvider     load.Provider
 	dnsProvider      dns.Provider
 	pingProvider     ping.Provider
-	netinfoProvider  netinfo.Provider
 	commandProvider  command.Provider
 	fileProvider     fileProv.Provider
 	dockerProvider   dockerProv.Provider
@@ -116,7 +114,7 @@ func newTestAgent(
 	registry.Register(
 		"network",
 		agent.NewNetworkProcessor(p.dnsProvider, p.pingProvider, nil, nil, logger),
-		p.dnsProvider, p.pingProvider, p.netinfoProvider,
+		p.dnsProvider, p.pingProvider,
 	)
 
 	registry.Register(
@@ -153,7 +151,6 @@ func newTestAgent(
 		p.diskProvider,
 		p.memoryProvider,
 		p.loadProvider,
-		p.netinfoProvider,
 		p.processProvider,
 		registry,
 		p.registryBucket,

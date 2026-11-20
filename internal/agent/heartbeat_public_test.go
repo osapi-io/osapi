@@ -44,7 +44,6 @@ import (
 	"github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/pki"
 	commandMocks "github.com/osapi-io/osapi/internal/provider/command/mocks"
-	netinfoMocks "github.com/osapi-io/osapi/internal/provider/network/netinfo/mocks"
 	dnsMocks "github.com/osapi-io/osapi/internal/provider/network/netplan/dns/mocks"
 	pingMocks "github.com/osapi-io/osapi/internal/provider/network/ping/mocks"
 	diskMocks "github.com/osapi-io/osapi/internal/provider/node/disk/mocks"
@@ -164,7 +163,6 @@ func (s *HeartbeatPublicTestSuite) TestStartWithHeartbeat() {
 					loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
 					dnsProvider:     dnsMocks.NewDefaultMockProvider(s.mockCtrl),
 					pingProvider:    pingMocks.NewDefaultMockProvider(s.mockCtrl),
-					netinfoProvider: netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
 					commandProvider: commandMocks.NewDefaultMockProvider(s.mockCtrl),
 					processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
 					registryBucket:  "registry",
@@ -204,7 +202,6 @@ func (s *HeartbeatPublicTestSuite) TestStartWithHeartbeat() {
 					loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
 					dnsProvider:     dnsMocks.NewDefaultMockProvider(s.mockCtrl),
 					pingProvider:    pingMocks.NewDefaultMockProvider(s.mockCtrl),
-					netinfoProvider: netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
 					commandProvider: commandMocks.NewDefaultMockProvider(s.mockCtrl),
 				})
 			},
@@ -266,7 +263,6 @@ func (s *HeartbeatLowLevelPublicTestSuite) SetupTest() {
 		loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
 		dnsProvider:     dnsMocks.NewDefaultMockProvider(s.mockCtrl),
 		pingProvider:    pingMocks.NewDefaultMockProvider(s.mockCtrl),
-		netinfoProvider: netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
 		commandProvider: commandMocks.NewDefaultMockProvider(s.mockCtrl),
 		processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
 		registryBucket:  "registry",
@@ -597,7 +593,6 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestStartHeartbeatHostnameChange() {
 				loadProvider:    loadMocks.NewDefaultMockProvider(ctrl),
 				dnsProvider:     dnsMocks.NewDefaultMockProvider(ctrl),
 				pingProvider:    pingMocks.NewDefaultMockProvider(ctrl),
-				netinfoProvider: netinfoMocks.NewDefaultMockProvider(ctrl),
 				commandProvider: commandMocks.NewDefaultMockProvider(ctrl),
 				processProvider: processMocks.NewDefaultMockProvider(ctrl),
 				registryBucket:  "registry",

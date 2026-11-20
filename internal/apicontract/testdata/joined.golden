@@ -719,7 +719,6 @@ schema RouteMutationEntry.status! = string(ok|failed|skipped|timeout)
 schema RouteMutationResponse.job_id = string/uuid
 schema RouteMutationResponse.results! = [RouteMutationEntry]
 schema RouteResponse.destination! = string
-schema RouteResponse.flags = string
 schema RouteResponse.gateway! = string
 schema RouteResponse.interface! = string
 schema RouteResponse.mask = string

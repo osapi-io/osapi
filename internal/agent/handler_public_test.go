@@ -48,7 +48,6 @@ import (
 	"github.com/osapi-io/osapi/internal/provider"
 	commandMocks "github.com/osapi-io/osapi/internal/provider/command/mocks"
 	fileMocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
-	netinfoMocks "github.com/osapi-io/osapi/internal/provider/network/netinfo/mocks"
 	"github.com/osapi-io/osapi/internal/provider/network/netplan/dns"
 	dnsMocks "github.com/osapi-io/osapi/internal/provider/network/netplan/dns/mocks"
 	"github.com/osapi-io/osapi/internal/provider/network/ping"
@@ -132,7 +131,6 @@ func (s *HandlerPublicTestSuite) SetupTest() {
 		loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
 		dnsProvider:     dnsMock,
 		pingProvider:    pingMock,
-		netinfoProvider: netinfoMocks.NewDefaultMockProvider(s.mockCtrl),
 		commandProvider: commandMocks.NewDefaultMockProvider(s.mockCtrl),
 		fileProvider:    fileMocks.NewDefaultMockProvider(s.mockCtrl),
 		processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),

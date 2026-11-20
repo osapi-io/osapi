@@ -218,7 +218,6 @@ func (suite *EnrollmentPublicTestSuite) TestHandlePKIEnrollment() {
 				nil, // diskProvider
 				nil, // memProvider
 				nil, // loadProvider
-				nil, // netinfoProvider
 				nil, // processProvider
 				nil, // registry
 				"",  // registryBucket
@@ -264,7 +263,7 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 
 				a := agent.New(
 					fs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, nil,
+					nil, "", nil, nil, nil, nil, nil, nil, "", "", nil, nil,
 				)
 
 				// Set up a PKI manager so PublicKey/Fingerprint don't panic.
@@ -301,7 +300,7 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 
 				a := agent.New(
 					fs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
+					nil, "", nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
 				)
 
 				m := pki.New(fs, "/keys", "agent")
@@ -339,7 +338,7 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 
 				a := agent.New(
 					fs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
+					nil, "", nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
 				)
 
 				m := pki.New(fs, "/keys", "agent")
@@ -374,7 +373,7 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 
 				a := agent.New(
 					fs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
+					nil, "", nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
 				)
 
 				m := pki.New(fs, "/keys", "agent")
@@ -414,7 +413,7 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 
 				a := agent.New(
 					fs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
+					nil, "", nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
 				)
 
 				m := pki.New(fs, "/keys", "agent")
@@ -461,7 +460,7 @@ func (suite *EnrollmentPublicTestSuite) TestStartEnrollmentListener() {
 
 				a := agent.New(
 					fs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, nil,
+					nil, "", nil, nil, nil, nil, nil, nil, "", "", nil, nil,
 				)
 
 				agent.SetAgentMachineID(a, "test-machine")
@@ -518,7 +517,7 @@ func (suite *EnrollmentPublicTestSuite) TestStartEnrollmentListener() {
 
 				a := agent.New(
 					fs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
+					nil, "", nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
 				)
 
 				agent.SetAgentMachineID(a, "test-machine")
@@ -564,7 +563,7 @@ func (suite *EnrollmentPublicTestSuite) TestStartEnrollmentListener() {
 
 				a := agent.New(
 					fs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
+					nil, "", nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
 				)
 
 				agent.SetAgentMachineID(a, "test-machine")
@@ -599,7 +598,7 @@ func (suite *EnrollmentPublicTestSuite) TestStartEnrollmentListener() {
 
 				a := agent.New(
 					fs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
+					nil, "", nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
 				)
 
 				agent.SetAgentMachineID(a, "test-machine")
@@ -645,7 +644,7 @@ func (suite *EnrollmentPublicTestSuite) TestStartEnrollmentListener() {
 
 				a := agent.New(
 					fs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
+					nil, "", nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
 				)
 
 				agent.SetAgentMachineID(a, "test-machine")
@@ -696,7 +695,7 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 
 				a := agent.New(
 					fs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, nil,
+					nil, "", nil, nil, nil, nil, nil, nil, "", "", nil, nil,
 				)
 
 				return a
@@ -727,7 +726,7 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 
 				a := agent.New(
 					fs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, nil,
+					nil, "", nil, nil, nil, nil, nil, nil, "", "", nil, nil,
 				)
 
 				return a
@@ -772,7 +771,7 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 				a := agent.New(
 					fs, cfg, logger,
 					mockJobClient, "test-stream",
-					nil, nil, nil, nil, nil, nil, nil, "", "", nil, nil,
+					nil, nil, nil, nil, nil, nil, "", "", nil, nil,
 				)
 
 				// Set up PKI manager.
@@ -842,7 +841,7 @@ func (suite *EnrollmentPublicTestSuite) TestHandleEnrollmentResponse() {
 
 				a := agent.New(
 					vfs, cfg, logger,
-					nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, nil,
+					nil, "", nil, nil, nil, nil, nil, nil, "", "", nil, nil,
 				)
 
 				// Use the manager created from the base FS (keys already loaded).

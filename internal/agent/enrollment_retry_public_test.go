@@ -56,7 +56,7 @@ func (s *EnrollmentRetryPublicTestSuite) pendingAgent(
 
 	a := agent.New(
 		fs, cfg, slog.Default(),
-		nil, "", nil, nil, nil, nil, nil, nil, nil, "", "", nil, publisher,
+		nil, "", nil, nil, nil, nil, nil, nil, "", "", nil, publisher,
 	)
 
 	m := pki.New(fs, "/keys", "agent")

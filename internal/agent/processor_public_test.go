@@ -36,7 +36,6 @@ import (
 	"github.com/osapi-io/osapi/internal/job/mocks"
 	commandMocks "github.com/osapi-io/osapi/internal/provider/command/mocks"
 	fileMocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
-	netinfoMocks "github.com/osapi-io/osapi/internal/provider/network/netinfo/mocks"
 	"github.com/osapi-io/osapi/internal/provider/network/netplan/dns"
 	dnsMocks "github.com/osapi-io/osapi/internal/provider/network/netplan/dns/mocks"
 	"github.com/osapi-io/osapi/internal/provider/network/ping"
@@ -104,7 +103,6 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 		PacketLoss:      0,
 	}, nil).AnyTimes()
 
-	netinfoMock := netinfoMocks.NewDefaultMockProvider(s.mockCtrl)
 	commandMock := commandMocks.NewDefaultMockProvider(s.mockCtrl)
 	fMock := fileMocks.NewDefaultMockProvider(s.mockCtrl)
 
@@ -120,7 +118,6 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 		loadProvider:    loadMock,
 		dnsProvider:     dnsMock,
 		pingProvider:    pingMock,
-		netinfoProvider: netinfoMock,
 		commandProvider: commandMock,
 		fileProvider:    fMock,
 		processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
@@ -549,7 +546,6 @@ func (s *ProcessorPublicTestSuite) TestNetworkOperations() {
 					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsProvider:     dnsMock,
 					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
-					netinfoProvider: netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandProvider: commandMocks.NewPlainMockProvider(s.mockCtrl),
 				})
 			},
@@ -579,7 +575,6 @@ func (s *ProcessorPublicTestSuite) TestNetworkOperations() {
 					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsProvider:     dnsMock,
 					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
-					netinfoProvider: netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandProvider: commandMocks.NewPlainMockProvider(s.mockCtrl),
 				})
 			},
@@ -609,7 +604,6 @@ func (s *ProcessorPublicTestSuite) TestNetworkOperations() {
 					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
 					dnsProvider:     dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingProvider:    pingMock,
-					netinfoProvider: netinfoMocks.NewPlainMockProvider(s.mockCtrl),
 					commandProvider: commandMocks.NewPlainMockProvider(s.mockCtrl),
 				})
 			},

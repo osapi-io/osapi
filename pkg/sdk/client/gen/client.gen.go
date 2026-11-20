@@ -3976,9 +3976,6 @@ type RouteResponse struct {
 	// Destination Destination network address.
 	Destination string `json:"destination"`
 
-	// Flags Route flags.
-	Flags *string `json:"flags,omitempty"`
-
 	// Gateway Gateway address.
 	Gateway string `json:"gateway"`
 

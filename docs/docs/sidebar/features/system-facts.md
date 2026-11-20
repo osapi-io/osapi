@@ -11,13 +11,14 @@ Facts are used in two features: the `agent get` output, and **fact references**
 
 ## What the agent collects
 
-The providers collect the facts every 60 seconds. `agent.facts.interval` sets
-this. The agent stores the facts in the `agent-facts` KV bucket, with a 5-minute
-TTL.
+The agent collects the facts with [gohai](https://github.com/osapi-io/gohai)
+every 60 seconds: its kernel, hostname, cpu, init, package_mgr, network and
+virtualization collectors. `agent.facts.interval` sets this. The agent stores
+the facts in the `agent-facts` KV bucket, with a 5-minute TTL.
 
 | Fact              | Description                                        | Example value        |
 | ----------------- | -------------------------------------------------- | -------------------- |
-| Architecture      | CPU architecture                                   | `amd64`, `arm64`     |
+| Architecture      | CPU architecture, as `uname -m` prints it          | `x86_64`, `arm64`    |
 | Kernel Version    | OS kernel version string                           | `6.8.0-51-generic`   |
 | FQDN              | Fully qualified domain name                        | `web-01.example.com` |
 | CPU Count         | Number of logical CPUs                             | `8`                  |
@@ -43,12 +44,13 @@ The list has only interfaces that are up and that are not loopback interfaces.
 
 Each route entry has:
 
-- **Destination**: the target network, or `default` / `0.0.0.0`
+- **Destination**: the target network. The default route is `0.0.0.0`
 - **Gateway**: the next-hop address
 - **Interface**: the name of the outgoing interface
-- **Mask**: the CIDR mask, for example `/24` (Linux only)
+- **Mask**: the CIDR mask, for example `/24`. The default route is `/0`
 - **Metric**: the route metric (Linux only)
-- **Flags**: the route flags
+
+The list has only IPv4 routes, on Linux and on macOS.
 
 ## Fact references (`@fact.*`)
 
@@ -62,7 +64,7 @@ is. The agent resolves it before it runs the operation.
 | Reference                 | Resolves to                 | Example value        |
 | ------------------------- | --------------------------- | -------------------- |
 | `@fact.hostname`          | The hostname of the agent   | `web-01`             |
-| `@fact.arch`              | CPU architecture            | `amd64`              |
+| `@fact.arch`              | CPU architecture            | `x86_64`             |
 | `@fact.kernel`            | Kernel version              | `6.8.0-51-generic`   |
 | `@fact.fqdn`              | Fully qualified hostname    | `web-01.example.com` |
 | `@fact.interface.primary` | The default route interface | `eth0`               |

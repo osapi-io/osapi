@@ -22,10 +22,6 @@
 package host
 
 import (
-	"os"
-	"os/exec"
-	"runtime"
-
 	"github.com/shirou/gopsutil/v4/host"
 
 	"github.com/osapi-io/osapi/internal/provider"
@@ -45,20 +41,12 @@ var (
 type Linux struct {
 	provider.FactsAware
 
-	InfoFn     func() (*host.InfoStat, error)
-	HostnameFn func() (string, error)
-	NumCPUFn   func() int
-	StatFn     func(name string) (os.FileInfo, error)
-	LookPathFn func(file string) (string, error)
+	InfoFn func() (*host.InfoStat, error)
 }
 
 // NewLinuxProvider factory to create a new Linux instance.
 func NewLinuxProvider() *Linux {
 	return &Linux{
-		InfoFn:     host.Info,
-		HostnameFn: os.Hostname,
-		NumCPUFn:   runtime.NumCPU,
-		StatFn:     os.Stat,
-		LookPathFn: exec.LookPath,
+		InfoFn: host.Info,
 	}
 }
