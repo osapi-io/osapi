@@ -192,7 +192,7 @@ func buildAgentInfo(
 		info.Memory = &MemoryResponse{
 			Total: uint64ToInt(a.MemoryStats.Total),
 			Free:  uint64ToInt(a.MemoryStats.Free),
-			Used:  uint64ToInt(a.MemoryStats.Cached),
+			Used:  uint64ToInt(a.MemoryStats.Used()),
 		}
 	}
 	for _, ni := range a.Interfaces {

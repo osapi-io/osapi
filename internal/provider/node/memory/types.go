@@ -39,3 +39,15 @@ type Result struct {
 	// Changed indicates whether system state was modified.
 	Changed bool `json:"changed"`
 }
+
+// Used is the memory in use: the total less what is available, which is
+// the free memory and what the kernel can reclaim, such as the cache. It is
+// what free(1) calls used. It is 0 when the host reports more available than
+// total.
+func (r Result) Used() uint64 {
+	if r.Available > r.Total {
+		return 0
+	}
+
+	return r.Total - r.Available
+}
