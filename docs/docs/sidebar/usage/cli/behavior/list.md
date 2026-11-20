@@ -2,7 +2,7 @@
 
 List the behaviors this binary has.
 
-An internal behavior is marked `(internal)`. Only other behaviors use it.
+An internal behavior has no API or CLI of its own. Only other behaviors use it.
 
 ```bash
 osapi behavior list

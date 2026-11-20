@@ -38,7 +38,7 @@ type Problem struct {
 	Rule     string `json:"rule"`
 	Message  string `json:"message"`
 	// Fix is how to fix it, from the check of Rule.
-	Fix string `json:"fix"`
+	Fix string `json:"fix" table:"-"`
 }
 
 // The rules Validate checks, by the name a Problem reports.

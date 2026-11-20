@@ -27,48 +27,10 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/cli"
-	"github.com/osapi-io/osapi/internal/guide"
 )
 
 type GuidePublicTestSuite struct {
 	suite.Suite
-}
-
-func (s *GuidePublicTestSuite) TestPrintTerms() {
-	tests := []struct {
-		name  string
-		terms []guide.Term
-		want  string
-	}{
-		{
-			name: "when a term has a use prints the name, what it does and the use",
-			terms: []guide.Term{
-				{Name: "Node", Does: "Runs on a host.", When: "Always."},
-				{Name: "API", Does: "Serves it."},
-			},
-			want: "  Node\n    Runs on a host.\n    Use: Always.\n\n  API\n    Serves it.\n",
-		},
-		{
-			name: "when the text is long wraps it under the name",
-			terms: []guide.Term{
-				{Name: "Key", Does: strings.TrimSpace(strings.Repeat("word ", 16))},
-			},
-			want: "  Key\n    " + strings.TrimSpace(strings.Repeat("word ", 14)) +
-				"\n    word word\n",
-		},
-		{
-			name:  "when a word is longer than a line keeps it whole",
-			terms: []guide.Term{{Name: "x", Does: strings.Repeat("y", 80) + " z"}},
-			want:  "  x\n    " + strings.Repeat("y", 80) + "\n    z\n",
-		},
-		{name: "when there are no terms prints nothing", want: ""},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			s.Equal(tc.want, captureStdout(func() { cli.PrintTerms(tc.terms) }))
-		})
-	}
 }
 
 func (s *GuidePublicTestSuite) TestPrintBlock() {
@@ -79,6 +41,18 @@ func (s *GuidePublicTestSuite) TestPrintBlock() {
 	})
 	s.Equal(
 		"\nOptions:\n  Flat()\n    Adds no word.\n    Use: Alone.\n\n  Long()\n    Help.\n",
+		got,
+	)
+}
+
+// TestPrintBlockWraps breaks a long paragraph at spaces, under the title.
+func (s *GuidePublicTestSuite) TestPrintBlockWraps() {
+	got := captureStdout(func() {
+		cli.PrintHeading("Keys")
+		cli.PrintBlock("Key", "", strings.TrimSpace(strings.Repeat("word ", 16)))
+	})
+	s.Equal(
+		"\nKeys:\n  Key\n    "+strings.TrimSpace(strings.Repeat("word ", 14))+"\n    word word\n",
 		got,
 	)
 }

@@ -18,28 +18,47 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmd
+package behaviordsl
 
 import (
-	"github.com/spf13/cobra"
+	"testing"
 
-	// Registers every behavior, so the commands below can see them.
-	_ "github.com/osapi-io/osapi/internal/behaviors/all"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi/internal/behavior"
 )
 
-// behaviorCmd groups the commands that read the behavior registry. They need
-// no config and no controller: they describe what this binary can do.
-var behaviorCmd = &cobra.Command{
-	Use:   "behavior",
-	Short: "List, describe and validate the behaviors this binary has",
-	Long: "A behavior is one thing that osapi manages on a host, for example kernel\n" +
-		"parameters. [Behaviors](../../../architecture/behaviors.md) tells more.\n" +
-		"These commands read the definitions in the binary. Thus they need no config\n" +
-		"file and no controller. What they print always agrees with the build that\n" +
-		"you run.",
+type MethodsTestSuite struct {
+	suite.Suite
 }
 
-func init() {
-	rootCmd.AddCommand(behaviorCmd)
-	skipConfigCmds["behavior"] = true
+func (s *MethodsTestSuite) TestConstraints() {
+	one, two := 1, 2
+	low, high := 0.5, 9.0
+	got := constraints(&behavior.Schema{
+		Pattern: "^a$", Format: "ipv4", Enum: []string{"a", "b"},
+		MinLength: &one, MaxLength: &two, Minimum: &low, Maximum: &high,
+	})
+	s.Equal("pattern ^a$, format ipv4, one of a b, min length 1, max length 2, min 0.5, max 9", got)
+}
+
+func (s *MethodsTestSuite) TestShape() {
+	s.Equal(
+		"ListInput",
+		shape("ListInput", &behavior.Schema{}, true),
+		"a type with no field is its name",
+	)
+}
+
+func (s *MethodsTestSuite) TestPairs() {
+	s.Equal("key=a, value=1", pairs(map[string]any{"key": "a", "value": 1}))
+	s.Equal("[key=a] [key=b]", pairs([]map[string]string{{"key": "a"}, {"key": "b"}}))
+	s.Equal("(none)", pairs(struct{}{}))
+	s.Equal(`"text"`, pairs("text"))
+}
+
+func TestMethodsTestSuite(
+	t *testing.T,
+) {
+	suite.Run(t, new(MethodsTestSuite))
 }

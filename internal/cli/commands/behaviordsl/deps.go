@@ -18,25 +18,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmd
+package behaviordsl
 
 import (
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/guide"
-	"github.com/osapi-io/osapi/internal/job"
 )
 
-var behaviorSpecCmd = newSpecCommand(
-	func() guide.Spec { return behavior.CurrentSpec(job.FactKeys()...) },
-	"Print the behavior DSL: each option, method, example part and field tag",
-	"Print each part of the behavior DSL, what it makes osapi do and when to use\n"+
-		"it. The list comes from this binary. Thus it agrees with the build that you\n"+
-		"run. Read it before you write a behavior, then check the result with\n"+
-		"`osapi behavior validate`.",
-	`  osapi behavior spec get
-  osapi behavior spec get --json`,
-)
-
-func init() {
-	behaviorCmd.AddCommand(behaviorSpecCmd)
+// Deps is what the methods use: the behaviors, their problems, the config
+// keys their settings are, and the spec of the DSL.
+type Deps struct {
+	Behaviors func() []*behavior.Behavior
+	Validate  func() []behavior.Problem
+	Keys      func() []config.Key
+	Spec      func() guide.Spec
 }

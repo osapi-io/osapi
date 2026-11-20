@@ -37,6 +37,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/commands/admission"
 	"github.com/osapi-io/osapi/internal/cli/commands/agentcmd"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/all/gen"
+	"github.com/osapi-io/osapi/internal/cli/commands/behaviordsl"
 	"github.com/osapi-io/osapi/internal/cli/commands/commanddsl"
 	configcmd "github.com/osapi-io/osapi/internal/cli/commands/config"
 	"github.com/osapi-io/osapi/internal/cli/commands/controllercmd"
@@ -51,6 +52,8 @@ import (
 	versioncmd "github.com/osapi-io/osapi/internal/cli/commands/version"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	"github.com/osapi-io/osapi/internal/guide"
+	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/skills"
 )
 
@@ -104,6 +107,14 @@ func init() {
 				return endpoint.OpenAPI(g, endpoint.ErrorRef)
 			},
 			Dir: ".",
+		}
+	})
+	command.Provide(behaviordsl.Group, func() behaviordsl.Deps {
+		return behaviordsl.Deps{
+			Behaviors: behavior.All,
+			Validate:  behavior.Validate,
+			Keys:      config.Keys,
+			Spec:      func() guide.Spec { return behavior.CurrentSpec(job.FactKeys()...) },
 		}
 	})
 	command.Provide(startcmd.Group, func() startcmd.Deps {

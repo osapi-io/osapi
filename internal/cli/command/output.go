@@ -261,8 +261,8 @@ func (c Column) FormatKV(
 	return c.Format(p, v)
 }
 
-// noValue reports whether v is no value: absent, null, an empty string, or
-// a zero time.
+// noValue reports whether v is no value: absent, null, an empty string or
+// list, or a zero time.
 func noValue(
 	c Column,
 	v any,
@@ -270,6 +270,9 @@ func noValue(
 	switch t := v.(type) {
 	case nil:
 		return true
+	case []any:
+		// An empty list, such as no platforms, has no value either.
+		return len(t) == 0
 	case string:
 		if t == "" {
 			return true
