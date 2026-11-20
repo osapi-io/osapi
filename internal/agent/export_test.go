@@ -29,6 +29,9 @@ import (
 	osexec "os/exec"
 	"time"
 
+	"github.com/osapi-io/gohai/pkg/gohai"
+	"github.com/osapi-io/gohai/pkg/gohai/source"
+
 	"github.com/avfs/avfs"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
@@ -56,7 +59,6 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/node/ntp"
 	"github.com/osapi-io/osapi/internal/provider/node/power"
 	"github.com/osapi-io/osapi/internal/provider/node/timezone"
-	"github.com/osapi-io/osapi/pkg/sdk/platform"
 )
 
 // SetEmbeddedFS overrides the embedded filesystem for testing.
@@ -923,10 +925,24 @@ func SetPlatformFns(
 	containerFn = container
 }
 
+// ExportInContainer tells whether the host of src is a container.
+func ExportInContainer(
+	src source.Sources,
+) bool {
+	return inContainer(src)
+}
+
+// ExportGohaiFacts collects the facts that opts select.
+func ExportGohaiFacts(
+	opts ...gohai.Option,
+) (*gohai.Facts, error) {
+	return gohaiFacts(opts...)
+}
+
 // ResetPlatformFns puts back the functions that tell the platform of the host.
 func ResetPlatformFns() {
 	detectFn = family.Detect
-	containerFn = platform.IsContainer
+	containerFn = func() bool { return inContainer(source.Sources{}) }
 }
 
 // ExportIdentityAttrs gives a the hostname, machine ID and facts that it

@@ -729,8 +729,8 @@ github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8
 github.com/opencontainers/go-digest v1.0.0/go.mod h1:0JzlMkj0TRzQZfJkVvzbP0HBR3IKzErnv2BNG4W4MAM=
 github.com/opencontainers/image-spec v1.1.1 h1:y0fUlFfIZhPF1W537XOLg0/fcx6zcHCJwooC2xJA040=
 github.com/opencontainers/image-spec v1.1.1/go.mod h1:qpqAh3Dmcf36wStyyWU+kCeDgrGnAve2nCC8+7h8Q0M=
-github.com/osapi-io/gohai v1.2.0 h1:T17wpsLRlXGHR3o0+VpvCxUy++YoUUo+yhQE2oxKtY8=
-github.com/osapi-io/gohai v1.2.0/go.mod h1:m8Uddc81igWBeWpkv45RzIvz91gGjG6Yl/JXoVgoti4=
+github.com/osapi-io/gohai v1.3.0 h1:Y1JbKrbpgXAXyIEPs+DfMjED+wbw2yMh5wJpDgwZUxg=
+github.com/osapi-io/gohai v1.3.0/go.mod h1:kWHWvBmqvO7XJiIXlW18Smh724gC9QydR79bLJLBvec=
 github.com/osapi-io/nats-client v1.2.0 h1:5wxYnEHukjuDigPsG7eR6HIkZPzLfelmIxDjg8iTEX8=
 github.com/osapi-io/nats-client v1.2.0/go.mod h1:QyP+WVKK05r02ZK6lJ9omZAlP3iQ9nRhBrVEnpJFqfU=
 github.com/osapi-io/nats-server v1.1.0 h1:plerqk29UH3YNrkubnf4CjUGjC99BLMDQ7BpFAauFAk=

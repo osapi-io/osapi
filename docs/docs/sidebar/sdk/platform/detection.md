@@ -55,12 +55,6 @@ A family with no case gets the Linux provider. A
 `behavior.Platform`, and can limit one method to a family with `.On`.
 `behavior.PlatformDebian` and `behavior.PlatformDarwin` are gohai's values.
 
-## Containers
-
-`IsContainer()` in `github.com/osapi-io/osapi/pkg/sdk/platform` reports whether
-the agent runs in a container, from `/.dockerenv`. The agent leaves out what a
-container cannot do, such as setting the hostname.
-
 ## Adding a new OS family
 
 1. If gohai does not name the family yet, add it to gohai first.
