@@ -18,7 +18,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/uuid v1.6.0
 	github.com/labstack/echo-opentelemetry v0.0.4
-	github.com/labstack/echo/v5 v5.4.4
+	github.com/labstack/echo/v5 v5.4.5
 	github.com/lmittmann/tint v1.2.1
 	github.com/muesli/termenv v0.16.0
 	github.com/nats-io/jwt/v2 v2.8.3
