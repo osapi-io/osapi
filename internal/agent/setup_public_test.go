@@ -30,6 +30,7 @@ import (
 	"testing/fstest"
 
 	"github.com/avfs/avfs/vfs/memfs"
+	"github.com/osapi-io/gohai/pkg/gohai"
 	"github.com/osapi-io/gohai/pkg/gohai/source"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -268,6 +269,11 @@ func (s *SetupPublicTestSuite) TestInContainer() {
 			s.Equal(tt.want, got)
 		})
 	}
+}
+
+func (s *SetupPublicTestSuite) TestGohaiFacts() {
+	_, err := agent.ExportGohaiFacts(gohai.WithCollectors("no-such-collector"))
+	s.Error(err, "gohai's error comes back")
 }
 
 func (s *SetupPublicTestSuite) TestSubComponents() {

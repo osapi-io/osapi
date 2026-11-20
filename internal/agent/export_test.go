@@ -29,6 +29,7 @@ import (
 	osexec "os/exec"
 	"time"
 
+	"github.com/osapi-io/gohai/pkg/gohai"
 	"github.com/osapi-io/gohai/pkg/gohai/source"
 
 	"github.com/avfs/avfs"
@@ -929,6 +930,13 @@ func ExportInContainer(
 	src source.Sources,
 ) bool {
 	return inContainer(src)
+}
+
+// ExportGohaiFacts collects the facts that opts select.
+func ExportGohaiFacts(
+	opts ...gohai.Option,
+) (*gohai.Facts, error) {
+	return gohaiFacts(opts...)
 }
 
 // ResetPlatformFns puts back the functions that tell the platform of the host.

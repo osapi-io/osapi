@@ -64,16 +64,21 @@ var (
 func inContainer(
 	src source.Sources,
 ) bool {
-	g, err := gohai.New(gohai.WithCollectors("virtualization"), gohai.WithSources(src))
+	facts, err := gohaiFacts(gohai.WithCollectors("virtualization"), gohai.WithSources(src))
+
+	return err == nil && facts.Virtualization.InContainer()
+}
+
+// gohaiFacts collects the facts that opts select.
+func gohaiFacts(
+	opts ...gohai.Option,
+) (*gohai.Facts, error) {
+	g, err := gohai.New(opts...)
 	if err != nil {
-		return false
-	}
-	facts, err := g.Collect(context.Background())
-	if err != nil {
-		return false
+		return nil, err
 	}
 
-	return facts.Virtualization.InContainer()
+	return g.Collect(context.Background())
 }
 
 // Setup connects to NATS as cfg.Agent.NATS tells, and makes the provider of
