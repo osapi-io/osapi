@@ -40,10 +40,8 @@ var (
 // Linux implements the Host Provider interface for any Linux host. Each read
 // is the same on every distribution: gopsutil for the hostname, OS, kernel,
 // architecture, CPU count and uptime, a look for apt, dnf or yum, and a stat
-// of the systemd directory. Thus a host without a provider of its own, such
-// as Fedora, reports its facts. UpdateHostname is unsupported here, because
-// how a host sets its name is specific to its distribution; Debian embeds
-// Linux and adds it.
+// of the systemd directory. Every Linux host, Debian included, uses it. The
+// hostname behavior sets the name.
 type Linux struct {
 	provider.FactsAware
 

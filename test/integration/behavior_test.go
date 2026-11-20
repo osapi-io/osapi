@@ -26,7 +26,6 @@ import (
 	"os"
 	"os/exec"
 	"reflect"
-	"slices"
 	"strings"
 	"testing"
 
@@ -35,6 +34,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/command"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all"
+	"github.com/osapi-io/osapi/pkg/sdk/platform"
 )
 
 // BehaviorSmokeSuite runs every registered behavior's generated commands
@@ -80,11 +80,13 @@ func (s *BehaviorSmokeSuite) results(
 	return body.Results
 }
 
-// TestPrograms: the image has every program a behavior declares, so a
-// behavior's examples fail here for what it does, not for what is missing.
+// TestPrograms: the image has every program a behavior declares for this
+// platform, so a behavior's examples fail here for what it does, not for
+// what is missing.
 func (s *BehaviorSmokeSuite) TestPrograms() {
 	for _, b := range behavior.All() {
-		for _, p := range append(slices.Clone(b.Sudo), b.Runs...) {
+		sudo, runs := b.Programs(platform.Detect())
+		for _, p := range append(sudo, runs...) {
 			_, err := exec.LookPath(p)
 			s.NoError(err,
 				"%s runs %s, which this image lacks: add its package to the apt-get "+

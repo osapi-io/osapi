@@ -31,7 +31,6 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/agent"
-	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider/node/power"
 	powerMocks "github.com/osapi-io/osapi/internal/provider/node/power/mocks"
@@ -124,7 +123,6 @@ func (s *ProcessorPowerPublicTestSuite) TestProcessPowerOperation() {
 				nil,
 				nil,
 				nil,
-				config.Config{},
 				slog.Default())
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
@@ -246,7 +244,6 @@ func (s *ProcessorPowerPublicTestSuite) TestProcessPowerReboot() {
 				nil,
 				nil,
 				nil,
-				config.Config{},
 				slog.Default())
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
@@ -368,7 +365,6 @@ func (s *ProcessorPowerPublicTestSuite) TestProcessPowerShutdown() {
 				nil,
 				nil,
 				nil,
-				config.Config{},
 				slog.Default())
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})

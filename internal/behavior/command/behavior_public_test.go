@@ -244,7 +244,8 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 		),
 		behavior.Sudo("kvctl"),
 		behavior.Runs("kvstat"),
-		behavior.Write("create", write).Describe("Create one").
+		behavior.Write("create", write).Describe("Create one").On("debian").
+			Sudo("kvsync").Runs("kvcheck").
 			Example("One key", input{Key: "k"}, result{Key: "k"},
 				behavior.Wrote("/var/kv/k", "v\n"),
 				behavior.Removed("/var/kv/old"),
@@ -269,6 +270,9 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 	s.NotContains(index, "<DocCardList />", "the method pages are in the CLI reference")
 	s.Contains(index, "None. A behavior declares settings with `behavior.Config`.")
 	s.Contains(index, "On `debian`. On any other platform its methods report `skipped`.")
+	s.Contains(index, "`create` runs only on `debian`. On any other platform it reports `skipped`.")
+	s.Contains(index, "`create` runs `kvsync` with sudo, only where it runs.")
+	s.Contains(index, "`create` runs `kvcheck`, only where it runs.")
 	s.Contains(index, "It runs `kvctl` with sudo")
 	s.Contains(index, "It runs `kvstat`, which the host must have installed.")
 

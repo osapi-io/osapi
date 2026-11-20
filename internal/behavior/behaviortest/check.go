@@ -73,6 +73,11 @@ func Check(
 	var problems []string
 	for _, pp := range b.Platforms {
 		for _, m := range b.Methods {
+			// A method limited with On runs its examples only with the
+			// providers that serve it.
+			if !b.Serves(m, pp.Name) {
+				continue
+			}
 			for _, ex := range m.Examples {
 				where := fmt.Sprintf("%s %s on %s, %q", b.Name, m.Name, pp.Name, ex.Doc)
 				for _, p := range checkExample(b, m, pp.Name, ex) {

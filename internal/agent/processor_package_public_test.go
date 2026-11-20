@@ -31,7 +31,6 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/agent"
-	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider/node/apt"
 	aptMocks "github.com/osapi-io/osapi/internal/provider/node/apt/mocks"
@@ -61,7 +60,6 @@ func (s *ProcessorPackagePublicTestSuite) newProcessor(
 		packageProvider,
 		nil,
 		nil,
-		config.Config{},
 		slog.Default())
 }
 

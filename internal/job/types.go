@@ -145,14 +145,7 @@ type OperationType = client.JobOperation
 
 // Node operations — read-only operations that query node state.
 const (
-	OperationNodeHostnameGet    = client.OpNodeHostnameGet
-	OperationNodeHostnameUpdate = client.OpNodeHostnameUpdate
-	OperationNodeStatusGet      = client.OpNodeStatusGet
-	OperationNodeUptimeGet      = client.OpNodeUptimeGet
-	OperationNodeLoadGet        = client.OpNodeLoadGet
-	OperationNodeMemoryGet      = client.OpNodeMemoryGet
-	OperationNodeDiskGet        = client.OpNodeDiskGet
-	OperationNodeOSGet          = client.OpNodeOSGet
+	OperationNodeStatusGet = client.OpNodeStatusGet
 )
 
 // Network operations.

@@ -439,6 +439,13 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 			wantRules: []string{behavior.RuleSurface},
 		},
 		{
+			name: "when On names a platform the behavior has no provider for",
+			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
+				behavior.Read("get", get).Describe("Get").On(behavior.PlatformDarwin),
+			),
+			wantRules: []string{behavior.RulePlatform},
+		},
+		{
 			name: "when a platform is declared twice",
 			b: behavior.Define("sysctl", "x", behavior.Node, onDebian, onDebian,
 				behavior.Read("get", get).Describe("Get"),

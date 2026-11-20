@@ -29,13 +29,14 @@ type UptimeResult struct {
 	Hostname string `json:"hostname"`
 	Status   string `json:"status"`
 	Uptime   string `json:"uptime,omitempty"`
-	Error    string `json:"error,omitempty"`
-	Changed  bool   `json:"changed"`
+	// Seconds is the uptime in seconds.
+	Seconds int    `json:"seconds,omitempty"`
+	Error   string `json:"error,omitempty"`
 }
 
-// uptimeCollectionFromGen converts a gen.UptimeCollectionResponse to a Collection[UptimeResult].
+// uptimeCollectionFromGen converts a gen.UptimeGetResponse to a Collection[UptimeResult].
 func uptimeCollectionFromGen(
-	g *gen.UptimeCollectionResponse,
+	g *gen.UptimeGetResponse,
 ) Collection[UptimeResult] {
 	results := make([]UptimeResult, 0, len(g.Results))
 	for _, r := range g.Results {
@@ -43,8 +44,8 @@ func uptimeCollectionFromGen(
 			Hostname: r.Hostname,
 			Status:   string(r.Status),
 			Uptime:   derefString(r.Uptime),
+			Seconds:  derefInt(r.Seconds),
 			Error:    derefString(r.Error),
-			Changed:  derefBool(r.Changed),
 		})
 	}
 

@@ -108,7 +108,6 @@ func newTestAgent(
 			nil,
 			nil,
 			nil,
-			p.appConfig,
 			logger,
 		),
 		p.hostProvider, p.diskProvider, p.memoryProvider, p.loadProvider,

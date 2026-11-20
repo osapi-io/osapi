@@ -294,46 +294,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node",
-      link: {
-        type: "doc",
-        id: "gen/api/node-management-api-node-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/get-node-disk",
-          label: "Retrieve disk usage",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-node-memory",
-          label: "Retrieve memory stats",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-node-load",
-          label: "Retrieve load averages",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-node-os",
-          label: "Retrieve OS info",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-node-uptime",
-          label: "Retrieve uptime",
-          className: "api-method get",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Node/Status",
       link: {
         type: "doc",
@@ -513,28 +473,6 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/get-node-file-status",
           label: "Check deployment status of a file on the host",
           className: "api-method get",
-        },
-      ],
-    },
-    {
-      type: "category",
-      label: "Node/Hostname",
-      link: {
-        type: "doc",
-        id: "gen/api/hostname-management-api-hostname-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/get-node-hostname",
-          label: "Retrieve node hostname",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/put-node-hostname",
-          label: "Update node hostname",
-          className: "api-method put",
         },
       ],
     },
@@ -1058,6 +996,92 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
+      label: "Node/Disk",
+      link: {
+        type: "doc",
+        id: "gen/api/disk-api-disk-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-disk",
+          label: "Get the disk usage of the host",
+          className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Hostname",
+      link: {
+        type: "doc",
+        id: "gen/api/hostname-api-hostname-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-hostname",
+          label: "Get the hostname of the host",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-hostname",
+          label: "Set the hostname of the host",
+          className: "api-method put",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Load",
+      link: {
+        type: "doc",
+        id: "gen/api/load-api-load-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-load",
+          label: "Get the load averages of the host",
+          className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Memory",
+      link: {
+        type: "doc",
+        id: "gen/api/memory-api-memory-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-memory",
+          label: "Get the memory usage of the host",
+          className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Os",
+      link: {
+        type: "doc",
+        id: "gen/api/os-api-os-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-os",
+          label: "Get the operating system of the host",
+          className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "Node/Sysctl",
       link: {
         type: "doc",
@@ -1093,6 +1117,22 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/put-node-sysctl",
           label: "Set a kernel parameter, manage it, and apply it",
           className: "api-method put",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Uptime",
+      link: {
+        type: "doc",
+        id: "gen/api/uptime-api-uptime-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-uptime",
+          label: "Get the uptime of the host",
+          className: "api-method get",
         },
       ],
     },

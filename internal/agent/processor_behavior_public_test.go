@@ -87,6 +87,7 @@ func (s *ProcessorBehaviorPublicTestSuite) SetupTest() {
 		behavior.Platform("test", build(english{}, nil)),
 		behavior.Read("get", greet),
 		behavior.Read("list", greetConcrete),
+		behavior.Read("show", greet).On("debian"),
 	))
 	behavior.Register(behavior.Define("broken", "Fails to build", behavior.Node,
 		behavior.Platform("test", build(english{}, errors.New("no socket"))),
@@ -156,6 +157,11 @@ func (s *ProcessorBehaviorPublicTestSuite) TestNewBehaviorProcessor() {
 		{
 			name:            "when the behavior has no provider on this platform",
 			operation:       "elsewhere.get",
+			wantUnsupported: true,
+		},
+		{
+			name:            "when the method runs only on another platform",
+			operation:       "greeting.show",
 			wantUnsupported: true,
 		},
 		{

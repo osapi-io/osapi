@@ -325,7 +325,12 @@ func (s *PreflightPublicTestSuite) TestRunPreflight() {
 			s.Require().NoError(err)
 			agent.SetProcStatusPath(path)
 
-			results, ok := agent.RunPreflight(context.Background(), s.logger, s.mockExecMgr)
+			results, ok := agent.RunPreflight(
+				context.Background(),
+				s.logger,
+				s.mockExecMgr,
+				"debian",
+			)
 
 			s.Equal(tc.wantOK, ok)
 			count := map[string]int{}
@@ -392,7 +397,7 @@ func (s *PreflightPublicTestSuite) TestMissingPrograms() {
 		s.Run(tc.name, func() {
 			tc.setup()
 
-			got := agent.MissingPrograms()
+			got := agent.MissingPrograms("debian")
 
 			s.Equal(tc.want, got)
 		})

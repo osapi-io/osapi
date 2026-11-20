@@ -70,6 +70,12 @@ func (suite *MemoryTypesPublicTestSuite) TestMemoryFromGen() {
 	}
 }
 
+func (suite *MemoryTypesPublicTestSuite) TestMemoryUsageFromGen() {
+	suite.Nil(client.ExportMemoryUsageFromGen(nil))
+	got := client.ExportMemoryUsageFromGen(&gen.Usage{Total: 8, Used: 3, Free: 5})
+	suite.Equal(&client.Memory{Total: 8, Used: 3, Free: 5}, got)
+}
+
 func TestMemoryTypesPublicTestSuite(
 	t *testing.T,
 ) {

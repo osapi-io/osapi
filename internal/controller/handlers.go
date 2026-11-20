@@ -37,7 +37,6 @@ import (
 	commandAPI "github.com/osapi-io/osapi/internal/controller/api/node/command"
 	dockerAPI "github.com/osapi-io/osapi/internal/controller/api/node/container"
 	nodeFileAPI "github.com/osapi-io/osapi/internal/controller/api/node/file"
-	hostnameAPI "github.com/osapi-io/osapi/internal/controller/api/node/hostname"
 	logAPI "github.com/osapi-io/osapi/internal/controller/api/node/log"
 	networkAPI "github.com/osapi-io/osapi/internal/controller/api/node/network"
 	ntpAPI "github.com/osapi-io/osapi/internal/controller/api/node/ntp"
@@ -129,7 +128,6 @@ func handlers(
 		)...,
 	)
 	handlers = append(handlers, nodeAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
-	handlers = append(handlers, hostnameAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, dockerAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, scheduleAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, ntpAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)

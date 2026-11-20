@@ -42,26 +42,29 @@ to an OS family:
 
 ## Provider Selection
 
-The agent's `ProviderFactory` uses the family name to select providers:
+The agent uses the family name to select providers, in
+`internal/agent/providers.go`:
 
 ```go
-switch platform.Detect() {
+switch e.platform {
 case "debian":
-    hostProvider = host.NewDebianProvider()
+    return disk.NewDebianProvider(e.log)
 case "darwin":
-    hostProvider = host.NewDarwinProvider()
+    return disk.NewDarwinProvider(e.log)
 default:
-    hostProvider = host.NewLinuxProvider() // the reads of any Linux; no hostname change
+    return disk.NewLinuxProvider()
 }
 ```
+
+A [behavior](../../behaviors/behaviors.mdx) names the family with
+`behavior.Platform`, and can limit one method to a family with `.On`.
 
 ## Adding a New OS Family
 
 1. Add the family to `supportedFamilies` in `internal/cli/validate.go`
 2. Add the distribution mapping to `debianFamily` (or create a new map) in
    `pkg/sdk/platform/platform.go`
-3. Create provider files: `{family}_*.go` (for example
-   `redhat_update_hostname.go`). A host provider embeds `Linux`, which has the
-   reads that are the same on each distribution, and adds or overrides only what
-   differs, as `Debian` adds `UpdateHostname`
-4. Add a `case` to each provider switch in `internal/agent/factory.go`
+3. Create provider files: `{family}_*.go` (for example `redhat_get_disk.go`). A
+   provider can embed `Linux`, which has the reads that are the same on each
+   distribution, and add or override only what differs
+4. Add a `case` to each provider switch in `internal/agent/providers.go`

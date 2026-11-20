@@ -23,15 +23,18 @@ c := client.New("http://localhost:8080", token)
 // Get hostname
 resp, err := c.Hostname.Get(ctx, "_any")
 for _, r := range resp.Data.Results {
-    fmt.Printf("Hostname: %s\n", r.Hostname)
+    fmt.Printf("Hostname (%s): %s\n", r.Hostname, r.Name)
 }
 
 // Update hostname
 resp, err := c.Hostname.Update(ctx, "web-01", "new-hostname")
 for _, r := range resp.Data.Results {
-    fmt.Printf("changed=%v\n", r.Changed)
+    fmt.Printf("%s: changed=%v\n", r.Name, r.Changed)
 }
 ```
+
+`Update` runs on the Debian family only. Other hosts and containers report
+`skipped`.
 
 ## Example
 
@@ -41,4 +44,4 @@ for a complete working example.
 
 ## Permissions
 
-Get requires `node:read`. Update requires `node:write`.
+Get requires `hostname:read`. Update requires `hostname:write`.

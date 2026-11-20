@@ -24,6 +24,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -51,6 +52,12 @@ func read(
 
 type HostPublicTestSuite struct {
 	suite.Suite
+}
+
+func (s *HostPublicTestSuite) TestTime() {
+	fixed := time.Date(2026, time.January, 2, 3, 4, 5, 0, time.UTC)
+	s.Equal(fixed, host.Host{Now: func() time.Time { return fixed }}.Time(), "the host's clock")
+	s.WithinDuration(time.Now(), host.Host{}.Time(), time.Minute, "time.Now without one")
 }
 
 func (s *HostPublicTestSuite) TestSettings() {

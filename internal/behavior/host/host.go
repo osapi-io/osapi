@@ -29,6 +29,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/osapi-io/osapi/internal/provider"
 
@@ -62,6 +63,19 @@ type Host struct {
 	// Required are the providers of the behaviors this one requires, by
 	// behavior name, built for the same host. Require reads one.
 	Required map[string]any
+	// Now is the host's clock. The agent gives time.Now; a test gives a
+	// fixed time, so an example that reads the time, such as an uptime from
+	// the boot time, has one answer. Time reads it.
+	Now func() time.Time
+}
+
+// Time is the time on the host: h.Now, or time.Now when the host gives none.
+func (h Host) Time() time.Time {
+	if h.Now == nil {
+		return time.Now()
+	}
+
+	return h.Now()
 }
 
 // Exec is what a provider needs of the agent's command runner. It is

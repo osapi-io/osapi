@@ -29,7 +29,6 @@ type LoadResult struct {
 	Hostname    string       `json:"hostname"`
 	Status      string       `json:"status"`
 	Error       string       `json:"error,omitempty"`
-	Changed     bool         `json:"changed"`
 	LoadAverage *LoadAverage `json:"load_average,omitempty"`
 }
 
@@ -48,9 +47,25 @@ func loadAverageFromGen(
 	}
 }
 
-// loadCollectionFromGen converts a gen.LoadCollectionResponse to a Collection[LoadResult].
+// loadAveragesFromGen converts the load behavior's gen.Averages to a
+// LoadAverage.
+func loadAveragesFromGen(
+	g *gen.Averages,
+) *LoadAverage {
+	if g == nil {
+		return nil
+	}
+
+	return &LoadAverage{
+		OneMin:     float32(g.N1min),
+		FiveMin:    float32(g.N5min),
+		FifteenMin: float32(g.N15min),
+	}
+}
+
+// loadCollectionFromGen converts a gen.LoadGetResponse to a Collection[LoadResult].
 func loadCollectionFromGen(
-	g *gen.LoadCollectionResponse,
+	g *gen.LoadGetResponse,
 ) Collection[LoadResult] {
 	results := make([]LoadResult, 0, len(g.Results))
 	for _, r := range g.Results {
@@ -58,8 +73,7 @@ func loadCollectionFromGen(
 			Hostname:    r.Hostname,
 			Status:      string(r.Status),
 			Error:       derefString(r.Error),
-			Changed:     derefBool(r.Changed),
-			LoadAverage: loadAverageFromGen(r.LoadAverage),
+			LoadAverage: loadAveragesFromGen(r.LoadAverage),
 		})
 	}
 

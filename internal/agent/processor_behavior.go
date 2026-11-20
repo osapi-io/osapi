@@ -122,7 +122,7 @@ func NewBehaviorProcessor(
 			return nil, err
 		}
 		p, ok := providers.built[name]
-		if !ok {
+		if !ok || !m.RunsOn(providers.platform) {
 			return nil, fmt.Errorf(
 				"%s on %q: %w",
 				name,

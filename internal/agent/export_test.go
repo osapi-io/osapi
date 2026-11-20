@@ -516,7 +516,6 @@ func SetAgentAppConfig(
 			nil,
 			nil,
 			nil,
-			cfg,
 			a.logger,
 		)
 	}
@@ -553,9 +552,23 @@ func SetAgentHostProvider(
 			nil,
 			nil,
 			nil,
-			a.appConfig,
 			a.logger,
 		)
+	}
+}
+
+// SetAgentProcessorOnce makes the agent's next job of category return err,
+// and puts back the category's processor after it.
+func SetAgentProcessorOnce(
+	a *Agent,
+	category string,
+	err error,
+) {
+	orig := a.registry.processors[category]
+	a.registry.processors[category] = func(context.Context, job.Request) (json.RawMessage, error) {
+		a.registry.processors[category] = orig
+
+		return nil, err
 	}
 }
 

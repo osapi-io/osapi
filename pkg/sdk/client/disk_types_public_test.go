@@ -97,6 +97,12 @@ func (suite *DiskTypesPublicTestSuite) TestDisksFromGen() {
 	}
 }
 
+func (suite *DiskTypesPublicTestSuite) TestDiskListFromGen() {
+	suite.Nil(client.ExportDiskListFromGen(nil))
+	got := client.ExportDiskListFromGen(&[]gen.Disk{{Name: "/", Total: 3, Used: 1, Free: 2}})
+	suite.Equal([]client.Disk{{Name: "/", Total: 3, Used: 1, Free: 2}}, got)
+}
+
 func TestDiskTypesPublicTestSuite(
 	t *testing.T,
 ) {

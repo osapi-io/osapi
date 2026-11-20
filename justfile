@@ -354,7 +354,7 @@ behavior-int-linux:
         -v osapi-int-gomod:/go/pkg/mod -v osapi-int-gocache:/root/.cache/go-build \
         -e OSAPI_INTEGRATION_WRITE_BEHAVIORS=1 -e GOFLAGS=-buildvcs=false \
         "$image" sh -c '
-            (apt-get update -qq && apt-get install -y -qq procps) >/dev/null
+            (apt-get update -qq && apt-get install -y -qq procps systemd) >/dev/null
             head -c16 /dev/urandom | od -An -tx1 | tr -d " \n" > /etc/machine-id
             go test -tags integration -count=1 -v -run TestBehaviorSmokeSuite ./test/integration/'
 

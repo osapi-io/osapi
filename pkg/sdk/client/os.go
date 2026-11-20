@@ -37,7 +37,7 @@ func (s *OSService) Get(
 	ctx context.Context,
 	target string,
 ) (*Response[Collection[OSInfoResult]], error) {
-	resp, err := s.client.GetNodeOSWithResponse(ctx, target)
+	resp, err := s.client.GetNodeOsWithResponse(ctx, target)
 	if err != nil {
 		return nil, fmt.Errorf("get os: %w", err)
 	}

@@ -91,6 +91,35 @@ func IndexPage(
 		}
 		fmt.Fprintf(&sb, "On %s. On any other platform its methods report `skipped`.\n",
 			strings.Join(names, ", "))
+		for _, m := range b.Methods {
+			if len(m.Platforms) == 0 {
+				continue
+			}
+			on := make([]string, 0, len(m.Platforms))
+			for _, p := range m.Platforms {
+				on = append(on, "`"+p+"`")
+			}
+			fmt.Fprintf(
+				&sb,
+				"\n`%s` runs only on %s. On any other platform it reports `skipped`.\n",
+				m.Name,
+				strings.Join(on, ", "),
+			)
+		}
+	}
+	for _, m := range b.Methods {
+		for _, p := range [][2]any{{m.SudoPrograms, " with sudo"}, {m.RunsPrograms, ""}} {
+			progs := p[0].([]string)
+			if len(progs) == 0 {
+				continue
+			}
+			quoted := make([]string, 0, len(progs))
+			for _, prog := range progs {
+				quoted = append(quoted, "`"+prog+"`")
+			}
+			fmt.Fprintf(&sb, "\n`%s` runs %s%s, only where it runs.\n",
+				m.Name, strings.Join(quoted, ", "), p[1])
+		}
 	}
 	if len(b.Sudo) > 0 {
 		progs := make([]string, 0, len(b.Sudo))

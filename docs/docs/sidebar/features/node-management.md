@@ -28,14 +28,16 @@ OSAPI separates agent fleet discovery from node system queries:
 
 ## What it manages
 
-| Resource                        | Description                                                     |
-| ------------------------------- | --------------------------------------------------------------- |
-| Hostname                        | Get or update the system hostname                               |
-| Status                          | Uptime, OS name and version, kernel, platform info              |
-| Disk                            | Per-mount usage (total, used, free, percent)                    |
-| Memory                          | RAM and swap usage (total, used, free, percent)                 |
-| Load                            | 1-, 5-, and 15-minute load averages                             |
-| [System Facts](system-facts.md) | Architecture, kernel, FQDN, CPUs, NICs, routes, service/pkg mgr |
+| Resource                                      | Description                                                     |
+| --------------------------------------------- | --------------------------------------------------------------- |
+| [Hostname](../behaviors/hostname/hostname.md) | Get the hostname, or set it on Debian                           |
+| Status                                        | Uptime, OS name and version, kernel, platform info              |
+| [Uptime](../behaviors/uptime/uptime.md)       | The time since the host started                                 |
+| [OS](../behaviors/os/os.md)                   | The distribution and its version                                |
+| [Disk](../behaviors/disk/disk.md)             | The size, used and free space of each local filesystem          |
+| [Memory](../behaviors/memory/memory.md)       | The total, used and free memory                                 |
+| [Load](../behaviors/load/load.md)             | The 1, 5 and 15 minute load averages                            |
+| [System Facts](system-facts.md)               | Architecture, kernel, FQDN, CPUs, NICs, routes, service/pkg mgr |
 
 ## How it works
 
@@ -77,7 +79,7 @@ You can target a specific host, broadcast to all hosts, or route by label. Refer
 to [Node CLI Reference](../usage/cli/client/node/node.mdx) for job-based
 commands and [Agent CLI Reference](../usage/cli/client/agent/agent.mdx) for
 registry-based fleet discovery, or the
-[API Reference](/gen/api/node-management-api-node-operations) for the REST
+[API Reference](/gen/api/node-management-api-node-status) for the REST
 endpoints.
 
 ## Configuration
@@ -88,10 +90,11 @@ authentication settings.
 
 ## Permissions
 
-Node read endpoints require `node:read`. Hostname update requires `node:write`.
-Agent fleet discovery endpoints require `agent:read`. The built-in `admin` and
-`write` roles include `node:read` and `node:write`. The `read` role includes
-`node:read` only.
+Status requires `node:read`. Hostname, uptime, OS, disk, memory and load are
+behaviors. Each one requires its own permission, such as `uptime:read`, or
+`hostname:write` to set the hostname. Agent fleet discovery endpoints require
+`agent:read`. The built-in `admin` and `write` roles include `node:read` and
+each behavior's permissions. The `read` role includes each read permission only.
 
 ## Related
 
@@ -99,7 +102,7 @@ Agent fleet discovery endpoints require `agent:read`. The built-in `admin` and
   commands
 - [Node CLI Reference](../usage/cli/client/node/node.mdx): node job commands
 - [System Facts](system-facts.md): fact collection and `@fact.*` references
-- [API Reference](/gen/api/node-management-api-node-operations): REST API
+- [API Reference](/gen/api/node-management-api-node-status): REST API
   documentation
 - [Job System](job-system.md): how async job processing works
 - [Architecture](../architecture/architecture.md): system design overview

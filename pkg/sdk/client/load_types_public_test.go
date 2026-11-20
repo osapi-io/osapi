@@ -70,6 +70,12 @@ func (suite *LoadTypesPublicTestSuite) TestLoadAverageFromGen() {
 	}
 }
 
+func (suite *LoadTypesPublicTestSuite) TestLoadAveragesFromGen() {
+	suite.Nil(client.ExportLoadAveragesFromGen(nil))
+	got := client.ExportLoadAveragesFromGen(&gen.Averages{N1min: 0.5, N5min: 0.25, N15min: 0.125})
+	suite.Equal(&client.LoadAverage{OneMin: 0.5, FiveMin: 0.25, FifteenMin: 0.125}, got)
+}
+
 func TestLoadTypesPublicTestSuite(
 	t *testing.T,
 ) {

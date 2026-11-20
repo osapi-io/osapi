@@ -64,8 +64,7 @@ uncategorized ones directly under `internal/provider/{domain}/`.
 | `Client`       | `New()`, `NewWithClient(c)`  | `{domain}.go`                  |
 
 `DebianDocker` embeds `Debian`, uses its reads and replaces its writes. Or it is
-independent. `node/host` embeds and blocks `UpdateHostname`. `network/dns` is
-independent, and reads `/etc/resolv.conf` directly.
+independent, as `network/dns` is: it reads `/etc/resolv.conf` directly.
 
 ## Scaffolding
 
