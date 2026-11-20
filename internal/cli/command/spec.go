@@ -113,6 +113,18 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindMethod,
+			Name: `Then(running, fn)`,
+			Does: "Is running with fn after its Cleanup, such as the stop of a tracer, which flushes what the components recorded as they stopped.",
+			When: "In a Setup that wraps the components of another, such as osapi start, which runs the NATS server, the controller and the agent under one tracer.",
+		},
+		{
+			Kind: KindMethod,
+			Name: `.Flag("key", ...)`,
+			Does: "Adds a flag to a process for each config key, such as agent.max_jobs: --agent-max-jobs, the key with its dots and underscores as dashes, as OSAPI_AGENT_MAX_JOBS is its environment variable. The flag has the key's type, default and doc, from the config, and sets the key over the environment and the file.",
+			When: "On a Process, for each key a person sets when they start it. A Method's flags are its input, so it has no Flag.",
+		},
+		{
+			Kind: KindMethod,
 			Name: `Method[In, Out]("name")`,
 			Does: "A command, osapi <group> <name>, that takes In and prints Out. Each field of In is a flag. Out prints as JSON with --json, and from its type without it, by the output style of the CLI.",
 			When: "For each command of the group. Its name is the command's last word: a verb (list, get, create, update, delete) or an action in command.Actions, never a noun.",

@@ -46,6 +46,7 @@ const (
 	runPath       = "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	referencePath = "github.com/osapi-io/osapi/internal/cli/reference"
 	cobraPath     = "github.com/spf13/cobra"
+	configPath    = "github.com/osapi-io/osapi/internal/config"
 )
 
 // Commands writes gen/cli.go: one cobra command for each method, with its help,
@@ -163,6 +164,14 @@ func Commands(
 		if lm, ok := m.(*command.LocalMethod); ok && lm.IsProcess() {
 			call = jen.Return(jen.Qual(commandPath, "Serve").Call(
 				jen.Id("cmd"), jen.Qual(pkg, "Group"), jen.Lit(m.MethodName())))
+			// Each key that Flag names is a flag that sets it.
+			if keys := lm.ConfigKeys(); len(keys) > 0 {
+				args := []jen.Code{jen.Id(name).Dot("Flags").Call()}
+				for _, k := range keys {
+					args = append(args, jen.Lit(k))
+				}
+				inits = append(inits, jen.Qual(configPath, "BindFlags").Call(args...))
+			}
 		}
 		run = append(run, call)
 

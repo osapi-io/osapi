@@ -111,6 +111,11 @@ The design is `components/osapi/commands.md` in osapi-io/specs. Read it first.
   `command.Running{Components, Cleanup}`. `command.Serve` starts them, waits
   until the context ends, then stops them with `context.WithoutCancel` and
   `command.ShutdownTimeout`. Never make a context of your own.
+- A process's flags are config keys: `.Flag("agent.max_jobs")` makes
+  `--agent-max-jobs`, with the key's type, default and doc. Give a key a
+  default in `config.Defaults`, never in the flag. A setup that runs the
+  components of another, as `osapi start` does, calls their `Components` and
+  adds its own cleanup with `command.Then`.
 - A group that goes `Under` a command written by hand, such as `nats`, needs
   that command given to `AttachLocal` in `cmd/commands.go`. Without it, the
   definition makes a second command of that name, and a test fails.

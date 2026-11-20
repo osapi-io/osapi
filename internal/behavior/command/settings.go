@@ -20,8 +20,6 @@
 package command
 
 import (
-	"fmt"
-
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
@@ -38,27 +36,8 @@ func SettingFlags(
 	v *viper.Viper,
 ) {
 	for _, k := range config.Keys() {
-		if k.Flag == "" {
-			continue
+		if k.Flag != "" {
+			config.AddFlag(fs, v, k, k.Flag)
 		}
-		usage := fmt.Sprintf("%s (%s)", k.Doc, k.Name)
-		switch k.Type {
-		case "int":
-			d, _ := k.Default.(int)
-			fs.Int(k.Flag, d, usage)
-		case "bool":
-			d, _ := k.Default.(bool)
-			fs.Bool(k.Flag, d, usage)
-		case "float":
-			d, _ := k.Default.(float64)
-			fs.Float64(k.Flag, d, usage)
-		case "list":
-			d, _ := k.Default.([]string)
-			fs.StringSlice(k.Flag, d, usage)
-		default:
-			d, _ := k.Default.(string)
-			fs.String(k.Flag, d, usage)
-		}
-		_ = v.BindPFlag(k.Name, fs.Lookup(k.Flag))
 	}
 }

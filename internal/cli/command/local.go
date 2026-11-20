@@ -287,6 +287,7 @@ type LocalMethod struct {
 	sub, short, long string
 	says             string
 	process          bool
+	keys             []string
 	examples         []Example
 	refusals         []Refusal
 	handler          any
@@ -325,6 +326,22 @@ func (m *LocalMethod) Setup(
 	m.handler = fn
 
 	return m
+}
+
+// Flag adds a flag for each config key, such as agent.max_jobs, to a
+// process: --agent-max-jobs, with the key's type, default and doc, which
+// sets the key over the environment and the file.
+func (m *LocalMethod) Flag(
+	keys ...string,
+) *LocalMethod {
+	m.keys = append(m.keys, keys...)
+
+	return m
+}
+
+// ConfigKeys are the config keys that Flag named.
+func (m *LocalMethod) ConfigKeys() []string {
+	return m.keys
 }
 
 // IsProcess is true for a method that Process made.
