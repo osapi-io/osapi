@@ -2,10 +2,9 @@
 
 Check every behavior against the rules the platform relies on.
 
-It exits 1 when a rule fails, and names the behavior, the method, the rule and
-the fix. Each problem in `--json` has `behavior`, `method` (when the problem is
-in one), `rule`, `message` and `fix`. `osapi behavior spec get` describes each
-part of a behavior.
+It prints each problem with its behavior, method, rule and message, then the fix
+of each rule, and exits 1 when a rule fails. `osapi behavior spec get` describes
+each part of a behavior.
 
 The rules:
 

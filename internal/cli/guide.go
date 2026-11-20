@@ -24,36 +24,10 @@ import (
 	"fmt"
 	"os"
 	"strings"
-
-	"github.com/osapi-io/osapi/internal/guide"
 )
 
-// termWidth is the width that PrintTerms wraps the text of a term to.
+// termWidth is the width that PrintBlock wraps its text to.
 const termWidth = 76
-
-// PrintTerms prints terms under the current heading: each name in bold, then
-// what it does, then when to use it in gray. The text wraps and is indented
-// under the name, so a long description is never cut.
-func PrintTerms(
-	terms []guide.Term,
-) {
-	FlushKV()
-	headed = false
-	for i, t := range terms {
-		if i > 0 {
-			fmt.Println()
-		}
-		fmt.Println("  " + render(os.Stdout, NameStyle, t.Name))
-		for _, line := range wrapWords(t.Does, termWidth-4) {
-			fmt.Println("    " + line)
-		}
-		if t.When != "" {
-			for _, line := range wrapWords("Use: "+t.When, termWidth-4) {
-				fmt.Println("    " + Mute(os.Stdout, line))
-			}
-		}
-	}
-}
 
 // PrintBlock prints one block of a list of blocks under the current
 // heading: title in bold, then each pair, a label and a text, wrapped and

@@ -208,8 +208,8 @@ func IndexPage(
 ## Inspecting it
 
 `+"```bash"+`
-osapi behavior get --name %[1]s            # surfaces, methods, types, settings, telemetry
-osapi behavior get --name %[1]s --json     # the same, with each method's JSON Schema
+osapi behavior get --name %[1]s                           # surfaces, methods, types, settings, telemetry
+osapi behavior method get --name %[1]s --method <method>  # one method, with its JSON Schema
 `+"```"+`
 `, b.Name)
 	return sb.String()

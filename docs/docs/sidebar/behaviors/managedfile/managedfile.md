@@ -51,6 +51,6 @@ None. A behavior declares settings with `behavior.Config`.
 ## Inspecting it
 
 ```bash
-osapi behavior get --name managedfile            # surfaces, methods, types, settings, telemetry
-osapi behavior get --name managedfile --json     # the same, with each method's JSON Schema
+osapi behavior get --name managedfile                           # surfaces, methods, types, settings, telemetry
+osapi behavior method get --name managedfile --method <method>  # one method, with its JSON Schema
 ```

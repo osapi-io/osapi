@@ -123,6 +123,9 @@ type (
 	spec struct {
 		Kinds []kind `json:"kinds" table:"sections"`
 	}
+	tagged struct {
+		Tags []string `json:"tags" none:"none"`
+	}
 	terms struct {
 		Terms []term `json:"terms" table:"blocks"`
 	}
@@ -238,6 +241,7 @@ func (s *OutputPublicTestSuite) TestOutput() {
 		method("doc", reflect.TypeFor[doc]()),
 		method("spec", reflect.TypeFor[spec]()),
 		method("terms", reflect.TypeFor[terms]()),
+		method("tagged", reflect.TypeFor[tagged]()),
 		method("described", reflect.TypeFor[described]()),
 		method("nodes", reflect.TypeFor[[]node]()),
 		method("kept", reflect.TypeFor[[]kept]()),
@@ -378,6 +382,12 @@ func (s *OutputPublicTestSuite) TestOutput() {
 			answer: `{"kinds":[{"kind":"o","title":"Options","terms":[` +
 				`{"name":"Flat()","does":"Adds no word.","when":"Alone."},{"name":"Long()","does":"Help."}]}]}`,
 			want: "# Options\n* Flat()\n  | Adds no word.\n  Use| Alone.\n* Long()\n  | Help.\n",
+		},
+		{
+			name:   "when a list of values is empty, it has no value, and none says so",
+			method: "tagged",
+			answer: `{"tags":[]}`,
+			want:   "# Zzderive\nTags: none\n",
 		},
 		{
 			name:   "when a list of blocks is the output, it has its heading with the count",

@@ -19,7 +19,7 @@ host.
 
 1. **Ask the binary, not memory.** Before running a command, run
    `osapi help <command...> --json` for its exact flags. Before building a
-   request, run `osapi behavior get --name <behavior> --method <method> --json`
+   request, run `osapi behavior method get --name <behavior> --method <method> --json`
    for its input and output schema. For an operation on osapi itself, such as
    the agents or the jobs, run `osapi controller endpoint get --name <group> --json`. Flags and fields change between releases.
 2. **Always pass `--json`.** Output is the API's response body. On failure,

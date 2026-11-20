@@ -62,6 +62,7 @@ var (
 		"skill":      true,
 		"init":       true,
 		"endpoint":   true,
+		"behavior":   true,
 	}
 )
 

@@ -57,6 +57,6 @@ with its environment variable or its `osapi agent start` flag.
 ## Inspecting it
 
 ```bash
-osapi behavior get --name sysctl            # surfaces, methods, types, settings, telemetry
-osapi behavior get --name sysctl --json     # the same, with each method's JSON Schema
+osapi behavior get --name sysctl                           # surfaces, methods, types, settings, telemetry
+osapi behavior method get --name sysctl --method <method>  # one method, with its JSON Schema
 ```

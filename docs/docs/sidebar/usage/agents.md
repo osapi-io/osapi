@@ -48,9 +48,9 @@ It does not guess. Before it runs an operation it reads its contract from the
 binary:
 
 ```bash
-osapi behavior list --json                                 # every behavior and its methods
-osapi behavior get --name sysctl --method update --json    # one method's input and output schema
-osapi help --json                                          # every command, flag and error shape
+osapi behavior list --json                                      # every behavior and its methods
+osapi behavior method get --name sysctl --method update --json  # one method's input and output schema
+osapi help --json                                               # every command, flag and error shape
 ```
 
 Then it runs the command with `--json` and reads the result of each host. The
