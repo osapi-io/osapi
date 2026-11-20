@@ -49,6 +49,23 @@ type Running struct {
 	Cleanup    func(ctx context.Context)
 }
 
+// Then is r with fn after its cleanup, such as the stop of a tracer, which
+// flushes what the components recorded as they stopped.
+func Then(
+	r Running,
+	fn func(ctx context.Context),
+) Running {
+	before := r.Cleanup
+	r.Cleanup = func(ctx context.Context) {
+		if before != nil {
+			before(ctx)
+		}
+		fn(ctx)
+	}
+
+	return r
+}
+
 // Serve runs the process method of g. The context is the command's: one
 // context, which the root makes and cancels on SIGINT or SIGTERM. Setup gets
 // it, so a signal stops a setup that waits. Serve starts each component,

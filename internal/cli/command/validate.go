@@ -260,6 +260,9 @@ func Validate(
 		for _, f := range rule.Untagged(m.In) {
 			add(m.Name, RuleValidate, "input field "+f+" has no validate tag.")
 		}
+		if !m.process && len(m.keys) > 0 {
+			add(m.Name, RuleFlag, "a method's flags are its input, so it has no Flag.")
+		}
 		if m.process && len(m.refusals) > 0 {
 			add(m.Name, RuleFails, "a process has no input, so nothing Fails.")
 		}

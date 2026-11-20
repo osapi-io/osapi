@@ -4,10 +4,13 @@
 package gen
 
 import (
+	_ "github.com/osapi-io/osapi/internal/cli/commands/agentcmd/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/config/gen"
+	_ "github.com/osapi-io/osapi/internal/cli/commands/controllercmd/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/initcmd/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/natsserver/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/skill/gen"
+	_ "github.com/osapi-io/osapi/internal/cli/commands/startcmd/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/token/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/version/gen"
 )

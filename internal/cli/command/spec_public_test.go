@@ -55,6 +55,7 @@ var notDSL = map[string]bool{
 	"Run":                          true,
 	"Serve":                        true,
 	"IsProcess":                    true,
+	"ConfigKeys":                   true,
 	"Check":                        true,
 	"FlagName":                     true,
 	"Validate":                     true,

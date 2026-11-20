@@ -31,8 +31,7 @@ import (
 	"github.com/osapi-io/osapi/internal/telemetry/metrics"
 )
 
-// Start makes the NATS server, and its metrics server when the config turns
-// it on. ctx is the command's context: the heartbeat runs until it ends.
+// Start sets the namespace of the job subjects, then makes the components.
 func Start(
 	ctx context.Context,
 	d Deps,
@@ -55,6 +54,17 @@ func Start(
 
 	job.Init(n.Server.Namespace)
 
+	return Components(ctx, d)
+}
+
+// Components makes the NATS server, and its metrics server when the config
+// turns it on: the parts that osapi start runs too. ctx is the command's
+// context: the heartbeat runs until it ends.
+func Components(
+	ctx context.Context,
+	d Deps,
+) (command.Running, error) {
+	n := d.Config.NATS
 	log := d.Logger.With("component", "nats")
 	// The metrics server is made before the NATS connection, so that
 	// nats-client records the calls of the bus on it.

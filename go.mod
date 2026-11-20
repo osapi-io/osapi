@@ -14,7 +14,6 @@ require (
 	github.com/docker/go-connections v0.8.2
 	// https://github.com/oapi-codegen/oapi-codegen/issues/1702
 	github.com/getkin/kin-openapi v0.153.0
-	github.com/ggwhite/go-masker/v2 v2.4.2
 	github.com/go-playground/validator/v10 v10.30.6
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/uuid v1.6.0

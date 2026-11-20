@@ -184,6 +184,18 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 			),
 		},
 		{
+			name: "when a method has a Flag, which only a process has",
+			group: command.Define("zzflag", "Flag",
+				command.Uses[localDeps](),
+				command.Method[struct{}, greetOut]("get").Short("X").
+					Flag("agent.max_jobs").
+					Handle(func(context.Context, localDeps, struct{}) (greetOut, error) {
+						return greetOut{}, nil
+					}),
+			),
+			want: []string{"a method's flags are its input, so it has no Flag."},
+		},
+		{
 			name: "when a process's Setup is not its signature, and it Fails",
 			group: command.Define("zzproc", "Process",
 				command.Uses[localDeps](),

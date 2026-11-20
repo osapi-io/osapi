@@ -180,6 +180,23 @@ func (s *ProcessPublicTestSuite) TestProcessOutput() {
 	}
 }
 
+func (s *ProcessPublicTestSuite) TestThen() {
+	var order []string
+	add := func(name string) func(context.Context) {
+		return func(context.Context) { order = append(order, name) }
+	}
+
+	command.Then(command.Running{Cleanup: add("close")}, add("trace")).Cleanup(context.Background())
+	command.Then(command.Running{}, add("only")).Cleanup(context.Background())
+
+	s.Equal([]string{"close", "trace", "only"}, order)
+}
+
+func (s *ProcessPublicTestSuite) TestFlag() {
+	m := command.Process("start").Flag("agent.max_jobs", "agent.hostname")
+	s.Equal([]string{"agent.max_jobs", "agent.hostname"}, m.ConfigKeys())
+}
+
 func TestProcessPublicTestSuite(
 	t *testing.T,
 ) {
