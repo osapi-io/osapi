@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">System facts | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/system-facts"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="System facts | OSAPI"><meta data-rh="true" name="description" content="Agents collect system facts automatically. A fact is a typed property of the"><meta data-rh="true" property="og:description" content="Agents collect system facts automatically. A fact is a typed property of the"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/system-facts"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/system-facts" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/system-facts" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"System facts","item":"https://osapi-io.github.io/osapi/sidebar/features/system-facts"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.9c23508d.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.b3f9ab77.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.afa04a89.js" defer="defer"></script>
 </head>
 <body>
@@ -17,9 +17,10 @@ host that the agent runs on. The agent publishes the facts to a NATS KV bucket.
 Facts are used in two features: the <code>agent get</code> output, and <strong>fact references</strong>
 (<code>@fact.*</code>), which put live system values in job parameters.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-the-agent-collects">What the agent collects<a href="#what-the-agent-collects" class="hash-link" aria-label="Direct link to What the agent collects" title="Direct link to What the agent collects" translate="no">​</a></h2>
-<p>The providers collect the facts every 60 seconds. <code>agent.facts.interval</code> sets
-this. The agent stores the facts in the <code>agent-facts</code> KV bucket, with a 5-minute
-TTL.</p>
+<p>The agent collects the facts with <a href="https://github.com/osapi-io/gohai" target="_blank" rel="noopener noreferrer" class="">gohai</a>
+every 60 seconds: its kernel, hostname, cpu, init, package_mgr, network and
+virtualization collectors. <code>agent.facts.interval</code> sets this. The agent stores
+the facts in the <code>agent-facts</code> KV bucket, with a 5-minute TTL.</p>
 
 
 
@@ -75,7 +76,7 @@ TTL.</p>
 
 
 
-<table><thead><tr><th>Fact</th><th>Description</th><th>Example value</th></tr></thead><tbody><tr><td>Architecture</td><td>CPU architecture</td><td><code>amd64</code>, <code>arm64</code></td></tr><tr><td>Kernel Version</td><td>OS kernel version string</td><td><code>6.8.0-51-generic</code></td></tr><tr><td>FQDN</td><td>Fully qualified domain name</td><td><code>web-01.example.com</code></td></tr><tr><td>CPU Count</td><td>Number of logical CPUs</td><td><code>8</code></td></tr><tr><td>Service Manager</td><td>Init system</td><td><code>systemd</code>, <code>launchd</code></td></tr><tr><td>Package Manager</td><td>System package manager</td><td><code>apt</code>, <code>brew</code></td></tr><tr><td>Interfaces</td><td>Network interfaces with IPv4, IPv6, MAC and family</td><td>Refer to below</td></tr><tr><td>Primary Interface</td><td>Interface name of the default route</td><td><code>eth0</code>, <code>en0</code></td></tr><tr><td>Routes</td><td>IP routing table entries</td><td>Refer to below</td></tr></tbody></table>
+<table><thead><tr><th>Fact</th><th>Description</th><th>Example value</th></tr></thead><tbody><tr><td>Architecture</td><td>CPU architecture, as <code>uname -m</code> prints it</td><td><code>x86_64</code>, <code>arm64</code></td></tr><tr><td>Kernel Version</td><td>OS kernel version string</td><td><code>6.8.0-51-generic</code></td></tr><tr><td>FQDN</td><td>Fully qualified domain name</td><td><code>web-01.example.com</code></td></tr><tr><td>CPU Count</td><td>Number of logical CPUs</td><td><code>8</code></td></tr><tr><td>Service Manager</td><td>Init system</td><td><code>systemd</code>, <code>launchd</code></td></tr><tr><td>Package Manager</td><td>System package manager</td><td><code>apt</code>, <code>brew</code></td></tr><tr><td>Interfaces</td><td>Network interfaces with IPv4, IPv6, MAC and family</td><td>Refer to below</td></tr><tr><td>Primary Interface</td><td>Interface name of the default route</td><td><code>eth0</code>, <code>en0</code></td></tr><tr><td>Routes</td><td>IP routing table entries</td><td>Refer to below</td></tr></tbody></table>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="network-interfaces">Network interfaces<a href="#network-interfaces" class="hash-link" aria-label="Direct link to Network interfaces" title="Direct link to Network interfaces" translate="no">​</a></h3>
 <p>Each interface entry has:</p>
 <ul>
@@ -89,13 +90,13 @@ TTL.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="routes">Routes<a href="#routes" class="hash-link" aria-label="Direct link to Routes" title="Direct link to Routes" translate="no">​</a></h3>
 <p>Each route entry has:</p>
 <ul>
-<li class=""><strong>Destination</strong>: the target network, or <code>default</code> / <code>0.0.0.0</code></li>
+<li class=""><strong>Destination</strong>: the target network. The default route is <code>0.0.0.0</code></li>
 <li class=""><strong>Gateway</strong>: the next-hop address</li>
 <li class=""><strong>Interface</strong>: the name of the outgoing interface</li>
-<li class=""><strong>Mask</strong>: the CIDR mask, for example <code>/24</code> (Linux only)</li>
+<li class=""><strong>Mask</strong>: the CIDR mask, for example <code>/24</code>. The default route is <code>/0</code></li>
 <li class=""><strong>Metric</strong>: the route metric (Linux only)</li>
-<li class=""><strong>Flags</strong>: the route flags</li>
 </ul>
+<p>The list has only IPv4 routes, on Linux and on macOS.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="fact-references-fact">Fact references (<code>@fact.*</code>)<a href="#fact-references-fact" class="hash-link" aria-label="Direct link to fact-references-fact" title="Direct link to fact-references-fact" translate="no">​</a></h2>
 <p>Fact references put live system values in job parameters. When an agent
 processes a job, it replaces each <code>@fact.*</code> token in the request data with the
@@ -142,7 +143,7 @@ is. The agent resolves it before it runs the operation.</p>
 
 
 
-<table><thead><tr><th>Reference</th><th>Resolves to</th><th>Example value</th></tr></thead><tbody><tr><td><code>@fact.hostname</code></td><td>The hostname of the agent</td><td><code>web-01</code></td></tr><tr><td><code>@fact.arch</code></td><td>CPU architecture</td><td><code>amd64</code></td></tr><tr><td><code>@fact.kernel</code></td><td>Kernel version</td><td><code>6.8.0-51-generic</code></td></tr><tr><td><code>@fact.fqdn</code></td><td>Fully qualified hostname</td><td><code>web-01.example.com</code></td></tr><tr><td><code>@fact.interface.primary</code></td><td>The default route interface</td><td><code>eth0</code></td></tr><tr><td><code>@fact.custom.&lt;key&gt;</code></td><td>A custom fact value</td><td><em>(user-defined)</em></td></tr></tbody></table>
+<table><thead><tr><th>Reference</th><th>Resolves to</th><th>Example value</th></tr></thead><tbody><tr><td><code>@fact.hostname</code></td><td>The hostname of the agent</td><td><code>web-01</code></td></tr><tr><td><code>@fact.arch</code></td><td>CPU architecture</td><td><code>x86_64</code></td></tr><tr><td><code>@fact.kernel</code></td><td>Kernel version</td><td><code>6.8.0-51-generic</code></td></tr><tr><td><code>@fact.fqdn</code></td><td>Fully qualified hostname</td><td><code>web-01.example.com</code></td></tr><tr><td><code>@fact.interface.primary</code></td><td>The default route interface</td><td><code>eth0</code></td></tr><tr><td><code>@fact.custom.&lt;key&gt;</code></td><td>A custom fact value</td><td><em>(user-defined)</em></td></tr></tbody></table>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="usage-examples">Usage examples<a href="#usage-examples" class="hash-link" aria-label="Direct link to Usage examples" title="Direct link to Usage examples" translate="no">​</a></h3>
 <p>Get the DNS configuration of the primary network interface:</p>
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node network dns get \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --interface @fact.interface.primary</span><br></div></code></pre></div></div>
