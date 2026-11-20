@@ -60,17 +60,18 @@ var acronyms = map[string]bool{
 }
 
 // Write writes the page of each command under root into dir, and removes each
-// page in dir that no command has, except the pages in Keep.
+// page in dir that no command has, except the pages in Keep. It is the count
+// of the pages it wrote.
 func Write(
 	root *cobra.Command,
 	dir string,
-) error {
+) (int, error) {
 	written := map[string]bool{}
 	if err := writeTree(root, nil, dir, written); err != nil {
-		return err
+		return 0, err
 	}
 
-	return removeStale(dir, written)
+	return len(written), removeStale(dir, written)
 }
 
 // documented tells whether a command has a page. Hidden commands, help and

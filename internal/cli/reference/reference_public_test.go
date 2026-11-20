@@ -121,7 +121,9 @@ func (s *ReferencePublicTestSuite) TestWrite() {
 			NoError(os.WriteFile(filepath.Join(dir, "output.md"), []byte("# Output\n"), 0o644))
 		s.Require().NoError(os.WriteFile(filepath.Join(dir, "notes.txt"), []byte("x"), 0o644))
 
-		s.Require().NoError(reference.Write(tree(), dir))
+		n, err := reference.Write(tree(), dir)
+		s.Require().NoError(err)
+		s.Positive(n, "it counts the pages it wrote")
 
 		root := s.read(dir, "cli.mdx")
 		s.Contains(root, "# CLI\n\nManage hosts.\n")
@@ -170,7 +172,7 @@ func (s *ReferencePublicTestSuite) TestWrite() {
 		dir := s.T().TempDir()
 		s.Require().NoError(os.WriteFile(filepath.Join(dir, "node"), nil, 0o644))
 
-		err := reference.Write(tree(), dir)
+		_, err := reference.Write(tree(), dir)
 
 		s.ErrorContains(err, "make directory for ")
 	})
@@ -179,7 +181,7 @@ func (s *ReferencePublicTestSuite) TestWrite() {
 		dir := s.T().TempDir()
 		s.Require().NoError(os.MkdirAll(filepath.Join(dir, "node", "node.mdx"), 0o755))
 
-		err := reference.Write(tree(), dir)
+		_, err := reference.Write(tree(), dir)
 
 		s.ErrorContains(err, "write ")
 	})
@@ -192,7 +194,7 @@ func (s *ReferencePublicTestSuite) TestWrite() {
 		s.Require().NoError(os.Chmod(locked, 0o500))
 		s.T().Cleanup(func() { _ = os.Chmod(locked, 0o755) })
 
-		err := reference.Write(&cobra.Command{Use: "osapi"}, dir)
+		_, err := reference.Write(&cobra.Command{Use: "osapi"}, dir)
 
 		s.ErrorContains(err, "remove stale page locked/stale.md")
 	})
@@ -204,7 +206,7 @@ func (s *ReferencePublicTestSuite) TestWrite() {
 		s.Require().NoError(os.Chmod(closed, 0o000))
 		s.T().Cleanup(func() { _ = os.Chmod(closed, 0o755) })
 
-		err := reference.Write(&cobra.Command{Use: "osapi"}, dir)
+		_, err := reference.Write(&cobra.Command{Use: "osapi"}, dir)
 
 		s.Error(err)
 	})

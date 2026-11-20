@@ -177,7 +177,7 @@ go-pkg-check:
 # format them as the site formatter does.
 cli-docs-generate:
     just _docs-bun-install
-    go run . cli-docs --dir docs/docs/sidebar/usage/cli
+    go run . cli docs generate --dir docs/docs/sidebar/usage/cli
     cd docs && bun run prettier docs/sidebar/usage/cli --write --config prettier.config.js --ignore-path .prettierignore > /dev/null
 
 # The CLI reference pages are generated from the cobra command tree. A command
