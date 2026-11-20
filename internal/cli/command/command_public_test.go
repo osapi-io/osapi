@@ -319,6 +319,39 @@ func (s *CommandPublicTestSuite) TestAttach() {
 	s.Len(named.Commands(), 1)
 }
 
+// TestAttachLocalFlat puts each command of a flat group under the group's
+// parent, the root or the words of Under, with no word for the group.
+func (s *CommandPublicTestSuite) TestAttachLocalFlat() {
+	atRoot := command.Define("zzflatroot", "At the root", command.Flat())
+	run := &cobra.Command{Use: "zzrun"}
+	command.AddCommands(atRoot, run)
+	under := command.Define("zzflatunder", "Under", command.Flat(), command.Under("zzflatparent"))
+	start := &cobra.Command{Use: "start"}
+	command.AddCommands(under, start)
+
+	s.Empty(atRoot.CommandPath())
+	s.Equal("zzflatroot", atRoot.Path())
+	s.Equal([]string{"zzflatparent"}, under.CommandPath())
+	s.Equal("zzflatparent zzflatunder", under.Path())
+
+	root := &cobra.Command{Use: "osapi"}
+	s.Require().NoError(command.AttachLocal(root, command.Deps{}))
+	found, _, err := root.Find([]string{"zzrun"})
+	s.Require().NoError(err)
+	s.Same(run, found, "a flat group's command is under the root")
+	origin, ok := command.Origin(run)
+	s.True(ok)
+	s.Same(atRoot, origin)
+	found, _, err = root.Find([]string{"zzflatparent", "start"})
+	s.Require().NoError(err)
+	s.Same(start, found, "a flat group's command is under the words of Under")
+
+	// A command that is there already is a command made twice.
+	again := &cobra.Command{Use: "osapi"}
+	again.AddCommand(&cobra.Command{Use: "zzrun"})
+	s.ErrorContains(command.AttachLocal(again, command.Deps{}), "osapi zzrun is made twice")
+}
+
 // TestAttachLocal puts a local group under the root, under the words of
 // Under, and leaves it out of Attach; Origin names the group of each
 // command it added.

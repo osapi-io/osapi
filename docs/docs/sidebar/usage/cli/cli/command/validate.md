@@ -20,9 +20,11 @@ The rules:
   own name.
 - `verb`: The last word of each command is a verb (list, get, create, update,
   delete) or an action in command.Actions, as TestCommandShape holds each
-  command to. Fix: Name the method for a verb, and put a noun before it with
-  .Sub, such as roles list. Add a word to command.Actions only for a real
-  action, never for a noun.
+  command to. A command directly under the root, of a Flat group, has a word of
+  command.Roots instead. Fix: Name the method for a verb, and put a noun before
+  it with .Sub, such as roles list. Add a word to command.Actions only for a
+  real action, never for a noun, and to command.Roots only for a command that
+  belongs at the root.
 - `help`: Each method has a Short, and a method with input has an Example. Fix:
   Add .Short("&lt;what it does&gt;") and .Example("--flag value") to the method.
 - `flag`: Each value is a flag: the input is a struct, each field has a json

@@ -22,11 +22,10 @@ package cmd
 
 import (
 	goversion "github.com/caarlos0/go-version"
-	"github.com/spf13/cobra"
 	"go.opentelemetry.io/otel/attribute"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 
-	"github.com/osapi-io/osapi/internal/cli"
+	versioncmd "github.com/osapi-io/osapi/internal/cli/commands/version"
 )
 
 func buildVersion(
@@ -69,43 +68,28 @@ func versionAttr() attribute.KeyValue {
 	return semconv.ServiceVersion(appVersion())
 }
 
-// versionCmd represents the version command.
+// The build of this binary, which the release sets with -ldflags.
 var (
 	version   = ""
 	commit    = ""
 	treeState = ""
 	date      = ""
 	builtBy   = ""
-
-	versionCmd = &cobra.Command{
-		Use:   "version",
-		Short: "Display the version of osapi",
-		Example: `  osapi version
-  osapi version --json`,
-		Run: func(_ *cobra.Command, _ []string) {
-			v := buildVersion(version, commit, date, builtBy, treeState)
-
-			if jsonOutput {
-				jsonOut, _ := v.JSONString()
-				cli.PrintJSON([]byte(jsonOut))
-
-				return
-			}
-
-			cli.PrintHeading("Version")
-			cli.PrintKV(
-				"Version", v.GitVersion,
-				"Commit", v.GitCommit,
-				"Tree", v.GitTreeState,
-				"Built", v.BuildDate,
-				"Built by", v.BuiltBy,
-				"Go", v.GoVersion,
-				"Platform", v.Platform,
-			)
-		},
-	}
 )
 
-func init() {
-	rootCmd.AddCommand(versionCmd)
+// buildInfo is the build of this binary, for osapi version.
+func buildInfo() versioncmd.Info {
+	v := buildVersion(version, commit, date, builtBy, treeState)
+
+	return versioncmd.Info{
+		Version:   v.GitVersion,
+		Commit:    v.GitCommit,
+		TreeState: v.GitTreeState,
+		BuildDate: v.BuildDate,
+		BuiltBy:   v.BuiltBy,
+		GoVersion: v.GoVersion,
+		Platform:  v.Platform,
+		Compiler:  v.Compiler,
+		ModuleSum: v.ModuleSum,
+	}
 }

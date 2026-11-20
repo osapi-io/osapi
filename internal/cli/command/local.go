@@ -43,6 +43,9 @@ type LocalGroup struct {
 	Deps reflect.Type
 	// Methods are the group's commands, in the order they were declared.
 	Methods []*LocalMethod
+	// Flat is true for a group that adds no word of its own, which Flat
+	// sets: its commands are under its parent, such as osapi version.
+	Flat bool
 	// SubDocs are the one line of help of each command that a Sub makes,
 	// such as roles in osapi token roles list, which SubDoc sets.
 	SubDocs map[string]string
@@ -98,6 +101,16 @@ func SubDoc(
 	})
 }
 
+// Flat makes the group add no word of its own: each method is a command
+// under the group's parent, the root or the words of Under. osapi version is
+// the method version of a flat group at the root; osapi controller start
+// would be the method start of a flat group Under controller. A command
+// directly under the root has a word of Roots, and any other has a verb or
+// an action.
+func Flat() Option {
+	return optionFunc(func(g *LocalGroup) { g.Flat = true })
+}
+
 // Under puts the group's command under the command of words, such as
 // controller for osapi controller endpoint. Without it, the group is under
 // the root.
@@ -119,7 +132,7 @@ func Register(
 ) *LocalGroup {
 	localMu.Lock()
 	defer localMu.Unlock()
-	key := strings.Join(g.CommandPath(), " ")
+	key := g.Path()
 	if _, ok := locals[key]; ok {
 		panic(fmt.Sprintf("command: group %q registered twice", key))
 	}
@@ -218,7 +231,18 @@ func (g *LocalGroup) SubDoc(
 // CommandPath is the words of the group's command under the root: the words
 // Under set, then its name.
 func (g *LocalGroup) CommandPath() []string {
+	if g.Flat {
+		return append([]string(nil), g.Parents...)
+	}
+
 	return append(append([]string(nil), g.Parents...), g.Name)
+}
+
+// Path is the group's words and its name, such as controller endpoint, or
+// version for a flat group at the root: the key that Register and Lookup
+// use, and the name that a problem and cli command get give it.
+func (g *LocalGroup) Path() string {
+	return strings.Join(append(append([]string(nil), g.Parents...), g.Name), " ")
 }
 
 // Commands are the group's methods.

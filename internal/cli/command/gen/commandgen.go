@@ -167,9 +167,9 @@ func Commands(
 		if isLocal {
 			under = "osapi "
 		}
-		path := group + " " + m.CommandName()
+		path := strings.TrimSpace(group + " " + m.CommandName())
 		if sub := m.SubPath(); sub != "" && sub != m.CommandName() {
-			path = group + " " + sub + " " + m.CommandName()
+			path = strings.TrimSpace(group + " " + sub + " " + m.CommandName())
 		}
 		// An example with a doc has it as a # line above, and a blank line
 		// between examples; examples with none are one to a line.

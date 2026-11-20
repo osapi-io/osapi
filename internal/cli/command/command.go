@@ -223,8 +223,16 @@ func attach(
 		}
 		name := e.group.GroupName()
 		words := e.group.CommandPath()
+		// A flat group adds no word: its path is its parents, and each of
+		// its commands is under them, such as osapi version under the root.
+		lg, isLocal := e.group.(*LocalGroup)
+		flat := isLocal && lg.Flat
+		parents := words
+		if !flat {
+			parents = words[:len(words)-1]
+		}
 		into := parent
-		for _, w := range words[:len(words)-1] {
+		for _, w := range parents {
 			next := child(into, w)
 			// A named command that is not under into yet is added by the
 			// code that wrote it.
@@ -238,6 +246,19 @@ func attach(
 				into.AddCommand(next)
 			}
 			into = next
+		}
+		if flat {
+			for _, c := range e.cmds {
+				if child(into, c.Name()) != nil {
+					return fmt.Errorf(
+						"%s %s is made twice, by hand or by two groups: keep one",
+						prefix(local), strings.Join(append(parents, c.Name()), " "))
+				}
+				into.AddCommand(c)
+				origins[c] = e.group
+			}
+
+			continue
 		}
 		group := child(into, name)
 		for _, g := range groups {
