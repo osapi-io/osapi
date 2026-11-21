@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Route | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/reference/chains/route"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Route | OSAPI"><meta data-rh="true" name="description" content="The behaviors that route calls, and each call that its examples make."><meta data-rh="true" property="og:description" content="The behaviors that route calls, and each call that its examples make."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/reference/chains/route"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/reference/chains/route" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/reference/chains/route" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Reference","item":"https://osapi-io.github.io/osapi/sidebar/reference/"},{"@type":"ListItem","position":2,"name":"Chains","item":"https://osapi-io.github.io/osapi/sidebar/reference/chains/"},{"@type":"ListItem","position":3,"name":"Route","item":"https://osapi-io.github.io/osapi/sidebar/reference/chains/route"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.8208e3ef.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.d5b766a2.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.44533031.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.4d710965.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -41,7 +41,7 @@
 
 
 <table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td>Behavior</td><td><a class="" href="/osapi/sidebar/reference/behaviors/route">route</a></td></tr><tr><td>Chain</td><td>route → netplan → managedfile</td></tr><tr><td>Calls</td><td><a class="" href="/osapi/sidebar/reference/behaviors/netplan">netplan</a></td></tr><tr><td>Used by</td><td>none</td></tr></tbody></table>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="two-routes-create">Two routes (create)<a href="#two-routes-create" class="hash-link" aria-label="Direct link to Two routes (create)" title="Direct link to Two routes (create)" translate="no">​</a></h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-route-create">A route (create)<a href="#a-route-create" class="hash-link" aria-label="Direct link to A route (create)" title="Direct link to A route (create)" translate="no">​</a></h2>
 
 
 
@@ -72,8 +72,8 @@
 
 
 
-<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>route create</td><td>interface_name=osapi0 routes=[&quot;198.51.100.0/24 via 192.0.2.1&quot;, &quot;2001:…</td><td>changed=true interface_name=osapi0</td></tr><tr><td>└─ netplan get</td><td>name=osapi0</td><td>id=osapi0 matches=[osapi0] name=osapi0 section=ethernets</td></tr><tr><td>└─ netplan update</td><td>content=&lt;10 lines&gt; metadata={&quot;domain&quot;:&quot;route&quot;,&quot;interface&quot;:&quot;osapi0&quot;} p…</td><td>changed=true path=/etc/netplan/osapi-osapi0-routes.yaml</td></tr><tr><td>· └─ managedfile update</td><td>content=&lt;10 lines&gt; metadata={&quot;domain&quot;:&quot;route&quot;,&quot;interface&quot;:&quot;osapi0&quot;} m…</td><td>changed=true path=/etc/netplan/osapi-osapi0-routes.yaml</td></tr></tbody></table>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="one-route-in-place-of-two-update">One route in place of two (update)<a href="#one-route-in-place-of-two-update" class="hash-link" aria-label="Direct link to One route in place of two (update)" title="Direct link to One route in place of two (update)" translate="no">​</a></h2>
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>route create</td><td>destination=198.51.100.0/24 name=osapi0 via=192.0.2.1</td><td>changed=true destination=198.51.100.0/24</td></tr><tr><td>└─ netplan get</td><td>name=osapi0</td><td>id=osapi0 matches=[osapi0] name=osapi0 section=ethernets</td></tr><tr><td>└─ netplan update</td><td>content=&lt;7 lines&gt; metadata={&quot;domain&quot;:&quot;route&quot;,&quot;interface&quot;:&quot;osapi0&quot;} pa…</td><td>changed=true path=/etc/netplan/osapi-osapi0-routes.yaml</td></tr><tr><td>· └─ managedfile update</td><td>content=&lt;7 lines&gt; metadata={&quot;domain&quot;:&quot;route&quot;,&quot;interface&quot;:&quot;osapi0&quot;} mo…</td><td>changed=true path=/etc/netplan/osapi-osapi0-routes.yaml</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-second-route-with-a-metric-create">A second route, with a metric (create)<a href="#a-second-route-with-a-metric-create" class="hash-link" aria-label="Direct link to A second route, with a metric (create)" title="Direct link to A second route, with a metric (create)" translate="no">​</a></h2>
 
 
 
@@ -104,8 +104,8 @@
 
 
 
-<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>route update</td><td>interface_name=osapi0 routes=[&quot;203.0.113.0/24 via 192.0.2.1 metric 10…</td><td>changed=true interface_name=osapi0</td></tr><tr><td>└─ netplan get</td><td>name=osapi0</td><td>id=osapi0 matches=[osapi0] name=osapi0 section=ethernets</td></tr><tr><td>└─ netplan update</td><td>content=&lt;8 lines&gt; metadata={&quot;domain&quot;:&quot;route&quot;,&quot;interface&quot;:&quot;osapi0&quot;} pa…</td><td>changed=true path=/etc/netplan/osapi-osapi0-routes.yaml</td></tr><tr><td>· └─ managedfile update</td><td>content=&lt;8 lines&gt; metadata={&quot;domain&quot;:&quot;route&quot;,&quot;interface&quot;:&quot;osapi0&quot;} mo…</td><td>changed=true path=/etc/netplan/osapi-osapi0-routes.yaml</td></tr></tbody></table>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="an-interface-osapi-has-routes-of-delete">An interface osapi has routes of (delete)<a href="#an-interface-osapi-has-routes-of-delete" class="hash-link" aria-label="Direct link to An interface osapi has routes of (delete)" title="Direct link to An interface osapi has routes of (delete)" translate="no">​</a></h2>
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>route create</td><td>destination=2001:db8:1::/48 metric=200 name=osapi0 via=2001:db8::1</td><td>changed=true destination=2001:db8:1::/48</td></tr><tr><td>└─ netplan get</td><td>name=osapi0</td><td>id=osapi0 matches=[osapi0] name=osapi0 section=ethernets</td></tr><tr><td>└─ netplan update</td><td>content=&lt;10 lines&gt; metadata={&quot;domain&quot;:&quot;route&quot;,&quot;interface&quot;:&quot;osapi0&quot;} p…</td><td>changed=true path=/etc/netplan/osapi-osapi0-routes.yaml</td></tr><tr><td>· └─ managedfile update</td><td>content=&lt;10 lines&gt; metadata={&quot;domain&quot;:&quot;route&quot;,&quot;interface&quot;:&quot;osapi0&quot;} m…</td><td>changed=true path=/etc/netplan/osapi-osapi0-routes.yaml</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-new-gateway-and-metric-update">A new gateway and metric (update)<a href="#a-new-gateway-and-metric-update" class="hash-link" aria-label="Direct link to A new gateway and metric (update)" title="Direct link to A new gateway and metric (update)" translate="no">​</a></h2>
 
 
 
@@ -131,13 +131,13 @@
 
 
 
-<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>route delete</td><td>interface_name=osapi0</td><td>changed=true interface_name=osapi0</td></tr><tr><td>└─ netplan delete</td><td>path=/etc/netplan/osapi-osapi0-routes.yaml</td><td>changed=true path=/etc/netplan/osapi-osapi0-routes.yaml</td></tr><tr><td>· └─ managedfile delete</td><td>path=/etc/netplan/osapi-osapi0-routes.yaml</td><td>changed=true path=/etc/netplan/osapi-osapi0-routes.yaml</td></tr></tbody></table>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="an-interface-osapi-has-no-routes-of-delete">An interface osapi has no routes of (delete)<a href="#an-interface-osapi-has-no-routes-of-delete" class="hash-link" aria-label="Direct link to An interface osapi has no routes of (delete)" title="Direct link to An interface osapi has no routes of (delete)" translate="no">​</a></h2>
 
 
 
 
 
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>route update</td><td>destination=198.51.100.0/24 metric=10 name=osapi0 via=192.0.2.2</td><td>changed=true destination=198.51.100.0/24</td></tr><tr><td>└─ netplan get</td><td>name=osapi0</td><td>id=osapi0 matches=[osapi0] name=osapi0 section=ethernets</td></tr><tr><td>└─ netplan update</td><td>content=&lt;8 lines&gt; metadata={&quot;domain&quot;:&quot;route&quot;,&quot;interface&quot;:&quot;osapi0&quot;} pa…</td><td>changed=true path=/etc/netplan/osapi-osapi0-routes.yaml</td></tr><tr><td>· └─ managedfile update</td><td>content=&lt;8 lines&gt; metadata={&quot;domain&quot;:&quot;route&quot;,&quot;interface&quot;:&quot;osapi0&quot;} mo…</td><td>changed=true path=/etc/netplan/osapi-osapi0-routes.yaml</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="one-of-two-routes-delete">One of two routes (delete)<a href="#one-of-two-routes-delete" class="hash-link" aria-label="Direct link to One of two routes (delete)" title="Direct link to One of two routes (delete)" translate="no">​</a></h2>
 
 
 
@@ -158,6 +158,43 @@
 
 
 
-<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>route delete</td><td>interface_name=osapi0</td><td>changed=false interface_name=osapi0</td></tr><tr><td>└─ netplan delete</td><td>path=/etc/netplan/osapi-osapi0-routes.yaml</td><td>changed=false path=/etc/netplan/osapi-osapi0-routes.yaml</td></tr><tr><td>· └─ managedfile delete</td><td>path=/etc/netplan/osapi-osapi0-routes.yaml</td><td>changed=false path=/etc/netplan/osapi-osapi0-routes.yaml</td></tr></tbody></table></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/reference/chains/netplan"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Netplan</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/reference/chains/service"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Service</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#chain" class="table-of-contents__link toc-highlight">Chain</a></li><li><a href="#two-routes-create" class="table-of-contents__link toc-highlight">Two routes (create)</a></li><li><a href="#one-route-in-place-of-two-update" class="table-of-contents__link toc-highlight">One route in place of two (update)</a></li><li><a href="#an-interface-osapi-has-routes-of-delete" class="table-of-contents__link toc-highlight">An interface osapi has routes of (delete)</a></li><li><a href="#an-interface-osapi-has-no-routes-of-delete" class="table-of-contents__link toc-highlight">An interface osapi has no routes of (delete)</a></li></ul></div></div></div></div></main></div></div></div></div>
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>route delete</td><td>destination=198.51.100.0/24 name=osapi0</td><td>changed=true destination=198.51.100.0/24</td></tr><tr><td>└─ netplan get</td><td>name=osapi0</td><td>id=osapi0 matches=[osapi0] name=osapi0 section=ethernets</td></tr><tr><td>└─ netplan update</td><td>content=&lt;8 lines&gt; metadata={&quot;domain&quot;:&quot;route&quot;,&quot;interface&quot;:&quot;osapi0&quot;} pa…</td><td>changed=true path=/etc/netplan/osapi-osapi0-routes.yaml</td></tr><tr><td>· └─ managedfile update</td><td>content=&lt;8 lines&gt; metadata={&quot;domain&quot;:&quot;route&quot;,&quot;interface&quot;:&quot;osapi0&quot;} mo…</td><td>changed=true path=/etc/netplan/osapi-osapi0-routes.yaml</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-last-route-delete">The last route (delete)<a href="#the-last-route-delete" class="hash-link" aria-label="Direct link to The last route (delete)" title="Direct link to The last route (delete)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>route delete</td><td>destination=198.51.100.0/24 name=osapi0</td><td>changed=true destination=198.51.100.0/24</td></tr><tr><td>└─ netplan delete</td><td>path=/etc/netplan/osapi-osapi0-routes.yaml</td><td>changed=true path=/etc/netplan/osapi-osapi0-routes.yaml</td></tr><tr><td>· └─ managedfile delete</td><td>path=/etc/netplan/osapi-osapi0-routes.yaml</td><td>changed=true path=/etc/netplan/osapi-osapi0-routes.yaml</td></tr></tbody></table></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/reference/chains/netplan"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Netplan</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/reference/chains/service"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Service</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#chain" class="table-of-contents__link toc-highlight">Chain</a></li><li><a href="#a-route-create" class="table-of-contents__link toc-highlight">A route (create)</a></li><li><a href="#a-second-route-with-a-metric-create" class="table-of-contents__link toc-highlight">A second route, with a metric (create)</a></li><li><a href="#a-new-gateway-and-metric-update" class="table-of-contents__link toc-highlight">A new gateway and metric (update)</a></li><li><a href="#one-of-two-routes-delete" class="table-of-contents__link toc-highlight">One of two routes (delete)</a></li><li><a href="#the-last-route-delete" class="table-of-contents__link toc-highlight">The last route (delete)</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
