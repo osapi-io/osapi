@@ -65,9 +65,14 @@ var Behavior = behavior.Register(behavior.Define(
 				"America/New_York\n"),
 			behavior.Ran("timedatectl", "set-timezone", "America/New_York"),
 		).
+		// After sets the timezone first, as a live host can run it: the
+		// integration test runs these on CI's runner and puts its timezone
+		// back.
 		Example("A host that already has the timezone", UpdateInput{Timezone: "UTC"},
 			Result{Timezone: "UTC"},
-			behavior.Prints(show, "UTC\n"),
+			behavior.After(UpdateInput{Timezone: "UTC"}),
+			behavior.Prints(show, "America/New_York\n"),
+			behavior.PrintsAfter("timedatectl set-timezone UTC", show, "UTC\n"),
 		).
 		Fails("A name that is not a timezone", UpdateInput{Timezone: "../../etc/passwd"},
 			"not a valid timezone name").
