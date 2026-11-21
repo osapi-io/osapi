@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Service management | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/service-management"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Service management | OSAPI"><meta data-rh="true" name="description" content="osapi reads the systemd services of each host. It deploys, removes, starts,"><meta data-rh="true" property="og:description" content="osapi reads the systemd services of each host. It deploys, removes, starts,"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/service-management"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/service-management" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/service-management" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Service management","item":"https://osapi-io.github.io/osapi/sidebar/features/service-management"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.44533031.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.99229f61.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.4d710965.js" defer="defer"></script>
 </head>
 <body>
@@ -85,56 +85,13 @@ systemd. A service with no unit file reports <code>changed: false</code>.</li>
 <p>All commands accept <code>--json</code> to give the raw JSON output. All commands accept
 broadcast targets, such as <code>_all</code> or a label selector, and give one result for
 each host.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="supported-platforms">Supported platforms<a href="#supported-platforms" class="hash-link" aria-label="Direct link to Supported platforms" title="Direct link to Supported platforms" translate="no">​</a></h2>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<table><thead><tr><th>OS family</th><th>Read</th><th>Write</th></tr></thead><tbody><tr><td>Debian</td><td>Full</td><td>Full</td></tr><tr><td>Linux</td><td>Full</td><td>Skipped</td></tr><tr><td>Darwin</td><td>Skipped</td><td>Skipped</td></tr></tbody></table>
-<p>In a container, an agent reads the services and does not write them: the
-services of the host are not the container&#x27;s to manage.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="permissions">Permissions<a href="#permissions" class="hash-link" aria-label="Direct link to Permissions" title="Direct link to Permissions" translate="no">​</a></h2>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<table><thead><tr><th>Operation</th><th>Permission</th></tr></thead><tbody><tr><td>List, Get</td><td><code>service:read</code></td></tr><tr><td>Create, Update, Delete, Start, Stop, Restart, Enable, Disable</td><td><code>service:write</code></td></tr></tbody></table>
-<p>All built-in roles (<code>admin</code>, <code>write</code>, <code>read</code>) have <code>service:read</code>. The <code>admin</code>
-and <code>write</code> roles have <code>service:write</code>.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="permissions-and-platforms">Permissions and platforms<a href="#permissions-and-platforms" class="hash-link" aria-label="Direct link to Permissions and platforms" title="Direct link to Permissions and platforms" translate="no">​</a></h2>
+<p>The generated page of each behavior gives the permission, the platforms and the
+route of each method: <a class="" href="/osapi/sidebar/reference/behaviors/service">service</a>,
+<a class="" href="/osapi/sidebar/reference/behaviors/object">object</a>. The pages come from the
+definitions, so they stay true when a method changes, and this page does not
+copy them. <a class="" href="/osapi/sidebar/features/authentication">Authentication</a> tells which permissions each role
+has.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="related">Related<a href="#related" class="hash-link" aria-label="Direct link to Related" title="Direct link to Related" translate="no">​</a></h2>
 <ul>
 <li class=""><a class="" href="/osapi/sidebar/reference/behaviors/service">service</a>: each method, with its
@@ -143,6 +100,6 @@ input, its output and its examples</li>
 commands</li>
 <li class=""><a class="" href="/osapi/sidebar/sdk/client/services/service">SDK Reference</a>: the service of the SDK</li>
 <li class=""><a class="" href="/osapi/sidebar/features/file-management">File management</a>: upload the unit file</li>
-</ul></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/certificate-management"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Certificate management</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/agent-identity"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Agent Identity &amp; PKI</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#how-it-works" class="table-of-contents__link toc-highlight">How it works</a><ul><li><a href="#list-and-get" class="table-of-contents__link toc-highlight">List and get</a></li><li><a href="#the-services-that-osapi-deploys" class="table-of-contents__link toc-highlight">The services that osapi deploys</a></li><li><a href="#actions" class="table-of-contents__link toc-highlight">Actions</a></li></ul></li><li><a href="#cli-usage" class="table-of-contents__link toc-highlight">CLI usage</a></li><li><a href="#supported-platforms" class="table-of-contents__link toc-highlight">Supported platforms</a></li><li><a href="#permissions" class="table-of-contents__link toc-highlight">Permissions</a></li><li><a href="#related" class="table-of-contents__link toc-highlight">Related</a></li></ul></div></div></div></div></main></div></div></div></div>
+</ul></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/certificate-management"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Certificate management</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/agent-identity"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Agent Identity &amp; PKI</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#how-it-works" class="table-of-contents__link toc-highlight">How it works</a><ul><li><a href="#list-and-get" class="table-of-contents__link toc-highlight">List and get</a></li><li><a href="#the-services-that-osapi-deploys" class="table-of-contents__link toc-highlight">The services that osapi deploys</a></li><li><a href="#actions" class="table-of-contents__link toc-highlight">Actions</a></li></ul></li><li><a href="#cli-usage" class="table-of-contents__link toc-highlight">CLI usage</a></li><li><a href="#permissions-and-platforms" class="table-of-contents__link toc-highlight">Permissions and platforms</a></li><li><a href="#related" class="table-of-contents__link toc-highlight">Related</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>

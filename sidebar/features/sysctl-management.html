@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Sysctl management | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/sysctl-management"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Sysctl management | OSAPI"><meta data-rh="true" name="description" content="osapi manages Linux kernel parameters on target hosts with sysctl. The agent"><meta data-rh="true" property="og:description" content="osapi manages Linux kernel parameters on target hosts with sysctl. The agent"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/sysctl-management"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/sysctl-management" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/sysctl-management" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Sysctl management","item":"https://osapi-io.github.io/osapi/sidebar/features/sysctl-management"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.44533031.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.99229f61.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.4d710965.js" defer="defer"></script>
 </head>
 <body>
@@ -47,37 +47,12 @@ value, whoever set it. A host has about a thousand parameters.</p>
 <p>sysctl is a <a class="" href="/osapi/sidebar/reference/behaviors/sysctl">behavior</a>. Each entry also
 says whether osapi manages it, and list takes a <code>--prefix</code>, such as <code>net.ipv4</code>,
 to return one part of the tree.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="operations">Operations<a href="#operations" class="hash-link" aria-label="Direct link to Operations" title="Direct link to Operations" translate="no">​</a></h2>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<table><thead><tr><th>Operation</th><th>Description</th></tr></thead><tbody><tr><td>List</td><td>List every parameter and its current value</td></tr><tr><td>Get</td><td>Get any parameter&#x27;s current value</td></tr><tr><td>Create</td><td>Write a drop-in and apply it (idempotent)</td></tr><tr><td>Update</td><td>The same as create, addressed by key; manages it if not yet</td></tr><tr><td>Delete</td><td>Remove the drop-in; the value stays until reboot</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="permissions-and-platforms">Permissions and platforms<a href="#permissions-and-platforms" class="hash-link" aria-label="Direct link to Permissions and platforms" title="Direct link to Permissions and platforms" translate="no">​</a></h2>
+<p>The generated page of each behavior gives the permission, the platforms and the
+route of each method: <a class="" href="/osapi/sidebar/reference/behaviors/sysctl">sysctl</a>. The
+pages come from the definitions, so they stay true when a method changes, and
+this page does not copy them. <a class="" href="/osapi/sidebar/features/authentication">Authentication</a> tells which
+permissions each role has.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="cli-usage">CLI usage<a href="#cli-usage" class="hash-link" aria-label="Direct link to CLI usage" title="Direct link to CLI usage" translate="no">​</a></h2>
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain"># List every parameter on a host</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node sysctl list --target web-01</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain"># Get a specific parameter</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node sysctl get --target web-01 \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --key net.ipv4.ip_forward</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain"># Set a parameter and manage it (idempotent: unchanged if already set)</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node sysctl create --target web-01 \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --key net.ipv4.ip_forward --value 1</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain"># Set it by key, whether or not osapi managed it before</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node sysctl update --target web-01 \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --key net.ipv4.ip_forward --value 0</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain"># Broadcast create to all hosts</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node sysctl create --target _all \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --key vm.swappiness --value 10</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain"># Delete a parameter (removes the drop-in file)</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node sysctl delete --target web-01 \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --key net.ipv4.ip_forward</span><br></div></code></pre></div></div>
 <p>All commands accept <code>--json</code> to give the raw JSON output.</p>
@@ -100,59 +75,12 @@ with letters, digits, dots, underscores and hyphens. A key must start with a
 letter or a digit (<code>^[a-zA-Z0-9][a-zA-Z0-9._-]*$</code>). This includes each key that
 sysctl knows. The API and the provider of the agent both validate the shape of
 the key and the value before they apply a change.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="supported-platforms">Supported platforms<a href="#supported-platforms" class="hash-link" aria-label="Direct link to Supported platforms" title="Direct link to Supported platforms" translate="no">​</a></h2>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<table><thead><tr><th>OS Family</th><th>Support</th></tr></thead><tbody><tr><td>Debian</td><td>Full</td></tr><tr><td>Darwin</td><td>Skipped</td></tr><tr><td>Linux</td><td>Skipped</td></tr></tbody></table>
-<p>On a platform that is not supported, sysctl operations return <code>status: skipped</code>.
-They do not fail. Refer to <a class="" href="/osapi/sidebar/sdk/platform/detection">Platform Detection</a>
-for how osapi finds the OS family.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="permissions">Permissions<a href="#permissions" class="hash-link" aria-label="Direct link to Permissions" title="Direct link to Permissions" translate="no">​</a></h2>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<table><thead><tr><th>Operation</th><th>Permission</th></tr></thead><tbody><tr><td>List, Get</td><td><code>sysctl:read</code></td></tr><tr><td>Create, Update, Delete</td><td><code>sysctl:write</code></td></tr></tbody></table>
-<p>All built-in roles (<code>admin</code>, <code>write</code>, <code>read</code>) include <code>sysctl:read</code>. The <code>admin</code>
-and <code>write</code> roles also include <code>sysctl:write</code>.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="related">Related<a href="#related" class="hash-link" aria-label="Direct link to Related" title="Direct link to Related" translate="no">​</a></h2>
 <ul>
 <li class=""><a class="" href="/osapi/sidebar/usage/cli/client/node/sysctl">CLI Reference</a>: sysctl commands</li>
 <li class=""><a class="" href="/osapi/sidebar/features/file-management">File Management</a>: file-state KV tracking</li>
 <li class=""><a class="" href="/osapi/sidebar/sdk/platform/detection">Platform Detection</a>: OS family detection</li>
 <li class=""><a class="" href="/osapi/sidebar/usage/configuration">Configuration</a>: full configuration reference</li>
-</ul></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/container-management"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Container management</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/ntp-management"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">NTP management</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#how-it-works" class="table-of-contents__link toc-highlight">How it works</a><ul><li><a href="#delete-behavior" class="table-of-contents__link toc-highlight">Delete behavior</a></li><li><a href="#list-and-get" class="table-of-contents__link toc-highlight">List and get</a></li></ul></li><li><a href="#operations" class="table-of-contents__link toc-highlight">Operations</a></li><li><a href="#cli-usage" class="table-of-contents__link toc-highlight">CLI usage</a></li><li><a href="#broadcast-support" class="table-of-contents__link toc-highlight">Broadcast support</a></li><li><a href="#idempotent-updates" class="table-of-contents__link toc-highlight">Idempotent updates</a></li><li><a href="#key-naming" class="table-of-contents__link toc-highlight">Key naming</a></li><li><a href="#supported-platforms" class="table-of-contents__link toc-highlight">Supported platforms</a></li><li><a href="#permissions" class="table-of-contents__link toc-highlight">Permissions</a></li><li><a href="#related" class="table-of-contents__link toc-highlight">Related</a></li></ul></div></div></div></div></main></div></div></div></div>
+</ul></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/container-management"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Container management</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/ntp-management"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">NTP management</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#how-it-works" class="table-of-contents__link toc-highlight">How it works</a><ul><li><a href="#delete-behavior" class="table-of-contents__link toc-highlight">Delete behavior</a></li><li><a href="#list-and-get" class="table-of-contents__link toc-highlight">List and get</a></li></ul></li><li><a href="#permissions-and-platforms" class="table-of-contents__link toc-highlight">Permissions and platforms</a></li><li><a href="#cli-usage" class="table-of-contents__link toc-highlight">CLI usage</a></li><li><a href="#broadcast-support" class="table-of-contents__link toc-highlight">Broadcast support</a></li><li><a href="#idempotent-updates" class="table-of-contents__link toc-highlight">Idempotent updates</a></li><li><a href="#key-naming" class="table-of-contents__link toc-highlight">Key naming</a></li><li><a href="#related" class="table-of-contents__link toc-highlight">Related</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Network management | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/network-management"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Network management | OSAPI"><meta data-rh="true" name="description" content="osapi can query and update the network configuration of managed hosts. Network"><meta data-rh="true" property="og:description" content="osapi can query and update the network configuration of managed hosts. Network"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/network-management"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/network-management" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/network-management" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Network management","item":"https://osapi-io.github.io/osapi/sidebar/features/network-management"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.44533031.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.99229f61.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.4d710965.js" defer="defer"></script>
 </head>
 <body>
@@ -46,7 +46,7 @@ privileges, and the agents make the changes.</p>
 
 
 
-<table><thead><tr><th>Resource</th><th>Operations</th><th>Description</th></tr></thead><tbody><tr><td>DNS</td><td>Read, Update, Delete</td><td>Nameservers and search domains per interface</td></tr><tr><td>Ping</td><td>Read</td><td>ICMP connectivity check to a target host</td></tr><tr><td>Interface</td><td>Full CRUD</td><td>Each interface, and osapi&#x27;s Netplan config</td></tr><tr><td>Route</td><td>Full CRUD</td><td>Each route, and osapi&#x27;s Netplan static routes</td></tr></tbody></table>
+<table><thead><tr><th>Resource</th><th>Operations</th><th>Description</th></tr></thead><tbody><tr><td>DNS</td><td>Read, Update, Delete</td><td>Nameservers and search domains per interface</td></tr><tr><td>Ping</td><td>Read</td><td>ICMP connectivity check to a target host</td></tr><tr><td>Interface</td><td>Full CRUD</td><td>Each interface, and osapi&#x27;s Netplan config</td></tr><tr><td>Route</td><td>Full CRUD</td><td>The static routes of an interface, one a call</td></tr></tbody></table>
 <p>For interface and route management details, see
 <a class="" href="/osapi/sidebar/features/network-interface-management">Network Interface Management</a>.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-it-works">How it works<a href="#how-it-works" class="hash-link" aria-label="Direct link to How it works" title="Direct link to How it works" translate="no">​</a></h2>
@@ -94,75 +94,15 @@ endpoints.</p>
 <p>Network management uses the general job system. It needs no configuration of its
 own. Refer to <a class="" href="/osapi/sidebar/usage/configuration">Configuration</a> for NATS, agent, and
 authentication settings.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="permissions">Permissions<a href="#permissions" class="hash-link" aria-label="Direct link to Permissions" title="Direct link to Permissions" translate="no">​</a></h2>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<table><thead><tr><th>Operation</th><th>Permission</th></tr></thead><tbody><tr><td>DNS get</td><td><code>network:read</code></td></tr><tr><td>DNS update</td><td><code>network:write</code></td></tr><tr><td>DNS delete</td><td><code>network:write</code></td></tr><tr><td>Interface list</td><td><code>network:read</code></td></tr><tr><td>Interface get</td><td><code>network:read</code></td></tr><tr><td>Interface create</td><td><code>network:write</code></td></tr><tr><td>Interface update</td><td><code>network:write</code></td></tr><tr><td>Interface delete</td><td><code>network:write</code></td></tr><tr><td>Route list</td><td><code>network:read</code></td></tr><tr><td>Route get</td><td><code>network:read</code></td></tr><tr><td>Route create</td><td><code>network:write</code></td></tr><tr><td>Route update</td><td><code>network:write</code></td></tr><tr><td>Route delete</td><td><code>network:write</code></td></tr><tr><td>Ping</td><td><code>network:read</code></td></tr></tbody></table>
-<p>The <code>admin</code> and <code>write</code> roles include both <code>network:read</code> and <code>network:write</code>.
-The <code>read</code> role includes only <code>network:read</code>.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="permissions-and-platforms">Permissions and platforms<a href="#permissions-and-platforms" class="hash-link" aria-label="Direct link to Permissions and platforms" title="Direct link to Permissions and platforms" translate="no">​</a></h2>
+<p>The generated page of each behavior gives the permission, the platforms and the
+route of each method: <a class="" href="/osapi/sidebar/reference/behaviors/dns">dns</a>,
+<a class="" href="/osapi/sidebar/reference/behaviors/interface">interface</a>,
+<a class="" href="/osapi/sidebar/reference/behaviors/route">route</a>. The pages come from the
+definitions, so they stay true when a method changes, and this page does not
+copy them. <a class="" href="/osapi/sidebar/features/authentication">Authentication</a> tells which permissions each role
+has.</p>
+<p>Ping is not a behavior: it needs <code>network:read</code>.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="related">Related<a href="#related" class="hash-link" aria-label="Direct link to Related" title="Direct link to Related" translate="no">​</a></h2>
 <ul>
 <li class=""><a class="" href="/osapi/sidebar/usage/cli/client/node/network">CLI Reference</a>: network
@@ -172,6 +112,6 @@ commands</li>
 documentation</li>
 <li class=""><a class="" href="/osapi/sidebar/features/job-system">Job System</a>: how async job processing works</li>
 <li class=""><a class="" href="/osapi/sidebar/architecture">Architecture</a>: system design overview</li>
-</ul></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/node-management"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Node management</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/command-execution"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Command execution</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#what-it-manages" class="table-of-contents__link toc-highlight">What it manages</a></li><li><a href="#how-it-works" class="table-of-contents__link toc-highlight">How it works</a></li><li><a href="#configuration" class="table-of-contents__link toc-highlight">Configuration</a></li><li><a href="#permissions" class="table-of-contents__link toc-highlight">Permissions</a></li><li><a href="#related" class="table-of-contents__link toc-highlight">Related</a></li></ul></div></div></div></div></main></div></div></div></div>
+</ul></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/node-management"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Node management</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/command-execution"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Command execution</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#what-it-manages" class="table-of-contents__link toc-highlight">What it manages</a></li><li><a href="#how-it-works" class="table-of-contents__link toc-highlight">How it works</a></li><li><a href="#configuration" class="table-of-contents__link toc-highlight">Configuration</a></li><li><a href="#permissions-and-platforms" class="table-of-contents__link toc-highlight">Permissions and platforms</a></li><li><a href="#related" class="table-of-contents__link toc-highlight">Related</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Node management | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/node-management"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Node management | OSAPI"><meta data-rh="true" name="description" content="OSAPI can query and update system-level information on managed nodes. All node"><meta data-rh="true" property="og:description" content="OSAPI can query and update system-level information on managed nodes. All node"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/node-management"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/node-management" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/node-management" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Node management","item":"https://osapi-io.github.io/osapi/sidebar/features/node-management"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.44533031.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.99229f61.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.4d710965.js" defer="defer"></script>
 </head>
 <body>
@@ -102,12 +102,19 @@ registry-based fleet discovery, or the
 <p>Node management uses the general job system. It needs no configuration of its
 own. Refer to <a class="" href="/osapi/sidebar/usage/configuration">Configuration</a> for NATS, agent, and
 authentication settings.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="permissions">Permissions<a href="#permissions" class="hash-link" aria-label="Direct link to Permissions" title="Direct link to Permissions" translate="no">​</a></h2>
-<p>Status requires <code>node:read</code>. Hostname, uptime, OS, disk, memory and load are
-behaviors. Each one requires its own permission, such as <code>uptime:read</code>, or
-<code>hostname:write</code> to set the hostname. Agent fleet discovery endpoints require
-<code>agent:read</code>. The built-in <code>admin</code> and <code>write</code> roles include <code>node:read</code> and
-each behavior&#x27;s permissions. The <code>read</code> role includes each read permission only.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="permissions-and-platforms">Permissions and platforms<a href="#permissions-and-platforms" class="hash-link" aria-label="Direct link to Permissions and platforms" title="Direct link to Permissions and platforms" translate="no">​</a></h2>
+<p>The generated page of each behavior gives the permission, the platforms and the
+route of each method: <a class="" href="/osapi/sidebar/reference/behaviors/status">status</a>,
+<a class="" href="/osapi/sidebar/reference/behaviors/hostname">hostname</a>,
+<a class="" href="/osapi/sidebar/reference/behaviors/uptime">uptime</a>,
+<a class="" href="/osapi/sidebar/reference/behaviors/os">os</a>,
+<a class="" href="/osapi/sidebar/reference/behaviors/disk">disk</a>,
+<a class="" href="/osapi/sidebar/reference/behaviors/memory">memory</a>,
+<a class="" href="/osapi/sidebar/reference/behaviors/load">load</a>. The pages come from the
+definitions, so they stay true when a method changes, and this page does not
+copy them. <a class="" href="/osapi/sidebar/features/authentication">Authentication</a> tells which permissions each role
+has.</p>
+<p>Agent fleet discovery is not a behavior: its endpoints need <code>agent:read</code>.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="related">Related<a href="#related" class="hash-link" aria-label="Direct link to Related" title="Direct link to Related" translate="no">​</a></h2>
 <ul>
 <li class=""><a class="" href="/osapi/sidebar/usage/cli/client/agent">Agent CLI Reference</a>: agent fleet
@@ -117,6 +124,6 @@ commands</li>
 <li class=""><a class="" href="/osapi/gen/api/status-api-status-operations">API Reference</a>: REST API documentation</li>
 <li class=""><a class="" href="/osapi/sidebar/features/job-system">Job System</a>: how async job processing works</li>
 <li class=""><a class="" href="/osapi/sidebar/architecture">Architecture</a>: system design overview</li>
-</ul></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Features</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/network-management"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Network management</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#agent-vs-node" class="table-of-contents__link toc-highlight">Agent vs. node</a></li><li><a href="#what-it-manages" class="table-of-contents__link toc-highlight">What it manages</a></li><li><a href="#how-it-works" class="table-of-contents__link toc-highlight">How it works</a><ul><li><a href="#when-part-of-a-status-cannot-be-read" class="table-of-contents__link toc-highlight">When part of a status cannot be read</a></li></ul></li><li><a href="#configuration" class="table-of-contents__link toc-highlight">Configuration</a></li><li><a href="#permissions" class="table-of-contents__link toc-highlight">Permissions</a></li><li><a href="#related" class="table-of-contents__link toc-highlight">Related</a></li></ul></div></div></div></div></main></div></div></div></div>
+</ul></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Features</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/network-management"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Network management</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#agent-vs-node" class="table-of-contents__link toc-highlight">Agent vs. node</a></li><li><a href="#what-it-manages" class="table-of-contents__link toc-highlight">What it manages</a></li><li><a href="#how-it-works" class="table-of-contents__link toc-highlight">How it works</a><ul><li><a href="#when-part-of-a-status-cannot-be-read" class="table-of-contents__link toc-highlight">When part of a status cannot be read</a></li></ul></li><li><a href="#configuration" class="table-of-contents__link toc-highlight">Configuration</a></li><li><a href="#permissions-and-platforms" class="table-of-contents__link toc-highlight">Permissions and platforms</a></li><li><a href="#related" class="table-of-contents__link toc-highlight">Related</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>

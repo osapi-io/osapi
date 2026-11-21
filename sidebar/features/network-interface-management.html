@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Network interface management | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/network-interface-management"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Network interface management | OSAPI"><meta data-rh="true" name="description" content="osapi manages the network interface configuration and the static routes of"><meta data-rh="true" property="og:description" content="osapi manages the network interface configuration and the static routes of"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/network-interface-management"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/network-interface-management" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/network-interface-management" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Network interface management","item":"https://osapi-io.github.io/osapi/sidebar/features/network-interface-management"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.44533031.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.99229f61.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.4d710965.js" defer="defer"></script>
 </head>
 <body>
@@ -82,57 +82,14 @@ puts it back, and does not report it as unchanged.</li>
 to the target, and renames it over the target. Thus <code>netplan generate</code> never
 reads a file that is only partly written.</li>
 </ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="operations">Operations<a href="#operations" class="hash-link" aria-label="Direct link to Operations" title="Direct link to Operations" translate="no">​</a></h2>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<table><thead><tr><th>Operation</th><th>Description</th></tr></thead><tbody><tr><td>Interface List</td><td>List all interfaces on the host</td></tr><tr><td>Interface Get</td><td>Get configuration for a specific interface</td></tr><tr><td>Interface Create</td><td>Create a new Netplan interface config</td></tr><tr><td>Interface Update</td><td>Replace an existing Netplan interface config</td></tr><tr><td>Interface Delete</td><td>Remove an OSAPI-managed interface config</td></tr><tr><td>Route List</td><td>List the routes of an interface</td></tr><tr><td>Route Create</td><td>Add one static route to an interface</td></tr><tr><td>Route Update</td><td>Change the gateway or metric of one route</td></tr><tr><td>Route Delete</td><td>Drop one route that osapi wrote</td></tr><tr><td>DNS Delete</td><td>Remove OSAPI-managed DNS config for an interface</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="permissions-and-platforms">Permissions and platforms<a href="#permissions-and-platforms" class="hash-link" aria-label="Direct link to Permissions and platforms" title="Direct link to Permissions and platforms" translate="no">​</a></h2>
+<p>The generated page of each behavior gives the permission, the platforms and the
+route of each method: <a class="" href="/osapi/sidebar/reference/behaviors/dns">dns</a>,
+<a class="" href="/osapi/sidebar/reference/behaviors/interface">interface</a>,
+<a class="" href="/osapi/sidebar/reference/behaviors/route">route</a>. The pages come from the
+definitions, so they stay true when a method changes, and this page does not
+copy them. <a class="" href="/osapi/sidebar/features/authentication">Authentication</a> tells which permissions each role
+has.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="cli-usage">CLI usage<a href="#cli-usage" class="hash-link" aria-label="Direct link to CLI usage" title="Direct link to CLI usage" translate="no">​</a></h2>
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain"># List all interfaces</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node network interface list --target web-01</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain"># Get a specific interface</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node network interface get \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --target web-01 --name eth0</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain"># Create a static interface config</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node network interface create \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --target web-01 --name eth1 \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --addresses 192.168.1.100/24 \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --gateway4 192.168.1.1</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain"># Create an interface with DHCP</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node network interface create \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --target web-01 --name eth1 --dhcp4</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain"># Update an interface (replace config)</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node network interface update \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --target web-01 --name eth1 \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --addresses 192.168.1.200/24 \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --gateway4 192.168.1.1 \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --mtu 9000</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain"># Delete an interface config</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node network interface delete \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --target web-01 --name eth1</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain"># List the routes of an interface</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node network interface route list --target web-01 --name eth0</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain"># Add static routes, one a call</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node network interface route create --target web-01 --name eth1 \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --destination 10.0.0.0/8 --via 192.168.1.1</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node network interface route create --target web-01 --name eth1 \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --destination 172.16.0.0/12 --via 192.168.1.1 --metric 100</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain"># Change the metric of a route</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node network interface route update --target web-01 --name eth1 \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --destination 10.0.0.0/8 --via 192.168.1.1 --metric 50</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain"># Drop a route</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node network interface route delete --target web-01 --name eth1 \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --destination 10.0.0.0/8</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain"># Delete DNS config for an interface</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node network dns delete \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --target web-01 --interface-name eth0</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain"># Broadcast interface create to all hosts</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node network interface create \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --target _all --name eth1 --dhcp4</span><br></div></code></pre></div></div>
 <p>All commands accept <code>--json</code> to give the raw JSON output.</p>
@@ -143,78 +100,10 @@ selector, for example <code>--target group:web</code>, to target a part of the f
 <p>Responses always include per-host results:</p>
 <div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">  Job ID: 550e8400-e29b-41d4-a716-446655440000</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  HOSTNAME  NAME    CHANGED</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  web-01    eth0    true</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  web-02    eth0    true</span><br></div></code></pre></div></div>
 <p>Skipped and failed hosts appear with their error in the output.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="supported-platforms">Supported platforms<a href="#supported-platforms" class="hash-link" aria-label="Direct link to Supported platforms" title="Direct link to Supported platforms" translate="no">​</a></h2>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<table><thead><tr><th>OS Family</th><th>Interface and route list, get</th><th>Interface and route writes</th></tr></thead><tbody><tr><td>Debian</td><td>Yes</td><td>Yes</td></tr><tr><td>Linux</td><td>Yes</td><td>Skipped</td></tr><tr><td>Darwin</td><td>Yes</td><td>Skipped</td></tr></tbody></table>
-<p>On a platform that is not supported, an operation returns <code>status: skipped</code>. It
-does not fail. Refer to <a class="" href="/osapi/sidebar/sdk/platform/detection">Platform Detection</a> for
-how osapi finds the OS family.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="container-behavior">Container behavior<a href="#container-behavior" class="hash-link" aria-label="Direct link to Container behavior" title="Direct link to Container behavior" translate="no">​</a></h2>
 <p>Interface and route writes return <code>status: skipped</code> inside containers. List and
 get read the container&#x27;s own interfaces and routes. Netplan requires direct host
 access and is not available in standard container environments.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="permissions">Permissions<a href="#permissions" class="hash-link" aria-label="Direct link to Permissions" title="Direct link to Permissions" translate="no">​</a></h2>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<table><thead><tr><th>Operation</th><th>Permission</th></tr></thead><tbody><tr><td>Interface List, Get</td><td><code>network:read</code></td></tr><tr><td>Interface Create, Update, Delete</td><td><code>network:write</code></td></tr><tr><td>Route List, Get</td><td><code>network:read</code></td></tr><tr><td>Route Create, Update, Delete</td><td><code>network:write</code></td></tr><tr><td>DNS Get</td><td><code>network:read</code></td></tr><tr><td>DNS Update, Delete</td><td><code>network:write</code></td></tr></tbody></table>
-<p>Network read operations require <code>network:read</code>, included in all built-in roles
-(<code>admin</code>, <code>write</code>, <code>read</code>). Mutation operations require <code>network:write</code>,
-included in the <code>admin</code> and <code>write</code> roles.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="related">Related<a href="#related" class="hash-link" aria-label="Direct link to Related" title="Direct link to Related" translate="no">​</a></h2>
 <ul>
 <li class=""><a class="" href="/osapi/sidebar/usage/cli/client/node/network/interface">CLI Reference</a>:
@@ -226,6 +115,6 @@ route commands</li>
 <li class=""><a class="" href="/osapi/sidebar/features/network-management">Network Management</a>: DNS and ping</li>
 <li class=""><a class="" href="/osapi/sidebar/sdk/platform/detection">Platform Detection</a>: OS family detection</li>
 <li class=""><a class="" href="/osapi/sidebar/usage/configuration">Configuration</a>: full configuration reference</li>
-</ul></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/agent-identity"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Agent Identity &amp; PKI</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/reference"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Reference</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#how-it-works" class="table-of-contents__link toc-highlight">How it works</a><ul><li><a href="#dns-delete" class="table-of-contents__link toc-highlight">DNS delete</a></li></ul></li><li><a href="#safety-features" class="table-of-contents__link toc-highlight">Safety features</a></li><li><a href="#operations" class="table-of-contents__link toc-highlight">Operations</a></li><li><a href="#cli-usage" class="table-of-contents__link toc-highlight">CLI usage</a></li><li><a href="#broadcast-support" class="table-of-contents__link toc-highlight">Broadcast support</a></li><li><a href="#supported-platforms" class="table-of-contents__link toc-highlight">Supported platforms</a></li><li><a href="#container-behavior" class="table-of-contents__link toc-highlight">Container behavior</a></li><li><a href="#permissions" class="table-of-contents__link toc-highlight">Permissions</a></li><li><a href="#related" class="table-of-contents__link toc-highlight">Related</a></li></ul></div></div></div></div></main></div></div></div></div>
+</ul></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/agent-identity"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Agent Identity &amp; PKI</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/reference"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Reference</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#how-it-works" class="table-of-contents__link toc-highlight">How it works</a><ul><li><a href="#dns-delete" class="table-of-contents__link toc-highlight">DNS delete</a></li></ul></li><li><a href="#safety-features" class="table-of-contents__link toc-highlight">Safety features</a></li><li><a href="#permissions-and-platforms" class="table-of-contents__link toc-highlight">Permissions and platforms</a></li><li><a href="#cli-usage" class="table-of-contents__link toc-highlight">CLI usage</a></li><li><a href="#broadcast-support" class="table-of-contents__link toc-highlight">Broadcast support</a></li><li><a href="#container-behavior" class="table-of-contents__link toc-highlight">Container behavior</a></li><li><a href="#related" class="table-of-contents__link toc-highlight">Related</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
