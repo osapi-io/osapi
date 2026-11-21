@@ -50,6 +50,9 @@ func Run(
 	for _, p := range directCalls(b, sourceDir) {
 		t.Error(p)
 	}
+	for _, p := range ChainProblems(b) {
+		t.Error(p.Message + ". Fix: " + p.Fix)
+	}
 }
 
 // Check runs every example of every method of b on a fake host, once per

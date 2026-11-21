@@ -22,13 +22,136 @@ package behavior
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"path"
 	"reflect"
 	"runtime"
 	"slices"
 	"strings"
+	"sync"
+
+	"github.com/osapi-io/osapi/internal/guide"
 )
+
+// The chain rules, by the name a problem reports. RuleRequires and
+// RuleInternal hold when the behaviors are built; RuleCalled and RuleUsed
+// hold when the examples run, because only a run shows which behaviors a
+// provider calls.
+const (
+	// RuleCalled: each call of a provider goes to a behavior that its
+	// behavior requires.
+	RuleCalled = "called"
+	// RuleUsed: an example calls each behavior that a behavior requires.
+	RuleUsed = "used"
+)
+
+// ChainChecks are the rules of a chain: the behaviors that a behavior
+// requires, and the calls that it makes to them. osapi behavior chain
+// validate checks each one; behavior validate checks the ones that hold
+// when the behaviors are built, and go test checks the ones that need a run.
+var ChainChecks = guide.Checks{
+	{
+		Rule:     RuleRequires,
+		Requires: "Each required behavior is registered, and no behavior requires itself through others.",
+		Fix:      "Import the required behavior in internal/behaviors/all, or remove the requirement that makes the cycle.",
+	},
+	{
+		Rule:     RuleInternal,
+		Requires: "Another behavior requires each internal behavior. Nothing else can call it, because it has no API and no CLI.",
+		Fix:      "Add behavior.Requires(it) to the behavior that uses it, or remove behavior.Internal if an operator calls it.",
+	},
+	{
+		Rule:     RuleCalled,
+		Requires: "A provider calls only the behaviors that its behavior requires. The agent builds the provider of each required behavior, and no other.",
+		Fix:      "Add the behavior that it calls to behavior.Requires, and read its provider with host.Require.",
+	},
+	{
+		Rule:     RuleUsed,
+		Requires: "An example calls each behavior that a behavior requires. A requirement that no example calls is not tested, or is not needed.",
+		Fix:      "Add an example whose provider calls the required behavior, or remove the requirement.",
+	},
+}
+
+// ChainProblems are the problems of the chain rules that hold when the
+// behaviors are built: RuleRequires and RuleInternal.
+func ChainProblems() []Problem {
+	var problems []Problem
+	for _, p := range chainProblems(All()) {
+		if p.Rule == RuleRequires || p.Rule == RuleInternal {
+			p.Fix = ChainChecks.Fix(p.Rule)
+			problems = append(problems, p)
+		}
+	}
+
+	return problems
+}
+
+// A Step is one call of a method in a chain, with the calls it made. The
+// examples record them: Record gives a context, and each Call under it adds
+// its step, so osapi behavior chain get shows what each call sent and got.
+type Step struct {
+	Behavior string  `json:"behavior"`
+	Method   string  `json:"method"`
+	Input    any     `json:"input,omitempty"`
+	Output   any     `json:"output,omitempty"`
+	Error    string  `json:"error,omitempty"`
+	Steps    []*Step `json:"steps,omitempty"`
+
+	mu sync.Mutex
+}
+
+type stepKey struct{}
+
+// Record is ctx with s as the step that each Call under it adds its own
+// step to. Without it, Call records nothing.
+func Record(
+	ctx context.Context,
+	s *Step,
+) context.Context {
+	return context.WithValue(ctx, stepKey{}, s)
+}
+
+// Redact is in as a step records it: a struct with each field tagged
+// secret:"true" as [redacted], as the audit log and the spans leave it out.
+// Anything else is in unchanged.
+func Redact(
+	in any,
+) any {
+	t := reflect.TypeOf(in)
+	if t == nil || t.Kind() != reflect.Struct {
+		return in
+	}
+	var secrets []string
+	for i := range t.NumField() {
+		if f := t.Field(i); Secret(f) {
+			secrets = append(secrets, strings.Split(f.Tag.Get("json"), ",")[0])
+		}
+	}
+	if len(secrets) == 0 {
+		return in
+	}
+	data, _ := json.Marshal(in)
+	var fields map[string]any
+	_ = json.Unmarshal(data, &fields)
+	for _, name := range secrets {
+		if _, ok := fields[name]; ok {
+			fields[name] = "[redacted]"
+		}
+	}
+
+	return fields
+}
+
+// add appends c to the steps of s. Calls can run at the same time, as
+// status reads its behaviors.
+func (s *Step) add(
+	c *Step,
+) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.Steps = append(s.Steps, c)
+}
 
 // Requires declares the behaviors this one is built on. The agent builds
 // each required behavior's provider before this one's and hands it to this
@@ -178,6 +301,13 @@ func Call[P any, In any, Out any](
 		return zero, fmt.Errorf("%s is not a method of behavior %s", name, b.Name)
 	}
 
+	var step *Step
+	if parent, ok := ctx.Value(stepKey{}).(*Step); ok {
+		step = &Step{Behavior: b.Name, Method: m.Name, Input: Redact(in)}
+		parent.add(step)
+		ctx = Record(ctx, step)
+	}
+
 	var out Out
 	_, err := m.run(ctx, func(ctx context.Context) (any, any, error) {
 		if err := check(ctx, m, in); err != nil {
@@ -188,6 +318,13 @@ func Call[P any, In any, Out any](
 
 		return out, in, err
 	})
+	if step != nil {
+		if err != nil {
+			step.Error = err.Error()
+		} else {
+			step.Output = out
+		}
+	}
 
 	return out, err
 }
@@ -196,4 +333,113 @@ func Call[P any, In any, Out any](
 // github.com/osapi-io/osapi/internal/behaviors/managedfile.Update.
 func (m *Method) Func() string {
 	return m.fn
+}
+
+// The kinds of the chain spec that the behavior spec does not have.
+const (
+	KindChain    = "chain"
+	KindFailStep = "fail"
+)
+
+// ChainSpec is every term of a chain: what one is, how a behavior builds on
+// others, how it calls them, and what happens when a step fails. osapi
+// behavior chain spec get prints it, with the building blocks of the binary.
+var ChainSpec = guide.Spec{
+	Kinds: []guide.Kind{
+		{Kind: KindChain, Title: "What a chain is"},
+		{Kind: KindCompose, Title: "Building on other behaviors"},
+		{Kind: KindCall, Title: "Calls between behaviors"},
+		{Kind: KindFailStep, Title: "When a step fails"},
+	},
+	Terms: []guide.Term{
+		{
+			Kind: KindChain,
+			Name: "A chain",
+			Does: "The behaviors that a behavior calls, and the ones that they call: dns calls netplan, and netplan calls managedfile. The chain has the name of the behavior at its top. It is not declared on its own: Requires on each behavior makes it.",
+			When: "osapi behavior chain list shows each chain; osapi behavior chain get --name <behavior> shows its tree.",
+		},
+		{
+			Kind: KindChain,
+			Name: "The calls of an example",
+			Does: "osapi behavior chain get runs each example of the behavior on the fake host that go test uses, and records each Call: the behavior, the method, the input, and the output or the error. Thus the tree shows what the code does now.",
+			When: "To see what a behavior sends to the behaviors that it calls, before a change or when one fails.",
+		},
+		{
+			Kind: KindCompose,
+			Name: "Use a building block",
+			Does: "A building block is an internal behavior that does one generic job, such as writing a file that osapi manages. Its spans, checks and records come with it. \"Building blocks\" lists the ones in this binary.",
+			When: "Before a provider does generic work itself: a managed file, a service reload, a call to an outside API. Require the block with Requires, and call it with Call.",
+		},
+		{
+			Kind: KindCompose,
+			Name: "Make a building block",
+			Does: "Generic work that no block does yet becomes a new internal behavior. The behavior that needs it requires it.",
+			When: "When the work is not about the one thing that the behavior manages, or a second behavior would need it.",
+		},
+		{
+			Kind: KindCompose,
+			Name: "One host, one step",
+			Does: "A behavior acts on one host, in one job. Its building blocks run on the same host, in the same job.",
+			When: "Work across hosts, or in ordered steps, is an osapi-orchestrator workflow, not a behavior.",
+		},
+		{
+			Kind: KindCall,
+			Name: "Call(ctx, other.Behavior, other.Method, p, in)",
+			Does: "Runs a method of a required behavior in its own span, so the trace shows it as a step. It checks in against its validate tags first, as the API does for a served method: an input that breaks one is an error, and the method does not run.",
+			When: "Each time a provider uses a required behavior. A direct call fails the tests.",
+		},
+		{
+			Kind: KindCall,
+			Name: "host.Require[P](h)",
+			Does: "Returns the provider of a required behavior, in a builder.",
+			When: "In the builder of a behavior that uses Requires.",
+		},
+		{
+			Kind: KindFailStep,
+			Name: "The error goes up",
+			Does: "Call returns the error of a step to the provider that called it. The provider returns it, with what it was doing, or handles it. The job fails with the message, and the trace marks the span of the step that failed.",
+			When: "In each provider that calls another behavior.",
+		},
+		{
+			Kind: KindFailStep,
+			Name: "A step undoes its own change",
+			Does: "A building block that changes the host and then fails puts the host back before it returns the error: netplan gives its file back the content that it had, or removes a new file, when netplan generate refuses it. The caller does not undo the work of a block.",
+			When: "In a building block whose change can fail after it started.",
+		},
+		{
+			Kind: KindFailStep,
+			Name: "Skipped on a platform",
+			Does: "A behavior that a chain needs, and that cannot run on a platform, makes the behavior at the top report skipped there too.",
+			When: "When a building block declares fewer platforms than the behavior that requires it.",
+		},
+	},
+}
+
+// CurrentChainSpec is ChainSpec, with "Building blocks": each internal
+// behavior in the registry, with what it does and its methods. Thus the list
+// agrees with the binary.
+func CurrentChainSpec() guide.Spec {
+	spec := guide.Spec{
+		Kinds: append([]guide.Kind(nil), ChainSpec.Kinds...),
+		Terms: append([]guide.Term(nil), ChainSpec.Terms...),
+	}
+	spec.Kinds = append(spec.Kinds, guide.Kind{Kind: KindBlock, Title: "Building blocks"})
+	for _, b := range All() {
+		if !b.Internal {
+			continue
+		}
+		names := make([]string, 0, len(b.Methods))
+		for _, m := range b.Methods {
+			names = append(names, m.Name)
+		}
+		spec.Terms = append(spec.Terms, guide.Term{
+			Kind: KindBlock,
+			Name: b.Name,
+			Does: b.Doc + ". Methods: " + strings.Join(names, ", ") + ".",
+			When: "Require it, and call its methods with Call. osapi behavior get --name " +
+				b.Name + " shows its inputs.",
+		})
+	}
+
+	return spec
 }

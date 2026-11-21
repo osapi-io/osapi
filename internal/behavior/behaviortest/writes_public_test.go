@@ -227,14 +227,22 @@ func (s *WritesPublicTestSuite) TestDirectCalls() {
 
 			r := &recorder{}
 			behaviortest.Run(r, b)
+			// user has no methods, so no example calls tools: that is the
+			// used rule, which chain_public_test.go covers.
+			var errs []string
+			for _, e := range r.errs {
+				if !strings.Contains(e, "no example calls it") {
+					errs = append(errs, e)
+				}
+			}
 
 			if tc.want == nil {
-				s.Empty(r.errs)
+				s.Empty(errs)
 				return
 			}
-			s.Require().Len(r.errs, 1)
+			s.Require().Len(errs, 1)
 			for _, w := range tc.want {
-				s.Contains(r.errs[0], w)
+				s.Contains(errs[0], w)
 			}
 		})
 	}

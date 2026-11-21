@@ -96,6 +96,20 @@ type Check struct {
 // Checks are the rules of a validate command, in order.
 type Checks []Check
 
+// Requires is what rule requires, or "" for a rule without a check. A layer
+// that checks another layer's rule states it with these words.
+func (c Checks) Requires(
+	rule string,
+) string {
+	for _, k := range c {
+		if k.Rule == rule {
+			return k.Requires
+		}
+	}
+
+	return ""
+}
+
 // Fix is the fix of rule, or "" for a rule without a check.
 func (c Checks) Fix(
 	rule string,

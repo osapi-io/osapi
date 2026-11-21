@@ -21,6 +21,8 @@
 package behavior_test
 
 import (
+	"context"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -34,6 +36,84 @@ type ChainPublicTestSuite struct {
 
 func (s *ChainPublicTestSuite) TearDownTest() {
 	behavior.Reset()
+}
+
+func (s *ChainPublicTestSuite) TestRecord() {
+	b := top()
+
+	s.Run("a call under Record adds its step, with its input and output", func() {
+		root := &behavior.Step{Behavior: "other", Method: "create"}
+		out, err := behavior.Call(behavior.Record(context.Background(), root), b, get,
+			fakeProvider{prefix: "v-"}, getIn{Key: "k"})
+		s.Require().NoError(err)
+		s.Require().Len(root.Steps, 1)
+		s.Equal("sysctl", root.Steps[0].Behavior)
+		s.Equal("list", root.Steps[0].Method, "the first method declared with get")
+		s.Equal(getIn{Key: "k"}, root.Steps[0].Input)
+		s.Equal(out, root.Steps[0].Output)
+		s.Empty(root.Steps[0].Error)
+	})
+
+	s.Run("a failed call records its error, and no output", func() {
+		root := &behavior.Step{}
+		_, err := behavior.Call(behavior.Record(context.Background(), root), b, get,
+			fakeProvider{}, getIn{Key: "boom"})
+		s.Require().Error(err)
+		s.Equal("boom", root.Steps[0].Error)
+		s.Nil(root.Steps[0].Output)
+	})
+
+	s.Run("a call without Record records nothing", func() {
+		_, err := behavior.Call(context.Background(), b, get, fakeProvider{}, getIn{Key: "k"})
+		s.NoError(err)
+	})
+
+	s.Run("calls at the same time each add their step", func() {
+		root := &behavior.Step{}
+		ctx := behavior.Record(context.Background(), root)
+		var wg sync.WaitGroup
+		for range 20 {
+			wg.Go(func() { _, _ = behavior.Call(ctx, b, get, fakeProvider{}, getIn{Key: "k"}) })
+		}
+		wg.Wait()
+		s.Len(root.Steps, 20)
+	})
+}
+
+type loginIn struct {
+	User     string `json:"user"`
+	Password string `json:"password,omitempty" secret:"true"`
+}
+
+func (s *ChainPublicTestSuite) TestRedact() {
+	s.Equal(map[string]any{"user": "ops", "password": "[redacted]"},
+		behavior.Redact(loginIn{User: "ops", Password: "hunter2"}))
+	s.Equal(map[string]any{"user": "ops"}, behavior.Redact(loginIn{User: "ops"}),
+		"an empty secret that the JSON leaves out stays out")
+	s.Equal(
+		getIn{Key: "k"},
+		behavior.Redact(getIn{Key: "k"}),
+		"a struct with no secret is unchanged",
+	)
+	s.Equal("text", behavior.Redact("text"))
+	s.Nil(behavior.Redact(nil))
+}
+
+func (s *ChainPublicTestSuite) TestChainProblems() {
+	missing := behavior.Define("missing", "x", behavior.Node)
+	behavior.Register(behavior.Define("orphan", "x", behavior.Node, behavior.Internal))
+	behavior.Register(behavior.Define("user", "x", behavior.Node, behavior.Requires(missing),
+		behavior.Writes("relative")))
+
+	rules := map[string]bool{}
+	for _, p := range behavior.ChainProblems() {
+		rules[p.Rule] = true
+	}
+	s.Equal(map[string]bool{behavior.RuleRequires: true, behavior.RuleInternal: true}, rules,
+		"only the chain rules: the writes rule is behavior validate's")
+	for _, p := range behavior.ChainProblems() {
+		s.Equal(behavior.ChainChecks.Fix(p.Rule), p.Fix)
+	}
 }
 
 func (s *ChainPublicTestSuite) TestRequires() {

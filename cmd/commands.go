@@ -24,6 +24,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
+	"github.com/osapi-io/osapi/internal/cli/commands/chain"
+
 	"github.com/avfs/avfs/vfs/osfs"
 
 	"github.com/spf13/viper"
@@ -116,6 +119,15 @@ func init() {
 			Validate:  behavior.Validate,
 			Keys:      config.Keys,
 			Spec:      func() guide.Spec { return behavior.CurrentSpec(job.FactKeys()...) },
+		}
+	})
+	command.Provide(chain.Group, func() chain.Deps {
+		return chain.Deps{
+			Behaviors:   behavior.All,
+			Runs:        behaviortest.Chains,
+			Problems:    behavior.ChainProblems,
+			RunProblems: behaviortest.ChainProblems,
+			Spec:        behavior.CurrentChainSpec,
 		}
 	})
 	command.Provide(clidocs.Group, func() clidocs.Deps { return clidocs.Deps{Root: rootCmd} })

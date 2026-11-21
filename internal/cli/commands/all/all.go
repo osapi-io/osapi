@@ -26,6 +26,7 @@ import (
 	_ "github.com/osapi-io/osapi/internal/cli/commands/admission"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/agentcmd"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/behaviordsl"
+	_ "github.com/osapi-io/osapi/internal/cli/commands/chain"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/clidocs"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/commanddsl"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/config"

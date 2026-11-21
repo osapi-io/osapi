@@ -37,7 +37,8 @@ Ask the code and the binary before you read prose. Each one answers one question
 | What rules and test checks a behavior must pass, and the fix of each | `go run . behavior validate --help`                       |
 | What a provider builder gets from the agent      | `go doc ./internal/behavior/host Host`                         |
 | What behaviors exist already                     | `go run . behavior list`                                  |
-| Which building blocks do generic work, such as a managed file, and when to make a new one | `go run . behavior spec get`, under "Building on other behaviors" and "Building blocks" |
+| Which building blocks do generic work, such as a managed file, and when to make a new one | `go run . behavior chain spec get`, under "Building on other behaviors" and "Building blocks" |
+| What a behavior that requires others sends to them, and gets back | `go run . behavior chain get --name <name>`: each example's calls, with their inputs and outputs; `--json` has them in full |
 | What one accepts and does: routes, fields, platforms, sudo, what it uses | `go run . behavior get --name <name> --json`, building blocks included |
 | Whether a definition breaks a rule               | `go run . behavior validate`                              |
 | A complete example of every part                 | `internal/behaviors/sysctl`                                     |
@@ -152,6 +153,11 @@ interface that the definition matches. netplan ignores a second definition of
 the same interface: dns writes under that ID, and interface refuses an
 interface that a match defines. `netplan status` lists only the interfaces that
 netplan manages, so a behavior asks gohai whether the host has an interface.
+
+The behaviors that a behavior calls, and the ones that they call, are its
+chain. `go run . behavior chain list` shows each chain, and `go run . behavior
+chain validate` checks it: each requirement is called by an example, and a
+provider calls only the behaviors that it requires.
 
 A write example runs on a live host in the integration tests. Thus it uses an
 item that it cannot harm, such as `osapi0`, a dummy interface that the

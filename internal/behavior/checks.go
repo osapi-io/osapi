@@ -142,14 +142,18 @@ var Checks = guide.Checks{
 		Fix:      "Add behavior.Platform(\"debian\", newDebian), remove the second declaration, or add the missing method to the provider.",
 	},
 	{
-		Rule:     RuleRequires,
-		Requires: "Each required behavior is registered, and no behavior requires itself through others.",
-		Fix:      "Import the required behavior in internal/behaviors/all, or remove the requirement that makes the cycle.",
+		Rule: RuleRequires,
+		Requires: ChainChecks.Requires(
+			RuleRequires,
+		) + " The chain layer owns this rule: osapi behavior chain validate.",
+		Fix: ChainChecks.Fix(RuleRequires),
 	},
 	{
-		Rule:     RuleInternal,
-		Requires: "Another behavior requires each internal behavior. Nothing else can call it, because it has no API and no CLI.",
-		Fix:      "Add behavior.Requires(it) to the behavior that uses it, or remove behavior.Internal if an operator calls it.",
+		Rule: RuleInternal,
+		Requires: ChainChecks.Requires(
+			RuleInternal,
+		) + " The chain layer owns this rule: osapi behavior chain validate.",
+		Fix: ChainChecks.Fix(RuleInternal),
 	},
 	{
 		Rule:     RuleWrites,

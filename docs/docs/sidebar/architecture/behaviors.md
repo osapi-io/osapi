@@ -89,6 +89,23 @@ graph LR
 - **`behavior get` and the Behaviors pages** show what each behavior uses, and
   what uses it.
 
+The behaviors that a behavior calls, and the ones that they call, are a
+**chain**: `dns → netplan → managedfile`. The chain has the name of the behavior
+at its top. It is not declared on its own: `Requires` on each behavior makes it.
+`osapi behavior chain` shows and checks the chains:
+
+- `osapi behavior chain list` shows each chain as a tree, and what calls each
+  building block.
+- `osapi behavior chain get --name dns` runs each example of dns on the fake
+  host that `go test` uses, and shows each call that it makes: what each call
+  sends and gets. Thus it shows what the code does now.
+- `osapi behavior chain validate` checks the chain rules. A required behavior is
+  registered, and no requirement makes a cycle. An internal behavior has a
+  behavior that requires it. A provider calls only the behaviors that its
+  behavior requires. An example calls each behavior that a behavior requires.
+- `osapi behavior chain spec get` tells how to build a chain, what happens when
+  a step fails, and the building blocks of the binary.
+
 A behavior that only other behaviors use is **internal**. `managedfile` has no
 route, no command and no permissions, because only other behaviors call it.
 `behavior list` and its docs page still show it, with the behaviors that use it.
