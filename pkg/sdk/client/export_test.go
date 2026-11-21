@@ -431,53 +431,6 @@ func LogEntryInfoFromGen(
 	return logEntryInfoFromGen(input)
 }
 
-// InterfaceInfoFromGen exposes the private interfaceInfoFromGen for testing.
-func InterfaceInfoFromGen(
-	input gen.InterfaceInfo,
-) InterfaceInfo {
-	return interfaceInfoFromGen(input)
-}
-
-// InterfaceListCollectionFromGen exposes the private
-// interfaceListCollectionFromGen for testing.
-func InterfaceListCollectionFromGen(
-	input *gen.InterfaceListResponse,
-) Collection[InterfaceListResult] {
-	return interfaceListCollectionFromGen(input)
-}
-
-// InterfaceGetCollectionFromGen exposes the private
-// interfaceGetCollectionFromGen for testing.
-func InterfaceGetCollectionFromGen(
-	input *gen.InterfaceGetResponse,
-) Collection[InterfaceGetResult] {
-	return interfaceGetCollectionFromGen(input)
-}
-
-// InterfaceMutationCollectionFromCreate exposes the private
-// interfaceMutationCollectionFromCreate for testing.
-func InterfaceMutationCollectionFromCreate(
-	input *gen.InterfaceMutationResponse,
-) Collection[InterfaceMutationResult] {
-	return interfaceMutationCollectionFromCreate(input)
-}
-
-// InterfaceMutationCollectionFromUpdate exposes the private
-// interfaceMutationCollectionFromUpdate for testing.
-func InterfaceMutationCollectionFromUpdate(
-	input *gen.InterfaceMutationResponse,
-) Collection[InterfaceMutationResult] {
-	return interfaceMutationCollectionFromUpdate(input)
-}
-
-// InterfaceMutationCollectionFromDelete exposes the private
-// interfaceMutationCollectionFromDelete for testing.
-func InterfaceMutationCollectionFromDelete(
-	input *gen.InterfaceMutationResponse,
-) Collection[InterfaceMutationResult] {
-	return interfaceMutationCollectionFromDelete(input)
-}
-
 // RouteInfoFromGen exposes the private routeInfoFromGen for testing.
 func RouteInfoFromGen(
 	input gen.RouteInfo,

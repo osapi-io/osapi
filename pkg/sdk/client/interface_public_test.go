@@ -22,7 +22,8 @@ package client_test
 
 import (
 	"context"
-	"errors"
+	"encoding/json"
+	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -43,755 +44,163 @@ func (suite *InterfacePublicTestSuite) SetupTest() {
 	suite.ctx = context.Background()
 }
 
-func (suite *InterfacePublicTestSuite) TestList() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.InterfaceListResult]], error)
-	}{
-		{
-			name: "when listing interfaces returns results",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","interfaces":[{"name":"eth0","dhcp4":true,"mtu":1500}]}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceListResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("agent1", resp.Data.Results[0].Hostname)
-				suite.Equal("ok", resp.Data.Results[0].Status)
-				suite.Len(resp.Data.Results[0].Interfaces, 1)
-				suite.Equal("eth0", resp.Data.Results[0].Interfaces[0].Name)
-				suite.True(resp.Data.Results[0].Interfaces[0].DHCP4)
-				suite.Equal(1500, resp.Data.Results[0].Interfaces[0].MTU)
-			},
+func (suite *InterfacePublicTestSuite) calls() map[string]func(c *client.Client) (any, error) {
+	return map[string]func(c *client.Client) (any, error){
+		"list": func(c *client.Client) (any, error) { return c.Interface.List(suite.ctx, "_any") },
+		"get":  func(c *client.Client) (any, error) { return c.Interface.Get(suite.ctx, "_any", "eth0") },
+		"create": func(c *client.Client) (any, error) {
+			return c.Interface.Create(suite.ctx, "_any", "eth1", client.InterfaceConfigOpts{})
 		},
+		"update": func(c *client.Client) (any, error) {
+			return c.Interface.Update(suite.ctx, "_any", "eth1", client.InterfaceConfigOpts{})
+		},
+		"delete": func(c *client.Client) (any, error) { return c.Interface.Delete(suite.ctx, "_any", "eth1") },
+	}
+}
+
+func (suite *InterfacePublicTestSuite) TestInterface() {
+	row := `{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"web-01","status":"ok",` +
+		`"name":"eth0","changed":true}]}`
+	tests := []struct {
+		name      string
+		handler   http.HandlerFunc
+		serverURL string
+		wantErr   string
+	}{
+		{name: "when the API answers", handler: func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(row))
+		}},
 		{
-			name: "when server returns 403 returns AuthError",
+			name:    "when the API refuses",
+			wantErr: "forbidden",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusForbidden)
 				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
 			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceListResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
 		},
 		{
-			name: "when server returns 401 returns AuthError",
+			name:    "when the body is empty",
+			wantErr: "nil response body",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusUnauthorized)
-				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceListResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusUnauthorized, target.StatusCode)
+				w.WriteHeader(http.StatusOK)
 			},
 		},
 		{
-			name: "when server returns 500 returns ServerError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusInternalServerError)
-				_, _ = w.Write([]byte(`{"error":"internal error"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceListResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.ServerError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusInternalServerError, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
+			name:      "when the server is unreachable",
 			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceListResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "interface list")
-			},
-		},
-		{
-			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceListResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
+			wantErr:   "interface",
 		},
 	}
-
 	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
-
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Interface.List(suite.ctx, "_any")
-			tc.validateFunc(resp, err)
-		})
-	}
-}
-
-func (suite *InterfacePublicTestSuite) TestGet() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.InterfaceGetResult]], error)
-	}{
-		{
-			name: "when getting interface returns result",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","interface":{"name":"eth0","dhcp4":true,"addresses":["192.168.1.10/24"]}}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceGetResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("agent1", resp.Data.Results[0].Hostname)
-				suite.NotNil(resp.Data.Results[0].Interface)
-				suite.Equal("eth0", resp.Data.Results[0].Interface.Name)
-				suite.True(resp.Data.Results[0].Interface.DHCP4)
-				suite.Equal([]string{"192.168.1.10/24"}, resp.Data.Results[0].Interface.Addresses)
-			},
-		},
-		{
-			name: "when server returns 404 returns NotFoundError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusNotFound)
-				_, _ = w.Write([]byte(`{"error":"interface not found"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceGetResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.NotFoundError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusNotFound, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceGetResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceGetResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "interface get")
-			},
-		},
-		{
-			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceGetResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
-
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Interface.Get(suite.ctx, "_any", "eth0")
-			tc.validateFunc(resp, err)
-		})
-	}
-}
-
-func (suite *InterfacePublicTestSuite) TestCreate() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		opts         client.InterfaceConfigOpts
-		validateFunc func(*client.Response[client.Collection[client.InterfaceMutationResult]], error)
-	}{
-		{
-			name: "when creating interface returns result",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","name":"eth0","changed":true}]}`,
-					),
-				)
-			},
-			opts: func() client.InterfaceConfigOpts {
-				dhcp4 := true
-				return client.InterfaceConfigOpts{
-					DHCP4: &dhcp4,
+		for method, fn := range suite.calls() {
+			suite.Run(tc.name+": "+method, func() {
+				url := tc.serverURL
+				if url == "" {
+					server := httptest.NewServer(tc.handler)
+					defer server.Close()
+					url = server.URL
 				}
-			}(),
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceMutationResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("agent1", resp.Data.Results[0].Hostname)
-				suite.Equal("ok", resp.Data.Results[0].Status)
-				suite.Equal("eth0", resp.Data.Results[0].Name)
-				suite.True(resp.Data.Results[0].Changed)
-			},
-		},
-		{
-			name: "when server returns 400 returns ValidationError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusBadRequest)
-				_, _ = w.Write([]byte(`{"error":"invalid config"}`))
-			},
-			opts: client.InterfaceConfigOpts{},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
+				resp, err := fn(client.New(url, "test-token", client.WithLogger(slog.Default())))
+				if tc.wantErr != "" {
+					suite.ErrorContains(err, tc.wantErr)
 
-				var target *client.ValidationError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusBadRequest, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			opts: client.InterfaceConfigOpts{},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			opts:      client.InterfaceConfigOpts{},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "interface create")
-			},
-		},
-		{
-			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			opts: client.InterfaceConfigOpts{},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
-		},
-		{
-			name: "when creating with all fields populates request",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","name":"eth0","changed":true}]}`,
-					),
-				)
-			},
-			opts: func() client.InterfaceConfigOpts {
-				dhcp4 := true
-				dhcp6 := false
-				mtu := 9000
-				wol := true
-				return client.InterfaceConfigOpts{
-					DHCP4:      &dhcp4,
-					DHCP6:      &dhcp6,
-					Addresses:  []string{"10.0.0.5/24", "fd00::5/64"},
-					Gateway4:   "10.0.0.1",
-					Gateway6:   "fd00::1",
-					MTU:        &mtu,
-					MACAddress: "02:42:ac:11:00:02",
-					WakeOnLAN:  &wol,
+					return
 				}
-			}(),
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceMutationResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.Require().NotNil(resp)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
-
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Interface.Create(suite.ctx, "_any", "eth0", tc.opts)
-			tc.validateFunc(resp, err)
-		})
+				suite.Require().NoError(err)
+				suite.NotNil(resp)
+			})
+		}
 	}
 }
 
-func (suite *InterfacePublicTestSuite) TestUpdate() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		opts         client.InterfaceConfigOpts
-		validateFunc func(*client.Response[client.Collection[client.InterfaceMutationResult]], error)
-	}{
-		{
-			name: "when updating interface returns result",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","name":"eth0","changed":true}]}`,
-					),
-				)
-			},
-			opts: func() client.InterfaceConfigOpts {
-				mtu := 9000
-				return client.InterfaceConfigOpts{
-					MTU: &mtu,
-				}
-			}(),
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceMutationResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.True(resp.Data.Results[0].Changed)
-			},
-		},
-		{
-			name: "when server returns 404 returns NotFoundError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusNotFound)
-				_, _ = w.Write([]byte(`{"error":"interface not found"}`))
-			},
-			opts: client.InterfaceConfigOpts{},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
+// TestListGroupsByHost checks that the rows of a list, one per interface,
+// become one result per host, and a host that failed has no interfaces.
+func (suite *InterfacePublicTestSuite) TestListGroupsByHost() {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"results":[` +
+			`{"hostname":"web-01","status":"ok","name":"eth0","state":"up","mac":"52:54:00:12:34:56",` +
+			`"mtu":1500,"ipv4":"10.0.0.5","ipv6":"2001:db8::5","addresses":["10.0.0.5/24"],` +
+			`"dhcp4":true,"primary":true},` +
+			`{"hostname":"web-01","status":"ok","name":"eth1","state":"down","mtu":1500},` +
+			`{"hostname":"web-02","status":"failed","error":"boom"}]}`))
+	}))
+	defer server.Close()
+	c := client.New(server.URL, "t", client.WithLogger(slog.Default()))
 
-				var target *client.NotFoundError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusNotFound, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 400 returns ValidationError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusBadRequest)
-				_, _ = w.Write([]byte(`{"error":"invalid"}`))
-			},
-			opts: client.InterfaceConfigOpts{},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
+	got, err := c.Interface.List(suite.ctx, "_all")
 
-				var target *client.ValidationError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusBadRequest, target.StatusCode)
+	suite.Require().NoError(err)
+	suite.Equal([]client.InterfaceListResult{
+		{Hostname: "web-01", Status: "ok", Interfaces: []client.InterfaceInfo{
+			{
+				Name: "eth0", State: "up", MAC: "52:54:00:12:34:56", MTU: 1500,
+				IPv4: "10.0.0.5", IPv6: "2001:db8::5", Addresses: []string{"10.0.0.5/24"},
+				DHCP4: true, Primary: true,
 			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			opts: client.InterfaceConfigOpts{},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			opts:      client.InterfaceConfigOpts{},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "interface update")
-			},
-		},
-		{
-			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			opts: client.InterfaceConfigOpts{},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
-
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Interface.Update(suite.ctx, "_any", "eth0", tc.opts)
-			tc.validateFunc(resp, err)
-		})
-	}
+			{Name: "eth1", State: "down", MTU: 1500},
+		}},
+		{Hostname: "web-02", Status: "failed", Error: "boom"},
+	}, got.Data.Results)
 }
 
-func (suite *InterfacePublicTestSuite) TestDelete() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.InterfaceMutationResult]], error)
-	}{
-		{
-			name: "when deleting interface returns result",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","name":"eth0","changed":true}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceMutationResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("agent1", resp.Data.Results[0].Hostname)
-				suite.Equal("eth0", resp.Data.Results[0].Name)
-				suite.True(resp.Data.Results[0].Changed)
-			},
-		},
-		{
-			name: "when broadcast delete returns multiple results",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"server1","status":"ok","changed":true},{"hostname":"server2","status":"failed","error":"not found"}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceMutationResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Len(resp.Data.Results, 2)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
+func (suite *InterfacePublicTestSuite) TestGetAndMutationFields() {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(
+			[]byte(`{"results":[{"hostname":"web-01","status":"ok","name":"eth0","changed":true},` +
+				`{"hostname":"web-02","status":"skipped","error":"unsupported"}]}`),
+		)
+	}))
+	defer server.Close()
+	c := client.New(server.URL, "t", client.WithLogger(slog.Default()))
 
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "interface delete")
-			},
-		},
-		{
-			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.InterfaceMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
+	got, err := c.Interface.Get(suite.ctx, "_all", "eth0")
+	suite.Require().NoError(err)
+	suite.Equal(client.InterfaceGetResult{
+		Hostname: "web-01", Status: "ok", Interface: &client.InterfaceInfo{Name: "eth0"},
+	}, got.Data.Results[0])
+	suite.Nil(got.Data.Results[1].Interface)
 
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
-		},
-	}
+	deleted, err := c.Interface.Delete(suite.ctx, "_all", "eth0")
+	suite.Require().NoError(err)
+	suite.Equal([]client.InterfaceMutationResult{
+		{Hostname: "web-01", Status: "ok", Name: "eth0", Changed: true},
+		{Hostname: "web-02", Status: "skipped", Error: "unsupported"},
+	}, deleted.Data.Results)
+}
 
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
+// TestRequestBody checks that each option set reaches the request, and an
+// option left unset does not.
+func (suite *InterfacePublicTestSuite) TestRequestBody() {
+	var body map[string]any
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		raw, _ := io.ReadAll(r.Body)
+		body = map[string]any{}
+		_ = json.Unmarshal(raw, &body)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"results":[]}`))
+	}))
+	defer server.Close()
+	c := client.New(server.URL, "t", client.WithLogger(slog.Default()))
+	yes, mtu := true, 9000
 
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
+	_, err := c.Interface.Create(suite.ctx, "_any", "eth1", client.InterfaceConfigOpts{
+		DHCP4: &yes, DHCP6: &yes, Addresses: []string{"10.0.1.5/24"}, Gateway4: "10.0.1.1",
+		Gateway6: "2001:db8::1", MTU: &mtu, MACAddress: "52:54:00:aa:bb:cc", WakeOnLAN: &yes,
+	})
+	suite.Require().NoError(err)
+	suite.Equal(map[string]any{
+		"dhcp4": true, "dhcp6": true, "addresses": []any{"10.0.1.5/24"}, "gateway4": "10.0.1.1",
+		"gateway6": "2001:db8::1", "mtu": float64(9000), "mac_address": "52:54:00:aa:bb:cc",
+		"wakeonlan": true,
+	}, body)
 
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Interface.Delete(suite.ctx, "_any", "eth0")
-			tc.validateFunc(resp, err)
-		})
-	}
+	_, err = c.Interface.Update(suite.ctx, "_any", "eth1", client.InterfaceConfigOpts{})
+	suite.Require().NoError(err)
+	suite.Empty(body)
 }
 
 func TestInterfacePublicTestSuite(

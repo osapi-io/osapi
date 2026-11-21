@@ -176,3 +176,13 @@ func convertRouteListEntries(
 	}
 	return result
 }
+
+// strPtrOrNil returns a pointer to s if non-empty, otherwise nil.
+func strPtrOrNil(
+	s string,
+) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
+}

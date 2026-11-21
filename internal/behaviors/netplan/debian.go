@@ -25,7 +25,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"sort"
 	"strings"
+
+	"github.com/avfs/avfs"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
@@ -37,6 +40,7 @@ import (
 type debian struct {
 	files managedfile.Provider
 	exec  host.Exec
+	fs    avfs.VFS
 }
 
 func newDebian(
@@ -45,12 +49,14 @@ func newDebian(
 	return &debian{
 		files: host.Require[managedfile.Provider](h, managedfile.Behavior),
 		exec:  h.Exec,
+		fs:    h.FS,
 	}, nil
 }
 
 // Apply writes the file and, when it changed, validates and applies it.
-// netplan reads the whole directory, so a file it refuses is removed again
-// before it reaches a later apply.
+// netplan reads the whole directory, so a file it refuses does not stay to
+// reach a later apply: the content it had is put back, or a new file is
+// removed.
 func (d *debian) Apply(
 	ctx context.Context,
 	in UpdateInput,
@@ -58,6 +64,7 @@ func (d *debian) Apply(
 	if err := own(in.Path); err != nil {
 		return false, err
 	}
+	previous, readErr := d.fs.ReadFile(in.Path)
 	result, err := behavior.Call(
 		ctx,
 		managedfile.Behavior,
@@ -74,6 +81,15 @@ func (d *debian) Apply(
 		return false, err
 	}
 	if _, err := d.exec.RunPrivilegedCmd(ctx, "netplan", []string{"generate"}); err != nil {
+		if readErr == nil {
+			_, _ = behavior.Call(ctx, managedfile.Behavior, managedfile.Update, d.files,
+				managedfile.UpdateInput{
+					Path: in.Path, Content: string(previous), Mode: "0600", Metadata: in.Metadata,
+				})
+
+			return false, fmt.Errorf(
+				"netplan generate refused %s, so its content was put back: %w", in.Path, err)
+		}
 		_, _ = behavior.Call(ctx, managedfile.Behavior, managedfile.Delete, d.files,
 			managedfile.DeleteInput{Path: in.Path})
 
@@ -106,9 +122,11 @@ func (d *debian) Remove(
 	return true, nil
 }
 
-// Interface reads netplan status. An interface that netplan does not list,
-// or a status netplan cannot give, is an ethernet, the section most
-// interfaces are in, under its own name.
+// Interface reads netplan status. netplan lists only the interfaces it
+// manages, so an interface that it does not list, or a status netplan cannot
+// give, is an ethernet, the section most interfaces are in, under its own
+// name. Whether the host has the interface is gohai's to read: the callers
+// check it.
 func (d *debian) Interface(
 	ctx context.Context,
 	name string,
@@ -118,23 +136,32 @@ func (d *debian) Interface(
 		Type string `json:"type"`
 		ID   string `json:"id"`
 	}
-	// netplan status lists every interface of the host, with or without a
-	// definition. A netplan without status, or with output that is not JSON,
-	// gives nothing to check, so the name stands as an ethernet.
-	parsed := json.Unmarshal([]byte(out), &status) == nil && len(status) > 0
-	s, ok := status[name]
-	if parsed && !ok {
-		return Interface{}, fmt.Errorf("interface %q: %w", name, behavior.ErrNotFound)
-	}
+	_ = json.Unmarshal([]byte(out), &status)
+	s := status[name]
 	// A definition that matches several interfaces, such as cloud-init's
 	// all for en*, is the one netplan applies: a second definition under
 	// the interface's name is ignored, so a write goes under the ID.
 	id := s.ID
 	if id == "" {
-		id = name
+		return Interface{
+			Name: name, Type: s.Type, Section: Section(s.Type), ID: name, Matches: []string{name},
+		}, nil
 	}
+	matches := []string{}
+	for other, o := range status {
+		if o.ID == id {
+			matches = append(matches, other)
+		}
+	}
+	sort.Strings(matches)
 
-	return Interface{Name: name, Type: s.Type, Section: Section(s.Type), ID: id}, nil
+	return Interface{
+		Name:    name,
+		Type:    s.Type,
+		Section: Section(s.Type),
+		ID:      id,
+		Matches: matches,
+	}, nil
 }
 
 // Section is the netplan section of an interface of type t.

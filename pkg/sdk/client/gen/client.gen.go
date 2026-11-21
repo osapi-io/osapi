@@ -466,78 +466,6 @@ func (e HostnameResultStatus) Valid() bool {
 	}
 }
 
-// Defines values for InterfaceGetEntryStatus.
-const (
-	InterfaceGetEntryStatusFailed  InterfaceGetEntryStatus = "failed"
-	InterfaceGetEntryStatusOk      InterfaceGetEntryStatus = "ok"
-	InterfaceGetEntryStatusSkipped InterfaceGetEntryStatus = "skipped"
-	InterfaceGetEntryStatusTimeout InterfaceGetEntryStatus = "timeout"
-)
-
-// Valid indicates whether the value is a known member of the InterfaceGetEntryStatus enum.
-func (e InterfaceGetEntryStatus) Valid() bool {
-	switch e {
-	case InterfaceGetEntryStatusFailed:
-		return true
-	case InterfaceGetEntryStatusOk:
-		return true
-	case InterfaceGetEntryStatusSkipped:
-		return true
-	case InterfaceGetEntryStatusTimeout:
-		return true
-	default:
-		return false
-	}
-}
-
-// Defines values for InterfaceListEntryStatus.
-const (
-	InterfaceListEntryStatusFailed  InterfaceListEntryStatus = "failed"
-	InterfaceListEntryStatusOk      InterfaceListEntryStatus = "ok"
-	InterfaceListEntryStatusSkipped InterfaceListEntryStatus = "skipped"
-	InterfaceListEntryStatusTimeout InterfaceListEntryStatus = "timeout"
-)
-
-// Valid indicates whether the value is a known member of the InterfaceListEntryStatus enum.
-func (e InterfaceListEntryStatus) Valid() bool {
-	switch e {
-	case InterfaceListEntryStatusFailed:
-		return true
-	case InterfaceListEntryStatusOk:
-		return true
-	case InterfaceListEntryStatusSkipped:
-		return true
-	case InterfaceListEntryStatusTimeout:
-		return true
-	default:
-		return false
-	}
-}
-
-// Defines values for InterfaceMutationEntryStatus.
-const (
-	InterfaceMutationEntryStatusFailed  InterfaceMutationEntryStatus = "failed"
-	InterfaceMutationEntryStatusOk      InterfaceMutationEntryStatus = "ok"
-	InterfaceMutationEntryStatusSkipped InterfaceMutationEntryStatus = "skipped"
-	InterfaceMutationEntryStatusTimeout InterfaceMutationEntryStatus = "timeout"
-)
-
-// Valid indicates whether the value is a known member of the InterfaceMutationEntryStatus enum.
-func (e InterfaceMutationEntryStatus) Valid() bool {
-	switch e {
-	case InterfaceMutationEntryStatusFailed:
-		return true
-	case InterfaceMutationEntryStatusOk:
-		return true
-	case InterfaceMutationEntryStatusSkipped:
-		return true
-	case InterfaceMutationEntryStatusTimeout:
-		return true
-	default:
-		return false
-	}
-}
-
 // Defines values for LoadEntryStatus.
 const (
 	LoadEntryStatusFailed  LoadEntryStatus = "failed"
@@ -682,6 +610,30 @@ func (e NetworkDnsResultStatus) Valid() bool {
 	}
 }
 
+// Defines values for NetworkInterfaceEntryStatus.
+const (
+	NetworkInterfaceEntryStatusFailed  NetworkInterfaceEntryStatus = "failed"
+	NetworkInterfaceEntryStatusOk      NetworkInterfaceEntryStatus = "ok"
+	NetworkInterfaceEntryStatusSkipped NetworkInterfaceEntryStatus = "skipped"
+	NetworkInterfaceEntryStatusTimeout NetworkInterfaceEntryStatus = "timeout"
+)
+
+// Valid indicates whether the value is a known member of the NetworkInterfaceEntryStatus enum.
+func (e NetworkInterfaceEntryStatus) Valid() bool {
+	switch e {
+	case NetworkInterfaceEntryStatusFailed:
+		return true
+	case NetworkInterfaceEntryStatusOk:
+		return true
+	case NetworkInterfaceEntryStatusSkipped:
+		return true
+	case NetworkInterfaceEntryStatusTimeout:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for NetworkInterfaceResponseFamily.
 const (
 	Dual  NetworkInterfaceResponseFamily = "dual"
@@ -697,6 +649,30 @@ func (e NetworkInterfaceResponseFamily) Valid() bool {
 	case Inet:
 		return true
 	case Inet6:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for NetworkInterfaceResultStatus.
+const (
+	NetworkInterfaceResultStatusFailed  NetworkInterfaceResultStatus = "failed"
+	NetworkInterfaceResultStatusOk      NetworkInterfaceResultStatus = "ok"
+	NetworkInterfaceResultStatusSkipped NetworkInterfaceResultStatus = "skipped"
+	NetworkInterfaceResultStatusTimeout NetworkInterfaceResultStatus = "timeout"
+)
+
+// Valid indicates whether the value is a known member of the NetworkInterfaceResultStatus enum.
+func (e NetworkInterfaceResultStatus) Valid() bool {
+	switch e {
+	case NetworkInterfaceResultStatusFailed:
+		return true
+	case NetworkInterfaceResultStatusOk:
+		return true
+	case NetworkInterfaceResultStatusSkipped:
+		return true
+	case NetworkInterfaceResultStatusTimeout:
 		return true
 	default:
 		return false
@@ -1638,25 +1614,25 @@ func (e PutFileByNameMultipartBodyContentType) Valid() bool {
 
 // Defines values for GetJobsParamsStatus.
 const (
-	Completed      GetJobsParamsStatus = "completed"
-	Failed         GetJobsParamsStatus = "failed"
-	PartialFailure GetJobsParamsStatus = "partial_failure"
-	Processing     GetJobsParamsStatus = "processing"
-	Submitted      GetJobsParamsStatus = "submitted"
+	GetJobsParamsStatusCompleted      GetJobsParamsStatus = "completed"
+	GetJobsParamsStatusFailed         GetJobsParamsStatus = "failed"
+	GetJobsParamsStatusPartialFailure GetJobsParamsStatus = "partial_failure"
+	GetJobsParamsStatusProcessing     GetJobsParamsStatus = "processing"
+	GetJobsParamsStatusSubmitted      GetJobsParamsStatus = "submitted"
 )
 
 // Valid indicates whether the value is a known member of the GetJobsParamsStatus enum.
 func (e GetJobsParamsStatus) Valid() bool {
 	switch e {
-	case Completed:
+	case GetJobsParamsStatusCompleted:
 		return true
-	case Failed:
+	case GetJobsParamsStatusFailed:
 		return true
-	case PartialFailure:
+	case GetJobsParamsStatusPartialFailure:
 		return true
-	case Processing:
+	case GetJobsParamsStatusProcessing:
 		return true
-	case Submitted:
+	case GetJobsParamsStatusSubmitted:
 		return true
 	default:
 		return false
@@ -2808,144 +2784,6 @@ type HostnameUpdateResponse struct {
 	Results []HostnameResult    `json:"results"`
 }
 
-// InterfaceConfigRequest defines model for InterfaceConfigRequest.
-type InterfaceConfigRequest struct {
-	Addresses  *[]string `json:"addresses,omitempty" validate:"omitempty,dive,cidr"`
-	Dhcp4      *bool     `json:"dhcp4,omitempty" validate:"omitempty"`
-	Dhcp6      *bool     `json:"dhcp6,omitempty" validate:"omitempty"`
-	Gateway4   *string   `json:"gateway4,omitempty" validate:"omitempty,ipv4"`
-	Gateway6   *string   `json:"gateway6,omitempty" validate:"omitempty,ipv6"`
-	MacAddress *string   `json:"mac_address,omitempty" validate:"omitempty"`
-	Mtu        *int      `json:"mtu,omitempty" validate:"omitempty,min=68,max=9000"`
-	Wakeonlan  *bool     `json:"wakeonlan,omitempty" validate:"omitempty"`
-}
-
-// InterfaceGetEntry Interface get result for a single agent.
-type InterfaceGetEntry struct {
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname Hostname of the agent that reported this entry.
-	Hostname string `json:"hostname"`
-
-	// Interface Information about a network interface.
-	Interface *InterfaceInfo `json:"interface,omitempty"`
-
-	// Status The status of the operation for this host.
-	Status InterfaceGetEntryStatus `json:"status"`
-}
-
-// InterfaceGetEntryStatus The status of the operation for this host.
-type InterfaceGetEntryStatus string
-
-// InterfaceGetResponse defines model for InterfaceGetResponse.
-type InterfaceGetResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []InterfaceGetEntry `json:"results"`
-}
-
-// InterfaceInfo Information about a network interface.
-type InterfaceInfo struct {
-	// Addresses IP addresses assigned to the interface (CIDR).
-	Addresses *[]string `json:"addresses,omitempty"`
-
-	// Dhcp4 Whether DHCPv4 is enabled.
-	Dhcp4 *bool `json:"dhcp4,omitempty"`
-
-	// Dhcp6 Whether DHCPv6 is enabled.
-	Dhcp6 *bool `json:"dhcp6,omitempty"`
-
-	// Family Address family (inet, inet6, dual).
-	Family *string `json:"family,omitempty"`
-
-	// Gateway4 IPv4 gateway address.
-	Gateway4 *string `json:"gateway4,omitempty"`
-
-	// Gateway6 IPv6 gateway address.
-	Gateway6 *string `json:"gateway6,omitempty"`
-
-	// Ipv4 Primary IPv4 address.
-	Ipv4 *string `json:"ipv4,omitempty"`
-
-	// Ipv6 Primary IPv6 address.
-	Ipv6 *string `json:"ipv6,omitempty"`
-
-	// Mac Hardware MAC address.
-	Mac *string `json:"mac,omitempty"`
-
-	// MacAddress Configured MAC address override.
-	MacAddress *string `json:"mac_address,omitempty"`
-
-	// Mtu Maximum transmission unit.
-	Mtu *int `json:"mtu,omitempty"`
-
-	// Name Interface name.
-	Name *string `json:"name,omitempty"`
-
-	// Primary Whether this is the primary (default route) interface.
-	Primary *bool `json:"primary,omitempty"`
-
-	// State Operational state of the interface.
-	State *string `json:"state,omitempty"`
-
-	// Wakeonlan Whether Wake-on-LAN is enabled.
-	Wakeonlan *bool `json:"wakeonlan,omitempty"`
-}
-
-// InterfaceListEntry Interface list result for a single agent.
-type InterfaceListEntry struct {
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname Hostname of the agent that reported this entry.
-	Hostname string `json:"hostname"`
-
-	// Interfaces List of network interfaces on this host.
-	Interfaces *[]InterfaceInfo `json:"interfaces,omitempty"`
-
-	// Status The status of the operation for this host.
-	Status InterfaceListEntryStatus `json:"status"`
-}
-
-// InterfaceListEntryStatus The status of the operation for this host.
-type InterfaceListEntryStatus string
-
-// InterfaceListResponse defines model for InterfaceListResponse.
-type InterfaceListResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID  `json:"job_id,omitempty"`
-	Results []InterfaceListEntry `json:"results"`
-}
-
-// InterfaceMutationEntry Result of an interface mutation operation for one host.
-type InterfaceMutationEntry struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname Hostname of the agent that processed this operation.
-	Hostname string `json:"hostname"`
-
-	// Name Interface name.
-	Name *string `json:"name,omitempty"`
-
-	// Status The status of the operation for this host.
-	Status InterfaceMutationEntryStatus `json:"status"`
-}
-
-// InterfaceMutationEntryStatus The status of the operation for this host.
-type InterfaceMutationEntryStatus string
-
-// InterfaceMutationResponse defines model for InterfaceMutationResponse.
-type InterfaceMutationResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID      `json:"job_id,omitempty"`
-	Results []InterfaceMutationEntry `json:"results"`
-}
-
 // JobDetailResponse defines model for JobDetailResponse.
 type JobDetailResponse struct {
 	// AgentStates How far each agent got, by hostname.
@@ -3318,6 +3156,103 @@ type NetworkDnsUpdateResponse struct {
 	Results []NetworkDnsResult  `json:"results"`
 }
 
+// NetworkInterfaceCollectionResponse defines model for NetworkInterfaceCollectionResponse.
+type NetworkInterfaceCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID     `json:"job_id,omitempty" validate:"uuid"`
+	Results []NetworkInterfaceEntry `json:"results"`
+}
+
+// NetworkInterfaceCreateRequest defines model for NetworkInterfaceCreateRequest.
+type NetworkInterfaceCreateRequest struct {
+	// Addresses The static addresses, in CIDR notation, such as 10.0.0.5/24
+	Addresses *[]string `json:"addresses,omitempty" validate:"omitempty,max=16,dive,cidr"`
+
+	// Dhcp4 Take an IPv4 address from DHCP
+	Dhcp4 *bool `json:"dhcp4,omitempty" validate:"omitempty"`
+
+	// Dhcp6 Take an IPv6 address from DHCP
+	Dhcp6 *bool `json:"dhcp6,omitempty" validate:"omitempty"`
+
+	// Gateway4 The IPv4 default gateway
+	Gateway4 *string `json:"gateway4,omitempty" validate:"omitempty,ipv4"`
+
+	// Gateway6 The IPv6 default gateway
+	Gateway6 *string `json:"gateway6,omitempty" validate:"omitempty,ipv6"`
+
+	// MacAddress The MAC address to set
+	MacAddress *string `json:"mac_address,omitempty" validate:"omitempty,mac_address"`
+
+	// Mtu The MTU, from 68 to 9000
+	Mtu *int `json:"mtu,omitempty" validate:"omitempty,min=68,max=9000"`
+
+	// Wakeonlan Turn on wake-on-LAN
+	Wakeonlan *bool `json:"wakeonlan,omitempty" validate:"omitempty"`
+}
+
+// NetworkInterfaceCreateResponse defines model for NetworkInterfaceCreateResponse.
+type NetworkInterfaceCreateResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID      `json:"job_id,omitempty" validate:"uuid"`
+	Results []NetworkInterfaceResult `json:"results"`
+}
+
+// NetworkInterfaceDeleteResponse defines model for NetworkInterfaceDeleteResponse.
+type NetworkInterfaceDeleteResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID      `json:"job_id,omitempty" validate:"uuid"`
+	Results []NetworkInterfaceResult `json:"results"`
+}
+
+// NetworkInterfaceEntry defines model for NetworkInterfaceEntry.
+type NetworkInterfaceEntry struct {
+	// Addresses Each of its addresses, in CIDR notation
+	Addresses *[]string `json:"addresses,omitempty"`
+
+	// Dhcp4 Whether DHCP gave it an IPv4 address: a route of it has proto dhcp
+	Dhcp4 *bool `json:"dhcp4,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that produced this result.
+	Hostname string `json:"hostname"`
+
+	// Ipv4 Its first IPv4 address that is not link-local
+	Ipv4 *string `json:"ipv4,omitempty"`
+
+	// Ipv6 Its first IPv6 address that is not link-local
+	Ipv6 *string `json:"ipv6,omitempty"`
+
+	// Mac Its MAC address; empty for one without, such as lo
+	Mac *string `json:"mac,omitempty"`
+
+	// Mtu Its MTU
+	Mtu *int `json:"mtu,omitempty"`
+
+	// Name The interface
+	Name *string `json:"name,omitempty"`
+
+	// Primary Whether it has the default route
+	Primary *bool `json:"primary,omitempty"`
+
+	// State up or down
+	State *string `json:"state,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status NetworkInterfaceEntryStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
+}
+
+// NetworkInterfaceEntryStatus The status of the operation for this host.
+type NetworkInterfaceEntryStatus string
+
+// NetworkInterfaceGetResponse defines model for NetworkInterfaceGetResponse.
+type NetworkInterfaceGetResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID     `json:"job_id,omitempty" validate:"uuid"`
+	Results []NetworkInterfaceEntry `json:"results"`
+}
+
 // NetworkInterfaceResponse defines model for NetworkInterfaceResponse.
 type NetworkInterfaceResponse struct {
 	// Family IP address family.
@@ -3330,6 +3265,61 @@ type NetworkInterfaceResponse struct {
 
 // NetworkInterfaceResponseFamily IP address family.
 type NetworkInterfaceResponseFamily string
+
+// NetworkInterfaceResult defines model for NetworkInterfaceResult.
+type NetworkInterfaceResult struct {
+	// Changed Whether the host changed
+	Changed *bool `json:"changed,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that produced this result.
+	Hostname string `json:"hostname"`
+
+	// Name The interface
+	Name *string `json:"name,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status NetworkInterfaceResultStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
+}
+
+// NetworkInterfaceResultStatus The status of the operation for this host.
+type NetworkInterfaceResultStatus string
+
+// NetworkInterfaceUpdateRequest defines model for NetworkInterfaceUpdateRequest.
+type NetworkInterfaceUpdateRequest struct {
+	// Addresses The static addresses, in CIDR notation, such as 10.0.0.5/24
+	Addresses *[]string `json:"addresses,omitempty" validate:"omitempty,max=16,dive,cidr"`
+
+	// Dhcp4 Take an IPv4 address from DHCP
+	Dhcp4 *bool `json:"dhcp4,omitempty" validate:"omitempty"`
+
+	// Dhcp6 Take an IPv6 address from DHCP
+	Dhcp6 *bool `json:"dhcp6,omitempty" validate:"omitempty"`
+
+	// Gateway4 The IPv4 default gateway
+	Gateway4 *string `json:"gateway4,omitempty" validate:"omitempty,ipv4"`
+
+	// Gateway6 The IPv6 default gateway
+	Gateway6 *string `json:"gateway6,omitempty" validate:"omitempty,ipv6"`
+
+	// MacAddress The MAC address to set
+	MacAddress *string `json:"mac_address,omitempty" validate:"omitempty,mac_address"`
+
+	// Mtu The MTU, from 68 to 9000
+	Mtu *int `json:"mtu,omitempty" validate:"omitempty,min=68,max=9000"`
+
+	// Wakeonlan Turn on wake-on-LAN
+	Wakeonlan *bool `json:"wakeonlan,omitempty" validate:"omitempty"`
+}
+
+// NetworkInterfaceUpdateResponse defines model for NetworkInterfaceUpdateResponse.
+type NetworkInterfaceUpdateResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID      `json:"job_id,omitempty" validate:"uuid"`
+	Results []NetworkInterfaceResult `json:"results"`
+}
 
 // NodeCondition defines model for NodeCondition.
 type NodeCondition struct {
@@ -4850,11 +4840,11 @@ type GroupName = string
 // Hostname defines model for Hostname.
 type Hostname = string
 
-// InterfaceName defines model for InterfaceName.
-type InterfaceName = string
-
 // NetworkDnsInterfaceName defines model for NetworkDnsInterface_name.
 type NetworkDnsInterfaceName = string
+
+// NetworkInterfaceName defines model for NetworkInterfaceName.
+type NetworkInterfaceName = string
 
 // PackageName defines model for PackageName.
 type PackageName = string
@@ -5075,10 +5065,10 @@ type PutNodeHostnameJSONRequestBody = HostnameUpdateRequest
 type PutNodeNetworkDnsJSONRequestBody = NetworkDnsUpdateRequest
 
 // PostNodeNetworkInterfaceJSONRequestBody defines body for PostNodeNetworkInterface for application/json ContentType.
-type PostNodeNetworkInterfaceJSONRequestBody = InterfaceConfigRequest
+type PostNodeNetworkInterfaceJSONRequestBody = NetworkInterfaceCreateRequest
 
 // PutNodeNetworkInterfaceJSONRequestBody defines body for PutNodeNetworkInterface for application/json ContentType.
-type PutNodeNetworkInterfaceJSONRequestBody = InterfaceConfigRequest
+type PutNodeNetworkInterfaceJSONRequestBody = NetworkInterfaceUpdateRequest
 
 // PostNodeNetworkPingJSONRequestBody defines body for PostNodeNetworkPing for application/json ContentType.
 type PostNodeNetworkPingJSONRequestBody PostNodeNetworkPingJSONBody
@@ -5443,20 +5433,20 @@ type ClientInterface interface {
 	GetNodeNetworkInterface(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteNodeNetworkInterface request
-	DeleteNodeNetworkInterface(ctx context.Context, hostname Hostname, name InterfaceName, reqEditors ...RequestEditorFn) (*http.Response, error)
+	DeleteNodeNetworkInterface(ctx context.Context, hostname Hostname, name NetworkInterfaceName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetNodeNetworkInterfaceByName request
-	GetNodeNetworkInterfaceByName(ctx context.Context, hostname Hostname, name InterfaceName, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetNodeNetworkInterfaceByKey request
+	GetNodeNetworkInterfaceByKey(ctx context.Context, hostname Hostname, name NetworkInterfaceName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostNodeNetworkInterfaceWithBody request with any body
-	PostNodeNetworkInterfaceWithBody(ctx context.Context, hostname Hostname, name InterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostNodeNetworkInterfaceWithBody(ctx context.Context, hostname Hostname, name NetworkInterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostNodeNetworkInterface(ctx context.Context, hostname Hostname, name InterfaceName, body PostNodeNetworkInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostNodeNetworkInterface(ctx context.Context, hostname Hostname, name NetworkInterfaceName, body PostNodeNetworkInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PutNodeNetworkInterfaceWithBody request with any body
-	PutNodeNetworkInterfaceWithBody(ctx context.Context, hostname Hostname, name InterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PutNodeNetworkInterfaceWithBody(ctx context.Context, hostname Hostname, name NetworkInterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PutNodeNetworkInterface(ctx context.Context, hostname Hostname, name InterfaceName, body PutNodeNetworkInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PutNodeNetworkInterface(ctx context.Context, hostname Hostname, name NetworkInterfaceName, body PutNodeNetworkInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostNodeNetworkPingWithBody request with any body
 	PostNodeNetworkPingWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -6651,7 +6641,7 @@ func (c *Client) GetNodeNetworkInterface(ctx context.Context, hostname Hostname,
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteNodeNetworkInterface(ctx context.Context, hostname Hostname, name InterfaceName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) DeleteNodeNetworkInterface(ctx context.Context, hostname Hostname, name NetworkInterfaceName, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDeleteNodeNetworkInterfaceRequest(c.Server, hostname, name)
 	if err != nil {
 		return nil, err
@@ -6663,8 +6653,8 @@ func (c *Client) DeleteNodeNetworkInterface(ctx context.Context, hostname Hostna
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetNodeNetworkInterfaceByName(ctx context.Context, hostname Hostname, name InterfaceName, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetNodeNetworkInterfaceByNameRequest(c.Server, hostname, name)
+func (c *Client) GetNodeNetworkInterfaceByKey(ctx context.Context, hostname Hostname, name NetworkInterfaceName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeNetworkInterfaceByKeyRequest(c.Server, hostname, name)
 	if err != nil {
 		return nil, err
 	}
@@ -6675,7 +6665,7 @@ func (c *Client) GetNodeNetworkInterfaceByName(ctx context.Context, hostname Hos
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNodeNetworkInterfaceWithBody(ctx context.Context, hostname Hostname, name InterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) PostNodeNetworkInterfaceWithBody(ctx context.Context, hostname Hostname, name NetworkInterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostNodeNetworkInterfaceRequestWithBody(c.Server, hostname, name, contentType, body)
 	if err != nil {
 		return nil, err
@@ -6687,7 +6677,7 @@ func (c *Client) PostNodeNetworkInterfaceWithBody(ctx context.Context, hostname 
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNodeNetworkInterface(ctx context.Context, hostname Hostname, name InterfaceName, body PostNodeNetworkInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) PostNodeNetworkInterface(ctx context.Context, hostname Hostname, name NetworkInterfaceName, body PostNodeNetworkInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostNodeNetworkInterfaceRequest(c.Server, hostname, name, body)
 	if err != nil {
 		return nil, err
@@ -6699,7 +6689,7 @@ func (c *Client) PostNodeNetworkInterface(ctx context.Context, hostname Hostname
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutNodeNetworkInterfaceWithBody(ctx context.Context, hostname Hostname, name InterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) PutNodeNetworkInterfaceWithBody(ctx context.Context, hostname Hostname, name NetworkInterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutNodeNetworkInterfaceRequestWithBody(c.Server, hostname, name, contentType, body)
 	if err != nil {
 		return nil, err
@@ -6711,7 +6701,7 @@ func (c *Client) PutNodeNetworkInterfaceWithBody(ctx context.Context, hostname H
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutNodeNetworkInterface(ctx context.Context, hostname Hostname, name InterfaceName, body PutNodeNetworkInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) PutNodeNetworkInterface(ctx context.Context, hostname Hostname, name NetworkInterfaceName, body PutNodeNetworkInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutNodeNetworkInterfaceRequest(c.Server, hostname, name, body)
 	if err != nil {
 		return nil, err
@@ -10406,7 +10396,7 @@ func NewGetNodeNetworkInterfaceRequest(server string, hostname Hostname) (*http.
 }
 
 // NewDeleteNodeNetworkInterfaceRequest generates requests for DeleteNodeNetworkInterface
-func NewDeleteNodeNetworkInterfaceRequest(server string, hostname Hostname, name InterfaceName) (*http.Request, error) {
+func NewDeleteNodeNetworkInterfaceRequest(server string, hostname Hostname, name NetworkInterfaceName) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -10446,8 +10436,8 @@ func NewDeleteNodeNetworkInterfaceRequest(server string, hostname Hostname, name
 	return req, nil
 }
 
-// NewGetNodeNetworkInterfaceByNameRequest generates requests for GetNodeNetworkInterfaceByName
-func NewGetNodeNetworkInterfaceByNameRequest(server string, hostname Hostname, name InterfaceName) (*http.Request, error) {
+// NewGetNodeNetworkInterfaceByKeyRequest generates requests for GetNodeNetworkInterfaceByKey
+func NewGetNodeNetworkInterfaceByKeyRequest(server string, hostname Hostname, name NetworkInterfaceName) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -10488,7 +10478,7 @@ func NewGetNodeNetworkInterfaceByNameRequest(server string, hostname Hostname, n
 }
 
 // NewPostNodeNetworkInterfaceRequest calls the generic PostNodeNetworkInterface builder with application/json body
-func NewPostNodeNetworkInterfaceRequest(server string, hostname Hostname, name InterfaceName, body PostNodeNetworkInterfaceJSONRequestBody) (*http.Request, error) {
+func NewPostNodeNetworkInterfaceRequest(server string, hostname Hostname, name NetworkInterfaceName, body PostNodeNetworkInterfaceJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
@@ -10499,7 +10489,7 @@ func NewPostNodeNetworkInterfaceRequest(server string, hostname Hostname, name I
 }
 
 // NewPostNodeNetworkInterfaceRequestWithBody generates requests for PostNodeNetworkInterface with any type of body
-func NewPostNodeNetworkInterfaceRequestWithBody(server string, hostname Hostname, name InterfaceName, contentType string, body io.Reader) (*http.Request, error) {
+func NewPostNodeNetworkInterfaceRequestWithBody(server string, hostname Hostname, name NetworkInterfaceName, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -10542,7 +10532,7 @@ func NewPostNodeNetworkInterfaceRequestWithBody(server string, hostname Hostname
 }
 
 // NewPutNodeNetworkInterfaceRequest calls the generic PutNodeNetworkInterface builder with application/json body
-func NewPutNodeNetworkInterfaceRequest(server string, hostname Hostname, name InterfaceName, body PutNodeNetworkInterfaceJSONRequestBody) (*http.Request, error) {
+func NewPutNodeNetworkInterfaceRequest(server string, hostname Hostname, name NetworkInterfaceName, body PutNodeNetworkInterfaceJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
@@ -10553,7 +10543,7 @@ func NewPutNodeNetworkInterfaceRequest(server string, hostname Hostname, name In
 }
 
 // NewPutNodeNetworkInterfaceRequestWithBody generates requests for PutNodeNetworkInterface with any type of body
-func NewPutNodeNetworkInterfaceRequestWithBody(server string, hostname Hostname, name InterfaceName, contentType string, body io.Reader) (*http.Request, error) {
+func NewPutNodeNetworkInterfaceRequestWithBody(server string, hostname Hostname, name NetworkInterfaceName, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -13296,20 +13286,20 @@ type ClientWithResponsesInterface interface {
 	GetNodeNetworkInterfaceWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeNetworkInterfaceResponse, error)
 
 	// DeleteNodeNetworkInterfaceWithResponse request
-	DeleteNodeNetworkInterfaceWithResponse(ctx context.Context, hostname Hostname, name InterfaceName, reqEditors ...RequestEditorFn) (*DeleteNodeNetworkInterfaceResponse, error)
+	DeleteNodeNetworkInterfaceWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceName, reqEditors ...RequestEditorFn) (*DeleteNodeNetworkInterfaceResponse, error)
 
-	// GetNodeNetworkInterfaceByNameWithResponse request
-	GetNodeNetworkInterfaceByNameWithResponse(ctx context.Context, hostname Hostname, name InterfaceName, reqEditors ...RequestEditorFn) (*GetNodeNetworkInterfaceByNameResponse, error)
+	// GetNodeNetworkInterfaceByKeyWithResponse request
+	GetNodeNetworkInterfaceByKeyWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceName, reqEditors ...RequestEditorFn) (*GetNodeNetworkInterfaceByKeyResponse, error)
 
 	// PostNodeNetworkInterfaceWithBodyWithResponse request with any body
-	PostNodeNetworkInterfaceWithBodyWithResponse(ctx context.Context, hostname Hostname, name InterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeNetworkInterfaceResponse, error)
+	PostNodeNetworkInterfaceWithBodyWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeNetworkInterfaceResponse, error)
 
-	PostNodeNetworkInterfaceWithResponse(ctx context.Context, hostname Hostname, name InterfaceName, body PostNodeNetworkInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeNetworkInterfaceResponse, error)
+	PostNodeNetworkInterfaceWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceName, body PostNodeNetworkInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeNetworkInterfaceResponse, error)
 
 	// PutNodeNetworkInterfaceWithBodyWithResponse request with any body
-	PutNodeNetworkInterfaceWithBodyWithResponse(ctx context.Context, hostname Hostname, name InterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeNetworkInterfaceResponse, error)
+	PutNodeNetworkInterfaceWithBodyWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeNetworkInterfaceResponse, error)
 
-	PutNodeNetworkInterfaceWithResponse(ctx context.Context, hostname Hostname, name InterfaceName, body PutNodeNetworkInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeNetworkInterfaceResponse, error)
+	PutNodeNetworkInterfaceWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceName, body PutNodeNetworkInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeNetworkInterfaceResponse, error)
 
 	// PostNodeNetworkPingWithBodyWithResponse request with any body
 	PostNodeNetworkPingWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeNetworkPingResponse, error)
@@ -15724,7 +15714,7 @@ func (r PutNodeNetworkDnsResponse) ContentType() string {
 type GetNodeNetworkInterfaceResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *InterfaceListResponse
+	JSON200      *NetworkInterfaceCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -15758,10 +15748,11 @@ func (r GetNodeNetworkInterfaceResponse) ContentType() string {
 type DeleteNodeNetworkInterfaceResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *InterfaceMutationResponse
+	JSON200      *NetworkInterfaceDeleteResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -15789,10 +15780,10 @@ func (r DeleteNodeNetworkInterfaceResponse) ContentType() string {
 	return ""
 }
 
-type GetNodeNetworkInterfaceByNameResponse struct {
+type GetNodeNetworkInterfaceByKeyResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *InterfaceGetResponse
+	JSON200      *NetworkInterfaceGetResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -15801,7 +15792,7 @@ type GetNodeNetworkInterfaceByNameResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetNodeNetworkInterfaceByNameResponse) Status() string {
+func (r GetNodeNetworkInterfaceByKeyResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -15809,7 +15800,7 @@ func (r GetNodeNetworkInterfaceByNameResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetNodeNetworkInterfaceByNameResponse) StatusCode() int {
+func (r GetNodeNetworkInterfaceByKeyResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -15817,7 +15808,7 @@ func (r GetNodeNetworkInterfaceByNameResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetNodeNetworkInterfaceByNameResponse) ContentType() string {
+func (r GetNodeNetworkInterfaceByKeyResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -15827,10 +15818,11 @@ func (r GetNodeNetworkInterfaceByNameResponse) ContentType() string {
 type PostNodeNetworkInterfaceResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *InterfaceMutationResponse
+	JSON200      *NetworkInterfaceCreateResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -15861,7 +15853,7 @@ func (r PostNodeNetworkInterfaceResponse) ContentType() string {
 type PutNodeNetworkInterfaceResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *InterfaceMutationResponse
+	JSON200      *NetworkInterfaceUpdateResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -18545,7 +18537,7 @@ func (c *ClientWithResponses) GetNodeNetworkInterfaceWithResponse(ctx context.Co
 }
 
 // DeleteNodeNetworkInterfaceWithResponse request returning *DeleteNodeNetworkInterfaceResponse
-func (c *ClientWithResponses) DeleteNodeNetworkInterfaceWithResponse(ctx context.Context, hostname Hostname, name InterfaceName, reqEditors ...RequestEditorFn) (*DeleteNodeNetworkInterfaceResponse, error) {
+func (c *ClientWithResponses) DeleteNodeNetworkInterfaceWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceName, reqEditors ...RequestEditorFn) (*DeleteNodeNetworkInterfaceResponse, error) {
 	rsp, err := c.DeleteNodeNetworkInterface(ctx, hostname, name, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -18553,17 +18545,17 @@ func (c *ClientWithResponses) DeleteNodeNetworkInterfaceWithResponse(ctx context
 	return ParseDeleteNodeNetworkInterfaceResponse(rsp)
 }
 
-// GetNodeNetworkInterfaceByNameWithResponse request returning *GetNodeNetworkInterfaceByNameResponse
-func (c *ClientWithResponses) GetNodeNetworkInterfaceByNameWithResponse(ctx context.Context, hostname Hostname, name InterfaceName, reqEditors ...RequestEditorFn) (*GetNodeNetworkInterfaceByNameResponse, error) {
-	rsp, err := c.GetNodeNetworkInterfaceByName(ctx, hostname, name, reqEditors...)
+// GetNodeNetworkInterfaceByKeyWithResponse request returning *GetNodeNetworkInterfaceByKeyResponse
+func (c *ClientWithResponses) GetNodeNetworkInterfaceByKeyWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceName, reqEditors ...RequestEditorFn) (*GetNodeNetworkInterfaceByKeyResponse, error) {
+	rsp, err := c.GetNodeNetworkInterfaceByKey(ctx, hostname, name, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetNodeNetworkInterfaceByNameResponse(rsp)
+	return ParseGetNodeNetworkInterfaceByKeyResponse(rsp)
 }
 
 // PostNodeNetworkInterfaceWithBodyWithResponse request with arbitrary body returning *PostNodeNetworkInterfaceResponse
-func (c *ClientWithResponses) PostNodeNetworkInterfaceWithBodyWithResponse(ctx context.Context, hostname Hostname, name InterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeNetworkInterfaceResponse, error) {
+func (c *ClientWithResponses) PostNodeNetworkInterfaceWithBodyWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeNetworkInterfaceResponse, error) {
 	rsp, err := c.PostNodeNetworkInterfaceWithBody(ctx, hostname, name, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -18571,7 +18563,7 @@ func (c *ClientWithResponses) PostNodeNetworkInterfaceWithBodyWithResponse(ctx c
 	return ParsePostNodeNetworkInterfaceResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostNodeNetworkInterfaceWithResponse(ctx context.Context, hostname Hostname, name InterfaceName, body PostNodeNetworkInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeNetworkInterfaceResponse, error) {
+func (c *ClientWithResponses) PostNodeNetworkInterfaceWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceName, body PostNodeNetworkInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeNetworkInterfaceResponse, error) {
 	rsp, err := c.PostNodeNetworkInterface(ctx, hostname, name, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -18580,7 +18572,7 @@ func (c *ClientWithResponses) PostNodeNetworkInterfaceWithResponse(ctx context.C
 }
 
 // PutNodeNetworkInterfaceWithBodyWithResponse request with arbitrary body returning *PutNodeNetworkInterfaceResponse
-func (c *ClientWithResponses) PutNodeNetworkInterfaceWithBodyWithResponse(ctx context.Context, hostname Hostname, name InterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeNetworkInterfaceResponse, error) {
+func (c *ClientWithResponses) PutNodeNetworkInterfaceWithBodyWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeNetworkInterfaceResponse, error) {
 	rsp, err := c.PutNodeNetworkInterfaceWithBody(ctx, hostname, name, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -18588,7 +18580,7 @@ func (c *ClientWithResponses) PutNodeNetworkInterfaceWithBodyWithResponse(ctx co
 	return ParsePutNodeNetworkInterfaceResponse(rsp)
 }
 
-func (c *ClientWithResponses) PutNodeNetworkInterfaceWithResponse(ctx context.Context, hostname Hostname, name InterfaceName, body PutNodeNetworkInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeNetworkInterfaceResponse, error) {
+func (c *ClientWithResponses) PutNodeNetworkInterfaceWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceName, body PutNodeNetworkInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeNetworkInterfaceResponse, error) {
 	rsp, err := c.PutNodeNetworkInterface(ctx, hostname, name, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -22906,7 +22898,7 @@ func ParseGetNodeNetworkInterfaceResponse(rsp *http.Response) (*GetNodeNetworkIn
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest InterfaceListResponse
+		var dest NetworkInterfaceCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -22960,7 +22952,7 @@ func ParseDeleteNodeNetworkInterfaceResponse(rsp *http.Response) (*DeleteNodeNet
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest InterfaceMutationResponse
+		var dest NetworkInterfaceDeleteResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -22987,6 +22979,13 @@ func ParseDeleteNodeNetworkInterfaceResponse(rsp *http.Response) (*DeleteNodeNet
 		}
 		response.JSON403 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -22999,22 +22998,22 @@ func ParseDeleteNodeNetworkInterfaceResponse(rsp *http.Response) (*DeleteNodeNet
 	return response, nil
 }
 
-// ParseGetNodeNetworkInterfaceByNameResponse parses an HTTP response from a GetNodeNetworkInterfaceByNameWithResponse call
-func ParseGetNodeNetworkInterfaceByNameResponse(rsp *http.Response) (*GetNodeNetworkInterfaceByNameResponse, error) {
+// ParseGetNodeNetworkInterfaceByKeyResponse parses an HTTP response from a GetNodeNetworkInterfaceByKeyWithResponse call
+func ParseGetNodeNetworkInterfaceByKeyResponse(rsp *http.Response) (*GetNodeNetworkInterfaceByKeyResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetNodeNetworkInterfaceByNameResponse{
+	response := &GetNodeNetworkInterfaceByKeyResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest InterfaceGetResponse
+		var dest NetworkInterfaceGetResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -23075,7 +23074,7 @@ func ParsePostNodeNetworkInterfaceResponse(rsp *http.Response) (*PostNodeNetwork
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest InterfaceMutationResponse
+		var dest NetworkInterfaceCreateResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -23101,6 +23100,13 @@ func ParsePostNodeNetworkInterfaceResponse(rsp *http.Response) (*PostNodeNetwork
 			return nil, err
 		}
 		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
@@ -23129,7 +23135,7 @@ func ParsePutNodeNetworkInterfaceResponse(rsp *http.Response) (*PutNodeNetworkIn
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest InterfaceMutationResponse
+		var dest NetworkInterfaceUpdateResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

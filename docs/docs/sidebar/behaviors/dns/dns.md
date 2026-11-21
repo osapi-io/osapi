@@ -30,13 +30,15 @@ On `debian`, `linux`, `darwin`. On any other platform its methods report `skippe
 
 `delete` runs only on `debian`. On any other platform it reports `skipped`.
 
-On linux it also runs `resolvectl`.
+On linux it also runs `resolvectl`, `ip`.
 
 On darwin it also runs `scutil`.
 
+It runs `ethtool` when the host has it, and reads without it otherwise.
+
 It writes `/etc/netplan/osapi-dns-*.yaml`.
 
-In a trace, a call is the span `behavior.dns.<method>`, with `behavior.netplan.<method>`, `behavior.managedfile.<method>`, `exec resolvectl`, `exec scutil`, `exec netplan`, `exec chown`, `exec stat`, `file.write`, `file.remove`, `file.chmod`, `kv.get`, `kv.put` under it.
+In a trace, a call is the span `behavior.dns.<method>`, with `behavior.netplan.<method>`, `behavior.managedfile.<method>`, `exec resolvectl`, `exec ip`, `exec scutil`, `exec ethtool`, `exec netplan`, `exec chown`, `exec stat`, `file.write`, `file.remove`, `file.chmod`, `kv.get`, `kv.put` under it.
 
 Its span records the input `interface_name` (get, update, delete).
 

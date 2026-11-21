@@ -21,29 +21,25 @@
 package client
 
 import (
+	openapi_types "github.com/oapi-codegen/runtime/types"
+
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
-// InterfaceInfo represents a network interface's configuration.
+// InterfaceInfo is a network interface as its host reports it.
 type InterfaceInfo struct {
-	Name       string   `json:"name,omitempty"`
-	IPv4       string   `json:"ipv4,omitempty"`
-	IPv6       string   `json:"ipv6,omitempty"`
-	MAC        string   `json:"mac,omitempty"`
-	Family     string   `json:"family,omitempty"`
-	Primary    bool     `json:"primary"`
-	DHCP4      bool     `json:"dhcp4"`
-	DHCP6      bool     `json:"dhcp6"`
-	Addresses  []string `json:"addresses,omitempty"`
-	Gateway4   string   `json:"gateway4,omitempty"`
-	Gateway6   string   `json:"gateway6,omitempty"`
-	MTU        int      `json:"mtu,omitempty"`
-	MACAddress string   `json:"mac_address,omitempty"`
-	WakeOnLAN  bool     `json:"wakeonlan"`
-	State      string   `json:"state,omitempty"`
+	Name      string   `json:"name,omitempty"`
+	State     string   `json:"state,omitempty"`
+	MAC       string   `json:"mac,omitempty"`
+	MTU       int      `json:"mtu,omitempty"`
+	IPv4      string   `json:"ipv4,omitempty"`
+	IPv6      string   `json:"ipv6,omitempty"`
+	Addresses []string `json:"addresses,omitempty"`
+	DHCP4     bool     `json:"dhcp4"`
+	Primary   bool     `json:"primary"`
 }
 
-// InterfaceListResult represents an interface list result from a single agent.
+// InterfaceListResult is the network interfaces of one host.
 type InterfaceListResult struct {
 	Hostname   string          `json:"hostname"`
 	Status     string          `json:"status"`
@@ -51,7 +47,7 @@ type InterfaceListResult struct {
 	Interfaces []InterfaceInfo `json:"interfaces,omitempty"`
 }
 
-// InterfaceGetResult represents an interface get result from a single agent.
+// InterfaceGetResult is one network interface of one host.
 type InterfaceGetResult struct {
 	Hostname  string         `json:"hostname"`
 	Status    string         `json:"status"`
@@ -59,8 +55,8 @@ type InterfaceGetResult struct {
 	Interface *InterfaceInfo `json:"interface,omitempty"`
 }
 
-// InterfaceMutationResult represents the result of an interface
-// create, update, or delete.
+// InterfaceMutationResult is an interface after a create, an update or a
+// delete on one host.
 type InterfaceMutationResult struct {
 	Hostname string `json:"hostname"`
 	Status   string `json:"status"`
@@ -69,144 +65,125 @@ type InterfaceMutationResult struct {
 	Error    string `json:"error,omitempty"`
 }
 
-// InterfaceConfigOpts contains options for creating or updating
-// a network interface.
+// InterfaceConfigOpts is the config osapi writes for an interface. dhcp4
+// and dhcp6 are false unless set.
 type InterfaceConfigOpts struct {
-	// DHCP4 enables or disables DHCPv4.
+	// DHCP4 takes an IPv4 address from DHCP.
 	DHCP4 *bool
-	// DHCP6 enables or disables DHCPv6.
+	// DHCP6 takes an IPv6 address from DHCP.
 	DHCP6 *bool
-	// Addresses is the list of IP addresses in CIDR notation.
+	// Addresses is the static addresses, in CIDR notation.
 	Addresses []string
-	// Gateway4 is the IPv4 gateway address.
+	// Gateway4 is the IPv4 default gateway.
 	Gateway4 string
-	// Gateway6 is the IPv6 gateway address.
+	// Gateway6 is the IPv6 default gateway.
 	Gateway6 string
-	// MTU is the maximum transmission unit.
+	// MTU is the MTU, from 68 to 9000.
 	MTU *int
-	// MACAddress is the hardware MAC address.
+	// MACAddress is the MAC address to set.
 	MACAddress string
-	// WakeOnLAN enables or disables Wake-on-LAN.
+	// WakeOnLAN turns on wake-on-LAN.
 	WakeOnLAN *bool
 }
 
-// interfaceInfoFromGen converts a gen.InterfaceInfo to an InterfaceInfo.
+// interfaceRequest is the request body of opts.
+func interfaceRequest(
+	opts InterfaceConfigOpts,
+) gen.NetworkInterfaceUpdateRequest {
+	body := gen.NetworkInterfaceUpdateRequest{
+		Dhcp4:     opts.DHCP4,
+		Dhcp6:     opts.DHCP6,
+		Mtu:       opts.MTU,
+		Wakeonlan: opts.WakeOnLAN,
+	}
+	if len(opts.Addresses) > 0 {
+		body.Addresses = &opts.Addresses
+	}
+	if opts.Gateway4 != "" {
+		body.Gateway4 = &opts.Gateway4
+	}
+	if opts.Gateway6 != "" {
+		body.Gateway6 = &opts.Gateway6
+	}
+	if opts.MACAddress != "" {
+		body.MacAddress = &opts.MACAddress
+	}
+
+	return body
+}
+
+// interfaceInfoFromGen is the interface of a row, or nil for a row with
+// none, such as a host that failed.
 func interfaceInfoFromGen(
-	g gen.InterfaceInfo,
-) InterfaceInfo {
-	info := InterfaceInfo{
-		Name:       derefString(g.Name),
-		IPv4:       derefString(g.Ipv4),
-		IPv6:       derefString(g.Ipv6),
-		MAC:        derefString(g.Mac),
-		Family:     derefString(g.Family),
-		Primary:    derefBool(g.Primary),
-		DHCP4:      derefBool(g.Dhcp4),
-		DHCP6:      derefBool(g.Dhcp6),
-		Gateway4:   derefString(g.Gateway4),
-		Gateway6:   derefString(g.Gateway6),
-		MTU:        derefInt(g.Mtu),
-		MACAddress: derefString(g.MacAddress),
-		WakeOnLAN:  derefBool(g.Wakeonlan),
-		State:      derefString(g.State),
+	r gen.NetworkInterfaceEntry,
+) *InterfaceInfo {
+	if r.Name == nil {
+		return nil
 	}
 
-	if g.Addresses != nil {
-		info.Addresses = *g.Addresses
+	return &InterfaceInfo{
+		Name:      *r.Name,
+		State:     derefString(r.State),
+		MAC:       derefString(r.Mac),
+		MTU:       derefInt(r.Mtu),
+		IPv4:      derefString(r.Ipv4),
+		IPv6:      derefString(r.Ipv6),
+		Addresses: derefStrings(r.Addresses),
+		DHCP4:     derefBool(r.Dhcp4),
+		Primary:   derefBool(r.Primary),
 	}
-
-	return info
 }
 
-// interfaceListCollectionFromGen converts a gen.InterfaceListResponse
-// to a Collection[InterfaceListResult].
-func interfaceListCollectionFromGen(
-	g *gen.InterfaceListResponse,
+// interfaceListFromGen groups the rows of a list, one per interface, into
+// one result per host, in the order each host first answers.
+func interfaceListFromGen(
+	g *gen.NetworkInterfaceCollectionResponse,
 ) Collection[InterfaceListResult] {
-	results := make([]InterfaceListResult, 0, len(g.Results))
+	results := []InterfaceListResult{}
+	index := map[string]int{}
 	for _, r := range g.Results {
-		entry := InterfaceListResult{
-			Hostname: r.Hostname,
-			Status:   string(r.Status),
-			Error:    derefString(r.Error),
+		i, ok := index[r.Hostname]
+		if !ok {
+			i = len(results)
+			index[r.Hostname] = i
+			results = append(results, InterfaceListResult{
+				Hostname: r.Hostname,
+				Status:   string(r.Status),
+				Error:    derefString(r.Error),
+			})
 		}
-
-		if r.Interfaces != nil {
-			ifaces := make([]InterfaceInfo, 0, len(*r.Interfaces))
-			for _, iface := range *r.Interfaces {
-				ifaces = append(ifaces, interfaceInfoFromGen(iface))
-			}
-
-			entry.Interfaces = ifaces
+		if info := interfaceInfoFromGen(r); info != nil {
+			results[i].Interfaces = append(results[i].Interfaces, *info)
 		}
-
-		results = append(results, entry)
 	}
 
-	return Collection[InterfaceListResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
-	}
+	return Collection[InterfaceListResult]{Results: results, JobID: jobIDFromGen(g.JobId)}
 }
 
-// interfaceGetCollectionFromGen converts a gen.InterfaceGetResponse
-// to a Collection[InterfaceGetResult].
-func interfaceGetCollectionFromGen(
-	g *gen.InterfaceGetResponse,
+// interfaceGetFromGen is the rows of a get.
+func interfaceGetFromGen(
+	g *gen.NetworkInterfaceGetResponse,
 ) Collection[InterfaceGetResult] {
 	results := make([]InterfaceGetResult, 0, len(g.Results))
 	for _, r := range g.Results {
-		entry := InterfaceGetResult{
-			Hostname: r.Hostname,
-			Status:   string(r.Status),
-			Error:    derefString(r.Error),
-		}
-
-		if r.Interface != nil {
-			info := interfaceInfoFromGen(*r.Interface)
-			entry.Interface = &info
-		}
-
-		results = append(results, entry)
+		results = append(results, InterfaceGetResult{
+			Hostname:  r.Hostname,
+			Status:    string(r.Status),
+			Error:     derefString(r.Error),
+			Interface: interfaceInfoFromGen(r),
+		})
 	}
 
-	return Collection[InterfaceGetResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
-	}
+	return Collection[InterfaceGetResult]{Results: results, JobID: jobIDFromGen(g.JobId)}
 }
 
-// interfaceMutationCollectionFromCreate converts a
-// gen.InterfaceMutationResponse to a Collection[InterfaceMutationResult].
-func interfaceMutationCollectionFromCreate(
-	g *gen.InterfaceMutationResponse,
+// interfaceMutationsFromGen is the rows of a create, an update or a delete.
+func interfaceMutationsFromGen(
+	rows []gen.NetworkInterfaceResult,
+	jobID *openapi_types.UUID,
 ) Collection[InterfaceMutationResult] {
-	return interfaceMutationCollectionFromGen(g)
-}
-
-// interfaceMutationCollectionFromUpdate converts a
-// gen.InterfaceMutationResponse to a Collection[InterfaceMutationResult].
-func interfaceMutationCollectionFromUpdate(
-	g *gen.InterfaceMutationResponse,
-) Collection[InterfaceMutationResult] {
-	return interfaceMutationCollectionFromGen(g)
-}
-
-// interfaceMutationCollectionFromDelete converts a
-// gen.InterfaceMutationResponse to a Collection[InterfaceMutationResult].
-func interfaceMutationCollectionFromDelete(
-	g *gen.InterfaceMutationResponse,
-) Collection[InterfaceMutationResult] {
-	return interfaceMutationCollectionFromGen(g)
-}
-
-// interfaceMutationCollectionFromGen converts a gen.InterfaceMutationResponse
-// to a Collection[InterfaceMutationResult].
-func interfaceMutationCollectionFromGen(
-	g *gen.InterfaceMutationResponse,
-) Collection[InterfaceMutationResult] {
-	results := make([]InterfaceMutationResult, 0, len(g.Results))
-	for _, r := range g.Results {
+	results := make([]InterfaceMutationResult, 0, len(rows))
+	for _, r := range rows {
 		results = append(results, InterfaceMutationResult{
 			Hostname: r.Hostname,
 			Status:   string(r.Status),
@@ -216,8 +193,5 @@ func interfaceMutationCollectionFromGen(
 		})
 	}
 
-	return Collection[InterfaceMutationResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
-	}
+	return Collection[InterfaceMutationResult]{Results: results, JobID: jobIDFromGen(jobID)}
 }

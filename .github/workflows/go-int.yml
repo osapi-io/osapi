@@ -56,6 +56,10 @@ jobs:
         run: just react-build
       - name: Linux tuning
         run: just linux-tune
+      # The interface write examples configure osapi0, a dummy interface, so
+      # they never change the runner's own network.
+      - name: Dummy interface
+        run: sudo ip link add osapi0 type dummy
       # As root, with the behavior write examples on: the runner is thrown
       # away after the job, so they may change its kernel parameters and /etc.
       - name: Integration

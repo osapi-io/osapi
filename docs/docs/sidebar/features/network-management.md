@@ -14,7 +14,7 @@ privileges, and the agents make the changes.
 | --------- | -------------------- | -------------------------------------------- |
 | DNS       | Read, Update, Delete | Nameservers and search domains per interface |
 | Ping      | Read                 | ICMP connectivity check to a target host     |
-| Interface | Full CRUD            | Netplan interface configuration              |
+| Interface | Full CRUD            | Each interface, and osapi's Netplan config   |
 | Route     | Full CRUD            | Netplan static route configuration           |
 
 For interface and route management details, see
@@ -85,12 +85,17 @@ authentication settings.
 
 ## Permissions
 
-| Operation  | Permission     |
-| ---------- | -------------- |
-| DNS get    | `dns:read`     |
-| DNS update | `dns:write`    |
-| DNS delete | `dns:write`    |
-| Ping       | `network:read` |
+| Operation        | Permission      |
+| ---------------- | --------------- |
+| DNS get          | `network:read`  |
+| DNS update       | `network:write` |
+| DNS delete       | `network:write` |
+| Interface list   | `network:read`  |
+| Interface get    | `network:read`  |
+| Interface create | `network:write` |
+| Interface update | `network:write` |
+| Interface delete | `network:write` |
+| Ping             | `network:read`  |
 
 The `admin` and `write` roles include both `network:read` and `network:write`.
 The `read` role includes only `network:read`.

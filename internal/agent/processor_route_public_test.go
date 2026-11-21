@@ -115,7 +115,7 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteOperation() {
 				routeProvider = tt.setupMock()
 			}
 
-			processor := agent.NewNetworkProcessor(nil, nil, routeProvider, slog.Default())
+			processor := agent.NewNetworkProcessor(nil, routeProvider, slog.Default())
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
@@ -177,7 +177,7 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteList() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			processor := agent.NewNetworkProcessor(nil, nil, tt.setupMock(), slog.Default())
+			processor := agent.NewNetworkProcessor(nil, tt.setupMock(), slog.Default())
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
@@ -258,7 +258,7 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteGet() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			processor := agent.NewNetworkProcessor(nil, nil, tt.setupMock(), slog.Default())
+			processor := agent.NewNetworkProcessor(nil, tt.setupMock(), slog.Default())
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
@@ -348,7 +348,7 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteCreate() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			processor := agent.NewNetworkProcessor(nil, nil, tt.setupMock(), slog.Default())
+			processor := agent.NewNetworkProcessor(nil, tt.setupMock(), slog.Default())
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
@@ -438,7 +438,7 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteUpdate() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			processor := agent.NewNetworkProcessor(nil, nil, tt.setupMock(), slog.Default())
+			processor := agent.NewNetworkProcessor(nil, tt.setupMock(), slog.Default())
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
@@ -517,7 +517,7 @@ func (s *ProcessorRoutePublicTestSuite) TestProcessRouteDelete() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			processor := agent.NewNetworkProcessor(nil, nil, tt.setupMock(), slog.Default())
+			processor := agent.NewNetworkProcessor(nil, tt.setupMock(), slog.Default())
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}

@@ -33,7 +33,8 @@ const (
 
 // status is netplan status for a host with a bond and an ethernet.
 const status = `{"netplan-global-state":{"online":true},` +
-	`"enp0s1":{"index":2,"type":"ethernet","id":"all"},"bond0":{"index":3,"type":"bond","id":"bond0"}}`
+	`"enp0s1":{"index":2,"type":"ethernet","id":"all"},"enp0s2":{"index":3,"type":"ethernet","id":"all"},` +
+	`"bond0":{"index":4,"type":"bond","id":"bond0"},"lo":{"index":1,"type":"ethernet"}}`
 
 // Behavior writes, validates and applies the netplan files of the dns,
 // interface and route behaviors, which require it. It keeps each file's
@@ -51,8 +52,9 @@ var Behavior = behavior.Register(behavior.Define(
 		Describe("Write a netplan file, validate it and apply it").
 		Explain("Writes the file with mode 0600, validates the whole config with netplan "+
 			"generate, and applies it with netplan apply. When netplan generate refuses "+
-			"it, the file is removed again, because netplan reads every file in the "+
-			"directory. A file that already holds the content changes nothing.").
+			"it, the file gets back the content it had, or a new file is removed, because "+
+			"netplan reads every file in the directory. A file that already holds the "+
+			"content changes nothing.").
 		Example("A new file", UpdateInput{Path: dnsFile, Content: dnsYAML},
 			Result{Path: dnsFile, Changed: true},
 			behavior.Wrote(dnsFile, dnsYAML),
@@ -82,21 +84,42 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Read("get", Get).Key("name").
 		Describe("Get what netplan status reports for an interface").
 		Explain("Reads netplan status: the interface's type, its section and the ID of the "+
-			"definition that matches it, which a write goes under. An interface that it does "+
-			"not list is not found. A netplan without status is an ethernet under its own name.").
+			"definition that matches it, which a write goes under, and each interface that "+
+			"definition matches. netplan lists only the interfaces it manages, so an "+
+			"interface that it does not list is an ethernet under its own name.").
 		Example("A bond", GetInput{Name: "bond0"},
-			Interface{Name: "bond0", Type: "bond", Section: "bonds", ID: "bond0"},
+			Interface{
+				Name:    "bond0",
+				Type:    "bond",
+				Section: "bonds",
+				ID:      "bond0",
+				Matches: []string{"bond0"},
+			},
 			behavior.Prints("netplan status --format json", status),
 		).
 		Example("An interface a match defines, as cloud-init's all for en*", GetInput{Name: "enp0s1"},
-			Interface{Name: "enp0s1", Type: "ethernet", Section: "ethernets", ID: "all"},
+			Interface{
+				Name: "enp0s1", Type: "ethernet", Section: "ethernets", ID: "all",
+				Matches: []string{"enp0s1", "enp0s2"},
+			},
+			behavior.Prints("netplan status --format json", status),
+		).
+		Example("An interface netplan does not define", GetInput{Name: "lo"},
+			Interface{
+				Name:    "lo",
+				Type:    "ethernet",
+				Section: "ethernets",
+				ID:      "lo",
+				Matches: []string{"lo"},
+			},
 			behavior.Prints("netplan status --format json", status),
 		).
 		Example("A netplan without status", GetInput{Name: "eth0"},
-			Interface{Name: "eth0", Section: "ethernets", ID: "eth0"},
+			Interface{Name: "eth0", Section: "ethernets", ID: "eth0", Matches: []string{"eth0"}},
 			behavior.Prints("netplan status --format json", "Invalid command: status\n"),
 		).
-		Fails("An interface the host does not have", GetInput{Name: "eth9"}, "not found",
+		Example("An interface netplan does not manage", GetInput{Name: "eth9"},
+			Interface{Name: "eth9", Section: "ethernets", ID: "eth9", Matches: []string{"eth9"}},
 			behavior.Prints("netplan status --format json", status),
 		),
 ))

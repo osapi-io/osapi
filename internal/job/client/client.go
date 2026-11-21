@@ -187,7 +187,7 @@ func (c *Client) Query(
 	}
 
 	if resp.Status == job.StatusFailed {
-		return "", nil, job.NewResponseError(resp)
+		return jobID, nil, job.NewResponseError(resp)
 	}
 
 	resp.JobID = jobID
@@ -254,7 +254,7 @@ func (c *Client) Modify(
 	}
 
 	if resp.Status == job.StatusFailed {
-		return "", nil, job.NewResponseError(resp)
+		return jobID, nil, job.NewResponseError(resp)
 	}
 
 	resp.JobID = jobID

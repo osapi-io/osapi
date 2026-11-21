@@ -7,7 +7,7 @@
 | [load](load/load.md) | Get the load averages of target hosts | API and CLI | - | status |
 | [managedfile](managedfile/managedfile.md) | Files osapi writes on a host and keeps a record of | Internal | - | netplan, sysctl |
 | [memory](memory/memory.md) | Get the memory usage of target hosts | API and CLI | - | status |
-| [netplan](netplan/netplan.md) | The netplan files osapi writes, validated and applied | Internal | managedfile | dns |
+| [netplan](netplan/netplan.md) | The netplan files osapi writes, validated and applied | Internal | managedfile | dns, interface |
 | [os](os/os.md) | Get the operating system of target hosts | API and CLI | - | status |
 | [package](package/package.md) | The packages installed on the host | API and CLI | - | - |
 | [status](status/status.md) | The status summary of a node | API and CLI | hostname, uptime, os, load, memory, disk | - |
@@ -16,3 +16,4 @@
 | [updatepackages](updatepackages/updatepackages.md) | The updates the package index has for the host | API and CLI | - | - |
 | [uptime](uptime/uptime.md) | Get the uptime of target hosts | API and CLI | - | status |
 | [dns](dns/dns.md) | The DNS resolvers of each interface of the host | API and CLI | netplan | - |
+| [interface](interface/interface.md) | The network interfaces of the host | API and CLI | netplan | - |

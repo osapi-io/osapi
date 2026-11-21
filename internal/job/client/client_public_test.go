@@ -28,6 +28,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 	"testing"
 	"time"
 
@@ -316,7 +317,11 @@ func (s *ClientPublicTestSuite) TestQuery() {
 			if tt.expectedErr != "" {
 				s.Error(err)
 				s.Contains(err.Error(), tt.expectedErr)
-				s.Empty(jobID)
+				if strings.HasPrefix(tt.expectedErr, "job failed") {
+					s.NotEmpty(jobID, "a job that ran keeps its ID")
+				} else {
+					s.Empty(jobID)
+				}
 				s.Nil(resp)
 			} else {
 				s.NoError(err)
@@ -928,7 +933,11 @@ func (s *ClientPublicTestSuite) TestModify() {
 			if tt.expectedErr != "" {
 				s.Error(err)
 				s.Contains(err.Error(), tt.expectedErr)
-				s.Empty(jobID)
+				if strings.HasPrefix(tt.expectedErr, "job failed") {
+					s.NotEmpty(jobID, "a job that ran keeps its ID")
+				} else {
+					s.Empty(jobID)
+				}
 				s.Nil(resp)
 			} else {
 				s.NoError(err)

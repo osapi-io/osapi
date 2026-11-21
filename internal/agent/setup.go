@@ -282,7 +282,7 @@ func buildRegistry(
 	logProvider := e.logs()
 	serviceProvider := e.service()
 	pingProvider := e.ping()
-	interfaceProvider, routeProvider := e.netplan()
+	routeProvider := e.netplan()
 	commandProvider := command.New(e.log, e.exec)
 	dockerProvider := e.docker(ctx)
 	cronProvider := e.cron()
@@ -315,8 +315,8 @@ func buildRegistry(
 
 	r.Register(
 		"network",
-		NewNetworkProcessor(pingProvider, interfaceProvider, routeProvider, e.log),
-		pingProvider, interfaceProvider, routeProvider,
+		NewNetworkProcessor(pingProvider, routeProvider, e.log),
+		pingProvider, routeProvider,
 	)
 
 	r.Register(

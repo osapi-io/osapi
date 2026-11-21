@@ -28,7 +28,6 @@ import (
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/job"
-	"github.com/osapi-io/osapi/internal/provider/network/netplan/iface"
 	"github.com/osapi-io/osapi/internal/provider/network/netplan/route"
 	"github.com/osapi-io/osapi/internal/provider/network/ping"
 )
@@ -36,7 +35,6 @@ import (
 // NewNetworkProcessor returns a ProcessorFunc that handles network-related operations.
 func NewNetworkProcessor(
 	pingProvider ping.Provider,
-	interfaceProvider iface.Provider,
 	routeProvider route.Provider,
 	logger *slog.Logger,
 ) ProcessorFunc {
@@ -49,8 +47,6 @@ func NewNetworkProcessor(
 		switch baseOperation {
 		case "ping":
 			return processNetworkPing(ctx, pingProvider, logger, req)
-		case "interface":
-			return processInterfaceOperation(ctx, interfaceProvider, logger, req)
 		case "route":
 			return processRouteOperation(ctx, routeProvider, logger, req)
 		default:

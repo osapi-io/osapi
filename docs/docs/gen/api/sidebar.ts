@@ -506,46 +506,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Network/Interface",
-      link: {
-        type: "doc",
-        id: "gen/api/network-management-api-interface-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/get-node-network-interface",
-          label: "List network interfaces",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-node-network-interface-by-name",
-          label: "Get network interface details",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-node-network-interface",
-          label: "Create interface configuration",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "gen/api/put-node-network-interface",
-          label: "Update interface configuration",
-          className: "api-method put",
-        },
-        {
-          type: "doc",
-          id: "gen/api/delete-node-network-interface",
-          label: "Delete interface configuration",
-          className: "api-method delete",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Node/Network/Route",
       link: {
         type: "doc",
@@ -976,6 +936,46 @@ const sidebar: SidebarsConfig = {
           type: "doc",
           id: "gen/api/put-node-network-dns",
           label: "Set the DNS resolvers of an interface",
+          className: "api-method put",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Interface",
+      link: {
+        type: "doc",
+        id: "gen/api/interface-api-network-interface-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-network-interface",
+          label: "List the network interfaces of the host",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-node-network-interface",
+          label: "Drop the config osapi has of a network interface",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-network-interface-by-key",
+          label: "Get a network interface of the host",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-network-interface",
+          label: "Configure a network interface",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-network-interface",
+          label: "Change the config osapi has of a network interface",
           className: "api-method put",
         },
       ],
