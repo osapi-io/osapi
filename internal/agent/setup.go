@@ -279,7 +279,6 @@ func buildRegistry(
 	powerProvider := e.power()
 	processProvider := e.process()
 	userProvider := e.user()
-	packageProvider := e.packages()
 	logProvider := e.logs()
 	serviceProvider := e.service()
 	dnsProvider := e.dns()
@@ -299,7 +298,6 @@ func buildRegistry(
 			powerProvider,
 			processProvider,
 			userProvider,
-			packageProvider,
 			logProvider,
 			serviceProvider,
 			e.log,
@@ -312,7 +310,6 @@ func buildRegistry(
 		powerProvider,
 		processProvider,
 		userProvider,
-		packageProvider,
 		logProvider,
 		serviceProvider,
 	)

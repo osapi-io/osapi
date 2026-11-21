@@ -83,9 +83,6 @@ tags:
   - name: NTP_Management_API_ntp_operations
     x-displayName: Node/NTP
     description: NTP server configuration management on a target node.
-  - name: Package_Management_API_package_operations
-    x-displayName: Node/Package
-    description: Package management on a target node.
   - name: Power_Management_API_power_operations
     x-displayName: Node/Power
     description: Power management operations (reboot, shutdown) on a target node.
@@ -119,6 +116,9 @@ tags:
   - description: Get the operating system of target hosts
     name: Os_API_os_operations
     x-displayName: Node/Os
+  - description: The packages installed on the host
+    name: Package_API_package_operations
+    x-displayName: Node/Package
   - description: The status summary of a node
     name: Status_API_status_operations
     x-displayName: Node/Status
@@ -128,6 +128,9 @@ tags:
   - description: The timezone of the host
     name: Timezone_API_timezone_operations
     x-displayName: Node/Timezone
+  - description: The updates the package index has for the host
+    name: Updatepackages_API_updatepackages_operations
+    x-displayName: Node/Updatepackages
   - description: Get the uptime of target hosts
     name: Uptime_API_uptime_operations
     x-displayName: Node/Uptime
@@ -4023,291 +4026,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/package:
-    servers: []
-    get:
-      summary: List installed packages
-      description: |
-        List all installed packages on the target node.
-      tags:
-        - Package_Management_API_package_operations
-      operationId: GetNodePackage
-      security:
-        - BearerAuth:
-            - package:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      responses:
-        '200':
-          description: List of installed packages.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PackageCollectionResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error listing packages.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    post:
-      summary: Install a package
-      description: |
-        Install a package on the target node.
-      tags:
-        - Package_Management_API_package_operations
-      operationId: PostNodePackage
-      security:
-        - BearerAuth:
-            - package:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      requestBody:
-        description: Package install parameters.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PackageInstallRequest'
-      responses:
-        '200':
-          description: Package installed.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PackageMutationResponse'
-        '400':
-          description: Invalid request payload.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error installing package.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/package/{name}:
-    servers: []
-    get:
-      summary: Get a package
-      description: |
-        Get details for a specific installed package by name on the target node.
-      tags:
-        - Package_Management_API_package_operations
-      operationId: GetNodePackageByName
-      security:
-        - BearerAuth:
-            - package:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/PackageName'
-      responses:
-        '200':
-          description: Package detail.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PackageCollectionResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Package not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error retrieving package.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    delete:
-      summary: Remove a package
-      description: |
-        Remove a package from the target node.
-      tags:
-        - Package_Management_API_package_operations
-      operationId: DeleteNodePackage
-      security:
-        - BearerAuth:
-            - package:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/PackageName'
-      responses:
-        '200':
-          description: Package removed.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PackageMutationResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Package not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error removing package.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/package/update:
-    servers: []
-    post:
-      summary: Update package sources
-      description: |
-        Refresh package sources (apt update) on the target node.
-      tags:
-        - Package_Management_API_package_operations
-      operationId: PostNodePackageUpdate
-      security:
-        - BearerAuth:
-            - package:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      responses:
-        '200':
-          description: Package sources updated.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PackageMutationResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error updating package sources.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    get:
-      summary: List available updates
-      description: |
-        List packages with available updates on the target node.
-      tags:
-        - Package_Management_API_package_operations
-      operationId: GetNodePackageUpdate
-      security:
-        - BearerAuth:
-            - package:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      responses:
-        '200':
-          description: List of available updates.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UpdateCollectionResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error listing available updates.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /api/node/{hostname}/power/reboot:
     servers: []
     post:
@@ -6331,6 +6049,209 @@ paths:
       summary: Get the operating system of the host
       tags:
         - Os_API_os_operations
+  /api/node/{hostname}/package:
+    servers: []
+    get:
+      description: >-
+        Lists each installed package with its version: dpkg on the Debian
+        family, rpm on the other Linux families, and Homebrew on macOS.
+      operationId: GetNodePackage
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackageCollectionResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - package:read
+      summary: List the packages installed on the host
+      tags:
+        - Package_API_package_operations
+    post:
+      description: >-
+        Installs the package with apt-get install, at the version when one is
+        given. A package that is installed, at that version when one is given,
+        does not change and reports changed: false. It runs on the Debian family
+        only, and elsewhere reports skipped.
+      operationId: PostNodePackage
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PackageCreateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackageCreateResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - package:write
+      summary: Install a package
+      tags:
+        - Package_API_package_operations
+  /api/node/{hostname}/package/{name}:
+    servers: []
+    delete:
+      description: >-
+        Removes the package with apt-get remove. A package that is not installed
+        does not change and reports changed: false. It runs on the Debian family
+        only, and elsewhere reports skipped.
+      operationId: DeleteNodePackage
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/PackageName'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackageDeleteResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host has no package with that name.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - package:write
+      summary: Remove a package
+      tags:
+        - Package_API_package_operations
+    get:
+      description: >-
+        Reads one package from the same list. A package that is not installed is
+        not found.
+      operationId: GetNodePackageByKey
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/PackageName'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackageGetResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host has no package with that name.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - package:read
+      summary: Get one installed package
+      tags:
+        - Package_API_package_operations
   /api/node/{hostname}/status:
     servers: []
     get:
@@ -6747,6 +6668,98 @@ paths:
       summary: Set the timezone of the host
       tags:
         - Timezone_API_timezone_operations
+  /api/node/{hostname}/updatepackages:
+    servers: []
+    get:
+      description: >-
+        Runs apt list --upgradable: each package with its installed version and
+        the version the index has. Refresh the index first for what the
+        repositories have now.
+      operationId: GetNodeUpdatepackages
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdatepackagesCollectionResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - updatepackages:read
+      summary: List the packages the index has newer versions of
+      tags:
+        - Updatepackages_API_updatepackages_operations
+    put:
+      description: >-
+        Runs apt-get update. It reports changed: true when the Release file of a
+        repository under /var/lib/apt/lists changed, and changed: false when
+        each repository was unchanged.
+      operationId: PutNodeUpdatepackages
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdatepackagesUpdateResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - updatepackages:write
+      summary: Refresh the package index
+      tags:
+        - Updatepackages_API_updatepackages_operations
   /api/node/{hostname}/uptime:
     servers: []
     get:
@@ -9832,173 +9845,6 @@ components:
             $ref: '#/components/schemas/NtpMutationResult'
       required:
         - results
-    PackageInstallRequest:
-      type: object
-      required:
-        - name
-      properties:
-        name:
-          type: string
-          description: >
-            Name of the package to install. It starts with a letter or digit,
-            and may have an architecture or a version.
-          pattern: ^[a-zA-Z0-9][a-zA-Z0-9.+_:~=-]*$
-          x-oapi-codegen-extra-tags:
-            validate: required,package_name
-    PackageEntry:
-      type: object
-      description: A package list result for one host.
-      properties:
-        hostname:
-          type: string
-          description: Hostname of the agent that reported this entry.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        packages:
-          type: array
-          items:
-            $ref: '#/components/schemas/PackageInfo'
-          description: List of packages.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    PackageInfo:
-      type: object
-      description: Information about an installed package.
-      properties:
-        name:
-          type: string
-          description: Package name.
-        version:
-          type: string
-          description: Installed version.
-        description:
-          type: string
-          description: Package description.
-        status:
-          type: string
-          description: Package status (e.g., installed).
-        size:
-          type: integer
-          format: int64
-          description: Installed size in bytes.
-    PackageCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/PackageEntry'
-      required:
-        - results
-    PackageMutationResult:
-      type: object
-      description: Result of a package install, remove, or update operation for one host.
-      properties:
-        hostname:
-          type: string
-          description: Hostname of the agent that processed this operation.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        name:
-          type: string
-          description: Package name.
-        changed:
-          type: boolean
-          description: Whether the operation modified system state.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    PackageMutationResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/PackageMutationResult'
-      required:
-        - results
-    UpdateEntry:
-      type: object
-      description: An update list result for one host.
-      properties:
-        hostname:
-          type: string
-          description: Hostname of the agent that reported this entry.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        updates:
-          type: array
-          items:
-            $ref: '#/components/schemas/UpdateInfo'
-          description: List of available updates.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    UpdateInfo:
-      type: object
-      description: Information about an available package update.
-      properties:
-        name:
-          type: string
-          description: Package name.
-        current_version:
-          type: string
-          description: Currently installed version.
-        new_version:
-          type: string
-          description: Available version.
-    UpdateCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/UpdateEntry'
-      required:
-        - results
     PowerRequest:
       type: object
       properties:
@@ -11433,6 +11279,160 @@ components:
         - distribution
         - version
       type: object
+    PackageCollectionResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/PackageInstalled'
+          type: array
+      required:
+        - results
+      type: object
+    PackageCreateRequest:
+      properties:
+        name:
+          description: The package to install, such as curl
+          maxLength: 255
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9.+_:~=-]*$
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,max=255,package_name
+        version:
+          description: >-
+            The version to install, such as 8.5.0-2ubuntu10; the newest when
+            empty
+          maxLength: 255
+          pattern: ^[0-9][A-Za-z0-9.+~:-]*$
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,max=255,package_version
+      required:
+        - name
+      type: object
+    PackageCreateResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/PackageResult'
+          type: array
+      required:
+        - results
+      type: object
+    PackageDeleteResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/PackageResult'
+          type: array
+      required:
+        - results
+      type: object
+    PackageGetResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/PackageInstalled'
+          type: array
+      required:
+        - results
+      type: object
+    PackageInstalled:
+      properties:
+        architecture:
+          description: The architecture it is built for, such as amd64
+          type: string
+        description:
+          description: Its one-line summary
+          type: string
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        manager:
+          description: 'The package database that has it: dpkg, rpm or brew'
+          type: string
+        name:
+          description: The package
+          type: string
+        size:
+          description: Its installed size in bytes
+          format: int64
+          type: integer
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+        version:
+          description: The installed version
+          type: string
+      required:
+        - hostname
+        - status
+      type: object
+    PackageResult:
+      properties:
+        changed:
+          description: Whether the host changed
+          type: boolean
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        name:
+          description: The package
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
+      type: object
     Entry:
       properties:
         seconds:
@@ -11775,6 +11775,94 @@ components:
       required:
         - results
       type: object
+    UpdatepackagesAvailable:
+      properties:
+        current_version:
+          description: The installed version
+          type: string
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        name:
+          description: The package
+          type: string
+        new_version:
+          description: The version the index has
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
+      type: object
+    UpdatepackagesCollectionResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/UpdatepackagesAvailable'
+          type: array
+      required:
+        - results
+      type: object
+    UpdatepackagesResult:
+      properties:
+        changed:
+          description: Whether the refresh got new index data
+          type: boolean
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
+      type: object
+    UpdatepackagesUpdateResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/UpdatepackagesResult'
+          type: array
+      required:
+        - results
+      type: object
     UptimeEntry:
       properties:
         error:
@@ -11896,19 +11984,6 @@ components:
       schema:
         type: string
         minLength: 1
-    PackageName:
-      name: name
-      in: path
-      required: true
-      description: >
-        Package name. It starts with a letter or digit, and may have an
-        architecture or a version, such as nginx:amd64 or nginx=1.24.0-1.
-      x-oapi-codegen-extra-tags:
-        validate: required,package_name
-      schema:
-        type: string
-        minLength: 1
-        pattern: ^[a-zA-Z0-9][a-zA-Z0-9.+_:~=-]*$
     Pid:
       name: pid
       in: path
@@ -11987,6 +12062,17 @@ components:
         type: string
         minLength: 1
         pattern: ^SHA256:[A-Za-z0-9+/]+=*$
+    PackageName:
+      description: The package to remove, such as curl
+      in: path
+      name: name
+      required: true
+      schema:
+        maxLength: 255
+        pattern: ^[a-zA-Z0-9][a-zA-Z0-9.+_:~=-]*$
+        type: string
+      x-oapi-codegen-extra-tags:
+        validate: required,max=255,package_name
     SysctlKey:
       description: Parameter name, such as net.ipv4.ip_forward
       in: path
@@ -12055,9 +12141,6 @@ x-tagGroups:
   - name: NTP Management API
     tags:
       - NTP_Management_API_ntp_operations
-  - name: Package Management API
-    tags:
-      - Package_Management_API_package_operations
   - name: Power Management API
     tags:
       - Power_Management_API_power_operations
@@ -12089,6 +12172,9 @@ x-tagGroups:
   - name: Os API
     tags:
       - Os_API_os_operations
+  - name: Package API
+    tags:
+      - Package_API_package_operations
   - name: Status API
     tags:
       - Status_API_status_operations
@@ -12098,6 +12184,9 @@ x-tagGroups:
   - name: Timezone API
     tags:
       - Timezone_API_timezone_operations
+  - name: Updatepackages API
+    tags:
+      - Updatepackages_API_updatepackages_operations
   - name: Uptime API
     tags:
       - Uptime_API_uptime_operations

@@ -24,7 +24,7 @@ export * from './network-management-api-route-operations/network-management-api-
 export * from './node-file-operations-api-node-file-operations/node-file-operations-api-node-file-operations';
 export * from './ntp-management-api-ntp-operations/ntp-management-api-ntp-operations';
 export * from './os-api-os-operations/os-api-os-operations';
-export * from './package-management-api-package-operations/package-management-api-package-operations';
+export * from './package-api-package-operations/package-api-package-operations';
 export * from './power-management-api-power-operations/power-management-api-power-operations';
 export * from './process-management-api-process-operations/process-management-api-process-operations';
 export * from './schedule-management-api-schedule-operations/schedule-management-api-schedule-operations';
@@ -33,6 +33,7 @@ export * from './status-api-status-operations/status-api-status-operations';
 export * from './sysctl-api-sysctl-operations/sysctl-api-sysctl-operations';
 export * from './telemetry-api-telemetry/telemetry-api-telemetry';
 export * from './timezone-api-timezone-operations/timezone-api-timezone-operations';
+export * from './updatepackages-api-updatepackages-operations/updatepackages-api-updatepackages-operations';
 export * from './uptime-api-uptime-operations/uptime-api-uptime-operations';
 export * from './user-and-group-management-api-group-operations/user-and-group-management-api-group-operations';
 export * from './user-and-group-management-api-user-operations/user-and-group-management-api-user-operations';

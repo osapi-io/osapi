@@ -1,0 +1,69 @@
+---
+id: put-node-updatepackages
+title: "Refresh the package index"
+description: "Runs apt-get update. It reports changed: true when the Release file of a repository under /var/lib/apt/lists changed, and changed: false when each repository was unchanged."
+sidebar_label: "Refresh the package index"
+hide_title: true
+hide_table_of_contents: true
+api: eJztWN1v2zYQ/1cOfFkLyB/pkm4TsIcMWzcP7VBkKfaQBMFZPEusZZIlj0k8w//7cJRkO04wdHsr0CdRou6D9/vd6U4bpSlWwXg2zqpSXSQbAT2PamJIXiPTGGYMgbwLHKFq0NakS+CQCO4bssANwQW1hJFgYVoCtwDMAtGwC2tIVlOAyR2GSWvmE/Q8aU3cKysArd5rXmAbe9WEVXOo6R4jJNu/OVaFcp4CiuszrUr1PvEfTtOH7LbHaok1RVUojwFXxBSiKq82Rye+xFATl3CLbVvALdp1AY2LbHFFBbgALc6phRd1cMmX9zQfa7p7KcaNiHvkRhVK3lalGgRVoQJ9SiaQVqWEqlCxamiFqtyolbFvydbcqPKkULz2Ihk5GFurbaEeRg69GVVOU012RA8ccMRYR5G9w9bI6VS5M1CsjP3xpMg7t5xPo7bbG/EgemcjZcFX06lcKmeZLMsSvW9NlaM3+RglFpsDJ32Q2LLppD+6+a3RsjoKXkPw0c1h9jOkSBrYgQ+uohiBGxNBfKTIEi16wJVvxfGzsyl9fzqdjujVD/PR6Yk+HeF3J69Hp6evX5+dnZ5Op9OpKtTChRWyKlVKRqvjQH1+nLL4dpvjkVrO24ZpFZ8es2fW03P+1RA3FDLXAy0CxQZqx2DpHozV9AAaGfdOzp1rCa3ASSG48FTjL/IYVhQj1gRmkVVjTZZhgabt6P2EGzt+PdH3W78j2bdXxQ2yIKJTJeh0kEgUntUeGTnF51Hu9gbtu7yDhQudXnEt42zTSpVXyi0Fw3wUVai4NN7nFZsVucTq5v8j6iy5xY9u2UcKeuUwqN52aA/5d3WYlv0Z99bd/CNVnB3jTM/H5eMih0ui07+PIeBaHVsYuPXZeru7iz5FO5ePGCLFr8vnHNxvBuwKuDfcSIXMnDQMu4q4LdTpf0z0Y3cfZ8SOvcdYPfb1HA7uB5Jk2Y6CrqpSCB2p94XgTQcfOwjEwdDdQLN8EE2Mpo2fYVxrI0tsoZcBnLvEeyeeNasTiWlLfO/CciBPNi0MPLBrLFNN4Ynhy90hReCRkbPpVBAdsM/Z/m9gX+bCkoslmAjWMWTC95CefIX0i4P0g8XEjQvmb9IwgvP3M1jSGnZVIwP77Vdgvzhg37gwN1qThRHMbEyLhamMfG09hZWJ0TgbxbOzr5X4C0T33PaaXDfaCHzBtS2Fcf7qR6pSMLzOo8RPhIHCeZJe/kqlR1/48j4YJnUjrXjXxFwd9QC35+9nt4+FbnedVe4lVsSNk9HGp8wIGTZKNUFvJtZpmmyGzmY7ScdTT6Rw1408N3uv/xS2dYQ69H2j5vnuzdBz//7XpepnltzP5t19z9gw+xwNYxcu49OH10X05ik8ay9jXiBPyDhvDxrImDvIt8amh9zlxDH8au4I1i6FvolFWLREXMhX8doixIbadnxtr222Bi1xBLRwPusFVmilqT5QCtwEl+oGxH99YL1XOmwjtK42dgy5+dp3uSYCwpwavDMulOAsSdNrayEJZhPFtdW0MFa0y66R6TH3aQgL80AajPWJ86jrEvvEY+jcrxqqljHPutd26AHmtHCBpLf7lChRBMNjOIdIlbMaQrJ9z5dbBfGkd7l7CiaKqsoFTXp8bVWhhAodGCfj6VjmKyE2VrkupdD2oMZyMqkNN2k+rtxqkj0cGdctJCFbU5FkTrkZZt53s0t42z8tjlQ5Tza6FCoau1BPeuE4eTe7zPTxLvIK7YG2i366ktTrydxNWMekOiisX9pfiz6JmB544ls0eU7Mgdv0KX6lujSSJFeFKg8GmKM8v+mGQhHZbOYY6UNot1t5/ClRWHfZf4fBSNp1vz9MlLVWZfb5X8L64qLvVV7C//9L8uxhh1nKroWa2Ca5U4Va0vrwL8r2RmZeQk0hu95tn1cVeT4QfPJZ3R6WzvcfpJRhX+eGAX0oaP1CtD/r1GbTvXHplmS3252PLPfi4Hb7D42YuJM=
+sidebar_class_name: "put api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Refresh the package index"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"put"}
+  path={"/api/node/{hostname}/updatepackages"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Runs apt-get update. It reports changed: true when the Release file of a repository under /var/lib/apt/lists changed, and changed: false when each repository was unchanged.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./put-node-updatepackages.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./put-node-updatepackages.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./put-node-updatepackages.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

@@ -58,6 +58,11 @@ var sysctlKeyPattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]*$`)
 // America/Argentina/Buenos_Aires: segments of letters, digits, _, + and -
 // joined by /, never starting with - and with no dot. It becomes an
 // argument of timedatectl, so the provider checks it again.
+// PackageVersionPattern is a Debian package version, such as 8.5.0-2ubuntu10
+// or 1:2.3: a digit first, then letters, digits and . + ~ : -. It becomes
+// part of an apt-get argument, so the provider checks it again.
+var PackageVersionPattern = regexp.MustCompile(`^[0-9][A-Za-z0-9.+~:-]*$`)
+
 var TimezonePattern = regexp.MustCompile(`^[A-Za-z0-9_+][A-Za-z0-9_+-]*(/[A-Za-z0-9_+-]+)*$`)
 
 // accountNamePattern matches a POSIX system account name: it must start with
@@ -105,10 +110,10 @@ var unitNamePattern = regexp.MustCompile(`^[a-zA-Z0-9:_.@-]+$`)
 // computes it: SHA256: and the base64 of the digest.
 var sshFingerprintPattern = regexp.MustCompile(`^SHA256:[A-Za-z0-9+/]+=*$`)
 
-// packageNamePattern matches a package name as apt and dpkg take it, with an
+// PackageNamePattern matches a package name as apt and dpkg take it, with an
 // architecture (:amd64) or a version (=1.2-1). The first character is a
 // letter or digit, so the package manager cannot read the name as an option.
-var packageNamePattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9.+_:~=-]*$`)
+var PackageNamePattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9.+_:~=-]*$`)
 
 func init() {
 	// valid_target is registered here, so a struct that has it validates
@@ -174,6 +179,12 @@ func init() {
 		return sysctlKeyPattern.MatchString(fl.Field().String())
 	})
 
+	// package_version validates a package version; PackageVersionPattern
+	// says what it permits.
+	_ = instance.RegisterValidation("package_version", func(fl validator.FieldLevel) bool {
+		return PackageVersionPattern.MatchString(fl.Field().String())
+	})
+
 	// timezone_name validates an IANA timezone name; TimezonePattern says
 	// what it permits.
 	_ = instance.RegisterValidation("timezone_name", func(fl validator.FieldLevel) bool {
@@ -215,7 +226,7 @@ func init() {
 	// package_name validates a package name, which reaches the package
 	// manager's command line as root.
 	_ = instance.RegisterValidation("package_name", func(fl validator.FieldLevel) bool {
-		return packageNamePattern.MatchString(fl.Field().String())
+		return PackageNamePattern.MatchString(fl.Field().String())
 	})
 
 	// no_linebreak rejects values containing a carriage return or line feed,
@@ -229,12 +240,13 @@ func init() {
 	// generation rather than being dropped.
 	rule.Register("sysctl_key", rule.Pattern(sysctlKeyPattern.String()))
 	rule.Register("timezone_name", rule.Pattern(TimezonePattern.String()))
+	rule.Register("package_version", rule.Pattern(PackageVersionPattern.String()))
 	rule.Register("no_linebreak", rule.Pattern(`^[^\r\n]*$`))
 	rule.Register("file_mode", rule.Pattern(`^[0-7]{3,4}$`))
 	rule.Register("resource_name", rule.Pattern(resourceNamePattern.String()))
 	rule.Register("nats_name", rule.Pattern(natsNamePattern.String()))
 	rule.Register("container_id", rule.Pattern(containerIDPattern.String()))
-	rule.Register("package_name", rule.Pattern(packageNamePattern.String()))
+	rule.Register("package_name", rule.Pattern(PackageNamePattern.String()))
 	rule.Register("service_name", rule.Pattern(serviceNamePattern.String()))
 	rule.Register("unit_name", rule.Pattern(unitNamePattern.String()))
 	rule.Register("ssh_fingerprint", rule.Pattern(sshFingerprintPattern.String()))
@@ -310,6 +322,9 @@ var customHints = map[string]func(ctx context.Context, fe validator.FieldError) 
 			fe.Value(),
 		)
 	},
+	"package_version": func(_ context.Context, fe validator.FieldError) string {
+		return fmt.Sprintf("%q is not a valid package version, such as 8.5.0-2ubuntu10", fe.Value())
+	},
 	"timezone_name": func(_ context.Context, fe validator.FieldError) string {
 		return fmt.Sprintf(
 			"%q is not a valid timezone name, such as UTC or America/New_York",
@@ -353,7 +368,7 @@ var customHints = map[string]func(ctx context.Context, fe validator.FieldError) 
 		return fmt.Sprintf(
 			"%q is not a valid package name (expected: %s)",
 			fe.Value(),
-			packageNamePattern.String(),
+			PackageNamePattern.String(),
 		)
 	},
 	"container_id": func(_ context.Context, fe validator.FieldError) string {

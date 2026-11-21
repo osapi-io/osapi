@@ -122,7 +122,6 @@ func (s *ProcessorPowerPublicTestSuite) TestProcessPowerOperation() {
 				nil,
 				nil,
 				nil,
-				nil,
 				slog.Default(),
 			)
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
@@ -244,7 +243,6 @@ func (s *ProcessorPowerPublicTestSuite) TestProcessPowerReboot() {
 				nil,
 				nil,
 				nil,
-				nil,
 				slog.Default(),
 			)
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
@@ -362,7 +360,6 @@ func (s *ProcessorPowerPublicTestSuite) TestProcessPowerShutdown() {
 			processor := agent.NewNodeProcessor(
 				nil,
 				tt.setupMock(),
-				nil,
 				nil,
 				nil,
 				nil,

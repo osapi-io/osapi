@@ -648,52 +648,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Package",
-      link: {
-        type: "doc",
-        id: "gen/api/package-management-api-package-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/get-node-package",
-          label: "List installed packages",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-node-package",
-          label: "Install a package",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-node-package-by-name",
-          label: "Get a package",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/delete-node-package",
-          label: "Remove a package",
-          className: "api-method delete",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-node-package-update",
-          label: "Update package sources",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-node-package-update",
-          label: "List available updates",
-          className: "api-method get",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Node/Power",
       link: {
         type: "doc",
@@ -1044,6 +998,40 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
+      label: "Node/Package",
+      link: {
+        type: "doc",
+        id: "gen/api/package-api-package-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-package",
+          label: "List the packages installed on the host",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-package",
+          label: "Install a package",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-node-package",
+          label: "Remove a package",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-package-by-key",
+          label: "Get one installed package",
+          className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "Node/Status",
       link: {
         type: "doc",
@@ -1116,6 +1104,28 @@ const sidebar: SidebarsConfig = {
           type: "doc",
           id: "gen/api/put-node-timezone",
           label: "Set the timezone of the host",
+          className: "api-method put",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Updatepackages",
+      link: {
+        type: "doc",
+        id: "gen/api/updatepackages-api-updatepackages-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-updatepackages",
+          label: "List the packages the index has newer versions of",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-updatepackages",
+          label: "Refresh the package index",
           className: "api-method put",
         },
       ],

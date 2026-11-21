@@ -638,6 +638,29 @@ func (s *ValidationPublicTestSuite) TestGoDuration() {
 	}
 }
 
+func (s *ValidationPublicTestSuite) TestPackageVersion() {
+	for version, want := range map[string]bool{
+		"8.5.0-2ubuntu10":  true,
+		"1:2.3+dfsg-1~bpo": true,
+		"-1":               false,
+		"1 2":              false,
+		"1;reboot":         false,
+		"":                 false,
+	} {
+		s.Run(version, func() {
+			_, ok := validation.Var(context.Background(), version, "package_version")
+			s.Equal(want, ok)
+		})
+	}
+
+	type req struct {
+		Version string `validate:"omitempty,package_version"`
+	}
+	errMsg, ok := validation.Struct(context.Background(), req{Version: "-x"})
+	s.False(ok)
+	s.Contains(errMsg, "not a valid package version")
+}
+
 func (s *ValidationPublicTestSuite) TestTimezoneName() {
 	for name, want := range map[string]bool{
 		"UTC":                            true,

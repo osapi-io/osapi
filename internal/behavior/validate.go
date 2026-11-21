@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/validation"
@@ -71,6 +72,9 @@ const (
 	// RuleFails: each rule of an input field has a .Fails input that breaks
 	// it. The endpoint DSL holds its inputs to the same check.
 	RuleFails = "fails"
+	// RuleOptional: an optional field of a write's request body is left out
+	// of the JSON when it is empty, so the client does not send "" for it.
+	RuleOptional = "optional"
 	// RulePlatform: a behavior declares a provider for at least one
 	// platform, once each, and each implements every method's provider type.
 	RulePlatform = "platform"
@@ -290,6 +294,12 @@ func ValidateBehavior(
 			}
 			for _, n := range unrefused(m) {
 				add(m.Name, RuleFails, "no .Fails input breaks %s on %s", n.Rule, n.Field)
+			}
+			if b.API && m.Verb == VerbWrite {
+				for _, f := range sentEmpty(m) {
+					add(m.Name, RuleOptional,
+						"optional field %s is sent as its zero value when it is empty", f)
+				}
 			}
 			recordable := false
 			for i := range m.In.NumField() {
@@ -524,6 +534,31 @@ func unrefused(
 	for _, n := range rule.Needs(m.In, false) {
 		if !broken[n.Key()] {
 			out = append(out, n)
+		}
+	}
+
+	return out
+}
+
+// sentEmpty is each field of m's request body that is optional, its
+// validate tag starting with omitempty, but whose json tag has no
+// omitempty: the client sends "" or 0 for it, which its other rules can
+// refuse. The key is in the path, not the body.
+func sentEmpty(
+	m *Method,
+) []string {
+	var out []string
+	for i := range m.In.NumField() {
+		f := m.In.Field(i)
+		name, opts, _ := strings.Cut(f.Tag.Get("json"), ",")
+		if name == "" || name == "-" || name == m.KeyField {
+			continue
+		}
+		if !strings.HasPrefix(f.Tag.Get("validate"), "omitempty") {
+			continue
+		}
+		if !slices.Contains(strings.Split(opts, ","), "omitempty") {
+			out = append(out, name)
 		}
 	}
 

@@ -110,6 +110,19 @@ type onlySecret struct {
 }
 
 // taggedName is an input whose name is tagged for the span.
+// sentEmptyIn has an optional body field whose json tag lacks omitempty,
+// and a key and an ignored field that the rule leaves alone.
+type sentEmptyIn struct {
+	Name    string `json:"name"           validate:"required"`
+	Version string `json:"version"        validate:"omitempty,max=9"`
+	Note    string `json:"note,omitempty" validate:"omitempty,max=9"`
+	Skip    string `json:"-"              validate:"omitempty"`
+}
+
+func setSentEmpty(context.Context, fakeProvider, sentEmptyIn) (result, error) {
+	return result{}, nil
+}
+
 type untaggedIn struct {
 	Name string `json:"name"`
 }
@@ -177,6 +190,23 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 				behavior.Read("list", readList).Describe("List"),
 				behavior.Read("status", readPointer).Key("key").Describe("One"),
 				behavior.Write("create", set).Key("key").Describe("Create"),
+			),
+		},
+		{
+			name: "when a write's optional body field is sent empty",
+			b: behavior.Define("pkg", "Packages", behavior.Node, behavior.API, onDebian,
+				behavior.Write("create", setSentEmpty).Key("name").Describe("Install").
+					Fails("too long", sentEmptyIn{Name: "a", Version: "0123456789"}, "x").
+					Fails("too long", sentEmptyIn{Name: "a", Note: "0123456789"}, "x"),
+			),
+			wantRules: []string{behavior.RuleOptional},
+		},
+		{
+			name: "when the optional field is on a behavior with no API",
+			b: behavior.Define("pkg", "Packages", behavior.Node, behavior.Internal, onDebian,
+				behavior.Write("create", setSentEmpty).Key("name").Describe("Install").
+					Fails("too long", sentEmptyIn{Name: "a", Version: "0123456789"}, "x").
+					Fails("too long", sentEmptyIn{Name: "a", Note: "0123456789"}, "x"),
 			),
 		},
 		{

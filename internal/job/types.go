@@ -236,16 +236,6 @@ const (
 	OperationSSHKeyRemove = client.OpSSHKeyRemove
 )
 
-// Package operations.
-const (
-	OperationPackageList        = client.OpPackageList
-	OperationPackageGet         = client.OpPackageGet
-	OperationPackageInstall     = client.OpPackageInstall
-	OperationPackageRemove      = client.OpPackageRemove
-	OperationPackageUpdate      = client.OpPackageUpdate
-	OperationPackageListUpdates = client.OpPackageListUpdates
-)
-
 // Log operations.
 const (
 	OperationLogQuery     = client.OpLogQuery

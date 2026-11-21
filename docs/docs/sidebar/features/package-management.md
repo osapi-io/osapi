@@ -4,57 +4,56 @@ sidebar_position: 15
 
 # Package management
 
-osapi manages system packages on target hosts. It puts one API in front of the
-package manager of the host (`apt` on Debian family systems). The API can list
-installed packages, install, remove, refresh the sources and check for updates.
+osapi reads the packages installed on each host, and installs and removes them
+on the Debian family. It is two behaviors:
+
+- [package](../behaviors/package/package.md): the installed packages.
+- [updatepackages](../behaviors/updatepackages/updatepackages.md): the updates
+  that the package index has, and the refresh of the index.
 
 ## How it works
 
-The package provider uses the package manager of the host. On Debian family
-systems, it uses `dpkg-query` for reads and `apt-get` for changes. All
-operations run on the agent. The controller does not run package commands.
-
 ### List and get
 
-The list operation queries the local package database for all installed
-packages. Each entry includes the package name, version, status, and installed
-size. The get operation fetches a single package by name.
+gohai reads the installed packages on every platform: `dpkg-query` on the Debian
+family, `rpm` on the other Linux families, and Homebrew on macOS. Each package
+has its name, version, architecture, package database, summary and installed
+size. Get reads one package from the same list. A package that is not installed
+is not found.
 
-### Install
+### Install and remove
 
-Installs a package by name with `apt-get install`. If the package is already
-installed, the operation returns `changed: false`. The agent runs
-`apt-get update` automatically before it installs, so that the latest version is
-available.
+`apt-get install` and `apt-get remove` run on the Debian family only. Install
+takes an optional `version`, such as `--version 8.5.0-2ubuntu10`; with none, it
+installs the newest that the index has. On other hosts they report skipped. A
+package that is installed does not install again, and a package that is not
+installed does not remove: each reports `changed: false`. A package that is
+installed at another version than the one asked for installs that version.
+Install does not refresh the index first. Run the index refresh for the newest
+version.
 
-### Remove
+### The package index
 
-Removes a package by name with `apt-get remove`. If the package is not
-installed, the operation returns `changed: false`.
+The index is not a fact about the host. It is what the repositories have, so
+`apt` reads it, not gohai. It runs on the Debian family.
 
-### Update (Refresh sources)
-
-Refreshes the package source lists with `apt-get update`. This does not upgrade
-packages. It only updates the local cache of available packages from the
-configured repositories. When the refresh is successful, it returns
-`changed: true`.
-
-### List available updates
-
-Queries for packages that have newer versions available in the configured
-repositories. Returns each package name along with the current installed version
-and the new available version.
+- The list runs `apt list --upgradable`: each package with its installed version
+  and the version that the index has.
+- The update runs `apt-get update`. It reports `changed: true` when the Release
+  file of a repository under `/var/lib/apt/lists` changed, and `changed: false`
+  when each repository was unchanged. apt-get prints `Get:` lines on some hosts
+  even when nothing changed, so its output does not tell.
 
 ## Operations
 
-| Operation | Description                          |
-| --------- | ------------------------------------ |
-| List      | List all installed packages          |
-| Get       | Get a specific package by name       |
-| Install   | Install a package                    |
-| Remove    | Remove a package                     |
-| Update    | Refresh package sources              |
-| Updates   | List packages with available updates |
+| Operation             | Description                                 |
+| --------------------- | ------------------------------------------- |
+| package list          | List the installed packages                 |
+| package get           | Get one installed package                   |
+| package create        | Install a package                           |
+| package delete        | Remove a package                            |
+| updatepackages list   | List the packages the index has updates for |
+| updatepackages update | Refresh the package index                   |
 
 ## CLI usage
 
@@ -62,23 +61,23 @@ and the new available version.
 # List all installed packages on a host
 osapi client node package list --target web-01
 
-# Get details for a specific package
+# Get one package
 osapi client node package get --target web-01 --name nginx
 
 # Install a package
-osapi client node package install --target web-01 --name nginx
+osapi client node package create --target web-01 --name nginx
 
 # Remove a package
-osapi client node package uninstall --target web-01 --name nginx
+osapi client node package delete --target web-01 --name nginx
 
-# Refresh package sources (apt-get update)
-osapi client node package update --target web-01
+# Refresh the package index (apt-get update)
+osapi client node updatepackages update --target web-01
 
 # List available updates
-osapi client node package list --updates --target web-01
+osapi client node updatepackages list --target web-01
 
 # Broadcast install to all hosts
-osapi client node package install --target _all --name htop
+osapi client node package create --target _all --name htop
 ```
 
 All commands accept `--json` to give the raw JSON output.

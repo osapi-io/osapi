@@ -35,7 +35,6 @@ import (
 	ifaceProv "github.com/osapi-io/osapi/internal/provider/network/netplan/iface"
 	routeProv "github.com/osapi-io/osapi/internal/provider/network/netplan/route"
 	"github.com/osapi-io/osapi/internal/provider/network/ping"
-	aptProv "github.com/osapi-io/osapi/internal/provider/node/apt"
 	certProv "github.com/osapi-io/osapi/internal/provider/node/certificate"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
@@ -205,17 +204,6 @@ func (e hostEnv) user() userProv.Provider {
 		return userProv.NewDarwinProvider()
 	default:
 		return userProv.NewLinuxProvider()
-	}
-}
-
-func (e hostEnv) packages() aptProv.Provider {
-	switch e.platform {
-	case "debian":
-		return aptProv.NewDebianProvider(e.log, e.exec)
-	case "darwin":
-		return aptProv.NewDarwinProvider()
-	default:
-		return aptProv.NewLinuxProvider()
 	}
 }
 

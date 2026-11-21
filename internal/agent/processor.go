@@ -28,7 +28,6 @@ import (
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/job"
-	"github.com/osapi-io/osapi/internal/provider/node/apt"
 	logProv "github.com/osapi-io/osapi/internal/provider/node/log"
 	"github.com/osapi-io/osapi/internal/provider/node/ntp"
 	"github.com/osapi-io/osapi/internal/provider/node/power"
@@ -57,7 +56,6 @@ func NewNodeProcessor(
 	powerProvider power.Provider,
 	processProvider processProv.Provider,
 	userProvider user.Provider,
-	packageProvider apt.Provider,
 	logProvider logProv.Provider,
 	serviceProvider serviceProv.Provider,
 	logger *slog.Logger,
@@ -81,8 +79,6 @@ func NewNodeProcessor(
 			return processGroupOperation(ctx, userProvider, logger, req)
 		case "sshKey":
 			return processSSHKeyOperation(ctx, userProvider, logger, req)
-		case "package":
-			return processPackageOperation(ctx, packageProvider, logger, req)
 		case "log":
 			return processLogOperation(ctx, logProvider, logger, req)
 		case "service":
