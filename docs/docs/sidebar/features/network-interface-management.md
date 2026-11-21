@@ -18,6 +18,12 @@ interface has its state, MAC address, MTU and addresses. `dhcp4` is true when a
 route of the interface has proto `dhcp`. `primary` is true when the interface
 has the default route. `list` leaves out the loopback.
 
+Routes are the [route behavior](../behaviors/route/route.md). `list` reads each
+route of the main table through gohai on every platform: `ip route` on Linux,
+and `netstat` on macOS. `get` reads the routes that go out of one interface. A
+route has its destination, gateway, interface, family, metric, `proto` (where it
+came from, such as `dhcp`, `kernel` or `static`) and scope.
+
 `create`, `update` and `delete` write a Netplan file of the interface's own on
 the Debian family, through the internal
 [netplan behavior](../behaviors/netplan/netplan.md):
@@ -27,8 +33,12 @@ the Debian family, through the internal
   `false` unless you give them, so the interface has only the addresses that you
   give. A gateway is a default route: Netplan deprecates `gateway4` and
   `gateway6`.
-- **Routes**: `osapi-{name}-routes.yaml` configures the static routes of the
-  named interface.
+- **Routes**: `osapi-{name}-routes.yaml` has the static routes of the named
+  interface. You give each route as `ip route` writes it:
+  `<destination> via <gateway>`, with `metric <n>` after it if you give one,
+  such as `10.0.0.0/8 via 192.168.1.1 metric 100`. The destination is in CIDR
+  notation, and the gateway is of the same family. osapi refuses a default
+  route: set the gateway of the interface with the interface behavior.
 
 osapi writes the config only under a Netplan definition that is the interface's
 own. If a match defines the interface, such as the `all` definition of
@@ -55,9 +65,9 @@ The DNS behavior also supports delete: it removes the interface's own
   they apply. If the generated configuration is not valid, the agent puts back
   the previous file, and the job returns an error. The previous configuration
   stays.
-- **Protection of the default route.** The route provider does not delete a
-  route if that removes the default gateway. Thus the host does not lose its
-  connection.
+- **Protection of the default route.** The route behavior does not write a
+  default route (`0.0.0.0/0` or `::/0`). Thus a wrong route does not cut the
+  host off.
 - **The osapi prefix.** osapi manages only files with the `osapi-` prefix. It
   does not touch system files from installers or other tools.
 - **SHA idempotency.** `update` calculates the SHA of the new content and
@@ -121,17 +131,17 @@ osapi client node network route list --target web-01
 
 # Get routes for an interface
 osapi client node network route get \
-  --target web-01 --interface eth0
+  --target web-01 --interface-name eth0
 
 # Create static routes
 osapi client node network route create \
-  --target web-01 --interface eth0 \
-  --route 10.0.0.0/8:192.168.1.1 \
-  --route 172.16.0.0/12:192.168.1.1:100
+  --target web-01 --interface-name eth1 \
+  --routes "10.0.0.0/8 via 192.168.1.1" \
+  --routes "172.16.0.0/12 via 192.168.1.1 metric 100"
 
 # Delete routes for an interface
 osapi client node network route delete \
-  --target web-01 --interface eth0
+  --target web-01 --interface-name eth1
 
 # Delete DNS config for an interface
 osapi client node network dns delete \
@@ -164,11 +174,11 @@ Skipped and failed hosts appear with their error in the output.
 
 ## Supported platforms
 
-| OS Family | Interface list, get | Interface writes, routes |
-| --------- | ------------------- | ------------------------ |
-| Debian    | Yes                 | Yes                      |
-| Linux     | Yes                 | Skipped                  |
-| Darwin    | Yes                 | Skipped                  |
+| OS Family | Interface and route list, get | Interface and route writes |
+| --------- | ----------------------------- | -------------------------- |
+| Debian    | Yes                           | Yes                        |
+| Linux     | Yes                           | Skipped                    |
+| Darwin    | Yes                           | Skipped                    |
 
 On a platform that is not supported, an operation returns `status: skipped`. It
 does not fail. Refer to [Platform Detection](../sdk/platform/detection.md) for
@@ -176,10 +186,9 @@ how osapi finds the OS family.
 
 ## Container behavior
 
-Interface writes and route operations return `status: skipped` inside
-containers. Interface list and get read the container's own interfaces. Netplan
-requires direct host access and is not available in standard container
-environments.
+Interface and route writes return `status: skipped` inside containers. List and
+get read the container's own interfaces and routes. Netplan requires direct host
+access and is not available in standard container environments.
 
 ## Permissions
 

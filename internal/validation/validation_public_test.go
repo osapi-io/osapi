@@ -290,6 +290,33 @@ func (s *ValidationPublicTestSuite) TestAlphanumOrFact() {
 	}
 }
 
+func (s *ValidationPublicTestSuite) TestInterfaceName() {
+	tests := []struct {
+		name  string
+		field string
+		want  bool
+	}{
+		{name: "when a plain name", field: "eth0", want: true},
+		{name: "when a name with a dash", field: "br-lan", want: true},
+		{name: "when a VLAN name with a dot", field: "eth0.100", want: true},
+		{name: "when 15 characters", field: "abcdefghijklmno", want: true},
+		{name: "when a known fact", field: "@fact.interface.primary", want: true},
+		{name: "when 16 characters", field: "abcdefghijklmnop"},
+		{name: "when it starts with a dot", field: ".eth0"},
+		{name: "when it starts with a dash", field: "-eth0"},
+		{name: "when it has a slash", field: "../shadow"},
+		{name: "when it has a semicolon", field: "eth0;reboot"},
+		{name: "when an unknown fact", field: "@fact.nonexistent"},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			_, ok := validation.Var(context.Background(), tt.field, "required,interface_name")
+			s.Equal(tt.want, ok)
+		})
+	}
+}
+
 func (s *ValidationPublicTestSuite) TestIpOrFact() {
 	tests := []struct {
 		name         string

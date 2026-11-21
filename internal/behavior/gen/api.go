@@ -545,8 +545,9 @@ func completed(
 }
 
 // rows are the result rows the handler makes of one host's output, as
-// behaviorapi's rows does: one per element of a list, else one, each with
-// the host's name and status.
+// dispatch's rows does: one per element of a list, else one, each with the
+// host's name and status. An empty list is one row with only those, so the
+// host still shows that it answered.
 func rows(
 	m *behavior.Method,
 	host string,
@@ -561,7 +562,7 @@ func rows(
 			outputs = []map[string]any{one}
 		}
 	}
-	if len(outputs) == 0 && m.Out.Kind() != reflect.Slice {
+	if len(outputs) == 0 {
 		outputs = []map[string]any{{}}
 	}
 	for _, row := range outputs {

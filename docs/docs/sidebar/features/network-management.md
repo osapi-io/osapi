@@ -10,12 +10,12 @@ privileges, and the agents make the changes.
 
 ## What it manages
 
-| Resource  | Operations           | Description                                  |
-| --------- | -------------------- | -------------------------------------------- |
-| DNS       | Read, Update, Delete | Nameservers and search domains per interface |
-| Ping      | Read                 | ICMP connectivity check to a target host     |
-| Interface | Full CRUD            | Each interface, and osapi's Netplan config   |
-| Route     | Full CRUD            | Netplan static route configuration           |
+| Resource  | Operations           | Description                                   |
+| --------- | -------------------- | --------------------------------------------- |
+| DNS       | Read, Update, Delete | Nameservers and search domains per interface  |
+| Ping      | Read                 | ICMP connectivity check to a target host      |
+| Interface | Full CRUD            | Each interface, and osapi's Netplan config    |
+| Route     | Full CRUD            | Each route, and osapi's Netplan static routes |
 
 For interface and route management details, see
 [Network Interface Management](network-interface-management.md).
@@ -95,6 +95,11 @@ authentication settings.
 | Interface create | `network:write` |
 | Interface update | `network:write` |
 | Interface delete | `network:write` |
+| Route list       | `network:read`  |
+| Route get        | `network:read`  |
+| Route create     | `network:write` |
+| Route update     | `network:write` |
+| Route delete     | `network:write` |
 | Ping             | `network:read`  |
 
 The `admin` and `write` roles include both `network:read` and `network:write`.

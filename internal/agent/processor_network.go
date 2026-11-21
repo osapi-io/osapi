@@ -28,14 +28,12 @@ import (
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/job"
-	"github.com/osapi-io/osapi/internal/provider/network/netplan/route"
 	"github.com/osapi-io/osapi/internal/provider/network/ping"
 )
 
 // NewNetworkProcessor returns a ProcessorFunc that handles network-related operations.
 func NewNetworkProcessor(
 	pingProvider ping.Provider,
-	routeProvider route.Provider,
 	logger *slog.Logger,
 ) ProcessorFunc {
 	logger = logger.With(slog.String("subsystem", "agent.processor.network"))
@@ -47,8 +45,6 @@ func NewNetworkProcessor(
 		switch baseOperation {
 		case "ping":
 			return processNetworkPing(ctx, pingProvider, logger, req)
-		case "route":
-			return processRouteOperation(ctx, routeProvider, logger, req)
 		default:
 			return nil, fmt.Errorf("unsupported network operation: %s", req.Operation)
 		}

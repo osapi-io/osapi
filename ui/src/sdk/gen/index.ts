@@ -20,13 +20,13 @@ export * from './log-management-api-log-operations/log-management-api-log-operat
 export * from './memory-api-memory-operations/memory-api-memory-operations';
 export * from './nats-api-nats/nats-api-nats';
 export * from './network-management-api-network-operations/network-management-api-network-operations';
-export * from './network-management-api-route-operations/network-management-api-route-operations';
 export * from './node-file-operations-api-node-file-operations/node-file-operations-api-node-file-operations';
 export * from './ntp-management-api-ntp-operations/ntp-management-api-ntp-operations';
 export * from './os-api-os-operations/os-api-os-operations';
 export * from './package-api-package-operations/package-api-package-operations';
 export * from './power-management-api-power-operations/power-management-api-power-operations';
 export * from './process-management-api-process-operations/process-management-api-process-operations';
+export * from './route-api-network-route-operations/route-api-network-route-operations';
 export * from './schedule-management-api-schedule-operations/schedule-management-api-schedule-operations';
 export * from './service-management-api-service-operations/service-management-api-service-operations';
 export * from './status-api-status-operations/status-api-status-operations';

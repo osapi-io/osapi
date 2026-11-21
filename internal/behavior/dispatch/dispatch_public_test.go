@@ -159,6 +159,17 @@ func (s *DispatchPublicTestSuite) TestRun() {
 			wantBody: `{"job_id":"job-1","results":[{"hostname":"server1","key":"a","status":"ok"}]}`,
 		},
 		{
+			name:   "when a list is empty, the host's row has only its name and status",
+			method: "list",
+			target: "server1",
+			setup: func() {
+				s.jobs.EXPECT().
+					Query(gomock.Any(), "server1", job.CategoryBehavior, op+"list", kvIn{}).
+					Return("job-1", completed("server1", `[]`, nil), nil)
+			},
+			wantBody: `{"job_id":"job-1","results":[{"hostname":"server1","status":"ok"}]}`,
+		},
+		{
 			name:   "when a read is broadcast, each host's answer is its own row",
 			method: "get",
 			target: "_all",

@@ -22,7 +22,8 @@ package client_test
 
 import (
 	"context"
-	"errors"
+	"encoding/json"
+	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -43,775 +44,164 @@ func (suite *RoutePublicTestSuite) SetupTest() {
 	suite.ctx = context.Background()
 }
 
-func (suite *RoutePublicTestSuite) TestList() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.RouteListResult]], error)
-	}{
-		{
-			name: "when listing routes returns results",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","routes":[{"destination":"10.0.0.0/8","gateway":"192.168.1.1","interface":"eth0","metric":100}]}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteListResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("agent1", resp.Data.Results[0].Hostname)
-				suite.Equal("ok", resp.Data.Results[0].Status)
-				suite.Len(resp.Data.Results[0].Routes, 1)
-				suite.Equal("10.0.0.0/8", resp.Data.Results[0].Routes[0].Destination)
-				suite.Equal("192.168.1.1", resp.Data.Results[0].Routes[0].Gateway)
-				suite.Equal("eth0", resp.Data.Results[0].Routes[0].Interface)
-				suite.Equal(100, resp.Data.Results[0].Routes[0].Metric)
-			},
+func (suite *RoutePublicTestSuite) calls() map[string]func(c *client.Client) (any, error) {
+	opts := client.RouteConfigOpts{Routes: []client.RouteItem{{To: "10.0.0.0/8", Via: "10.0.1.1"}}}
+
+	return map[string]func(c *client.Client) (any, error){
+		"list": func(c *client.Client) (any, error) { return c.Route.List(suite.ctx, "_any") },
+		"get":  func(c *client.Client) (any, error) { return c.Route.Get(suite.ctx, "_any", "eth0") },
+		"create": func(c *client.Client) (any, error) {
+			return c.Route.Create(suite.ctx, "_any", "eth1", opts)
 		},
+		"update": func(c *client.Client) (any, error) {
+			return c.Route.Update(suite.ctx, "_any", "eth1", opts)
+		},
+		"delete": func(c *client.Client) (any, error) { return c.Route.Delete(suite.ctx, "_any", "eth1") },
+	}
+}
+
+func (suite *RoutePublicTestSuite) TestRoute() {
+	row := `{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"web-01","status":"ok",` +
+		`"interface_name":"eth1","changed":true}]}`
+	tests := []struct {
+		name      string
+		handler   http.HandlerFunc
+		serverURL string
+		wantErr   string
+	}{
+		{name: "when the API answers", handler: func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(row))
+		}},
 		{
-			name: "when server returns 403 returns AuthError",
+			name:    "when the API refuses",
+			wantErr: "forbidden",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusForbidden)
 				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
 			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteListResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
 		},
 		{
-			name: "when server returns 401 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusUnauthorized)
-				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteListResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusUnauthorized, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 500 returns ServerError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusInternalServerError)
-				_, _ = w.Write([]byte(`{"error":"internal error"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteListResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.ServerError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusInternalServerError, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteListResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "route list")
-			},
-		},
-		{
-			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
+			name:    "when the body is empty",
+			wantErr: "nil response body",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusOK)
 			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteListResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
 		},
+		{name: "when the server is unreachable", serverURL: "http://127.0.0.1:0", wantErr: "route"},
 	}
-
 	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
-
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Route.List(suite.ctx, "_any")
-			tc.validateFunc(resp, err)
-		})
-	}
-}
-
-func (suite *RoutePublicTestSuite) TestGet() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.RouteGetResult]], error)
-	}{
-		{
-			name: "when getting routes returns result",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","routes":[{"destination":"10.0.0.0/8","gateway":"192.168.1.1"}]}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteGetResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("agent1", resp.Data.Results[0].Hostname)
-				suite.Len(resp.Data.Results[0].Routes, 1)
-				suite.Equal("10.0.0.0/8", resp.Data.Results[0].Routes[0].Destination)
-			},
-		},
-		{
-			name: "when server returns 404 returns NotFoundError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusNotFound)
-				_, _ = w.Write([]byte(`{"error":"interface not found"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteGetResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.NotFoundError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusNotFound, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteGetResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteGetResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "route get")
-			},
-		},
-		{
-			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteGetResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
-
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Route.Get(suite.ctx, "_any", "eth0")
-			tc.validateFunc(resp, err)
-		})
-	}
-}
-
-func (suite *RoutePublicTestSuite) TestCreate() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		opts         client.RouteConfigOpts
-		validateFunc func(*client.Response[client.Collection[client.RouteMutationResult]], error)
-	}{
-		{
-			name: "when creating routes returns result",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","interface":"eth0","changed":true}]}`,
-					),
-				)
-			},
-			opts: client.RouteConfigOpts{
-				Routes: []client.RouteItem{
-					{To: "10.0.0.0/8", Via: "192.168.1.1"},
-				},
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteMutationResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("agent1", resp.Data.Results[0].Hostname)
-				suite.Equal("ok", resp.Data.Results[0].Status)
-				suite.Equal("eth0", resp.Data.Results[0].Interface)
-				suite.True(resp.Data.Results[0].Changed)
-			},
-		},
-		{
-			name: "when creating routes with metric sets metric",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","changed":true}]}`,
-					),
-				)
-			},
-			opts: func() client.RouteConfigOpts {
-				metric := 100
-
-				return client.RouteConfigOpts{
-					Routes: []client.RouteItem{
-						{To: "10.0.0.0/8", Via: "192.168.1.1", Metric: &metric},
-					},
+		for method, fn := range suite.calls() {
+			suite.Run(tc.name+": "+method, func() {
+				url := tc.serverURL
+				if url == "" {
+					server := httptest.NewServer(tc.handler)
+					defer server.Close()
+					url = server.URL
 				}
-			}(),
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteMutationResult]],
-				err error,
-			) {
-				suite.NoError(err)
+				resp, err := fn(client.New(url, "test-token", client.WithLogger(slog.Default())))
+				if tc.wantErr != "" {
+					suite.ErrorContains(err, tc.wantErr)
+
+					return
+				}
+				suite.Require().NoError(err)
 				suite.NotNil(resp)
-			},
-		},
-		{
-			name: "when server returns 400 returns ValidationError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusBadRequest)
-				_, _ = w.Write([]byte(`{"error":"invalid routes"}`))
-			},
-			opts: client.RouteConfigOpts{
-				Routes: []client.RouteItem{},
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.ValidationError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusBadRequest, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			opts: client.RouteConfigOpts{
-				Routes: []client.RouteItem{
-					{To: "10.0.0.0/8", Via: "192.168.1.1"},
-				},
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			opts: client.RouteConfigOpts{
-				Routes: []client.RouteItem{
-					{To: "10.0.0.0/8", Via: "192.168.1.1"},
-				},
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "route create")
-			},
-		},
-		{
-			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			opts: client.RouteConfigOpts{
-				Routes: []client.RouteItem{
-					{To: "10.0.0.0/8", Via: "192.168.1.1"},
-				},
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
-
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Route.Create(suite.ctx, "_any", "eth0", tc.opts)
-			tc.validateFunc(resp, err)
-		})
+			})
+		}
 	}
 }
 
-func (suite *RoutePublicTestSuite) TestUpdate() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		opts         client.RouteConfigOpts
-		validateFunc func(*client.Response[client.Collection[client.RouteMutationResult]], error)
-	}{
+// TestRowsGroupByHost checks that the rows of a list or a get, one per
+// route, become one result per host, and a host that failed has no routes.
+func (suite *RoutePublicTestSuite) TestRowsGroupByHost() {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"results":[` +
+			`{"hostname":"web-01","status":"ok","destination":"default","gateway":"10.0.0.1",` +
+			`"interface":"eth0","family":"inet","metric":100,"proto":"dhcp"},` +
+			`{"hostname":"web-01","status":"ok","destination":"10.0.0.0/24","interface":"eth0",` +
+			`"family":"inet","proto":"kernel","scope":"link"},` +
+			`{"hostname":"web-02","status":"failed","error":"boom"}]}`))
+	}))
+	defer server.Close()
+	c := client.New(server.URL, "t", client.WithLogger(slog.Default()))
+	want := []client.RouteInfo{
 		{
-			name: "when updating routes returns result",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","interface":"eth0","changed":true}]}`,
-					),
-				)
-			},
-			opts: client.RouteConfigOpts{
-				Routes: []client.RouteItem{
-					{To: "10.0.0.0/8", Via: "192.168.1.1"},
-				},
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteMutationResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.True(resp.Data.Results[0].Changed)
-			},
+			Destination: "default", Gateway: "10.0.0.1", Interface: "eth0", Family: "inet",
+			Metric: 100, Proto: "dhcp",
 		},
 		{
-			name: "when server returns 404 returns NotFoundError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusNotFound)
-				_, _ = w.Write([]byte(`{"error":"interface not found"}`))
-			},
-			opts: client.RouteConfigOpts{
-				Routes: []client.RouteItem{
-					{To: "10.0.0.0/8", Via: "192.168.1.1"},
-				},
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.NotFoundError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusNotFound, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 400 returns ValidationError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusBadRequest)
-				_, _ = w.Write([]byte(`{"error":"invalid"}`))
-			},
-			opts: client.RouteConfigOpts{},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.ValidationError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusBadRequest, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			opts: client.RouteConfigOpts{
-				Routes: []client.RouteItem{
-					{To: "10.0.0.0/8", Via: "192.168.1.1"},
-				},
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			opts: client.RouteConfigOpts{
-				Routes: []client.RouteItem{
-					{To: "10.0.0.0/8", Via: "192.168.1.1"},
-				},
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "route update")
-			},
-		},
-		{
-			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			opts: client.RouteConfigOpts{
-				Routes: []client.RouteItem{
-					{To: "10.0.0.0/8", Via: "192.168.1.1"},
-				},
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
+			Destination: "10.0.0.0/24",
+			Interface:   "eth0",
+			Family:      "inet",
+			Proto:       "kernel",
+			Scope:       "link",
 		},
 	}
 
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
+	listed, err := c.Route.List(suite.ctx, "_all")
+	suite.Require().NoError(err)
+	suite.Equal([]client.RouteListResult{
+		{Hostname: "web-01", Status: "ok", Routes: want},
+		{Hostname: "web-02", Status: "failed", Error: "boom"},
+	}, listed.Data.Results)
 
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Route.Update(suite.ctx, "_any", "eth0", tc.opts)
-			tc.validateFunc(resp, err)
-		})
-	}
+	got, err := c.Route.Get(suite.ctx, "_all", "eth0")
+	suite.Require().NoError(err)
+	suite.Equal(
+		client.RouteGetResult{Hostname: "web-01", Status: "ok", Routes: want},
+		got.Data.Results[0],
+	)
 }
 
-func (suite *RoutePublicTestSuite) TestDelete() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.RouteMutationResult]], error)
-	}{
-		{
-			name: "when deleting routes returns result",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","interface":"eth0","changed":true}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteMutationResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("agent1", resp.Data.Results[0].Hostname)
-				suite.Equal("eth0", resp.Data.Results[0].Interface)
-				suite.True(resp.Data.Results[0].Changed)
-			},
-		},
-		{
-			name: "when broadcast delete returns multiple results",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"server1","status":"ok","changed":true},{"hostname":"server2","status":"failed","error":"not found"}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteMutationResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Len(resp.Data.Results, 2)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
+func (suite *RoutePublicTestSuite) TestMutationFields() {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(
+			[]byte(`{"results":[{"hostname":"web-01","status":"ok","interface_name":"eth1",` +
+				`"changed":true},{"hostname":"web-02","status":"skipped","error":"unsupported"}]}`),
+		)
+	}))
+	defer server.Close()
+	c := client.New(server.URL, "t", client.WithLogger(slog.Default()))
 
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "route delete")
-			},
-		},
-		{
-			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.RouteMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
+	deleted, err := c.Route.Delete(suite.ctx, "_all", "eth1")
+	suite.Require().NoError(err)
+	suite.Equal([]client.RouteMutationResult{
+		{Hostname: "web-01", Status: "ok", Interface: "eth1", Changed: true},
+		{Hostname: "web-02", Status: "skipped", Error: "unsupported"},
+	}, deleted.Data.Results)
+}
 
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
-		},
-	}
+// TestRequestBody checks that each route becomes the string the API takes.
+func (suite *RoutePublicTestSuite) TestRequestBody() {
+	var body map[string]any
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		raw, _ := io.ReadAll(r.Body)
+		body = map[string]any{}
+		_ = json.Unmarshal(raw, &body)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"results":[]}`))
+	}))
+	defer server.Close()
+	c := client.New(server.URL, "t", client.WithLogger(slog.Default()))
+	metric := 100
 
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
-
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Route.Delete(suite.ctx, "_any", "eth0")
-			tc.validateFunc(resp, err)
-		})
-	}
+	_, err := c.Route.Create(
+		suite.ctx,
+		"_any",
+		"eth1",
+		client.RouteConfigOpts{Routes: []client.RouteItem{
+			{To: "10.0.0.0/8", Via: "10.0.1.1"},
+			{To: "2001:db8:1::/48", Via: "2001:db8::1", Metric: &metric},
+		}},
+	)
+	suite.Require().NoError(err)
+	suite.Equal(map[string]any{"routes": []any{
+		"10.0.0.0/8 via 10.0.1.1", "2001:db8:1::/48 via 2001:db8::1 metric 100",
+	}}, body)
 }
 
 func TestRoutePublicTestSuite(

@@ -830,7 +830,6 @@ func ExportProviders(
 		fileStateBucket: "file-state",
 		files:           files,
 	}
-	route := e.netplan()
 
 	return map[string]any{
 		"host":        e.host(),
@@ -846,7 +845,6 @@ func ExportProviders(
 		"logs":        e.logs(),
 		"certificate": e.certificate(),
 		"service":     e.service(),
-		"route":       route,
 	}
 }
 

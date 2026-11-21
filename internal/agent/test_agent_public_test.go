@@ -103,7 +103,7 @@ func newTestAgent(
 
 	registry.Register(
 		"network",
-		agent.NewNetworkProcessor(p.pingProvider, nil, logger),
+		agent.NewNetworkProcessor(p.pingProvider, logger),
 		p.pingProvider,
 	)
 

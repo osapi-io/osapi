@@ -37,12 +37,3 @@ func validateHostname(
 ) (string, bool) {
 	return validation.Var(ctx, hostname, "required,min=1,valid_target")
 }
-
-// validateInterfaceName validates an interfaceName path parameter.
-// Same upstream limitation as validateHostname.
-func validateInterfaceName(
-	ctx context.Context,
-	name string,
-) (string, bool) {
-	return validation.Var(ctx, name, "required,alphanum_or_fact")
-}

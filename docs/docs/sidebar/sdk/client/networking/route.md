@@ -4,7 +4,8 @@ sidebar_position: 4
 
 # Route
 
-Manage static network routes through Netplan.
+Read the routes of a host, and manage the static routes that osapi has of an
+interface through Netplan.
 
 ## Methods
 
@@ -36,13 +37,15 @@ Manage static network routes through Netplan.
 
 ### RouteInfo
 
-| Field         | Type     | Description                  |
-| ------------- | -------- | ---------------------------- |
-| `Destination` | `string` | Destination in CIDR notation |
-| `Gateway`     | `string` | Gateway IP address           |
-| `Interface`   | `string` | Network interface name       |
-| `Metric`      | `int`    | Route metric (priority)      |
-| `Scope`       | `string` | Route scope                  |
+| Field         | Type     | Description                                    |
+| ------------- | -------- | ---------------------------------------------- |
+| `Destination` | `string` | Destination in CIDR notation, or `default`     |
+| `Gateway`     | `string` | Gateway address; empty for a route on the link |
+| `Interface`   | `string` | Network interface name                         |
+| `Family`      | `string` | `inet` or `inet6`                              |
+| `Metric`      | `int`    | Route metric (priority)                        |
+| `Proto`       | `string` | Where the route came from, such as `dhcp`      |
+| `Scope`       | `string` | Route scope, such as `link`; empty for global  |
 
 ### RouteGetResult (Get)
 
@@ -80,7 +83,7 @@ for _, r := range resp.Data.Results {
     }
 }
 
-// Get managed routes for a specific interface
+// Get the routes that go out of an interface
 resp, err := c.Route.Get(ctx, "web-01", "eth0")
 for _, rt := range resp.Data.First().Routes {
     fmt.Printf("%s via %s\n", rt.Destination, rt.Gateway)
@@ -135,6 +138,8 @@ for a complete working example.
 | List, Get              | `network:read`  |
 | Create, Update, Delete | `network:write` |
 
-Route management is supported on the Debian OS family (Ubuntu, Debian,
-Raspbian). On unsupported platforms (Darwin, generic Linux), operations return
-`status: skipped`.
+List and Get run on every platform. Create, Update and Delete run on the Debian
+OS family (Ubuntu, Debian, Raspbian). On other platforms (Darwin, generic
+Linux), and in a container, they return `status: skipped`. A default route is
+refused: set the gateway of the interface with the Interface service. A host
+that refuses a write returns `status: failed` with the reason in `Error`.

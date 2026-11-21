@@ -14,7 +14,7 @@ import (
 // GetRequest is the request of dns get: its target and its input.
 type GetRequest struct {
 	Hostname      string `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
-	InterfaceName string `doc:"The interface, such as eth0, or a fact such as @fact.interface.primary" in:"path" json:"interface_name" param:"NetworkDnsInterface_name" validate:"required,alphanum_or_fact"`
+	InterfaceName string `doc:"The interface, such as eth0, or a fact such as @fact.interface.primary" in:"path" json:"interface_name" param:"NetworkDnsInterface_name" validate:"required,interface_name"`
 }
 
 // NetworkDnsEntry is the result of dns on one host.
@@ -44,7 +44,7 @@ func HandleGet(
 // UpdateRequest is the request of dns update: its target and its input.
 type UpdateRequest struct {
 	Hostname      string                  `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
-	InterfaceName string                  `doc:"The interface, such as eth0, or a fact such as @fact.interface.primary" in:"path" json:"interface_name" param:"NetworkDnsInterface_name" validate:"required,alphanum_or_fact"`
+	InterfaceName string                  `doc:"The interface, such as eth0, or a fact such as @fact.interface.primary" in:"path" json:"interface_name" param:"NetworkDnsInterface_name" validate:"required,interface_name"`
 	Body          NetworkDnsUpdateRequest `in:"body" validate:"required"`
 }
 
@@ -82,7 +82,7 @@ func HandleUpdate(
 // DeleteRequest is the request of dns delete: its target and its input.
 type DeleteRequest struct {
 	Hostname      string `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
-	InterfaceName string `doc:"The interface, such as eth0, or a fact such as @fact.interface.primary" in:"path" json:"interface_name" param:"NetworkDnsInterface_name" validate:"required,alphanum_or_fact"`
+	InterfaceName string `doc:"The interface, such as eth0, or a fact such as @fact.interface.primary" in:"path" json:"interface_name" param:"NetworkDnsInterface_name" validate:"required,interface_name"`
 }
 
 // NetworkDnsDeleteResponse is each target host's result.

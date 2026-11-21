@@ -17,7 +17,7 @@ on the same host, so it has no route, no command and no permissions.
 
 | Uses | Used by |
 | ---- | ------- |
-| [managedfile](../managedfile/managedfile.md) | [dns](../dns/dns.md), [interface](../interface/interface.md) |
+| [managedfile](../managedfile/managedfile.md) | [dns](../dns/dns.md), [interface](../interface/interface.md), [route](../route/route.md) |
 
 ## Where it runs
 

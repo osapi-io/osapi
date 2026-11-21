@@ -17,9 +17,10 @@ components:
       name: interface_name
       required: true
       schema:
+        pattern: ^(@fact\.[a-z0-9_.]+|[a-zA-Z0-9][a-zA-Z0-9._-]{0,14})$
         type: string
       x-oapi-codegen-extra-tags:
-        validate: required,alphanum_or_fact
+        validate: required,interface_name
   schemas:
     ErrorResponse:
       $ref: ../../../../controller/api/components/gen/api.yaml#/components/schemas/ErrorResponse
