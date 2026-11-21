@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/process/gen"
@@ -39,15 +41,24 @@ func (s *Process) PostNodeProcessSignal(
 	request gen.PostNodeProcessSignalRequestObject,
 ) (gen.PostNodeProcessSignalResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.PostNodeProcessSignal400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeProcessSignal400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	if errMsg, ok := validatePid(ctx, request.Pid); !ok {
-		return gen.PostNodeProcessSignal400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeProcessSignal400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
-		return gen.PostNodeProcessSignal400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeProcessSignal400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	hostname := request.Hostname
@@ -83,7 +94,10 @@ func (s *Process) PostNodeProcessSignal(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeProcessSignal500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeProcessSignal500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -105,12 +119,18 @@ func (s *Process) PostNodeProcessSignal(
 
 	if resp.Status == job.StatusFailed && resp.ErrorCode == job.ErrorCodeNotFound {
 		errMsg := resp.Error
-		return gen.PostNodeProcessSignal404JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeProcessSignal404JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Reason(err),
+		}, nil
 	}
 
 	if resp.Status == job.StatusFailed {
 		errMsg := resp.Error
-		return gen.PostNodeProcessSignal500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeProcessSignal500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	var result processProv.SignalResult
@@ -152,7 +172,10 @@ func (s *Process) postNodeProcessSignalBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeProcessSignal500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeProcessSignal500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	var items []gen.ProcessSignalResult

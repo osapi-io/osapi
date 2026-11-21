@@ -304,6 +304,45 @@ func (e DockerResponseStatus) Valid() bool {
 	}
 }
 
+// Defines values for ErrorResponseReason.
+const (
+	Conflict       ErrorResponseReason = "conflict"
+	Forbidden      ErrorResponseReason = "forbidden"
+	InvalidRequest ErrorResponseReason = "invalid_request"
+	NotFound       ErrorResponseReason = "not_found"
+	NotInstalled   ErrorResponseReason = "not_installed"
+	NotManaged     ErrorResponseReason = "not_managed"
+	ServerError    ErrorResponseReason = "server_error"
+	Unauthorized   ErrorResponseReason = "unauthorized"
+	Unavailable    ErrorResponseReason = "unavailable"
+)
+
+// Valid indicates whether the value is a known member of the ErrorResponseReason enum.
+func (e ErrorResponseReason) Valid() bool {
+	switch e {
+	case Conflict:
+		return true
+	case Forbidden:
+		return true
+	case InvalidRequest:
+		return true
+	case NotFound:
+		return true
+	case NotInstalled:
+		return true
+	case NotManaged:
+		return true
+	case ServerError:
+		return true
+	case Unauthorized:
+		return true
+	case Unavailable:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for FileDeployRequestContentType.
 const (
 	FileDeployRequestContentTypeRaw      FileDeployRequestContentType = "raw"
@@ -2386,15 +2425,18 @@ type Entry struct {
 
 // ErrorResponse defines model for ErrorResponse.
 type ErrorResponse struct {
-	// Code The error code.
-	Code *int `json:"code,omitempty"`
-
 	// Details Additional details about the error.
 	Details *string `json:"details,omitempty"`
 
 	// Error A description of the error that occurred.
 	Error *string `json:"error,omitempty"`
+
+	// Reason Why the request failed, as a word that a program can branch on. The HTTP status is the class of the problem; the reason is the cause, and the error is the message for a person, which can change between releases. invalid_request: the request breaks a rule, such as a missing field (400). unauthorized: no token, or a token that is not valid (401). forbidden: the token does not have the permission (403). not_found: the host or osapi does not have what the request names (404). not_managed: the item is there, but osapi did not deploy it, so osapi does not change it (409). not_installed: the host does not have a program that the request needs (409). conflict: the state of the item blocks the request, such as a create of one that exists (409). unavailable: a part that osapi depends on is down, such as NATS (503). server_error: the controller failed; its log has the cause (500).
+	Reason *ErrorResponseReason `json:"reason,omitempty"`
 }
+
+// ErrorResponseReason Why the request failed, as a word that a program can branch on. The HTTP status is the class of the problem; the reason is the cause, and the error is the message for a person, which can change between releases. invalid_request: the request breaks a rule, such as a missing field (400). unauthorized: no token, or a token that is not valid (401). forbidden: the token does not have the permission (403). not_found: the host or osapi does not have what the request names (404). not_managed: the item is there, but osapi did not deploy it, so osapi does not change it (409). not_installed: the host does not have a program that the request needs (409). conflict: the state of the item blocks the request, such as a create of one that exists (409). unavailable: a part that osapi depends on is down, such as NATS (503). server_error: the controller failed; its log has the cause (500).
+type ErrorResponseReason string
 
 // FactKeyEntry defines model for FactKeyEntry.
 type FactKeyEntry struct {
@@ -16653,6 +16695,7 @@ type DeleteNodeScheduleResponse struct {
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -16688,6 +16731,7 @@ type GetNodeScheduleByNameResponse struct {
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -16723,6 +16767,7 @@ type PutNodeScheduleResponse struct {
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -24749,6 +24794,13 @@ func ParseDeleteNodeScheduleResponse(rsp *http.Response) (*DeleteNodeScheduleRes
 		}
 		response.JSON404 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -24810,6 +24862,13 @@ func ParseGetNodeScheduleByNameResponse(rsp *http.Response) (*GetNodeScheduleByN
 		}
 		response.JSON404 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -24870,6 +24929,13 @@ func ParsePutNodeScheduleResponse(rsp *http.Response) (*PutNodeScheduleResponse,
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

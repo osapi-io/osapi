@@ -39,11 +39,17 @@ func (s *Container) PostNodeContainerDockerStart(
 	request gen.PostNodeContainerDockerStartRequestObject,
 ) (gen.PostNodeContainerDockerStartResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.PostNodeContainerDockerStart400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerStart400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	if errMsg, ok := validation.Var(ctx, request.Id, "required,container_id"); !ok {
-		return gen.PostNodeContainerDockerStart400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerStart400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	hostname := request.Hostname
@@ -70,9 +76,15 @@ func (s *Container) PostNodeContainerDockerStart(
 	if err != nil {
 		errMsg := err.Error()
 		if apierr.IsMissing(err) {
-			return gen.PostNodeContainerDockerStart404JSONResponse{Error: &errMsg}, nil
+			return gen.PostNodeContainerDockerStart404JSONResponse{
+				Error:  &errMsg,
+				Reason: apierr.Reason(err),
+			}, nil
 		}
-		return gen.PostNodeContainerDockerStart500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerStart500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -124,7 +136,10 @@ func (s *Container) postNodeContainerDockerStartBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeContainerDockerStart500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerStart500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	msg := "container started"

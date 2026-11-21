@@ -41,15 +41,24 @@ func (u *User) PostNodeUserPassword(
 	request gen.PostNodeUserPasswordRequestObject,
 ) (gen.PostNodeUserPasswordResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.PostNodeUserPassword400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeUserPassword400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	if errMsg, ok := validateName(ctx, request.Name); !ok {
-		return gen.PostNodeUserPassword400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeUserPassword400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
-		return gen.PostNodeUserPassword400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeUserPassword400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	hostname := request.Hostname
@@ -65,7 +74,10 @@ func (u *User) PostNodeUserPassword(
 	hash, err := hashPassword(request.Body.Password)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeUserPassword500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeUserPassword500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	data := map[string]string{
@@ -87,9 +99,15 @@ func (u *User) PostNodeUserPassword(
 	if err != nil {
 		errMsg := err.Error()
 		if apierr.IsMissing(err) {
-			return gen.PostNodeUserPassword404JSONResponse{Error: &errMsg}, nil
+			return gen.PostNodeUserPassword404JSONResponse{
+				Error:  &errMsg,
+				Reason: apierr.Reason(err),
+			}, nil
 		}
-		return gen.PostNodeUserPassword500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeUserPassword500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -145,7 +163,10 @@ func (u *User) postNodeUserPasswordBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeUserPassword500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeUserPassword500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	var apiResponses []gen.UserMutationResult

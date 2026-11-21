@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/process/gen"
@@ -38,7 +40,7 @@ func (s *Process) GetNodeProcess(
 	request gen.GetNodeProcessRequestObject,
 ) (gen.GetNodeProcessResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.GetNodeProcess400JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeProcess400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	hostname := request.Hostname
@@ -56,7 +58,7 @@ func (s *Process) GetNodeProcess(
 	jobID, resp, err := s.JobClient.Query(ctx, hostname, "node", job.OperationProcessList, nil)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeProcess500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeProcess500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -157,7 +159,7 @@ func (s *Process) getNodeProcessListBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeProcess500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeProcess500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	var items []gen.ProcessEntry

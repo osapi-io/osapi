@@ -3755,6 +3755,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >-
+            The entry is on the host, but osapi did not deploy it, so osapi does
+            not change it.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Error retrieving scheduled entry.
           content:
@@ -3812,6 +3820,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >-
+            The entry is on the host, but osapi did not deploy it, so osapi does
+            not change it.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Error updating scheduled entry.
           content:
@@ -3858,6 +3874,14 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Scheduled entry not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >-
+            The entry is on the host, but osapi did not deploy it, so osapi does
+            not change it.
           content:
             application/json:
               schema:
@@ -7393,10 +7417,34 @@ components:
           type: string
           description: Additional details about the error.
           example: Failed due to network timeout.
-        code:
-          type: integer
-          description: The error code.
-          example: 500
+        reason:
+          type: string
+          description: >-
+            Why the request failed, as a word that a program can branch on. The
+            HTTP status is the class of the problem; the reason is the cause,
+            and the error is the message for a person, which can change between
+            releases. invalid_request: the request breaks a rule, such as a
+            missing field (400). unauthorized: no token, or a token that is not
+            valid (401). forbidden: the token does not have the permission
+            (403). not_found: the host or osapi does not have what the request
+            names (404). not_managed: the item is there, but osapi did not
+            deploy it, so osapi does not change it (409). not_installed: the
+            host does not have a program that the request needs (409). conflict:
+            the state of the item blocks the request, such as a create of one
+            that exists (409). unavailable: a part that osapi depends on is
+            down, such as NATS (503). server_error: the controller failed; its
+            log has the cause (500).
+          enum:
+            - invalid_request
+            - unauthorized
+            - forbidden
+            - not_found
+            - not_managed
+            - not_installed
+            - conflict
+            - unavailable
+            - server_error
+          example: not_found
     Admission:
       properties:
         admitted_at:

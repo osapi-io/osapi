@@ -92,6 +92,23 @@ func (s *ApierrPublicTestSuite) TestIsMissing() {
 
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
+// TestReason: a failed job's cause names the reason of its answer, and each
+// status has its own.
+func (s *ApierrPublicTestSuite) TestReason() {
+	for err, want := range map[error]string{
+		fmt.Errorf("user: %w", job.ErrNotFound):        "not_found",
+		fmt.Errorf("cron: %w", job.ErrNotManaged):      "not_managed",
+		fmt.Errorf("package: %w", job.ErrNotInstalled): "not_installed",
+		errors.New("anything else"):                    "not_found",
+	} {
+		s.Equal(want, string(*apierr.Reason(err)), err.Error())
+	}
+	s.Equal("invalid_request", string(*apierr.Invalid()))
+	s.Equal("server_error", string(*apierr.ServerError()))
+	s.Equal("unauthorized", string(*apierr.Unauthorized()))
+	s.Equal("forbidden", string(*apierr.Forbidden()))
+}
+
 func TestApierrPublicTestSuite(
 	t *testing.T,
 ) {

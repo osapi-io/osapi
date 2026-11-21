@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/ntp/gen"
@@ -38,7 +40,7 @@ func (s *Ntp) GetNodeNtp(
 	request gen.GetNodeNtpRequestObject,
 ) (gen.GetNodeNtpResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.GetNodeNtp400JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeNtp400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	hostname := request.Hostname
@@ -62,7 +64,7 @@ func (s *Ntp) GetNodeNtp(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeNtp500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeNtp500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -110,7 +112,7 @@ func (s *Ntp) getNodeNtpBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeNtp500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeNtp500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	allResults := make([]gen.NtpStatusEntry, 0)

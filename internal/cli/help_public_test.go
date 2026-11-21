@@ -200,7 +200,7 @@ func (suite *HelpPublicTestSuite) TestPrintError() {
 			validateFunc: func(out string) {
 				assert.JSONEq(
 					suite.T(),
-					`{"error":"unknown flag: --nope","code":"usage_error"}`,
+					`{"error":"unknown flag: --nope","reason":"usage_error"}`,
 					out,
 				)
 			},
@@ -212,7 +212,7 @@ func (suite *HelpPublicTestSuite) TestPrintError() {
 			validateFunc: func(out string) {
 				assert.JSONEq(
 					suite.T(),
-					`{"error":"connection refused","code":"error"}`,
+					`{"error":"connection refused","reason":"error"}`,
 					out,
 				)
 			},
@@ -257,7 +257,7 @@ func (suite *HelpPublicTestSuite) TestHelpJSON() {
 			validateFunc: func(doc cli.HelpDocument) {
 				assert.Equal(suite.T(), "1.2.3", doc.Version)
 				assert.Equal(suite.T(), "osapi", doc.Command.Path)
-				assert.Contains(suite.T(), doc.Command.Long, `"code"`)
+				assert.Contains(suite.T(), doc.Command.Long, `"reason"`)
 				names := make([]string, 0, len(doc.Command.Subcommands))
 				for _, s := range doc.Command.Subcommands {
 					names = append(names, s.Name)
@@ -301,7 +301,7 @@ func (suite *HelpPublicTestSuite) TestHelpJSON() {
 	}
 }
 
-func (suite *HelpPublicTestSuite) TestExitCodeAndAPICode() {
+func (suite *HelpPublicTestSuite) TestExitCodeAndAPIReason() {
 	root, _ := newRoot()
 	root.SetArgs([]string{"get", "--nope"})
 	_, err := root.ExecuteC()
@@ -310,15 +310,15 @@ func (suite *HelpPublicTestSuite) TestExitCodeAndAPICode() {
 	assert.Equal(suite.T(), cli.ExitError, cli.ExitCode(errors.New("boom")))
 
 	for status, want := range map[int]string{
-		400: cli.CodeInvalidRequest,
-		401: cli.CodeUnauthorized,
-		403: cli.CodeForbidden,
-		404: cli.CodeNotFound,
-		409: cli.CodeConflict,
-		503: cli.CodeServerError,
-		418: cli.CodeAPIError,
+		400: cli.ReasonInvalidRequest,
+		401: cli.ReasonUnauthorized,
+		403: cli.ReasonForbidden,
+		404: cli.ReasonNotFound,
+		409: cli.ReasonConflict,
+		503: cli.ReasonServerError,
+		418: cli.ReasonAPIError,
 	} {
-		assert.Equal(suite.T(), want, cli.APICode(status))
+		assert.Equal(suite.T(), want, cli.APIReason(status))
 	}
 }
 

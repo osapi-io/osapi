@@ -39,11 +39,17 @@ func (s *Container) DeleteNodeContainerDockerByID(
 	request gen.DeleteNodeContainerDockerByIDRequestObject,
 ) (gen.DeleteNodeContainerDockerByIDResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.DeleteNodeContainerDockerByID400JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeContainerDockerByID400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	if errMsg, ok := validation.Var(ctx, request.Id, "required,container_id"); !ok {
-		return gen.DeleteNodeContainerDockerByID400JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeContainerDockerByID400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	hostname := request.Hostname
@@ -83,9 +89,15 @@ func (s *Container) DeleteNodeContainerDockerByID(
 	if err != nil {
 		errMsg := err.Error()
 		if apierr.IsMissing(err) {
-			return gen.DeleteNodeContainerDockerByID404JSONResponse{Error: &errMsg}, nil
+			return gen.DeleteNodeContainerDockerByID404JSONResponse{
+				Error:  &errMsg,
+				Reason: apierr.Reason(err),
+			}, nil
 		}
-		return gen.DeleteNodeContainerDockerByID500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeContainerDockerByID500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -145,7 +157,10 @@ func (s *Container) deleteNodeContainerDockerRemoveBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.DeleteNodeContainerDockerByID500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeContainerDockerByID500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	msg := "container removed"

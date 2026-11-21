@@ -28,17 +28,20 @@ import (
 	"github.com/osapi-io/osapi/internal/behaviors/netplan"
 )
 
-// The host of the examples: eth0 has resolvectl's servers and domain.
+// The host of the examples: osapi0 has resolvectl's servers and domain. The
+// integration test runs the write examples on a CI runner, which makes
+// osapi0, a dummy interface, so they never change the runner's own network,
+// whose interface is not always eth0.
 var linuxHost = []behavior.HostOption{
-	behavior.Exists("/sys/class/net/eth0/ifindex", "2"),
-	behavior.Prints("resolvectl dns", "Global:\nLink 2 (eth0): 1.1.1.1 8.8.8.8\n"),
-	behavior.Prints("resolvectl domain", "Global:\nLink 2 (eth0): example.com\n"),
+	behavior.Exists("/sys/class/net/osapi0/ifindex", "2"),
+	behavior.Prints("resolvectl dns", "Global:\nLink 2 (osapi0): 1.1.1.1 8.8.8.8\n"),
+	behavior.Prints("resolvectl domain", "Global:\nLink 2 (osapi0): example.com\n"),
 }
 
-// eth0File and eth0YAML are the netplan file that sets eth0's resolvers.
+// osapi0File and osapi0YAML are the netplan file that sets osapi0's resolvers.
 const (
-	eth0File = netplan.Dir + "/osapi-dns-eth0.yaml"
-	eth0YAML = "network:\n  version: 2\n  ethernets:\n    eth0:\n      nameservers:\n" +
+	osapi0File = netplan.Dir + "/osapi-dns-osapi0.yaml"
+	osapi0YAML = "network:\n  version: 2\n  ethernets:\n    osapi0:\n      nameservers:\n" +
 		"        addresses:\n          - 9.9.9.9\n        search:\n          - example.com\n"
 )
 
@@ -64,7 +67,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Explain("Reads the servers and the search domains of the interface: resolvectl "+
 			"on Linux, with resolv.conf on a host that has no resolvers per interface, "+
 			"such as a container, and scutil on macOS.").
-		Example("An interface with servers and a domain", GetInput{InterfaceName: "eth0"},
+		Example("An interface with servers and a domain", GetInput{InterfaceName: "osapi0"},
 			Entry{Servers: []string{"1.1.1.1", "8.8.8.8"}, SearchDomains: []string{"example.com"}},
 			append(
 				[]behavior.HostOption{
@@ -72,7 +75,7 @@ var Behavior = behavior.Register(behavior.Define(
 				},
 				linuxHost...)...,
 		).
-		Example("A container with no resolvers per interface", GetInput{InterfaceName: "eth0"},
+		Example("A container with no resolvers per interface", GetInput{InterfaceName: "osapi0"},
 			Entry{Servers: []string{"10.0.0.2"}, SearchDomains: []string{"svc.local"}},
 			behavior.OnPlatform(behavior.PlatformDebian, behavior.PlatformLinux),
 			behavior.Exists("/etc/resolv.conf", "nameserver 10.0.0.2\nsearch svc.local\n"),
@@ -92,7 +95,7 @@ var Behavior = behavior.Register(behavior.Define(
 					"resolver #1\n  nameserver[0] : 1.1.1.1\n  if_index : 14 (en0)\n",
 				),
 			}, linuxHost...)...).
-		Fails("An interface name that is not alphanumeric", GetInput{InterfaceName: "eth0;reboot"},
+		Fails("An interface name that is not alphanumeric", GetInput{InterfaceName: "osapi0;reboot"},
 			"InterfaceName"),
 	behavior.Write("update", Update).Key("interface_name").
 		On(behavior.PlatformDebian).
@@ -104,30 +107,30 @@ var Behavior = behavior.Register(behavior.Define(
 			"the interface's servers or domains, and an interface with no resolvers yet starts from none. override_dhcp drops the servers DHCP "+
 			"gives. It runs on the Debian family, and elsewhere, and in a container, "+
 			"reports skipped.").
-		Example("Set the servers of an interface", UpdateInput{InterfaceName: "eth0", Servers: []string{"9.9.9.9"}},
-			Result{InterfaceName: "eth0", Changed: true},
+		Example("Set the servers of an interface", UpdateInput{InterfaceName: "osapi0", Servers: []string{"9.9.9.9"}},
+			Result{InterfaceName: "osapi0", Changed: true},
 			append([]behavior.HostOption{
-				behavior.Prints("netplan status --format json", `{"eth0":{"type":"ethernet","id":"eth0"}}`),
-				behavior.Wrote(eth0File, eth0YAML),
+				behavior.Prints("netplan status --format json", `{"osapi0":{"type":"ethernet","id":"osapi0"}}`),
+				behavior.Wrote(osapi0File, osapi0YAML),
 				behavior.Ran("netplan", "generate"),
 				behavior.Ran("netplan", "apply"),
 			}, linuxHost...)...,
 		).
 		Example("Set the search domains, and keep the servers",
 			UpdateInput{
-				InterfaceName: "eth0",
+				InterfaceName: "osapi0",
 				SearchDomains: []string{"corp.example"},
 				OverrideDHCP:  true,
 			},
-			Result{InterfaceName: "eth0", Changed: true},
+			Result{InterfaceName: "osapi0", Changed: true},
 			append([]behavior.HostOption{
 				behavior.Prints(
 					"netplan status --format json",
-					`{"eth0":{"type":"ethernet","id":"eth0"}}`,
+					`{"osapi0":{"type":"ethernet","id":"osapi0"}}`,
 				),
 				behavior.Wrote(
-					eth0File,
-					"network:\n  version: 2\n  ethernets:\n    eth0:\n      nameservers:\n"+
+					osapi0File,
+					"network:\n  version: 2\n  ethernets:\n    osapi0:\n      nameservers:\n"+
 						"        addresses:\n          - 1.1.1.1\n          - 8.8.8.8\n        search:\n          - corp.example\n"+
 						"      dhcp4-overrides:\n        use-dns: false\n      dhcp6-overrides:\n        use-dns: false\n",
 				),
@@ -136,18 +139,18 @@ var Behavior = behavior.Register(behavior.Define(
 			}, linuxHost...)...,
 		).
 		Example("An interface with no resolvers yet",
-			UpdateInput{InterfaceName: "eth0", Servers: []string{"9.9.9.9"}},
-			Result{InterfaceName: "eth0", Changed: true},
-			behavior.Exists("/sys/class/net/eth0/ifindex", "2"),
+			UpdateInput{InterfaceName: "osapi0", Servers: []string{"9.9.9.9"}},
+			Result{InterfaceName: "osapi0", Changed: true},
+			behavior.Exists("/sys/class/net/osapi0/ifindex", "2"),
 			behavior.Prints("resolvectl dns", "Global:\nLink 3 (eth1): 1.1.1.1\n"),
 			behavior.Prints("resolvectl domain", "Global:\n"),
-			behavior.Prints("netplan status --format json", `{"eth0":{"type":"ethernet","id":"eth0"}}`),
-			behavior.Wrote(eth0File, "network:\n  version: 2\n  ethernets:\n    eth0:\n      nameservers:\n"+
+			behavior.Prints("netplan status --format json", `{"osapi0":{"type":"ethernet","id":"osapi0"}}`),
+			behavior.Wrote(osapi0File, "network:\n  version: 2\n  ethernets:\n    osapi0:\n      nameservers:\n"+
 				"        addresses:\n          - 9.9.9.9\n"),
 			behavior.Ran("netplan", "generate"),
 			behavior.Ran("netplan", "apply"),
 		).
-		Fails("No servers and no search domains", UpdateInput{InterfaceName: "eth0"},
+		Fails("No servers and no search domains", UpdateInput{InterfaceName: "osapi0"},
 			"give servers or search domains").
 		Fails("An interface the host does not have, to keep the servers of",
 			UpdateInput{
@@ -157,28 +160,31 @@ var Behavior = behavior.Register(behavior.Define(
 			append([]behavior.HostOption{
 				behavior.Prints(
 					"netplan status --format json",
-					`{"eth0":{"type":"ethernet","id":"eth0"}}`,
+					`{"osapi0":{"type":"ethernet","id":"osapi0"}}`,
 				),
 			}, linuxHost...)...).
 		Fails("A server that is not an IP address",
-			UpdateInput{InterfaceName: "eth0", Servers: []string{"one.one"}}, "ip").
+			UpdateInput{InterfaceName: "osapi0", Servers: []string{"one.one"}}, "ip").
 		Fails("A search domain that is not a host name",
-			UpdateInput{InterfaceName: "eth0", SearchDomains: []string{"bad domain"}}, "hostname").
+			UpdateInput{
+				InterfaceName: "osapi0",
+				SearchDomains: []string{"bad domain"},
+			}, "hostname").
 		Fails("More than 16 servers",
 			UpdateInput{
-				InterfaceName: "eth0",
+				InterfaceName: "osapi0",
 				Servers:       strings.Split(strings.Repeat("1.1.1.1 ", 17), " ")[:17],
 			},
 			"Servers").
 		Fails("More than 16 search domains",
 			UpdateInput{
-				InterfaceName: "eth0",
+				InterfaceName: "osapi0",
 				SearchDomains: strings.Split(strings.Repeat("a.b ", 17), " ")[:17],
 			},
 			"SearchDomains").
 		Fails("An interface name that is not alphanumeric",
 			UpdateInput{
-				InterfaceName: "eth0;reboot",
+				InterfaceName: "osapi0;reboot",
 				Servers:       []string{"9.9.9.9"},
 			}, "InterfaceName"),
 	behavior.Write("delete", Delete).Key("interface_name").
@@ -186,18 +192,18 @@ var Behavior = behavior.Register(behavior.Define(
 		Describe("Drop the DNS resolvers osapi set on an interface").
 		Explain("Removes the interface's netplan file and applies what is left. An "+
 			"interface osapi set nothing on does not change.").
-		Example("An interface osapi set", DeleteInput{InterfaceName: "eth0"},
-			Result{InterfaceName: "eth0", Changed: true},
+		Example("An interface osapi set", DeleteInput{InterfaceName: "osapi0"},
+			Result{InterfaceName: "osapi0", Changed: true},
 			append(
 				slices.Clone(linuxHost),
-				behavior.After(UpdateInput{InterfaceName: "eth0", Servers: []string{"9.9.9.9"}}),
-				behavior.Prints("netplan status --format json", `{"eth0":{"type":"ethernet","id":"eth0"}}`),
-				behavior.Removed(eth0File),
+				behavior.After(UpdateInput{InterfaceName: "osapi0", Servers: []string{"9.9.9.9"}}),
+				behavior.Prints("netplan status --format json", `{"osapi0":{"type":"ethernet","id":"osapi0"}}`),
+				behavior.Removed(osapi0File),
 				behavior.Ran("netplan", "apply"),
 			)...,
 		).
-		Example("An interface osapi set nothing on", DeleteInput{InterfaceName: "eth0"},
-			Result{InterfaceName: "eth0"}).
-		Fails("An interface name that is not alphanumeric", DeleteInput{InterfaceName: "eth0;reboot"},
+		Example("An interface osapi set nothing on", DeleteInput{InterfaceName: "osapi0"},
+			Result{InterfaceName: "osapi0"}).
+		Fails("An interface name that is not alphanumeric", DeleteInput{InterfaceName: "osapi0;reboot"},
 			"InterfaceName"),
 ))

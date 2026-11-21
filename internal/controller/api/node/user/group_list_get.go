@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/user/gen"
@@ -38,7 +40,7 @@ func (u *User) GetNodeGroup(
 	request gen.GetNodeGroupRequestObject,
 ) (gen.GetNodeGroupResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.GetNodeGroup400JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeGroup400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	hostname := request.Hostname
@@ -56,7 +58,7 @@ func (u *User) GetNodeGroup(
 	jobID, resp, err := u.JobClient.Query(ctx, hostname, "group", job.OperationGroupList, nil)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeGroup500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeGroup500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -97,7 +99,7 @@ func (u *User) getNodeGroupBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeGroup500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeGroup500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	allResults := make([]gen.GroupEntry, 0)

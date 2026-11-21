@@ -74,7 +74,7 @@ func LogFatal(
 	if err != nil {
 		msg += ": " + err.Error()
 	}
-	doc := ErrorDocument{Error: msg, Code: CodeFatal}
+	doc := ErrorDocument{Error: msg, Reason: ReasonFatal}
 	for i := 0; i+1 < len(kvPairs); i += 2 {
 		if doc.Details == nil {
 			doc.Details = map[string]string{}

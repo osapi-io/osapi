@@ -173,6 +173,11 @@ export type getNodeScheduleByNameResponse404 = {
   status: 404
 }
 
+export type getNodeScheduleByNameResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type getNodeScheduleByNameResponse500 = {
   data: ErrorResponse
   status: 500
@@ -181,7 +186,7 @@ export type getNodeScheduleByNameResponse500 = {
 export type getNodeScheduleByNameResponseSuccess = (getNodeScheduleByNameResponse200) & {
   headers: Headers;
 };
-export type getNodeScheduleByNameResponseError = (getNodeScheduleByNameResponse400 | getNodeScheduleByNameResponse401 | getNodeScheduleByNameResponse403 | getNodeScheduleByNameResponse404 | getNodeScheduleByNameResponse500) & {
+export type getNodeScheduleByNameResponseError = (getNodeScheduleByNameResponse400 | getNodeScheduleByNameResponse401 | getNodeScheduleByNameResponse403 | getNodeScheduleByNameResponse404 | getNodeScheduleByNameResponse409 | getNodeScheduleByNameResponse500) & {
   headers: Headers;
 };
 
@@ -238,6 +243,11 @@ export type putNodeScheduleResponse404 = {
   status: 404
 }
 
+export type putNodeScheduleResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type putNodeScheduleResponse500 = {
   data: ErrorResponse
   status: 500
@@ -246,7 +256,7 @@ export type putNodeScheduleResponse500 = {
 export type putNodeScheduleResponseSuccess = (putNodeScheduleResponse200) & {
   headers: Headers;
 };
-export type putNodeScheduleResponseError = (putNodeScheduleResponse400 | putNodeScheduleResponse401 | putNodeScheduleResponse403 | putNodeScheduleResponse404 | putNodeScheduleResponse500) & {
+export type putNodeScheduleResponseError = (putNodeScheduleResponse400 | putNodeScheduleResponse401 | putNodeScheduleResponse403 | putNodeScheduleResponse404 | putNodeScheduleResponse409 | putNodeScheduleResponse500) & {
   headers: Headers;
 };
 
@@ -318,6 +328,11 @@ export type deleteNodeScheduleResponse404 = {
   status: 404
 }
 
+export type deleteNodeScheduleResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type deleteNodeScheduleResponse500 = {
   data: ErrorResponse
   status: 500
@@ -326,7 +341,7 @@ export type deleteNodeScheduleResponse500 = {
 export type deleteNodeScheduleResponseSuccess = (deleteNodeScheduleResponse200) & {
   headers: Headers;
 };
-export type deleteNodeScheduleResponseError = (deleteNodeScheduleResponse400 | deleteNodeScheduleResponse401 | deleteNodeScheduleResponse403 | deleteNodeScheduleResponse404 | deleteNodeScheduleResponse500) & {
+export type deleteNodeScheduleResponseError = (deleteNodeScheduleResponse400 | deleteNodeScheduleResponse401 | deleteNodeScheduleResponse403 | deleteNodeScheduleResponse404 | deleteNodeScheduleResponse409 | deleteNodeScheduleResponse500) & {
   headers: Headers;
 };
 

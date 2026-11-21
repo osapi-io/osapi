@@ -34,9 +34,9 @@ import (
 const rootContract = `With --json, a command that fails writes its error to stderr as one JSON
 document:
 
-    {"error": "<message>", "code": "<error_code>"}
+    {"error": "<message>", "reason": "<reason>"}
 
-Match on "code"; the message can change between releases.
+Match on "reason"; the message can change between releases.
 
 Exit codes, shared by every command:
 

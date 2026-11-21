@@ -335,6 +335,24 @@ func (s *ScheduleDeletePublicTestSuite) TestDeleteNodeSchedule() {
 			},
 		},
 		{
+			name: "when osapi did not deploy the entry, it is a 409 not_managed",
+			request: gen.DeleteNodeScheduleRequestObject{
+				Hostname: "server1",
+				Name:     "unmanaged",
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(gomock.Any(), "server1", "schedule", job.OperationCronDelete, gomock.Any()).
+					Return("", nil, fmt.Errorf("cron entry not managed: %w", job.ErrNotManaged))
+			},
+			validateFunc: func(resp gen.DeleteNodeScheduleResponseObject) {
+				r, ok := resp.(gen.DeleteNodeSchedule409JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Reason)
+				s.Equal("not_managed", string(*r.Reason))
+			},
+		},
+		{
 			name: "not found error",
 			request: gen.DeleteNodeScheduleRequestObject{
 				Hostname: "server1",

@@ -40,11 +40,11 @@ func (u *User) GetNodeUserByName(
 	request gen.GetNodeUserByNameRequestObject,
 ) (gen.GetNodeUserByNameResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.GetNodeUserByName400JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeUserByName400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	if errMsg, ok := validateName(ctx, request.Name); !ok {
-		return gen.GetNodeUserByName400JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeUserByName400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	hostname := request.Hostname
@@ -71,9 +71,15 @@ func (u *User) GetNodeUserByName(
 	if err != nil {
 		errMsg := err.Error()
 		if apierr.IsMissing(err) {
-			return gen.GetNodeUserByName404JSONResponse{Error: &errMsg}, nil
+			return gen.GetNodeUserByName404JSONResponse{
+				Error:  &errMsg,
+				Reason: apierr.Reason(err),
+			}, nil
 		}
-		return gen.GetNodeUserByName500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeUserByName500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -145,7 +151,10 @@ func (u *User) getNodeUserByNameBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeUserByName500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeUserByName500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	allResults := make([]gen.UserEntry, 0)

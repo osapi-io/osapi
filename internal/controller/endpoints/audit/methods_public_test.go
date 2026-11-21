@@ -398,7 +398,7 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 				s.store.EXPECT().ListAll(gomock.Any()).Return(nil, errors.New("nats: timeout"))
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: `{"error":"failed to list all audit entries"}`,
+			wantBody: `{"error":"failed to list all audit entries","reason":"server_error"}`,
 		},
 	}
 	for _, tc := range tests {

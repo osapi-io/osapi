@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/certificate/gen"
@@ -38,11 +40,17 @@ func (s *Certificate) DeleteNodeCertificateCa(
 	request gen.DeleteNodeCertificateCaRequestObject,
 ) (gen.DeleteNodeCertificateCaResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.DeleteNodeCertificateCa400JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeCertificateCa400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	if errMsg, ok := validateName(ctx, request.Name); !ok {
-		return gen.DeleteNodeCertificateCa400JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeCertificateCa400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	hostname := request.Hostname
@@ -68,7 +76,10 @@ func (s *Certificate) DeleteNodeCertificateCa(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.DeleteNodeCertificateCa500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeCertificateCa500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -124,7 +135,10 @@ func (s *Certificate) deleteNodeCertificateCaBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.DeleteNodeCertificateCa500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeCertificateCa500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	var apiResponses []gen.CertificateCAMutationEntry

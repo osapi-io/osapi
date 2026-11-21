@@ -39,21 +39,25 @@ func checkError(
 		return nil
 	}
 
-	msg := extractErrorMessage(statusCode, responses...)
+	e := APIError{
+		StatusCode: statusCode,
+		Message:    extractErrorMessage(statusCode, responses...),
+		Reason:     extractReason(responses...),
+	}
 
 	switch statusCode {
 	case 400:
-		return &ValidationError{APIError{StatusCode: statusCode, Message: msg}}
+		return &ValidationError{e}
 	case 401, 403:
-		return &AuthError{APIError{StatusCode: statusCode, Message: msg}}
+		return &AuthError{e}
 	case 404:
-		return &NotFoundError{APIError{StatusCode: statusCode, Message: msg}}
+		return &NotFoundError{e}
 	case 409:
-		return &ConflictError{APIError{StatusCode: statusCode, Message: msg}}
+		return &ConflictError{e}
 	case 500:
-		return &ServerError{APIError{StatusCode: statusCode, Message: msg}}
+		return &ServerError{e}
 	default:
-		return &UnexpectedStatusError{APIError{StatusCode: statusCode, Message: msg}}
+		return &UnexpectedStatusError{e}
 	}
 }
 
@@ -70,4 +74,17 @@ func extractErrorMessage(
 	}
 
 	return fmt.Sprintf("unexpected status %d", statusCode)
+}
+
+// extractReason is the reason of the first error body that has one.
+func extractReason(
+	responses ...*gen.ErrorResponse,
+) string {
+	for _, r := range responses {
+		if r != nil && r.Reason != nil {
+			return string(*r.Reason)
+		}
+	}
+
+	return ""
 }

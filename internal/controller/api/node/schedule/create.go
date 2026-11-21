@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/schedule/gen"
@@ -39,11 +41,11 @@ func (s *Schedule) PostNodeSchedule(
 	request gen.PostNodeScheduleRequestObject,
 ) (gen.PostNodeScheduleResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.PostNodeSchedule400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeSchedule400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
-		return gen.PostNodeSchedule400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeSchedule400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	entry := cronProv.Entry{
@@ -89,7 +91,10 @@ func (s *Schedule) PostNodeSchedule(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeSchedule500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeSchedule500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -145,7 +150,10 @@ func (s *Schedule) postNodeScheduleCreateBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeSchedule500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeSchedule500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	var apiResponses []gen.ScheduleMutationResult

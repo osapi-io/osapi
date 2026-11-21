@@ -23,6 +23,7 @@ package schedule
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 
 	"github.com/google/uuid"
@@ -41,19 +42,19 @@ func (s *Schedule) PutNodeSchedule(
 	request gen.PutNodeScheduleRequestObject,
 ) (gen.PutNodeScheduleResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.PutNodeSchedule400JSONResponse{Error: &errMsg}, nil
+		return gen.PutNodeSchedule400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	if errMsg, ok := validateName(ctx, request.Name); !ok {
-		return gen.PutNodeSchedule400JSONResponse{Error: &errMsg}, nil
+		return gen.PutNodeSchedule400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
-		return gen.PutNodeSchedule400JSONResponse{Error: &errMsg}, nil
+		return gen.PutNodeSchedule400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	if errMsg, ok := validation.AtLeastOneField(request.Body); !ok {
-		return gen.PutNodeSchedule400JSONResponse{Error: &errMsg}, nil
+		return gen.PutNodeSchedule400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	entry := cronProv.Entry{
@@ -97,10 +98,19 @@ func (s *Schedule) PutNodeSchedule(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		if apierr.IsMissing(err) {
-			return gen.PutNodeSchedule404JSONResponse{Error: &errMsg}, nil
+		if errors.Is(err, job.ErrNotManaged) {
+			return gen.PutNodeSchedule409JSONResponse{
+				Error:  &errMsg,
+				Reason: apierr.Reason(err),
+			}, nil
 		}
-		return gen.PutNodeSchedule500JSONResponse{Error: &errMsg}, nil
+		if apierr.IsMissing(err) {
+			return gen.PutNodeSchedule404JSONResponse{
+				Error:  &errMsg,
+				Reason: apierr.Reason(err),
+			}, nil
+		}
+		return gen.PutNodeSchedule500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -156,7 +166,7 @@ func (s *Schedule) putNodeScheduleUpdateBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PutNodeSchedule500JSONResponse{Error: &errMsg}, nil
+		return gen.PutNodeSchedule500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	var apiResponses []gen.ScheduleMutationResult

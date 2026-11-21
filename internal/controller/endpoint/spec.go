@@ -277,6 +277,18 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindError,
+			Name: `.Because(reason)`,
+			Does: "Gives a mapped error a reason other than the reason of its status, such as Conflict(behavior.ErrNotManaged, doc).Because(ReasonNotManaged). Each error answer is {error, reason}: the status is the class of the problem, the reason is the cause that a program branches on, one of Reasons, and the message is for a person. Each helper sets the reason of its status: NotFound not_found, Conflict conflict, Invalid invalid_request, Forbidden forbidden, Unavailable unavailable.",
+			When: "When two errors of one status are different causes, such as not_managed and not_installed beside conflict.",
+		},
+		{
+			Kind: KindError,
+			Name: "ReasonFor(status)",
+			Does: "The reason of a status that no mapped error names, such as a route that does not exist, or a 500, which is server_error.",
+			When: "In a writer of error answers outside the generated routes, such as the error handler of the API.",
+		},
+		{
+			Kind: KindError,
 			Name: `NotFound(err, "doc")`,
 			Does: "Maps err to 404.",
 			When: "When the thing the key names is not there.",

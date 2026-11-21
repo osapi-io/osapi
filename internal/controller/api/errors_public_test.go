@@ -57,13 +57,13 @@ func (s *ErrorsPublicTestSuite) TestErrorBody() {
 				)
 			},
 			wantCode: http.StatusBadRequest,
-			wantBody: `{"error":"query parameter 'path' is required"}`,
+			wantBody: `{"error":"query parameter 'path' is required","reason":"invalid_request"}`,
 		},
 		{
 			name:     "when the route is not there, the 404 is in error",
 			method:   http.MethodGet,
 			wantCode: http.StatusNotFound,
-			wantBody: `{"error":"Not Found"}`,
+			wantBody: `{"error":"Not Found","reason":"not_found"}`,
 		},
 		{
 			name:   "when a route fails with a plain error, it is a 500 that tells no detail",
@@ -72,7 +72,7 @@ func (s *ErrorsPublicTestSuite) TestErrorBody() {
 				return errors.New("dial tcp 10.0.0.9:4222: refused")
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: `{"error":"Internal Server Error"}`,
+			wantBody: `{"error":"Internal Server Error","reason":"server_error"}`,
 		},
 		{
 			name:   "when a 500 has a message, it still tells only its status",
@@ -81,7 +81,7 @@ func (s *ErrorsPublicTestSuite) TestErrorBody() {
 				return echo.NewHTTPError(http.StatusInternalServerError, "nats: timeout")
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: `{"error":"Internal Server Error"}`,
+			wantBody: `{"error":"Internal Server Error","reason":"server_error"}`,
 		},
 		{
 			name:   "when the request is a HEAD, the error has no body",

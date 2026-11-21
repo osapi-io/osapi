@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/user/gen"
@@ -39,11 +41,11 @@ func (u *User) PostNodeGroup(
 	request gen.PostNodeGroupRequestObject,
 ) (gen.PostNodeGroupResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.PostNodeGroup400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeGroup400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
-		return gen.PostNodeGroup400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeGroup400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	opts := userProv.CreateGroupOpts{
@@ -78,7 +80,7 @@ func (u *User) PostNodeGroup(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeGroup500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeGroup500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -134,7 +136,7 @@ func (u *User) postNodeGroupCreateBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeGroup500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeGroup500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	var apiResponses []gen.GroupMutationResult

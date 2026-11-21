@@ -838,8 +838,66 @@ type Error struct {
 	Err error
 	// Code is the status code.
 	Code int
+	// Reason is the word of the answer's reason field, one of Reasons.
+	Reason string
 	// Doc says when it occurs, for the spec.
 	Doc string
+}
+
+// The reasons of an error answer: why the request failed, as a word that a
+// program branches on. The HTTP status is the class of the problem, the
+// reason its cause, and the message is for a person. The ErrorResponse
+// schema of the spec lists the same words.
+const (
+	ReasonInvalidRequest = "invalid_request"
+	ReasonUnauthorized   = "unauthorized"
+	ReasonForbidden      = "forbidden"
+	ReasonNotFound       = "not_found"
+	ReasonNotManaged     = "not_managed"
+	ReasonNotInstalled   = "not_installed"
+	ReasonConflict       = "conflict"
+	ReasonUnavailable    = "unavailable"
+	ReasonServerError    = "server_error"
+)
+
+// Reasons are each reason, in the order of the schema.
+var Reasons = []string{
+	ReasonInvalidRequest, ReasonUnauthorized, ReasonForbidden, ReasonNotFound,
+	ReasonNotManaged, ReasonNotInstalled, ReasonConflict, ReasonUnavailable,
+	ReasonServerError,
+}
+
+// ReasonFor is the reason of a status that no error names: the reason of
+// a 404 that no route matches, or a 405.
+func ReasonFor(
+	status int,
+) string {
+	switch {
+	case status == http.StatusUnauthorized:
+		return ReasonUnauthorized
+	case status == http.StatusForbidden:
+		return ReasonForbidden
+	case status == http.StatusNotFound:
+		return ReasonNotFound
+	case status == http.StatusConflict:
+		return ReasonConflict
+	case status == http.StatusServiceUnavailable:
+		return ReasonUnavailable
+	case status >= http.StatusInternalServerError:
+		return ReasonServerError
+	default:
+		return ReasonInvalidRequest
+	}
+}
+
+// Because is e with reason instead of the reason of its status, such as
+// not_managed for a 409 that osapi did not deploy.
+func (e Error) Because(
+	reason string,
+) Error {
+	e.Reason = reason
+
+	return e
 }
 
 // Errorf is an error whose text is the message, and that errors.Is
@@ -899,7 +957,7 @@ func Invalid(
 	err error,
 	doc string,
 ) Error {
-	return Error{Err: err, Code: http.StatusBadRequest, Doc: doc}
+	return Error{Err: err, Code: http.StatusBadRequest, Reason: ReasonInvalidRequest, Doc: doc}
 }
 
 // Forbidden maps err to 403: a request that the token may make, but not
@@ -908,7 +966,7 @@ func Forbidden(
 	err error,
 	doc string,
 ) Error {
-	return Error{Err: err, Code: http.StatusForbidden, Doc: doc}
+	return Error{Err: err, Code: http.StatusForbidden, Reason: ReasonForbidden, Doc: doc}
 }
 
 // NotFound maps err to 404.
@@ -916,7 +974,7 @@ func NotFound(
 	err error,
 	doc string,
 ) Error {
-	return Error{Err: err, Code: http.StatusNotFound, Doc: doc}
+	return Error{Err: err, Code: http.StatusNotFound, Reason: ReasonNotFound, Doc: doc}
 }
 
 // Conflict maps err to 409.
@@ -924,7 +982,7 @@ func Conflict(
 	err error,
 	doc string,
 ) Error {
-	return Error{Err: err, Code: http.StatusConflict, Doc: doc}
+	return Error{Err: err, Code: http.StatusConflict, Reason: ReasonConflict, Doc: doc}
 }
 
 // Unavailable maps err to 503.
@@ -932,5 +990,5 @@ func Unavailable(
 	err error,
 	doc string,
 ) Error {
-	return Error{Err: err, Code: http.StatusServiceUnavailable, Doc: doc}
+	return Error{Err: err, Code: http.StatusServiceUnavailable, Reason: ReasonUnavailable, Doc: doc}
 }

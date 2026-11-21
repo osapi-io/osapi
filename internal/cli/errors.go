@@ -26,25 +26,26 @@ import (
 	"io"
 )
 
-// Error codes in the --json error document. A program matches on these; the
-// message beside them can change between releases.
+// Reasons in the --json error document: why a command failed, as a word that
+// a program matches on; the message beside them can change between releases.
+// The ReasonInvalidRequest group is the API's, which the API names itself.
 const (
-	// CodeUsage is a bad invocation: unknown command or flag, or a missing
+	// ReasonUsage is a bad invocation: unknown command or flag, or a missing
 	// required flag. The process exits 2.
-	CodeUsage = "usage_error"
-	// CodeFatal is a failure before the command could run, such as a config
+	ReasonUsage = "usage_error"
+	// ReasonFatal is a failure before the command could run, such as a config
 	// file that will not load.
-	CodeFatal = "fatal"
-	// CodeError is any other failure the CLI cannot name more precisely.
-	CodeError = "error"
-	// CodeInvalidRequest and the codes below are the API's answer, by status.
-	CodeInvalidRequest = "invalid_request"
-	CodeUnauthorized   = "unauthorized"
-	CodeForbidden      = "forbidden"
-	CodeNotFound       = "not_found"
-	CodeConflict       = "conflict"
-	CodeServerError    = "server_error"
-	CodeAPIError       = "api_error"
+	ReasonFatal = "fatal"
+	// ReasonError is any other failure the CLI cannot name more precisely.
+	ReasonError = "error"
+	// ReasonInvalidRequest and the codes below are the API's answer, by status.
+	ReasonInvalidRequest = "invalid_request"
+	ReasonUnauthorized   = "unauthorized"
+	ReasonForbidden      = "forbidden"
+	ReasonNotFound       = "not_found"
+	ReasonConflict       = "conflict"
+	ReasonServerError    = "server_error"
+	ReasonAPIError       = "api_error"
 )
 
 // Exit codes shared by every command.
@@ -58,30 +59,30 @@ const (
 // under --json.
 type ErrorDocument struct {
 	Error   string            `json:"error"`
-	Code    string            `json:"code"`
+	Reason  string            `json:"reason"`
 	Status  int               `json:"status,omitempty"`
 	Details map[string]string `json:"details,omitempty"`
 }
 
-// APICode names an API status code for the error document.
-func APICode(
+// APIReason is the reason of an API answer that names none, by its status.
+func APIReason(
 	status int,
 ) string {
 	switch {
 	case status == 400:
-		return CodeInvalidRequest
+		return ReasonInvalidRequest
 	case status == 401:
-		return CodeUnauthorized
+		return ReasonUnauthorized
 	case status == 403:
-		return CodeForbidden
+		return ReasonForbidden
 	case status == 404:
-		return CodeNotFound
+		return ReasonNotFound
 	case status == 409:
-		return CodeConflict
+		return ReasonConflict
 	case status >= 500:
-		return CodeServerError
+		return ReasonServerError
 	default:
-		return CodeAPIError
+		return ReasonAPIError
 	}
 }
 

@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/certificate/gen"
@@ -38,7 +40,10 @@ func (s *Certificate) GetNodeCertificateCa(
 	request gen.GetNodeCertificateCaRequestObject,
 ) (gen.GetNodeCertificateCaResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.GetNodeCertificateCa400JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeCertificateCa400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	hostname := request.Hostname
@@ -62,7 +67,10 @@ func (s *Certificate) GetNodeCertificateCa(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeCertificateCa500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeCertificateCa500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -103,7 +111,10 @@ func (s *Certificate) getNodeCertificateCaBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeCertificateCa500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeCertificateCa500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	allResults := make([]gen.CertificateCAEntry, 0)

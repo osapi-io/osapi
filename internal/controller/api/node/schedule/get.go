@@ -23,6 +23,7 @@ package schedule
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 
 	"github.com/google/uuid"
@@ -40,11 +41,17 @@ func (s *Schedule) GetNodeScheduleByName(
 	request gen.GetNodeScheduleByNameRequestObject,
 ) (gen.GetNodeScheduleByNameResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.GetNodeScheduleByName400JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeScheduleByName400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	if errMsg, ok := validateName(ctx, request.Name); !ok {
-		return gen.GetNodeScheduleByName400JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeScheduleByName400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	hostname := request.Hostname
@@ -70,10 +77,22 @@ func (s *Schedule) GetNodeScheduleByName(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		if apierr.IsMissing(err) {
-			return gen.GetNodeScheduleByName404JSONResponse{Error: &errMsg}, nil
+		if errors.Is(err, job.ErrNotManaged) {
+			return gen.GetNodeScheduleByName409JSONResponse{
+				Error:  &errMsg,
+				Reason: apierr.Reason(err),
+			}, nil
 		}
-		return gen.GetNodeScheduleByName500JSONResponse{Error: &errMsg}, nil
+		if apierr.IsMissing(err) {
+			return gen.GetNodeScheduleByName404JSONResponse{
+				Error:  &errMsg,
+				Reason: apierr.Reason(err),
+			}, nil
+		}
+		return gen.GetNodeScheduleByName500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -133,7 +152,10 @@ func (s *Schedule) getNodeScheduleByNameBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeScheduleByName500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeScheduleByName500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	allResults := make([]gen.ScheduleEntry, 0)

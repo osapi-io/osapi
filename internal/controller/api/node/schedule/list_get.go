@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/schedule/gen"
@@ -38,7 +40,7 @@ func (s *Schedule) GetNodeSchedule(
 	request gen.GetNodeScheduleRequestObject,
 ) (gen.GetNodeScheduleResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.GetNodeSchedule400JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeSchedule400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	hostname := request.Hostname
@@ -56,7 +58,7 @@ func (s *Schedule) GetNodeSchedule(
 	jobID, resp, err := s.JobClient.Query(ctx, hostname, "schedule", job.OperationCronList, nil)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeSchedule500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeSchedule500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -97,7 +99,7 @@ func (s *Schedule) getNodeScheduleBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeSchedule500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeSchedule500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	allResults := make([]gen.ScheduleEntry, 0)

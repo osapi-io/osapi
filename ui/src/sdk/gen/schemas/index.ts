@@ -67,6 +67,7 @@ export * from './dockerStopRequest';
 export * from './dockerSummary';
 export * from './entry';
 export * from './errorResponse';
+export * from './errorResponseReason';
 export * from './factKeyEntry';
 export * from './factKeysResponse';
 export * from './fileDeployCollectionResponse';

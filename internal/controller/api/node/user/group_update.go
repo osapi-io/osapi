@@ -41,19 +41,19 @@ func (u *User) PutNodeGroup(
 	request gen.PutNodeGroupRequestObject,
 ) (gen.PutNodeGroupResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.PutNodeGroup400JSONResponse{Error: &errMsg}, nil
+		return gen.PutNodeGroup400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	if errMsg, ok := validateName(ctx, request.Name); !ok {
-		return gen.PutNodeGroup400JSONResponse{Error: &errMsg}, nil
+		return gen.PutNodeGroup400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
-		return gen.PutNodeGroup400JSONResponse{Error: &errMsg}, nil
+		return gen.PutNodeGroup400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	if errMsg, ok := validation.AtLeastOneField(request.Body); !ok {
-		return gen.PutNodeGroup400JSONResponse{Error: &errMsg}, nil
+		return gen.PutNodeGroup400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	opts := userProv.UpdateGroupOpts{}
@@ -90,9 +90,9 @@ func (u *User) PutNodeGroup(
 	if err != nil {
 		errMsg := err.Error()
 		if apierr.IsMissing(err) {
-			return gen.PutNodeGroup404JSONResponse{Error: &errMsg}, nil
+			return gen.PutNodeGroup404JSONResponse{Error: &errMsg, Reason: apierr.Reason(err)}, nil
 		}
-		return gen.PutNodeGroup500JSONResponse{Error: &errMsg}, nil
+		return gen.PutNodeGroup500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -148,7 +148,7 @@ func (u *User) putNodeGroupUpdateBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PutNodeGroup500JSONResponse{Error: &errMsg}, nil
+		return gen.PutNodeGroup500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	var apiResponses []gen.GroupMutationResult

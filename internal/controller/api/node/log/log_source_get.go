@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/log/gen"
@@ -37,7 +39,7 @@ func (s *Log) GetNodeLogSource(
 	request gen.GetNodeLogSourceRequestObject,
 ) (gen.GetNodeLogSourceResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.GetNodeLogSource400JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeLogSource400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	hostname := request.Hostname
@@ -55,7 +57,10 @@ func (s *Log) GetNodeLogSource(
 	jobID, resp, err := s.JobClient.Query(ctx, hostname, "node", job.OperationLogSources, nil)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeLogSource500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeLogSource500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -120,7 +125,10 @@ func (s *Log) getNodeLogSourceBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeLogSource500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeLogSource500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	var items []gen.LogSourceEntry
