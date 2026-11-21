@@ -35,7 +35,7 @@ var Behavior = behavior.Register(behavior.Define(
 	// gohai reads /proc/uptime on Linux, and the boot time from sysctl on macOS.
 	behavior.Platform(behavior.PlatformLinux, newReader),
 	behavior.Platform(behavior.PlatformDarwin, newReader),
-	behavior.Runs("sysctl"),
+	behavior.RunsOnPlatform(behavior.PlatformDarwin, "sysctl"),
 	behavior.Read("get", Get).
 		Describe("Get the uptime of the host").
 		Explain("Reads how long the host has run since it booted: /proc/uptime on Linux, "+

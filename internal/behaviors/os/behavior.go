@@ -33,7 +33,7 @@ var Behavior = behavior.Register(behavior.Define(
 	// gohai reads /etc/os-release on Linux, and sw_vers on macOS.
 	behavior.Platform(behavior.PlatformLinux, newReader),
 	behavior.Platform(behavior.PlatformDarwin, newReader),
-	behavior.Runs("sw_vers"),
+	behavior.RunsOnPlatform(behavior.PlatformDarwin, "sw_vers"),
 	behavior.Read("get", Get).
 		Describe("Get the operating system of the host").
 		Explain("Reads the distribution and its version: the ID and VERSION_ID of "+

@@ -217,6 +217,9 @@ func (s *PlatformPublicTestSuite) TestOn() {
 func (s *PlatformPublicTestSuite) TestPrograms() {
 	b := behavior.Define("hostname", "Hostname", behavior.Node,
 		behavior.Sudo("tee"), behavior.Runs("sysctl"),
+		behavior.RunsOnPlatform(behavior.PlatformDarwin, "vm_stat"),
+		behavior.RunsOnPlatform(behavior.PlatformLinux, "lsblk"),
+		behavior.RunsIfPresent("zfs"),
 		behavior.Read("get", get).Runs("cat"),
 		behavior.Write("update", get).On("debian").Sudo("hostnamectl", "tee"),
 	)
@@ -228,15 +231,20 @@ func (s *PlatformPublicTestSuite) TestPrograms() {
 	}{
 		{
 			name: "when the method runs on the platform", platform: "debian",
-			wantSudo: []string{"tee", "hostnamectl"}, wantRuns: []string{"sysctl", "cat"},
+			wantSudo: []string{"tee", "hostnamectl"}, wantRuns: []string{"sysctl", "lsblk", "cat"},
 		},
 		{
 			name: "when the method does not run on the platform", platform: "darwin",
-			wantSudo: []string{"tee"}, wantRuns: []string{"sysctl", "cat"},
+			wantSudo: []string{"tee"}, wantRuns: []string{"sysctl", "vm_stat", "cat"},
 		},
 		{
-			name: "when the platform is empty", platform: "",
-			wantSudo: []string{"tee", "hostnamectl"}, wantRuns: []string{"sysctl", "cat"},
+			name:     "when the platform is empty",
+			platform: "",
+			wantSudo: []string{
+				"tee",
+				"hostnamectl",
+			},
+			wantRuns: []string{"sysctl", "vm_stat", "lsblk", "cat"},
 		},
 	}
 	for _, tc := range tests {

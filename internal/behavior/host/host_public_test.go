@@ -27,9 +27,11 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
+	"github.com/osapi-io/osapi/internal/behavior/host/mocks"
 )
 
 type dirSettings struct {
@@ -52,6 +54,23 @@ func read(
 
 type HostPublicTestSuite struct {
 	suite.Suite
+}
+
+func (s *HostPublicTestSuite) TestSources() {
+	ctrl := gomock.NewController(s.T())
+	exec := mocks.NewMockExec(ctrl)
+	exec.EXPECT().RunCmd(gomock.Any(), "hostname", []string{"-s"}).Return("web-01\n", nil)
+	now := func() time.Time { return time.Unix(1, 0) }
+	h := host.Host{Exec: exec, Now: now, Platform: "debian"}
+
+	src := h.Sources()
+	s.Equal("debian", src.Family)
+	s.Equal(time.Unix(1, 0), src.Now())
+	out, err := src.Exec.Execute(context.Background(), "hostname", "-s")
+	s.NoError(err)
+	s.Equal("web-01\n", string(out))
+
+	s.Nil(host.Host{}.Sources().Exec, "a host with no Exec gives gohai none")
 }
 
 func (s *HostPublicTestSuite) TestTime() {

@@ -32,7 +32,7 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Platform(behavior.PlatformLinux, newReader),
 	behavior.Platform(behavior.PlatformDarwin, newReader),
 	// gohai reads /proc/meminfo on Linux, and sysctl and vm_stat on macOS.
-	behavior.Runs("sysctl", "vm_stat"),
+	behavior.RunsOnPlatform(behavior.PlatformDarwin, "sysctl", "vm_stat"),
 	behavior.Read("get", Get).
 		Describe("Get the memory usage of the host").
 		Explain("Reads the total, the free and the used memory, in bytes. Used is the "+

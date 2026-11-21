@@ -143,7 +143,8 @@ func (h *fakeHost) declare(
 	platform string,
 ) {
 	h.sudo = append(h.sudo, b.Sudo...)
-	h.runs = append(h.runs, b.Runs...)
+	_, runs := b.Programs(platform)
+	h.runs = append(append(h.runs, runs...), b.RunsIfPresent...)
 	for _, m := range b.Methods {
 		if platform == "" || b.Serves(m, platform) {
 			h.sudo = append(h.sudo, m.SudoPrograms...)

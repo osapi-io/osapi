@@ -244,6 +244,8 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 		),
 		behavior.Sudo("kvctl"),
 		behavior.Runs("kvstat"),
+		behavior.RunsOnPlatform(behavior.PlatformDarwin, "vm_stat"),
+		behavior.RunsIfPresent("zfs"),
 		behavior.Write("create", write).Describe("Create one").On("debian").
 			Sudo("kvsync").Runs("kvcheck").
 			Example("One key", input{Key: "k"}, result{Key: "k"},
@@ -275,6 +277,8 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 	s.Contains(index, "`create` runs `kvcheck`, only where it runs.")
 	s.Contains(index, "It runs `kvctl` with sudo")
 	s.Contains(index, "It runs `kvstat`, which the host must have installed.")
+	s.Contains(index, "On darwin it also runs `vm_stat`.")
+	s.Contains(index, "It runs `zfs` when the host has it")
 
 	// A behavior with settings lists them; one without API or CLI says
 	// only where its jobs run.

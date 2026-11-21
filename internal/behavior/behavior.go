@@ -93,6 +93,12 @@ type Behavior struct {
 	// Runs lists the programs its providers run without sudo, declared with
 	// Runs.
 	Runs []string
+	// PlatformRuns lists the programs its providers run on some platforms
+	// only, declared with RunsOnPlatform.
+	PlatformRuns []PlatformPrograms
+	// RunsIfPresent lists the programs its providers run only when the host
+	// has them, declared with RunsIfPresent.
+	RunsIfPresent []string
 	// Writes lists the paths its providers write, remove or change the mode
 	// of, as path.Match patterns, declared with Writes. "*" is any path.
 	Writes []string
@@ -287,12 +293,22 @@ func (m *Method) RunsOn(
 		return true
 	}
 	for _, p := range m.Platforms {
-		if p == platform || (p == PlatformLinux && platform != PlatformDarwin) {
+		if covers(p, platform) {
 			return true
 		}
 	}
 
 	return false
+}
+
+// covers reports whether a declaration for platform p holds on a host whose
+// platform is platform: the same platform, or linux for each platform that
+// is not darwin.
+func covers(
+	p string,
+	platform string,
+) bool {
+	return p == platform || (p == PlatformLinux && platform != PlatformDarwin)
 }
 
 // Explain sets the method's longer description, for its command's help and

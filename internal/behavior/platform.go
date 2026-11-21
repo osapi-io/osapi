@@ -91,6 +91,39 @@ func Runs(
 	return optionFunc(func(b *Behavior) { b.Runs = append(b.Runs, programs...) })
 }
 
+// PlatformPrograms are the programs that a behavior runs on one platform
+// only, such as vm_stat on darwin.
+type PlatformPrograms struct {
+	Platform string
+	Programs []string
+}
+
+// RunsOnPlatform declares the programs the behavior's providers run without
+// sudo on platform only. linux is each platform that is not darwin. Thus the
+// agent and the integration test of a Linux host do not look for a program
+// that only macOS has.
+func RunsOnPlatform(
+	platform string,
+	programs ...string,
+) Option {
+	return optionFunc(func(b *Behavior) {
+		b.PlatformRuns = append(
+			b.PlatformRuns,
+			PlatformPrograms{Platform: platform, Programs: programs},
+		)
+	})
+}
+
+// RunsIfPresent declares the programs the behavior's providers run only when
+// the host has them, such as zfs: a provider that does not find one reads
+// without it. The fake host permits them, and the agent and the integration
+// test do not require them.
+func RunsIfPresent(
+	programs ...string,
+) Option {
+	return optionFunc(func(b *Behavior) { b.RunsIfPresent = append(b.RunsIfPresent, programs...) })
+}
+
 // Writes declares the paths the behavior's providers write, remove or change
 // the mode of, as path.Match patterns such as "/etc/sysctl.d/osapi-*.conf".
 // "*" is any path: a behavior such as managedfile, which writes the path its
@@ -207,6 +240,11 @@ func (b *Behavior) Programs(
 	}
 	sudo = add(sudo, b.Sudo)
 	runs = add(runs, b.Runs)
+	for _, pp := range b.PlatformRuns {
+		if platform == "" || covers(pp.Platform, platform) {
+			runs = add(runs, pp.Programs)
+		}
+	}
 	for _, m := range b.Methods {
 		if platform == "" || m.RunsOn(platform) {
 			sudo = add(sudo, m.SudoPrograms)

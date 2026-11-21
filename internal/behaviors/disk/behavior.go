@@ -34,7 +34,10 @@ var Behavior = behavior.Register(behavior.Define(
 	// on macOS.
 	behavior.Platform(behavior.PlatformLinux, newReader),
 	behavior.Platform(behavior.PlatformDarwin, newReader),
-	behavior.Runs("df", "lsblk", "zfs", "mount"),
+	behavior.Runs("df"),
+	behavior.RunsOnPlatform(behavior.PlatformLinux, "lsblk"),
+	behavior.RunsOnPlatform(behavior.PlatformDarwin, "mount"),
+	behavior.RunsIfPresent("zfs"),
 	behavior.Read("get", Get).
 		Describe("Get the disk usage of the host").
 		Explain("Reads the size, the used space and the free space of each local "+
