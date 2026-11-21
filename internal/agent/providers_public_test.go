@@ -54,7 +54,7 @@ var gohaiReads = map[string]bool{
 func (s *ProvidersPublicTestSuite) TestProviders() {
 	areas := []string{
 		"host", "disk", "memory", "load", "dns", "ping", "cron",
-		"ntp", "power", "process", "user", "packages",
+		"ntp", "power", "process", "user",
 		"logs", "certificate", "service", "iface", "route",
 	}
 

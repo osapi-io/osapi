@@ -129,16 +129,6 @@ const (
 	OpSSHKeyRemove JobOperation = "node.sshKey.remove"
 )
 
-// Package operations.
-const (
-	OpPackageList        JobOperation = "node.package.list"
-	OpPackageGet         JobOperation = "node.package.get"
-	OpPackageInstall     JobOperation = "node.package.install"
-	OpPackageRemove      JobOperation = "node.package.remove"
-	OpPackageUpdate      JobOperation = "node.package.update"
-	OpPackageListUpdates JobOperation = "node.package.listUpdates"
-)
-
 // Log operations.
 const (
 	OpLogQuery     JobOperation = "node.log.query"

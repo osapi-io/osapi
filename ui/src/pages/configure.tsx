@@ -94,12 +94,14 @@ import {
 import { postNodeNetworkPing } from "@/sdk/gen/network-management-api-network-operations/network-management-api-network-operations";
 import {
   getNodePackage,
-  getNodePackageByName,
+  getNodePackageByKey,
   postNodePackage,
   deleteNodePackage,
-  postNodePackageUpdate,
-  getNodePackageUpdate,
-} from "@/sdk/gen/package-management-api-package-operations/package-management-api-package-operations";
+} from "@/sdk/gen/package-api-package-operations/package-api-package-operations";
+import {
+  getNodeUpdatepackages,
+  putNodeUpdatepackages,
+} from "@/sdk/gen/updatepackages-api-updatepackages-operations/updatepackages-api-updatepackages-operations";
 import {
   getNodeSysctl,
   getNodeSysctlByKey,
@@ -698,24 +700,22 @@ export function Configure() {
             result = await getNodePackage(t);
             break;
           case "package-get":
-            result = await getNodePackageByName(t, block.data.name as string);
+            result = await getNodePackageByKey(t, block.data.name as string);
             break;
           case "package-install":
             result = await postNodePackage(t, {
               name: block.data.name as string,
-              ...(block.data.version
-                ? { version: block.data.version as string }
-                : {}),
+              version: (block.data.version as string) || "",
             });
             break;
           case "package-remove":
             result = await deleteNodePackage(t, block.data.name as string);
             break;
           case "package-update":
-            result = await postNodePackageUpdate(t);
+            result = await putNodeUpdatepackages(t);
             break;
           case "package-check-updates":
-            result = await getNodePackageUpdate(t);
+            result = await getNodeUpdatepackages(t);
             break;
           case "sysctl-list":
             result = await getNodeSysctl(t);

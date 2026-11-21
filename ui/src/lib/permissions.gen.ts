@@ -48,6 +48,8 @@ export type Permission =
   | "memory:read"
   | "os:read"
   | "status:read"
+  | "updatepackages:read"
+  | "updatepackages:write"
   | "uptime:read";
 
 export const ALL_PERMISSIONS: Permission[] = [
@@ -97,6 +99,8 @@ export const ALL_PERMISSIONS: Permission[] = [
   "memory:read",
   "os:read",
   "status:read",
+  "updatepackages:read",
+  "updatepackages:write",
   "uptime:read",
 ];
 
@@ -149,6 +153,8 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "memory:read",
     "os:read",
     "status:read",
+    "updatepackages:read",
+    "updatepackages:write",
     "uptime:read",
   ],
   write: [
@@ -190,6 +196,8 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "memory:read",
     "os:read",
     "status:read",
+    "updatepackages:read",
+    "updatepackages:write",
     "uptime:read",
   ],
   read: [
@@ -218,6 +226,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "memory:read",
     "os:read",
     "status:read",
+    "updatepackages:read",
     "uptime:read",
   ],
 };

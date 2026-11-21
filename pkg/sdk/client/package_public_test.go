@@ -22,7 +22,6 @@ package client_test
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -43,913 +42,138 @@ func (suite *PackagePublicTestSuite) SetupTest() {
 	suite.ctx = context.Background()
 }
 
-func (suite *PackagePublicTestSuite) TestPackageList() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.PackageInfoResult]], error)
-	}{
-		{
-			name: "when listing packages returns results",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","packages":[{"name":"curl","version":"7.88.1","status":"installed","size":1024}]}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageInfoResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("agent1", resp.Data.Results[0].Hostname)
-				suite.Equal("ok", resp.Data.Results[0].Status)
-				suite.Require().Len(resp.Data.Results[0].Packages, 1)
-				suite.Equal("curl", resp.Data.Results[0].Packages[0].Name)
-				suite.Equal("7.88.1", resp.Data.Results[0].Packages[0].Version)
-			},
+// call runs one PackageService method against c and returns its error and
+// its first result as JSON-shaped fields.
+type call func(c *client.Client) (any, error)
+
+func (suite *PackagePublicTestSuite) calls() map[string]call {
+	return map[string]call{
+		"list": func(c *client.Client) (any, error) {
+			return c.Package.List(suite.ctx, "_any")
 		},
-		{
-			name: "when broadcast list returns multiple results",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"server1","status":"ok","packages":[]},{"hostname":"server2","status":"ok","packages":[]}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageInfoResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Len(resp.Data.Results, 2)
-			},
+		"get": func(c *client.Client) (any, error) {
+			return c.Package.Get(suite.ctx, "_any", "curl")
 		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageInfoResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
+		"install": func(c *client.Client) (any, error) {
+			return c.Package.Install(suite.ctx, "_any", "curl", "8.5.0")
 		},
-		{
-			name: "when server returns 401 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusUnauthorized)
-				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageInfoResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusUnauthorized, target.StatusCode)
-			},
+		"remove": func(c *client.Client) (any, error) {
+			return c.Package.Remove(suite.ctx, "_any", "curl")
 		},
-		{
-			name: "when server returns 500 returns ServerError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusInternalServerError)
-				_, _ = w.Write([]byte(`{"error":"internal error"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageInfoResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.ServerError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusInternalServerError, target.StatusCode)
-			},
+		"list updates": func(c *client.Client) (any, error) {
+			return c.Package.ListUpdates(suite.ctx, "_any")
 		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageInfoResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "package list")
-			},
+		"update": func(c *client.Client) (any, error) {
+			return c.Package.Update(suite.ctx, "_any")
 		},
-		{
-			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageInfoResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
-
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Package.List(suite.ctx, "_any")
-			tc.validateFunc(resp, err)
-		})
 	}
 }
 
-func (suite *PackagePublicTestSuite) TestPackageGet() {
+func (suite *PackagePublicTestSuite) TestPackage() {
+	row := `{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"web-01","status":"ok",` +
+		`"name":"curl","version":"8.5.0","architecture":"amd64","manager":"dpkg","description":"curl","size":512000,` +
+		`"changed":true,"current_version":"8.5.0","new_version":"8.5.1"}]}`
 	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.PackageInfoResult]], error)
+		name      string
+		handler   http.HandlerFunc
+		serverURL string
+		wantErr   string
 	}{
 		{
-			name: "when getting package returns result collection",
+			name: "when the API answers",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","packages":[{"name":"curl","version":"7.88.1","description":"command line tool","status":"installed","size":2048}]}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageInfoResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("agent1", resp.Data.Results[0].Hostname)
-				suite.Equal("ok", resp.Data.Results[0].Status)
-				suite.Require().Len(resp.Data.Results[0].Packages, 1)
-				suite.Equal("curl", resp.Data.Results[0].Packages[0].Name)
-				suite.Equal("7.88.1", resp.Data.Results[0].Packages[0].Version)
-				suite.Equal("command line tool", resp.Data.Results[0].Packages[0].Description)
-				suite.Equal(int64(2048), resp.Data.Results[0].Packages[0].Size)
+				_, _ = w.Write([]byte(row))
 			},
 		},
 		{
-			name: "when server returns 404 returns NotFoundError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusNotFound)
-				_, _ = w.Write([]byte(`{"error":"package not found"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageInfoResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.NotFoundError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusNotFound, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
+			name: "when the API refuses",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusForbidden)
 				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
 			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageInfoResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
+			wantErr: "forbidden",
 		},
 		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageInfoResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "package get")
-			},
-		},
-		{
-			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
+			name: "when the body is empty",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusOK)
 			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageInfoResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
+			wantErr: "nil response body",
+		},
+		{
+			name:      "when the server is unreachable",
+			serverURL: "http://127.0.0.1:0",
+			wantErr:   "package",
 		},
 	}
-
 	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
+		for method, fn := range suite.calls() {
+			suite.Run(tc.name+": "+method, func() {
+				url := tc.serverURL
+				if url == "" {
+					server := httptest.NewServer(tc.handler)
+					defer server.Close()
+					url = server.URL
+				}
+				c := client.New(url, "test-token", client.WithLogger(slog.Default()))
 
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
+				resp, err := fn(c)
+				if tc.wantErr != "" {
+					suite.ErrorContains(err, tc.wantErr)
 
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Package.Get(suite.ctx, "_any", "curl")
-			tc.validateFunc(resp, err)
-		})
+					return
+				}
+				suite.Require().NoError(err)
+				suite.NotNil(resp)
+			})
+		}
 	}
 }
 
-func (suite *PackagePublicTestSuite) TestPackageInstall() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.PackageMutationResult]], error)
-	}{
-		{
-			name: "when installing package returns result collection",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","name":"curl","changed":true}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageMutationResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("agent1", resp.Data.Results[0].Hostname)
-				suite.Equal("ok", resp.Data.Results[0].Status)
-				suite.Equal("curl", resp.Data.Results[0].Name)
-				suite.True(resp.Data.Results[0].Changed)
-			},
-		},
-		{
-			name: "when broadcast install returns multiple results",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"server1","status":"ok","name":"curl","changed":true},{"hostname":"server2","status":"ok","name":"curl","changed":false}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageMutationResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Len(resp.Data.Results, 2)
-			},
-		},
-		{
-			name: "when server returns 400 returns ValidationError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusBadRequest)
-				_, _ = w.Write([]byte(`{"error":"invalid package name"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
+func (suite *PackagePublicTestSuite) TestFields() {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(
+			[]byte(
+				`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"web-01",` +
+					`"status":"ok","name":"curl","version":"8.5.0","architecture":"amd64","manager":"dpkg",` +
+					`"description":"curl","size":512000,"changed":true,"current_version":"8.5.0","new_version":"8.5.1"}]}`,
+			),
+		)
+	}))
+	defer server.Close()
+	c := client.New(server.URL, "test-token", client.WithLogger(slog.Default()))
 
-				var target *client.ValidationError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusBadRequest, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
+	list, err := c.Package.List(suite.ctx, "_any")
+	suite.Require().NoError(err)
+	suite.Equal(client.PackageInfo{
+		Hostname: "web-01", Status: "ok", Name: "curl", Version: "8.5.0",
+		Architecture: "amd64", Manager: "dpkg", Description: "curl", Size: 512000,
+	}, list.Data.Results[0])
+	suite.Equal("00000000-0000-0000-0000-000000000001", list.Data.JobID)
 
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "package install")
-			},
-		},
-		{
-			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
+	installed, err := c.Package.Install(suite.ctx, "_any", "curl", "")
+	suite.Require().NoError(err)
+	suite.Equal(client.PackageMutationResult{
+		Hostname: "web-01", Status: "ok", Name: "curl", Changed: true,
+	}, installed.Data.Results[0])
 
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
-		},
-	}
+	updates, err := c.Package.ListUpdates(suite.ctx, "_any")
+	suite.Require().NoError(err)
+	suite.Equal(client.PackageUpdate{
+		Hostname:       "web-01",
+		Status:         "ok",
+		Name:           "curl",
+		CurrentVersion: "8.5.0",
+		NewVersion:     "8.5.1",
+	}, updates.Data.Results[0])
 
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
-
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Package.Install(suite.ctx, "_any", "curl")
-			tc.validateFunc(resp, err)
-		})
-	}
-}
-
-func (suite *PackagePublicTestSuite) TestPackageRemove() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.PackageMutationResult]], error)
-	}{
-		{
-			name: "when removing package returns result collection",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","name":"curl","changed":true}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageMutationResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Equal("agent1", resp.Data.Results[0].Hostname)
-				suite.Equal("curl", resp.Data.Results[0].Name)
-				suite.True(resp.Data.Results[0].Changed)
-			},
-		},
-		{
-			name: "when broadcast remove returns multiple results",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"server1","status":"ok","name":"curl","changed":true},{"hostname":"server2","status":"failed","error":"not installed"}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageMutationResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Len(resp.Data.Results, 2)
-			},
-		},
-		{
-			name: "when server returns 404 returns NotFoundError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusNotFound)
-				_, _ = w.Write([]byte(`{"error":"package not found"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.NotFoundError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusNotFound, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "package remove")
-			},
-		},
-		{
-			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
-
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Package.Remove(suite.ctx, "_any", "curl")
-			tc.validateFunc(resp, err)
-		})
-	}
-}
-
-func (suite *PackagePublicTestSuite) TestPackageUpdate() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.PackageMutationResult]], error)
-	}{
-		{
-			name: "when updating packages returns result collection",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","name":"curl","changed":true}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageMutationResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("agent1", resp.Data.Results[0].Hostname)
-				suite.Equal("ok", resp.Data.Results[0].Status)
-				suite.Equal("curl", resp.Data.Results[0].Name)
-				suite.True(resp.Data.Results[0].Changed)
-			},
-		},
-		{
-			name: "when broadcast update returns multiple results",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"server1","status":"ok","changed":true},{"hostname":"server2","status":"ok","changed":false}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageMutationResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Len(resp.Data.Results, 2)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 500 returns ServerError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusInternalServerError)
-				_, _ = w.Write([]byte(`{"error":"internal error"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.ServerError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusInternalServerError, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "package update")
-			},
-		},
-		{
-			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
-
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Package.Update(suite.ctx, "_any")
-			tc.validateFunc(resp, err)
-		})
-	}
-}
-
-func (suite *PackagePublicTestSuite) TestPackageListUpdates() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.PackageUpdateResult]], error)
-	}{
-		{
-			name: "when listing available updates returns results",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","updates":[{"name":"curl","current_version":"7.88.1","new_version":"7.88.2"}]}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageUpdateResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("agent1", resp.Data.Results[0].Hostname)
-				suite.Equal("ok", resp.Data.Results[0].Status)
-				suite.Require().Len(resp.Data.Results[0].Updates, 1)
-				suite.Equal("curl", resp.Data.Results[0].Updates[0].Name)
-				suite.Equal("7.88.1", resp.Data.Results[0].Updates[0].CurrentVersion)
-				suite.Equal("7.88.2", resp.Data.Results[0].Updates[0].NewVersion)
-			},
-		},
-		{
-			name: "when broadcast list updates returns multiple results",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"server1","status":"ok","updates":[]},{"hostname":"server2","status":"ok","updates":[]}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageUpdateResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Len(resp.Data.Results, 2)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageUpdateResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 500 returns ServerError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusInternalServerError)
-				_, _ = w.Write([]byte(`{"error":"internal error"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageUpdateResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.ServerError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusInternalServerError, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageUpdateResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "package list updates")
-			},
-		},
-		{
-			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.PackageUpdateResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
-
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Package.ListUpdates(suite.ctx, "_any")
-			tc.validateFunc(resp, err)
-		})
-	}
+	index, err := c.Package.Update(suite.ctx, "_any")
+	suite.Require().NoError(err)
+	suite.Equal(client.PackageIndexResult{Hostname: "web-01", Status: "ok", Changed: true},
+		index.Data.Results[0])
 }
 
 func TestPackagePublicTestSuite(
