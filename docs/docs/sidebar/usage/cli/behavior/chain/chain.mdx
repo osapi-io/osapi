@@ -1,0 +1,14 @@
+# Chain
+
+Show and check the chains of behaviors that a behavior calls.
+
+A behavior that requires others calls them on the same host, in the same job:
+dns calls netplan, and netplan calls managedfile. That is a chain, named by the
+behavior at its top. `behavior.Requires` on each behavior makes it; it is not
+declared on its own. These commands read the definitions in the binary, and run
+the examples on the fake host that `go test` uses. Thus they need no config file
+and no controller, and show what the code does now.
+
+import DocCardList from '@theme/DocCardList';
+
+<DocCardList />

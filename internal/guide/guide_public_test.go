@@ -100,6 +100,13 @@ func (s *GuidePublicTestSuite) TestChecks() {
 			},
 		},
 		{
+			name: "when the rule has a check Requires returns what it requires",
+			validateFunc: func() {
+				s.Equal("A description.", checks.Requires("doc"))
+				s.Empty(checks.Requires("nope"))
+			},
+		},
+		{
 			name: "when listed Help has one item for each rule",
 			validateFunc: func() {
 				s.Equal(

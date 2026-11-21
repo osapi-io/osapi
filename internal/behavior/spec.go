@@ -274,30 +274,6 @@ var Spec = guide.Spec{
 		},
 
 		{
-			Kind: KindCompose,
-			Name: "Use a building block",
-			Does: "A building block is an internal behavior that does one generic job, such as writing a file that osapi manages. Its spans, checks and records come with it. \"Building blocks\" lists the ones in this binary.",
-			When: "Before a provider does generic work itself: a managed file, a service reload, a call to an outside API. Require the block with Requires, and call it with Call.",
-		},
-		{
-			Kind: KindCompose,
-			Name: "Make a building block",
-			Does: "Generic work that no block does yet becomes a new internal behavior. The behavior that needs it requires it.",
-			When: "When the work is not about the one thing that the behavior manages, or a second behavior would need it.",
-		},
-		{
-			Kind: KindCompose,
-			Name: "One host, one step",
-			Does: "A behavior acts on one host, in one job. Its building blocks run on the same host, in the same job.",
-			When: "Work across hosts, or in ordered steps, is an osapi-orchestrator workflow, not a behavior.",
-		},
-		{
-			Kind: KindCall,
-			Name: "Call(ctx, other.Behavior, other.Method, p, in)",
-			Does: "Runs a method of a required behavior in its own span, so the trace shows it as a step. It checks in against its validate tags first, as the API does for a served method: an input that breaks one is an error, and the method does not run.",
-			When: "Each time a provider uses a required behavior. A direct call fails the tests.",
-		},
-		{
 			Kind: KindCall,
 			Name: "atomicfile.Write(ctx, h.FS, path, content, mode)",
 			Does: "Writes the file atomically, in a file.write span. atomicfile.Remove and atomicfile.Chmod make file.remove and file.chmod spans.",
@@ -317,15 +293,16 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindCall,
-			Name: "host.Require[P](h)",
-			Does: "Returns the provider of a required behavior, in a builder.",
-			When: "In the builder of a behavior that uses Requires.",
-		},
-		{
-			Kind: KindCall,
 			Name: rule.RegisterName,
 			Does: rule.RegisterDoes,
 			When: rule.RegisterWhen,
+		},
+
+		{
+			Kind: KindCompose,
+			Name: "Chains",
+			Does: "A behavior that requires others calls them on the same host, in the same job: dns calls netplan, and netplan calls managedfile. osapi behavior chain spec get has how to build one, its rules and the building blocks in this binary; osapi behavior chain get shows what each call sends and gets.",
+			When: "Before a provider does generic work itself, such as writing a file that osapi manages.",
 		},
 
 		{
@@ -464,41 +441,19 @@ var Spec = guide.Spec{
 	},
 }
 
-// CurrentSpec is Spec, with "Building blocks" after "Building on other
-// behaviors": each internal behavior in the registry, with what it does and
-// its methods. factKeys, the keys that .Facts has, are added to that term.
-// Thus both lists agree with the binary.
+// CurrentSpec is Spec, with factKeys, the keys that .Facts has, added to
+// that term. Thus the list agrees with the binary.
 func CurrentSpec(
 	factKeys ...string,
 ) guide.Spec {
-	spec := guide.Spec{Terms: append([]guide.Term(nil), Spec.Terms...)}
+	spec := guide.Spec{
+		Kinds: append([]guide.Kind(nil), Spec.Kinds...),
+		Terms: append([]guide.Term(nil), Spec.Terms...),
+	}
 	for i, t := range spec.Terms {
 		if t.Name == ".Facts.<key>" && len(factKeys) > 0 {
 			spec.Terms[i].Does += " The keys: " + strings.Join(factKeys, ", ") + "."
 		}
-	}
-	for _, k := range Spec.Kinds {
-		spec.Kinds = append(spec.Kinds, k)
-		if k.Kind == KindCompose {
-			spec.Kinds = append(spec.Kinds, guide.Kind{Kind: KindBlock, Title: "Building blocks"})
-		}
-	}
-
-	for _, b := range All() {
-		if !b.Internal {
-			continue
-		}
-		names := make([]string, 0, len(b.Methods))
-		for _, m := range b.Methods {
-			names = append(names, m.Name)
-		}
-		spec.Terms = append(spec.Terms, guide.Term{
-			Kind: KindBlock,
-			Name: b.Name,
-			Does: b.Doc + ". Methods: " + strings.Join(names, ", ") + ".",
-			When: "Require it, and call its methods with Call. osapi behavior get --name " +
-				b.Name + " shows its inputs.",
-		})
 	}
 
 	return spec

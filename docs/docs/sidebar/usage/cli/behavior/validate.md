@@ -97,12 +97,13 @@ The rules:
   method. Fix: Add behavior.Platform("debian", newDebian), remove the second
   declaration, or add the missing method to the provider.
 - `requires`: Each required behavior is registered, and no behavior requires
-  itself through others. Fix: Import the required behavior in
-  internal/behaviors/all, or remove the requirement that makes the cycle.
+  itself through others. The chain layer owns this rule: osapi behavior chain
+  validate. Fix: Import the required behavior in internal/behaviors/all, or
+  remove the requirement that makes the cycle.
 - `internal`: Another behavior requires each internal behavior. Nothing else can
-  call it, because it has no API and no CLI. Fix: Add behavior.Requires(it) to
-  the behavior that uses it, or remove behavior.Internal if an operator calls
-  it.
+  call it, because it has no API and no CLI. The chain layer owns this rule:
+  osapi behavior chain validate. Fix: Add behavior.Requires(it) to the behavior
+  that uses it, or remove behavior.Internal if an operator calls it.
 - `writes`: Each path given to Writes is "_" or an absolute path.Match pattern.
   Fix: Use a pattern such as "/etc/sysctl.d/osapi-_.conf".
 

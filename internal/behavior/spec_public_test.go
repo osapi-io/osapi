@@ -129,12 +129,13 @@ func (s *SpecPublicTestSuite) TestSpecHasEveryPartOfTheDSL() {
 		s.Run(name, func() {
 			word := regexp.MustCompile(`(^|[^A-Za-z])` + name + `([^A-Za-z]|$)`)
 			found := false
-			for _, t := range behavior.Spec.Terms {
+			// The chain layer owns the terms of calls between behaviors.
+			for _, t := range append(behavior.Spec.Terms, behavior.ChainSpec.Terms...) {
 				if word.MatchString(t.Name) {
 					found = true
 				}
 			}
-			s.True(found, "behavior.Spec has no term for %s; add one", name)
+			s.True(found, "behavior.Spec and behavior.ChainSpec have no term for %s; add one", name)
 		})
 	}
 }
@@ -208,13 +209,41 @@ func (s *SpecPublicTestSuite) TestChecksHaveEveryRule() {
 	}
 	s.Contains(rules, behavior.RuleSpan)
 
-	checked := make([]string, 0, len(behavior.Checks))
-	for _, c := range behavior.Checks {
-		checked = append(checked, c.Rule)
+	checked := map[string]bool{}
+	for _, c := range append(behavior.Checks, behavior.ChainChecks...) {
+		checked[c.Rule] = true
 		s.NotEmpty(c.Requires, c.Rule)
 		s.NotEmpty(c.Fix, c.Rule)
 	}
-	s.ElementsMatch(rules, checked, "each Rule constant has one check in behavior.Checks")
+	for _, r := range rules {
+		s.True(checked[r], "the rule %s has no check in behavior.Checks or behavior.ChainChecks", r)
+	}
+	s.Len(checked, len(rules), "each check is of a Rule constant")
+}
+
+func (s *SpecPublicTestSuite) TestCurrentChainSpec() {
+	behavior.Reset()
+	defer behavior.Reset()
+	behavior.Register(behavior.Define("files", "Files it keeps", behavior.Node, behavior.Internal,
+		behavior.Read("get", get), behavior.Write("update", set)))
+	behavior.Register(behavior.Define("kv", "Key values", behavior.Node, behavior.Read("get", get)))
+
+	spec := behavior.CurrentChainSpec()
+
+	s.Equal(behavior.KindBlock, spec.Kinds[len(spec.Kinds)-1].Kind, "building blocks come last")
+	blocks := spec.Of(behavior.KindBlock)
+	s.Require().Len(blocks, 1, "only an internal behavior is a building block")
+	s.Equal("files", blocks[0].Name)
+	s.Equal("Files it keeps. Methods: get, update.", blocks[0].Does)
+	s.Contains(blocks[0].When, "osapi behavior get --name files")
+	s.Empty(behavior.ChainSpec.Of(behavior.KindBlock), "ChainSpec itself is not changed")
+	for _, t := range behavior.ChainSpec.Terms {
+		s.NotEmpty(t.Does, t.Name)
+		s.NotEmpty(t.When, t.Name)
+	}
+	for _, k := range behavior.ChainSpec.Kinds {
+		s.NotEmpty(behavior.ChainSpec.Of(k.Kind), "kind %s has no terms", k.Kind)
+	}
 }
 
 func (s *SpecPublicTestSuite) TestCurrentSpec() {
@@ -226,24 +255,7 @@ func (s *SpecPublicTestSuite) TestCurrentSpec() {
 
 	spec := behavior.CurrentSpec()
 
-	kinds := make([]string, 0, len(spec.Kinds))
-	for _, k := range spec.Kinds {
-		kinds = append(kinds, k.Kind)
-	}
-	at := 0
-	for i, k := range kinds {
-		if k == behavior.KindCompose {
-			at = i
-		}
-	}
-	s.Equal(behavior.KindBlock, kinds[at+1], "building blocks follow the composing rules")
-
-	blocks := spec.Of(behavior.KindBlock)
-	s.Require().Len(blocks, 1, "only an internal behavior is a building block")
-	s.Equal("files", blocks[0].Name)
-	s.Equal("Files it keeps. Methods: get, update.", blocks[0].Does)
-	s.Contains(blocks[0].When, "osapi behavior get --name files")
-	s.Len(behavior.Spec.Of(behavior.KindBlock), 0, "Spec itself is not changed")
+	s.Empty(spec.Of(behavior.KindBlock), "the building blocks are in the chain spec")
 
 	for _, t := range behavior.CurrentSpec("architecture", "fqdn").Of(behavior.KindTemplate) {
 		if t.Name == ".Facts.<key>" {
