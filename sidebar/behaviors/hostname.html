@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">hostname | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/behaviors/hostname"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="hostname | OSAPI"><meta data-rh="true" name="description" content="Get or set the hostname of target hosts."><meta data-rh="true" property="og:description" content="Get or set the hostname of target hosts."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/behaviors/hostname"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/behaviors/hostname" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/behaviors/hostname" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Behaviors","item":"https://osapi-io.github.io/osapi/sidebar/behaviors/"},{"@type":"ListItem","position":2,"name":"hostname","item":"https://osapi-io.github.io/osapi/sidebar/behaviors/hostname/"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.ff5cad93.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.3525ee83.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.afa04a89.js" defer="defer"></script>
 </head>
 <body>
@@ -55,9 +55,9 @@
 <p>On <code>linux</code>, <code>darwin</code>. On any other platform its methods report <code>skipped</code>.</p>
 <p><code>update</code> runs only on <code>debian</code>. On any other platform it reports <code>skipped</code>.</p>
 <p><code>update</code> runs <code>hostnamectl</code> with sudo, only where it runs.</p>
-<p>It runs <code>sysctl</code>, which the host must have installed. <code>osapi agent start</code>
+<p>It runs <code>hostname</code>, which the host must have installed. <code>osapi agent start</code>
 warns about any that are missing.</p>
-<p>In a trace, a call is the span <code>behavior.hostname.&lt;method&gt;</code>, with <code>exec hostnamectl</code>, <code>exec sysctl</code> under it.</p>
+<p>In a trace, a call is the span <code>behavior.hostname.&lt;method&gt;</code>, with <code>exec hostnamectl</code>, <code>exec hostname</code> under it.</p>
 <p>Its span records the input <code>name</code> (update).</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="methods">Methods<a href="#methods" class="hash-link" aria-label="Direct link to Methods" title="Direct link to Methods" translate="no">​</a></h2>
 
