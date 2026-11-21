@@ -142,10 +142,10 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		},
 		{
 			name: "when the example \"A unit with no [Install] section\" is run",
-			args: []string{"node", "service", "enable", "--target", "server1", "--name", "app"},
+			args: []string{"node", "service", "enable", "--target", "server1", "--name", "static"},
 			want: commandtest.Request{
 				Method: "POST",
-				Path:   "/api/node/server1/service/app/enable",
+				Path:   "/api/node/server1/service/static/enable",
 				Body:   "",
 			},
 		},

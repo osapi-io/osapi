@@ -383,10 +383,10 @@ None. The method takes no input; its command needs only --target.
 
 ### Examples (2)
 
-| EXAMPLE                           | INPUT    | OUTPUT                  |
-| --------------------------------- | -------- | ----------------------- |
-| Enable the service                | name=app | name=app, changed=true  |
-| A unit with no \[Install] section | name=app | name=app, changed=false |
+| EXAMPLE                           | INPUT       | OUTPUT                     |
+| --------------------------------- | ----------- | -------------------------- |
+| Enable the service                | name=app    | name=app, changed=true     |
+| A unit with no \[Install] section | name=static | name=static, changed=false |
 
 ## Method disable
 

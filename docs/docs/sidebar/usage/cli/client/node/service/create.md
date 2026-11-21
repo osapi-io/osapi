@@ -27,9 +27,9 @@ osapi client node service create --target web-01 --name app --object app.service
 
 With the default settings, each example does this on the host:
 
-| Example            | On the host                                                                                                                                            |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Deploy a unit file | writes `/etc/systemd/system/osapi-app.service`: `[Unit]\nDescription=Example app\n\n[Service]\nExecStart=/usr/bin/app`; runs `systemctl daemon-reload` |
+| Example            | On the host                                                                                                                                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Deploy a unit file | writes `/etc/systemd/system/osapi-app.service`: `[Unit]\nDescription=Example app\n\n[Service]\nExecStart=/bin/sleep infinity\n\n[Install]\nWantedBy=multi-user.target`; runs `systemctl daemon-reload` |
 
 The command fails in these cases:
 

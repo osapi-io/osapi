@@ -17,17 +17,17 @@ osapi client node service enable [flags]
 osapi client node service enable --target web-01 --name app
 
 # A unit with no [Install] section
-osapi client node service enable --target web-01 --name app
+osapi client node service enable --target web-01 --name static
 ```
 
 ## Result
 
 With the default settings, each example does this on the host:
 
-| Example                           | On the host                               |
-| --------------------------------- | ----------------------------------------- |
-| Enable the service                | runs `systemctl enable osapi-app.service` |
-| A unit with no \[Install] section | runs `systemctl enable osapi-app.service` |
+| Example                           | On the host                                  |
+| --------------------------------- | -------------------------------------------- |
+| Enable the service                | runs `systemctl enable osapi-app.service`    |
+| A unit with no \[Install] section | runs `systemctl enable osapi-static.service` |
 
 The command fails in these cases:
 

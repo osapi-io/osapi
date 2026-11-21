@@ -11,7 +11,7 @@ op DELETE /api/node/{hostname}/network/route/{interface_name} id=DeleteNodeNetwo
 op DELETE /api/node/{hostname}/ntp id=DeleteNodeNtp tags=[NTP_Management_API_ntp_operations] auth=BearerAuth:ntp:write params=[path:hostname!:string] body= responses=[200=application/json:NtpDeleteResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op DELETE /api/node/{hostname}/package/{name} id=DeleteNodePackage tags=[Package_API_package_operations] auth=BearerAuth:package:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:PackageDeleteResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op DELETE /api/node/{hostname}/schedule/{name} id=DeleteNodeSchedule tags=[Schedule_Management_API_schedule_operations] auth=BearerAuth:schedule:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:ScheduleDeleteResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op DELETE /api/node/{hostname}/service/{name} id=DeleteNodeService tags=[Service_Management_API_service_operations] auth=BearerAuth:service:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:ServiceMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op DELETE /api/node/{hostname}/service/{name} id=DeleteNodeService tags=[Service_API_service_operations] auth=BearerAuth:service:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:ServiceDeleteResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op DELETE /api/node/{hostname}/sysctl/{key} id=DeleteNodeSysctl tags=[Sysctl_API_sysctl_operations] auth=BearerAuth:sysctl:write params=[path:hostname!:string path:key!:string] body= responses=[200=application/json:SysctlDeleteResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op DELETE /api/node/{hostname}/user/{name} id=DeleteNodeUser tags=[User_and_Group_Management_API_user_operations] auth=BearerAuth:user:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:UserMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op DELETE /api/node/{hostname}/user/{name}/ssh-key/{fingerprint} id=DeleteNodeUserSSHKey tags=[User_and_Group_Management_API_user_operations] auth=BearerAuth:user:write params=[path:fingerprint!:string path:hostname!:string path:name!:string] body= responses=[200=application/json:SSHKeyMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -60,8 +60,8 @@ op GET /api/node/{hostname}/process id=GetNodeProcess tags=[Process_Management_A
 op GET /api/node/{hostname}/process/{pid} id=GetNodeProcessByPid tags=[Process_Management_API_process_operations] auth=BearerAuth:process:read params=[path:hostname!:string path:pid!:integer] body= responses=[200=application/json:ProcessGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/schedule id=GetNodeSchedule tags=[Schedule_Management_API_schedule_operations] auth=BearerAuth:schedule:read params=[path:hostname!:string] body= responses=[200=application/json:ScheduleCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/schedule/{name} id=GetNodeScheduleByName tags=[Schedule_Management_API_schedule_operations] auth=BearerAuth:schedule:read params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:ScheduleGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op GET /api/node/{hostname}/service id=GetNodeService tags=[Service_Management_API_service_operations] auth=BearerAuth:service:read params=[path:hostname!:string] body= responses=[200=application/json:ServiceListResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op GET /api/node/{hostname}/service/{name} id=GetNodeServiceByName tags=[Service_Management_API_service_operations] auth=BearerAuth:service:read params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:ServiceGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op GET /api/node/{hostname}/service id=GetNodeService tags=[Service_API_service_operations] auth=BearerAuth:service:read params=[path:hostname!:string] body= responses=[200=application/json:ServiceCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op GET /api/node/{hostname}/service/{name} id=GetNodeServiceByKey tags=[Service_API_service_operations] auth=BearerAuth:service:read params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:ServiceGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/status id=GetNodeStatus tags=[Status_API_status_operations] auth=BearerAuth:status:read params=[path:hostname!:string] body= responses=[200=application/json:StatusGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/sysctl id=GetNodeSysctl tags=[Sysctl_API_sysctl_operations] auth=BearerAuth:sysctl:read params=[path:hostname!:string query:prefix:string] body= responses=[200=application/json:SysctlCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/sysctl/{key} id=GetNodeSysctlByKey tags=[Sysctl_API_sysctl_operations] auth=BearerAuth:sysctl:read params=[path:hostname!:string path:key!:string] body= responses=[200=application/json:SysctlGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -99,12 +99,12 @@ op POST /api/node/{hostname}/power/reboot id=PostNodePowerReboot tags=[Power_Man
 op POST /api/node/{hostname}/power/shutdown id=PostNodePowerShutdown tags=[Power_Management_API_power_operations] auth=BearerAuth:power:execute params=[path:hostname!:string] body=application/json:PowerRequest responses=[200=application/json:PowerShutdownResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op POST /api/node/{hostname}/process/{pid}/signal id=PostNodeProcessSignal tags=[Process_Management_API_process_operations] auth=BearerAuth:process:execute params=[path:hostname!:string path:pid!:integer] body=application/json:ProcessSignalRequest! responses=[200=application/json:ProcessSignalResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op POST /api/node/{hostname}/schedule id=PostNodeSchedule tags=[Schedule_Management_API_schedule_operations] auth=BearerAuth:schedule:write params=[path:hostname!:string] body=application/json:ScheduleCreateRequest! responses=[200=application/json:ScheduleCreateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op POST /api/node/{hostname}/service id=PostNodeService tags=[Service_Management_API_service_operations] auth=BearerAuth:service:write params=[path:hostname!:string] body=application/json:ServiceCreateRequest! responses=[200=application/json:ServiceMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op POST /api/node/{hostname}/service/{name}/disable id=PostNodeServiceDisable tags=[Service_Management_API_service_operations] auth=BearerAuth:service:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:ServiceMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op POST /api/node/{hostname}/service/{name}/enable id=PostNodeServiceEnable tags=[Service_Management_API_service_operations] auth=BearerAuth:service:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:ServiceMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op POST /api/node/{hostname}/service/{name}/restart id=PostNodeServiceRestart tags=[Service_Management_API_service_operations] auth=BearerAuth:service:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:ServiceMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op POST /api/node/{hostname}/service/{name}/start id=PostNodeServiceStart tags=[Service_Management_API_service_operations] auth=BearerAuth:service:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:ServiceMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op POST /api/node/{hostname}/service/{name}/stop id=PostNodeServiceStop tags=[Service_Management_API_service_operations] auth=BearerAuth:service:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:ServiceMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op POST /api/node/{hostname}/service id=PostNodeService tags=[Service_API_service_operations] auth=BearerAuth:service:write params=[path:hostname!:string] body=application/json:ServiceCreateRequest! responses=[200=application/json:ServiceCreateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op POST /api/node/{hostname}/service/{name}/disable id=PostNodeServiceDisable tags=[Service_API_service_operations] auth=BearerAuth:service:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:ServiceDisableResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op POST /api/node/{hostname}/service/{name}/enable id=PostNodeServiceEnable tags=[Service_API_service_operations] auth=BearerAuth:service:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:ServiceEnableResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op POST /api/node/{hostname}/service/{name}/restart id=PostNodeServiceRestart tags=[Service_API_service_operations] auth=BearerAuth:service:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:ServiceRestartResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op POST /api/node/{hostname}/service/{name}/start id=PostNodeServiceStart tags=[Service_API_service_operations] auth=BearerAuth:service:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:ServiceStartResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op POST /api/node/{hostname}/service/{name}/stop id=PostNodeServiceStop tags=[Service_API_service_operations] auth=BearerAuth:service:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:ServiceStopResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op POST /api/node/{hostname}/sysctl id=PostNodeSysctl tags=[Sysctl_API_sysctl_operations] auth=BearerAuth:sysctl:write params=[path:hostname!:string] body=application/json:SysctlCreateRequest! responses=[200=application/json:SysctlCreateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op POST /api/node/{hostname}/user id=PostNodeUser tags=[User_and_Group_Management_API_user_operations] auth=BearerAuth:user:write params=[path:hostname!:string] body=application/json:UserCreateRequest! responses=[200=application/json:UserMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op POST /api/node/{hostname}/user/{name}/password id=PostNodeUserPassword tags=[User_and_Group_Management_API_user_operations] auth=BearerAuth:user:write params=[path:hostname!:string path:name!:string] body=application/json:UserPasswordRequest! responses=[200=application/json:UserMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -118,7 +118,7 @@ op PUT /api/node/{hostname}/network/interface/{name} id=PutNodeNetworkInterface 
 op PUT /api/node/{hostname}/network/route/{interface_name} id=PutNodeNetworkRoute tags=[Route_API_network_route_operations] auth=BearerAuth:network:write params=[path:hostname!:string path:interface_name!:string] body=application/json:NetworkRouteUpdateRequest! responses=[200=application/json:NetworkRouteUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op PUT /api/node/{hostname}/ntp id=PutNodeNtp tags=[NTP_Management_API_ntp_operations] auth=BearerAuth:ntp:write params=[path:hostname!:string] body=application/json:NtpUpdateRequest! responses=[200=application/json:NtpUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op PUT /api/node/{hostname}/schedule/{name} id=PutNodeSchedule tags=[Schedule_Management_API_schedule_operations] auth=BearerAuth:schedule:write params=[path:hostname!:string path:name!:string] body=application/json:ScheduleUpdateRequest! responses=[200=application/json:ScheduleUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op PUT /api/node/{hostname}/service/{name} id=PutNodeService tags=[Service_Management_API_service_operations] auth=BearerAuth:service:write params=[path:hostname!:string path:name!:string] body=application/json:ServiceUpdateRequest! responses=[200=application/json:ServiceMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op PUT /api/node/{hostname}/service/{name} id=PutNodeService tags=[Service_API_service_operations] auth=BearerAuth:service:write params=[path:hostname!:string path:name!:string] body=application/json:ServiceUpdateRequest! responses=[200=application/json:ServiceUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op PUT /api/node/{hostname}/sysctl/{key} id=PutNodeSysctl tags=[Sysctl_API_sysctl_operations] auth=BearerAuth:sysctl:write params=[path:hostname!:string path:key!:string] body=application/json:SysctlUpdateRequest! responses=[200=application/json:SysctlUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op PUT /api/node/{hostname}/timezone id=PutNodeTimezone tags=[Timezone_API_timezone_operations] auth=BearerAuth:timezone:write params=[path:hostname!:string] body=application/json:TimezoneUpdateRequest! responses=[200=application/json:TimezoneUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op PUT /api/node/{hostname}/updatepackages id=PutNodeUpdatepackages tags=[Updatepackages_API_updatepackages_operations] auth=BearerAuth:updatepackages:write params=[path:hostname!:string] body= responses=[200=application/json:UpdatepackagesUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -758,33 +758,41 @@ schema ScheduleUpdateRequest.user = string
 schema ScheduleUpdateRequest.vars = map[any]
 schema ScheduleUpdateResponse.job_id = string/uuid
 schema ScheduleUpdateResponse.results! = [ScheduleMutationResult]
+schema ServiceCollectionResponse.job_id = string/uuid
+schema ServiceCollectionResponse.results! = [ServiceEntry]
 schema ServiceCreateRequest.name! = string
 schema ServiceCreateRequest.object! = string
-schema ServiceGetEntry.error = string
-schema ServiceGetEntry.hostname! = string
-schema ServiceGetEntry.service = ServiceInfo
-schema ServiceGetEntry.status! = string(ok|failed|skipped|timeout)
+schema ServiceCreateResponse.job_id = string/uuid
+schema ServiceCreateResponse.results! = [ServiceResult]
+schema ServiceDeleteResponse.job_id = string/uuid
+schema ServiceDeleteResponse.results! = [ServiceResult]
+schema ServiceDisableResponse.job_id = string/uuid
+schema ServiceDisableResponse.results! = [ServiceResult]
+schema ServiceEnableResponse.job_id = string/uuid
+schema ServiceEnableResponse.results! = [ServiceResult]
+schema ServiceEntry.description = string
+schema ServiceEntry.enabled = boolean
+schema ServiceEntry.error = string
+schema ServiceEntry.hostname! = string
+schema ServiceEntry.name = string
+schema ServiceEntry.state = string
+schema ServiceEntry.status! = string(ok|failed|skipped|timeout)
 schema ServiceGetResponse.job_id = string/uuid
-schema ServiceGetResponse.results! = [ServiceGetEntry]
-schema ServiceInfo.description = string
-schema ServiceInfo.enabled = boolean
-schema ServiceInfo.name = string
-schema ServiceInfo.pid = integer
-schema ServiceInfo.status = string
-schema ServiceListEntry.error = string
-schema ServiceListEntry.hostname! = string
-schema ServiceListEntry.services = [ServiceInfo]
-schema ServiceListEntry.status! = string(ok|failed|skipped|timeout)
-schema ServiceListResponse.job_id = string/uuid
-schema ServiceListResponse.results! = [ServiceListEntry]
-schema ServiceMutationEntry.changed = boolean
-schema ServiceMutationEntry.error = string
-schema ServiceMutationEntry.hostname! = string
-schema ServiceMutationEntry.name = string
-schema ServiceMutationEntry.status! = string(ok|failed|skipped|timeout)
-schema ServiceMutationResponse.job_id = string/uuid
-schema ServiceMutationResponse.results! = [ServiceMutationEntry]
+schema ServiceGetResponse.results! = [ServiceEntry]
+schema ServiceRestartResponse.job_id = string/uuid
+schema ServiceRestartResponse.results! = [ServiceResult]
+schema ServiceResult.changed = boolean
+schema ServiceResult.error = string
+schema ServiceResult.hostname! = string
+schema ServiceResult.name = string
+schema ServiceResult.status! = string(ok|failed|skipped|timeout)
+schema ServiceStartResponse.job_id = string/uuid
+schema ServiceStartResponse.results! = [ServiceResult]
+schema ServiceStopResponse.job_id = string/uuid
+schema ServiceStopResponse.results! = [ServiceResult]
 schema ServiceUpdateRequest.object! = string
+schema ServiceUpdateResponse.job_id = string/uuid
+schema ServiceUpdateResponse.results! = [ServiceResult]
 schema StaleDeployment.current_sha! = string
 schema StaleDeployment.deployed_at! = string
 schema StaleDeployment.deployed_sha! = string
@@ -978,7 +986,7 @@ tag Power_Management_API_power_operations
 tag Process_Management_API_process_operations
 tag Route_API_network_route_operations
 tag Schedule_Management_API_schedule_operations
-tag Service_Management_API_service_operations
+tag Service_API_service_operations
 tag Status_API_status_operations
 tag Sysctl_API_sysctl_operations
 tag Telemetry_API_telemetry

@@ -21,9 +21,9 @@ osapi client node service update --target web-01 --name app --object app-v2.serv
 
 With the default settings, each example does this on the host:
 
-| Example         | On the host                                                                                                                                                            |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A new unit file | writes `/etc/systemd/system/osapi-app.service`: `[Unit]\nDescription=Example app\n\n[Service]\nExecStart=/usr/bin/app\nRestart=always`; runs `systemctl daemon-reload` |
+| Example         | On the host                                                                                                                                                                                                            |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A new unit file | writes `/etc/systemd/system/osapi-app.service`: `[Unit]\nDescription=Example app\n\n[Service]\nExecStart=/bin/sleep infinity\n\n[Install]\nWantedBy=multi-user.target\nRestart=always`; runs `systemctl daemon-reload` |
 
 The command fails in these cases:
 

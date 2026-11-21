@@ -215,6 +215,20 @@ func (suite *SysctlPublicTestSuite) TestSysctlList() {
 	}
 }
 
+// TestSysctlListPrefix: a prefix goes to the API as the prefix query.
+func (suite *SysctlPublicTestSuite) TestSysctlListPrefix() {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		suite.Equal("net.ipv4", r.URL.Query().Get("prefix"))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"results":[]}`))
+	}))
+	defer server.Close()
+	sut := client.New(server.URL, "test-token", client.WithLogger(slog.Default()))
+
+	_, err := sut.Sysctl.List(suite.ctx, "_any", client.SysctlListOpts{Prefix: "net.ipv4"})
+	suite.NoError(err)
+}
+
 func (suite *SysctlPublicTestSuite) TestSysctlGet() {
 	tests := []struct {
 		name         string

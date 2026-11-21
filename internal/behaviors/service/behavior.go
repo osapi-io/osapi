@@ -41,8 +41,11 @@ const (
 	appUp    = "osapi-app.service loaded active running Example app\n"
 	appOff   = "osapi-app.service disabled enabled\n"
 	appOn    = "osapi-app.service enabled enabled\n"
-	unitText = "[Unit]\nDescription=Example app\n\n[Service]\nExecStart=/usr/bin/app\n"
-	appPath  = "/etc/systemd/system/osapi-app.service"
+	unitText = "[Unit]\nDescription=Example app\n\n[Service]\nExecStart=/bin/sleep infinity\n\n" +
+		"[Install]\nWantedBy=multi-user.target\n"
+	// staticText has no [Install] section, so systemd cannot enable it.
+	staticText = "[Unit]\nDescription=Example static\n\n[Service]\nExecStart=/bin/sleep infinity\n"
+	appPath    = "/etc/systemd/system/osapi-app.service"
 )
 
 // ssh is the service of the examples that osapi did not deploy.
@@ -249,13 +252,13 @@ var Behavior = behavior.Register(behavior.Define(
 		EnableInput{Name: "a b"},
 		EnableInput{Name: "--now"},
 	).
-		Example("A unit with no [Install] section", EnableInput{Name: "app"},
-			Result{Name: "app"},
-			stored,
-			deployed,
-			behavior.Prints(units, appDead),
-			behavior.Prints(files, "osapi-app.service static -\n"),
-			behavior.Ran("systemctl", "enable", "osapi-app.service"),
+		Example("A unit with no [Install] section", EnableInput{Name: "static"},
+			Result{Name: "static"},
+			behavior.Stored("static.service", staticText, "raw"),
+			behavior.After(CreateInput{Name: "static", Object: "static.service"}),
+			behavior.Prints(units, "osapi-static.service loaded inactive dead Example static\n"),
+			behavior.Prints(files, "osapi-static.service static -\n"),
+			behavior.Ran("systemctl", "enable", "osapi-static.service"),
 		),
 	action(
 		"disable",
@@ -295,6 +298,22 @@ func action[In any](
 	option In,
 ) *behavior.Method {
 	ran := "systemctl " + name + " osapi-app.service"
+	// A live host starts each example from a unit that create deployed: dead
+	// and disabled. stop and disable need it running or enabled first.
+	host := []behavior.HostOption{stored, deployed}
+	switch name {
+	case "stop":
+		host = append(host, behavior.After(StartInput{Name: "app"}))
+	case "disable":
+		host = append(host, behavior.After(EnableInput{Name: "app"}))
+	}
+	host = append(host,
+		behavior.Prints(units, unit),
+		behavior.Prints(files, file),
+		behavior.PrintsAfter(ran, units, unitAfter),
+		behavior.PrintsAfter(ran, files, fileAfter),
+		behavior.Ran("systemctl", name, "osapi-app.service"),
+	)
 	m := behavior.Action(name, fn).Key("name").
 		On(behavior.PlatformDebian).
 		Sudo("systemctl").
@@ -302,13 +321,7 @@ func action[In any](
 		Explain(explain+" A service that osapi did not deploy is not found.").
 		Example(strings.ToUpper(name[:1])+name[1:]+" the service", in,
 			Result{Name: "app", Changed: true},
-			stored,
-			deployed,
-			behavior.Prints(units, unit),
-			behavior.Prints(files, file),
-			behavior.PrintsAfter(ran, units, unitAfter),
-			behavior.PrintsAfter(ran, files, fileAfter),
-			behavior.Ran("systemctl", name, "osapi-app.service"),
+			host...,
 		).
 		Fails("A service that osapi did not deploy", missing, "not found").
 		Fails("A unit file that osapi did not deploy", agent, "not found", agentUnit).

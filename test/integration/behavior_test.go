@@ -26,6 +26,7 @@ import (
 	"encoding/json"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -129,6 +130,7 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 				s.Run(b.Name+" "+m.Name+" "+ex.Doc, func() {
 					defer s.restore(b)()
 					s.reset(b, ex.Input)
+					s.store(ex.Given)
 					for _, g := range ex.Given {
 						if g.Kind != behavior.GivenCall {
 							continue
@@ -146,6 +148,9 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 							s.Equal(want, r["changed"], "the example's changed")
 						}
 					}
+					if m.AlwaysChanges {
+						return
+					}
 					for _, r := range s.results(commandLine(b, m, ex.Input)) {
 						if r["status"] == "ok" {
 							s.Equal(false, r["changed"], "the same call again changes nothing")
@@ -154,6 +159,24 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 				})
 			}
 		}
+	}
+}
+
+// store uploads each object that the example stores with behavior.Stored,
+// with osapi client file upload, as a person does before a deploy. An object
+// that has the content already is unchanged.
+func (s *BehaviorSmokeSuite) store(
+	given []behavior.Given,
+) {
+	for _, g := range given {
+		if g.Kind != behavior.GivenObject {
+			continue
+		}
+		path := filepath.Join(s.T().TempDir(), "object")
+		s.Require().NoError(os.WriteFile(path, []byte(g.Content), 0o600))
+		_, stderr, code := runCLI("client", "file", "upload", "--name", g.Path,
+			"--file", path, "--content-type", g.ContentType)
+		s.Require().Equal(0, code, "upload %s: %s", g.Path, stderr)
 	}
 }
 
