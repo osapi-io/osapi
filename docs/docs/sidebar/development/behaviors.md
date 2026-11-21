@@ -23,7 +23,12 @@ shows the Go API, with examples that run as tests.
 Every behavior has the same files, so a reader, a reviewer or an agent finds the
 same thing in the same place.
 `osapi behavior create --name <name> --description "..."` writes them, as a
-working behavior that keeps a value in a file:
+working behavior that keeps a value in a file. The name is the route, the
+command and the docs page. The Go package and its directory are the name too,
+unless `--package` names a different one. A name that is a Go keyword needs
+`--package`: `--name package --package packages` serves `/package` from
+`internal/behaviors/packages/`. The scaffold refuses the keyword, and does not
+change the name for you.
 
 ```text
 internal/behaviors/<name>/

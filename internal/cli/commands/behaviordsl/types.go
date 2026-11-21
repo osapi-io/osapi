@@ -170,7 +170,8 @@ type CreateInput struct {
 	Name        string `json:"name"        validate:"required"  doc:"The behavior's name: lowercase letters and digits"`
 	Description string `json:"description" validate:"required"  doc:"What it manages, in one line"`
 	Group       string `json:"group"       validate:"omitempty" doc:"Nest it under a group, such as network: its routes, commands and directory"`
-	Root        string `json:"root"        validate:"omitempty" doc:"The osapi checkout to write into"                                           default:"."`
+	Package     string `json:"package"     validate:"omitempty" doc:"The Go package and directory, when it is not the name: package is a Go keyword, so --name package --package packages"`
+	Root        string `json:"root"        validate:"omitempty" doc:"The osapi checkout to write into"                                                                                     default:"."`
 }
 
 // CreateOutput is the files that create wrote, and the steps after it.

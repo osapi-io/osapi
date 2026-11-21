@@ -74,10 +74,49 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 		setup        func() string
 		group        string
 		bname        string
+		goPackage    string
 		doc          string
 		wantErr      string
 		validateFunc func(root string, files []string)
 	}{
+		{
+			name:    "when the name is a Go keyword and no package is named",
+			setup:   func() string { return s.checkout(allGo) },
+			bname:   "package",
+			doc:     "The packages on the host",
+			wantErr: `"package" is a Go keyword, so it cannot be the Go package: pass --package`,
+		},
+		{
+			name:      "when the package is not a Go package name",
+			setup:     func() string { return s.checkout(allGo) },
+			bname:     "package",
+			goPackage: "pkg-s",
+			doc:       "The packages on the host",
+			wantErr:   `package "pkg-s" must be lowercase letters and digits`,
+		},
+		{
+			name:      "when a package is named, the code lives there and the name stays",
+			setup:     func() string { return s.checkout(allGo) },
+			bname:     "package",
+			goPackage: "packages",
+			doc:       "The packages on the host",
+			validateFunc: func(root string, files []string) {
+				s.Contains(files, "internal/behaviors/packages/behavior.go")
+				def, err := os.ReadFile(
+					filepath.Join(root, "internal/behaviors/packages/behavior.go"),
+				)
+				s.Require().NoError(err)
+				s.Contains(string(def), "package packages")
+				s.Contains(string(def), `"package", "The packages on the host",`)
+				test, err := os.ReadFile(
+					filepath.Join(root, "internal/behaviors/packages/behavior_public_test.go"))
+				s.Require().NoError(err)
+				s.Contains(string(test), "package packages_test")
+				all, err := os.ReadFile(filepath.Join(root, "internal/behaviors/all/all.go"))
+				s.Require().NoError(err)
+				s.Contains(string(all), `"github.com/osapi-io/osapi/internal/behaviors/packages"`)
+			},
+		},
 		{
 			name:  "when the name is free, it writes the layout and registers it",
 			setup: func() string { return s.checkout(allGo) },
@@ -277,7 +316,7 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 		s.Run(tc.name, func() {
 			root := tc.setup()
 
-			files, err := behavior.Scaffold(root, tc.group, tc.bname, tc.doc)
+			files, err := behavior.Scaffold(root, tc.group, tc.bname, tc.goPackage, tc.doc)
 
 			if tc.wantErr != "" {
 				s.ErrorContains(err, tc.wantErr)
@@ -318,7 +357,7 @@ func (s *ScaffoldPublicTestSuite) TestGolden() {
 		s.Run(tc.name, func() {
 			root := s.checkout(allGo)
 
-			files, err := behavior.Scaffold(root, tc.group, tc.bname, tc.doc)
+			files, err := behavior.Scaffold(root, tc.group, tc.bname, "", tc.doc)
 			s.Require().NoError(err)
 
 			for _, rel := range files {

@@ -72,9 +72,12 @@ type scaffoldSource struct {
 // scaffold is what a new behavior is called and where it lives.
 type scaffold struct {
 	group string
-	name  string
-	path  string
-	doc   string
+	// name is the behavior's name, in its routes, commands and docs.
+	name string
+	// goPackage is the Go package and directory it lives in.
+	goPackage string
+	path      string
+	doc       string
 }
 
 // pkg is the import path of the new behavior's package.
@@ -121,7 +124,7 @@ func renderGo(
 
 // newFile is a file of the behavior's package.
 func (sc scaffold) newFile() *jen.File {
-	f := jen.NewFilePathName(sc.pkg(), sc.name)
+	f := jen.NewFilePathName(sc.pkg(), sc.goPackage)
 	f.HeaderComment(license)
 	f.ImportName(behaviorPath, "behavior")
 
@@ -130,9 +133,9 @@ func (sc scaffold) newFile() *jen.File {
 
 // newTestFile is a file of the behavior's external test package.
 func (sc scaffold) newTestFile() *jen.File {
-	f := jen.NewFilePathName(sc.pkg()+"_test", sc.name+"_test")
+	f := jen.NewFilePathName(sc.pkg()+"_test", sc.goPackage+"_test")
 	f.HeaderComment(license)
-	f.ImportName(sc.pkg(), sc.name)
+	f.ImportName(sc.pkg(), sc.goPackage)
 	f.ImportName(sc.pkg()+"/mocks", "mocks")
 	f.ImportName(suitePath, "suite")
 	f.ImportName(gomockPath, "gomock")
@@ -231,7 +234,9 @@ func s(
 
 func (sc scaffold) behaviorFile() *jen.File {
 	f := sc.newFile()
-	f.PackageComment(fmt.Sprintf("Package %s is the %s behavior: %s.", sc.name, sc.name, sc.doc))
+	f.PackageComment(
+		fmt.Sprintf("Package %s is the %s behavior: %s.", sc.goPackage, sc.name, sc.doc),
+	)
 	b := func(name string) *jen.Statement { return jen.Qual(behaviorPath, name) }
 	// next breaks a method chain after its dot, one method to a line.
 	next := func(method string, args ...jen.Code) *jen.Statement {
