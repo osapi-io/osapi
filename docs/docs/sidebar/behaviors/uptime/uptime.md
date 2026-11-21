@@ -20,7 +20,7 @@ Get the uptime of target hosts.
 
 | Uses | Used by |
 | ---- | ------- |
-| Nothing | Nothing |
+| Nothing | [status](../status/status.md) |
 
 ## Where it runs
 

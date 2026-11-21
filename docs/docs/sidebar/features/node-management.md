@@ -48,28 +48,26 @@ and shows it.
 
 ### When part of a status cannot be read
 
-`node status` puts together six separate reads: hostname, OS information,
-uptime, disks, memory and load. When one read fails, the others still return.
-The response names the failure, and does not show a zero. A zero value looks the
-same as a host with nothing to report.
+`node status` is the [status behavior](../behaviors/status/status.md). It runs
+six separate reads: hostname, uptime, OS, load, memory and disks. When one read
+fails, the others still return. The response names the failure in `errors`, and
+does not show a zero. A zero value looks the same as a host with nothing to
+report.
 
-When a read fails, the status has `partial: true` and a `field_errors` object.
-Its keys are the fields that the failed reads did not fill:
+Each item of `errors` is the name of the read and its error:
 
 ```json
 {
   "hostname": "web-01",
-  "uptime": "4 hours, 1 minute",
-  "partial": true,
-  "field_errors": {
-    "memory_stats": "open /proc/meminfo: permission denied"
-  }
+  "status": "ok",
+  "name": "web-01",
+  "uptime": { "uptime": "4 hours, 1 minute", "seconds": 14460 },
+  "errors": ["memory: open /proc/meminfo: permission denied"]
 }
 ```
 
 The `status` of the row stays `ok`, because the operation ran and the agent
-answered. The CLI prints an **Unavailable** section with each field and the
-reason that the agent could not read it.
+answered.
 
 The network and command operations are also under node. Refer to
 [Network Management](network-management.md) and

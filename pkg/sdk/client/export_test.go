@@ -70,13 +70,6 @@ func ExportOSInfoFromGen(
 	return osInfoFromGen(input)
 }
 
-// ExportDisksFromGen exposes the private disksFromGen for testing.
-func ExportDisksFromGen(
-	input *gen.DisksResponse,
-) []Disk {
-	return disksFromGen(input)
-}
-
 func ExportHostnameCollectionFromGen(
 	input *gen.HostnameGetResponse,
 ) Collection[HostnameResult] {

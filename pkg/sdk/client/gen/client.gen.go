@@ -748,30 +748,6 @@ func (e NodeConditionType) Valid() bool {
 	}
 }
 
-// Defines values for NodeStatusResponseStatus.
-const (
-	NodeStatusResponseStatusFailed  NodeStatusResponseStatus = "failed"
-	NodeStatusResponseStatusOk      NodeStatusResponseStatus = "ok"
-	NodeStatusResponseStatusSkipped NodeStatusResponseStatus = "skipped"
-	NodeStatusResponseStatusTimeout NodeStatusResponseStatus = "timeout"
-)
-
-// Valid indicates whether the value is a known member of the NodeStatusResponseStatus enum.
-func (e NodeStatusResponseStatus) Valid() bool {
-	switch e {
-	case NodeStatusResponseStatusFailed:
-		return true
-	case NodeStatusResponseStatusOk:
-		return true
-	case NodeStatusResponseStatusSkipped:
-		return true
-	case NodeStatusResponseStatusTimeout:
-		return true
-	default:
-		return false
-	}
-}
-
 // Defines values for NtpMutationResultStatus.
 const (
 	NtpMutationResultStatusFailed  NtpMutationResultStatus = "failed"
@@ -1360,6 +1336,30 @@ func (e ServiceMutationEntryStatus) Valid() bool {
 	case ServiceMutationEntryStatusSkipped:
 		return true
 	case ServiceMutationEntryStatusTimeout:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for StatusEntryStatus.
+const (
+	StatusEntryStatusFailed  StatusEntryStatus = "failed"
+	StatusEntryStatusOk      StatusEntryStatus = "ok"
+	StatusEntryStatusSkipped StatusEntryStatus = "skipped"
+	StatusEntryStatusTimeout StatusEntryStatus = "timeout"
+)
+
+// Valid indicates whether the value is a known member of the StatusEntryStatus enum.
+func (e StatusEntryStatus) Valid() bool {
+	switch e {
+	case StatusEntryStatusFailed:
+		return true
+	case StatusEntryStatusOk:
+		return true
+	case StatusEntryStatusSkipped:
+		return true
+	case StatusEntryStatusTimeout:
 		return true
 	default:
 		return false
@@ -2249,24 +2249,6 @@ type DiskGetResponse struct {
 	Results []DiskEntry         `json:"results"`
 }
 
-// DiskResponse Local disk usage information.
-type DiskResponse struct {
-	// Free Free disk space in bytes.
-	Free int `json:"free"`
-
-	// Name Disk identifier, e.g., "/dev/sda1".
-	Name string `json:"name"`
-
-	// Total Total disk space in bytes.
-	Total int `json:"total"`
-
-	// Used Used disk space in bytes.
-	Used int `json:"used"`
-}
-
-// DisksResponse List of local disk usage information.
-type DisksResponse = []DiskResponse
-
 // DockerActionCollectionResponse defines model for DockerActionCollectionResponse.
 type DockerActionCollectionResponse struct {
 	// JobId The job ID used to process this request.
@@ -2559,6 +2541,15 @@ type DockerSummary struct {
 
 	// State Current container state.
 	State *string `json:"state,omitempty"`
+}
+
+// Entry defines model for Entry.
+type Entry struct {
+	// Seconds How long the host has run, in seconds
+	Seconds int `json:"seconds"`
+
+	// Uptime How long the host has run, in days, hours and minutes
+	Uptime string `json:"uptime"`
 }
 
 // ErrorResponse defines model for ErrorResponse.
@@ -3370,52 +3361,6 @@ type NodeCondition struct {
 
 // NodeConditionType defines model for NodeCondition.Type.
 type NodeConditionType string
-
-// NodeStatusCollectionResponse defines model for NodeStatusCollectionResponse.
-type NodeStatusCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID  `json:"job_id,omitempty"`
-	Results []NodeStatusResponse `json:"results"`
-}
-
-// NodeStatusResponse defines model for NodeStatusResponse.
-type NodeStatusResponse struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Disks List of local disk usage information.
-	Disks *DisksResponse `json:"disks,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// FieldErrors The reads that failed, keyed by the field they would have filled. Absent when every read succeeded.
-	FieldErrors *map[string]string `json:"field_errors,omitempty"`
-
-	// Hostname The hostname of the system.
-	Hostname string `json:"hostname"`
-
-	// LoadAverage The system load averages for 1, 5, and 15 minutes.
-	LoadAverage *LoadAverageResponse `json:"load_average,omitempty"`
-
-	// Memory Memory usage information.
-	Memory *MemoryResponse `json:"memory,omitempty"`
-
-	// OsInfo Operating system information.
-	OsInfo *OSInfoResponse `json:"os_info,omitempty"`
-
-	// Partial True when one or more of the reads behind this status failed. The fields they would have filled are absent or zero-valued, and field_errors says which and why.
-	Partial *bool `json:"partial,omitempty"`
-
-	// Status The status of the operation for this host.
-	Status NodeStatusResponseStatus `json:"status"`
-
-	// Uptime The uptime of the system.
-	Uptime *string `json:"uptime,omitempty"`
-}
-
-// NodeStatusResponseStatus The status of the operation for this host.
-type NodeStatusResponseStatus string
 
 // NtpCollectionResponse defines model for NtpCollectionResponse.
 type NtpCollectionResponse struct {
@@ -4342,6 +4287,41 @@ type StaleDeploymentsResponse struct {
 
 	// TotalItems Total number of stale deployments.
 	TotalItems int `json:"total_items"`
+}
+
+// StatusEntry defines model for StatusEntry.
+type StatusEntry struct {
+	// Disks Each local filesystem
+	Disks *[]Disk `json:"disks,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Errors Each read that failed, as name: error. The other fields still answer.
+	Errors *[]string `json:"errors,omitempty"`
+
+	// Hostname Hostname of the agent that produced this result.
+	Hostname    string    `json:"hostname"`
+	LoadAverage *Averages `json:"load_average,omitempty"`
+	Memory      *Usage    `json:"memory,omitempty"`
+
+	// Name The hostname of the host, as the hostname command prints it
+	Name   *string  `json:"name,omitempty"`
+	OsInfo *Release `json:"os_info,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status StatusEntryStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
+	Uptime *Entry            `json:"uptime,omitempty"`
+}
+
+// StatusEntryStatus The status of the operation for this host.
+type StatusEntryStatus string
+
+// StatusGetResponse defines model for StatusGetResponse.
+type StatusGetResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []StatusEntry       `json:"results"`
 }
 
 // StatusResponse defines model for StatusResponse.
@@ -5317,9 +5297,6 @@ type ClientInterface interface {
 	// GetNATSStatus request
 	GetNATSStatus(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetNodeStatus request
-	GetNodeStatus(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// GetNodeCertificateCa request
 	GetNodeCertificateCa(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -5607,6 +5584,9 @@ type ClientInterface interface {
 
 	// PostNodeServiceStop request
 	PostNodeServiceStop(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetNodeStatus request
+	GetNodeStatus(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNodeSysctl request
 	GetNodeSysctl(ctx context.Context, hostname Hostname, params *GetNodeSysctlParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -6063,18 +6043,6 @@ func (c *Client) RetryJobByID(ctx context.Context, id openapi_types.UUID, body R
 
 func (c *Client) GetNATSStatus(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetNATSStatusRequest(c.Server)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetNodeStatus(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetNodeStatusRequest(c.Server, hostname)
 	if err != nil {
 		return nil, err
 	}
@@ -7347,6 +7315,18 @@ func (c *Client) PostNodeServiceStart(ctx context.Context, hostname Hostname, na
 
 func (c *Client) PostNodeServiceStop(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostNodeServiceStopRequest(c.Server, hostname, name)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetNodeStatus(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeStatusRequest(c.Server, hostname)
 	if err != nil {
 		return nil, err
 	}
@@ -8715,40 +8695,6 @@ func NewGetNATSStatusRequest(server string) (*http.Request, error) {
 	}
 
 	operationPath := fmt.Sprintf("/api/nats/status")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetNodeStatusRequest generates requests for GetNodeStatus
-func NewGetNodeStatusRequest(server string, hostname Hostname) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/node/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -12210,6 +12156,40 @@ func NewPostNodeServiceStopRequest(server string, hostname Hostname, name Servic
 	return req, nil
 }
 
+// NewGetNodeStatusRequest generates requests for GetNodeStatus
+func NewGetNodeStatusRequest(server string, hostname Hostname) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/node/%s/status", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetNodeSysctlRequest generates requests for GetNodeSysctl
 func NewGetNodeSysctlRequest(server string, hostname Hostname, params *GetNodeSysctlParams) (*http.Request, error) {
 	var err error
@@ -13183,9 +13163,6 @@ type ClientWithResponsesInterface interface {
 	// GetNATSStatusWithResponse request
 	GetNATSStatusWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetNATSStatusResponse, error)
 
-	// GetNodeStatusWithResponse request
-	GetNodeStatusWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeStatusResponse, error)
-
 	// GetNodeCertificateCaWithResponse request
 	GetNodeCertificateCaWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeCertificateCaResponse, error)
 
@@ -13473,6 +13450,9 @@ type ClientWithResponsesInterface interface {
 
 	// PostNodeServiceStopWithResponse request
 	PostNodeServiceStopWithResponse(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*PostNodeServiceStopResponse, error)
+
+	// GetNodeStatusWithResponse request
+	GetNodeStatusWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeStatusResponse, error)
 
 	// GetNodeSysctlWithResponse request
 	GetNodeSysctlWithResponse(ctx context.Context, hostname Hostname, params *GetNodeSysctlParams, reqEditors ...RequestEditorFn) (*GetNodeSysctlResponse, error)
@@ -14570,40 +14550,6 @@ func (r GetNATSStatusResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetNATSStatusResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type GetNodeStatusResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *NodeStatusCollectionResponse
-	JSON400      *ErrorResponse
-	JSON401      *ErrorResponse
-	JSON403      *ErrorResponse
-	JSON500      *ErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r GetNodeStatusResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetNodeStatusResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetNodeStatusResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -17224,6 +17170,40 @@ func (r PostNodeServiceStopResponse) ContentType() string {
 	return ""
 }
 
+type GetNodeStatusResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *StatusGetResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNodeStatusResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNodeStatusResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetNodeStatusResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetNodeSysctlResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -18137,15 +18117,6 @@ func (c *ClientWithResponses) GetNATSStatusWithResponse(ctx context.Context, req
 		return nil, err
 	}
 	return ParseGetNATSStatusResponse(rsp)
-}
-
-// GetNodeStatusWithResponse request returning *GetNodeStatusResponse
-func (c *ClientWithResponses) GetNodeStatusWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeStatusResponse, error) {
-	rsp, err := c.GetNodeStatus(ctx, hostname, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetNodeStatusResponse(rsp)
 }
 
 // GetNodeCertificateCaWithResponse request returning *GetNodeCertificateCaResponse
@@ -19070,6 +19041,15 @@ func (c *ClientWithResponses) PostNodeServiceStopWithResponse(ctx context.Contex
 		return nil, err
 	}
 	return ParsePostNodeServiceStopResponse(rsp)
+}
+
+// GetNodeStatusWithResponse request returning *GetNodeStatusResponse
+func (c *ClientWithResponses) GetNodeStatusWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeStatusResponse, error) {
+	rsp, err := c.GetNodeStatus(ctx, hostname, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNodeStatusResponse(rsp)
 }
 
 // GetNodeSysctlWithResponse request returning *GetNodeSysctlResponse
@@ -20974,60 +20954,6 @@ func ParseGetNATSStatusResponse(rsp *http.Response) (*GetNATSStatusResponse, err
 			return nil, err
 		}
 		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON403 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetNodeStatusResponse parses an HTTP response from a GetNodeStatusWithResponse call
-func ParseGetNodeStatusResponse(rsp *http.Response) (*GetNodeStatusResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetNodeStatusResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest NodeStatusCollectionResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest ErrorResponse
@@ -25356,6 +25282,60 @@ func ParsePostNodeServiceStopResponse(rsp *http.Response) (*PostNodeServiceStopR
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNodeStatusResponse parses an HTTP response from a GetNodeStatusWithResponse call
+func ParseGetNodeStatusResponse(rsp *http.Response) (*GetNodeStatusResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNodeStatusResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest StatusGetResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

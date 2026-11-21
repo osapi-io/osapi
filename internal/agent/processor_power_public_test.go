@@ -116,14 +116,16 @@ func (s *ProcessorPowerPublicTestSuite) TestProcessPowerOperation() {
 			}
 
 			processor := agent.NewNodeProcessor(
-				nil, nil, nil, nil, nil, nil,
+				nil,
+				nil,
 				powerProvider,
 				nil,
 				nil,
 				nil,
 				nil,
 				nil,
-				slog.Default())
+				slog.Default(),
+			)
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
@@ -237,14 +239,16 @@ func (s *ProcessorPowerPublicTestSuite) TestProcessPowerReboot() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := agent.NewNodeProcessor(
-				nil, nil, nil, nil, nil, nil,
+				nil,
+				nil,
 				tt.setupMock(),
 				nil,
 				nil,
 				nil,
 				nil,
 				nil,
-				slog.Default())
+				slog.Default(),
+			)
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
@@ -358,14 +362,16 @@ func (s *ProcessorPowerPublicTestSuite) TestProcessPowerShutdown() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := agent.NewNodeProcessor(
-				nil, nil, nil, nil, nil, nil,
+				nil,
+				nil,
 				tt.setupMock(),
 				nil,
 				nil,
 				nil,
 				nil,
 				nil,
-				slog.Default())
+				slog.Default(),
+			)
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}

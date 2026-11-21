@@ -135,25 +135,6 @@ func (s *ProcessorPublicTestSuite) TestProcessJobOperation() {
 		validateFunc func(json.RawMessage, error)
 	}{
 		{
-			name: "successful node status operation",
-			jobRequest: job.Request{
-				Type:      job.TypeQuery,
-				Category:  "node",
-				Operation: "status.get",
-				Data:      json.RawMessage(`{}`),
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Contains(response, "hostname")
-				s.Equal(false, response["changed"])
-			},
-		},
-		{
 			name: "successful network DNS query operation",
 			jobRequest: job.Request{
 				Type:      job.TypeQuery,
@@ -388,68 +369,6 @@ func (s *ProcessorPublicTestSuite) TestProcessJobOperation() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			tt.validateFunc(agent.ExportProcessJobOperation(s.testAgent, tt.jobRequest))
-		})
-	}
-}
-
-func (s *ProcessorPublicTestSuite) TestSystemOperations() {
-	tests := []struct {
-		name      string
-		operation string
-		labels    map[string]string
-		// jobType defaults to a query.
-		jobType job.Type
-		// data defaults to an empty object.
-		data string
-		// createAgent builds an agent with the providers a row needs;
-		// nil uses the suite's agent.
-		createAgent  func() *agent.Agent
-		validateFunc func(json.RawMessage, error)
-	}{
-		{
-			name:      "get node status",
-			operation: "status.get",
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Contains(response, "hostname")
-				s.Equal(false, response["changed"])
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			a := s.testAgent
-			if tt.createAgent != nil {
-				a = tt.createAgent()
-			} else {
-				cfg := agent.GetAgentAppConfig(a)
-				cfg.Agent.Labels = tt.labels
-				agent.SetAgentAppConfig(a, cfg)
-			}
-
-			jobType := tt.jobType
-			if jobType == "" {
-				jobType = job.TypeQuery
-			}
-			data := tt.data
-			if data == "" {
-				data = `{}`
-			}
-
-			request := job.Request{
-				Type:      jobType,
-				Category:  "node",
-				Operation: tt.operation,
-				Data:      json.RawMessage(data),
-			}
-
-			tt.validateFunc(agent.ExportProcessNodeOperation(a, request))
 		})
 	}
 }

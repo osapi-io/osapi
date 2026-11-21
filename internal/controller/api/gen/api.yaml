@@ -47,9 +47,6 @@ tags:
   - description: Telemetry endpoints, such as the spans of a trace.
     name: Telemetry_API_telemetry
     x-displayName: Telemetry
-  - name: Node_Management_API_node_status
-    x-displayName: Node/Status
-    description: Operations related to node status endpoint.
   - name: Certificate_Management_API_certificate_operations
     x-displayName: Node/Certificate
     description: CA certificate management on a target node.
@@ -125,6 +122,9 @@ tags:
   - description: Get the operating system of target hosts
     name: Os_API_os_operations
     x-displayName: Node/Os
+  - description: The status summary of a node
+    name: Status_API_status_operations
+    x-displayName: Node/Status
   - description: Kernel parameters, written to sysctl.d files and applied
     name: Sysctl_API_sysctl_operations
     x-displayName: Node/Sysctl
@@ -1911,53 +1911,6 @@ paths:
       summary: Get the spans of a trace
       tags:
         - Telemetry_API_telemetry
-  /api/node/{hostname}:
-    servers: []
-    get:
-      summary: Retrieve node status
-      description: >
-        Get the current status of the node including hostname, uptime, load
-        averages, memory, and disk usage.
-      tags:
-        - Node_Management_API_node_status
-      operationId: GetNodeStatus
-      security:
-        - BearerAuth:
-            - node:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      responses:
-        '200':
-          description: |
-            A JSON object containing the node's status information.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NodeStatusCollectionResponse'
-        '400':
-          description: Invalid request parameters.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error retrieving node status.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /api/node/{hostname}/certificate/ca:
     servers: []
     get:
@@ -6474,6 +6427,53 @@ paths:
       summary: Get the operating system of the host
       tags:
         - Os_API_os_operations
+  /api/node/{hostname}/status:
+    servers: []
+    get:
+      description: >-
+        Runs the get of the hostname, uptime, os, load, memory and disk
+        behaviors on the host, and answers with each. A read that fails is in
+        errors, as its name and its error, and the other fields still answer.
+      operationId: GetNodeStatus
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusGetResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - status:read
+      summary: Get the status summary of the host
+      tags:
+        - Status_API_status_operations
   /api/node/{hostname}/sysctl:
     servers: []
     get:
@@ -7117,45 +7117,45 @@ components:
         - total_items
       type: object
     LoadAverageResponse:
-      type: object
       description: The system load averages for 1, 5, and 15 minutes.
       properties:
         1min:
-          type: number
           description: Load average for the last 1 minute.
           example: 0.32
-        5min:
           type: number
+        5min:
           description: Load average for the last 5 minutes.
           example: 0.28
-        15min:
           type: number
+        15min:
           description: Load average for the last 15 minutes.
           example: 0.25
+          type: number
       required:
         - 1min
         - 5min
         - 15min
-    MemoryResponse:
       type: object
+    MemoryResponse:
       description: Memory usage information.
       properties:
-        total:
-          type: integer
-          description: Total memory in bytes.
-          example: 8388608
         free:
-          type: integer
           description: Free memory in bytes.
           example: 2097152
-        used:
           type: integer
+        total:
+          description: Total memory in bytes.
+          example: 8388608
+          type: integer
+        used:
           description: Used memory in bytes.
           example: 4194304
+          type: integer
       required:
         - total
         - free
         - used
+      type: object
     NetworkInterfaceResponse:
       properties:
         family:
@@ -7203,20 +7203,20 @@ components:
         - last_transition_time
       type: object
     OSInfoResponse:
-      type: object
       description: Operating system information.
       properties:
         distribution:
-          type: string
           description: The name of the Linux distribution.
           example: Ubuntu
-        version:
           type: string
+        version:
           description: The version of the Linux distribution.
           example: '20.04'
+          type: string
       required:
         - distribution
         - version
+      type: object
     RouteResponse:
       description: A network routing table entry.
       properties:
@@ -8077,102 +8077,6 @@ components:
         - status
         - attributes
       type: object
-    DiskResponse:
-      type: object
-      description: Local disk usage information.
-      properties:
-        name:
-          type: string
-          description: Disk identifier, e.g., "/dev/sda1".
-          example: /dev/sda1
-        total:
-          type: integer
-          description: Total disk space in bytes.
-          example: 500000000000
-        used:
-          type: integer
-          description: Used disk space in bytes.
-          example: 250000000000
-        free:
-          type: integer
-          description: Free disk space in bytes.
-          example: 250000000000
-      required:
-        - name
-        - total
-        - used
-        - free
-    DisksResponse:
-      type: array
-      description: List of local disk usage information.
-      items:
-        $ref: '#/components/schemas/DiskResponse'
-    NodeStatusResponse:
-      type: object
-      properties:
-        hostname:
-          type: string
-          description: The hostname of the system.
-          example: my-linux-server
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        uptime:
-          type: string
-          description: The uptime of the system.
-          example: 0 days, 4 hours, 1 minute
-        load_average:
-          $ref: '#/components/schemas/LoadAverageResponse'
-        memory:
-          $ref: '#/components/schemas/MemoryResponse'
-        disks:
-          $ref: '#/components/schemas/DisksResponse'
-        os_info:
-          $ref: '#/components/schemas/OSInfoResponse'
-        changed:
-          type: boolean
-          description: Whether the operation modified system state.
-        error:
-          type: string
-          description: Error message if the agent failed.
-        partial:
-          type: boolean
-          description: >-
-            True when one or more of the reads behind this status failed. The
-            fields they would have filled are absent or zero-valued, and
-            field_errors says which and why.
-          example: true
-        field_errors:
-          type: object
-          additionalProperties:
-            type: string
-          description: >-
-            The reads that failed, keyed by the field they would have filled.
-            Absent when every read succeeded.
-          example:
-            memory_stats: 'open /proc/meminfo: permission denied'
-      required:
-        - hostname
-        - status
-    NodeStatusCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/NodeStatusResponse'
-      required:
-        - results
     CertificateCACreateRequest:
       type: object
       required:
@@ -11621,6 +11525,79 @@ components:
         - distribution
         - version
       type: object
+    Entry:
+      properties:
+        seconds:
+          description: How long the host has run, in seconds
+          type: integer
+        uptime:
+          description: How long the host has run, in days, hours and minutes
+          type: string
+      required:
+        - uptime
+        - seconds
+      type: object
+    StatusEntry:
+      properties:
+        disks:
+          description: Each local filesystem
+          items:
+            $ref: '#/components/schemas/Disk'
+          type: array
+        error:
+          description: Error message if the agent failed.
+          type: string
+        errors:
+          description: >-
+            Each read that failed, as name: error. The other fields still
+            answer.
+          items:
+            type: string
+          type: array
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        load_average:
+          $ref: '#/components/schemas/Averages'
+        memory:
+          $ref: '#/components/schemas/Usage'
+        name:
+          description: The hostname of the host, as the hostname command prints it
+          type: string
+        os_info:
+          $ref: '#/components/schemas/Release'
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+        uptime:
+          $ref: '#/components/schemas/Entry'
+      required:
+        - hostname
+        - status
+      type: object
+    StatusGetResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/StatusEntry'
+          type: array
+      required:
+        - results
+      type: object
     SysctlCollectionResponse:
       properties:
         job_id:
@@ -12044,9 +12021,6 @@ x-tagGroups:
   - name: Telemetry API
     tags:
       - Telemetry_API_telemetry
-  - name: Node Management API
-    tags:
-      - Node_Management_API_node_status
   - name: Certificate Management API
     tags:
       - Certificate_Management_API_certificate_operations
@@ -12110,6 +12084,9 @@ x-tagGroups:
   - name: Os API
     tags:
       - Os_API_os_operations
+  - name: Status API
+    tags:
+      - Status_API_status_operations
   - name: Sysctl API
     tags:
       - Sysctl_API_sysctl_operations

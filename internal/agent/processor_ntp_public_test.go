@@ -116,14 +116,16 @@ func (s *ProcessorNtpPublicTestSuite) TestProcessNtpOperation() {
 			}
 
 			processor := agent.NewNodeProcessor(
-				nil, nil, nil, nil,
-				ntpProvider, nil, nil,
+				ntpProvider,
 				nil,
 				nil,
 				nil,
 				nil,
 				nil,
-				slog.Default())
+				nil,
+				nil,
+				slog.Default(),
+			)
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
@@ -190,14 +192,16 @@ func (s *ProcessorNtpPublicTestSuite) TestProcessNtpGet() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := agent.NewNodeProcessor(
-				nil, nil, nil, nil,
-				tt.setupMock(), nil, nil,
+				tt.setupMock(),
 				nil,
 				nil,
 				nil,
 				nil,
 				nil,
-				slog.Default())
+				nil,
+				nil,
+				slog.Default(),
+			)
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
@@ -279,14 +283,16 @@ func (s *ProcessorNtpPublicTestSuite) TestProcessNtpCreate() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := agent.NewNodeProcessor(
-				nil, nil, nil, nil,
-				tt.setupMock(), nil, nil,
+				tt.setupMock(),
 				nil,
 				nil,
 				nil,
 				nil,
 				nil,
-				slog.Default())
+				nil,
+				nil,
+				slog.Default(),
+			)
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
@@ -368,14 +374,16 @@ func (s *ProcessorNtpPublicTestSuite) TestProcessNtpUpdate() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := agent.NewNodeProcessor(
-				nil, nil, nil, nil,
-				tt.setupMock(), nil, nil,
+				tt.setupMock(),
 				nil,
 				nil,
 				nil,
 				nil,
 				nil,
-				slog.Default())
+				nil,
+				nil,
+				slog.Default(),
+			)
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
@@ -436,14 +444,16 @@ func (s *ProcessorNtpPublicTestSuite) TestProcessNtpDelete() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := agent.NewNodeProcessor(
-				nil, nil, nil, nil,
-				tt.setupMock(), nil, nil,
+				tt.setupMock(),
 				nil,
 				nil,
 				nil,
 				nil,
 				nil,
-				slog.Default())
+				nil,
+				nil,
+				slog.Default(),
+			)
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}

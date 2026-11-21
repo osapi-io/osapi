@@ -2145,7 +2145,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
     type NodeStatusRow = {
       hostname: string;
       status?: string;
-      uptime?: string;
+      uptime?: { uptime: string; seconds: number };
       load_average?: { "1min": number; "5min": number; "15min": number };
       memory?: { total: number; used: number; free: number };
       disks?: { name: string; total: number; used: number; free: number }[];
@@ -2163,7 +2163,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
           error: r.error,
           extra: !r.error ? (
             <div className="flex flex-wrap gap-3 text-xs text-text-muted">
-              {r.uptime && <span>up {r.uptime}</span>}
+              {r.uptime && <span>up {r.uptime.uptime}</span>}
               {r.load_average && (
                 <span>
                   load {r.load_average["1min"].toFixed(2)}/

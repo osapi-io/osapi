@@ -40,27 +40,6 @@ type DiskResult struct {
 	Disks    []Disk `json:"disks,omitempty"`
 }
 
-// disksFromGen converts a gen.DisksResponse to a slice of Disk.
-func disksFromGen(
-	g *gen.DisksResponse,
-) []Disk {
-	if g == nil {
-		return nil
-	}
-
-	disks := make([]Disk, 0, len(*g))
-	for _, d := range *g {
-		disks = append(disks, Disk{
-			Name:  d.Name,
-			Total: d.Total,
-			Used:  d.Used,
-			Free:  d.Free,
-		})
-	}
-
-	return disks
-}
-
 // diskListFromGen converts the disk behavior's []gen.Disk to a slice of Disk.
 func diskListFromGen(
 	g *[]gen.Disk,

@@ -32,7 +32,6 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/admission"
-	nodeAPI "github.com/osapi-io/osapi/internal/controller/api/node"
 	certificateAPI "github.com/osapi-io/osapi/internal/controller/api/node/certificate"
 	commandAPI "github.com/osapi-io/osapi/internal/controller/api/node/command"
 	dockerAPI "github.com/osapi-io/osapi/internal/controller/api/node/container"
@@ -127,7 +126,6 @@ func handlers(
 			dispatch.Deps{JobClient: d.jobs},
 		)...,
 	)
-	handlers = append(handlers, nodeAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, dockerAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, scheduleAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, ntpAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)

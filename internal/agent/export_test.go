@@ -514,10 +514,6 @@ func SetAgentAppConfig(
 	// label/config-dependent dispatch picks up the change.
 	if a.registry != nil {
 		a.registry.processors["node"] = NewNodeProcessor(
-			a.hostProvider,
-			a.diskProvider,
-			a.memoryProvider,
-			a.loadProvider,
 			ntp.Provider(nil),
 			timezone.Provider(nil),
 			power.Provider(nil),
@@ -550,10 +546,6 @@ func SetAgentHostProvider(
 	// dispatch picks up the change.
 	if a.registry != nil {
 		a.registry.processors["node"] = NewNodeProcessor(
-			p,
-			a.diskProvider,
-			a.memoryProvider,
-			a.loadProvider,
 			ntp.Provider(nil),
 			timezone.Provider(nil),
 			power.Provider(nil),

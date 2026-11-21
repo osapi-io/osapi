@@ -54,13 +54,16 @@ func (s *ProcessorLogPublicTestSuite) newProcessor(
 	logProvider log.Provider,
 ) agent.ProcessorFunc {
 	return agent.NewNodeProcessor(
-		nil, nil, nil, nil, nil, nil, nil,
+		nil,
+		nil,
+		nil,
 		nil,
 		nil,
 		nil,
 		logProvider,
 		nil,
-		slog.Default())
+		slog.Default(),
+	)
 }
 
 func (s *ProcessorLogPublicTestSuite) TestProcessLogOperation() {

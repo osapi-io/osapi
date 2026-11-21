@@ -183,7 +183,7 @@ import { getNodeLoad } from "@/sdk/gen/load-api-load-operations/load-api-load-op
 import { getNodeMemory } from "@/sdk/gen/memory-api-memory-operations/memory-api-memory-operations";
 import { getNodeOs } from "@/sdk/gen/os-api-os-operations/os-api-os-operations";
 import { getNodeUptime } from "@/sdk/gen/uptime-api-uptime-operations/uptime-api-uptime-operations";
-import { getNodeStatus } from "@/sdk/gen/node-management-api-node-status/node-management-api-node-status";
+import { getNodeStatus } from "@/sdk/gen/status-api-status-operations/status-api-status-operations";
 import {
   getAuditLogs,
   getAuditLogByID,

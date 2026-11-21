@@ -4,10 +4,10 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { NodeStatusResponse } from './nodeStatusResponse';
+import type { StatusEntry } from './statusEntry';
 
-export interface NodeStatusCollectionResponse {
+export interface StatusGetResponse {
   /** The job ID used to process this request. */
   job_id?: string;
-  results: NodeStatusResponse[];
+  results: StatusEntry[];
 }

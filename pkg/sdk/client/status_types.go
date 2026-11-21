@@ -24,64 +24,50 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
-// NodeStatus represents full node status from a single agent.
+// NodeStatus is the status summary of one host.
 type NodeStatus struct {
 	Hostname    string       `json:"hostname"`
 	Status      string       `json:"status"`
-	Uptime      string       `json:"uptime,omitempty"`
 	Error       string       `json:"error,omitempty"`
-	Changed     bool         `json:"changed"`
+	Name        string       `json:"name,omitempty"`
+	Uptime      string       `json:"uptime,omitempty"`
 	Disks       []Disk       `json:"disks,omitempty"`
 	LoadAverage *LoadAverage `json:"load_average,omitempty"`
 	Memory      *Memory      `json:"memory,omitempty"`
 	OSInfo      *OSInfo      `json:"os_info,omitempty"`
-	// Partial is true when one or more of the reads behind this status failed.
-	// The fields they would have filled are absent or zero-valued.
-	Partial bool `json:"partial,omitempty"`
-	// FieldErrors names the reads that failed, keyed by the field each would
-	// have filled.
-	FieldErrors map[string]string `json:"field_errors,omitempty"`
+	// Errors names each read that failed, as name: error. The other fields
+	// still answer.
+	Errors []string `json:"errors,omitempty"`
 }
 
-// nodeStatusCollectionFromGen converts a gen.NodeStatusCollectionResponse to a Collection[NodeStatus].
+// nodeStatusCollectionFromGen converts a gen.StatusGetResponse to a
+// Collection[NodeStatus].
 func nodeStatusCollectionFromGen(
-	g *gen.NodeStatusCollectionResponse,
+	g *gen.StatusGetResponse,
 ) Collection[NodeStatus] {
 	results := make([]NodeStatus, 0, len(g.Results))
 	for _, r := range g.Results {
-		results = append(results, NodeStatus{
+		st := NodeStatus{
 			Hostname:    r.Hostname,
 			Status:      string(r.Status),
-			Uptime:      derefString(r.Uptime),
 			Error:       derefString(r.Error),
-			Changed:     derefBool(r.Changed),
-			Disks:       disksFromGen(r.Disks),
-			LoadAverage: loadAverageFromGen(r.LoadAverage),
-			Memory:      memoryFromGen(r.Memory),
-			OSInfo:      osInfoFromGen(r.OsInfo),
-			Partial:     derefBool(r.Partial),
-			FieldErrors: fieldErrorsFromGen(r.FieldErrors),
-		})
+			Name:        derefString(r.Name),
+			Disks:       diskListFromGen(r.Disks),
+			LoadAverage: loadAveragesFromGen(r.LoadAverage),
+			Memory:      memoryUsageFromGen(r.Memory),
+			OSInfo:      osReleaseFromGen(r.OsInfo),
+		}
+		if r.Uptime != nil {
+			st.Uptime = r.Uptime.Uptime
+		}
+		if r.Errors != nil {
+			st.Errors = *r.Errors
+		}
+		results = append(results, st)
 	}
 
 	return Collection[NodeStatus]{
 		Results: results,
 		JobID:   jobIDFromGen(g.JobId),
 	}
-}
-
-// fieldErrorsFromGen copies the per-field read errors, if any.
-func fieldErrorsFromGen(
-	g *map[string]string,
-) map[string]string {
-	if g == nil {
-		return nil
-	}
-
-	out := make(map[string]string, len(*g))
-	for field, message := range *g {
-		out[field] = message
-	}
-
-	return out
 }

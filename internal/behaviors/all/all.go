@@ -30,6 +30,7 @@ import (
 	_ "github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	_ "github.com/osapi-io/osapi/internal/behaviors/memory"
 	_ "github.com/osapi-io/osapi/internal/behaviors/os"
+	_ "github.com/osapi-io/osapi/internal/behaviors/status"
 	_ "github.com/osapi-io/osapi/internal/behaviors/sysctl"
 	_ "github.com/osapi-io/osapi/internal/behaviors/uptime"
 )
