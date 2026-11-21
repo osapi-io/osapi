@@ -101,6 +101,30 @@ value that breaks a rule, and the spec carries the rule and the whole tag.
 and the behavior DSL use the same rules; `spec` prints them under
 `validate:"..."`.
 
+Name and shape each field so the generated layers can build it. `behavior
+validate` fails each of these, and its message ends with the fix:
+
+- **The name of the behavior** is lowercase letters and digits, with no dash:
+  the generators make Go names of it. It is the route, the command and the
+  permission. A name that is a Go keyword, such as `package`, keeps its name and
+  takes `osapi behavior create --package <go-package>` for the directory.
+- **Each input field** has a `json` name and a `doc`, and no `default`, which
+  the server does not apply. Make the provider treat the empty value as the
+  default, and say in the `doc` what it is. No input field is named `hostname`
+  or `target`: every request has the target host as both.
+- **An optional field of a write's body**, `validate:"omitempty,..."`, is
+  `json:"name,omitempty"` too. Without it the client sends `""`, and the
+  field's other rules refuse it. The endpoint layer owns this rule.
+- **A key** (`.Key`) is `validate:"required"`: it is a path segment.
+- **A CLI input field** is a type a flag holds: `string`, `bool`, `int`,
+  `[]string`, `map[string]string` or `[]byte` (a file). The CLI owns the list.
+  An `int64` or a `float64` does not compile into a flag.
+- **An output field** has a `json` name and a `render` tag that the output
+  knows. No field is an array; use a slice.
+- **A struct that an output holds**, such as `Usage` in memory's output, is
+  named in one spec for every behavior. Give it a name no other behavior's
+  type has, or hold that behavior's own type, as `status` holds memory's.
+
 The API, the agent and `behavior.Call` check these rules before each method
 runs, for an internal behavior too. Do not write the check in the provider's
 method; declare the rule.

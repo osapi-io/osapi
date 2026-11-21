@@ -6923,8 +6923,6 @@ components:
           type: string
           x-oapi-codegen-extra-tags:
             validate: omitempty,max=1024
-      required:
-        - reason
       type: object
     AgentInfo:
       properties:

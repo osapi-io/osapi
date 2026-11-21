@@ -746,6 +746,30 @@ func (s *EndpointPublicTestSuite) TestOpenAPIErrors() {
 	}
 }
 
+// sentEmptyIn has an optional body field with no json omitempty, a path
+// field, which is not in the body, and an optional field that is omitted.
+type sentEmptyIn struct {
+	ID   string `json:"id"             in:"path" validate:"required"`
+	Note string `json:"note"                     validate:"omitempty"`
+	Kept string `json:"kept,omitempty"           validate:"omitempty"`
+	Skip string `json:"-"                        validate:"omitempty"`
+}
+
+// sentEmptyBodyIn names its body with in:"body", whose field is sent empty.
+type sentEmptyBodyIn struct {
+	ID   string        `json:"id" in:"path" validate:"required"`
+	Body sentEmptyBody `          in:"body" validate:"required"`
+}
+
+type sentEmptyBody struct {
+	Reason string `json:"reason" validate:"omitempty"`
+}
+
+// sentEmptyQuery is a read's query, which a client leaves out when empty.
+type sentEmptyQuery struct {
+	Note string `json:"note" in:"query" validate:"omitempty"`
+}
+
 func (s *EndpointPublicTestSuite) TestValidate() {
 	tests := []struct {
 		name  string
@@ -782,6 +806,19 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 				endpoint.Get[noInput, Node]("list").Handle(handleNode),
 			),
 			want: []string{"the method has a handler, and the group Uses no type."},
+		},
+		{
+			name: "when an optional body field is sent empty, in the input or in its body type",
+			group: endpoint.Define("node", "The nodes",
+				endpoint.SubDoc("one", "One node"),
+				endpoint.Post[sentEmptyIn, Node]("create"),
+				endpoint.Post[sentEmptyBodyIn, Node]("reject").Sub("one"),
+				endpoint.Get[sentEmptyQuery, Node]("list"),
+			),
+			want: []string{
+				"optional body field note is sent as its zero value when it is empty.",
+				"optional body field reason is sent as its zero value when it is empty.",
+			},
 		},
 		{
 			name:  "when the group has a bad name and no methods",

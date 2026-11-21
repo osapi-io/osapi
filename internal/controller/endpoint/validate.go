@@ -23,9 +23,11 @@ package endpoint
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"reflect"
 	"regexp"
 	"slices"
+	"strings"
 	"unicode"
 
 	"github.com/osapi-io/osapi/internal/validation"
@@ -56,6 +58,9 @@ const (
 	RuleValidate = "validate"
 	// RuleFails is the same check in the behavior DSL, from package rule.
 	RuleFails = "fails"
+	// RuleOptional: an optional field of a request body is left out of the
+	// JSON when it is empty, so a client does not send "" for it.
+	RuleOptional = "optional"
 )
 
 // Checks are the rules Validate applies. osapi controller endpoint
@@ -122,6 +127,11 @@ var Checks = guide.Checks{
 		Rule:     RuleFails,
 		Requires: rule.FailsRequires,
 		Fix:      rule.FailsFix,
+	},
+	{
+		Rule:     RuleOptional,
+		Requires: "An optional field of a write's request body, with omitempty in its validate tag, has omitempty in its json tag too, so a client leaves it out when it is empty instead of sending \"\" or 0, which its other rules can refuse.",
+		Fix:      "Add ,omitempty to the field's json tag, such as json:\"reason,omitempty\".",
 	},
 	{
 		Rule:     RuleSchema,
@@ -231,6 +241,15 @@ func Validate(
 		for _, msg := range refusalProblems(m) {
 			add(m.Name, RuleFails, msg)
 		}
+		if m.Verb != http.MethodGet {
+			for _, f := range SentEmpty(bodyFields(m.In)) {
+				add(
+					m.Name,
+					RuleOptional,
+					"optional body field "+f+" is sent as its zero value when it is empty.",
+				)
+			}
+		}
 
 		if msg := handlerProblem(g, m); msg != "" {
 			add(m.Name, RuleHandler, msg)
@@ -295,6 +314,54 @@ func refusalProblems(
 	for _, n := range rule.Needs(m.In, true) {
 		if !broken[n.Key()] {
 			out = append(out, "no .Fails input breaks "+n.Rule+" on "+n.Field+".")
+		}
+	}
+
+	return out
+}
+
+// bodyFields is the fields of a request body: the fields of the type that
+// in:"body" names, and each input field that is not a path, query or form
+// value.
+func bodyFields(
+	in reflect.Type,
+) []reflect.StructField {
+	var body []reflect.StructField
+	for _, f := range fields(in) {
+		switch f.Tag.Get("in") {
+		case "path", "query", "form":
+		case "body":
+			t := f.Type
+			for t.Kind() == reflect.Pointer {
+				t = t.Elem()
+			}
+			body = append(body, fields(t)...)
+		default:
+			body = append(body, f)
+		}
+	}
+
+	return body
+}
+
+// SentEmpty is each field of a request body, fs, that is optional, with
+// omitempty in its validate tag, but has no omitempty in its json tag: a
+// client sends "" or 0 for it, which its other rules can refuse. The
+// behavior DSL asks it of a write's body, so the two cannot disagree.
+func SentEmpty(
+	fs []reflect.StructField,
+) []string {
+	var out []string
+	for _, f := range fs {
+		name, opts, _ := strings.Cut(f.Tag.Get("json"), ",")
+		if name == "" || name == "-" {
+			continue
+		}
+		if !slices.Contains(strings.Split(f.Tag.Get("validate"), ","), "omitempty") {
+			continue
+		}
+		if !slices.Contains(strings.Split(opts, ","), "omitempty") {
+			out = append(out, name)
 		}
 	}
 

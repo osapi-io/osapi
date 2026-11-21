@@ -37,50 +37,50 @@ type SchemaPublicTestSuite struct {
 }
 
 type nested struct {
-	Name string `json:"name"`
+	Name string `json:"name" doc:"test"`
 }
 
 type everything struct {
 	Plain     string            `doc:"no json tag"`
-	Named     string            `                  json:"named,omitempty"`
-	Commaonly string            `                  json:",omitempty"`
+	Named     string            `doc:"test"        json:"named,omitempty"`
+	Commaonly string            `doc:"test"        json:",omitempty"`
 	Skipped   string            `                  json:"-"`
 	unexport  string            //nolint:unused
-	Flag      bool              `                  json:"flag"`
-	Count     int               `                  json:"count"           validate:"min=1,max=10"`
-	Ratio     float64           `                  json:"ratio"           validate:"min=0.5"`
-	Size      uint8             `                  json:"size"`
-	Tags      []string          `                  json:"tags"            validate:"min=1,max=3"`
-	Exact     string            `                  json:"exact"           validate:"len=4"`
-	Mode      string            `                  json:"mode"            validate:"required,oneof=on off"`
-	Addr      string            `                  json:"addr"            validate:"omitempty,ip"`
-	Custom    string            `                  json:"custom"          validate:"test_custom"`
-	Formatted string            `                  json:"formatted"       validate:"test_format"`
-	Labels    map[string]string `                  json:"labels"`
-	Child     *nested           `                  json:"child"`
-	Items     [2]nested         `                  json:"items"           validate:"dive"`
-	Pass      string            `                  json:"pass"                                             secret:"true"`
-	Dir       string            `                  json:"dir"             validate:"startswith=/etc"`
+	Flag      bool              `doc:"test"        json:"flag"`
+	Count     int               `doc:"test"        json:"count"           validate:"min=1,max=10"`
+	Ratio     float64           `doc:"test"        json:"ratio"           validate:"min=0.5"`
+	Size      uint8             `doc:"test"        json:"size"`
+	Tags      []string          `doc:"test"        json:"tags"            validate:"min=1,max=3"`
+	Exact     string            `doc:"test"        json:"exact"           validate:"len=4"`
+	Mode      string            `doc:"test"        json:"mode"            validate:"required,oneof=on off"`
+	Addr      string            `doc:"test"        json:"addr"            validate:"omitempty,ip"`
+	Custom    string            `doc:"test"        json:"custom"          validate:"test_custom"`
+	Formatted string            `doc:"test"        json:"formatted"       validate:"test_format"`
+	Labels    map[string]string `doc:"test"        json:"labels"`
+	Child     *nested           `doc:"test"        json:"child"`
+	Items     [2]nested         `doc:"test"        json:"items"           validate:"dive"`
+	Pass      string            `doc:"test"        json:"pass"                                             secret:"true"`
+	Dir       string            `doc:"test"        json:"dir"             validate:"startswith=/etc"`
 }
 
 type badKind struct {
-	C chan int `json:"c"`
+	C chan int `json:"c" doc:"test"`
 }
 
 type badSlice struct {
-	C []chan int `json:"c"`
+	C []chan int `json:"c" doc:"test"`
 }
 
 type badMap struct {
-	C map[string]chan int `json:"c"`
+	C map[string]chan int `json:"c" doc:"test"`
 }
 
 type badTag struct {
-	X string `json:"x" validate:"not_registered"`
+	X string `json:"x" validate:"not_registered" doc:"test"`
 }
 
 type badBound struct {
-	X string `json:"x" validate:"min=lots"`
+	X string `json:"x" validate:"min=lots" doc:"test"`
 }
 
 func (s *SchemaPublicTestSuite) SetupSuite() {

@@ -50,6 +50,9 @@ type Target interface {
 	// Bound sets min, max or len: the length of a string, the items of an
 	// array, or the value of a number.
 	Bound(rule string, n float64)
+	// Items is the target of each item of an array, which the rules after
+	// dive apply to.
+	Items() Target
 }
 
 var (
@@ -97,7 +100,6 @@ func None(Target) {}
 var flags = map[string]bool{
 	"omitempty": true,
 	"required":  true,
-	"dive":      true,
 }
 
 // formats maps the standard validate tags to JSON Schema formats.
@@ -127,6 +129,9 @@ func Apply(
 	for _, r := range strings.Split(tag, ",") {
 		name, param, _ := strings.Cut(r, "=")
 		switch {
+		case name == "dive":
+			// The rules after dive are each item's, not the array's.
+			t = t.Items()
 		case flags[name]:
 		case name == "min" || name == "max" || name == "len":
 			n, err := strconv.ParseFloat(param, 64)

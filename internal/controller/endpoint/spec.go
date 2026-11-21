@@ -415,6 +415,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindCheck,
+			Name: "SentEmpty(fields)",
+			Does: "The optional rule: each optional field of a request body, with omitempty in its validate tag and none in its json tag, which a client would send as \"\" or 0. controller endpoint validate checks each write with it, and behavior validate checks each behavior write's body with the same func.",
+			When: "Add ,omitempty to the json tag of each field it names.",
+		},
+		{
+			Kind: KindCheck,
 			Name: "TestJoinedSpec",
 			Does: "Holds the joined spec to its contract, internal/apicontract/testdata/joined.golden.",
 			When: "When you change the API on purpose, run it with -update and keep the diff.",

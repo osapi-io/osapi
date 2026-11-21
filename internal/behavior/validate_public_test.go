@@ -42,15 +42,15 @@ func (s *ValidatePublicTestSuite) TearDownTest() {
 }
 
 type noChanged struct {
-	Key string `json:"key"`
+	Key string `json:"key" doc:"test"`
 }
 
 type stringChanged struct {
-	Changed string `json:"changed"`
+	Changed string `json:"changed" doc:"test"`
 }
 
 type reserved struct {
-	Hostname string `json:"hostname"`
+	Hostname string `json:"hostname" doc:"test"`
 }
 
 func readList(
@@ -106,16 +106,16 @@ type noFields struct{}
 
 // onlySecret is an input whose only field is a secret.
 type onlySecret struct {
-	Password string `json:"password" secret:"true" validate:"omitempty"`
+	Password string `json:"password" secret:"true" validate:"omitempty" doc:"test"`
 }
 
 // taggedName is an input whose name is tagged for the span.
 // sentEmptyIn has an optional body field whose json tag lacks omitempty,
 // and a key and an ignored field that the rule leaves alone.
 type sentEmptyIn struct {
-	Name    string `json:"name"           validate:"required"`
-	Version string `json:"version"        validate:"omitempty,max=9"`
-	Note    string `json:"note,omitempty" validate:"omitempty,max=9"`
+	Name    string `json:"name"           validate:"required"        doc:"test"`
+	Version string `json:"version"        validate:"omitempty,max=9" doc:"test"`
+	Note    string `json:"note,omitempty" validate:"omitempty,max=9" doc:"test"`
 	Skip    string `json:"-"              validate:"omitempty"`
 }
 
@@ -123,12 +123,22 @@ func setSentEmpty(context.Context, fakeProvider, sentEmptyIn) (result, error) {
 	return result{}, nil
 }
 
+// wideIn has an int64, which a CLI flag does not hold: the command
+// generator builds an int flag only.
+type wideIn struct {
+	Limit int64 `json:"limit" validate:"omitempty" doc:"test"`
+}
+
+func listWide(context.Context, fakeProvider, wideIn) ([]entry, error) {
+	return nil, nil
+}
+
 type untaggedIn struct {
-	Name string `json:"name"`
+	Name string `json:"name" doc:"test"`
 }
 
 type limitedIn struct {
-	Name string `json:"name" validate:"omitempty,max=3"`
+	Name string `json:"name" validate:"omitempty,max=3" doc:"test"`
 }
 
 func readLimited(context.Context, fakeProvider, limitedIn) (entry, error) {
@@ -140,7 +150,7 @@ func readUntagged(context.Context, fakeProvider, untaggedIn) (entry, error) {
 }
 
 type taggedName struct {
-	Name string `json:"name" telemetry:"attr" validate:"required"`
+	Name string `json:"name" telemetry:"attr" validate:"required" doc:"test"`
 }
 
 func setNoFields(context.Context, fakeProvider, noFields) (result, error) {
@@ -365,8 +375,8 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 		{
 			name: "when a CLI input field cannot be a flag",
 			b: behavior.Define("sysctl", "x", behavior.Node, onDebian, behavior.API, behavior.CLI,
-				behavior.Read("list", listTagged).Describe("List").
-					Example("All", taggedIn{}, []entry{}),
+				behavior.Read("list", listWide).Describe("List").
+					Example("All", wideIn{}, []entry{}),
 			),
 			wantRules: []string{behavior.RuleSurface},
 		},

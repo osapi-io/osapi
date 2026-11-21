@@ -67,7 +67,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindDefinition,
 			Name: `Register(Define(name, doc, options...))`,
-			Does: "Declares the behavior and adds it to the registry. The agent, the server, the CLI and the generator read the registry.",
+			Does: "Declares the behavior and adds it to the registry. The agent, the server, the CLI and the generator read the registry. The name is the route, the command, the permission and the docs page: lowercase letters and digits, no dash. The Go package is where the definition lives, which osapi behavior create --package sets when the name is a Go keyword.",
 			When: "One time, in behavior.go: var Behavior = behavior.Register(behavior.Define(...)).",
 		},
 
@@ -178,7 +178,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindRefine,
 			Name: `.Key("field")`,
-			Does: "Puts that input field in the route and the CLI, and records it on the span of each call.",
+			Does: "Puts that input field in the route and the CLI, and records it on the span of each call. The field is validate:\"required\": a path segment is never empty.",
 			When: "On each method that acts on one item, such as get, update and delete of a key.",
 		},
 		{
@@ -331,7 +331,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindTag,
 			Name: `json:"name"`,
-			Does: "The name of the field in the request, the flag, the column and --json.",
+			Does: "The name of the field in the request, the flag, the column and --json. A field with no json name fails the input or output rule, because the CLI and the tables cannot show it. An optional field of a write's body, validate:\"omitempty,...\", is json:\"name,omitempty\" too, or the client sends \"\" for it (the optional rule). No input field is named hostname or target: every request has those.",
 			When: "On each field.",
 		},
 		{
@@ -342,14 +342,20 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindTag,
+			Name: `default:"..."`,
+			Does: "Not on a behavior input: the spec and the flag would show the default, but the server does not apply it, so a caller of the API gets the zero value. The input rule fails it.",
+			When: "Never on a behavior input. The provider treats the empty value as the default, and the doc says what it is.",
+		},
+		{
+			Kind: KindTag,
 			Name: `doc:"..."`,
-			Does: "The description in the spec, the flag help and the docs pages.",
+			Does: "The description in the spec, the flag help and the docs pages. The input rule fails an input field with none.",
 			When: "On each field.",
 		},
 		{
 			Kind: KindTag,
 			Name: `render:"..."`,
-			Does: `How an output column shows: "-" hides it; bytes, age or status.`,
+			Does: `How an output column shows: "-" hides it; bytes, age, time, duration, duration=ms, status or short=N. The output rule fails a value the output does not know; the CLI owns the list.`,
 			When: "On an output field that a table must show differently.",
 		},
 		{
@@ -367,7 +373,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindTag,
 			Name: `secret:"true"`,
-			Does: "Redacted from the audit log, write-only in the spec, never recorded on a span.",
+			Does: "Redacted from the audit log, write-only with the password format in the spec that ships, never recorded on a span.",
 			When: "On each input that holds a password, a key or a token.",
 		},
 		{

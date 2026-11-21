@@ -108,8 +108,11 @@ func (s *AdmissionService) Reject(
 	machineID string,
 	reason string,
 ) error {
-	resp, err := s.client.RejectMachineWithResponse(ctx, machineID,
-		gen.RejectMachineJSONRequestBody{Reason: reason})
+	body := gen.RejectMachineJSONRequestBody{}
+	if reason != "" {
+		body.Reason = &reason
+	}
+	resp, err := s.client.RejectMachineWithResponse(ctx, machineID, body)
 	if err != nil {
 		return fmt.Errorf("reject machine %s: %w", machineID, err)
 	}

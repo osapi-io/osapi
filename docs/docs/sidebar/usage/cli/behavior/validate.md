@@ -9,8 +9,10 @@ each part of a behavior.
 The rules:
 
 - `name`: The behavior, its group and each method have a name of lowercase
-  letters, digits and dashes. No behavior or group is named all. Fix: Rename it,
-  such as sysctl or ip-forward.
+  letters and digits, starting with a letter: the generators make Go names of
+  it, so a dash does not compile. No behavior or group is named all. Fix: Rename
+  it, such as sysctl or updatepackages. A name that is a Go keyword, such as
+  package, takes osapi behavior create --package for its Go package.
 - `placement`: The behavior has a placement. Fix: Add behavior.Node to Define.
 - `doc`: The behavior and each method have a description. Fix: Give Define a
   one-line description, and each method .Describe("...").
@@ -22,14 +24,22 @@ The rules:
   or delete. Fix: Rename the method to the standard verb that the message names.
 - `route`: No two methods have the same route. Fix: Give one of them a key with
   .Key("field").
-- `key`: The key of a method is a field of its input. Fix: Give .Key the JSON
-  name of an input field, or add the field to the input.
+- `key`: The key of a method is a field of its input, and is required: it is a
+  path segment, which is never empty. Fix: Give .Key the JSON name of an input
+  field, or add the field to the input, and tag it validate:"required,...".
 - `schema`: Each input is a struct, and each input and output type has a JSON
-  Schema. Fix: Use structs of strings, numbers, bools, lists and structs.
-  Declare a custom validate tag with behavior.Validator.
+  Schema. A struct that an input or output holds is named in one spec for every
+  behavior, so no two behaviors have a different type of the same name. Fix: Use
+  structs of strings, numbers, bools, lists and structs. Declare a custom
+  validate tag with behavior.Validator. Rename a held struct that another
+  behavior's type already names, such as Usage to MemoryUsage, or hold that
+  behavior's type.
 - `output`: Each output is a struct or a list of structs, with no field named
-  hostname, status or error. Fix: Put the value in a struct, and rename a field
-  that has one of those names.
+  hostname, status or error. Each field has a json name, no field is an array,
+  and each render tag is one the output knows (osapi cli command spec get lists
+  them). Fix: Put the value in a struct, rename a field that has one of those
+  names, tag each field json:"name", use a slice for an array, and use a render
+  value the output knows.
 - `changed`: The output of a write has Changed bool with json:"changed". Fix:
   Add Changed bool `json:"changed"` to the output, and set it to true only when
   the call changed the host.
@@ -45,10 +55,17 @@ The rules:
   answers 400 to a value that breaks it. Fix: Add validate:"..." to the field,
   such as validate:"required,min=1,max=255", or validate:"omitempty" for an
   optional field with no other rule.
-- `optional`: An optional field of a write's request body, its validate tag
-  starting with omitempty, has omitempty in its json tag too, so the client
-  leaves it out when it is empty. Fix: Add ,omitempty to the field's json tag,
-  such as json:"version,omitempty".
+- `optional`: An optional field of a write's request body, with omitempty in its
+  validate tag, has omitempty in its json tag too, so the client leaves it out
+  when it is empty. The endpoint DSL owns the rule; controller endpoint validate
+  checks it the same way. Fix: Add ,omitempty to the field's json tag, such as
+  json:"version,omitempty".
+- `input`: Each input field has a json name and a doc, has no default, which the
+  server does not apply, is not an array, and is not named hostname or target:
+  every request has the target host as its hostname path segment and its
+  --target flag. Fix: Tag the field json:"name" and doc:"...", drop the default
+  tag and make the provider treat the empty value as the default, use a slice
+  for an array, and rename a field called hostname or target.
 - `fails`: Each rule of an input field has a .Fails input that breaks it, which
   the API refuses with 400. An endpoint's required needs one, with the field
   empty; a behavior's needs none, as its generated tests leave the field out. A
@@ -61,9 +78,10 @@ The rules:
   Remove telemetry:"attr" from the secret field. A secret is never recorded on a
   span.
 - `surface`: A behavior with CLI also has API. An internal behavior has no API
-  or CLI. Each input field of a CLI behavior is a string, bool or number. Fix:
-  Add behavior.API, remove API and CLI from the internal behavior, or give the
-  field a type that a flag can hold.
+  or CLI. Each input field of a CLI behavior has a type a flag holds: string,
+  bool, int, []string, map[string]string or []byte (a file). The CLI owns the
+  list; its generator builds each. Fix: Add behavior.API, remove API and CLI
+  from the internal behavior, or give the field a type that a flag can hold.
 - `example`: Each method of a CLI behavior has an example. Each example and
   refusal has a description, and the input and output types of its method. A
   refusal has error text and no effects. Fix: Add .Example("...",

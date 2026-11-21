@@ -33,8 +33,8 @@ import (
 var Checks = guide.Checks{
 	{
 		Rule:     RuleName,
-		Requires: "The behavior, its group and each method have a name of lowercase letters, digits and dashes. No behavior or group is named all.",
-		Fix:      "Rename it, such as sysctl or ip-forward.",
+		Requires: "The behavior, its group and each method have a name of lowercase letters and digits, starting with a letter: the generators make Go names of it, so a dash does not compile. No behavior or group is named all.",
+		Fix:      "Rename it, such as sysctl or updatepackages. A name that is a Go keyword, such as package, takes osapi behavior create --package for its Go package.",
 	},
 	{
 		Rule:     RulePlacement,
@@ -68,18 +68,18 @@ var Checks = guide.Checks{
 	},
 	{
 		Rule:     RuleKey,
-		Requires: "The key of a method is a field of its input.",
-		Fix:      "Give .Key the JSON name of an input field, or add the field to the input.",
+		Requires: "The key of a method is a field of its input, and is required: it is a path segment, which is never empty.",
+		Fix:      "Give .Key the JSON name of an input field, or add the field to the input, and tag it validate:\"required,...\".",
 	},
 	{
 		Rule:     RuleSchema,
-		Requires: "Each input is a struct, and each input and output type has a JSON Schema.",
-		Fix:      "Use structs of strings, numbers, bools, lists and structs. Declare a custom validate tag with behavior.Validator.",
+		Requires: "Each input is a struct, and each input and output type has a JSON Schema. A struct that an input or output holds is named in one spec for every behavior, so no two behaviors have a different type of the same name.",
+		Fix:      "Use structs of strings, numbers, bools, lists and structs. Declare a custom validate tag with behavior.Validator. Rename a held struct that another behavior's type already names, such as Usage to MemoryUsage, or hold that behavior's type.",
 	},
 	{
 		Rule:     RuleOutputShape,
-		Requires: "Each output is a struct or a list of structs, with no field named hostname, status or error.",
-		Fix:      "Put the value in a struct, and rename a field that has one of those names.",
+		Requires: "Each output is a struct or a list of structs, with no field named hostname, status or error. Each field has a json name, no field is an array, and each render tag is one the output knows (osapi cli command spec get lists them).",
+		Fix:      "Put the value in a struct, rename a field that has one of those names, tag each field json:\"name\", use a slice for an array, and use a render value the output knows.",
 	},
 	{
 		Rule:     RuleChanged,
@@ -103,8 +103,13 @@ var Checks = guide.Checks{
 	},
 	{
 		Rule:     RuleOptional,
-		Requires: "An optional field of a write's request body, its validate tag starting with omitempty, has omitempty in its json tag too, so the client leaves it out when it is empty.",
+		Requires: "An optional field of a write's request body, with omitempty in its validate tag, has omitempty in its json tag too, so the client leaves it out when it is empty. The endpoint DSL owns the rule; controller endpoint validate checks it the same way.",
 		Fix:      "Add ,omitempty to the field's json tag, such as json:\"version,omitempty\".",
+	},
+	{
+		Rule:     RuleInput,
+		Requires: "Each input field has a json name and a doc, has no default, which the server does not apply, is not an array, and is not named hostname or target: every request has the target host as its hostname path segment and its --target flag.",
+		Fix:      "Tag the field json:\"name\" and doc:\"...\", drop the default tag and make the provider treat the empty value as the default, use a slice for an array, and rename a field called hostname or target.",
 	},
 	{
 		Rule:     RuleFails,
@@ -118,7 +123,7 @@ var Checks = guide.Checks{
 	},
 	{
 		Rule:     RuleSurface,
-		Requires: "A behavior with CLI also has API. An internal behavior has no API or CLI. Each input field of a CLI behavior is a string, bool or number.",
+		Requires: "A behavior with CLI also has API. An internal behavior has no API or CLI. Each input field of a CLI behavior has a type a flag holds: string, bool, int, []string, map[string]string or []byte (a file). The CLI owns the list; its generator builds each.",
 		Fix:      "Add behavior.API, remove API and CLI from the internal behavior, or give the field a type that a flag can hold.",
 	},
 	{
