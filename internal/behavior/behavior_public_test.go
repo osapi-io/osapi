@@ -346,6 +346,12 @@ func (s *BehaviorPublicTestSuite) TestServedAt() {
 	s.Equal("osapi client node sysctl get", b.Command(m))
 }
 
+// TestChildTypeName: a child's names in the spec start with its parent's.
+func (s *BehaviorPublicTestSuite) TestChildTypeName() {
+	s.Equal("SysctlPart", child(top()).TypeName())
+	s.Equal("NetworkDnsPart", child(grouped()).TypeName())
+}
+
 // TestPathKeys: a child's methods put the parent's key in the path before
 // their own; a behavior with no parent has only its own.
 func (s *BehaviorPublicTestSuite) TestPathKeys() {

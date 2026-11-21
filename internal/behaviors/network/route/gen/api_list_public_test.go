@@ -23,37 +23,37 @@ func (s *APIListPublicTestSuite) SetupSuite() {
 	s.api = servertest.New(s.T(), "internal/behaviors/network/route/gen/api.yaml", gen.Routes)
 }
 
-// TestList sends GET /api/node/{hostname}/network/route and checks each
-// answer's response.
+// TestList sends GET /api/node/{hostname}/network/interface/{name}/route and
+// checks each answer's response.
 func (s *APIListPublicTestSuite) TestList() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
-			Name: "when the example \"A Linux host\" is sent, the host's result is returned",
+			Name: "when the example \"An interface with routes\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/network/route",
+				Path:   "/api/node/server1/network/interface/eth0/route",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
 				"server1",
 				"route.list",
-				route.ListInput{},
+				route.ListInput{Name: "eth0"},
 				servertest.Completed("server1", `[{"destination":"default","gateway":"10.0.0.1","interface":"eth0","family":"inet","metric":100,"proto":"dhcp","scope":""},{"destination":"10.0.0.0/24","gateway":"","interface":"eth0","family":"inet","metric":0,"proto":"kernel","scope":"link"},{"destination":"10.20.0.0/16","gateway":"10.0.0.254","interface":"eth0","family":"inet","metric":50,"proto":"static","scope":""}]`),
 			),
 			WantCode: http.StatusOK,
 			WantBody: `{"job_id":"job-1","results":[{"destination":"default","family":"inet","gateway":"10.0.0.1","hostname":"server1","interface":"eth0","metric":100,"proto":"dhcp","scope":"","status":"ok"},{"destination":"10.0.0.0/24","family":"inet","gateway":"","hostname":"server1","interface":"eth0","metric":0,"proto":"kernel","scope":"link","status":"ok"},{"destination":"10.20.0.0/16","family":"inet","gateway":"10.0.0.254","hostname":"server1","interface":"eth0","metric":50,"proto":"static","scope":"","status":"ok"}]}`,
 		},
 		{
-			Name: "when the example \"A Linux host\" is broadcast, every host's result is returned",
+			Name: "when the example \"An interface with routes\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/_all/network/route",
+				Path:   "/api/node/_all/network/interface/eth0/route",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
 				"_all",
 				"route.list",
-				route.ListInput{},
+				route.ListInput{Name: "eth0"},
 				servertest.Completed("server1", `[{"destination":"default","gateway":"10.0.0.1","interface":"eth0","family":"inet","metric":100,"proto":"dhcp","scope":""},{"destination":"10.0.0.0/24","gateway":"","interface":"eth0","family":"inet","metric":0,"proto":"kernel","scope":"link"},{"destination":"10.20.0.0/16","gateway":"10.0.0.254","interface":"eth0","family":"inet","metric":50,"proto":"static","scope":""}]`),
 				servertest.Skipped("server2"),
 				servertest.Failed("server3", "boom"),
@@ -62,16 +62,50 @@ func (s *APIListPublicTestSuite) TestList() {
 			WantBody: `{"job_id":"job-1","results":[{"destination":"default","family":"inet","gateway":"10.0.0.1","hostname":"server1","interface":"eth0","metric":100,"proto":"dhcp","scope":"","status":"ok"},{"destination":"10.0.0.0/24","family":"inet","gateway":"","hostname":"server1","interface":"eth0","metric":0,"proto":"kernel","scope":"link","status":"ok"},{"destination":"10.20.0.0/16","family":"inet","gateway":"10.0.0.254","hostname":"server1","interface":"eth0","metric":50,"proto":"static","scope":"","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
 		},
 		{
-			Name: "when the example \"A Mac\" is sent, the host's result is returned",
+			Name: "when the example \"An interface with no routes\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/network/route",
+				Path:   "/api/node/server1/network/interface/eth1/route",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
 				"server1",
 				"route.list",
-				route.ListInput{},
+				route.ListInput{Name: "eth1"},
+				servertest.Completed("server1", `[]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"An interface with no routes\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/network/interface/eth1/route",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"route.list",
+				route.ListInput{Name: "eth1"},
+				servertest.Completed("server1", `[]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
+			Name: "when the example \"A Mac\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/network/interface/en0/route",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"route.list",
+				route.ListInput{Name: "en0"},
 				servertest.Completed("server1", `[{"destination":"default","gateway":"192.168.0.1","interface":"en0","family":"inet","metric":0,"proto":"","scope":""}]`),
 			),
 			WantCode: http.StatusOK,
@@ -81,13 +115,13 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the example \"A Mac\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/_all/network/route",
+				Path:   "/api/node/_all/network/interface/en0/route",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
 				"_all",
 				"route.list",
-				route.ListInput{},
+				route.ListInput{Name: "en0"},
 				servertest.Completed("server1", `[{"destination":"default","gateway":"192.168.0.1","interface":"en0","family":"inet","metric":0,"proto":"","scope":""}]`),
 				servertest.Skipped("server2"),
 				servertest.Failed("server3", "boom"),
@@ -99,13 +133,13 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/network/route",
+				Path:   "/api/node/server1/network/interface/eth0/route",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
 				"server1",
 				"route.list",
-				route.ListInput{},
+				route.ListInput{Name: "eth0"},
 				servertest.Skipped("server1"),
 			),
 			WantCode: http.StatusOK,
@@ -115,13 +149,13 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the host fails it, its row says failed",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/network/route",
+				Path:   "/api/node/server1/network/interface/eth0/route",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
 				"server1",
 				"route.list",
-				route.ListInput{},
+				route.ListInput{Name: "eth0"},
 				servertest.Failed("server1", "boom"),
 			),
 			WantCode: http.StatusOK,
@@ -131,13 +165,13 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the host never answers, its row says timeout",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/network/route",
+				Path:   "/api/node/server1/network/interface/eth0/route",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
 				"server1",
 				"route.list",
-				route.ListInput{},
+				route.ListInput{Name: "eth0"},
 				servertest.TimedOut("server1"),
 			),
 			WantCode: http.StatusOK,
@@ -147,13 +181,13 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/network/route",
+				Path:   "/api/node/server1/network/interface/eth0/route",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
 				"server1",
 				"route.list",
-				route.ListInput{},
+				route.ListInput{Name: "eth0"},
 			).Fails(servertest.ErrUnreachable),
 			WantCode: http.StatusInternalServerError,
 		},
@@ -161,13 +195,13 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when broadcast and the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/_all/network/route",
+				Path:   "/api/node/_all/network/interface/eth0/route",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
 				"_all",
 				"route.list",
-				route.ListInput{},
+				route.ListInput{Name: "eth0"},
 			).Fails(servertest.ErrUnreachable),
 			WantCode: http.StatusInternalServerError,
 		},
@@ -182,7 +216,7 @@ func (s *APIListPublicTestSuite) TestListValidationHTTP() {
 			Name: "when the target is not an agent, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/nowhere/network/route",
+				Path:   "/api/node/nowhere/network/interface/eth0/route",
 			},
 			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
@@ -191,7 +225,16 @@ func (s *APIListPublicTestSuite) TestListValidationHTTP() {
 			Name: "when the target is empty, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node//network/route",
+				Path:   "/api/node//network/interface/eth0/route",
+			},
+			Token:    servertest.Read,
+			WantCode: http.StatusBadRequest,
+		},
+		{
+			Name: "when sent a name that is not an interface name, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/network/interface/eth0%3Breboot/route",
 			},
 			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
@@ -206,7 +249,7 @@ func (s *APIListPublicTestSuite) TestListRBACHTTP() {
 			Name: "when there is no token, it is a 401",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/network/route",
+				Path:   "/api/node/server1/network/interface/eth0/route",
 			},
 			Token:    servertest.NoToken,
 			WantCode: http.StatusUnauthorized,
@@ -215,7 +258,7 @@ func (s *APIListPublicTestSuite) TestListRBACHTTP() {
 			Name: "when the token lacks network:read, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/network/route",
+				Path:   "/api/node/server1/network/interface/eth0/route",
 			},
 			Token:    servertest.Lacking,
 			WantCode: http.StatusForbidden,
@@ -224,13 +267,13 @@ func (s *APIListPublicTestSuite) TestListRBACHTTP() {
 			Name: "when the token has the admin role, the request runs",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/network/route",
+				Path:   "/api/node/server1/network/interface/eth0/route",
 			},
 			Token: servertest.Admin,
 			Job: servertest.Query(
 				"server1",
 				"route.list",
-				route.ListInput{},
+				route.ListInput{Name: "eth0"},
 				servertest.Skipped("server1"),
 			),
 			WantCode: http.StatusOK,

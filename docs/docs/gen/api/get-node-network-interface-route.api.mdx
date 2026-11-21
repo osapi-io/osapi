@@ -1,0 +1,69 @@
+---
+id: get-node-network-interface-route
+title: "List the routes of an interface"
+description: "Reads the routes of the main table that go out of the interface: ip route on Linux, netstat on macOS. proto says where a route came from, such as dhcp, kernel or static. An interface with no routes has none; one the host does not have is not found."
+sidebar_label: "List the routes of an interface"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "get api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"List the routes of an interface"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/api/node/{hostname}/network/interface/{name}/route"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Reads the routes of the main table that go out of the interface: ip route on Linux, netstat on macOS. proto says where a route came from, such as dhcp, kernel or static. An interface with no routes has none; one the host does not have is not found.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./get-node-network-interface-route.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./get-node-network-interface-route.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./get-node-network-interface-route.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

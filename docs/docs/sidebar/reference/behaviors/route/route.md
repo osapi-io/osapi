@@ -6,7 +6,7 @@ title: Route
 
 # Route
 
-The routes of the host. `osapi behavior get --name route` and
+The routes of an interface. `osapi behavior get --name route` and
 `osapi behavior method get` show the same. [Its chain](../../chains/route.md)
 shows each call that its examples make.
 
@@ -15,9 +15,8 @@ shows each call that its examples make.
 |             |                                  |
 | ----------- | -------------------------------- |
 | Name        | route                            |
-| Description | The routes of the host           |
+| Description | The routes of an interface       |
 | Placement   | node                             |
-| Group       | network                          |
 | Internal    | no                               |
 | API         | yes                              |
 | CLI         | yes                              |
@@ -30,25 +29,23 @@ shows each call that its examples make.
 | Uses        | [netplan](../netplan/netplan.md) |
 | Used by     | none                             |
 
-### Methods (5)
+### Methods (4)
 
 | NAME                     | VERB  | HTTP   | ROUTE                                                                   | PERMISSION    | DESCRIPTION                                 |
 | ------------------------ | ----- | ------ | ----------------------------------------------------------------------- | ------------- | ------------------------------------------- |
-| [list](#method-list)     | read  | GET    | /api/node/&#123;hostname&#125;/network/route                            | network:read  | List the routes of the host                 |
-| [get](#method-get)       | read  | GET    | /api/node/&#123;hostname&#125;/network/route/&#123;interface_name&#125; | network:read  | Get the routes of an interface              |
-| [create](#method-create) | write | POST   | /api/node/&#123;hostname&#125;/network/route/&#123;interface_name&#125; | network:write | Add static routes to an interface           |
-| [update](#method-update) | write | PUT    | /api/node/&#123;hostname&#125;/network/route/&#123;interface_name&#125; | network:write | Change the routes osapi has of an interface |
-| [delete](#method-delete) | write | DELETE | /api/node/&#123;hostname&#125;/network/route/&#123;interface_name&#125; | network:write | Drop the routes osapi has of an interface   |
+| [list](#method-list)     | read  | GET    | /api/node/&#123;hostname&#125;/network/interface/&#123;name&#125;/route | network:read  | List the routes of an interface             |
+| [create](#method-create) | write | POST   | /api/node/&#123;hostname&#125;/network/interface/&#123;name&#125;/route | network:write | Add a static route to an interface          |
+| [update](#method-update) | write | PUT    | /api/node/&#123;hostname&#125;/network/interface/&#123;name&#125;/route | network:write | Change the gateway or the metric of a route |
+| [delete](#method-delete) | write | DELETE | /api/node/&#123;hostname&#125;/network/interface/&#123;name&#125;/route | network:write | Drop a route that osapi wrote               |
 
-### Types (5)
+### Types (4)
 
-| NAME                     | INPUT                                              | OUTPUT                                                                               |
-| ------------------------ | -------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| [list](#method-list)     | ListInput                                          | \[]Entry &#123; destination, gateway, interface, family, metric, proto, scope &#125; |
-| [get](#method-get)       | GetInput &#123; interface_name* &#125;             | \[]Entry &#123; destination, gateway, interface, family, metric, proto, scope &#125; |
-| [create](#method-create) | CreateInput &#123; interface_name*, routes* &#125; | Result &#123; interface_name, changed &#125;                                         |
-| [update](#method-update) | UpdateInput &#123; interface_name*, routes* &#125; | Result &#123; interface_name, changed &#125;                                         |
-| [delete](#method-delete) | DeleteInput &#123; interface_name* &#125;          | Result &#123; interface_name, changed &#125;                                         |
+| NAME                     | INPUT                                                       | OUTPUT                                                                               |
+| ------------------------ | ----------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| [list](#method-list)     | ListInput &#123; name* &#125;                               | \[]Entry &#123; destination, gateway, interface, family, metric, proto, scope &#125; |
+| [create](#method-create) | CreateInput &#123; name*, destination*, via*, metric &#125; | Result &#123; destination, changed &#125;                                            |
+| [update](#method-update) | UpdateInput &#123; name*, destination*, via*, metric &#125; | Result &#123; destination, changed &#125;                                            |
+| [delete](#method-delete) | DeleteInput &#123; name*, destination* &#125;               | Result &#123; destination, changed &#125;                                            |
 
 ### Settings (0)
 
@@ -62,66 +59,28 @@ None. Declare them with behavior.Config.
 | Child spans     | behavior.netplan.&lt;method&gt;, behavior.managedfile.&lt;method&gt;, exec ip, exec ifconfig, exec netstat, exec ethtool, exec netplan, exec chown, exec stat, file.write, file.remove, file.chmod, kv.get, kv.put |
 | Metrics         | osapi_behavior_calls_total, osapi_behavior_duration_seconds, osapi_behavior_changes_total                                                                                                                          |
 | Attributes      | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed                                                                                                    |
-| Recorded inputs | interface_name (get, create, update, delete)                                                                                                                                                                       |
+| Recorded inputs | name (list, create, update, delete), destination (create, update, delete)                                                                                                                                          |
 
 ## Method list
 
-|             |                                                                                                                                              |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Name        | list                                                                                                                                         |
-| Verb        | read                                                                                                                                         |
-| Description | List the routes of the host                                                                                                                  |
-| Detail      | Reads each route of the main table: ip route on Linux, netstat on macOS. proto says where a route came from, such as dhcp, kernel or static. |
-| HTTP        | GET                                                                                                                                          |
-| Route       | /api/node/&#123;hostname&#125;/network/route                                                                                                 |
-| Permission  | network:read                                                                                                                                 |
-| Command     | [osapi client node network route list](../../../usage/cli/client/node/network/route/list.md)                                                 |
-| Input type  | ListInput                                                                                                                                    |
-| Output type | \[]Entry                                                                                                                                     |
-
-### Input (0)
-
-None. The method takes no input; its command needs only --target.
-
-### Output (7)
-
-| FIELD       | TYPE    | DESCRIPTION                                                               |
-| ----------- | ------- | ------------------------------------------------------------------------- |
-| destination | string  | The destination in CIDR notation, or default                              |
-| gateway     | string  | The gateway; empty for a route on the link                                |
-| interface   | string  | The interface the route goes out of                                       |
-| family      | string  | inet or inet6                                                             |
-| metric      | integer | The metric; 0 when the kernel gives none                                  |
-| proto       | string  | Where the route came from, such as kernel, dhcp or static; empty on macOS |
-| scope       | string  | The scope, such as link; empty for a global route                         |
-
-### Examples (2)
-
-| EXAMPLE      | INPUT  | OUTPUT                                                                                                                                                                                                                                                                                                                    |
-| ------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A Linux host | (none) | \[destination=default, family=inet, gateway=10.0.0.1, interface=eth0, metric=100, proto=dhcp, scope=] \[destination=10.0.0.0/24, family=inet, gateway=, interface=eth0, metric=0, proto=kernel, scope=link] \[destination=10.20.0.0/16, family=inet, gateway=10.0.0.254, interface=eth0, metric=50, proto=static, scope=] |
-| A Mac        | (none) | \[destination=default, family=inet, gateway=192.168.0.1, interface=en0, metric=0, proto=, scope=]                                                                                                                                                                                                                         |
-
-## Method get
-
-|             |                                                                                                                                                               |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Name        | get                                                                                                                                                           |
-| Verb        | read                                                                                                                                                          |
-| Description | Get the routes of an interface                                                                                                                                |
-| Detail      | Reads the routes of the main table that go out of the interface, as list does. An interface with no routes has none; one the host does not have is not found. |
-| HTTP        | GET                                                                                                                                                           |
-| Route       | /api/node/&#123;hostname&#125;/network/route/&#123;interface_name&#125;                                                                                       |
-| Permission  | network:read                                                                                                                                                  |
-| Command     | [osapi client node network route get](../../../usage/cli/client/node/network/route/get.md)                                                                    |
-| Input type  | GetInput                                                                                                                                                      |
-| Output type | \[]Entry                                                                                                                                                      |
+|             |                                                                                                                                                                                                                                                          |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | list                                                                                                                                                                                                                                                     |
+| Verb        | read                                                                                                                                                                                                                                                     |
+| Description | List the routes of an interface                                                                                                                                                                                                                          |
+| Detail      | Reads the routes of the main table that go out of the interface: ip route on Linux, netstat on macOS. proto says where a route came from, such as dhcp, kernel or static. An interface with no routes has none; one the host does not have is not found. |
+| HTTP        | GET                                                                                                                                                                                                                                                      |
+| Route       | /api/node/&#123;hostname&#125;/network/interface/&#123;name&#125;/route                                                                                                                                                                                  |
+| Permission  | network:read                                                                                                                                                                                                                                             |
+| Command     | [osapi client node network interface route list](../../../usage/cli/client/node/network/interface/route/list.md)                                                                                                                                         |
+| Input type  | ListInput                                                                                                                                                                                                                                                |
+| Output type | \[]Entry                                                                                                                                                                                                                                                 |
 
 ### Input (1)
 
-| FIELD          | TYPE   | REQUIRED | CONSTRAINTS                                                                  | DESCRIPTION                                                            |
-| -------------- | ------ | -------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| interface_name | string | yes      | pattern ^(@fact\.\[a-z0-9_.]+\|\[a-zA-Z0-9]\[a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                                                  | DESCRIPTION                                                            |
+| ----- | ------ | -------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| name  | string | yes      | pattern ^(@fact\.\[a-z0-9_.]+\|\[a-zA-Z0-9]\[a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary |
 
 ### Output (7)
 
@@ -137,114 +96,121 @@ None. The method takes no input; its command needs only --target.
 
 ### Examples (3)
 
-| EXAMPLE                     | INPUT               | OUTPUT                                                                                                                                                                                                                                                                                                                    |
-| --------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| An interface with routes    | interface_name=eth0 | \[destination=default, family=inet, gateway=10.0.0.1, interface=eth0, metric=100, proto=dhcp, scope=] \[destination=10.0.0.0/24, family=inet, gateway=, interface=eth0, metric=0, proto=kernel, scope=link] \[destination=10.20.0.0/16, family=inet, gateway=10.0.0.254, interface=eth0, metric=50, proto=static, scope=] |
-| An interface with no routes | interface_name=eth1 |                                                                                                                                                                                                                                                                                                                           |
-| A Mac                       | interface_name=en0  | \[destination=default, family=inet, gateway=192.168.0.1, interface=en0, metric=0, proto=, scope=]                                                                                                                                                                                                                         |
+| EXAMPLE                     | INPUT     | OUTPUT                                                                                                                                                                                                                                                                                                                    |
+| --------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| An interface with routes    | name=eth0 | \[destination=default, family=inet, gateway=10.0.0.1, interface=eth0, metric=100, proto=dhcp, scope=] \[destination=10.0.0.0/24, family=inet, gateway=, interface=eth0, metric=0, proto=kernel, scope=link] \[destination=10.20.0.0/16, family=inet, gateway=10.0.0.254, interface=eth0, metric=50, proto=static, scope=] |
+| An interface with no routes | name=eth1 |                                                                                                                                                                                                                                                                                                                           |
+| A Mac                       | name=en0  | \[destination=default, family=inet, gateway=192.168.0.1, interface=en0, metric=0, proto=, scope=]                                                                                                                                                                                                                         |
 
 ## Method create
 
-|             |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Name        | create                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| Verb        | write                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| Description | Add static routes to an interface                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| Detail      | Writes a netplan file of the interface's routes, such as /etc/netplan/osapi-osapi0-routes.yaml for osapi0, under a netplan definition that is the interface's own, and applies it. A default route is refused: the interface behavior sets the gateway. An interface the host does not have is not found. An interface that a match defines, such as cloud-init's all for en*, is refused, because the routes would go on each interface the match takes, now and later. An interface osapi already has routes of does not change: update replaces them. It runs on the Debian family, and elsewhere, and in a container, reports skipped. |
-| HTTP        | POST                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Route       | /api/node/&#123;hostname&#125;/network/route/&#123;interface_name&#125;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| Permission  | network:write                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| Command     | [osapi client node network route create](../../../usage/cli/client/node/network/route/create.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| Input type  | CreateInput                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| Output type | Result                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+|             |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | create                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Verb        | write                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Description | Add a static route to an interface                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Detail      | Adds the route to the interface's netplan file, such as /etc/netplan/osapi-osapi0-routes.yaml for osapi0, under a netplan definition that is the interface's own, and applies it. A route osapi already has, the same, does not change; one to the same destination by another gateway or metric is refused: update changes it. A default route is refused: the interface behavior sets the gateway. An interface the host does not have is not found. An interface that a match defines, such as cloud-init's all for en*, is refused, because the route would go on each interface the match takes. It runs on the Debian family, and elsewhere, and in a container, reports skipped. |
+| HTTP        | POST                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Route       | /api/node/&#123;hostname&#125;/network/interface/&#123;name&#125;/route                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Permission  | network:write                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Command     | [osapi client node network interface route create](../../../usage/cli/client/node/network/interface/route/create.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Input type  | CreateInput                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Output type | Result                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
-### Input (2)
+### Input (4)
 
-| FIELD          | TYPE   | REQUIRED | CONSTRAINTS                                                                  | DESCRIPTION                                                                                                                                                                |
-| -------------- | ------ | -------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| interface_name | string | yes      | pattern ^(@fact\.\[a-z0-9_.]+\|\[a-zA-Z0-9]\[a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary                                                                                                     |
-| routes         | array  | yes      |                                                                              | Each route as ip route writes it: &lt;destination&gt; via &lt;gateway&gt;, with metric &lt;n&gt; after it when you give one, such as 10.0.0.0/8 via 192.168.1.1 metric 100 |
+| FIELD       | TYPE    | REQUIRED | CONSTRAINTS                                                                  | DESCRIPTION                                                                     |
+| ----------- | ------- | -------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| name        | string  | yes      | pattern ^(@fact\.\[a-z0-9_.]+\|\[a-zA-Z0-9]\[a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary          |
+| destination | string  | yes      | format cidr                                                                  | Where the route goes, in CIDR notation, such as 10.0.0.0/8; not a default route |
+| via         | string  | yes      | format ip                                                                    | The gateway, an address of the destination's family, such as 192.168.1.1        |
+| metric      | integer | no       | min 0, max 4.294967295e+09                                                   | The metric, from 0 to 4294967295; none when it is 0                             |
 
 ### Output (2)
 
-| FIELD          | TYPE    | DESCRIPTION              |
-| -------------- | ------- | ------------------------ |
-| interface_name | string  | The interface            |
-| changed        | boolean | Whether the host changed |
+| FIELD       | TYPE    | DESCRIPTION                  |
+| ----------- | ------- | ---------------------------- |
+| destination | string  | The destination of the route |
+| changed     | boolean | Whether the host changed     |
 
-### Examples (2)
+### Examples (3)
 
-| EXAMPLE                                  | INPUT                                                                                                     | OUTPUT                               |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| Two routes                               | interface_name=osapi0, routes=\[198.51.100.0/24 via 192.0.2.1 2001:db8:1::/48 via 2001:db8::1 metric 200] | interface_name=osapi0, changed=true  |
-| An interface osapi already has routes of | interface_name=osapi0, routes=\[198.51.100.0/24 via 192.0.2.1 2001:db8:1::/48 via 2001:db8::1 metric 200] | interface_name=osapi0, changed=false |
+| EXAMPLE                       | INPUT                                                                 | OUTPUT                                     |
+| ----------------------------- | --------------------------------------------------------------------- | ------------------------------------------ |
+| A route                       | name=osapi0, destination=198.51.100.0/24, via=192.0.2.1               | destination=198.51.100.0/24, changed=true  |
+| A second route, with a metric | name=osapi0, destination=2001:db8:1::/48, via=2001:db8::1, metric=200 | destination=2001:db8:1::/48, changed=true  |
+| A route osapi already has     | name=osapi0, destination=198.51.100.0/24, via=192.0.2.1               | destination=198.51.100.0/24, changed=false |
 
 ## Method update
 
-|             |                                                                                                                                                                     |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Name        | update                                                                                                                                                              |
-| Verb        | write                                                                                                                                                               |
-| Description | Change the routes osapi has of an interface                                                                                                                         |
-| Detail      | Writes the interface's routes file over the one osapi has, as create writes it, and applies it. An interface osapi has no routes of is not found: create adds them. |
-| HTTP        | PUT                                                                                                                                                                 |
-| Route       | /api/node/&#123;hostname&#125;/network/route/&#123;interface_name&#125;                                                                                             |
-| Permission  | network:write                                                                                                                                                       |
-| Command     | [osapi client node network route update](../../../usage/cli/client/node/network/route/update.md)                                                                    |
-| Input type  | UpdateInput                                                                                                                                                         |
-| Output type | Result                                                                                                                                                              |
+|             |                                                                                                                                                    |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | update                                                                                                                                             |
+| Verb        | write                                                                                                                                              |
+| Description | Change the gateway or the metric of a route                                                                                                        |
+| Detail      | Writes the route over the one osapi has to the same destination, and applies it. A destination osapi has no route to is not found: create adds it. |
+| HTTP        | PUT                                                                                                                                                |
+| Route       | /api/node/&#123;hostname&#125;/network/interface/&#123;name&#125;/route                                                                            |
+| Permission  | network:write                                                                                                                                      |
+| Command     | [osapi client node network interface route update](../../../usage/cli/client/node/network/interface/route/update.md)                               |
+| Input type  | UpdateInput                                                                                                                                        |
+| Output type | Result                                                                                                                                             |
 
-### Input (2)
+### Input (4)
 
-| FIELD          | TYPE   | REQUIRED | CONSTRAINTS                                                                  | DESCRIPTION                                                                                                                                                                |
-| -------------- | ------ | -------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| interface_name | string | yes      | pattern ^(@fact\.\[a-z0-9_.]+\|\[a-zA-Z0-9]\[a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary                                                                                                     |
-| routes         | array  | yes      |                                                                              | Each route as ip route writes it: &lt;destination&gt; via &lt;gateway&gt;, with metric &lt;n&gt; after it when you give one, such as 10.0.0.0/8 via 192.168.1.1 metric 100 |
+| FIELD       | TYPE    | REQUIRED | CONSTRAINTS                                                                  | DESCRIPTION                                                                     |
+| ----------- | ------- | -------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| name        | string  | yes      | pattern ^(@fact\.\[a-z0-9_.]+\|\[a-zA-Z0-9]\[a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary          |
+| destination | string  | yes      | format cidr                                                                  | Where the route goes, in CIDR notation, such as 10.0.0.0/8; not a default route |
+| via         | string  | yes      | format ip                                                                    | The gateway, an address of the destination's family, such as 192.168.1.1        |
+| metric      | integer | no       | min 0, max 4.294967295e+09                                                   | The metric, from 0 to 4294967295; none when it is 0                             |
 
 ### Output (2)
 
-| FIELD          | TYPE    | DESCRIPTION              |
-| -------------- | ------- | ------------------------ |
-| interface_name | string  | The interface            |
-| changed        | boolean | Whether the host changed |
+| FIELD       | TYPE    | DESCRIPTION                  |
+| ----------- | ------- | ---------------------------- |
+| destination | string  | The destination of the route |
+| changed     | boolean | Whether the host changed     |
 
 ### Examples (1)
 
-| EXAMPLE                   | INPUT                                                                   | OUTPUT                              |
-| ------------------------- | ----------------------------------------------------------------------- | ----------------------------------- |
-| One route in place of two | interface_name=osapi0, routes=\[203.0.113.0/24 via 192.0.2.1 metric 10] | interface_name=osapi0, changed=true |
+| EXAMPLE                  | INPUT                                                              | OUTPUT                                    |
+| ------------------------ | ------------------------------------------------------------------ | ----------------------------------------- |
+| A new gateway and metric | name=osapi0, destination=198.51.100.0/24, via=192.0.2.2, metric=10 | destination=198.51.100.0/24, changed=true |
 
 ## Method delete
 
-|             |                                                                                                                    |
-| ----------- | ------------------------------------------------------------------------------------------------------------------ |
-| Name        | delete                                                                                                             |
-| Verb        | write                                                                                                              |
-| Description | Drop the routes osapi has of an interface                                                                          |
-| Detail      | Removes the interface's routes file and applies what is left. An interface osapi has no routes of does not change. |
-| HTTP        | DELETE                                                                                                             |
-| Route       | /api/node/&#123;hostname&#125;/network/route/&#123;interface_name&#125;                                            |
-| Permission  | network:write                                                                                                      |
-| Command     | [osapi client node network route delete](../../../usage/cli/client/node/network/route/delete.md)                   |
-| Input type  | DeleteInput                                                                                                        |
-| Output type | Result                                                                                                             |
+|             |                                                                                                                                                           |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | delete                                                                                                                                                    |
+| Verb        | write                                                                                                                                                     |
+| Description | Drop a route that osapi wrote                                                                                                                             |
+| Detail      | Drops the route from the interface's netplan file and applies what is left; the last route removes the file. A route osapi does not have does not change. |
+| HTTP        | DELETE                                                                                                                                                    |
+| Route       | /api/node/&#123;hostname&#125;/network/interface/&#123;name&#125;/route                                                                                   |
+| Permission  | network:write                                                                                                                                             |
+| Command     | [osapi client node network interface route delete](../../../usage/cli/client/node/network/interface/route/delete.md)                                      |
+| Input type  | DeleteInput                                                                                                                                               |
+| Output type | Result                                                                                                                                                    |
 
-### Input (1)
+### Input (2)
 
-| FIELD          | TYPE   | REQUIRED | CONSTRAINTS                                                                  | DESCRIPTION                                                            |
-| -------------- | ------ | -------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| interface_name | string | yes      | pattern ^(@fact\.\[a-z0-9_.]+\|\[a-zA-Z0-9]\[a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary |
+| FIELD       | TYPE   | REQUIRED | CONSTRAINTS                                                                  | DESCRIPTION                                                            |
+| ----------- | ------ | -------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| name        | string | yes      | pattern ^(@fact\.\[a-z0-9_.]+\|\[a-zA-Z0-9]\[a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary |
+| destination | string | yes      | format cidr                                                                  | The destination of the route, in CIDR notation, such as 10.0.0.0/8     |
 
 ### Output (2)
 
-| FIELD          | TYPE    | DESCRIPTION              |
-| -------------- | ------- | ------------------------ |
-| interface_name | string  | The interface            |
-| changed        | boolean | Whether the host changed |
+| FIELD       | TYPE    | DESCRIPTION                  |
+| ----------- | ------- | ---------------------------- |
+| destination | string  | The destination of the route |
+| changed     | boolean | Whether the host changed     |
 
-### Examples (2)
+### Examples (3)
 
-| EXAMPLE                             | INPUT                 | OUTPUT                               |
-| ----------------------------------- | --------------------- | ------------------------------------ |
-| An interface osapi has routes of    | interface_name=osapi0 | interface_name=osapi0, changed=true  |
-| An interface osapi has no routes of | interface_name=osapi0 | interface_name=osapi0, changed=false |
+| EXAMPLE                     | INPUT                                    | OUTPUT                                     |
+| --------------------------- | ---------------------------------------- | ------------------------------------------ |
+| One of two routes           | name=osapi0, destination=198.51.100.0/24 | destination=198.51.100.0/24, changed=true  |
+| The last route              | name=osapi0, destination=198.51.100.0/24 | destination=198.51.100.0/24, changed=true  |
+| A route osapi does not have | name=osapi0, destination=198.51.100.0/24 | destination=198.51.100.0/24, changed=false |

@@ -24,8 +24,13 @@ import "strings"
 
 // TypeName is the prefix of every schema, parameter and operation name the
 // spec gives this behavior: sysctl is Sysctl, dns under network is
-// NetworkDns.
+// NetworkDns, and a route under the interface under network is
+// NetworkInterfaceRoute.
 func (b *Behavior) TypeName() string {
+	if b.Parent != nil {
+		return b.Parent.TypeName() + title(b.Name)
+	}
+
 	return title(b.Group) + title(b.Name)
 }
 

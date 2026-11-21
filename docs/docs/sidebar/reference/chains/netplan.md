@@ -16,7 +16,7 @@ The behaviors that netplan calls, and each call that its examples make.
 | Behavior | [netplan](../behaviors/netplan/netplan.md)                                                                             |
 | Chain    | netplan → managedfile                                                                                                  |
 | Calls    | [managedfile](../behaviors/managedfile/managedfile.md)                                                                 |
-| Used by  | [dns](../behaviors/dns/dns.md), [interface](../behaviors/interface/interface.md), [route](../behaviors/route/route.md) |
+| Used by  | [route](../behaviors/route/route.md), [dns](../behaviors/dns/dns.md), [interface](../behaviors/interface/interface.md) |
 
 ## A new file (update)
 

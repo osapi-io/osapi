@@ -1,0 +1,69 @@
+---
+id: delete-node-network-interface-route
+title: "Drop a route that osapi wrote"
+description: "Drops the route from the interface's netplan file and applies what is left; the last route removes the file. A route osapi does not have does not change."
+sidebar_label: "Drop a route that osapi wrote"
+hide_title: true
+hide_table_of_contents: true
+api: eJztW21v20YS/iuDxQGNcRQlt3LaKChwbpO0PqRB4KoIcLZPGJEjcWNql9ldSlZ1+u/F7C4lWhZyjdsP/kD4C8nlzM7LM8+spPFG5GQzIysntRIj8croyoIrCIyuHcHM6IW/lcqRmWFGX1lQ5KoSFcxkSYAqB6yqUpKFVYEOpIWSZu6lFyvRuqjK0EIvKShnyRTO44q2WEnINVlQ2kGBS9rfZQWqOaUiEboig2znRc6WUkmO3umc3pFbaXN70Vh4yUpFIio0uCBHxorR1ebA0TGaObkRTLAsE5igWidQaOsULigBbaDEKZXwbG50XY1WNE1zWp6wGZLFK3SFSAS/LUaiERSJMPSploZyMXKmpkTYrKAFitFGLKR6S2ruCjE6TYRbVyxpnZFqLraJuOtprGQv0znNSfXozhnsOZxbll1iKXN0LNFskCyk+v408SsT570R223ywM927hKwdVYAWiBXDLybCDPM3O75v/gu3QmklZELNOvjbv9flyt0jgwL/veZ13x9nV5h7/dB78Ukvfnn//j6vPefQe/Fzf4ynfRuNoPkdLg9+Yf4OwK182biDd5ub4LNZN0POl+zWKaVI+X40mM58zjrf7Qcw03bI8ModJL8bjlZJxWGUB+LfOsF0LN9XSUgFfx48eqSIe6X96k5HaT+r/+dSMRMmwU6MRKZzM2DaDwiGF7Pdrttp+3qniM3u1309CNljneVruQHRystFOJlCOihakaEf2ArrWyI2teDwV+I+Uc9ncj8eLg/6ilcvILaUg5OQ2V0RpYZR1qIGecKpjtcVN6hs7MBfTccDHr09Ytpb3iaD3v47enz3nD4/PnZ2XA4GAwG7SzUtcz/Qha8eAiQrUvnl6WjhX3oZqC9I35+KMgVZDyWmHegeXNn1lTrklBxrTwaoMcKj4zR5qGa1/wYFmQtzglkUIJzUg5mKEvK02PKdpT5QN/PcaWxJ6hy3Foqo/M64+SGjHIQj2q3Dl1tj7sc1hrtu6YCM22CXjbNw0TVCy4OfcsQ8K6IRNhbWVUh3HJBunatgvliQGhFeva9vo2RgqgcGtUPCrXVaaKPX1qulz5qHKQohsbgWhxu1CD0sWwQ6j04cIAXzAoIDcuH+qsmkwmspCtgFQEud9BO2drhF7LGodX3y2uH5cPM3bf1HFr3DWS8bACkzrLamADxPau8Ccl0Ggw5I2nZgC4NNelQlvZPbJ7nki+xhCgDONW12xtxdNu8Jt5ahew0UPJbG8IYp8/v/KFYByoInBnRmXB3QlhpkwfvkQtybnABGSqYGlRZAVqlwGX283j8vqk1GU59WYl2V3iV0dOSFi/jRmzY7j2sLSX+ZLmPd1xreGbmzy4VGcu9c1XIrPBWBMjAlNyKSIGhktCSTUGqcFSKPo3uOTg1hLfsnKnL1ikJYSGtlWoOM0llDs+Gg8FJCrXC2hXayN8pH4HS4PQtqXic8tchPjKcYP2+LHt6krLdU5nnpIIB4e37R18fHTJ+a61Y8JuTlJcnM12rfLSnfm2Onp39MbztHjOGZUXDqGiBCucUVXEHiuE1lMC0do1WmXulOVWlXoN0CVh9uGMMuHSs/0XUL5V1WJbUNva+jXvsuAfWEuW20ZZpNStlFvPFeNo1Bm/3tNTZrW3Lt9OXGYoCWlHYie6kdTv1tcIlyhKnJY3YJjSx1UQvqSKVWwjYzPWqdU57dz7+FZ6d+eRYMksyE4/UYCnzlNFlSSZWz0uQzkKp51BgC+asYXDSbjcHQBWJaOMtnEYChPgk3qAiXsfExrtdGkQimkAGfY3T3EdatjPd7wllr5xZvKF93+8/R/DjVi7bJRBp/LSj8Y7GOxrvaLyj8SdN47+1zIUenL+/gFtaw+5Dgifzbzoy78i8I/OOzDsyf9Jk/qaxD3pwoWw9m8lM8vdqe1DbwOjDjtE7Ru8YvWP0jtGfNKOPj2f8OCr38fS/eXi25nxhRF38auZFx/0d93fc33F/x/1PmvuPgqdJmIeQdEfw4+vnz6NlQa7QeQCLJ7ez7ifYrkF0DaJrEF2DeOIN4lzFktXqIBSpV2Qpq410az8Y+wOhIXNe82TqlYikNVoZ6Ujc8LBkGFy6En7AZ3L+/mLiZ8Qmu9kpPyYU2oUYidyPAPkBXFYp+ljJvtI59TfN+NK2H7fp74Yz+5uw0IyfhZjwvjd7e3/l3hLaR9vqjZj6uzfNnN6/P4xFHET1E3F+dT8oVjhX+Thwz7rcj4K+buJ+MNrZmiyTaqY9e8dUeJA+YO/xumKyNlQROk7yfs7Met58K1V954vSpvCTXBKsdW3irBvCrCRyCZfqtUKwBZVleq2uVSiJkpwFVHB+EQUC5NpKwRVG1/MC2OO8tXtU2iwjl4NUKfiprP0wnOTSnVKBS8nlFEqXWVgrQL9Fcq1ymknF2nlV8ty0H+BCmMk7ykGqqna+hejaVbVLY0VnBTFfEGbFtdrRP8208Rz2qaaaLEjHA+KWMq1yMHXTVjx/sSXR5Ib7LKvKtMkpT6+5LBk8IRmnPE0bys9h5s8ttSkjDOyo359LV9TTNNOLvrewJ3W44ISXMiOustGmGXv+5WIMb+PT5ECVrkhZXZuMUm3m/Shs+79cjD3gKm3dAlVLG0/cc9fzk/At3lsZ7evgHrBah68nPaof68zRnetXJUo/jOojtYmscCVC3TAviESMWoONkRr8zHn0hN9ops09P9yECVLWs9lM0dJvptxu+fGnmsw6sMYSjfQM68f/peXrXIxmWFr6TGCfXcafOE/g8f8lcDQCzcSl4oH6JZY134lE3NK6/V8Efor/Ueb+XcP+j7A+WH7Do72EORkf9LD0Y7C1x6zYEn3w4YH9DhLnWUaV++y77Y7z6vXb1+PXIhHTOM+/YFSNhMEVIwZXwVBdhWY12oRnG1Gimtc453eDVq5RjD2lGadumke8YL+OhmKzCW+M+UC53e4i4w+YHJrt9g/VIuqN
+sidebar_class_name: "delete api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Drop a route that osapi wrote"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"delete"}
+  path={"/api/node/{hostname}/network/interface/{name}/route"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Drops the route from the interface's netplan file and applies what is left; the last route removes the file. A route osapi does not have does not change.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./delete-node-network-interface-route.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./delete-node-network-interface-route.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./delete-node-network-interface-route.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

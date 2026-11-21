@@ -85,12 +85,11 @@ import {
   deleteNodeNetworkInterface,
 } from "@/sdk/gen/interface-api-network-interface-operations/interface-api-network-interface-operations";
 import {
-  getNodeNetworkRoute,
-  getNodeNetworkRouteByKey,
-  postNodeNetworkRoute,
-  putNodeNetworkRoute,
-  deleteNodeNetworkRoute,
-} from "@/sdk/gen/route-api-network-route-operations/route-api-network-route-operations";
+  getNodeNetworkInterfaceRoute,
+  postNodeNetworkInterfaceRoute,
+  putNodeNetworkInterfaceRoute,
+  deleteNodeNetworkInterfaceRoute,
+} from "@/sdk/gen/route-api-route-operations/route-api-route-operations";
 import { postNodeNetworkPing } from "@/sdk/gen/network-management-api-network-operations/network-management-api-network-operations";
 import {
   getNodePackage,
@@ -645,54 +644,30 @@ export function Configure() {
             );
             break;
           case "route-list":
-            result = await getNodeNetworkRoute(t);
-            break;
-          case "route-get":
-            result = await getNodeNetworkRouteByKey(
+            result = await getNodeNetworkInterfaceRoute(
               t,
               block.data.interface_name as string,
             );
             break;
-          case "route-create": {
-            // The API takes each route as ip route writes it.
-            const routes: string[] = [];
-            if (block.data.to && block.data.via) {
-              routes.push(
-                `${block.data.to as string} via ${block.data.via as string}` +
-                  (block.data.metric
-                    ? ` metric ${Number(block.data.metric)}`
-                    : ""),
-              );
-            }
-            result = await postNodeNetworkRoute(
+          case "route-create":
+            result = await postNodeNetworkInterfaceRoute(
               t,
               block.data.interface_name as string,
-              { routes },
+              routeBody(block.data),
             );
             break;
-          }
-          case "route-update": {
-            // The API takes each route as ip route writes it.
-            const updRoutes: string[] = [];
-            if (block.data.to && block.data.via) {
-              updRoutes.push(
-                `${block.data.to as string} via ${block.data.via as string}` +
-                  (block.data.metric
-                    ? ` metric ${Number(block.data.metric)}`
-                    : ""),
-              );
-            }
-            result = await putNodeNetworkRoute(
+          case "route-update":
+            result = await putNodeNetworkInterfaceRoute(
               t,
               block.data.interface_name as string,
-              { routes: updRoutes },
+              routeBody(block.data),
             );
             break;
-          }
           case "route-delete":
-            result = await deleteNodeNetworkRoute(
+            result = await deleteNodeNetworkInterfaceRoute(
               t,
               block.data.interface_name as string,
+              { destination: (block.data.to as string) || "" },
             );
             break;
           case "ping":
@@ -1282,15 +1257,16 @@ export function Configure() {
         return null;
       case "route-create":
       case "route-update":
+      case "route-delete":
         return (
           <RouteBlock
             data={block.data}
             onChange={(data) => updateBlockData(block.id, data)}
             onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
+            destinationOnly={block.type === "route-delete"}
           />
         );
-      case "route-get":
-      case "route-delete":
+      case "route-list":
         return (
           <SingleInputBlock
             data={block.data}
@@ -1301,8 +1277,6 @@ export function Configure() {
             placeholder="eth0"
           />
         );
-      case "route-list":
-        return null;
       case "ping":
         return (
           <SingleInputBlock
@@ -1789,4 +1763,15 @@ export function Configure() {
       />
     </ContentArea>
   );
+}
+
+// routeBody is the body of a route create or update: one route, with its
+// metric only when the block gives one.
+function routeBody(data: Record<string, unknown>) {
+  const metric = Number(data.metric);
+  return {
+    destination: (data.to as string) || "",
+    via: (data.via as string) || "",
+    ...(data.metric ? { metric } : {}),
+  };
 }

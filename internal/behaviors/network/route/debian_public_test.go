@@ -25,102 +25,90 @@ import (
 	"errors"
 	"testing"
 
+	hostmocks "github.com/osapi-io/osapi/internal/behavior/host/mocks"
+	netplanmocks "github.com/osapi-io/osapi/internal/behaviors/netplan/mocks"
+	"go.uber.org/mock/gomock"
+
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
-	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	"github.com/osapi-io/osapi/internal/behaviors/netplan"
-	netplanmocks "github.com/osapi-io/osapi/internal/behaviors/netplan/mocks"
 	"github.com/osapi-io/osapi/internal/behaviors/network/route"
 )
 
-// DebianPublicTestSuite covers what no example can: a container, a platform
-// with no writer, a netplan read that fails, and each form a route string
-// takes.
 type DebianPublicTestSuite struct {
 	suite.Suite
 }
 
-func (s *DebianPublicTestSuite) TestContainerSkips() {
-	p, err := route.ExportNewDebian(host.Host{
-		Container: true,
-		Required: map[string]any{
-			netplan.Behavior.Name: netplanmocks.NewMockProvider(gomock.NewController(s.T())),
-		},
-	})
+// TestUnsupported: a container and a platform with no writer read the
+// routes, and refuse each write.
+func (s *DebianPublicTestSuite) TestUnsupported() {
+	ctx := context.Background()
+	in := route.CreateInput{Name: "osapi0", Destination: "198.51.100.0/24", Via: "192.0.2.1"}
+	del := route.DeleteInput{Name: "osapi0", Destination: "198.51.100.0/24"}
+	inContainer, err := route.ExportNewDebian(host.Host{Container: true})
 	s.Require().NoError(err)
-	_, err = p.Create(context.Background(), route.Config{InterfaceName: "osapi0"})
-	s.ErrorIs(err, behavior.ErrUnsupported)
-	_, err = p.Update(context.Background(), route.Config{InterfaceName: "osapi0"})
-	s.ErrorIs(err, behavior.ErrUnsupported)
-	_, err = p.Remove(context.Background(), "osapi0")
-	s.ErrorIs(err, behavior.ErrUnsupported)
+	reader, err := route.ExportNewReader(host.Host{})
+	s.Require().NoError(err)
+	for _, p := range []route.Provider{inContainer, reader} {
+		_, err = route.Create(ctx, p, in)
+		s.ErrorIs(err, behavior.ErrUnsupported)
+		_, err = route.Delete(ctx, p, del)
+		s.ErrorIs(err, behavior.ErrUnsupported)
+	}
 }
 
-func (s *DebianPublicTestSuite) TestReaderWritesAreUnsupported() {
-	p, err := route.ExportNewReader(host.Host{Platform: behavior.PlatformDarwin})
-	s.Require().NoError(err)
-	_, err = p.Create(context.Background(), route.Config{})
-	s.ErrorIs(err, behavior.ErrUnsupported)
-	_, err = p.Update(context.Background(), route.Config{})
-	s.ErrorIs(err, behavior.ErrUnsupported)
-	_, err = p.Remove(context.Background(), "en0")
-	s.ErrorIs(err, behavior.ErrUnsupported)
+// TestDamagedFile: a routes file that osapi cannot read is an error, not
+// routes that osapi drops; a file with no definition has no routes.
+func (s *DebianPublicTestSuite) TestDamagedFile() {
+	file := netplan.Dir + "/osapi-osapi0-routes.yaml"
+	for content, want := range map[string]string{
+		"network: [":                 "read " + file,
+		"network:\n  ethernets: 5\n": "read " + file,
+		"network:\n  version: 2\n":   "not found",
+	} {
+		fs := memfs.New()
+		s.Require().NoError(fs.MkdirAll(netplan.Dir, 0o755))
+		s.Require().NoError(fs.WriteFile(file, []byte(content), 0o600))
+		p, err := route.ExportNewDebian(host.Host{FS: fs})
+		s.Require().NoError(err)
+
+		_, err = route.Update(context.Background(), p,
+			route.UpdateInput{Name: "osapi0", Destination: "198.51.100.0/24", Via: "192.0.2.1"})
+		s.ErrorContains(err, want, content)
+		_, err = route.Delete(context.Background(), p,
+			route.DeleteInput{Name: "osapi0", Destination: "198.51.100.0/24"})
+		if want != "not found" {
+			s.ErrorContains(err, want, content)
+		}
+	}
 }
 
-func (s *DebianPublicTestSuite) TestReadFails() {
-	p, err := route.ExportNewReader(host.Host{Platform: behavior.PlatformDebian, FS: memfs.New()})
-	s.Require().NoError(err)
-	_, err = p.Routes(context.Background())
-	s.ErrorContains(err, "read the routes")
-	_, err = p.InterfaceRoutes(context.Background(), "eth0")
-	s.ErrorContains(err, "read the routes")
-}
-
-func (s *DebianPublicTestSuite) TestNetplanReadFails() {
+// TestNetplanFails: when netplan cannot say where the interface is, the
+// route is not written.
+func (s *DebianPublicTestSuite) TestNetplanFails() {
+	ctrl := gomock.NewController(s.T())
 	fs := memfs.New()
 	s.Require().NoError(fs.MkdirAll("/sys/class/net/osapi0", 0o755))
 	s.Require().NoError(fs.WriteFile("/sys/class/net/osapi0/ifindex", []byte("3"), 0o644))
-	np := netplanmocks.NewMockProvider(gomock.NewController(s.T()))
-	np.EXPECT().Interface(gomock.Any(), "osapi0").Return(netplan.Interface{}, errors.New("boom"))
+	s.Require().NoError(fs.WriteFile("/sys/class/net/osapi0/flags", []byte("0x82"), 0o644))
+	exec := hostmocks.NewMockExec(ctrl)
+	exec.EXPECT().RunCmd(gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
+	np := netplanmocks.NewMockProvider(ctrl)
+	np.EXPECT().
+		Interface(gomock.Any(), "osapi0").
+		Return(netplan.Interface{}, errors.New("netplan broke"))
 	p, err := route.ExportNewDebian(host.Host{
-		Platform: behavior.PlatformDebian,
-		FS:       fs,
+		FS: fs, Exec: exec, Platform: "debian",
 		Required: map[string]any{netplan.Behavior.Name: np},
 	})
 	s.Require().NoError(err)
-	_, err = p.Create(context.Background(), route.Config{
-		InterfaceName: "osapi0", Routes: []string{"198.51.100.0/24 via 192.0.2.1"},
-	})
-	s.ErrorContains(err, "boom")
-}
 
-func (s *DebianPublicTestSuite) TestParse() {
-	tests := []struct {
-		in      string
-		wantErr string
-	}{
-		{in: "10.0.0.0/8 via 192.168.1.1"},
-		{in: "2001:db8::/32 via 2001:db8::1 metric 4294967295"},
-		{in: "10.0.0.0/8 via 192.168.1.1 metric 4294967296", wantErr: "the metric"},
-		{in: "10.0.0.0/8 via 192.168.1.1 weight 1", wantErr: "is not <destination>"},
-		{in: "10.0.0.0/8 via", wantErr: "is not <destination>"},
-		{in: "bogus via 192.168.1.1", wantErr: "CIDR"},
-		{in: "10.0.0.0/8 via bogus", wantErr: "the gateway"},
-	}
-	for _, tc := range tests {
-		s.Run(tc.in, func() {
-			_, err := route.ExportParse(tc.in)
-			if tc.wantErr == "" {
-				s.NoError(err)
-
-				return
-			}
-			s.ErrorContains(err, tc.wantErr)
-		})
-	}
+	_, err = route.Create(context.Background(), p,
+		route.CreateInput{Name: "osapi0", Destination: "198.51.100.0/24", Via: "192.0.2.1"})
+	s.ErrorContains(err, "netplan broke")
 }
 
 func TestDebianPublicTestSuite(

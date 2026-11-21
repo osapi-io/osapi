@@ -16,22 +16,7 @@ func decodeList(
 	if msg, ok := server.Param(c, "hostname", &in.Hostname); !ok {
 		return in, msg, false
 	}
-	if msg, ok := server.Valid(c, in); !ok {
-		return in, msg, false
-	}
-
-	return in, "", true
-}
-
-// decodeGet reads the get method's input from the request.
-func decodeGet(
-	c *echo.Context,
-) (GetRequest, string, bool) {
-	var in GetRequest
-	if msg, ok := server.Param(c, "hostname", &in.Hostname); !ok {
-		return in, msg, false
-	}
-	if msg, ok := server.Param(c, "interface_name", &in.InterfaceName); !ok {
+	if msg, ok := server.Param(c, "name", &in.Name); !ok {
 		return in, msg, false
 	}
 	if msg, ok := server.Valid(c, in); !ok {
@@ -52,7 +37,7 @@ func decodeCreate(
 	if msg, ok := server.Param(c, "hostname", &in.Hostname); !ok {
 		return in, msg, false
 	}
-	if msg, ok := server.Param(c, "interface_name", &in.InterfaceName); !ok {
+	if msg, ok := server.Param(c, "name", &in.Name); !ok {
 		return in, msg, false
 	}
 	if msg, ok := server.Valid(c, in); !ok {
@@ -73,7 +58,7 @@ func decodeUpdate(
 	if msg, ok := server.Param(c, "hostname", &in.Hostname); !ok {
 		return in, msg, false
 	}
-	if msg, ok := server.Param(c, "interface_name", &in.InterfaceName); !ok {
+	if msg, ok := server.Param(c, "name", &in.Name); !ok {
 		return in, msg, false
 	}
 	if msg, ok := server.Valid(c, in); !ok {
@@ -88,10 +73,13 @@ func decodeDelete(
 	c *echo.Context,
 ) (DeleteRequest, string, bool) {
 	var in DeleteRequest
+	if msg, ok := server.Body(c, &in.Body); !ok {
+		return in, msg, false
+	}
 	if msg, ok := server.Param(c, "hostname", &in.Hostname); !ok {
 		return in, msg, false
 	}
-	if msg, ok := server.Param(c, "interface_name", &in.InterfaceName); !ok {
+	if msg, ok := server.Param(c, "name", &in.Name); !ok {
 		return in, msg, false
 	}
 	if msg, ok := server.Valid(c, in); !ok {

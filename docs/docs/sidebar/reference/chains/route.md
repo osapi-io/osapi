@@ -18,36 +18,46 @@ The behaviors that route calls, and each call that its examples make.
 | Calls    | [netplan](../behaviors/netplan/netplan.md) |
 | Used by  | none                                       |
 
-## Two routes (create)
+## A route (create)
 
 | CALL                    | SENDS                                                                                  | GETS                                                      |
 | ----------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| route create            | interface_name=osapi0 routes=\["198.51.100.0/24 via 192.0.2.1", "2001:…                | changed=true interface_name=osapi0                        |
+| route create            | destination=198.51.100.0/24 name=osapi0 via=192.0.2.1                                  | changed=true destination=198.51.100.0/24                  |
+| └─ netplan get          | name=osapi0                                                                            | id=osapi0 matches=\[osapi0] name=osapi0 section=ethernets |
+| └─ netplan update       | content=&lt;7 lines&gt; metadata=&#123;"domain":"route","interface":"osapi0"&#125; pa… | changed=true path=/etc/netplan/osapi-osapi0-routes.yaml   |
+| · └─ managedfile update | content=&lt;7 lines&gt; metadata=&#123;"domain":"route","interface":"osapi0"&#125; mo… | changed=true path=/etc/netplan/osapi-osapi0-routes.yaml   |
+
+## A second route, with a metric (create)
+
+| CALL                    | SENDS                                                                                  | GETS                                                      |
+| ----------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| route create            | destination=2001:db8:1::/48 metric=200 name=osapi0 via=2001:db8::1                     | changed=true destination=2001:db8:1::/48                  |
 | └─ netplan get          | name=osapi0                                                                            | id=osapi0 matches=\[osapi0] name=osapi0 section=ethernets |
 | └─ netplan update       | content=&lt;10 lines&gt; metadata=&#123;"domain":"route","interface":"osapi0"&#125; p… | changed=true path=/etc/netplan/osapi-osapi0-routes.yaml   |
 | · └─ managedfile update | content=&lt;10 lines&gt; metadata=&#123;"domain":"route","interface":"osapi0"&#125; m… | changed=true path=/etc/netplan/osapi-osapi0-routes.yaml   |
 
-## One route in place of two (update)
+## A new gateway and metric (update)
 
 | CALL                    | SENDS                                                                                  | GETS                                                      |
 | ----------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| route update            | interface_name=osapi0 routes=\["203.0.113.0/24 via 192.0.2.1 metric 10…                | changed=true interface_name=osapi0                        |
+| route update            | destination=198.51.100.0/24 metric=10 name=osapi0 via=192.0.2.2                        | changed=true destination=198.51.100.0/24                  |
 | └─ netplan get          | name=osapi0                                                                            | id=osapi0 matches=\[osapi0] name=osapi0 section=ethernets |
 | └─ netplan update       | content=&lt;8 lines&gt; metadata=&#123;"domain":"route","interface":"osapi0"&#125; pa… | changed=true path=/etc/netplan/osapi-osapi0-routes.yaml   |
 | · └─ managedfile update | content=&lt;8 lines&gt; metadata=&#123;"domain":"route","interface":"osapi0"&#125; mo… | changed=true path=/etc/netplan/osapi-osapi0-routes.yaml   |
 
-## An interface osapi has routes of (delete)
+## One of two routes (delete)
+
+| CALL                    | SENDS                                                                                  | GETS                                                      |
+| ----------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| route delete            | destination=198.51.100.0/24 name=osapi0                                                | changed=true destination=198.51.100.0/24                  |
+| └─ netplan get          | name=osapi0                                                                            | id=osapi0 matches=\[osapi0] name=osapi0 section=ethernets |
+| └─ netplan update       | content=&lt;8 lines&gt; metadata=&#123;"domain":"route","interface":"osapi0"&#125; pa… | changed=true path=/etc/netplan/osapi-osapi0-routes.yaml   |
+| · └─ managedfile update | content=&lt;8 lines&gt; metadata=&#123;"domain":"route","interface":"osapi0"&#125; mo… | changed=true path=/etc/netplan/osapi-osapi0-routes.yaml   |
+
+## The last route (delete)
 
 | CALL                    | SENDS                                      | GETS                                                    |
 | ----------------------- | ------------------------------------------ | ------------------------------------------------------- |
-| route delete            | interface_name=osapi0                      | changed=true interface_name=osapi0                      |
+| route delete            | destination=198.51.100.0/24 name=osapi0    | changed=true destination=198.51.100.0/24                |
 | └─ netplan delete       | path=/etc/netplan/osapi-osapi0-routes.yaml | changed=true path=/etc/netplan/osapi-osapi0-routes.yaml |
 | · └─ managedfile delete | path=/etc/netplan/osapi-osapi0-routes.yaml | changed=true path=/etc/netplan/osapi-osapi0-routes.yaml |
-
-## An interface osapi has no routes of (delete)
-
-| CALL                    | SENDS                                      | GETS                                                     |
-| ----------------------- | ------------------------------------------ | -------------------------------------------------------- |
-| route delete            | interface_name=osapi0                      | changed=false interface_name=osapi0                      |
-| └─ netplan delete       | path=/etc/netplan/osapi-osapi0-routes.yaml | changed=false path=/etc/netplan/osapi-osapi0-routes.yaml |
-| · └─ managedfile delete | path=/etc/netplan/osapi-osapi0-routes.yaml | changed=false path=/etc/netplan/osapi-osapi0-routes.yaml |

@@ -25,6 +25,3 @@ var ExportNewDebian = newDebian
 
 // ExportNewReader exposes newReader for testing.
 var ExportNewReader = newReader
-
-// ExportParse exposes parse for testing.
-var ExportParse = parse

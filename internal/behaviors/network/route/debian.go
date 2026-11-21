@@ -23,9 +23,11 @@ package route
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/avfs/avfs"
+	"gopkg.in/yaml.v3"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
@@ -33,7 +35,9 @@ import (
 )
 
 // debian reads through gohai and writes an interface's routes with a netplan
-// file of their own, through the netplan behavior.
+// file of their own, through the netplan behavior. Each write reads osapi's
+// routes of the interface from that file, changes one, and writes the file
+// again; the last route that goes removes it.
 type debian struct {
 	*reader
 	netplan   netplan.Provider
@@ -59,53 +63,67 @@ func file(
 	return netplan.Dir + "/osapi-" + name + "-routes.yaml"
 }
 
-// Create writes the interface's routes. When osapi already has routes of the
-// interface, it changes nothing: update replaces them.
-func (d *debian) Create(
+// Set writes the route r of the interface.
+func (d *debian) Set(
 	ctx context.Context,
-	in Config,
+	in Route,
+	create bool,
 ) (bool, error) {
+	name, r := in.Name, toSpec(in)
 	if d.container {
 		return false, behavior.ErrUnsupported
 	}
-	specs, err := routes(in)
+	if err := check(r); err != nil {
+		return false, err
+	}
+	have, err := d.have(name)
 	if err != nil {
 		return false, err
 	}
-	if d.exists(in.InterfaceName) {
+	i := slices.IndexFunc(have, func(s spec) bool { return s.To == r.To })
+	switch {
+	case i >= 0 && have[i] == r:
 		return false, nil
-	}
-
-	return d.write(ctx, in.InterfaceName, specs)
-}
-
-// Update writes the interface's routes over the ones osapi has.
-func (d *debian) Update(
-	ctx context.Context,
-	in Config,
-) (bool, error) {
-	if d.container {
-		return false, behavior.ErrUnsupported
-	}
-	specs, err := routes(in)
-	if err != nil {
-		return false, err
-	}
-	if !d.exists(in.InterfaceName) {
+	case i >= 0 && create:
+		return false, fmt.Errorf("osapi has a route to %s of %s via %s: update changes it",
+			r.To, name, have[i].Via)
+	case i < 0 && !create:
 		return false, fmt.Errorf(
-			"osapi has no routes of interface %q: %w", in.InterfaceName, behavior.ErrNotFound)
+			"osapi has no route to %s of %s: %w",
+			r.To,
+			name,
+			behavior.ErrNotFound,
+		)
+	case i >= 0:
+		have[i] = r
+	default:
+		have = append(have, r)
 	}
 
-	return d.write(ctx, in.InterfaceName, specs)
+	return d.write(ctx, name, have)
 }
 
-// Remove drops osapi's routes of the interface.
+// Remove drops osapi's route to destination of the interface, and the file
+// with its last route.
 func (d *debian) Remove(
 	ctx context.Context,
 	name string,
+	destination string,
 ) (bool, error) {
 	if d.container {
 		return false, behavior.ErrUnsupported
+	}
+	have, err := d.have(name)
+	if err != nil {
+		return false, err
+	}
+	i := slices.IndexFunc(have, func(s spec) bool { return s.To == destination })
+	if i < 0 {
+		return false, nil
+	}
+	have = slices.Delete(have, i, i+1)
+	if len(have) > 0 {
+		return d.write(ctx, name, have)
 	}
 	result, err := behavior.Call(ctx, netplan.Behavior, netplan.Delete, d.netplan,
 		netplan.DeleteInput{Path: file(name)})
@@ -113,33 +131,38 @@ func (d *debian) Remove(
 	return result.Changed, err
 }
 
-// exists reports whether osapi has routes of the interface.
-func (d *debian) exists(
+// have is osapi's routes of the interface, from the file that osapi wrote:
+// none when there is no file.
+func (d *debian) have(
 	name string,
-) bool {
-	_, err := d.fs.Stat(file(name))
-
-	return err == nil
-}
-
-// routes is the routes of in. A default route is refused: a wrong one cuts
-// the host off, and the interface behavior sets the gateway.
-func routes(
-	in Config,
 ) ([]spec, error) {
-	specs := make([]spec, 0, len(in.Routes))
-	for _, s := range in.Routes {
-		// The route rule has checked each route before the job was sent.
-		r, _ := parse(s)
-		if r.isDefault() {
-			return nil, fmt.Errorf(
-				"route %q is a default route, which osapi does not write: "+
-					"give the interface a gateway with osapi client node network interface", s)
+	data, err := d.fs.ReadFile(file(name))
+	if err != nil {
+		return nil, nil //nolint:nilerr // no file is no routes
+	}
+	var doc struct {
+		Network map[string]any `yaml:"network"`
+	}
+	if err := yaml.Unmarshal(data, &doc); err != nil {
+		return nil, fmt.Errorf("read %s: %w", file(name), err)
+	}
+	for section, defs := range doc.Network {
+		if section == "version" {
+			continue
 		}
-		specs = append(specs, r)
+		raw, _ := yaml.Marshal(defs)
+		var byID map[string]struct {
+			Routes []spec `yaml:"routes"`
+		}
+		if err := yaml.Unmarshal(raw, &byID); err != nil {
+			return nil, fmt.Errorf("read %s: %w", file(name), err)
+		}
+		for _, def := range byID {
+			return def.Routes, nil
+		}
 	}
 
-	return specs, nil
+	return nil, nil
 }
 
 // write writes the interface's routes under its own netplan definition. An
@@ -152,7 +175,7 @@ func (d *debian) write(
 	name string,
 	specs []spec,
 ) (bool, error) {
-	if _, err := d.InterfaceRoutes(ctx, name); err != nil {
+	if _, err := d.Routes(ctx, name); err != nil {
 		return false, err
 	}
 	iface, err := behavior.Call(ctx, netplan.Behavior, netplan.Get, d.netplan,
@@ -174,7 +197,7 @@ func (d *debian) write(
 		d.netplan,
 		netplan.UpdateInput{
 			Path:     file(name),
-			Content:  yaml(iface.ID, iface.Section, specs),
+			Content:  render(iface.ID, iface.Section, specs),
 			Metadata: map[string]string{"domain": "route", "interface": name},
 		},
 	)
@@ -201,9 +224,9 @@ func others(
 	return strings.Join(out, ", ")
 }
 
-// yaml is the netplan config of an interface's routes, under id, its netplan
-// definition.
-func yaml(
+// render is the netplan config of an interface's routes, under id, its
+// netplan definition.
+func render(
 	id string,
 	section string,
 	routes []spec,
@@ -212,9 +235,9 @@ func yaml(
 	b.WriteString("network:\n  version: 2\n")
 	fmt.Fprintf(&b, "  %s:\n    %s:\n      routes:\n", section, id)
 	for _, r := range routes {
-		fmt.Fprintf(&b, "        - to: %s\n          via: %s\n", r.to, r.via)
-		if r.metric > 0 {
-			fmt.Fprintf(&b, "          metric: %d\n", r.metric)
+		fmt.Fprintf(&b, "        - to: %s\n          via: %s\n", r.To, r.Via)
+		if r.Metric > 0 {
+			fmt.Fprintf(&b, "          metric: %d\n", r.Metric)
 		}
 	}
 
