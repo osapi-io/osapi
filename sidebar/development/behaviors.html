@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Building a behavior | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/development/behaviors"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Building a behavior | OSAPI"><meta data-rh="true" name="description" content="A behavior is one thing that osapi manages on a host, for example kernel"><meta data-rh="true" property="og:description" content="A behavior is one thing that osapi manages on a host, for example kernel"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/development/behaviors"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/behaviors" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/behaviors" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Development","item":"https://osapi-io.github.io/osapi/sidebar/development/"},{"@type":"ListItem","position":2,"name":"Building a behavior","item":"https://osapi-io.github.io/osapi/sidebar/development/behaviors"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.f0974ba0.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.93abf413.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.340e77f4.js" defer="defer"></script>
 </head>
 <body>
@@ -229,8 +229,49 @@ one row per element.</p>
 before it puts a job on the queue. The spec has <code>schema</code>. A value that fails
 shows &quot;<code>&lt;value&gt; &lt;message&gt;</code>&quot;. A tag without a schema fails the spec generation.
 Thus the spec never checks less than the server.</p>
-<p>With <code>CLI</code>, each input field must be a string, a bool or a number, because each
-field is a flag. <code>osapi behavior validate</code> fails a field that no flag can hold.</p>
+<p>With <code>CLI</code>, each input field is a flag. A flag holds a <code>string</code>, a <code>bool</code>, an
+<code>int</code>, a <code>[]string</code>, a <code>map[string]string</code> or a <code>[]byte</code>, a file. The CLI owns
+that list and its generator builds each one, so an <code>int64</code> or a <code>float64</code> fails
+<code>osapi behavior validate</code>.</p>
+<p>The generated layers need each field in a form they can build.
+<code>osapi behavior validate</code> fails a definition that breaks one of these rules:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Rule</th><th>Requires</th></tr></thead><tbody><tr><td><code>name</code></td><td>The behavior and its group are lowercase letters and digits, with no dash. A Go keyword, such as <code>package</code>, takes <code>osapi behavior create --package</code></td></tr><tr><td><code>input</code></td><td>Each input field has a <code>json</code> name and a <code>doc</code>, no <code>default</code> (the server does not apply it), no array, and is not named <code>hostname</code> or <code>target</code></td></tr><tr><td><code>optional</code></td><td>An optional field of a write&#x27;s body, <code>validate:&quot;omitempty,...&quot;</code>, is <code>json:&quot;name,omitempty&quot;</code> too, so the client does not send <code>&quot;&quot;</code>. The endpoint layer owns it</td></tr><tr><td><code>key</code></td><td>A key is <code>validate:&quot;required&quot;</code>: it is a path segment</td></tr><tr><td><code>output</code></td><td>Each output field has a <code>json</code> name and no array, and each <code>render</code> tag is one the output knows. The CLI owns the render values</td></tr><tr><td><code>schema</code></td><td>A struct that an output holds has a name that no other behavior&#x27;s type has, because one spec names every behavior&#x27;s types</td></tr></tbody></table>
+<p>Each rule that another layer owns is asked of that layer. Flags and <code>render</code>
+values are the CLI&#x27;s, and the <code>optional</code> rule is the endpoint layer&#x27;s. Thus
+<code>behavior validate</code> and the other layer cannot disagree.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="methodsgo-and-providergo">methods.go and provider.go<a href="#methodsgo-and-providergo" class="hash-link" aria-label="Direct link to methods.go and provider.go" title="Direct link to methods.go and provider.go" translate="no">​</a></h2>
 <p><a href="https://github.com/osapi-io/osapi/blob/main/internal/skills/resources/dev-skills/build-a-behavior/references/services.md" target="_blank" rel="noopener noreferrer" class="">The services a behavior uses</a>,
 in the build-a-behavior skill, lists what the agent hands a provider
