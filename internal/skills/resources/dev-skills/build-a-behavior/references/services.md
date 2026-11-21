@@ -5,7 +5,7 @@ osapi is a platform, and a behavior is a client of it. The agent gives each prov
 In tests, no real program runs. The filesystem of the fake host is in memory. Its command runner is a generated mock. The mock records each command line and gives the output that the example declares. Thus a behavior for Debian that runs `dpkg-query` and writes `/etc` gets tests on macOS and in CI, where neither exists. Only
 CI runs the real commands: its `Integration` step runs the write examples as root on a throwaway Linux runner.
 
-`go doc ./internal/behavior/host Host` tells what each service is. `behavior get --name <name>` tells what a building block accepts. This page tells the two things that they do not tell: how the tests replace each service, and what to copy.
+`osapi behavior spec get` lists each service of the host under "The host a provider gets", and a test fails when a service has no entry there. `go doc ./internal/behavior/host Host` tells what each service is. `behavior get --name <name>` tells what a building block accepts. This page tells the two things that they do not tell: how the tests replace each service, and what to copy.
 
 ## How the tests fake each service
 
@@ -13,6 +13,8 @@ CI runs the real commands: its `Integration` step runs the write examples as roo
 | --- | --- | --- |
 | `h.FS`, never the `os` package | An in-memory filesystem | `Exists` before the call; `Wrote`, `Removed` after |
 | `h.Exec`, with each program declared by `behavior.Runs`, or `behavior.Sudo` if it runs as root | A mock that records each command line and answers with what the example declares | `Prints` for an output, `PrintsAfter` for one that changes once a command has run; `Ran` after |
+| A gohai collector, with `h.Sources()`, for each read of a fact | The collector, reading the fake filesystem and the mock commands | `Exists` and `Prints` for what gohai reads |
+| `h.Objects`, through the `object` building block | The objects that the example stores | `Stored` before the call |
 | A building block, through `behavior.Requires` and `host.Require` | The building block's real provider, on the same fake host | Whatever that provider's own calls need; its `behavior get` lists them |
 | `h.Time()`, never `time.Now` | `behaviortest.Now`, 2026-01-02 03:04:05 UTC | An output computed from that time, such as an uptime from a boot time |
 | `host.Settings[Settings](h)` | The defaults | |
@@ -35,8 +37,9 @@ The shape of the provider comes from the location of the truth about what it man
 **A file that something else owns.** Read and write `h.FS`. Compare before you write. An example uses `Exists` for the file as it was and `Wrote` for
 the result.
 
-**What a program reports.** Run it with `h.Exec` and parse its output: a package
-manager, `systemctl`, `ip`. Query before you act. Act only when the query shows that the host is different. An example gives the answer of the query with `Prints`. It gives the answer after the change with `PrintsAfter`. Thus the second run sees the change and reports `changed: false`.
+**What a program changes.** A write runs the program with `h.Exec`: a package
+manager, `systemctl`, `ip`. Read the state through gohai, as the next case says,
+and query before you act. Act only when the query shows that the host is different. An example gives the answer of the query with `Prints`. It gives the answer after the change with `PrintsAfter`. Thus the second run sees the change and reports `changed: false`.
 
 **A fact about the host, read only.** Call the gohai collector that has it, with
 `h.Sources()`: `memory.NewWith(h.Sources()).Collect(ctx, nil)`. gohai reads the
@@ -46,6 +49,13 @@ the examples gohai's files with `Exists` and its commands with `Prints`. Do not
 parse `/proc` or `sysctl` in the behavior. When gohai does not have the read,
 add it to gohai first. When an answer is the platform's own, such as the name of
 the operating system, limit each example with `behavior.OnPlatform`.
+
+The tests enforce this. A read that runs a command outside gohai fails the
+`gohai` check. The service behavior reads with `services.NewWith(h.Sources())`
+and writes with `systemctl`. Only a read of what is not a fact of the host runs
+a command itself, and it says why with `.NotAFact("...")`: the updates of the
+package index are what the repositories have, and the definition that netplan
+has of an interface is the configuration of netplan.
 
 ## Input that reaches the host
 

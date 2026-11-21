@@ -6,6 +6,10 @@
  */
 
 export interface ServiceUpdateRequest {
-  /** Object Store reference for the new unit file. */
+  /**
+     * The object that holds the unit file, from osapi client file upload
+     * @minLength 1
+     * @maxLength 255
+     */
   object: string;
 }

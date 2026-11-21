@@ -121,6 +121,18 @@ func getNote(
 			panic("trusted a damaged record")
 		}
 	}
+	// A read runs its commands through gohai's runner, as a collector does.
+	out, err := n.h.Sources().Exec.Execute(ctx, "cat", notePath)
+
+	return noteOut{Text: string(out)}, err
+}
+
+// rawRead reads the note with h.Exec, outside gohai.
+func rawRead(
+	ctx context.Context,
+	n note,
+	_ getIn,
+) (noteOut, error) {
 	out, err := n.h.Exec.RunCmd(ctx, "cat", []string{notePath})
 
 	return noteOut{Text: out}, err
@@ -473,14 +485,78 @@ func (s *CheckPublicTestSuite) TestRun() {
 	s.Contains(r.errs[0], "output")
 }
 
+// TestCheckGohai: a read that runs a command outside gohai fails, unless it
+// says why with NotAFact.
+func (s *CheckPublicTestSuite) TestCheckGohai() {
+	tests := []struct {
+		name string
+		m    *behavior.Method
+		want []string
+	}{
+		{
+			name: "when a read runs a command outside gohai",
+			m:    behavior.Read("get", rawRead),
+			want: []string{"a read runs cat outside gohai"},
+		},
+		{
+			name: "when the read says what it reads is not a fact",
+			m:    behavior.Read("get", rawRead).NotAFact("a note is not a fact"),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			b := behavior.Define("note", "Notes", behavior.Node, onDebian(nil),
+				behavior.Runs("cat"),
+				tc.m.Describe("Get it").
+					Example("The note", getIn{}, noteOut{Text: "hi"},
+						behavior.Prints("cat "+notePath, "hi")),
+			)
+
+			got := behaviortest.Check(b)
+
+			s.Require().Len(got, len(tc.want), strings.Join(got, "\n"))
+			for i, want := range tc.want {
+				s.Contains(got[i], want)
+			}
+		})
+	}
+}
+
+// TestCheckObjects: a provider reads the objects that the example stores,
+// and an object the example does not store is not found.
+func (s *CheckPublicTestSuite) TestCheckObjects() {
+	read := func(ctx context.Context, p pkg, in pkgIn) (pkgOut, error) {
+		content, contentType, err := p.h.Objects.Object(ctx, in.Name)
+		if err != nil {
+			return pkgOut{}, err
+		}
+
+		return pkgOut{Changed: string(content) == "x" && contentType == "raw"}, nil
+	}
+	b := behavior.Define(
+		"obj",
+		"Objects",
+		behavior.Node,
+		behavior.Platform("debian", func(h host.Host) (pkg, error) { return pkg{h: h}, nil }),
+		behavior.Read("get", read).Describe("Get one").
+			Example("A stored object", pkgIn{Name: "a"}, pkgOut{Changed: true},
+				behavior.Stored("a", "x", "raw")).
+			Fails("An object the store does not have", pkgIn{Name: "b"}, "not found"),
+	)
+
+	s.Empty(behaviortest.Check(b))
+}
+
 // TestCheckProgramState: a write whose state a program keeps passes the
 // second-run check only when the example says what the program prints once
 // the write has run.
 func (s *CheckPublicTestSuite) TestCheckProgramState() {
 	tests := []struct {
-		name  string
-		given []behavior.HostOption
-		want  []string
+		name   string
+		given  []behavior.HostOption
+		always bool
+		want   []string
 	}{
 		{
 			name: "when PrintsAfter says the query answers installed after the install",
@@ -500,10 +576,21 @@ func (s *CheckPublicTestSuite) TestCheckProgramState() {
 			},
 			want: []string{"running it again reports changed: true"},
 		},
+		{
+			name: "when an action changes the host each time it runs",
+			given: []behavior.HostOption{
+				behavior.Prints("dpkg-query -W -- tree", "not-installed"),
+			},
+			always: true,
+		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			m := behavior.Write("install", installPkg)
+			if tc.always {
+				m = behavior.Action("install", installPkg).Always()
+			}
 			opts := append(
 				[]behavior.HostOption{behavior.Ran("apt-get", "install", "--", "tree")},
 				tc.given...)
@@ -517,7 +604,7 @@ func (s *CheckPublicTestSuite) TestCheckProgramState() {
 				),
 				behavior.Runs("dpkg-query"),
 				behavior.Sudo("apt-get"),
-				behavior.Write("install", installPkg).Describe("Install one").
+				m.Describe("Install one").
 					Example("Install tree", pkgIn{Name: "tree"}, pkgOut{Changed: true}, opts...),
 			)
 

@@ -42,13 +42,13 @@ The network interfaces of the host. `osapi behavior get --name interface` and
 
 ### Types (5)
 
-| NAME                     | INPUT                                                                                                     | OUTPUT                                                                             |
-| ------------------------ | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| [list](#method-list)     | ListInput                                                                                                 | []Entry &#123; name, state, mac, mtu, ipv4, ipv6, addresses, dhcp4, primary &#125; |
-| [get](#method-get)       | GetInput &#123; name* &#125;                                                                              | Entry &#123; name, state, mac, mtu, ipv4, ipv6, addresses, dhcp4, primary &#125;   |
-| [create](#method-create) | CreateInput &#123; name*, dhcp4, dhcp6, addresses, gateway4, gateway6, mtu, mac_address, wakeonlan &#125; | Result &#123; name, changed &#125;                                                 |
-| [update](#method-update) | UpdateInput &#123; name*, dhcp4, dhcp6, addresses, gateway4, gateway6, mtu, mac_address, wakeonlan &#125; | Result &#123; name, changed &#125;                                                 |
-| [delete](#method-delete) | DeleteInput &#123; name* &#125;                                                                           | Result &#123; name, changed &#125;                                                 |
+| NAME                     | INPUT                                                                                                     | OUTPUT                                                                              |
+| ------------------------ | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| [list](#method-list)     | ListInput                                                                                                 | \[]Entry &#123; name, state, mac, mtu, ipv4, ipv6, addresses, dhcp4, primary &#125; |
+| [get](#method-get)       | GetInput &#123; name* &#125;                                                                              | Entry &#123; name, state, mac, mtu, ipv4, ipv6, addresses, dhcp4, primary &#125;    |
+| [create](#method-create) | CreateInput &#123; name*, dhcp4, dhcp6, addresses, gateway4, gateway6, mtu, mac_address, wakeonlan &#125; | Result &#123; name, changed &#125;                                                  |
+| [update](#method-update) | UpdateInput &#123; name*, dhcp4, dhcp6, addresses, gateway4, gateway6, mtu, mac_address, wakeonlan &#125; | Result &#123; name, changed &#125;                                                  |
+| [delete](#method-delete) | DeleteInput &#123; name* &#125;                                                                           | Result &#123; name, changed &#125;                                                  |
 
 ### Settings (0)
 
@@ -77,7 +77,7 @@ None. Declare them with behavior.Config.
 | Permission  | network:read                                                                                                                                                                                                                            |
 | Command     | [osapi client node network interface list](../../../usage/cli/client/node/network/interface/list.md)                                                                                                                                    |
 | Input type  | ListInput                                                                                                                                                                                                                               |
-| Output type | []Entry                                                                                                                                                                                                                                 |
+| Output type | \[]Entry                                                                                                                                                                                                                                |
 
 ### Input (0)
 
@@ -99,10 +99,10 @@ None. The method takes no input; its command needs only --target.
 
 ### Examples (2)
 
-| EXAMPLE      | INPUT  | OUTPUT                                                                                                                                                                               |
-| ------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| A Linux host | (none) | [addresses=[10.0.0.5/24 2001:db8::5/64 fe80::5054:ff:fe12:3456/64], dhcp4=true, ipv4=10.0.0.5, ipv6=2001:db8::5, mac=52:54:00:12:34:56, mtu=1500, name=eth0, primary=true, state=up] |
-| A Mac        | (none) | [addresses=[192.168.0.40/24], dhcp4=false, ipv4=192.168.0.40, ipv6=, mac=3c:22:fb:00:00:01, mtu=1500, name=en0, primary=true, state=up]                                              |
+| EXAMPLE      | INPUT  | OUTPUT                                                                                                                                                                                 |
+| ------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A Linux host | (none) | \[addresses=\[10.0.0.5/24 2001:db8::5/64 fe80::5054:ff:fe12:3456/64], dhcp4=true, ipv4=10.0.0.5, ipv6=2001:db8::5, mac=52:54:00:12:34:56, mtu=1500, name=eth0, primary=true, state=up] |
+| A Mac        | (none) | \[addresses=\[192.168.0.40/24], dhcp4=false, ipv4=192.168.0.40, ipv6=, mac=3c:22:fb:00:00:01, mtu=1500, name=en0, primary=true, state=up]                                              |
 
 ## Method get
 
@@ -121,9 +121,9 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (1)
 
-| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                                               | DESCRIPTION                                                            |
-| ----- | ------ | -------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| name  | string | yes      | pattern ^(@fact\.[a-z0-9_.]+\|[a-zA-Z0-9][a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                                                  | DESCRIPTION                                                            |
+| ----- | ------ | -------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| name  | string | yes      | pattern ^(@fact\.\[a-z0-9_.]+\|\[a-zA-Z0-9]\[a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary |
 
 ### Output (9)
 
@@ -141,10 +141,10 @@ None. The method takes no input; its command needs only --target.
 
 ### Examples (2)
 
-| EXAMPLE                          | INPUT     | OUTPUT                                                                                                                                                                             |
-| -------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| An interface with a DHCP address | name=eth0 | name=eth0, state=up, mac=52:54:00:12:34:56, mtu=1500, ipv4=10.0.0.5, ipv6=2001:db8::5, addresses=[10.0.0.5/24 2001:db8::5/64 fe80::5054:ff:fe12:3456/64], dhcp4=true, primary=true |
-| A Mac                            | name=en0  | name=en0, state=up, mac=3c:22:fb:00:00:01, mtu=1500, ipv4=192.168.0.40, ipv6=, addresses=[192.168.0.40/24], dhcp4=false, primary=true                                              |
+| EXAMPLE                          | INPUT     | OUTPUT                                                                                                                                                                              |
+| -------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| An interface with a DHCP address | name=eth0 | name=eth0, state=up, mac=52:54:00:12:34:56, mtu=1500, ipv4=10.0.0.5, ipv6=2001:db8::5, addresses=\[10.0.0.5/24 2001:db8::5/64 fe80::5054:ff:fe12:3456/64], dhcp4=true, primary=true |
+| A Mac                            | name=en0  | name=en0, state=up, mac=3c:22:fb:00:00:01, mtu=1500, ipv4=192.168.0.40, ipv6=, addresses=\[192.168.0.40/24], dhcp4=false, primary=true                                              |
 
 ## Method create
 
@@ -163,17 +163,17 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (9)
 
-| FIELD       | TYPE    | REQUIRED | CONSTRAINTS                                                                | DESCRIPTION                                                            |
-| ----------- | ------- | -------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| name        | string  | yes      | pattern ^(@fact\.[a-z0-9_.]+\|[a-zA-Z0-9][a-zA-Z0-9._-]&#123;0,14&#125;)$  | The interface, such as eth0, or a fact such as @fact.interface.primary |
-| dhcp4       | boolean | no       |                                                                            | Take an IPv4 address from DHCP                                         |
-| dhcp6       | boolean | no       |                                                                            | Take an IPv6 address from DHCP                                         |
-| addresses   | array   | no       |                                                                            | The static addresses, in CIDR notation, such as 10.0.0.5/24            |
-| gateway4    | string  | no       | format ipv4                                                                | The IPv4 default gateway                                               |
-| gateway6    | string  | no       | format ipv6                                                                | The IPv6 default gateway                                               |
-| mtu         | integer | no       | min 68, max 9000                                                           | The MTU, from 68 to 9000                                               |
-| mac_address | string  | no       | pattern ^([0-9A-Fa-f]&#123;2&#125;:)&#123;5&#125;[0-9A-Fa-f]&#123;2&#125;$ | The MAC address to set                                                 |
-| wakeonlan   | boolean | no       |                                                                            | Turn on wake-on-LAN                                                    |
+| FIELD       | TYPE    | REQUIRED | CONSTRAINTS                                                                  | DESCRIPTION                                                            |
+| ----------- | ------- | -------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| name        | string  | yes      | pattern ^(@fact\.\[a-z0-9_.]+\|\[a-zA-Z0-9]\[a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary |
+| dhcp4       | boolean | no       |                                                                              | Take an IPv4 address from DHCP                                         |
+| dhcp6       | boolean | no       |                                                                              | Take an IPv6 address from DHCP                                         |
+| addresses   | array   | no       |                                                                              | The static addresses, in CIDR notation, such as 10.0.0.5/24            |
+| gateway4    | string  | no       | format ipv4                                                                  | The IPv4 default gateway                                               |
+| gateway6    | string  | no       | format ipv6                                                                  | The IPv6 default gateway                                               |
+| mtu         | integer | no       | min 68, max 9000                                                             | The MTU, from 68 to 9000                                               |
+| mac_address | string  | no       | pattern ^(\[0-9A-Fa-f]&#123;2&#125;:)&#123;5&#125;\[0-9A-Fa-f]&#123;2&#125;$ | The MAC address to set                                                 |
+| wakeonlan   | boolean | no       |                                                                              | Turn on wake-on-LAN                                                    |
 
 ### Output (2)
 
@@ -184,11 +184,11 @@ None. The method takes no input; its command needs only --target.
 
 ### Examples (3)
 
-| EXAMPLE                               | INPUT                                                                                                        | OUTPUT                     |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------- |
-| A static address                      | name=osapi0, addresses=[10.0.1.5/24]                                                                         | name=osapi0, changed=true  |
-| Each setting                          | name=osapi0, dhcp6=true, addresses=[2001:db8::5/64], mtu=9000, mac_address=52:54:00:aa:bb:cc, wakeonlan=true | name=osapi0, changed=true  |
-| An interface osapi already configures | name=osapi0, addresses=[10.0.1.5/24]                                                                         | name=osapi0, changed=false |
+| EXAMPLE                               | INPUT                                                                                                         | OUTPUT                     |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| A static address                      | name=osapi0, addresses=\[10.0.1.5/24]                                                                         | name=osapi0, changed=true  |
+| Each setting                          | name=osapi0, dhcp6=true, addresses=\[2001:db8::5/64], mtu=9000, mac_address=52:54:00:aa:bb:cc, wakeonlan=true | name=osapi0, changed=true  |
+| An interface osapi already configures | name=osapi0, addresses=\[10.0.1.5/24]                                                                         | name=osapi0, changed=false |
 
 ## Method update
 
@@ -207,17 +207,17 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (9)
 
-| FIELD       | TYPE    | REQUIRED | CONSTRAINTS                                                                | DESCRIPTION                                                            |
-| ----------- | ------- | -------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| name        | string  | yes      | pattern ^(@fact\.[a-z0-9_.]+\|[a-zA-Z0-9][a-zA-Z0-9._-]&#123;0,14&#125;)$  | The interface, such as eth0, or a fact such as @fact.interface.primary |
-| dhcp4       | boolean | no       |                                                                            | Take an IPv4 address from DHCP                                         |
-| dhcp6       | boolean | no       |                                                                            | Take an IPv6 address from DHCP                                         |
-| addresses   | array   | no       |                                                                            | The static addresses, in CIDR notation, such as 10.0.0.5/24            |
-| gateway4    | string  | no       | format ipv4                                                                | The IPv4 default gateway                                               |
-| gateway6    | string  | no       | format ipv6                                                                | The IPv6 default gateway                                               |
-| mtu         | integer | no       | min 68, max 9000                                                           | The MTU, from 68 to 9000                                               |
-| mac_address | string  | no       | pattern ^([0-9A-Fa-f]&#123;2&#125;:)&#123;5&#125;[0-9A-Fa-f]&#123;2&#125;$ | The MAC address to set                                                 |
-| wakeonlan   | boolean | no       |                                                                            | Turn on wake-on-LAN                                                    |
+| FIELD       | TYPE    | REQUIRED | CONSTRAINTS                                                                  | DESCRIPTION                                                            |
+| ----------- | ------- | -------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| name        | string  | yes      | pattern ^(@fact\.\[a-z0-9_.]+\|\[a-zA-Z0-9]\[a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary |
+| dhcp4       | boolean | no       |                                                                              | Take an IPv4 address from DHCP                                         |
+| dhcp6       | boolean | no       |                                                                              | Take an IPv6 address from DHCP                                         |
+| addresses   | array   | no       |                                                                              | The static addresses, in CIDR notation, such as 10.0.0.5/24            |
+| gateway4    | string  | no       | format ipv4                                                                  | The IPv4 default gateway                                               |
+| gateway6    | string  | no       | format ipv6                                                                  | The IPv6 default gateway                                               |
+| mtu         | integer | no       | min 68, max 9000                                                             | The MTU, from 68 to 9000                                               |
+| mac_address | string  | no       | pattern ^(\[0-9A-Fa-f]&#123;2&#125;:)&#123;5&#125;\[0-9A-Fa-f]&#123;2&#125;$ | The MAC address to set                                                 |
+| wakeonlan   | boolean | no       |                                                                              | Turn on wake-on-LAN                                                    |
 
 ### Output (2)
 
@@ -249,9 +249,9 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (1)
 
-| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                                               | DESCRIPTION                                                            |
-| ----- | ------ | -------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| name  | string | yes      | pattern ^(@fact\.[a-z0-9_.]+\|[a-zA-Z0-9][a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                                                  | DESCRIPTION                                                            |
+| ----- | ------ | -------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| name  | string | yes      | pattern ^(@fact\.\[a-z0-9_.]+\|\[a-zA-Z0-9]\[a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary |
 
 ### Output (2)
 

@@ -117,16 +117,16 @@
 | [osapi client node schedule get](../../usage/cli/client/node/schedule/get.md)                                   | hand-written | Get a scheduled entry by name                                                            |
 | [osapi client node schedule list](../../usage/cli/client/node/schedule/list.md)                                 | hand-written | List all scheduled entries                                                               |
 | [osapi client node schedule update](../../usage/cli/client/node/schedule/update.md)                             | hand-written | Update a scheduled entry                                                                 |
-| [osapi client node service create](../../usage/cli/client/node/service/create.md)                               | hand-written | Create a systemd service unit file                                                       |
-| [osapi client node service delete](../../usage/cli/client/node/service/delete.md)                               | hand-written | Delete a systemd service unit file                                                       |
-| [osapi client node service disable](../../usage/cli/client/node/service/disable.md)                             | hand-written | Disable a systemd service from starting on boot                                          |
-| [osapi client node service enable](../../usage/cli/client/node/service/enable.md)                               | hand-written | Enable a systemd service to start on boot                                                |
-| [osapi client node service get](../../usage/cli/client/node/service/get.md)                                     | hand-written | Get a systemd service                                                                    |
-| [osapi client node service list](../../usage/cli/client/node/service/list.md)                                   | hand-written | List systemd services                                                                    |
-| [osapi client node service restart](../../usage/cli/client/node/service/restart.md)                             | hand-written | Restart a systemd service                                                                |
-| [osapi client node service start](../../usage/cli/client/node/service/start.md)                                 | hand-written | Start a systemd service                                                                  |
-| [osapi client node service stop](../../usage/cli/client/node/service/stop.md)                                   | hand-written | Stop a systemd service                                                                   |
-| [osapi client node service update](../../usage/cli/client/node/service/update.md)                               | hand-written | Update a systemd service unit file                                                       |
+| [osapi client node service create](../../usage/cli/client/node/service/create.md)                               | behavior     | Deploy a service                                                                         |
+| [osapi client node service delete](../../usage/cli/client/node/service/delete.md)                               | behavior     | Remove a service that osapi deployed                                                     |
+| [osapi client node service disable](../../usage/cli/client/node/service/disable.md)                             | behavior     | Make a service that osapi deployed not start at boot                                     |
+| [osapi client node service enable](../../usage/cli/client/node/service/enable.md)                               | behavior     | Make a service that osapi deployed start at boot                                         |
+| [osapi client node service get](../../usage/cli/client/node/service/get.md)                                     | behavior     | Get one service                                                                          |
+| [osapi client node service list](../../usage/cli/client/node/service/list.md)                                   | behavior     | List the services of the host                                                            |
+| [osapi client node service restart](../../usage/cli/client/node/service/restart.md)                             | behavior     | Restart a service that osapi deployed                                                    |
+| [osapi client node service start](../../usage/cli/client/node/service/start.md)                                 | behavior     | Start a service that osapi deployed                                                      |
+| [osapi client node service stop](../../usage/cli/client/node/service/stop.md)                                   | behavior     | Stop a service that osapi deployed                                                       |
+| [osapi client node service update](../../usage/cli/client/node/service/update.md)                               | behavior     | Deploy a new unit file for a service                                                     |
 | [osapi client node status get](../../usage/cli/client/node/status/get.md)                                       | behavior     | Get the status summary of the host                                                       |
 | [osapi client node sysctl create](../../usage/cli/client/node/sysctl/create.md)                                 | behavior     | Manage a kernel parameter and apply it                                                   |
 | [osapi client node sysctl delete](../../usage/cli/client/node/sysctl/delete.md)                                 | behavior     | Stop the management of a kernel parameter                                                |
@@ -175,5 +175,5 @@
 | ------------ | --- |
 | Command      | 42  |
 | Endpoint     | 31  |
-| Behavior     | 34  |
-| Hand written | 59  |
+| Behavior     | 44  |
+| Hand written | 49  |

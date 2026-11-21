@@ -1198,72 +1198,48 @@ func (e ScheduleUpdateRequestContentType) Valid() bool {
 	}
 }
 
-// Defines values for ServiceGetEntryStatus.
+// Defines values for ServiceEntryStatus.
 const (
-	ServiceGetEntryStatusFailed  ServiceGetEntryStatus = "failed"
-	ServiceGetEntryStatusOk      ServiceGetEntryStatus = "ok"
-	ServiceGetEntryStatusSkipped ServiceGetEntryStatus = "skipped"
-	ServiceGetEntryStatusTimeout ServiceGetEntryStatus = "timeout"
+	ServiceEntryStatusFailed  ServiceEntryStatus = "failed"
+	ServiceEntryStatusOk      ServiceEntryStatus = "ok"
+	ServiceEntryStatusSkipped ServiceEntryStatus = "skipped"
+	ServiceEntryStatusTimeout ServiceEntryStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the ServiceGetEntryStatus enum.
-func (e ServiceGetEntryStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the ServiceEntryStatus enum.
+func (e ServiceEntryStatus) Valid() bool {
 	switch e {
-	case ServiceGetEntryStatusFailed:
+	case ServiceEntryStatusFailed:
 		return true
-	case ServiceGetEntryStatusOk:
+	case ServiceEntryStatusOk:
 		return true
-	case ServiceGetEntryStatusSkipped:
+	case ServiceEntryStatusSkipped:
 		return true
-	case ServiceGetEntryStatusTimeout:
+	case ServiceEntryStatusTimeout:
 		return true
 	default:
 		return false
 	}
 }
 
-// Defines values for ServiceListEntryStatus.
+// Defines values for ServiceResultStatus.
 const (
-	ServiceListEntryStatusFailed  ServiceListEntryStatus = "failed"
-	ServiceListEntryStatusOk      ServiceListEntryStatus = "ok"
-	ServiceListEntryStatusSkipped ServiceListEntryStatus = "skipped"
-	ServiceListEntryStatusTimeout ServiceListEntryStatus = "timeout"
+	ServiceResultStatusFailed  ServiceResultStatus = "failed"
+	ServiceResultStatusOk      ServiceResultStatus = "ok"
+	ServiceResultStatusSkipped ServiceResultStatus = "skipped"
+	ServiceResultStatusTimeout ServiceResultStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the ServiceListEntryStatus enum.
-func (e ServiceListEntryStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the ServiceResultStatus enum.
+func (e ServiceResultStatus) Valid() bool {
 	switch e {
-	case ServiceListEntryStatusFailed:
+	case ServiceResultStatusFailed:
 		return true
-	case ServiceListEntryStatusOk:
+	case ServiceResultStatusOk:
 		return true
-	case ServiceListEntryStatusSkipped:
+	case ServiceResultStatusSkipped:
 		return true
-	case ServiceListEntryStatusTimeout:
-		return true
-	default:
-		return false
-	}
-}
-
-// Defines values for ServiceMutationEntryStatus.
-const (
-	ServiceMutationEntryStatusFailed  ServiceMutationEntryStatus = "failed"
-	ServiceMutationEntryStatusOk      ServiceMutationEntryStatus = "ok"
-	ServiceMutationEntryStatusSkipped ServiceMutationEntryStatus = "skipped"
-	ServiceMutationEntryStatusTimeout ServiceMutationEntryStatus = "timeout"
-)
-
-// Valid indicates whether the value is a known member of the ServiceMutationEntryStatus enum.
-func (e ServiceMutationEntryStatus) Valid() bool {
-	switch e {
-	case ServiceMutationEntryStatusFailed:
-		return true
-	case ServiceMutationEntryStatusOk:
-		return true
-	case ServiceMutationEntryStatusSkipped:
-		return true
-	case ServiceMutationEntryStatusTimeout:
+	case ServiceResultStatusTimeout:
 		return true
 	default:
 		return false
@@ -1590,25 +1566,25 @@ func (e PutFileByNameMultipartBodyContentType) Valid() bool {
 
 // Defines values for GetJobsParamsStatus.
 const (
-	Completed      GetJobsParamsStatus = "completed"
-	Failed         GetJobsParamsStatus = "failed"
-	PartialFailure GetJobsParamsStatus = "partial_failure"
-	Processing     GetJobsParamsStatus = "processing"
-	Submitted      GetJobsParamsStatus = "submitted"
+	GetJobsParamsStatusCompleted      GetJobsParamsStatus = "completed"
+	GetJobsParamsStatusFailed         GetJobsParamsStatus = "failed"
+	GetJobsParamsStatusPartialFailure GetJobsParamsStatus = "partial_failure"
+	GetJobsParamsStatusProcessing     GetJobsParamsStatus = "processing"
+	GetJobsParamsStatusSubmitted      GetJobsParamsStatus = "submitted"
 )
 
 // Valid indicates whether the value is a known member of the GetJobsParamsStatus enum.
 func (e GetJobsParamsStatus) Valid() bool {
 	switch e {
-	case Completed:
+	case GetJobsParamsStatusCompleted:
 		return true
-	case Failed:
+	case GetJobsParamsStatusFailed:
 		return true
-	case PartialFailure:
+	case GetJobsParamsStatusPartialFailure:
 		return true
-	case Processing:
+	case GetJobsParamsStatusProcessing:
 		return true
-	case Submitted:
+	case GetJobsParamsStatusSubmitted:
 		return true
 	default:
 		return false
@@ -4100,115 +4076,137 @@ type ScheduleUpdateResponse struct {
 	Results []ScheduleMutationResult `json:"results"`
 }
 
-// ServiceCreateRequest defines model for ServiceCreateRequest.
-type ServiceCreateRequest struct {
-	// Name Service unit name.
-	Name string `json:"name" validate:"required,service_name"`
-
-	// Object Object Store reference for the unit file.
-	Object string `json:"object" validate:"required,min=1"`
+// ServiceCollectionResponse defines model for ServiceCollectionResponse.
+type ServiceCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []ServiceEntry      `json:"results"`
 }
 
-// ServiceGetEntry Service get result for a single agent.
-type ServiceGetEntry struct {
+// ServiceCreateRequest defines model for ServiceCreateRequest.
+type ServiceCreateRequest struct {
+	// Name The service, such as app for osapi-app.service
+	Name string `json:"name" validate:"required,service_name"`
+
+	// Object The object that holds the unit file, from osapi client file upload
+	Object string `json:"object" validate:"required,min=1,max=255"`
+}
+
+// ServiceCreateResponse defines model for ServiceCreateResponse.
+type ServiceCreateResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []ServiceResult     `json:"results"`
+}
+
+// ServiceDeleteResponse defines model for ServiceDeleteResponse.
+type ServiceDeleteResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []ServiceResult     `json:"results"`
+}
+
+// ServiceDisableResponse defines model for ServiceDisableResponse.
+type ServiceDisableResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []ServiceResult     `json:"results"`
+}
+
+// ServiceEnableResponse defines model for ServiceEnableResponse.
+type ServiceEnableResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []ServiceResult     `json:"results"`
+}
+
+// ServiceEntry defines model for ServiceEntry.
+type ServiceEntry struct {
+	// Description The Description= of its unit
+	Description *string `json:"description,omitempty"`
+
+	// Enabled Whether it starts at boot: the state of its unit file
+	Enabled *bool `json:"enabled,omitempty"`
+
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
-	// Hostname Hostname of the agent that reported this entry.
+	// Hostname Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
-	// Service Information about a systemd service.
-	Service *ServiceInfo `json:"service,omitempty"`
+	// Name The service, without .service
+	Name *string `json:"name,omitempty"`
+
+	// State What systemd says it does now, such as running, exited or dead
+	State *string `json:"state,omitempty"`
 
 	// Status The status of the operation for this host.
-	Status ServiceGetEntryStatus `json:"status"`
+	Status ServiceEntryStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
 }
 
-// ServiceGetEntryStatus The status of the operation for this host.
-type ServiceGetEntryStatus string
+// ServiceEntryStatus The status of the operation for this host.
+type ServiceEntryStatus string
 
 // ServiceGetResponse defines model for ServiceGetResponse.
 type ServiceGetResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []ServiceGetEntry   `json:"results"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []ServiceEntry      `json:"results"`
 }
 
-// ServiceInfo Information about a systemd service.
-type ServiceInfo struct {
-	// Description Service description from the unit file.
-	Description *string `json:"description,omitempty"`
-
-	// Enabled Whether the service is enabled to start on boot.
-	Enabled *bool `json:"enabled,omitempty"`
-
-	// Name Service unit name.
-	Name *string `json:"name,omitempty"`
-
-	// Pid Main process ID of the service.
-	Pid *int `json:"pid,omitempty"`
-
-	// Status Active status of the service.
-	Status *string `json:"status,omitempty"`
-}
-
-// ServiceListEntry Service list result for a single agent.
-type ServiceListEntry struct {
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname Hostname of the agent that reported this entry.
-	Hostname string `json:"hostname"`
-
-	// Services List of services on this host.
-	Services *[]ServiceInfo `json:"services,omitempty"`
-
-	// Status The status of the operation for this host.
-	Status ServiceListEntryStatus `json:"status"`
-}
-
-// ServiceListEntryStatus The status of the operation for this host.
-type ServiceListEntryStatus string
-
-// ServiceListResponse defines model for ServiceListResponse.
-type ServiceListResponse struct {
+// ServiceRestartResponse defines model for ServiceRestartResponse.
+type ServiceRestartResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []ServiceListEntry  `json:"results"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []ServiceResult     `json:"results"`
 }
 
-// ServiceMutationEntry Result of a service mutation or action operation for one host.
-type ServiceMutationEntry struct {
-	// Changed Whether the operation modified system state.
+// ServiceResult defines model for ServiceResult.
+type ServiceResult struct {
+	// Changed Whether the host changed
 	Changed *bool `json:"changed,omitempty"`
 
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
-	// Hostname Hostname of the agent that processed this operation.
+	// Hostname Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
-	// Name Service unit name.
+	// Name The service
 	Name *string `json:"name,omitempty"`
 
 	// Status The status of the operation for this host.
-	Status ServiceMutationEntryStatus `json:"status"`
+	Status ServiceResultStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
 }
 
-// ServiceMutationEntryStatus The status of the operation for this host.
-type ServiceMutationEntryStatus string
+// ServiceResultStatus The status of the operation for this host.
+type ServiceResultStatus string
 
-// ServiceMutationResponse defines model for ServiceMutationResponse.
-type ServiceMutationResponse struct {
+// ServiceStartResponse defines model for ServiceStartResponse.
+type ServiceStartResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID    `json:"job_id,omitempty"`
-	Results []ServiceMutationEntry `json:"results"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []ServiceResult     `json:"results"`
+}
+
+// ServiceStopResponse defines model for ServiceStopResponse.
+type ServiceStopResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []ServiceResult     `json:"results"`
 }
 
 // ServiceUpdateRequest defines model for ServiceUpdateRequest.
 type ServiceUpdateRequest struct {
-	// Object Object Store reference for the new unit file.
-	Object string `json:"object" validate:"required,min=1"`
+	// Object The object that holds the unit file, from osapi client file upload
+	Object string `json:"object" validate:"required,min=1,max=255"`
+}
+
+// ServiceUpdateResponse defines model for ServiceUpdateResponse.
+type ServiceUpdateResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []ServiceResult     `json:"results"`
 }
 
 // StaleDeployment defines model for StaleDeployment.
@@ -5528,8 +5526,8 @@ type ClientInterface interface {
 	// DeleteNodeService request
 	DeleteNodeService(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetNodeServiceByName request
-	GetNodeServiceByName(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetNodeServiceByKey request
+	GetNodeServiceByKey(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PutNodeServiceWithBody request with any body
 	PutNodeServiceWithBody(ctx context.Context, hostname Hostname, name ServiceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -7165,8 +7163,8 @@ func (c *Client) DeleteNodeService(ctx context.Context, hostname Hostname, name 
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetNodeServiceByName(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetNodeServiceByNameRequest(c.Server, hostname, name)
+func (c *Client) GetNodeServiceByKey(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeServiceByKeyRequest(c.Server, hostname, name)
 	if err != nil {
 		return nil, err
 	}
@@ -11749,8 +11747,8 @@ func NewDeleteNodeServiceRequest(server string, hostname Hostname, name ServiceN
 	return req, nil
 }
 
-// NewGetNodeServiceByNameRequest generates requests for GetNodeServiceByName
-func NewGetNodeServiceByNameRequest(server string, hostname Hostname, name ServiceName) (*http.Request, error) {
+// NewGetNodeServiceByKeyRequest generates requests for GetNodeServiceByKey
+func NewGetNodeServiceByKeyRequest(server string, hostname Hostname, name ServiceName) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -13381,8 +13379,8 @@ type ClientWithResponsesInterface interface {
 	// DeleteNodeServiceWithResponse request
 	DeleteNodeServiceWithResponse(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*DeleteNodeServiceResponse, error)
 
-	// GetNodeServiceByNameWithResponse request
-	GetNodeServiceByNameWithResponse(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*GetNodeServiceByNameResponse, error)
+	// GetNodeServiceByKeyWithResponse request
+	GetNodeServiceByKeyWithResponse(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*GetNodeServiceByKeyResponse, error)
 
 	// PutNodeServiceWithBodyWithResponse request with any body
 	PutNodeServiceWithBodyWithResponse(ctx context.Context, hostname Hostname, name ServiceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeServiceResponse, error)
@@ -16722,7 +16720,7 @@ func (r PutNodeScheduleResponse) ContentType() string {
 type GetNodeServiceResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ServiceListResponse
+	JSON200      *ServiceCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -16756,7 +16754,7 @@ func (r GetNodeServiceResponse) ContentType() string {
 type PostNodeServiceResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ServiceMutationResponse
+	JSON200      *ServiceCreateResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -16790,10 +16788,11 @@ func (r PostNodeServiceResponse) ContentType() string {
 type DeleteNodeServiceResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ServiceMutationResponse
+	JSON200      *ServiceDeleteResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -16821,7 +16820,7 @@ func (r DeleteNodeServiceResponse) ContentType() string {
 	return ""
 }
 
-type GetNodeServiceByNameResponse struct {
+type GetNodeServiceByKeyResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ServiceGetResponse
@@ -16833,7 +16832,7 @@ type GetNodeServiceByNameResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetNodeServiceByNameResponse) Status() string {
+func (r GetNodeServiceByKeyResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -16841,7 +16840,7 @@ func (r GetNodeServiceByNameResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetNodeServiceByNameResponse) StatusCode() int {
+func (r GetNodeServiceByKeyResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -16849,7 +16848,7 @@ func (r GetNodeServiceByNameResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetNodeServiceByNameResponse) ContentType() string {
+func (r GetNodeServiceByKeyResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -16859,7 +16858,7 @@ func (r GetNodeServiceByNameResponse) ContentType() string {
 type PutNodeServiceResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ServiceMutationResponse
+	JSON200      *ServiceUpdateResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -16894,7 +16893,7 @@ func (r PutNodeServiceResponse) ContentType() string {
 type PostNodeServiceDisableResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ServiceMutationResponse
+	JSON200      *ServiceDisableResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -16929,7 +16928,7 @@ func (r PostNodeServiceDisableResponse) ContentType() string {
 type PostNodeServiceEnableResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ServiceMutationResponse
+	JSON200      *ServiceEnableResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -16964,7 +16963,7 @@ func (r PostNodeServiceEnableResponse) ContentType() string {
 type PostNodeServiceRestartResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ServiceMutationResponse
+	JSON200      *ServiceRestartResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -16999,7 +16998,7 @@ func (r PostNodeServiceRestartResponse) ContentType() string {
 type PostNodeServiceStartResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ServiceMutationResponse
+	JSON200      *ServiceStartResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -17034,7 +17033,7 @@ func (r PostNodeServiceStartResponse) ContentType() string {
 type PostNodeServiceStopResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ServiceMutationResponse
+	JSON200      *ServiceStopResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -18910,13 +18909,13 @@ func (c *ClientWithResponses) DeleteNodeServiceWithResponse(ctx context.Context,
 	return ParseDeleteNodeServiceResponse(rsp)
 }
 
-// GetNodeServiceByNameWithResponse request returning *GetNodeServiceByNameResponse
-func (c *ClientWithResponses) GetNodeServiceByNameWithResponse(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*GetNodeServiceByNameResponse, error) {
-	rsp, err := c.GetNodeServiceByName(ctx, hostname, name, reqEditors...)
+// GetNodeServiceByKeyWithResponse request returning *GetNodeServiceByKeyResponse
+func (c *ClientWithResponses) GetNodeServiceByKeyWithResponse(ctx context.Context, hostname Hostname, name ServiceName, reqEditors ...RequestEditorFn) (*GetNodeServiceByKeyResponse, error) {
+	rsp, err := c.GetNodeServiceByKey(ctx, hostname, name, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetNodeServiceByNameResponse(rsp)
+	return ParseGetNodeServiceByKeyResponse(rsp)
 }
 
 // PutNodeServiceWithBodyWithResponse request with arbitrary body returning *PutNodeServiceResponse
@@ -24604,7 +24603,7 @@ func ParseGetNodeServiceResponse(rsp *http.Response) (*GetNodeServiceResponse, e
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ServiceListResponse
+		var dest ServiceCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -24658,7 +24657,7 @@ func ParsePostNodeServiceResponse(rsp *http.Response) (*PostNodeServiceResponse,
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ServiceMutationResponse
+		var dest ServiceCreateResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -24712,7 +24711,7 @@ func ParseDeleteNodeServiceResponse(rsp *http.Response) (*DeleteNodeServiceRespo
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ServiceMutationResponse
+		var dest ServiceDeleteResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -24739,6 +24738,13 @@ func ParseDeleteNodeServiceResponse(rsp *http.Response) (*DeleteNodeServiceRespo
 		}
 		response.JSON403 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -24751,15 +24757,15 @@ func ParseDeleteNodeServiceResponse(rsp *http.Response) (*DeleteNodeServiceRespo
 	return response, nil
 }
 
-// ParseGetNodeServiceByNameResponse parses an HTTP response from a GetNodeServiceByNameWithResponse call
-func ParseGetNodeServiceByNameResponse(rsp *http.Response) (*GetNodeServiceByNameResponse, error) {
+// ParseGetNodeServiceByKeyResponse parses an HTTP response from a GetNodeServiceByKeyWithResponse call
+func ParseGetNodeServiceByKeyResponse(rsp *http.Response) (*GetNodeServiceByKeyResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetNodeServiceByNameResponse{
+	response := &GetNodeServiceByKeyResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -24827,7 +24833,7 @@ func ParsePutNodeServiceResponse(rsp *http.Response) (*PutNodeServiceResponse, e
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ServiceMutationResponse
+		var dest ServiceUpdateResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -24888,7 +24894,7 @@ func ParsePostNodeServiceDisableResponse(rsp *http.Response) (*PostNodeServiceDi
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ServiceMutationResponse
+		var dest ServiceDisableResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -24949,7 +24955,7 @@ func ParsePostNodeServiceEnableResponse(rsp *http.Response) (*PostNodeServiceEna
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ServiceMutationResponse
+		var dest ServiceEnableResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -25010,7 +25016,7 @@ func ParsePostNodeServiceRestartResponse(rsp *http.Response) (*PostNodeServiceRe
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ServiceMutationResponse
+		var dest ServiceRestartResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -25071,7 +25077,7 @@ func ParsePostNodeServiceStartResponse(rsp *http.Response) (*PostNodeServiceStar
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ServiceMutationResponse
+		var dest ServiceStartResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -25132,7 +25138,7 @@ func ParsePostNodeServiceStopResponse(rsp *http.Response) (*PostNodeServiceStopR
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ServiceMutationResponse
+		var dest ServiceStopResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

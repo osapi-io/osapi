@@ -89,9 +89,9 @@ None. Declare them with behavior.Config.
 
 ### Examples (1)
 
-| EXAMPLE    | INPUT                                                                                                            | OUTPUT                                         |
-| ---------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| A new file | path=/etc/netplan/osapi-dns.yaml, content=network: version: 2 ethernets: eth0: nameservers: addresses: [1.1.1.1] | path=/etc/netplan/osapi-dns.yaml, changed=true |
+| EXAMPLE    | INPUT                                                                                                             | OUTPUT                                         |
+| ---------- | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| A new file | path=/etc/netplan/osapi-dns.yaml, content=network: version: 2 ethernets: eth0: nameservers: addresses: \[1.1.1.1] | path=/etc/netplan/osapi-dns.yaml, changed=true |
 
 ## Method delete
 
@@ -154,10 +154,10 @@ None. Declare them with behavior.Config.
 
 ### Examples (5)
 
-| EXAMPLE                                                   | INPUT       | OUTPUT                                                                         |
-| --------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------ |
-| A bond                                                    | name=bond0  | name=bond0, type=bond, section=bonds, id=bond0, matches=[bond0]                |
-| An interface a match defines, as cloud-init's all for en* | name=enp0s1 | name=enp0s1, type=ethernet, section=ethernets, id=all, matches=[enp0s1 enp0s2] |
-| An interface netplan does not define                      | name=lo     | name=lo, type=ethernet, section=ethernets, id=lo, matches=[lo]                 |
-| A netplan without status                                  | name=eth0   | name=eth0, type=, section=ethernets, id=eth0, matches=[eth0]                   |
-| An interface netplan does not manage                      | name=eth9   | name=eth9, type=, section=ethernets, id=eth9, matches=[eth9]                   |
+| EXAMPLE                                                   | INPUT       | OUTPUT                                                                          |
+| --------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------- |
+| A bond                                                    | name=bond0  | name=bond0, type=bond, section=bonds, id=bond0, matches=\[bond0]                |
+| An interface a match defines, as cloud-init's all for en* | name=enp0s1 | name=enp0s1, type=ethernet, section=ethernets, id=all, matches=\[enp0s1 enp0s2] |
+| An interface netplan does not define                      | name=lo     | name=lo, type=ethernet, section=ethernets, id=lo, matches=\[lo]                 |
+| A netplan without status                                  | name=eth0   | name=eth0, type=, section=ethernets, id=eth0, matches=\[eth0]                   |
+| An interface netplan does not manage                      | name=eth9   | name=eth9, type=, section=ethernets, id=eth9, matches=\[eth9]                   |

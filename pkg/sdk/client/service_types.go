@@ -17,40 +17,26 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-
 package client
 
 import (
+	openapi_types "github.com/oapi-codegen/runtime/types"
+
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
-// ServiceInfoResult represents a service list result from a single agent.
-type ServiceInfoResult struct {
-	Hostname string        `json:"hostname"`
-	Status   string        `json:"status"`
-	Services []ServiceInfo `json:"services,omitempty"`
-	Error    string        `json:"error,omitempty"`
-}
-
-// ServiceInfo represents a single systemd service entry.
+// ServiceInfo is one service on one host.
 type ServiceInfo struct {
+	Hostname    string `json:"hostname"`
+	Status      string `json:"status"`
+	Error       string `json:"error,omitempty"`
 	Name        string `json:"name,omitempty"`
-	Status      string `json:"status,omitempty"`
+	State       string `json:"state,omitempty"`
 	Enabled     bool   `json:"enabled"`
 	Description string `json:"description,omitempty"`
-	PID         int    `json:"pid,omitempty"`
 }
 
-// ServiceGetResult represents a service get result from a single agent.
-type ServiceGetResult struct {
-	Hostname string       `json:"hostname"`
-	Status   string       `json:"status"`
-	Service  *ServiceInfo `json:"service,omitempty"`
-	Error    string       `json:"error,omitempty"`
-}
-
-// ServiceMutationResult represents the result of a service mutation or
-// action operation.
+// ServiceMutationResult is a service after a write or an action.
 type ServiceMutationResult struct {
 	Hostname string `json:"hostname"`
 	Status   string `json:"status"`
@@ -59,116 +45,37 @@ type ServiceMutationResult struct {
 	Error    string `json:"error,omitempty"`
 }
 
-// ServiceCreateOpts contains options for creating a service unit file.
+// ServiceCreateOpts names the service and the object that holds its unit
+// file.
 type ServiceCreateOpts struct {
-	// Name is the service unit name (required).
+	// Name is the service, such as app for osapi-app.service (required).
 	Name string
-	// Object is the object store reference for the unit file (required).
+	// Object is the object that holds the unit file (required).
 	Object string
 }
 
-// ServiceUpdateOpts contains options for updating a service unit file.
+// ServiceUpdateOpts names the object that holds the new unit file.
 type ServiceUpdateOpts struct {
-	// Object is the new object store reference for the unit file (required).
+	// Object is the object that holds the unit file (required).
 	Object string
 }
 
-// serviceListCollectionFromGen converts a gen.ServiceListResponse
-// to a Collection[ServiceInfoResult].
-func serviceListCollectionFromGen(
-	g *gen.ServiceListResponse,
-) Collection[ServiceInfoResult] {
-	results := make([]ServiceInfoResult, 0, len(g.Results))
-	for _, r := range g.Results {
-		result := ServiceInfoResult{
-			Hostname: r.Hostname,
-			Status:   string(r.Status),
-			Error:    derefString(r.Error),
-		}
-
-		if r.Services != nil {
-			svcs := make([]ServiceInfo, 0, len(*r.Services))
-			for _, s := range *r.Services {
-				svcs = append(svcs, serviceInfoFromGen(s))
-			}
-			result.Services = svcs
-		}
-
-		results = append(results, result)
+func serviceInfosFromGen(
+	jobID *openapi_types.UUID,
+	rows []gen.ServiceEntry,
+) Collection[ServiceInfo] {
+	results := make([]ServiceInfo, 0, len(rows))
+	for _, r := range rows {
+		results = append(results, ServiceInfo{
+			Hostname:    r.Hostname,
+			Status:      string(r.Status),
+			Error:       derefString(r.Error),
+			Name:        derefString(r.Name),
+			State:       derefString(r.State),
+			Enabled:     derefBool(r.Enabled),
+			Description: derefString(r.Description),
+		})
 	}
 
-	return Collection[ServiceInfoResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
-	}
-}
-
-// serviceInfoFromGen converts a gen.ServiceInfo to a ServiceInfo.
-func serviceInfoFromGen(
-	s gen.ServiceInfo,
-) ServiceInfo {
-	return ServiceInfo{
-		Name:        derefString(s.Name),
-		Status:      derefString(s.Status),
-		Enabled:     derefBool(s.Enabled),
-		Description: derefString(s.Description),
-		PID:         derefInt(s.Pid),
-	}
-}
-
-// serviceGetCollectionFromGen converts a gen.ServiceGetResponse
-// to a Collection[ServiceGetResult].
-func serviceGetCollectionFromGen(
-	g *gen.ServiceGetResponse,
-) Collection[ServiceGetResult] {
-	results := make([]ServiceGetResult, 0, len(g.Results))
-	for _, r := range g.Results {
-		result := ServiceGetResult{
-			Hostname: r.Hostname,
-			Status:   string(r.Status),
-			Error:    derefString(r.Error),
-		}
-
-		if r.Service != nil {
-			info := serviceInfoFromGen(*r.Service)
-			result.Service = &info
-		}
-
-		results = append(results, result)
-	}
-
-	return Collection[ServiceGetResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
-	}
-}
-
-// serviceMutationCollectionFromGen converts a gen.ServiceMutationResponse
-// to a Collection[ServiceMutationResult].
-func serviceMutationCollectionFromGen(
-	g *gen.ServiceMutationResponse,
-) Collection[ServiceMutationResult] {
-	results := make([]ServiceMutationResult, 0, len(g.Results))
-	for _, r := range g.Results {
-		results = append(results, serviceMutationResultFromGen(r))
-	}
-
-	return Collection[ServiceMutationResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
-	}
-}
-
-// serviceMutationResultFromGen converts a single gen.ServiceMutationEntry
-// to a ServiceMutationResult.
-func serviceMutationResultFromGen(
-	r gen.ServiceMutationEntry,
-) ServiceMutationResult {
-	return ServiceMutationResult{
-		Hostname: r.Hostname,
-		Status:   string(r.Status),
-		Name:     derefString(r.Name),
-		Changed:  derefBool(r.Changed),
-		Error:    derefString(r.Error),
-	}
+	return Collection[ServiceInfo]{Results: results, JobID: jobIDFromGen(jobID)}
 }

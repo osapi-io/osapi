@@ -24,6 +24,8 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/behavior/host"
+
 	"github.com/osapi-io/osapi/internal/provider"
 
 	"github.com/avfs/avfs"
@@ -41,7 +43,6 @@ import (
 	ntpProv "github.com/osapi-io/osapi/internal/provider/node/ntp"
 	powerProv "github.com/osapi-io/osapi/internal/provider/node/power"
 	processProv "github.com/osapi-io/osapi/internal/provider/node/process"
-	serviceProv "github.com/osapi-io/osapi/internal/provider/node/service"
 	userProv "github.com/osapi-io/osapi/internal/provider/node/user"
 	cronProv "github.com/osapi-io/osapi/internal/provider/schedule/cron"
 )
@@ -67,6 +68,9 @@ type hostEnv struct {
 	fileState       provider.FileState
 	fileStateBucket string
 	files           fileProv.Provider
+	// objects are the objects of the object store, for behaviors; nil
+	// without an object store.
+	objects host.Objects
 }
 
 func (e hostEnv) host() nodeHost.Provider {
@@ -217,32 +221,5 @@ func (e hostEnv) certificate() certProv.Provider {
 		return certProv.NewDarwinProvider()
 	default:
 		return certProv.NewLinuxProvider()
-	}
-}
-
-func (e hostEnv) service() serviceProv.Provider {
-	switch e.platform {
-	case "debian":
-		if e.container {
-			e.log.Info("running in container, service operations disabled")
-			return serviceProv.NewLinuxProvider()
-		}
-		if e.files == nil {
-			e.log.Warn("file provider not available, service operations disabled")
-			return serviceProv.NewLinuxProvider()
-		}
-		return serviceProv.NewDebianProvider(
-			e.log,
-			e.fs,
-			e.files,
-			e.fileState,
-			e.fileStateBucket,
-			e.exec,
-			e.hostname,
-		)
-	case "darwin":
-		return serviceProv.NewDarwinProvider()
-	default:
-		return serviceProv.NewLinuxProvider()
 	}
 }

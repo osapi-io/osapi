@@ -81,7 +81,7 @@ None. The method takes no input; its command needs only --target.
 
 ### Examples (2)
 
-| EXAMPLE        | INPUT  | OUTPUT                                         |
-| -------------- | ------ | ---------------------------------------------- |
-| An Ubuntu host | (none) | os_info=map[distribution:ubuntu version:24.04] |
-| A Mac          | (none) | os_info=map[distribution:darwin version:15.5]  |
+| EXAMPLE        | INPUT  | OUTPUT                                          |
+| -------------- | ------ | ----------------------------------------------- |
+| An Ubuntu host | (none) | os_info=map\[distribution:ubuntu version:24.04] |
+| A Mac          | (none) | os_info=map\[distribution:darwin version:15.5]  |

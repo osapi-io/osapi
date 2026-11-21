@@ -53,7 +53,7 @@ import {
 } from "@/sdk/gen/schedule-management-api-schedule-operations/schedule-management-api-schedule-operations";
 import {
   getNodeService,
-  getNodeServiceByName,
+  getNodeServiceByKey,
   postNodeService,
   putNodeService,
   deleteNodeService,
@@ -62,7 +62,7 @@ import {
   postNodeServiceRestart,
   postNodeServiceEnable,
   postNodeServiceDisable,
-} from "@/sdk/gen/service-management-api-service-operations/service-management-api-service-operations";
+} from "@/sdk/gen/service-api-service-operations/service-api-service-operations";
 import {
   postNodeCommandExec,
   postNodeCommandShell,
@@ -411,7 +411,7 @@ export function Configure() {
             result = await getNodeService(t);
             break;
           case "service-get":
-            result = await getNodeServiceByName(t, block.data.name as string);
+            result = await getNodeServiceByKey(t, block.data.name as string);
             break;
           case "service-create":
             result = await postNodeService(t, {

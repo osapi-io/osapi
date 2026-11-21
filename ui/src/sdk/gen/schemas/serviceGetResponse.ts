@@ -4,10 +4,10 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { ServiceGetEntry } from './serviceGetEntry';
+import type { ServiceEntry } from './serviceEntry';
 
 export interface ServiceGetResponse {
   /** The job ID used to process this request. */
   job_id?: string;
-  results: ServiceGetEntry[];
+  results: ServiceEntry[];
 }

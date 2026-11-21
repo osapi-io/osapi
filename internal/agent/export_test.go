@@ -49,6 +49,7 @@ import (
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/osapi-io/gohai/pkg/gohai/family"
 	"github.com/osapi-io/osapi/internal/agent/identity"
+	behaviorHost "github.com/osapi-io/osapi/internal/behavior/host"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/exec"
 	"github.com/osapi-io/osapi/internal/job"
@@ -517,7 +518,6 @@ func SetAgentAppConfig(
 			nil,
 			nil,
 			nil,
-			nil,
 			a.logger,
 		)
 	}
@@ -544,7 +544,6 @@ func SetAgentHostProvider(
 		a.registry.processors["node"] = NewNodeProcessor(
 			ntp.Provider(nil),
 			power.Provider(nil),
-			nil,
 			nil,
 			nil,
 			nil,
@@ -844,7 +843,6 @@ func ExportProviders(
 		"user":        e.user(),
 		"logs":        e.logs(),
 		"certificate": e.certificate(),
-		"service":     e.service(),
 	}
 }
 
@@ -1033,4 +1031,12 @@ func SetGetgroups(
 // ResetGetgroups restores os.Getgroups.
 func ResetGetgroups() {
 	getgroups = os.Getgroups
+}
+
+// ExportStoreObjects is the object store that behaviors read, over store.
+func ExportStoreObjects(
+	store fileProv.Objects,
+	bucket string,
+) behaviorHost.Objects {
+	return storeObjects{store: store, bucket: bucket}
 }

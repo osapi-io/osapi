@@ -203,8 +203,17 @@ type Method struct {
 	// host and how it behaves when run twice. It is the command's long help
 	// and the body of its docs page. Optional.
 	Long string
-	// Verb is read or write.
+	// Verb is read or write. An action is a write.
 	Verb Verb
+	// Action is true for a write declared with Action: it is named for what
+	// it does, such as restart, and its route ends in its name.
+	Action bool
+	// Always is true for an action declared with .Always: it changes the
+	// host each time it runs, as restart does, so no run is unchanged.
+	AlwaysChanges bool
+	// NonFact is why a read runs a command outside gohai, set with
+	// .NotAFact: what it reads is not a fact of the host.
+	NonFact string
 	// KeyField is the input field that goes in the path, by its JSON name.
 	// Empty means the method addresses the whole collection.
 	KeyField string
@@ -311,6 +320,29 @@ func covers(
 	return p == platform || (p == PlatformLinux && platform != PlatformDarwin)
 }
 
+// Always marks an action that changes the host each time it runs, such as
+// restart: it reports changed: true on each run, and the generated test does
+// not run it a second time to see changed: false. behavior validate refuses it
+// on a method that is not an action.
+func (m *Method) Always() *Method {
+	m.AlwaysChanges = true
+
+	return m
+}
+
+// NotAFact marks a read that runs a command outside gohai, and says why:
+// what it reads is not a fact of the host, such as the updates that the
+// package index has, which are what the repositories have. A read of a fact
+// goes through gohai, with h.Sources(); a fact that gohai does not read is a
+// change to gohai first.
+func (m *Method) NotAFact(
+	why string,
+) *Method {
+	m.NonFact = why
+
+	return m
+}
+
 // Explain sets the method's longer description, for its command's help and
 // its docs page.
 func (m *Method) Explain(
@@ -403,6 +435,22 @@ func Write[P any, In any, Out any](
 	return newMethod(name, VerbWrite, fn)
 }
 
+// Action declares a write named for what it does to the host, such as
+// restart or reboot, which no create, update or delete says. It is a write in
+// each other way: <group>:write, a modify job, and an output that reports
+// Changed. Its route is POST on the method's path with its name after it,
+// /service/{name}/restart, so two actions on one item have two routes. The
+// name is one of the CLI's actions, osapi cli command spec get lists them.
+func Action[P any, In any, Out any](
+	name string,
+	fn func(ctx context.Context, p P, in In) (Out, error),
+) *Method {
+	m := newMethod(name, VerbWrite, fn)
+	m.Action = true
+
+	return m
+}
+
 func newMethod[P any, In any, Out any](
 	name string,
 	verb Verb,
@@ -438,11 +486,14 @@ func newMethod[P any, In any, Out any](
 	}
 }
 
-// HTTPMethod is the method's HTTP verb: GET for a read, and for a write POST,
-// PUT or DELETE by the method's name, POST for any other write.
+// HTTPMethod is the method's HTTP verb: GET for a read, POST for an action,
+// and for a write POST, PUT or DELETE by the method's name.
 func (m *Method) HTTPMethod() string {
 	if m.Verb == VerbRead {
 		return "GET"
+	}
+	if m.Action {
+		return "POST"
 	}
 
 	switch m.Name {
@@ -455,8 +506,8 @@ func (m *Method) HTTPMethod() string {
 	}
 }
 
-// Path is the method's route: /api/node/{hostname}, the group and name, and
-// the key when the method addresses one item.
+// Path is the method's route: /api/node/{hostname}, the group and name, the
+// key when the method addresses one item, and an action's name.
 func (b *Behavior) Path(
 	m *Method,
 ) string {
@@ -467,6 +518,9 @@ func (b *Behavior) Path(
 	p += b.Name
 	if m.KeyField != "" {
 		p += "/{" + m.KeyField + "}"
+	}
+	if m.Action {
+		p += "/" + m.Name
 	}
 
 	return p

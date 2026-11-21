@@ -70,6 +70,8 @@
 //	Read(n, fn)   a method that reads the host: GET, <name>:read
 //	Write(n, fn)  a method that changes it: POST, or PUT for update and
 //	              DELETE for delete, <name>:write
+//	Action(n, fn) a write named for what it does, such as restart: POST on
+//	              its path with the name after it, <name>:write
 //
 // A method is refined with Key (the input field in the path), Describe (one
 // line), Explain (what it touches and what running it twice does) and Example

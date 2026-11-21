@@ -36,6 +36,7 @@ const (
 	KindRefine     = "refine"
 	KindExample    = "example"
 	KindCall       = "call"
+	KindHost       = "host"
 	KindCompose    = "compose"
 	KindBlock      = "block"
 	KindTag        = "tag"
@@ -56,6 +57,7 @@ var Spec = guide.Spec{
 		{Kind: KindMethod, Title: "Methods"},
 		{Kind: KindRefine, Title: "Refinements of a method"},
 		{Kind: KindExample, Title: "Hosts and effects of an example"},
+		{Kind: KindHost, Title: "The host a provider gets"},
 		{Kind: KindCall, Title: "Calls in a provider"},
 		{Kind: KindCompose, Title: "Building on other behaviors"},
 		{Kind: KindTag, Title: "Tags on input, output and settings fields"},
@@ -174,12 +176,90 @@ var Spec = guide.Spec{
 			Does: "A method that changes the host: POST, PUT or DELETE, and <group>:write. Named create, update or delete. Out has Changed bool.",
 			When: "For each change. fn is func(ctx, p Provider, in In) (Out, error).",
 		},
+		{
+			Kind: KindMethod,
+			Name: `Action("name", fn)`,
+			Does: "A write named for what it does, such as restart: POST on the method's path with the name after it, /service/{name}/restart, and <group>:write. Named with one of the CLI's actions. Out has Changed bool.",
+			When: "For a change that create, update and delete do not say, such as start, stop, restart, enable, signal or reboot.",
+		},
 
 		{
 			Kind: KindRefine,
 			Name: `.Key("field")`,
 			Does: "Puts that input field in the route and the CLI, and records it on the span of each call. The field is validate:\"required\": a path segment is never empty.",
 			When: "On each method that acts on one item, such as get, update and delete of a key.",
+		},
+		{
+			Kind: KindRefine,
+			Name: `.NotAFact("why")`,
+			Does: "Says why a read runs a command outside gohai: what it reads is not a fact of the host, such as the updates of the package index. Without it, the tests of a read fail on each command that does not go through gohai.",
+			When: "Only when no gohai collector can have the value, because the host does not own it. A fact that gohai does not read is a change to gohai first.",
+		},
+		{
+			Kind: KindHost,
+			Name: "h.Platform, h.Container, h.Hostname",
+			Does: "The platform of the agent as gohai names it, such as debian or darwin; whether the agent runs in a container; and its hostname. The tests build the provider once for each platform that the behavior declares, with behaviortest.Hostname.",
+			When: "To choose what a builder returns. A builder that cannot manage the host, such as a writer in a container, returns the reader, or ErrUnsupported so the methods report skipped.",
+		},
+		{
+			Kind: KindHost,
+			Name: "h.FS",
+			Does: "The filesystem of the host, an avfs.VFS. The agent gives the real one. The tests give an in-memory one, so an example says the files before the call with Exists and Links, and the files after it with Wrote and Removed.",
+			When: "For each file that the provider reads or writes itself, never the os package. A file that osapi owns goes through managedfile; atomicfile.Write writes one in place.",
+		},
+		{
+			Kind: KindHost,
+			Name: "h.Exec",
+			Does: "Runs a program: RunCmd as the agent's user, RunPrivilegedCmd with sudo, RunPrivilegedCmdWithStdin for a secret. The tests give a generated mock that records each command line and prints what the example says with Prints and PrintsAfter; Ran checks a command after. Each program is declared with Runs or Sudo.",
+			When: "For a write, such as systemctl start or apt-get install, and for a read of what is not a fact of the host, with .NotAFact. A read of a fact goes through h.Sources().",
+		},
+		{
+			Kind: KindHost,
+			Name: "h.Sources()",
+			Does: "The sources that a gohai collector reads the host through: h.FS, h.Exec, h.Now and h.Resolver. Thus services.NewWith(h.Sources()).Collect(ctx, nil) reads the real host on an agent and the fake host in the tests, with the files of Exists and the commands of Prints.",
+			When: "For each read of a fact of the host. The gohai test check fails a read that runs a command another way.",
+		},
+		{
+			Kind: KindHost,
+			Name: "h.FileState, h.FileStateBucket",
+			Does: "The KV store where osapi keeps a record of each file that it wrote, and its bucket. nil when the agent has no store. The tests give an in-memory store.",
+			When: "Only through managedfile, which declares KeepsState. A provider does not read or write records itself.",
+		},
+		{
+			Kind: KindHost,
+			Name: "h.Objects",
+			Does: "Reads an object of the Object Store, such as a file that osapi client file upload stored. nil when the agent has no store. The tests give the objects of Stored.",
+			When: "Only through the object building block, which the behavior requires.",
+		},
+		{
+			Kind: KindHost,
+			Name: "h.Settings, h.Required",
+			Does: "The decoded settings of the behavior, which Settings[T](h) reads, and the providers of the behaviors that it requires, which Require reads. The tests give the defaults of Config and the real providers of the required behaviors, on the same fake host.",
+			When: "Through Settings[T](h) and Require[P](h, b), not the fields.",
+		},
+		{
+			Kind: KindHost,
+			Name: "h.Now, h.Time()",
+			Does: "The clock of the host. Time reads it. The tests give behaviortest.Now, 2026-01-02 03:04:05 UTC.",
+			When: "For each time that a provider computes, such as an uptime from a boot time. Never time.Now.",
+		},
+		{
+			Kind: KindHost,
+			Name: "h.Resolver, h.Logger",
+			Does: "The name resolver that gohai uses, such as for the canonical FQDN, and the logger of the agent. The tests give a resolver that answers without the network, and a logger that discards.",
+			When: "The resolver goes to gohai through h.Sources(). Log with h.Logger only what a span does not carry.",
+		},
+		{
+			Kind: KindCall,
+			Name: "collector.NewWith(h.Sources())",
+			Does: "Reads the facts of the host through gohai, such as services.NewWith(h.Sources()).Collect(ctx, nil). Sources gives gohai the host's filesystem and commands, so the tests run it on the fake host.",
+			When: "For each read of a fact of the host: its packages, services, interfaces, routes, disks. A provider runs h.Exec for writes, and reads with it only what is not a fact, with .NotAFact.",
+		},
+		{
+			Kind: KindRefine,
+			Name: `.Always()`,
+			Does: "Marks an action that changes the host each time it runs, such as restart. Its output reports changed: true on each run, and the generated test does not run it again to see changed: false. behavior validate refuses it on a method that is not an action.",
+			When: "On an action that has no state to compare, so a second run is not unchanged.",
 		},
 		{
 			Kind: KindRefine,
@@ -241,6 +321,12 @@ var Spec = guide.Spec{
 			Name: `PrintsAfter("after", "command", "output")`,
 			Does: "Says what a command prints after another command has run.",
 			When: "For state that a program keeps, not a file.",
+		},
+		{
+			Kind: KindExample,
+			Name: `Stored(name, content, contentType)`,
+			Does: "Says the object store of the fleet has the object name, with its content and its content type, raw or template, as osapi client file upload stores it. A provider reads it with h.Objects.Object.",
+			When: "For an example of a behavior that deploys an uploaded file, such as through the object building block.",
 		},
 		{
 			Kind: KindExample,
@@ -410,12 +496,6 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindNotYet,
-			Name: "Action methods",
-			Does: "A method such as restart or reboot. validate refuses a write that is not create, update or delete.",
-			When: "Stop, and tell the person what is missing. Do not build around it.",
-		},
-		{
-			Kind: KindNotYet,
 			Name: "A command or a shell from the caller",
 			Does: "There is no execute permission.",
 			When: "Stop, and tell the person what is missing. Do not build around it.",
@@ -429,7 +509,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindNotYet,
 			Name: "Streaming and uploads",
-			Does: "And the object store that they would deploy from.",
+			Does: "A method that streams its output, or that takes a file in its request. A behavior reads an object that osapi client file upload stored, with the object building block.",
 			When: "Stop, and tell the person what is missing. Do not build around it.",
 		},
 		{

@@ -3,9 +3,9 @@
 Deploy a file from Object Store to a host.
 
 The agent compares SHA-256 checksums, so it does not write a file again when the
-file did not change.
-[File management](../../../../../features/file-management.md) tells how the
-agent renders a template.
+file did not change. \[File
+management](../../../../../features/file-management.md) tells how the agent
+renders a template.
 
 ```bash
 osapi client node file deploy

@@ -24,7 +24,11 @@ The rules:
 - `duplicate`: Each behavior is registered one time, and each method name is
   used one time. Fix: Rename or remove the second one.
 - `verb`: A read is named list, get or status. A write is named create, update
-  or delete. Fix: Rename the method to the standard verb that the message names.
+  or delete. An action, declared with Action, is named for what it does with one
+  of the CLI's actions, such as restart, and not with a standard verb. Fix:
+  Rename the method to the standard verb that the message names, or declare a
+  write named for what it does with behavior.Action and a name from osapi cli
+  command spec get.
 - `route`: No two methods have the same route. Fix: Give one of them a key with
   .Key("field").
 - `key`: The key of a method is a field of its input, and is required: it is a
@@ -50,9 +54,9 @@ The rules:
   shows what each call changed. Fix: Name the item with .Key("field"). A method
   without a key, such as a create, tags that field telemetry:"attr".
 - `template`: A field tagged template:"&lt;vars&gt;" is a string, and
-  &lt;vars&gt; is the JSON name of an input field of type map[string]string.
+  &lt;vars&gt; is the JSON name of an input field of type map\[string]string.
   Fix: Tag the string field that holds the template with template:"vars", and
-  add Vars map[string]string `json:"vars"` to the input.
+  add Vars map\[string]string `json:"vars"` to the input.
 - `validate`: Each input field has a validate tag: its rules, or omitempty for
   an optional field with none. The spec carries the whole tag, and the server
   answers 400 to a value that breaks it. Fix: Add validate:"..." to the field,
@@ -82,7 +86,7 @@ The rules:
   span.
 - `surface`: A behavior with CLI also has API. An internal behavior has no API
   or CLI. Each input field of a CLI behavior has a type a flag holds: string,
-  bool, int, []string, map[string]string or []byte (a file). The CLI owns the
+  bool, int, \[]string, map\[string]string or \[]byte (a file). The CLI owns the
   list; its generator builds each. Fix: Add behavior.API, remove API and CLI
   from the internal behavior, or give the field a type that a flag can hold.
 - `example`: Each method of a CLI behavior has an example. Each example and
@@ -143,6 +147,12 @@ checks these. Each failure ends with its fix:
 - `runs`: Each program that the provider runs is declared. Fix: Add
   behavior.Runs("program"), or behavior.Sudo("program") for a program run as
   root.
+- `gohai`: A read runs each command through gohai: it reads the facts of the
+  host with a gohai collector and h.Sources(), not with h.Exec. Fix: Read the
+  fact with the gohai collector that has it, such as
+  services.NewWith(h.Sources()). A fact that gohai does not read is a change to
+  gohai first. A read of what is not a fact of the host, such as the updates of
+  the package index, declares why with .NotAFact("...").
 - `writes`: Each path that the provider writes, removes or changes the mode of
   is declared, also through a required behavior. Fix: Add a pattern that covers
   the path to behavior.Writes.

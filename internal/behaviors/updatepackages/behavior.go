@@ -32,6 +32,7 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.CLI,
 	behavior.Platform(behavior.PlatformDebian, newDebian),
 	behavior.Read("list", List).
+		NotAFact("the updates are what the repositories of the package index have, not a fact of the host").
 		Runs("apt").
 		Describe("List the packages the index has newer versions of").
 		Explain("Runs apt list --upgradable: each package with its installed "+

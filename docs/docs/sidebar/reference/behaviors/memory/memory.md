@@ -81,6 +81,6 @@ None. The method takes no input; its command needs only --target.
 
 ### Examples (1)
 
-| EXAMPLE                             | INPUT  | OUTPUT                                                                      |
-| ----------------------------------- | ------ | --------------------------------------------------------------------------- |
-| A host with 8 GiB, 2 GiB of it free | (none) | memory=map[free:2.147483648e+09 total:8.589934592e+09 used:4.294967296e+09] |
+| EXAMPLE                             | INPUT  | OUTPUT                                                                       |
+| ----------------------------------- | ------ | ---------------------------------------------------------------------------- |
+| A host with 8 GiB, 2 GiB of it free | (none) | memory=map\[free:2.147483648e+09 total:8.589934592e+09 used:4.294967296e+09] |

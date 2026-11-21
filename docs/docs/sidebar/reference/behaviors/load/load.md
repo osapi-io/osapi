@@ -81,6 +81,6 @@ None. The method takes no input; its command needs only --target.
 
 ### Examples (1)
 
-| EXAMPLE                   | INPUT  | OUTPUT                                           |
-| ------------------------- | ------ | ------------------------------------------------ |
-| A host under a light load | (none) | load_average=map[15min:0.25 1min:0.32 5min:0.28] |
+| EXAMPLE                   | INPUT  | OUTPUT                                            |
+| ------------------------- | ------ | ------------------------------------------------- |
+| A host under a light load | (none) | load_average=map\[15min:0.25 1min:0.32 5min:0.28] |

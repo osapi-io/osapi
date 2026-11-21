@@ -58,8 +58,8 @@ var Checks = guide.Checks{
 	},
 	{
 		Rule:     RuleVerb,
-		Requires: "A read is named list, get or status. A write is named create, update or delete.",
-		Fix:      "Rename the method to the standard verb that the message names.",
+		Requires: "A read is named list, get or status. A write is named create, update or delete. An action, declared with Action, is named for what it does with one of the CLI's actions, such as restart, and not with a standard verb.",
+		Fix:      "Rename the method to the standard verb that the message names, or declare a write named for what it does with behavior.Action and a name from osapi cli command spec get.",
 	},
 	{
 		Rule:     RuleRoute,
@@ -187,6 +187,7 @@ const (
 	TestOption     = "option"
 	TestShell      = "shell"
 	TestRuns       = "runs"
+	TestGohai      = "gohai"
 	TestWrites     = "writes"
 	TestFileSpan   = "file-span"
 	TestKeepsState = "keeps-state"
@@ -257,6 +258,11 @@ var TestChecks = guide.Checks{
 		Rule:     TestRuns,
 		Requires: "Each program that the provider runs is declared.",
 		Fix:      "Add behavior.Runs(\"program\"), or behavior.Sudo(\"program\") for a program run as root.",
+	},
+	{
+		Rule:     TestGohai,
+		Requires: "A read runs each command through gohai: it reads the facts of the host with a gohai collector and h.Sources(), not with h.Exec.",
+		Fix:      "Read the fact with the gohai collector that has it, such as services.NewWith(h.Sources()). A fact that gohai does not read is a change to gohai first. A read of what is not a fact of the host, such as the updates of the package index, declares why with .NotAFact(\"...\").",
 	},
 	{
 		Rule:     TestWrites,

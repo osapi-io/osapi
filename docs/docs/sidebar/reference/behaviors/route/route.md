@@ -42,13 +42,13 @@ shows each call that its examples make.
 
 ### Types (5)
 
-| NAME                     | INPUT                                              | OUTPUT                                                                              |
-| ------------------------ | -------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| [list](#method-list)     | ListInput                                          | []Entry &#123; destination, gateway, interface, family, metric, proto, scope &#125; |
-| [get](#method-get)       | GetInput &#123; interface_name* &#125;             | []Entry &#123; destination, gateway, interface, family, metric, proto, scope &#125; |
-| [create](#method-create) | CreateInput &#123; interface_name*, routes* &#125; | Result &#123; interface_name, changed &#125;                                        |
-| [update](#method-update) | UpdateInput &#123; interface_name*, routes* &#125; | Result &#123; interface_name, changed &#125;                                        |
-| [delete](#method-delete) | DeleteInput &#123; interface_name* &#125;          | Result &#123; interface_name, changed &#125;                                        |
+| NAME                     | INPUT                                              | OUTPUT                                                                               |
+| ------------------------ | -------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| [list](#method-list)     | ListInput                                          | \[]Entry &#123; destination, gateway, interface, family, metric, proto, scope &#125; |
+| [get](#method-get)       | GetInput &#123; interface_name* &#125;             | \[]Entry &#123; destination, gateway, interface, family, metric, proto, scope &#125; |
+| [create](#method-create) | CreateInput &#123; interface_name*, routes* &#125; | Result &#123; interface_name, changed &#125;                                         |
+| [update](#method-update) | UpdateInput &#123; interface_name*, routes* &#125; | Result &#123; interface_name, changed &#125;                                         |
+| [delete](#method-delete) | DeleteInput &#123; interface_name* &#125;          | Result &#123; interface_name, changed &#125;                                         |
 
 ### Settings (0)
 
@@ -77,7 +77,7 @@ None. Declare them with behavior.Config.
 | Permission  | network:read                                                                                                                                 |
 | Command     | [osapi client node network route list](../../../usage/cli/client/node/network/route/list.md)                                                 |
 | Input type  | ListInput                                                                                                                                    |
-| Output type | []Entry                                                                                                                                      |
+| Output type | \[]Entry                                                                                                                                     |
 
 ### Input (0)
 
@@ -97,10 +97,10 @@ None. The method takes no input; its command needs only --target.
 
 ### Examples (2)
 
-| EXAMPLE      | INPUT  | OUTPUT                                                                                                                                                                                                                                                                                                                 |
-| ------------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A Linux host | (none) | [destination=default, family=inet, gateway=10.0.0.1, interface=eth0, metric=100, proto=dhcp, scope=] [destination=10.0.0.0/24, family=inet, gateway=, interface=eth0, metric=0, proto=kernel, scope=link] [destination=10.20.0.0/16, family=inet, gateway=10.0.0.254, interface=eth0, metric=50, proto=static, scope=] |
-| A Mac        | (none) | [destination=default, family=inet, gateway=192.168.0.1, interface=en0, metric=0, proto=, scope=]                                                                                                                                                                                                                       |
+| EXAMPLE      | INPUT  | OUTPUT                                                                                                                                                                                                                                                                                                                    |
+| ------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A Linux host | (none) | \[destination=default, family=inet, gateway=10.0.0.1, interface=eth0, metric=100, proto=dhcp, scope=] \[destination=10.0.0.0/24, family=inet, gateway=, interface=eth0, metric=0, proto=kernel, scope=link] \[destination=10.20.0.0/16, family=inet, gateway=10.0.0.254, interface=eth0, metric=50, proto=static, scope=] |
+| A Mac        | (none) | \[destination=default, family=inet, gateway=192.168.0.1, interface=en0, metric=0, proto=, scope=]                                                                                                                                                                                                                         |
 
 ## Method get
 
@@ -115,13 +115,13 @@ None. The method takes no input; its command needs only --target.
 | Permission  | network:read                                                                                                                                                  |
 | Command     | [osapi client node network route get](../../../usage/cli/client/node/network/route/get.md)                                                                    |
 | Input type  | GetInput                                                                                                                                                      |
-| Output type | []Entry                                                                                                                                                       |
+| Output type | \[]Entry                                                                                                                                                      |
 
 ### Input (1)
 
-| FIELD          | TYPE   | REQUIRED | CONSTRAINTS                                                               | DESCRIPTION                                                            |
-| -------------- | ------ | -------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| interface_name | string | yes      | pattern ^(@fact\.[a-z0-9_.]+\|[a-zA-Z0-9][a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary |
+| FIELD          | TYPE   | REQUIRED | CONSTRAINTS                                                                  | DESCRIPTION                                                            |
+| -------------- | ------ | -------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| interface_name | string | yes      | pattern ^(@fact\.\[a-z0-9_.]+\|\[a-zA-Z0-9]\[a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary |
 
 ### Output (7)
 
@@ -137,11 +137,11 @@ None. The method takes no input; its command needs only --target.
 
 ### Examples (3)
 
-| EXAMPLE                     | INPUT               | OUTPUT                                                                                                                                                                                                                                                                                                                 |
-| --------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| An interface with routes    | interface_name=eth0 | [destination=default, family=inet, gateway=10.0.0.1, interface=eth0, metric=100, proto=dhcp, scope=] [destination=10.0.0.0/24, family=inet, gateway=, interface=eth0, metric=0, proto=kernel, scope=link] [destination=10.20.0.0/16, family=inet, gateway=10.0.0.254, interface=eth0, metric=50, proto=static, scope=] |
-| An interface with no routes | interface_name=eth1 |                                                                                                                                                                                                                                                                                                                        |
-| A Mac                       | interface_name=en0  | [destination=default, family=inet, gateway=192.168.0.1, interface=en0, metric=0, proto=, scope=]                                                                                                                                                                                                                       |
+| EXAMPLE                     | INPUT               | OUTPUT                                                                                                                                                                                                                                                                                                                    |
+| --------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| An interface with routes    | interface_name=eth0 | \[destination=default, family=inet, gateway=10.0.0.1, interface=eth0, metric=100, proto=dhcp, scope=] \[destination=10.0.0.0/24, family=inet, gateway=, interface=eth0, metric=0, proto=kernel, scope=link] \[destination=10.20.0.0/16, family=inet, gateway=10.0.0.254, interface=eth0, metric=50, proto=static, scope=] |
+| An interface with no routes | interface_name=eth1 |                                                                                                                                                                                                                                                                                                                           |
+| A Mac                       | interface_name=en0  | \[destination=default, family=inet, gateway=192.168.0.1, interface=en0, metric=0, proto=, scope=]                                                                                                                                                                                                                         |
 
 ## Method create
 
@@ -160,10 +160,10 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (2)
 
-| FIELD          | TYPE   | REQUIRED | CONSTRAINTS                                                               | DESCRIPTION                                                                                                                                                                |
-| -------------- | ------ | -------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| interface_name | string | yes      | pattern ^(@fact\.[a-z0-9_.]+\|[a-zA-Z0-9][a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary                                                                                                     |
-| routes         | array  | yes      |                                                                           | Each route as ip route writes it: &lt;destination&gt; via &lt;gateway&gt;, with metric &lt;n&gt; after it when you give one, such as 10.0.0.0/8 via 192.168.1.1 metric 100 |
+| FIELD          | TYPE   | REQUIRED | CONSTRAINTS                                                                  | DESCRIPTION                                                                                                                                                                |
+| -------------- | ------ | -------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| interface_name | string | yes      | pattern ^(@fact\.\[a-z0-9_.]+\|\[a-zA-Z0-9]\[a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary                                                                                                     |
+| routes         | array  | yes      |                                                                              | Each route as ip route writes it: &lt;destination&gt; via &lt;gateway&gt;, with metric &lt;n&gt; after it when you give one, such as 10.0.0.0/8 via 192.168.1.1 metric 100 |
 
 ### Output (2)
 
@@ -174,10 +174,10 @@ None. The method takes no input; its command needs only --target.
 
 ### Examples (2)
 
-| EXAMPLE                                  | INPUT                                                                                                    | OUTPUT                               |
-| ---------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| Two routes                               | interface_name=osapi0, routes=[198.51.100.0/24 via 192.0.2.1 2001:db8:1::/48 via 2001:db8::1 metric 200] | interface_name=osapi0, changed=true  |
-| An interface osapi already has routes of | interface_name=osapi0, routes=[198.51.100.0/24 via 192.0.2.1 2001:db8:1::/48 via 2001:db8::1 metric 200] | interface_name=osapi0, changed=false |
+| EXAMPLE                                  | INPUT                                                                                                     | OUTPUT                               |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| Two routes                               | interface_name=osapi0, routes=\[198.51.100.0/24 via 192.0.2.1 2001:db8:1::/48 via 2001:db8::1 metric 200] | interface_name=osapi0, changed=true  |
+| An interface osapi already has routes of | interface_name=osapi0, routes=\[198.51.100.0/24 via 192.0.2.1 2001:db8:1::/48 via 2001:db8::1 metric 200] | interface_name=osapi0, changed=false |
 
 ## Method update
 
@@ -196,10 +196,10 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (2)
 
-| FIELD          | TYPE   | REQUIRED | CONSTRAINTS                                                               | DESCRIPTION                                                                                                                                                                |
-| -------------- | ------ | -------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| interface_name | string | yes      | pattern ^(@fact\.[a-z0-9_.]+\|[a-zA-Z0-9][a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary                                                                                                     |
-| routes         | array  | yes      |                                                                           | Each route as ip route writes it: &lt;destination&gt; via &lt;gateway&gt;, with metric &lt;n&gt; after it when you give one, such as 10.0.0.0/8 via 192.168.1.1 metric 100 |
+| FIELD          | TYPE   | REQUIRED | CONSTRAINTS                                                                  | DESCRIPTION                                                                                                                                                                |
+| -------------- | ------ | -------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| interface_name | string | yes      | pattern ^(@fact\.\[a-z0-9_.]+\|\[a-zA-Z0-9]\[a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary                                                                                                     |
+| routes         | array  | yes      |                                                                              | Each route as ip route writes it: &lt;destination&gt; via &lt;gateway&gt;, with metric &lt;n&gt; after it when you give one, such as 10.0.0.0/8 via 192.168.1.1 metric 100 |
 
 ### Output (2)
 
@@ -210,9 +210,9 @@ None. The method takes no input; its command needs only --target.
 
 ### Examples (1)
 
-| EXAMPLE                   | INPUT                                                                  | OUTPUT                              |
-| ------------------------- | ---------------------------------------------------------------------- | ----------------------------------- |
-| One route in place of two | interface_name=osapi0, routes=[203.0.113.0/24 via 192.0.2.1 metric 10] | interface_name=osapi0, changed=true |
+| EXAMPLE                   | INPUT                                                                   | OUTPUT                              |
+| ------------------------- | ----------------------------------------------------------------------- | ----------------------------------- |
+| One route in place of two | interface_name=osapi0, routes=\[203.0.113.0/24 via 192.0.2.1 metric 10] | interface_name=osapi0, changed=true |
 
 ## Method delete
 
@@ -231,9 +231,9 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (1)
 
-| FIELD          | TYPE   | REQUIRED | CONSTRAINTS                                                               | DESCRIPTION                                                            |
-| -------------- | ------ | -------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| interface_name | string | yes      | pattern ^(@fact\.[a-z0-9_.]+\|[a-zA-Z0-9][a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary |
+| FIELD          | TYPE   | REQUIRED | CONSTRAINTS                                                                  | DESCRIPTION                                                            |
+| -------------- | ------ | -------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| interface_name | string | yes      | pattern ^(@fact\.\[a-z0-9_.]+\|\[a-zA-Z0-9]\[a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary |
 
 ### Output (2)
 

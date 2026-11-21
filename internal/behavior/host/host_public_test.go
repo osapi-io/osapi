@@ -59,7 +59,12 @@ type HostPublicTestSuite struct {
 func (s *HostPublicTestSuite) TestSources() {
 	ctrl := gomock.NewController(s.T())
 	exec := mocks.NewMockExec(ctrl)
-	exec.EXPECT().RunCmd(gomock.Any(), "hostname", []string{"-s"}).Return("web-01\n", nil)
+	exec.EXPECT().RunCmd(gomock.Any(), "hostname", []string{"-s"}).
+		DoAndReturn(func(ctx context.Context, _ string, _ []string) (string, error) {
+			s.True(host.FromGohai(ctx), "gohai's runner marks its commands")
+
+			return "web-01\n", nil
+		})
 	now := func() time.Time { return time.Unix(1, 0) }
 	h := host.Host{Exec: exec, Now: now, Platform: "debian"}
 
@@ -71,6 +76,7 @@ func (s *HostPublicTestSuite) TestSources() {
 	s.Equal("web-01\n", string(out))
 
 	s.Nil(host.Host{}.Sources().Exec, "a host with no Exec gives gohai none")
+	s.False(host.FromGohai(context.Background()), "a command of a provider is not gohai's")
 }
 
 func (s *HostPublicTestSuite) TestTime() {

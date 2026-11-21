@@ -131,6 +131,9 @@ func groupFile(
 			Op(".").Line().Id("Describe").Call(jen.Lit(m.Doc)).
 			Op(".").Line().Id("Permission").Call(jen.Lit(b.Permission(m.Verb))).
 			Op(".").Line().Id("Returns").Call(jen.Lit(ok))
+		if m.Action {
+			def = def.Op(".").Line().Id("Action").Call(jen.Lit(m.Name))
+		}
 		if m.Long != "" {
 			def = def.Op(".").Line().Id("Explain").Call(jen.Lit(m.Long))
 		}

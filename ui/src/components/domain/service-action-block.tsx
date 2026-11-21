@@ -13,7 +13,7 @@ export function ServiceActionBlock(props: ServiceActionBlockProps) {
       {...props}
       field="name"
       label="Service Name"
-      placeholder="nginx.service"
+      placeholder="app, for osapi-app.service"
     />
   );
 }

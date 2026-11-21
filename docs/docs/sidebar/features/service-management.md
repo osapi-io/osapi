@@ -4,189 +4,119 @@ sidebar_position: 25
 
 # Service management
 
-osapi manages systemd services on managed hosts. You can list, examine, start,
-stop, restart, enable and disable services. You can also create, update and
-delete unit files. osapi deploys unit files through the Object Store, with the
-same SHA checksums as file management.
+osapi reads the systemd services of each host. It deploys, removes, starts,
+stops, restarts, enables and disables the services that it deploys itself. It is
+the [service](../reference/behaviors/service/service.md) behavior.
+
+A unit file goes to the fleet in two steps. Upload the file one time with
+`osapi client file upload`. Then deploy it by its name to each host. The agent
+gets the object from the Object Store with the
+[object](../reference/behaviors/object/object.md) building block, and writes it
+with [managedfile](../reference/behaviors/managedfile/managedfile.md). The
+[chain](../reference/chains/service.md) of the behavior shows these calls.
 
 ## How it works
 
-The service provider uses `systemctl` on Debian family systems to manage systemd
-service units.
+### List and get
 
-### List
+gohai reads the services with `systemctl list-units` and
+`systemctl list-unit-files` on each Linux host. Each service has its name, its
+state (such as `running`, `exited` or `dead`), whether it starts at boot and its
+description. Get reads one service from the same list, by its name with
+`.service` or without it. A service that systemd has not loaded, such as one
+that is stopped and disabled, is not in the list and is not found
+(osapi-io/gohai#321). A Mac has no systemd, and reports skipped.
 
-Returns all systemd services on the host. Each entry has the service name, the
-active status, the enabled state, the description and the PID, if the service
-runs.
+### The services that osapi deploys
 
-### Get
+osapi writes and acts on its own services only. The unit file of each is
+`/etc/systemd/system/osapi-<name>.service`, and osapi keeps a record of each
+file that it writes. Thus `--name app` is `osapi-app.service`, and osapi cannot
+change a service that a package installed, such as `ssh`. A unit file with the
+prefix that osapi did not write, such as the agent's own `osapi-agent.service`,
+is not osapi's either: create refuses it. An update, a delete or an action on a
+service that osapi did not deploy is not found.
 
-Returns the details of one service: its name, active status, enabled state,
-description and PID.
+- **Create** writes the object as the unit file, and runs
+  `systemctl daemon-reload` when the file changed. A unit file that has the
+  content reports `changed: false`. The service does not start: start and enable
+  are their own actions.
+- **Update** writes a different object over the unit file of a service that
+  osapi deployed.
+- **Delete** runs `systemctl disable --now`, removes the unit file and reloads
+  systemd. A service with no unit file reports `changed: false`.
 
-### Start
+### Actions
 
-Starts a stopped service with `systemctl start`. If the service was not running,
-it returns `changed: true`. If the service was already active, it returns
-`changed: false`.
+Each action runs `systemctl <action> osapi-<name>.service` on the Debian family.
 
-### Stop
-
-Stops a running service with `systemctl stop`. If the service was running, it
-returns `changed: true`. If the service was already stopped, it returns
-`changed: false`.
-
-### Restart
-
-Restarts a service with `systemctl restart`. It always returns `changed: true`,
-because the agent restarts the service in all states.
-
-### Enable
-
-Enables a service with `systemctl enable`, so that it starts at boot. If the
-service was not enabled, it returns `changed: true`.
-
-### Disable
-
-Disables a service with `systemctl disable`, so that it does not start at boot.
-If the service was enabled, it returns `changed: true`.
-
-### Create
-
-Deploys a new service unit file to the host. First, upload the content of the
-unit file to the Object Store. The agent writes the file to
-`/etc/systemd/system/{name}` and runs `systemctl daemon-reload` to load the new
-unit.
-
-Create is idempotent **on the content**. If a unit file on disk has the same
-content, it reports `changed: false`. If somebody changed the file, the agent
-writes it again from the Object Store. Use `update` to point the host to a
-different object.
-
-### Update
-
-Replaces a service unit file with a new Object Store reference. The agent
-deploys the unit file again and runs `systemctl daemon-reload`. If the content
-did not change (the same SHA), it returns `changed: false` and does not reload
-the daemon. It fails if the unit file does not exist. Use `create` first.
-
-### Delete
-
-Removes a service unit file from the host. If the service runs, the agent stops
-and disables it. Then the agent deletes the unit file from
-`/etc/systemd/system/` and runs `systemctl daemon-reload`.
-
-## Operations
-
-| Operation | Description                                          |
-| --------- | ---------------------------------------------------- |
-| List      | List all systemd services                            |
-| Get       | Get the details of one service                       |
-| Start     | Start a service                                      |
-| Stop      | Stop a service                                       |
-| Restart   | Restart a service                                    |
-| Enable    | Enable a service, so that it starts at boot          |
-| Disable   | Disable a service, so that it does not start at boot |
-| Create    | Deploy a service unit file from Object Store         |
-| Update    | Deploy a service unit file again                     |
-| Delete    | Remove a service unit file and stop the unit         |
+| Action  | Reports `changed: false` when        |
+| ------- | ------------------------------------ |
+| start   | the service runs                     |
+| stop    | the service does not run             |
+| enable  | the service starts at boot           |
+| disable | the service does not start at boot   |
+| restart | never: each restart changes the host |
 
 ## CLI usage
 
 ```bash
-# List all services on a host
+# Upload the unit file one time
+osapi client file upload --name app.service --file ./app.service
+
+# List the services of a host
 osapi client node service list --target web-01
 
-# Get details for a specific service
-osapi client node service get --target web-01 --name nginx.service
+# Get one service
+osapi client node service get --target web-01 --name ssh
 
-# Start a service
-osapi client node service start --target web-01 --name nginx.service
+# Deploy the unit file as osapi-app.service
+osapi client node service create --target web-01 --name app --object app.service
 
-# Stop a service
-osapi client node service stop --target web-01 --name nginx.service
+# Start it and make it start at boot
+osapi client node service start --target web-01 --name app
+osapi client node service enable --target web-01 --name app
 
-# Restart a service
-osapi client node service restart --target web-01 --name nginx.service
+# Deploy a new version of the unit file
+osapi client node service update --target web-01 --name app --object app-v2.service
 
-# Enable a service to start on boot
-osapi client node service enable --target web-01 --name nginx.service
+# Restart it on each host of a group
+osapi client node service restart --target group:web --name app
 
-# Disable a service from starting on boot
-osapi client node service disable --target web-01 --name nginx.service
-
-# Deploy a new unit file from the Object Store
-osapi client node service create --target web-01 \
-  --name myapp.service --object myapp-unit
-
-# Update an existing unit file
-osapi client node service update --target web-01 \
-  --name myapp.service --object myapp-unit-v2
-
-# Delete a unit file
-osapi client node service delete --target web-01 \
-  --name myapp.service
-
-# Broadcast service restart to all hosts
-osapi client node service restart --target _all --name nginx.service
+# Stop, disable and remove it
+osapi client node service delete --target web-01 --name app
 ```
 
-All commands accept `--json` to give the raw JSON output.
-
-## Broadcast support
-
-All service operations accept broadcast targets. Use `--target _all` to manage
-the services on all registered agents. Use a label selector, for example
-`--target group:web`, to target a part of the fleet.
-
-Responses always have a result for each host:
-
-```
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  HOSTNAME  NAME             CHANGED
-  web-01    nginx.service    true
-  web-02    nginx.service    true
-```
-
-The output shows skipped and failed hosts with their error.
+All commands accept `--json` to give the raw JSON output. All commands accept
+broadcast targets, such as `_all` or a label selector, and give one result for
+each host.
 
 ## Supported platforms
 
-| OS family | Support |
-| --------- | ------- |
-| Debian    | Full    |
-| Darwin    | Skipped |
-| Linux     | Skipped |
+| OS family | Read    | Write   |
+| --------- | ------- | ------- |
+| Debian    | Full    | Full    |
+| Linux     | Full    | Skipped |
+| Darwin    | Skipped | Skipped |
 
-On a platform that is not supported, service operations return
-`status: skipped`. They do not fail. Refer to
-[Platform Detection](../sdk/platform/detection.md) for how osapi finds the OS
-family.
-
-## Container behavior
-
-In a container, service operations return `status: skipped`. The provider
-returns `ErrUnsupported`, because `systemctl` needs systemd as PID 1. A standard
-container does not have it.
+In a container, an agent reads the services and does not write them: the
+services of the host are not the container's to manage.
 
 ## Permissions
 
 | Operation                                                     | Permission      |
 | ------------------------------------------------------------- | --------------- |
 | List, Get                                                     | `service:read`  |
-| Start, Stop, Restart, Enable, Disable, Create, Update, Delete | `service:write` |
+| Create, Update, Delete, Start, Stop, Restart, Enable, Disable | `service:write` |
 
-To list and examine services, you need `service:read`. All built-in roles
-(`admin`, `write`, `read`) have it. The operations that change services need
-`service:write`. The `admin` and `write` roles have it.
+All built-in roles (`admin`, `write`, `read`) have `service:read`. The `admin`
+and `write` roles have `service:write`.
 
 ## Related
 
+- [service](../reference/behaviors/service/service.md): each method, with its
+  input, its output and its examples
 - [CLI Reference](../usage/cli/client/node/service/service.mdx): the service
   commands
 - [SDK Reference](../sdk/client/services/service.md): the service of the SDK
-- [Platform Detection](../sdk/platform/detection.md): how osapi finds the OS
-  family
-- [Configuration](../usage/configuration.md): all configuration settings
+- [File management](file-management.md): upload the unit file

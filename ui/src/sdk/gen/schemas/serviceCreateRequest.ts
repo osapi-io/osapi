@@ -7,10 +7,14 @@
 
 export interface ServiceCreateRequest {
   /**
-     * Service unit name.
+     * The service, such as app for osapi-app.service
      * @pattern ^[a-zA-Z0-9_@.-]+$
      */
   name: string;
-  /** Object Store reference for the unit file. */
+  /**
+     * The object that holds the unit file, from osapi client file upload
+     * @minLength 1
+     * @maxLength 255
+     */
   object: string;
 }

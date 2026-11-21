@@ -59,6 +59,10 @@ type Host struct {
 	FileState provider.FileState
 	// FileStateBucket is the KV bucket of FileState.
 	FileStateBucket string
+	// Objects reads the objects that osapi stores, such as a file uploaded
+	// with osapi client file upload. It is nil when the agent has no object
+	// store.
+	Objects Objects
 	// Settings is the behavior's decoded settings, as declared with
 	// behavior.Config, or its defaults before the config is read.
 	Settings any
@@ -93,15 +97,29 @@ type runner struct {
 	exec Exec
 }
 
-// Execute runs name with args, and is its output.
+// Execute runs name with args, and is its output. The context says that
+// gohai runs it, which FromGohai reads.
 func (r runner) Execute(
 	ctx context.Context,
 	name string,
 	args ...string,
 ) ([]byte, error) {
-	out, err := r.exec.RunCmd(ctx, name, args)
+	out, err := r.exec.RunCmd(context.WithValue(ctx, gohaiKey{}, true), name, args)
 
 	return []byte(out), err
+}
+
+// gohaiKey marks the context of a command that gohai runs.
+type gohaiKey struct{}
+
+// FromGohai reports whether gohai runs the command of ctx, through Sources.
+// The tests of a behavior read it: a read of a host fact goes through gohai.
+func FromGohai(
+	ctx context.Context,
+) bool {
+	v, _ := ctx.Value(gohaiKey{}).(bool)
+
+	return v
 }
 
 // Time is the time on the host: h.Now, or time.Now when the host gives none.
@@ -191,4 +209,12 @@ func Build(
 	h.Required = required
 
 	return b.Provider(h.Platform, h)
+}
+
+// Objects reads the objects of the object store of the fleet.
+type Objects interface {
+	// Object is the content of the object name, and the content type that
+	// its uploader gave it: raw, or template. An object that is not there
+	// is an error that wraps behavior.ErrNotFound.
+	Object(ctx context.Context, name string) (content []byte, contentType string, err error)
 }

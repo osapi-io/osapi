@@ -38,10 +38,10 @@ the same.
 
 ### Types (2)
 
-| NAME                     | INPUT       | OUTPUT                                                       |
-| ------------------------ | ----------- | ------------------------------------------------------------ |
-| [list](#method-list)     | ListInput   | []Available &#123; name, current_version, new_version &#125; |
-| [update](#method-update) | UpdateInput | Result &#123; changed &#125;                                 |
+| NAME                     | INPUT       | OUTPUT                                                        |
+| ------------------------ | ----------- | ------------------------------------------------------------- |
+| [list](#method-list)     | ListInput   | \[]Available &#123; name, current_version, new_version &#125; |
+| [update](#method-update) | UpdateInput | Result &#123; changed &#125;                                  |
 
 ### Settings (0)
 
@@ -70,7 +70,7 @@ None. Declare them with behavior.Config.
 | Permission  | updatepackages:read                                                                                                                                            |
 | Command     | [osapi client node updatepackages list](../../../usage/cli/client/node/updatepackages/list.md)                                                                 |
 | Input type  | ListInput                                                                                                                                                      |
-| Output type | []Available                                                                                                                                                    |
+| Output type | \[]Available                                                                                                                                                   |
 
 ### Input (0)
 
@@ -86,9 +86,9 @@ None. The method takes no input; its command needs only --target.
 
 ### Examples (1)
 
-| EXAMPLE     | INPUT  | OUTPUT                                                                                                                                                     |
-| ----------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Two updates | (none) | [current_version=8.5.0-2ubuntu10, name=curl, new_version=8.5.0-2ubuntu10.1] [current_version=3.0.13-0ubuntu3, name=openssl, new_version=3.0.13-0ubuntu3.1] |
+| EXAMPLE     | INPUT  | OUTPUT                                                                                                                                                       |
+| ----------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Two updates | (none) | \[current_version=8.5.0-2ubuntu10, name=curl, new_version=8.5.0-2ubuntu10.1] \[current_version=3.0.13-0ubuntu3, name=openssl, new_version=3.0.13-0ubuntu3.1] |
 
 ## Method update
 

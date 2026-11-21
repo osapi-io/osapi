@@ -118,9 +118,9 @@ var synonyms = map[string]string{
 // readVerbs are the names a read method may have.
 var readVerbs = map[string]bool{"list": true, "get": true, "status": true}
 
-// writeVerbs are the names a write method may have. A write named for an
-// action, such as restart, would be served as a create at the collection's
-// route, so it is refused until the platform has action methods.
+// writeVerbs are the names a write method may have. A write named for what
+// it does, such as restart, is an action: Action declares it, and its name is
+// one of the CLI's actions.
 var writeVerbs = map[string]bool{"create": true, "update": true, "delete": true}
 
 var namePattern = regexp.MustCompile(`^[a-z][a-z0-9]*$`)
@@ -346,11 +346,18 @@ func ValidateBehavior(
 		verb := strings.ToLower(m.Name)
 		if use, ok := synonyms[verb]; ok {
 			add(m.Name, RuleVerb, "%q is a synonym; name the method %q", m.Name, use)
+		} else if m.Action && (!command.Actions[verb] || command.Verbs[verb] || readVerbs[verb]) {
+			add(m.Name, RuleVerb, "an action is named for what it does, with one of the CLI's "+
+				"actions (osapi cli command spec get), not %q", m.Name)
 		} else if m.Verb == VerbRead && !readVerbs[verb] {
 			add(m.Name, RuleVerb, "a read is named list, get or status, not %q", m.Name)
-		} else if m.Verb == VerbWrite && !writeVerbs[verb] {
+		} else if m.Verb == VerbWrite && !m.Action && !writeVerbs[verb] {
 			add(m.Name, RuleVerb, "a write is named create, update or delete, not %q; "+
-				"action methods such as restart are not supported yet", m.Name)
+				"declare a write named for what it does, such as restart, with behavior.Action", m.Name)
+		}
+		if m.AlwaysChanges && !m.Action {
+			add(m.Name, RuleVerb, ".Always is for an action, such as restart; a create, update or "+
+				"delete compares the host with its input and changes nothing when they agree")
 		}
 		// The examples are the command lines on the CLI page of the method,
 		// and the generated tests send each one. The tests also check each
