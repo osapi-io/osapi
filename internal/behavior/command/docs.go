@@ -145,6 +145,13 @@ func IndexPage(
 			strings.Join(progs, ", "),
 		)
 	}
+	for _, pp := range b.PlatformRuns {
+		fmt.Fprintf(&sb, "\nOn %s it also runs %s.\n", pp.Platform, ticked(pp.Programs))
+	}
+	if len(b.RunsIfPresent) > 0 {
+		fmt.Fprintf(&sb, "\nIt runs %s when the host has it, and reads without it otherwise.\n",
+			ticked(b.RunsIfPresent))
+	}
 
 	if len(b.Writes) > 0 {
 		paths := make([]string, 0, len(b.Writes))
@@ -509,4 +516,16 @@ func ExampleFlags(
 	input any,
 ) string {
 	return "--target " + exampleHost + exampleArgs(input)
+}
+
+// ticked is programs in backticks, joined with commas.
+func ticked(
+	programs []string,
+) string {
+	out := make([]string, 0, len(programs))
+	for _, p := range programs {
+		out = append(out, "`"+p+"`")
+	}
+
+	return strings.Join(out, ", ")
 }

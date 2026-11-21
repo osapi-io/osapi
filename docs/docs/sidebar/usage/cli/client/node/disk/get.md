@@ -3,8 +3,9 @@
 Get the disk usage of the host.
 
 Reads the size, the used space and the free space of each local filesystem, in
-bytes, from df: ext4, xfs and btrfs on Linux, and apfs and hfs on macOS. Network
-and special filesystems are left out.
+bytes: the mounts of /proc/mounts on Linux and of mount on macOS, with their
+sizes from df. Local is ext4, xfs and btrfs on Linux, and apfs and hfs on macOS.
+Network and special filesystems are left out.
 
 ```bash
 osapi client node disk get [flags]

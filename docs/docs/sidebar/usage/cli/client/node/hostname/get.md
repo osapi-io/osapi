@@ -2,8 +2,8 @@
 
 Get the hostname of the host.
 
-Reads the kernel's hostname: /proc/sys/kernel/hostname on Linux, and
-kern.hostname on macOS.
+Reads the host's name as the hostname command prints it, on Linux and on macOS.
+It makes no DNS lookup.
 
 ```bash
 osapi client node hostname get [flags]

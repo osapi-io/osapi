@@ -20,7 +20,10 @@
 
 package behavior
 
-import "strings"
+import (
+	"slices"
+	"strings"
+)
 
 // Example is one sample call of a method, used for the docs pages.
 type Example struct {
@@ -36,6 +39,37 @@ type Example struct {
 	// built from Given and check its Output and Effects; see HostOption.
 	Given   []Given  `json:"given,omitempty"`
 	Effects []Effect `json:"effects,omitempty"`
+	// Platforms limits the example to these platforms, as Platform names
+	// them; OnPlatform sets it. An example with none runs on each platform
+	// the method serves.
+	Platforms []string `json:"platforms,omitempty"`
+}
+
+// OnPlatform limits an example to platforms, for a read whose answer is
+// the platform's own, such as the name of the operating system: an Ubuntu
+// host reads ubuntu, and a Mac reads darwin. The provider tests run the
+// example only with these platforms' providers, and each platform the
+// method serves must still have an example.
+func OnPlatform(
+	platforms ...string,
+) HostOption {
+	return examplePlatforms(platforms)
+}
+
+// examplePlatforms is the HostOption of OnPlatform.
+type examplePlatforms []string
+
+func (p examplePlatforms) applyExample(
+	e *Example,
+) {
+	e.Platforms = append(e.Platforms, p...)
+}
+
+// RunsOn reports whether the example runs on platform.
+func (e Example) RunsOn(
+	platform string,
+) bool {
+	return len(e.Platforms) == 0 || slices.Contains(e.Platforms, platform)
 }
 
 // Refusal is a call a method fails: an input it rejects, or a host it cannot

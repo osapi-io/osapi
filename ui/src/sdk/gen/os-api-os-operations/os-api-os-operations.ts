@@ -54,7 +54,7 @@ export const getGetNodeOsUrl = (hostname: string,) => {
 }
 
 /**
- * Reads the distribution and its version: the ID and VERSION_ID of /etc/os-release on Linux, and the system type and product version that sysctl gives on macOS, such as darwin 15.5.
+ * Reads the distribution and its version: the ID and VERSION_ID of /etc/os-release on Linux, and darwin with the ProductVersion of sw_vers on macOS, such as darwin 15.5.
  * @summary Get the operating system of the host
  */
 export const getNodeOs = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeOsResponse> => {

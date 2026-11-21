@@ -14,7 +14,7 @@ var diskGetCmd = &cobra.Command{
 	Annotations: map[string]string{reference.Permission: "disk:read"},
 	Args:        cobra.NoArgs,
 	Example:     "  # A host with one local filesystem\n  osapi client node disk get --target web-01",
-	Long:        "Reads the size, the used space and the free space of each local filesystem, in bytes, from df: ext4, xfs and btrfs on Linux, and apfs and hfs on macOS. Network and special filesystems are left out.",
+	Long:        "Reads the size, the used space and the free space of each local filesystem, in bytes: the mounts of /proc/mounts on Linux and of mount on macOS, with their sizes from df. Local is ext4, xfs and btrfs on Linux, and apfs and hfs on macOS. Network and special filesystems are left out.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("target")
 

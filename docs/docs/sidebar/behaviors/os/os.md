@@ -26,10 +26,9 @@ Get the operating system of target hosts.
 
 On `linux`, `darwin`. On any other platform its methods report `skipped`.
 
-It runs `sysctl`, which the host must have installed. `osapi agent start`
-warns about any that are missing.
+On darwin it also runs `sw_vers`.
 
-In a trace, a call is the span `behavior.os.<method>`, with `exec sysctl` under it.
+In a trace, a call is the span `behavior.os.<method>`, with `exec sw_vers` under it.
 
 ## Methods
 

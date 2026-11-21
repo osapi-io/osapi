@@ -336,7 +336,7 @@ func ChildSpans(
 	}
 	all(b, func(x *Behavior) {
 		sudo, runs := x.Programs("")
-		for _, p := range append(sudo, runs...) {
+		for _, p := range append(append(sudo, runs...), x.RunsIfPresent...) {
 			add("exec " + p)
 		}
 	})

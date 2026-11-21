@@ -29,10 +29,10 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Node,
 	behavior.API,
 	behavior.CLI,
-	// Linux reads /proc/meminfo; macOS reads its page counts from sysctl.
-	behavior.Platform(behavior.PlatformLinux, newLinux),
-	behavior.Platform(behavior.PlatformDarwin, newDarwin),
-	behavior.Runs("sysctl"),
+	behavior.Platform(behavior.PlatformLinux, newReader),
+	behavior.Platform(behavior.PlatformDarwin, newReader),
+	// gohai reads /proc/meminfo on Linux, and sysctl and vm_stat on macOS.
+	behavior.RunsOnPlatform(behavior.PlatformDarwin, "sysctl", "vm_stat"),
 	behavior.Read("get", Get).
 		Describe("Get the memory usage of the host").
 		Explain("Reads the total, the free and the used memory, in bytes. Used is the "+
@@ -45,8 +45,9 @@ var Behavior = behavior.Register(behavior.Define(
 				"MemTotal:        8388608 kB\nMemFree:         2097152 kB\nMemAvailable:    4194304 kB\n",
 			),
 			behavior.Prints("sysctl -n hw.memsize", "8589934592\n"),
-			behavior.Prints("sysctl -n hw.pagesize", "4096\n"),
-			behavior.Prints("sysctl -n vm.page_free_count", "524288\n"),
-			behavior.Prints("sysctl -n vm.page_speculative_count", "524288\n"),
+			behavior.Prints("vm_stat", "Mach Virtual Memory Statistics: (page size of 4096 bytes)\n"+
+				"Pages free:                              524288.\n"+
+				"Pages active:                            786432.\n"+
+				"Pages inactive:                          524288.\n"),
 		),
 ))

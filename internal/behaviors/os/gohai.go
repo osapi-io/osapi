@@ -18,40 +18,36 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package load
+package os
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/avfs/avfs"
+	"github.com/osapi-io/gohai/pkg/gohai/collectors/platform"
+	"github.com/osapi-io/gohai/pkg/gohai/source"
 
 	"github.com/osapi-io/osapi/internal/behavior/host"
 )
 
-// procLoadavg is the kernel's load averages.
-const procLoadavg = "/proc/loadavg"
-
-// linux reads /proc/loadavg.
-type linux struct {
-	fs avfs.VFS
+// reader reads the distribution with gohai's platform collector, on Linux
+// and on macOS, through the host's sources.
+type reader struct {
+	src source.Sources
 }
 
-// newLinux is the provider on Linux.
-func newLinux(
+func newReader(
 	h host.Host,
 ) (Provider, error) {
-	return &linux{fs: h.FS}, nil
+	return &reader{src: h.Sources()}, nil
 }
 
-// Load is the first three fields of /proc/loadavg.
-func (l *linux) Load(
-	_ context.Context,
-) (Averages, error) {
-	data, err := l.fs.ReadFile(procLoadavg)
-	if err != nil {
-		return Averages{}, fmt.Errorf("read %s: %w", procLoadavg, err)
-	}
+// Release is the distribution and its version: ubuntu 24.04, darwin 15.5.
+// The platform collector reads what it can, and does not fail.
+func (r *reader) Release(
+	ctx context.Context,
+) (Release, error) {
+	got, _ := platform.NewWith(r.src).Collect(ctx, nil)
+	info, _ := got.(*platform.Info)
 
-	return averages(string(data))
+	return Release{Distribution: info.Name, Version: info.Version}, nil
 }

@@ -18,58 +18,39 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package os
+package uptime
 
 import (
 	"context"
 	"fmt"
-	"strings"
+	"time"
 
-	"github.com/avfs/avfs"
+	gohai "github.com/osapi-io/gohai/pkg/gohai/collectors/uptime"
+	"github.com/osapi-io/gohai/pkg/gohai/source"
 
 	"github.com/osapi-io/osapi/internal/behavior/host"
 )
 
-// osRelease names the distribution: ID and VERSION_ID.
-const osRelease = "/etc/os-release"
-
-// linux reads /etc/os-release.
-type linux struct {
-	fs avfs.VFS
+// reader reads the uptime with gohai's uptime collector, on Linux and on
+// macOS, through the host's sources.
+type reader struct {
+	src source.Sources
 }
 
-// newLinux is the provider on Linux.
-func newLinux(
+func newReader(
 	h host.Host,
 ) (Provider, error) {
-	return &linux{fs: h.FS}, nil
+	return &reader{src: h.Sources()}, nil
 }
 
-// Release is the ID and VERSION_ID of /etc/os-release, without quotes.
-func (l *linux) Release(
-	_ context.Context,
-) (Release, error) {
-	data, err := l.fs.ReadFile(osRelease)
+// Uptime is how long the host has run since it booted.
+func (r *reader) Uptime(
+	ctx context.Context,
+) (time.Duration, error) {
+	got, err := gohai.NewWith(r.src).Collect(ctx, nil)
 	if err != nil {
-		return Release{}, fmt.Errorf("read %s: %w", osRelease, err)
-	}
-	var info Release
-	for _, line := range strings.Split(string(data), "\n") {
-		key, value, ok := strings.Cut(line, "=")
-		if !ok {
-			continue
-		}
-		value = strings.Trim(value, `"'`)
-		switch key {
-		case "ID":
-			info.Distribution = value
-		case "VERSION_ID":
-			info.Version = value
-		}
-	}
-	if info.Distribution == "" {
-		return Release{}, fmt.Errorf("%s has no ID", osRelease)
+		return 0, fmt.Errorf("read uptime: %w", err)
 	}
 
-	return info, nil
+	return time.Duration(got.(*gohai.Info).Seconds) * time.Second, nil
 }

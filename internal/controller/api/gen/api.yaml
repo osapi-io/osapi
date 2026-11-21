@@ -6193,8 +6193,10 @@ paths:
     get:
       description: >-
         Reads the size, the used space and the free space of each local
-        filesystem, in bytes, from df: ext4, xfs and btrfs on Linux, and apfs
-        and hfs on macOS. Network and special filesystems are left out.
+        filesystem, in bytes: the mounts of /proc/mounts on Linux and of mount
+        on macOS, with their sizes from df. Local is ext4, xfs and btrfs on
+        Linux, and apfs and hfs on macOS. Network and special filesystems are
+        left out.
       operationId: GetNodeDisk
       parameters:
         - $ref: '#/components/parameters/Hostname'
@@ -6239,8 +6241,8 @@ paths:
     servers: []
     get:
       description: >-
-        Reads the kernel's hostname: /proc/sys/kernel/hostname on Linux, and
-        kern.hostname on macOS.
+        Reads the host's name as the hostname command prints it, on Linux and on
+        macOS. It makes no DNS lookup.
       operationId: GetNodeHostname
       parameters:
         - $ref: '#/components/parameters/Hostname'
@@ -6430,8 +6432,8 @@ paths:
     get:
       description: >-
         Reads the distribution and its version: the ID and VERSION_ID of
-        /etc/os-release on Linux, and the system type and product version that
-        sysctl gives on macOS, such as darwin 15.5.
+        /etc/os-release on Linux, and darwin with the ProductVersion of sw_vers
+        on macOS, such as darwin 15.5.
       operationId: GetNodeOs
       parameters:
         - $ref: '#/components/parameters/Hostname'

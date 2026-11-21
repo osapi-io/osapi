@@ -208,6 +208,30 @@ func (s *CheckPublicTestSuite) TestCheck() {
 			},
 		},
 		{
+			name:     "when an example runs only on its platform",
+			platform: onDebian(nil),
+			methods: []behavior.Option{
+				behavior.Read("get", getNote).Describe("Get it").
+					Example("The note on debian", getIn{}, noteOut{Text: "hello"},
+						behavior.OnPlatform("debian"),
+						behavior.Prints("cat /etc/note", "hello")).
+					Example("A wrong output for a Mac, not run here", getIn{}, noteOut{Text: "nope"},
+						behavior.OnPlatform(behavior.PlatformDarwin),
+						behavior.Prints("cat /etc/note", "hello")),
+			},
+		},
+		{
+			name:     "when no example runs on a platform the method serves",
+			platform: onDebian(nil),
+			methods: []behavior.Option{
+				behavior.Read("get", getNote).Describe("Get it").
+					Example("Only for a Mac", getIn{}, noteOut{Text: "hello"},
+						behavior.OnPlatform(behavior.PlatformDarwin),
+						behavior.Prints("cat /etc/note", "hello")),
+			},
+			want: []string{"note get on debian: no example runs on this platform"},
+		},
+		{
 			name:     "when the programs are declared by a behavior it requires",
 			platform: onDebian(nil),
 			programs: []behavior.Option{

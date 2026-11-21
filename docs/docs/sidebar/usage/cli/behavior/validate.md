@@ -84,6 +84,9 @@ The rules:
 `go test` runs the examples and refusals of each behavior on a fake host, and
 checks these. Each failure ends with its fix:
 
+- `platforms`: Each platform that a method serves runs at least one of its
+  examples. Fix: Add an example for the platform, or name it in an example's
+  OnPlatform.
 - `output`: Each example runs without an error, and returns the output that it
   declares. Fix: Correct the output of the example, or the provider that returns
   a different one.

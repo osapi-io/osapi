@@ -30,19 +30,23 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Node,
 	behavior.API,
 	behavior.CLI,
-	// Linux reads /etc/os-release; macOS reads its version from sysctl.
-	behavior.Platform(behavior.PlatformLinux, newLinux),
-	behavior.Platform(behavior.PlatformDarwin, newDarwin),
-	behavior.Runs("sysctl"),
+	// gohai reads /etc/os-release on Linux, and sw_vers on macOS.
+	behavior.Platform(behavior.PlatformLinux, newReader),
+	behavior.Platform(behavior.PlatformDarwin, newReader),
+	behavior.RunsOnPlatform(behavior.PlatformDarwin, "sw_vers"),
 	behavior.Read("get", Get).
 		Describe("Get the operating system of the host").
 		Explain("Reads the distribution and its version: the ID and VERSION_ID of "+
-			"/etc/os-release on Linux, and the system type and product version that "+
-			"sysctl gives on macOS, such as darwin 15.5.").
+			"/etc/os-release on Linux, and darwin with the ProductVersion of sw_vers on "+
+			"macOS, such as darwin 15.5.").
 		Example("An Ubuntu host", GetInput{},
 			Entry{OSInfo: Release{Distribution: "ubuntu", Version: "24.04"}},
+			behavior.OnPlatform(behavior.PlatformLinux),
 			behavior.Exists("/etc/os-release", "NAME=\"Ubuntu\"\nID=ubuntu\nVERSION_ID=\"24.04\"\n"),
-			behavior.Prints("sysctl -n kern.ostype", "Ubuntu\n"),
-			behavior.Prints("sysctl -n kern.osproductversion", "24.04\n"),
+		).
+		Example("A Mac", GetInput{},
+			Entry{OSInfo: Release{Distribution: "darwin", Version: "15.5"}},
+			behavior.OnPlatform(behavior.PlatformDarwin),
+			behavior.Prints("sw_vers", "ProductName:\t\tmacOS\nProductVersion:\t\t15.5\nBuildVersion:\t\t24F74\n"),
 		),
 ))

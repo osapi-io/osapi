@@ -177,12 +177,18 @@ const (
 	TestFileSpan   = "file-span"
 	TestKeepsState = "keeps-state"
 	TestCall       = "call"
+	TestPlatforms  = "platforms"
 )
 
 // TestChecks are what the tests of every behavior check, when go test runs
 // its examples and refusals on a fake host. behavior validate --help prints
 // each one, and the message of each failure ends with its fix.
 var TestChecks = guide.Checks{
+	{
+		Rule:     TestPlatforms,
+		Requires: "Each platform that a method serves runs at least one of its examples.",
+		Fix:      "Add an example for the platform, or name it in an example's OnPlatform.",
+	},
 	{
 		Rule:     TestOutput,
 		Requires: "Each example runs without an error, and returns the output that it declares.",

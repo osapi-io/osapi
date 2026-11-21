@@ -26,8 +26,7 @@ Get the load averages of target hosts.
 
 On `linux`, `darwin`. On any other platform its methods report `skipped`.
 
-It runs `sysctl`, which the host must have installed. `osapi agent start`
-warns about any that are missing.
+On darwin it also runs `sysctl`.
 
 In a trace, a call is the span `behavior.load.<method>`, with `exec sysctl` under it.
 

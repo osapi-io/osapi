@@ -54,7 +54,7 @@ export const getGetNodeDiskUrl = (hostname: string,) => {
 }
 
 /**
- * Reads the size, the used space and the free space of each local filesystem, in bytes, from df: ext4, xfs and btrfs on Linux, and apfs and hfs on macOS. Network and special filesystems are left out.
+ * Reads the size, the used space and the free space of each local filesystem, in bytes: the mounts of /proc/mounts on Linux and of mount on macOS, with their sizes from df. Local is ext4, xfs and btrfs on Linux, and apfs and hfs on macOS. Network and special filesystems are left out.
  * @summary Get the disk usage of the host
  */
 export const getNodeDisk = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeDiskResponse> => {

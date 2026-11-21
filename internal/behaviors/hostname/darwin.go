@@ -22,8 +22,8 @@ package hostname
 
 import (
 	"context"
-	"fmt"
-	"strings"
+
+	"github.com/osapi-io/gohai/pkg/gohai/source"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
@@ -32,26 +32,21 @@ import (
 // darwin reads kern.hostname. It does not set the name: update runs only on
 // debian.
 type darwin struct {
-	exec host.Exec
+	src source.Sources
 }
 
 // newDarwin is the provider on macOS.
 func newDarwin(
 	h host.Host,
 ) (Provider, error) {
-	return &darwin{exec: h.Exec}, nil
+	return &darwin{src: h.Sources()}, nil
 }
 
-// Hostname is kern.hostname.
+// Hostname is the host's name, read with gohai.
 func (d *darwin) Hostname(
 	ctx context.Context,
 ) (string, error) {
-	out, err := d.exec.RunCmd(ctx, "sysctl", []string{"-n", "kern.hostname"})
-	if err != nil {
-		return "", fmt.Errorf("read kern.hostname: %w", err)
-	}
-
-	return strings.TrimSpace(out), nil
+	return machineName(ctx, d.src)
 }
 
 // SetHostname is unsupported on macOS. The agent does not call it, because

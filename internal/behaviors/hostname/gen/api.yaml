@@ -124,7 +124,7 @@ openapi: 3.0.0
 paths:
   /api/node/{hostname}/hostname:
     get:
-      description: 'Reads the kernel''s hostname: /proc/sys/kernel/hostname on Linux, and kern.hostname on macOS.'
+      description: Reads the host's name as the hostname command prints it, on Linux and on macOS. It makes no DNS lookup.
       operationId: GetNodeHostname
       parameters:
         - $ref: '#/components/parameters/Hostname'

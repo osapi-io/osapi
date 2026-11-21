@@ -127,6 +127,18 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindOption,
+			Name: "RunsOnPlatform(platform, programs...)",
+			Does: "Lists the programs that the providers run without sudo on one platform only. linux is each platform that is not darwin. The agent and the integration test ask for them on that platform only.",
+			When: "For a program that only one platform has, such as vm_stat or sw_vers on darwin.",
+		},
+		{
+			Kind: KindOption,
+			Name: "RunsIfPresent(programs...)",
+			Does: "Lists the programs that the providers run only when the host has them. The fake host permits them, and the agent and the integration test do not ask for them.",
+			When: "For a program that a provider reads without, when it is missing, such as zfs.",
+		},
+		{
+			Kind: KindOption,
 			Name: `Writes("/etc/x.d/osapi-*.conf")`,
 			Does: "Lists the paths that the providers write, remove or change the mode of. Each such call is a file span in a trace. \"*\" is the path that the caller names.",
 			When: "For each path, also when a required behavior, such as managedfile, does the write.",

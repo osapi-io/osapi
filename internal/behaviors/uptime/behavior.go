@@ -32,10 +32,10 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Node,
 	behavior.API,
 	behavior.CLI,
-	// Linux reads /proc/uptime; macOS reads its boot time from sysctl.
-	behavior.Platform(behavior.PlatformLinux, newLinux),
-	behavior.Platform(behavior.PlatformDarwin, newDarwin),
-	behavior.Runs("sysctl"),
+	// gohai reads /proc/uptime on Linux, and the boot time from sysctl on macOS.
+	behavior.Platform(behavior.PlatformLinux, newReader),
+	behavior.Platform(behavior.PlatformDarwin, newReader),
+	behavior.RunsOnPlatform(behavior.PlatformDarwin, "sysctl"),
 	behavior.Read("get", Get).
 		Describe("Get the uptime of the host").
 		Explain("Reads how long the host has run since it booted: /proc/uptime on Linux, "+
@@ -44,6 +44,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Example("A host up for a day, two hours and five minutes", GetInput{},
 			Entry{Uptime: "1 day, 2 hours, 5 minutes", Seconds: 93900},
 			behavior.Exists("/proc/uptime", "93900.42 180001.15\n"),
+			behavior.Exists("/proc/stat", "btime 1767229145\n"),
 			behavior.Prints("sysctl -n kern.boottime",
 				"{ sec = 1767229145, usec = 0 } Thu Jan  1 00:59:05 2026"),
 		),

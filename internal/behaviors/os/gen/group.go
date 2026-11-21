@@ -53,8 +53,9 @@ var Group = endpoint.Define(
 		Describe("Get the operating system of the host").
 		Permission("os:read").
 		Returns("Each target host's result.").
-		Explain("Reads the distribution and its version: the ID and VERSION_ID of /etc/os-release on Linux, and the system type and product version that sysctl gives on macOS, such as darwin 15.5.").
-		Example("--target web-01", "An Ubuntu host"),
+		Explain("Reads the distribution and its version: the ID and VERSION_ID of /etc/os-release on Linux, and darwin with the ProductVersion of sw_vers on macOS, such as darwin 15.5.").
+		Example("--target web-01", "An Ubuntu host").
+		Example("--target web-01", "A Mac"),
 )
 
 func init() {

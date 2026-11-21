@@ -18,35 +18,40 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package load
+package memory
 
 import (
 	"context"
 	"fmt"
 
+	gohai "github.com/osapi-io/gohai/pkg/gohai/collectors/memory"
+	"github.com/osapi-io/gohai/pkg/gohai/source"
+
 	"github.com/osapi-io/osapi/internal/behavior/host"
 )
 
-// darwin reads vm.loadavg from sysctl.
-type darwin struct {
-	exec host.Exec
+// reader reads the memory with gohai's memory collector, on Linux and on
+// macOS, through the host's sources.
+type reader struct {
+	src source.Sources
 }
 
-// newDarwin is the provider on macOS.
-func newDarwin(
+func newReader(
 	h host.Host,
 ) (Provider, error) {
-	return &darwin{exec: h.Exec}, nil
+	return &reader{src: h.Sources()}, nil
 }
 
-// Load is vm.loadavg: { 0.32 0.28 0.25 }.
-func (d *darwin) Load(
+// Memory is the total, the free and the used memory, in bytes. Used is the
+// total less what is available.
+func (r *reader) Memory(
 	ctx context.Context,
-) (Averages, error) {
-	out, err := d.exec.RunCmd(ctx, "sysctl", []string{"-n", "vm.loadavg"})
+) (Usage, error) {
+	got, err := gohai.NewWith(r.src).Collect(ctx, nil)
 	if err != nil {
-		return Averages{}, fmt.Errorf("read vm.loadavg: %w", err)
+		return Usage{}, fmt.Errorf("read memory: %w", err)
 	}
+	m := got.(*gohai.Info)
 
-	return averages(out)
+	return Usage{Total: int(m.Total), Free: int(m.Free), Used: int(m.Used)}, nil
 }
