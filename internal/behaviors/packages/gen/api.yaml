@@ -59,7 +59,6 @@ components:
             validate: omitempty,max=255,package_version
       required:
         - name
-        - version
       type: object
     PackageCreateResponse:
       properties:

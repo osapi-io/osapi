@@ -3528,7 +3528,7 @@ type PackageCreateRequest struct {
 	Name string `json:"name" validate:"required,max=255,package_name"`
 
 	// Version The version to install, such as 8.5.0-2ubuntu10; the newest when empty
-	Version string `json:"version" validate:"omitempty,max=255,package_version"`
+	Version *string `json:"version,omitempty" validate:"omitempty,max=255,package_version"`
 }
 
 // PackageCreateResponse defines model for PackageCreateResponse.

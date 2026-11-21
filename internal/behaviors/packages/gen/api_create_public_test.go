@@ -32,7 +32,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/package",
-				Body:   `{"name":"tree","version":""}`,
+				Body:   `{"name":"tree"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -49,7 +49,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/_all/package",
-				Body:   `{"name":"tree","version":""}`,
+				Body:   `{"name":"tree"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -68,7 +68,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/package",
-				Body:   `{"name":"tree","version":""}`,
+				Body:   `{"name":"tree"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -85,7 +85,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/package",
-				Body:   `{"name":"tree","version":""}`,
+				Body:   `{"name":"tree"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -102,7 +102,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/package",
-				Body:   `{"name":"tree","version":""}`,
+				Body:   `{"name":"tree"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -119,7 +119,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/package",
-				Body:   `{"name":"tree","version":""}`,
+				Body:   `{"name":"tree"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -134,7 +134,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/_all/package",
-				Body:   `{"name":"tree","version":""}`,
+				Body:   `{"name":"tree"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -156,7 +156,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/nowhere/package",
-				Body:   `{"name":"tree","version":""}`,
+				Body:   `{"name":"tree"}`,
 			},
 			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
@@ -166,7 +166,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node//package",
-				Body:   `{"name":"tree","version":""}`,
+				Body:   `{"name":"tree"}`,
 			},
 			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
@@ -176,7 +176,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/package",
-				Body:   `{"name":"","version":""}`,
+				Body:   `{"name":""}`,
 			},
 			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
@@ -206,7 +206,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/package",
-				Body:   `{"name":"-oAPT::Get=x","version":""}`,
+				Body:   `{"name":"-oAPT::Get=x"}`,
 			},
 			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
@@ -216,7 +216,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/package",
-				Body:   `{"name":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","version":""}`,
+				Body:   `{"name":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
 			},
 			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
@@ -252,7 +252,7 @@ func (s *APICreatePublicTestSuite) TestCreateRBACHTTP() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/package",
-				Body:   `{"name":"tree","version":""}`,
+				Body:   `{"name":"tree"}`,
 			},
 			Token:    servertest.NoToken,
 			WantCode: http.StatusUnauthorized,
@@ -262,7 +262,7 @@ func (s *APICreatePublicTestSuite) TestCreateRBACHTTP() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/package",
-				Body:   `{"name":"tree","version":""}`,
+				Body:   `{"name":"tree"}`,
 			},
 			Token:    servertest.Lacking,
 			WantCode: http.StatusForbidden,
@@ -272,7 +272,7 @@ func (s *APICreatePublicTestSuite) TestCreateRBACHTTP() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/package",
-				Body:   `{"name":"tree","version":""}`,
+				Body:   `{"name":"tree"}`,
 			},
 			Token:    servertest.Read,
 			WantCode: http.StatusForbidden,
@@ -282,7 +282,7 @@ func (s *APICreatePublicTestSuite) TestCreateRBACHTTP() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/package",
-				Body:   `{"name":"tree","version":""}`,
+				Body:   `{"name":"tree"}`,
 			},
 			Token: servertest.Admin,
 			Job: servertest.Modify(

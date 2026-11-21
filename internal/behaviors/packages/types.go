@@ -31,7 +31,7 @@ type GetInput struct {
 // CreateInput is the package to install.
 type CreateInput struct {
 	Name    string `json:"name"    validate:"required,max=255,package_name"     doc:"The package to install, such as curl"                                   telemetry:"attr"`
-	Version string `json:"version" validate:"omitempty,max=255,package_version" doc:"The version to install, such as 8.5.0-2ubuntu10; the newest when empty"`
+	Version string `json:"version,omitempty" validate:"omitempty,max=255,package_version" doc:"The version to install, such as 8.5.0-2ubuntu10; the newest when empty"`
 }
 
 // DeleteInput is the package to remove.

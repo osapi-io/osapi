@@ -102,6 +102,11 @@ var Checks = guide.Checks{
 		Fix:      rule.Fix,
 	},
 	{
+		Rule:     RuleOptional,
+		Requires: "An optional field of a write's request body, its validate tag starting with omitempty, has omitempty in its json tag too, so the client leaves it out when it is empty.",
+		Fix:      "Add ,omitempty to the field's json tag, such as json:\"version,omitempty\".",
+	},
+	{
 		Rule:     RuleFails,
 		Requires: rule.FailsRequires,
 		Fix:      rule.FailsFix,

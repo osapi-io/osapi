@@ -83,7 +83,7 @@ func (s *CLIPublicTestSuite) TestCommands() {
 			want: commandtest.Request{
 				Method: "POST",
 				Path:   "/api/node/server1/package",
-				Body:   "{\"name\":\"tree\",\"version\":\"\"}",
+				Body:   "{\"name\":\"tree\"}",
 			},
 		},
 		{

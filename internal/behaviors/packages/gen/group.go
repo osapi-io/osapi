@@ -74,7 +74,7 @@ type CreateRequest struct {
 // PackageCreateRequest is the body of package create.
 type PackageCreateRequest struct {
 	Name    string `doc:"The package to install, such as curl" json:"name" validate:"required,max=255,package_name"`
-	Version string `doc:"The version to install, such as 8.5.0-2ubuntu10; the newest when empty" json:"version" validate:"omitempty,max=255,package_version"`
+	Version string `doc:"The version to install, such as 8.5.0-2ubuntu10; the newest when empty" json:"version,omitempty" validate:"omitempty,max=255,package_version"`
 }
 
 // PackageResult is the result of package on one host.
