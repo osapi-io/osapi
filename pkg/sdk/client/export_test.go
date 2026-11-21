@@ -431,53 +431,6 @@ func LogEntryInfoFromGen(
 	return logEntryInfoFromGen(input)
 }
 
-// RouteInfoFromGen exposes the private routeInfoFromGen for testing.
-func RouteInfoFromGen(
-	input gen.RouteInfo,
-) RouteInfo {
-	return routeInfoFromGen(input)
-}
-
-// RouteListCollectionFromGen exposes the private
-// routeListCollectionFromGen for testing.
-func RouteListCollectionFromGen(
-	input *gen.RouteListResponse,
-) Collection[RouteListResult] {
-	return routeListCollectionFromGen(input)
-}
-
-// RouteGetCollectionFromGen exposes the private
-// routeGetCollectionFromGen for testing.
-func RouteGetCollectionFromGen(
-	input *gen.RouteGetResponse,
-) Collection[RouteGetResult] {
-	return routeGetCollectionFromGen(input)
-}
-
-// RouteMutationCollectionFromCreate exposes the private
-// routeMutationCollectionFromCreate for testing.
-func RouteMutationCollectionFromCreate(
-	input *gen.RouteMutationResponse,
-) Collection[RouteMutationResult] {
-	return routeMutationCollectionFromCreate(input)
-}
-
-// RouteMutationCollectionFromUpdate exposes the private
-// routeMutationCollectionFromUpdate for testing.
-func RouteMutationCollectionFromUpdate(
-	input *gen.RouteMutationResponse,
-) Collection[RouteMutationResult] {
-	return routeMutationCollectionFromUpdate(input)
-}
-
-// RouteMutationCollectionFromDelete exposes the private
-// routeMutationCollectionFromDelete for testing.
-func RouteMutationCollectionFromDelete(
-	input *gen.RouteMutationResponse,
-) Collection[RouteMutationResult] {
-	return routeMutationCollectionFromDelete(input)
-}
-
 // ExportNewResponse exposes newResponse for testing.
 func ExportNewResponse[T any](
 	data T,

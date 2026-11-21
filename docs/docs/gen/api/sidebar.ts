@@ -506,46 +506,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Network/Route",
-      link: {
-        type: "doc",
-        id: "gen/api/network-management-api-route-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/get-node-network-route",
-          label: "List network routes",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-node-network-route-by-interface",
-          label: "Get routes for an interface",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-node-network-route",
-          label: "Create routes for an interface",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "gen/api/put-node-network-route",
-          label: "Update routes for an interface",
-          className: "api-method put",
-        },
-        {
-          type: "doc",
-          id: "gen/api/delete-node-network-route",
-          label: "Delete routes for an interface",
-          className: "api-method delete",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Node/NTP",
       link: {
         type: "doc",
@@ -976,6 +936,46 @@ const sidebar: SidebarsConfig = {
           type: "doc",
           id: "gen/api/put-node-network-interface",
           label: "Change the config osapi has of a network interface",
+          className: "api-method put",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Route",
+      link: {
+        type: "doc",
+        id: "gen/api/route-api-network-route-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-network-route",
+          label: "List the routes of the host",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-node-network-route",
+          label: "Drop the routes osapi has of an interface",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-network-route-by-key",
+          label: "Get the routes of an interface",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-network-route",
+          label: "Add static routes to an interface",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-network-route",
+          label: "Change the routes osapi has of an interface",
           className: "api-method put",
         },
       ],

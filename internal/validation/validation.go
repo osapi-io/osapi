@@ -54,6 +54,11 @@ const MinSigningKeyLen = 32
 // an argument.
 var sysctlKeyPattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]*$`)
 
+// interfaceNamePattern is a Linux interface name: up to 15 characters, such
+// as eth0, br-lan or eth0.100. A name never starts with a dot or a dash, so it
+// never leaves a directory in a file name.
+var interfaceNamePattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]{0,14}$`)
+
 // TimezonePattern is an IANA timezone name, such as UTC or
 // America/Argentina/Buenos_Aires: segments of letters, digits, _, + and -
 // joined by /, never starting with - and with no dot. It becomes an
@@ -133,6 +138,16 @@ func init() {
 			return facts.IsKnownKey(v[len(facts.Prefix):])
 		}
 		return instance.Var(v, "alphanum") == nil
+	})
+
+	// interface_name accepts a Linux interface name, or an @fact. reference
+	// with a known fact key, which the agent resolves to one.
+	_ = instance.RegisterValidation("interface_name", func(fl validator.FieldLevel) bool {
+		v := fl.Field().String()
+		if strings.HasPrefix(v, facts.Prefix) {
+			return facts.IsKnownKey(v[len(facts.Prefix):])
+		}
+		return interfaceNamePattern.MatchString(v)
 	})
 
 	// ip_or_fact accepts IP addresses (v4/v6) or @fact. prefixed references
@@ -242,6 +257,12 @@ func init() {
 	// spec validates what the server does. A tag without one fails schema
 	// generation rather than being dropped.
 	rule.Register("sysctl_key", rule.Pattern(sysctlKeyPattern.String()))
+	rule.Register(
+		"interface_name",
+		rule.Pattern(
+			`^(@fact\.[a-z0-9_.]+|`+interfaceNamePattern.String()[1:len(interfaceNamePattern.String())-1]+`)$`,
+		),
+	)
 	rule.Register("timezone_name", rule.Pattern(TimezonePattern.String()))
 	rule.Register("package_version", rule.Pattern(PackageVersionPattern.String()))
 	rule.Register("no_linebreak", rule.Pattern(`^[^\r\n]*$`))

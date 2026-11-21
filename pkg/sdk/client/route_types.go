@@ -21,19 +21,25 @@
 package client
 
 import (
+	"fmt"
+
+	openapi_types "github.com/oapi-codegen/runtime/types"
+
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
-// RouteInfo represents a network route entry.
+// RouteInfo is a route of a host's main routing table.
 type RouteInfo struct {
 	Destination string `json:"destination,omitempty"`
 	Gateway     string `json:"gateway,omitempty"`
 	Interface   string `json:"interface,omitempty"`
+	Family      string `json:"family,omitempty"`
 	Metric      int    `json:"metric,omitempty"`
+	Proto       string `json:"proto,omitempty"`
 	Scope       string `json:"scope,omitempty"`
 }
 
-// RouteListResult represents a route list result from a single agent.
+// RouteListResult is the routes of one host.
 type RouteListResult struct {
 	Hostname string      `json:"hostname"`
 	Status   string      `json:"status"`
@@ -41,7 +47,7 @@ type RouteListResult struct {
 	Routes   []RouteInfo `json:"routes,omitempty"`
 }
 
-// RouteGetResult represents a route get result from a single agent.
+// RouteGetResult is the routes of one interface of one host.
 type RouteGetResult struct {
 	Hostname string      `json:"hostname"`
 	Status   string      `json:"status"`
@@ -49,8 +55,8 @@ type RouteGetResult struct {
 	Routes   []RouteInfo `json:"routes,omitempty"`
 }
 
-// RouteMutationResult represents the result of a route create, update,
-// or delete.
+// RouteMutationResult is an interface's routes after a create, an update or
+// a delete on one host.
 type RouteMutationResult struct {
 	Hostname  string `json:"hostname"`
 	Status    string `json:"status"`
@@ -59,139 +65,90 @@ type RouteMutationResult struct {
 	Error     string `json:"error,omitempty"`
 }
 
-// RouteItem represents a single route entry for create/update operations.
+// RouteItem is a static route.
 type RouteItem struct {
 	// To is the destination in CIDR notation. Required.
 	To string
-	// Via is the gateway IP address. Required.
+	// Via is the gateway, of the destination's family. Required.
 	Via string
 	// Metric is the route metric (priority). Optional.
 	Metric *int
 }
 
-// RouteConfigOpts contains options for creating or updating routes.
+// RouteConfigOpts is the routes osapi writes for an interface.
 type RouteConfigOpts struct {
-	// Routes is the list of route entries. Required.
+	// Routes is the routes, one or more. A default route is refused: the
+	// interface's gateway is set with InterfaceService.
 	Routes []RouteItem
 }
 
-// routeInfoFromGen converts a gen.RouteInfo to a RouteInfo.
-func routeInfoFromGen(
-	g gen.RouteInfo,
-) RouteInfo {
-	return RouteInfo{
-		Destination: derefString(g.Destination),
-		Gateway:     derefString(g.Gateway),
-		Interface:   derefString(g.Interface),
-		Metric:      derefInt(g.Metric),
-		Scope:       derefString(g.Scope),
-	}
-}
-
-// routeListCollectionFromGen converts a gen.RouteListResponse
-// to a Collection[RouteListResult].
-func routeListCollectionFromGen(
-	g *gen.RouteListResponse,
-) Collection[RouteListResult] {
-	results := make([]RouteListResult, 0, len(g.Results))
-	for _, r := range g.Results {
-		entry := RouteListResult{
-			Hostname: r.Hostname,
-			Status:   string(r.Status),
-			Error:    derefString(r.Error),
+// routeStrings is each route as the API takes it: <to> via <via>, with
+// metric <n> after it when set.
+func routeStrings(
+	items []RouteItem,
+) []string {
+	out := make([]string, 0, len(items))
+	for _, r := range items {
+		s := r.To + " via " + r.Via
+		if r.Metric != nil {
+			s += fmt.Sprintf(" metric %d", *r.Metric)
 		}
+		out = append(out, s)
+	}
 
-		if r.Routes != nil {
-			routes := make([]RouteInfo, 0, len(*r.Routes))
-			for _, rt := range *r.Routes {
-				routes = append(routes, routeInfoFromGen(rt))
-			}
+	return out
+}
 
-			entry.Routes = routes
+// routeRowsFromGen groups the rows of a list or a get, one per route, into
+// one result per host, in the order each host first answers. A host that
+// failed or was skipped is a result without routes.
+func routeRowsFromGen(
+	rows []gen.NetworkRouteEntry,
+) []RouteGetResult {
+	results := []RouteGetResult{}
+	index := map[string]int{}
+	for _, r := range rows {
+		i, ok := index[r.Hostname]
+		if !ok {
+			i = len(results)
+			index[r.Hostname] = i
+			results = append(results, RouteGetResult{
+				Hostname: r.Hostname,
+				Status:   string(r.Status),
+				Error:    derefString(r.Error),
+			})
 		}
-
-		results = append(results, entry)
-	}
-
-	return Collection[RouteListResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
-	}
-}
-
-// routeGetCollectionFromGen converts a gen.RouteGetResponse
-// to a Collection[RouteGetResult].
-func routeGetCollectionFromGen(
-	g *gen.RouteGetResponse,
-) Collection[RouteGetResult] {
-	results := make([]RouteGetResult, 0, len(g.Results))
-	for _, r := range g.Results {
-		entry := RouteGetResult{
-			Hostname: r.Hostname,
-			Status:   string(r.Status),
-			Error:    derefString(r.Error),
+		if r.Destination != nil {
+			results[i].Routes = append(results[i].Routes, RouteInfo{
+				Destination: *r.Destination,
+				Gateway:     derefString(r.Gateway),
+				Interface:   derefString(r.Interface),
+				Family:      derefString(r.Family),
+				Metric:      derefInt(r.Metric),
+				Proto:       derefString(r.Proto),
+				Scope:       derefString(r.Scope),
+			})
 		}
-
-		if r.Routes != nil {
-			routes := make([]RouteInfo, 0, len(*r.Routes))
-			for _, rt := range *r.Routes {
-				routes = append(routes, routeInfoFromGen(rt))
-			}
-
-			entry.Routes = routes
-		}
-
-		results = append(results, entry)
 	}
 
-	return Collection[RouteGetResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
-	}
+	return results
 }
 
-// routeMutationCollectionFromCreate converts a gen.RouteMutationResponse
-// to a Collection[RouteMutationResult].
-func routeMutationCollectionFromCreate(
-	g *gen.RouteMutationResponse,
+// routeMutationsFromGen is the rows of a create, an update or a delete.
+func routeMutationsFromGen(
+	rows []gen.NetworkRouteResult,
+	jobID *openapi_types.UUID,
 ) Collection[RouteMutationResult] {
-	return routeMutationCollectionFromGen(g)
-}
-
-// routeMutationCollectionFromUpdate converts a gen.RouteMutationResponse
-// to a Collection[RouteMutationResult].
-func routeMutationCollectionFromUpdate(
-	g *gen.RouteMutationResponse,
-) Collection[RouteMutationResult] {
-	return routeMutationCollectionFromGen(g)
-}
-
-// routeMutationCollectionFromDelete converts a gen.RouteMutationResponse
-// to a Collection[RouteMutationResult].
-func routeMutationCollectionFromDelete(
-	g *gen.RouteMutationResponse,
-) Collection[RouteMutationResult] {
-	return routeMutationCollectionFromGen(g)
-}
-
-// routeMutationCollectionFromGen converts a gen.RouteMutationResponse
-// to a Collection[RouteMutationResult].
-func routeMutationCollectionFromGen(
-	g *gen.RouteMutationResponse,
-) Collection[RouteMutationResult] {
-	results := make([]RouteMutationResult, 0, len(g.Results))
-	for _, r := range g.Results {
+	results := make([]RouteMutationResult, 0, len(rows))
+	for _, r := range rows {
 		results = append(results, RouteMutationResult{
 			Hostname:  r.Hostname,
 			Status:    string(r.Status),
-			Interface: derefString(r.Interface),
+			Interface: derefString(r.InterfaceName),
 			Changed:   derefBool(r.Changed),
 			Error:     derefString(r.Error),
 		})
 	}
 
-	return Collection[RouteMutationResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
-	}
+	return Collection[RouteMutationResult]{Results: results, JobID: jobIDFromGen(jobID)}
 }

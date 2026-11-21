@@ -55,7 +55,7 @@ func (s *ProvidersPublicTestSuite) TestProviders() {
 	areas := []string{
 		"host", "disk", "memory", "load", "ping", "cron",
 		"ntp", "power", "process", "user",
-		"logs", "certificate", "service", "route",
+		"logs", "certificate", "service",
 	}
 
 	tests := []struct {
@@ -95,7 +95,6 @@ func (s *ProvidersPublicTestSuite) TestProviders() {
 				"cron":        "Linux",
 				"certificate": "Linux",
 				"service":     "Linux",
-				"route":       "Linux",
 			},
 		},
 		{

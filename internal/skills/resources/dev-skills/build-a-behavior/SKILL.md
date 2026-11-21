@@ -145,8 +145,8 @@ as well, such as of a program's argument, holds with the provider's error.
 Work that two behaviors share is a building block, not a copy. The `netplan`
 behavior writes a file under `/etc/netplan`, validates it with `netplan
 generate`, and applies it. When `netplan generate` refuses the file, the file
-gets back the content that it had, or a new file is removed. dns and interface
-require it, and so will routes. Its `get` gives the netplan ID of the definition
+gets back the content that it had, or a new file is removed. dns, interface and
+route require it. Its `get` gives the netplan ID of the definition
 that matches an interface, such as cloud-init's `all` for `en*`, and each
 interface that the definition matches. netplan ignores a second definition of
 the same interface: dns writes under that ID, and interface refuses an

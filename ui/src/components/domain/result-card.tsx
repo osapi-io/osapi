@@ -939,7 +939,13 @@ function InterfaceListResult({ data }: { data: Record<string, unknown> }) {
 }
 
 // Route list
-function RouteListResult({ data }: { data: Record<string, unknown> }) {
+function RouteListResult({
+  data,
+  label,
+}: {
+  data: Record<string, unknown>;
+  label: string;
+}) {
   const { search, setSearch } = useListSearch();
   type RouteHost = {
     hostname: string;
@@ -953,12 +959,32 @@ function RouteListResult({ data }: { data: Record<string, unknown> }) {
     }[];
     error?: string;
   };
-  const hosts = data.results as RouteHost[];
+  // The API answers one row per route: group them by host, keeping a host
+  // that failed or was skipped as a row without a route.
+  type RouteRow = NonNullable<RouteHost["routes"]>[number] & {
+    hostname: string;
+    status?: string;
+    error?: string;
+  };
+  const hosts: RouteHost[] = [];
+  for (const row of data.results as RouteRow[]) {
+    let host = hosts.find((h) => h.hostname === row.hostname);
+    if (!host) {
+      host = {
+        hostname: row.hostname,
+        status: row.status,
+        error: row.error,
+        routes: [],
+      };
+      hosts.push(host);
+    }
+    if (row.destination) host.routes?.push(row);
+  }
   const totalRoutes = hosts.reduce((n, h) => n + (h.routes?.length ?? 0), 0);
   return (
     <ResultShell
       jobId={data.job_id as string | undefined}
-      label="route list"
+      label={label}
       data={data}
     >
       <ListSearchBar
@@ -1654,8 +1680,11 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
   }
 
   // Route list — expanded with search
-  if (type === "route-list" && Array.isArray(data.results)) {
-    return <RouteListResult data={data} />;
+  if (
+    (type === "route-list" || type === "route-get") &&
+    Array.isArray(data.results)
+  ) {
+    return <RouteListResult data={data} label={type.replace("-", " ")} />;
   }
 
   // DNS delete / interface CRUD / route CRUD — generic collection results
@@ -1666,7 +1695,6 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
       "interface-create",
       "interface-update",
       "interface-delete",
-      "route-get",
       "route-create",
       "route-update",
       "route-delete",

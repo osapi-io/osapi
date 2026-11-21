@@ -27,12 +27,13 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
-// RouteService provides network route management operations.
+// RouteService reads the routes of a host and writes the routes osapi has
+// of an interface.
 type RouteService struct {
 	client *gen.ClientWithResponses
 }
 
-// List lists all network routes on the target host.
+// List is the routes of each target host, one result per host.
 func (s *RouteService) List(
 	ctx context.Context,
 	target string,
@@ -41,7 +42,6 @@ func (s *RouteService) List(
 	if err != nil {
 		return nil, fmt.Errorf("route list: %w", err)
 	}
-
 	if err := checkError(
 		resp.StatusCode(),
 		resp.JSON400,
@@ -51,63 +51,65 @@ func (s *RouteService) List(
 	); err != nil {
 		return nil, err
 	}
-
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
+		return nil, &UnexpectedStatusError{
+			APIError{StatusCode: resp.StatusCode(), Message: "nil response body"},
+		}
+	}
+	rows := routeRowsFromGen(resp.JSON200.Results)
+	results := make([]RouteListResult, 0, len(rows))
+	for _, r := range rows {
+		results = append(results, RouteListResult(r))
 	}
 
-	return newResponse(routeListCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
+	return newResponse(Collection[RouteListResult]{
+		Results: results, JobID: jobIDFromGen(resp.JSON200.JobId),
+	}, resp.Body, resp.HTTPResponse), nil
 }
 
-// Get retrieves routes for a specific interface on the target host.
+// Get is the routes of one interface of each target host.
 func (s *RouteService) Get(
 	ctx context.Context,
 	target string,
 	interfaceName string,
 ) (*Response[Collection[RouteGetResult]], error) {
-	resp, err := s.client.GetNodeNetworkRouteByInterfaceWithResponse(ctx, target, interfaceName)
+	resp, err := s.client.GetNodeNetworkRouteByKeyWithResponse(ctx, target, interfaceName)
 	if err != nil {
 		return nil, fmt.Errorf("route get: %w", err)
 	}
-
 	if err := checkError(
 		resp.StatusCode(),
 		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
-		resp.JSON404,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
 	}
-
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
+		return nil, &UnexpectedStatusError{
+			APIError{StatusCode: resp.StatusCode(), Message: "nil response body"},
+		}
 	}
 
-	return newResponse(routeGetCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
+	return newResponse(Collection[RouteGetResult]{
+		Results: routeRowsFromGen(resp.JSON200.Results), JobID: jobIDFromGen(resp.JSON200.JobId),
+	}, resp.Body, resp.HTTPResponse), nil
 }
 
-// Create creates route configuration for an interface on the target host.
+// Create writes osapi's routes of an interface on the target. An interface
+// osapi already has routes of does not change.
 func (s *RouteService) Create(
 	ctx context.Context,
 	target string,
 	interfaceName string,
 	opts RouteConfigOpts,
 ) (*Response[Collection[RouteMutationResult]], error) {
-	body := routeConfigRequestFromOpts(opts)
-
-	resp, err := s.client.PostNodeNetworkRouteWithResponse(ctx, target, interfaceName, body)
+	resp, err := s.client.PostNodeNetworkRouteWithResponse(ctx, target, interfaceName,
+		gen.NetworkRouteCreateRequest{Routes: routeStrings(opts.Routes)})
 	if err != nil {
 		return nil, fmt.Errorf("route create: %w", err)
 	}
-
 	if err := checkError(
 		resp.StatusCode(),
 		resp.JSON400,
@@ -117,61 +119,49 @@ func (s *RouteService) Create(
 	); err != nil {
 		return nil, err
 	}
-
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
+		return nil, &UnexpectedStatusError{
+			APIError{StatusCode: resp.StatusCode(), Message: "nil response body"},
+		}
 	}
 
-	return newResponse(
-		routeMutationCollectionFromCreate(resp.JSON200),
-		resp.Body,
-		resp.HTTPResponse,
-	), nil
+	return newResponse(routeMutationsFromGen(resp.JSON200.Results, resp.JSON200.JobId),
+		resp.Body, resp.HTTPResponse), nil
 }
 
-// Update updates route configuration for an interface on the target host.
+// Update writes osapi's routes of an interface over the ones it has on the
+// target.
 func (s *RouteService) Update(
 	ctx context.Context,
 	target string,
 	interfaceName string,
 	opts RouteConfigOpts,
 ) (*Response[Collection[RouteMutationResult]], error) {
-	body := routeConfigRequestFromOpts(opts)
-
-	resp, err := s.client.PutNodeNetworkRouteWithResponse(ctx, target, interfaceName, body)
+	resp, err := s.client.PutNodeNetworkRouteWithResponse(ctx, target, interfaceName,
+		gen.NetworkRouteUpdateRequest{Routes: routeStrings(opts.Routes)})
 	if err != nil {
 		return nil, fmt.Errorf("route update: %w", err)
 	}
-
 	if err := checkError(
 		resp.StatusCode(),
 		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
-		resp.JSON404,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
 	}
-
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
+		return nil, &UnexpectedStatusError{
+			APIError{StatusCode: resp.StatusCode(), Message: "nil response body"},
+		}
 	}
 
-	return newResponse(
-		routeMutationCollectionFromUpdate(resp.JSON200),
-		resp.Body,
-		resp.HTTPResponse,
-	), nil
+	return newResponse(routeMutationsFromGen(resp.JSON200.Results, resp.JSON200.JobId),
+		resp.Body, resp.HTTPResponse), nil
 }
 
-// Delete removes route configuration for an interface on the target host.
+// Delete drops osapi's routes of an interface on the target.
 func (s *RouteService) Delete(
 	ctx context.Context,
 	target string,
@@ -181,7 +171,6 @@ func (s *RouteService) Delete(
 	if err != nil {
 		return nil, fmt.Errorf("route delete: %w", err)
 	}
-
 	if err := checkError(
 		resp.StatusCode(),
 		resp.JSON400,
@@ -191,40 +180,12 @@ func (s *RouteService) Delete(
 	); err != nil {
 		return nil, err
 	}
-
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
-	}
-
-	return newResponse(
-		routeMutationCollectionFromDelete(resp.JSON200),
-		resp.Body,
-		resp.HTTPResponse,
-	), nil
-}
-
-// routeConfigRequestFromOpts builds a gen.RouteConfigRequest from SDK options.
-func routeConfigRequestFromOpts(
-	opts RouteConfigOpts,
-) gen.RouteConfigRequest {
-	items := make([]gen.RouteItem, 0, len(opts.Routes))
-	for _, r := range opts.Routes {
-		item := gen.RouteItem{
-			To:  r.To,
-			Via: r.Via,
+		return nil, &UnexpectedStatusError{
+			APIError{StatusCode: resp.StatusCode(), Message: "nil response body"},
 		}
-
-		if r.Metric != nil {
-			item.Metric = r.Metric
-		}
-
-		items = append(items, item)
 	}
 
-	return gen.RouteConfigRequest{
-		Routes: items,
-	}
+	return newResponse(routeMutationsFromGen(resp.JSON200.Results, resp.JSON200.JobId),
+		resp.Body, resp.HTTPResponse), nil
 }

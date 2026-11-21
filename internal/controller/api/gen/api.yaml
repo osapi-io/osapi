@@ -71,9 +71,6 @@ tags:
   - name: Network_Management_API_network_operations
     x-displayName: Node/Network
     description: Network operations on a target node.
-  - name: Network_Management_API_route_operations
-    x-displayName: Node/Network/Route
-    description: Network route configuration on a target node.
   - name: NTP_Management_API_ntp_operations
     x-displayName: Node/NTP
     description: NTP server configuration management on a target node.
@@ -113,6 +110,9 @@ tags:
   - description: The network interfaces of the host
     name: Interface_API_network_interface_operations
     x-displayName: Node/Interface
+  - description: The routes of the host
+    name: Route_API_network_route_operations
+    x-displayName: Node/Route
   - description: Get the operating system of target hosts
     name: Os_API_os_operations
     x-displayName: Node/Os
@@ -3156,259 +3156,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/network/route:
-    servers: []
-    get:
-      summary: List network routes
-      description: |
-        List all network routes on the target node.
-      tags:
-        - Network_Management_API_route_operations
-      operationId: GetNodeNetworkRoute
-      security:
-        - BearerAuth:
-            - network:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      responses:
-        '200':
-          description: List of network routes.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RouteListResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error listing network routes.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/network/route/{interfaceName}:
-    servers: []
-    get:
-      summary: Get routes for an interface
-      description: >
-        Get routes associated with a specific network interface on the target
-        node.
-      tags:
-        - Network_Management_API_route_operations
-      operationId: GetNodeNetworkRouteByInterface
-      security:
-        - BearerAuth:
-            - network:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/RouteInterfaceName'
-      responses:
-        '200':
-          description: Routes for the interface.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RouteGetResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Interface not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error getting routes for interface.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    post:
-      summary: Create routes for an interface
-      description: >
-        Create managed route configuration for a network interface on the target
-        node.
-      tags:
-        - Network_Management_API_route_operations
-      operationId: PostNodeNetworkRoute
-      security:
-        - BearerAuth:
-            - network:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/RouteInterfaceName'
-      requestBody:
-        description: Route configuration parameters.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RouteConfigRequest'
-      responses:
-        '200':
-          description: Route configuration created.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RouteMutationResponse'
-        '400':
-          description: Invalid request payload.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error creating route configuration.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    put:
-      summary: Update routes for an interface
-      description: >
-        Update the managed route configuration for a network interface on the
-        target node.
-      tags:
-        - Network_Management_API_route_operations
-      operationId: PutNodeNetworkRoute
-      security:
-        - BearerAuth:
-            - network:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/RouteInterfaceName'
-      requestBody:
-        description: Route configuration parameters.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RouteConfigRequest'
-      responses:
-        '200':
-          description: Route configuration updated.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RouteMutationResponse'
-        '400':
-          description: Invalid request payload.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Route configuration not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error updating route configuration.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    delete:
-      summary: Delete routes for an interface
-      description: >
-        Delete the managed route configuration for a network interface on the
-        target node.
-      tags:
-        - Network_Management_API_route_operations
-      operationId: DeleteNodeNetworkRoute
-      security:
-        - BearerAuth:
-            - network:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/RouteInterfaceName'
-      responses:
-        '200':
-          description: Route configuration deleted.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RouteMutationResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error deleting route configuration.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /api/node/{hostname}/ntp:
     servers: []
     get:
@@ -6022,6 +5769,279 @@ paths:
       summary: Change the config osapi has of a network interface
       tags:
         - Interface_API_network_interface_operations
+  /api/node/{hostname}/network/route:
+    servers: []
+    get:
+      description: >-
+        Reads each route of the main table: ip route on Linux, netstat on macOS.
+        proto says where a route came from, such as dhcp, kernel or static.
+      operationId: GetNodeNetworkRoute
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkRouteCollectionResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - network:read
+      summary: List the routes of the host
+      tags:
+        - Route_API_network_route_operations
+  /api/node/{hostname}/network/route/{interface_name}:
+    servers: []
+    delete:
+      description: >-
+        Removes the interface's routes file and applies what is left. An
+        interface osapi has no routes of does not change.
+      operationId: DeleteNodeNetworkRoute
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/NetworkRouteInterface_name'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkRouteDeleteResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host has no route with that interface_name.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - network:write
+      summary: Drop the routes osapi has of an interface
+      tags:
+        - Route_API_network_route_operations
+    get:
+      description: >-
+        Reads the routes of the main table that go out of the interface, as list
+        does. An interface with no routes has none; one the host does not have
+        is not found.
+      operationId: GetNodeNetworkRouteByKey
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/NetworkRouteInterface_name'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkRouteGetResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host has no route with that interface_name.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - network:read
+      summary: Get the routes of an interface
+      tags:
+        - Route_API_network_route_operations
+    post:
+      description: >-
+        Writes a netplan file of the interface's routes, such as
+        /etc/netplan/osapi-osapi0-routes.yaml for osapi0, under a netplan
+        definition that is the interface's own, and applies it. A default route
+        is refused: the interface behavior sets the gateway. An interface the
+        host does not have is not found. An interface that a match defines, such
+        as cloud-init's all for en*, is refused, because the routes would go on
+        each interface the match takes, now and later. An interface osapi
+        already has routes of does not change: update replaces them. It runs on
+        the Debian family, and elsewhere, and in a container, reports skipped.
+      operationId: PostNodeNetworkRoute
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/NetworkRouteInterface_name'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NetworkRouteCreateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkRouteCreateResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host has no route with that interface_name.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - network:write
+      summary: Add static routes to an interface
+      tags:
+        - Route_API_network_route_operations
+    put:
+      description: >-
+        Writes the interface's routes file over the one osapi has, as create
+        writes it, and applies it. An interface osapi has no routes of is not
+        found: create adds them.
+      operationId: PutNodeNetworkRoute
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/NetworkRouteInterface_name'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NetworkRouteUpdateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkRouteUpdateResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host has no route with that interface_name.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - network:write
+      summary: Change the routes osapi has of an interface
+      tags:
+        - Route_API_network_route_operations
   /api/node/{hostname}/os:
     servers: []
     get:
@@ -9162,181 +9182,6 @@ components:
             $ref: '#/components/schemas/PingResponse'
       required:
         - results
-    RouteInfo:
-      type: object
-      description: Information about a network route.
-      properties:
-        destination:
-          type: string
-          description: Route destination in CIDR notation.
-          example: 10.0.0.0/8
-        gateway:
-          type: string
-          description: Gateway IP address.
-          example: 192.168.1.1
-        interface:
-          type: string
-          description: Network interface name.
-          example: eth0
-        metric:
-          type: integer
-          description: Route metric (priority).
-          example: 100
-        scope:
-          type: string
-          description: Route scope.
-          example: link
-    RouteListEntry:
-      type: object
-      description: Route list result for a single agent.
-      properties:
-        hostname:
-          type: string
-          description: Hostname of the agent that reported this entry.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        routes:
-          type: array
-          items:
-            $ref: '#/components/schemas/RouteInfo'
-          description: List of network routes on this host.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    RouteGetEntry:
-      type: object
-      description: Route get result for a single agent.
-      properties:
-        hostname:
-          type: string
-          description: Hostname of the agent that reported this entry.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        routes:
-          type: array
-          items:
-            $ref: '#/components/schemas/RouteInfo'
-          description: Routes for the specified interface.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    RouteMutationEntry:
-      type: object
-      description: |
-        Result of a route mutation operation for one host.
-      properties:
-        hostname:
-          type: string
-          description: Hostname of the agent that processed this operation.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        interface:
-          type: string
-          description: Interface name the routes are associated with.
-        changed:
-          type: boolean
-          description: Whether the operation modified system state.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    RouteListResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/RouteListEntry'
-      required:
-        - results
-    RouteGetResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/RouteGetEntry'
-      required:
-        - results
-    RouteMutationResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/RouteMutationEntry'
-      required:
-        - results
-    RouteConfigRequest:
-      type: object
-      properties:
-        routes:
-          type: array
-          items:
-            $ref: '#/components/schemas/RouteItem'
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1,dive
-      required:
-        - routes
-    RouteItem:
-      type: object
-      properties:
-        to:
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: required,cidr
-        via:
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: required,ip
-        metric:
-          type: integer
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=0
-      required:
-        - to
-        - via
     NtpCreateRequest:
       type: object
       required:
@@ -11260,6 +11105,195 @@ components:
       required:
         - results
       type: object
+    NetworkRouteCollectionResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/NetworkRouteEntry'
+          type: array
+      required:
+        - results
+      type: object
+    NetworkRouteCreateRequest:
+      properties:
+        routes:
+          description: >-
+            Each route as ip route writes it: <destination> via <gateway>, with
+            metric <n> after it when you give one, such as 10.0.0.0/8 via
+            192.168.1.1 metric 100
+          items:
+            pattern: ^\S+ via \S+( metric [0-9]+)?$
+            type: string
+          maxItems: 64
+          minItems: 1
+          type: array
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=64,dive,route
+      required:
+        - routes
+      type: object
+    NetworkRouteCreateResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/NetworkRouteResult'
+          type: array
+      required:
+        - results
+      type: object
+    NetworkRouteDeleteResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/NetworkRouteResult'
+          type: array
+      required:
+        - results
+      type: object
+    NetworkRouteEntry:
+      properties:
+        destination:
+          description: The destination in CIDR notation, or default
+          type: string
+        error:
+          description: Error message if the agent failed.
+          type: string
+        family:
+          description: inet or inet6
+          type: string
+        gateway:
+          description: The gateway; empty for a route on the link
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        interface:
+          description: The interface the route goes out of
+          type: string
+        metric:
+          description: The metric; 0 when the kernel gives none
+          type: integer
+        proto:
+          description: >-
+            Where the route came from, such as kernel, dhcp or static; empty on
+            macOS
+          type: string
+        scope:
+          description: The scope, such as link; empty for a global route
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
+      type: object
+    NetworkRouteGetResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/NetworkRouteEntry'
+          type: array
+      required:
+        - results
+      type: object
+    NetworkRouteResult:
+      properties:
+        changed:
+          description: Whether the host changed
+          type: boolean
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        interface_name:
+          description: The interface
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
+      type: object
+    NetworkRouteUpdateRequest:
+      properties:
+        routes:
+          description: >-
+            Each route as ip route writes it: <destination> via <gateway>, with
+            metric <n> after it when you give one, such as 10.0.0.0/8 via
+            192.168.1.1 metric 100
+          items:
+            pattern: ^\S+ via \S+( metric [0-9]+)?$
+            type: string
+          maxItems: 64
+          minItems: 1
+          type: array
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=64,dive,route
+      required:
+        - routes
+      type: object
+    NetworkRouteUpdateResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/NetworkRouteResult'
+          type: array
+      required:
+        - results
+      type: object
     OsEntry:
       properties:
         error:
@@ -11995,17 +12029,6 @@ components:
         type: string
         minLength: 1
         pattern: ^[a-zA-Z0-9:_.@-]+$
-    RouteInterfaceName:
-      name: interfaceName
-      in: path
-      required: true
-      description: |
-        Network interface name for route operations (e.g., eth0, ens33).
-      x-oapi-codegen-extra-tags:
-        validate: required,min=1
-      schema:
-        type: string
-        minLength: 1
     Pid:
       name: pid
       in: path
@@ -12090,13 +12113,24 @@ components:
       name: interface_name
       required: true
       schema:
+        pattern: ^(@fact\.[a-z0-9_.]+|[a-zA-Z0-9][a-zA-Z0-9._-]{0,14})$
         type: string
       x-oapi-codegen-extra-tags:
-        validate: required,alphanum_or_fact
+        validate: required,interface_name
     NetworkInterfaceName:
       description: The interface, such as eth0, or a fact such as @fact.interface.primary
       in: path
       name: name
+      required: true
+      schema:
+        pattern: ^(@fact\.[a-z0-9_.]+|[a-zA-Z0-9][a-zA-Z0-9._-]{0,14})$
+        type: string
+      x-oapi-codegen-extra-tags:
+        validate: required,interface_name
+    NetworkRouteInterface_name:
+      description: The interface, such as eth0, or a fact such as @fact.interface.primary
+      in: path
+      name: interface_name
       required: true
       schema:
         pattern: ^(@fact\.[a-z0-9_.]+|[a-zA-Z0-9][a-zA-Z0-9._-]{0,14})$
@@ -12176,7 +12210,6 @@ x-tagGroups:
   - name: Network Management API
     tags:
       - Network_Management_API_network_operations
-      - Network_Management_API_route_operations
   - name: NTP Management API
     tags:
       - NTP_Management_API_ntp_operations
@@ -12214,6 +12247,9 @@ x-tagGroups:
   - name: Interface API
     tags:
       - Interface_API_network_interface_operations
+  - name: Route API
+    tags:
+      - Route_API_network_route_operations
   - name: Os API
     tags:
       - Os_API_os_operations

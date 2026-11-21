@@ -27,34 +27,14 @@ import (
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behaviors/netplan"
-	"github.com/osapi-io/osapi/internal/facts"
 	"github.com/osapi-io/osapi/internal/validation/rule"
 )
-
-// namePattern is a Linux interface name: up to 15 characters, such as eth0,
-// br-lan or eth0.100. A name never starts with a dot or a dash, so it never
-// leaves /etc/netplan in a file name.
-const namePattern = `^[a-zA-Z0-9][a-zA-Z0-9._-]{0,14}$`
-
-var nameRE = regexp.MustCompile(namePattern)
 
 // macPattern is a MAC address as netplan's macaddress takes it: six octets
 // in hex, split by colons.
 const macPattern = `^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$`
 
 var macRE = regexp.MustCompile(macPattern)
-
-// validName reports whether v is an interface name, or a fact reference the
-// agent resolves to one.
-func validName(
-	v string,
-) bool {
-	if strings.HasPrefix(v, facts.Prefix) {
-		return facts.IsKnownKey(v[len(facts.Prefix):])
-	}
-
-	return nameRE.MatchString(v)
-}
 
 // The host of the Linux examples: eth0 has a DHCP address and the default
 // route, and lo is left out of a list.
@@ -188,9 +168,6 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.RunsOnPlatform(behavior.PlatformDarwin, "ifconfig", "netstat"),
 	behavior.RunsIfPresent("ethtool"),
 	behavior.Writes(netplan.Dir+"/osapi-*.yaml"),
-	behavior.Validator("interface_name", validName,
-		func(t rule.Target) { t.Pattern(`^(@fact\.[a-z0-9_.]+|[a-zA-Z0-9][a-zA-Z0-9._-]{0,14})$`) },
-		"is not an interface name or a fact"),
 	behavior.Validator("mac_address", macRE.MatchString,
 		func(t rule.Target) { t.Pattern(macPattern) },
 		"is not a MAC address of six octets split by colons"),

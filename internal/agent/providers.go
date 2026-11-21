@@ -31,7 +31,6 @@ import (
 	"github.com/osapi-io/osapi/internal/exec"
 	dockerProv "github.com/osapi-io/osapi/internal/provider/container/docker"
 	fileProv "github.com/osapi-io/osapi/internal/provider/file"
-	routeProv "github.com/osapi-io/osapi/internal/provider/network/netplan/route"
 	"github.com/osapi-io/osapi/internal/provider/network/ping"
 	certProv "github.com/osapi-io/osapi/internal/provider/node/certificate"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
@@ -245,27 +244,5 @@ func (e hostEnv) service() serviceProv.Provider {
 		return serviceProv.NewDarwinProvider()
 	default:
 		return serviceProv.NewLinuxProvider()
-	}
-}
-
-func (e hostEnv) netplan() routeProv.Provider {
-	switch e.platform {
-	case "debian":
-		if e.fileState == nil {
-			e.log.Warn("file state KV not available, netplan operations disabled")
-			return routeProv.NewLinuxProvider()
-		}
-		return routeProv.NewDebianProvider(
-			e.log,
-			e.fs,
-			e.fileState,
-			e.fileStateBucket,
-			e.exec,
-			e.hostname,
-		)
-	case "darwin":
-		return routeProv.NewDarwinProvider()
-	default:
-		return routeProv.NewLinuxProvider()
 	}
 }

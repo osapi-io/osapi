@@ -1,0 +1,69 @@
+---
+id: get-node-network-route-by-key
+title: "Get the routes of an interface"
+description: "Reads the routes of the main table that go out of the interface, as list does. An interface with no routes has none; one the host does not have is not found."
+sidebar_label: "Get the routes of an interface"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "get api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Get the routes of an interface"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/api/node/{hostname}/network/route/{interface_name}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Reads the routes of the main table that go out of the interface, as list does. An interface with no routes has none; one the host does not have is not found.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./get-node-network-route-by-key.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./get-node-network-route-by-key.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./get-node-network-route-by-key.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

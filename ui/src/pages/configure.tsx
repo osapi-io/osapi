@@ -86,11 +86,11 @@ import {
 } from "@/sdk/gen/interface-api-network-interface-operations/interface-api-network-interface-operations";
 import {
   getNodeNetworkRoute,
-  getNodeNetworkRouteByInterface,
+  getNodeNetworkRouteByKey,
   postNodeNetworkRoute,
   putNodeNetworkRoute,
   deleteNodeNetworkRoute,
-} from "@/sdk/gen/network-management-api-route-operations/network-management-api-route-operations";
+} from "@/sdk/gen/route-api-network-route-operations/route-api-network-route-operations";
 import { postNodeNetworkPing } from "@/sdk/gen/network-management-api-network-operations/network-management-api-network-operations";
 import {
   getNodePackage,
@@ -648,21 +648,21 @@ export function Configure() {
             result = await getNodeNetworkRoute(t);
             break;
           case "route-get":
-            result = await getNodeNetworkRouteByInterface(
+            result = await getNodeNetworkRouteByKey(
               t,
               block.data.interface_name as string,
             );
             break;
           case "route-create": {
-            const routes = [];
+            // The API takes each route as ip route writes it.
+            const routes: string[] = [];
             if (block.data.to && block.data.via) {
-              routes.push({
-                to: block.data.to as string,
-                via: block.data.via as string,
-                ...(block.data.metric
-                  ? { metric: Number(block.data.metric) }
-                  : {}),
-              });
+              routes.push(
+                `${block.data.to as string} via ${block.data.via as string}` +
+                  (block.data.metric
+                    ? ` metric ${Number(block.data.metric)}`
+                    : ""),
+              );
             }
             result = await postNodeNetworkRoute(
               t,
@@ -672,15 +672,15 @@ export function Configure() {
             break;
           }
           case "route-update": {
-            const updRoutes = [];
+            // The API takes each route as ip route writes it.
+            const updRoutes: string[] = [];
             if (block.data.to && block.data.via) {
-              updRoutes.push({
-                to: block.data.to as string,
-                via: block.data.via as string,
-                ...(block.data.metric
-                  ? { metric: Number(block.data.metric) }
-                  : {}),
-              });
+              updRoutes.push(
+                `${block.data.to as string} via ${block.data.via as string}` +
+                  (block.data.metric
+                    ? ` metric ${Number(block.data.metric)}`
+                    : ""),
+              );
             }
             result = await putNodeNetworkRoute(
               t,

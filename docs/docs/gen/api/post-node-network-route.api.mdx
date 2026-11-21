@@ -1,11 +1,11 @@
 ---
 id: post-node-network-route
-title: "Create routes for an interface"
-description: "Create managed route configuration for a network interface on the target node."
-sidebar_label: "Create routes for an interface"
+title: "Add static routes to an interface"
+description: "Writes a netplan file of the interface's routes, such as /etc/netplan/osapi-osapi0-routes.yaml for osapi0, under a netplan definition that is the interface's own, and applies it. A default route is refused: the interface behavior sets the gateway. An interface the host does not have is not found. An interface that a match defines, such as cloud-init's all for en*, is refused, because the routes would go on each interface the match takes, now and later. An interface osapi already has routes of does not change: update replaces them. It runs on the Debian family, and elsewhere, and in a container, reports skipped."
+sidebar_label: "Add static routes to an interface"
 hide_title: true
 hide_table_of_contents: true
-api: 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
+api: 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
 sidebar_class_name: "post api-method"
 info_path: gen/api/osapi
 custom_edit_url: null
@@ -23,13 +23,13 @@ import Translate from "@docusaurus/Translate";
 <Heading
   as={"h1"}
   className={"openapi__heading"}
-  children={"Create routes for an interface"}
+  children={"Add static routes to an interface"}
 >
 </Heading>
 
 <MethodEndpoint
   method={"post"}
-  path={"/api/node/{hostname}/network/route/{interfaceName}"}
+  path={"/api/node/{hostname}/network/route/{interface_name}"}
   context={"endpoint"}
 >
   
@@ -37,8 +37,7 @@ import Translate from "@docusaurus/Translate";
 
 
 
-Create managed route configuration for a network interface on the target node.
-
+Writes a netplan file of the interface's routes, such as /etc/netplan/osapi-osapi0-routes.yaml for osapi0, under a netplan definition that is the interface's own, and applies it. A default route is refused: the interface behavior sets the gateway. An interface the host does not have is not found. An interface that a match defines, such as cloud-init's all for en*, is refused, because the routes would go on each interface the match takes, now and later. An interface osapi already has routes of does not change: update replaces them. It runs on the Debian family, and elsewhere, and in a container, reports skipped.
 
 <Heading
   id={"request"}

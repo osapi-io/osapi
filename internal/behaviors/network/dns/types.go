@@ -22,12 +22,12 @@ package dns
 
 // GetInput names the interface whose resolvers to read.
 type GetInput struct {
-	InterfaceName string `json:"interface_name" validate:"required,alphanum_or_fact" doc:"The interface, such as eth0, or a fact such as @fact.interface.primary"`
+	InterfaceName string `json:"interface_name" validate:"required,interface_name" doc:"The interface, such as eth0, or a fact such as @fact.interface.primary"`
 }
 
 // UpdateInput is the resolvers to set on an interface.
 type UpdateInput struct {
-	InterfaceName string   `json:"interface_name"           validate:"required,alphanum_or_fact"      doc:"The interface, such as eth0, or a fact such as @fact.interface.primary"`
+	InterfaceName string   `json:"interface_name"           validate:"required,interface_name"        doc:"The interface, such as eth0, or a fact such as @fact.interface.primary"`
 	Servers       []string `json:"servers,omitempty"        validate:"omitempty,max=16,dive,ip"       doc:"The DNS servers, IPv4 or IPv6; the interface's own when empty"`
 	SearchDomains []string `json:"search_domains,omitempty" validate:"omitempty,max=16,dive,hostname" doc:"The search domains; the interface's own when empty"`
 	OverrideDHCP  bool     `json:"override_dhcp,omitempty"  validate:"omitempty"                      doc:"Use only these servers: drop the ones DHCP gives"`
@@ -35,7 +35,7 @@ type UpdateInput struct {
 
 // DeleteInput names the interface whose resolvers osapi set.
 type DeleteInput struct {
-	InterfaceName string `json:"interface_name" validate:"required,alphanum_or_fact" doc:"The interface, such as eth0, or a fact such as @fact.interface.primary"`
+	InterfaceName string `json:"interface_name" validate:"required,interface_name" doc:"The interface, such as eth0, or a fact such as @fact.interface.primary"`
 }
 
 // Entry is the resolvers of an interface.
