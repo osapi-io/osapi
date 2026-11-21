@@ -1,0 +1,25 @@
+name: Specs Link
+on:
+  pull_request:
+    branches: [ "main" ]
+    types: [ opened, edited, reopened, synchronize ]
+
+# Reads only the event payload. It checks out nothing.
+permissions: {}
+
+jobs:
+  specs-link:
+    name: Specs link
+    # A dependency update from a bot has no specs change.
+    if: github.event.pull_request.user.type != 'Bot'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Find the specs pull request in the description
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if printf '%s\n' "$BODY" | tr -d '\r' | grep -Eq '^Specs: https://github\.com/osapi-io/specs/pull/[0-9]+([^0-9]|$)'; then
+            exit 0
+          fi
+          echo "::error::Put 'Specs: https://github.com/osapi-io/specs/pull/<number>' on a line in the description. See CONTRIBUTING.md, Submit a pull request."
+          exit 1
