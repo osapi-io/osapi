@@ -26,12 +26,13 @@ is the requested value, the update returns `changed: false`. Otherwise it runs
 runs on the Debian family only. On other hosts it reports skipped. The name must
 be an IANA name, such as `UTC` or `America/Argentina/Buenos_Aires`.
 
-## Operations
+## Permissions and platforms
 
-| Operation | Description                                                   |
-| --------- | ------------------------------------------------------------- |
-| Get       | Get the current timezone name and UTC offset                  |
-| Update    | Set the timezone (idempotent, returns changed: false if same) |
+The generated page of each behavior gives the permission, the platforms and the
+route of each method: [timezone](../reference/behaviors/timezone/timezone.md).
+The pages come from the definitions, so they stay true when a method changes,
+and this page does not copy them. [Authentication](authentication.md) tells
+which permissions each role has.
 
 ## CLI usage
 
@@ -73,29 +74,6 @@ Skipped and failed hosts appear with their error in the output.
 The update operation compares the requested timezone with the current value. If
 they are the same, the response is `changed: false`, and the agent makes no
 system call. You can run this operation many times safely.
-
-## Supported platforms
-
-| OS Family | Support |
-| --------- | ------- |
-| Debian    | Full    |
-| Darwin    | Skipped |
-| Linux     | Skipped |
-
-On a platform that is not supported, timezone operations return
-`status: skipped`. They do not fail. Refer to
-[Platform Detection](../sdk/platform/detection.md) for how osapi finds the OS
-family.
-
-## Permissions
-
-| Operation | Permission       |
-| --------- | ---------------- |
-| Get       | `timezone:read`  |
-| Update    | `timezone:write` |
-
-All built-in roles (`admin`, `write`, `read`) include `timezone:read`. The
-`admin` and `write` roles also include `timezone:write`.
 
 ## Related
 

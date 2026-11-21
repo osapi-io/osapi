@@ -91,26 +91,14 @@ All commands accept `--json` to give the raw JSON output. All commands accept
 broadcast targets, such as `_all` or a label selector, and give one result for
 each host.
 
-## Supported platforms
+## Permissions and platforms
 
-| OS family | Read    | Write   |
-| --------- | ------- | ------- |
-| Debian    | Full    | Full    |
-| Linux     | Full    | Skipped |
-| Darwin    | Skipped | Skipped |
-
-In a container, an agent reads the services and does not write them: the
-services of the host are not the container's to manage.
-
-## Permissions
-
-| Operation                                                     | Permission      |
-| ------------------------------------------------------------- | --------------- |
-| List, Get                                                     | `service:read`  |
-| Create, Update, Delete, Start, Stop, Restart, Enable, Disable | `service:write` |
-
-All built-in roles (`admin`, `write`, `read`) have `service:read`. The `admin`
-and `write` roles have `service:write`.
+The generated page of each behavior gives the permission, the platforms and the
+route of each method: [service](../reference/behaviors/service/service.md),
+[object](../reference/behaviors/object/object.md). The pages come from the
+definitions, so they stay true when a method changes, and this page does not
+copy them. [Authentication](authentication.md) tells which permissions each role
+has.
 
 ## Related
 

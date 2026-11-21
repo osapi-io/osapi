@@ -44,16 +44,14 @@ The index is not a fact about the host. It is what the repositories have, so
   when each repository was unchanged. apt-get prints `Get:` lines on some hosts
   even when nothing changed, so its output does not tell.
 
-## Operations
+## Permissions and platforms
 
-| Operation             | Description                                 |
-| --------------------- | ------------------------------------------- |
-| package list          | List the installed packages                 |
-| package get           | Get one installed package                   |
-| package create        | Install a package                           |
-| package delete        | Remove a package                            |
-| updatepackages list   | List the packages the index has updates for |
-| updatepackages update | Refresh the package index                   |
+The generated page of each behavior gives the permission, the platforms and the
+route of each method: [package](../reference/behaviors/package/package.md),
+[updatepackages](../reference/behaviors/updatepackages/updatepackages.md). The
+pages come from the definitions, so they stay true when a method changes, and
+this page does not copy them. [Authentication](authentication.md) tells which
+permissions each role has.
 
 ## CLI usage
 
@@ -99,29 +97,6 @@ Responses always include per-host results:
 ```
 
 Skipped and failed hosts appear with their error in the output.
-
-## Supported platforms
-
-| OS Family | Support |
-| --------- | ------- |
-| Debian    | Full    |
-| Darwin    | Skipped |
-| Linux     | Skipped |
-
-On a platform that is not supported, package operations return
-`status: skipped`. They do not fail. Refer to
-[Platform Detection](../sdk/platform/detection.md) for how osapi finds the OS
-family.
-
-## Permissions
-
-| Operation                       | Permission      |
-| ------------------------------- | --------------- |
-| List, Get, Updates              | `package:read`  |
-| Install, Remove, Update Sources | `package:write` |
-
-All built-in roles (`admin`, `write`, `read`) include `package:read`. The
-`admin` and `write` roles also include `package:write`.
 
 ## Related
 

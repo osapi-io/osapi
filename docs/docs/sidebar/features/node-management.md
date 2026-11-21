@@ -85,13 +85,21 @@ Node management uses the general job system. It needs no configuration of its
 own. Refer to [Configuration](../usage/configuration.md) for NATS, agent, and
 authentication settings.
 
-## Permissions
+## Permissions and platforms
 
-Status requires `node:read`. Hostname, uptime, OS, disk, memory and load are
-behaviors. Each one requires its own permission, such as `uptime:read`, or
-`hostname:write` to set the hostname. Agent fleet discovery endpoints require
-`agent:read`. The built-in `admin` and `write` roles include `node:read` and
-each behavior's permissions. The `read` role includes each read permission only.
+The generated page of each behavior gives the permission, the platforms and the
+route of each method: [status](../reference/behaviors/status/status.md),
+[hostname](../reference/behaviors/hostname/hostname.md),
+[uptime](../reference/behaviors/uptime/uptime.md),
+[os](../reference/behaviors/os/os.md),
+[disk](../reference/behaviors/disk/disk.md),
+[memory](../reference/behaviors/memory/memory.md),
+[load](../reference/behaviors/load/load.md). The pages come from the
+definitions, so they stay true when a method changes, and this page does not
+copy them. [Authentication](authentication.md) tells which permissions each role
+has.
+
+Agent fleet discovery is not a behavior: its endpoints need `agent:read`.
 
 ## Related
 
