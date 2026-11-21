@@ -1,26 +1,6 @@
-// Copyright (c) 2026 John Dewey
-
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to
-// deal in the Software without restriction, including without limitation the
-// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-// sell copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-// DEALINGS IN THE SOFTWARE.
-
 package job
 
-import "github.com/shirou/gopsutil/v4/host"
+import "github.com/osapi-io/gohai/pkg/gohai/source"
 
 // SetDefaultHostnameProvider overrides the default hostname provider for testing.
 func SetDefaultHostnameProvider(
@@ -31,23 +11,18 @@ func SetDefaultHostnameProvider(
 
 // ResetDefaultHostnameProvider restores the default hostname provider.
 func ResetDefaultHostnameProvider() {
-	defaultHostnameProvider = gopsutilHostnameProvider{}
+	defaultHostnameProvider = gohaiHostnameProvider{}
 }
 
-// ExportNewGopsutilHostnameProvider exposes the private gopsutilHostnameProvider
-// constructor for testing.
-func ExportNewGopsutilHostnameProvider() HostnameProvider {
-	return gopsutilHostnameProvider{}
+// ExportNewGohaiHostnameProvider exposes the gohai hostname provider for
+// testing.
+func ExportNewGohaiHostnameProvider() HostnameProvider {
+	return gohaiHostnameProvider{}
 }
 
-// SetHostInfoFn overrides the host.Info function for testing.
-func SetHostInfoFn(
-	fn func() (*host.InfoStat, error),
-) {
-	hostInfoFn = fn
-}
-
-// ResetHostInfoFn restores the default host.Info function.
-func ResetHostInfoFn() {
-	hostInfoFn = host.Info
+// ExportMachineName is the host name of src.
+func ExportMachineName(
+	src source.Sources,
+) (string, error) {
+	return machineName(src)
 }

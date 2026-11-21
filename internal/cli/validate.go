@@ -21,16 +21,26 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
 	"strings"
 
-	"github.com/shirou/gopsutil/v4/host"
+	"github.com/osapi-io/gohai/pkg/gohai/collectors/platform"
 )
 
-// hostInfoFn allows tests to override host.Info.
-var hostInfoFn = host.Info
+// realPlatformFn is gohai's read, which ResetPlatformFn puts back.
+var realPlatformFn = platformFn
+
+// platformFn is the host's distribution and version, from gohai's platform
+// collector (injectable for testing).
+var platformFn = func() (*platform.Info, error) {
+	got, err := platform.New().Collect(context.Background(), nil)
+	info, _ := got.(*platform.Info)
+
+	return info, err
+}
 
 // OSFamily represents a supported OS family with its member distributions.
 type OSFamily struct {
@@ -91,7 +101,7 @@ func IsOSFamilySupported(
 func ValidateDistribution(
 	logger *slog.Logger,
 ) error {
-	info, err := hostInfoFn()
+	info, err := platformFn()
 	if err != nil {
 		return fmt.Errorf("get host info: %w", err)
 	}
@@ -100,20 +110,20 @@ func ValidateDistribution(
 		return nil
 	}
 
-	family, supported := IsOSFamilySupported(info.Platform, info.PlatformVersion)
+	family, supported := IsOSFamilySupported(info.Name, info.Version)
 	if !supported {
 		return fmt.Errorf(
 			"os family not supported: %s %s is not a supported distribution",
-			info.Platform,
-			info.PlatformVersion,
+			info.Name,
+			info.Version,
 		)
 	}
 
 	logger.Debug(
 		"os family detected",
 		slog.String("family", family),
-		slog.String("distro", info.Platform),
-		slog.String("version", info.PlatformVersion),
+		slog.String("distro", info.Name),
+		slog.String("version", info.Version),
 	)
 
 	return nil

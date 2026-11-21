@@ -18,66 +18,20 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package process provides resource usage metrics for the current process.
 package process
 
-import gopsutil "github.com/shirou/gopsutil/v4/process"
+import (
+	"time"
 
-// ExportNewProviderWithPID exposes the private provider constructor for testing.
-func ExportNewProviderWithPID(
+	"github.com/osapi-io/gohai/pkg/gohai/source"
+)
+
+// ExportNewProvider is a provider for pid that reads src, with the clock
+// now.
+func ExportNewProvider(
 	pid int32,
+	src source.Sources,
+	now func() time.Time,
 ) Provider {
-	return &provider{pid: pid}
-}
-
-// SetNewProcessFn overrides the newProcessFn injectable for testing.
-func SetNewProcessFn(
-	fn func(int32) (*gopsutil.Process, error),
-) {
-	newProcessFn = fn
-}
-
-// ResetNewProcessFn restores the default newProcessFn.
-func ResetNewProcessFn() {
-	newProcessFn = gopsutil.NewProcess
-}
-
-// SetCPUPercentFn overrides the cpuPercentFn injectable for testing.
-func SetCPUPercentFn(
-	fn func(*gopsutil.Process) (float64, error),
-) {
-	cpuPercentFn = fn
-}
-
-// ResetCPUPercentFn restores the default cpuPercentFn.
-func ResetCPUPercentFn() {
-	cpuPercentFn = func(proc *gopsutil.Process) (float64, error) {
-		return proc.CPUPercent()
-	}
-}
-
-// SetMemoryInfoFn overrides the memoryInfoFn injectable for testing.
-func SetMemoryInfoFn(
-	fn func(*gopsutil.Process) (uint64, error),
-) {
-	memoryInfoFn = fn
-}
-
-// ResetMemoryInfoFn restores the default memoryInfoFn.
-func ResetMemoryInfoFn() {
-	memoryInfoFn = defaultMemoryInfoFn
-}
-
-// SetProcMemoryInfoFn overrides the procMemoryInfoFn injectable for testing.
-func SetProcMemoryInfoFn(
-	fn func(*gopsutil.Process) (*gopsutil.MemoryInfoStat, error),
-) {
-	procMemoryInfoFn = fn
-}
-
-// ResetProcMemoryInfoFn restores the default procMemoryInfoFn.
-func ResetProcMemoryInfoFn() {
-	procMemoryInfoFn = func(proc *gopsutil.Process) (*gopsutil.MemoryInfoStat, error) {
-		return proc.MemoryInfo()
-	}
+	return &provider{pid: pid, sources: src, now: now}
 }

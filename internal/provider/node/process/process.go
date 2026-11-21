@@ -18,17 +18,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package process provides process management operations.
 package process
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"syscall"
 	"time"
 
-	gopsutil "github.com/shirou/gopsutil/v4/process"
+	"github.com/osapi-io/gohai/pkg/gohai/collectors/process"
+	"github.com/osapi-io/gohai/pkg/gohai/source"
 
 	"github.com/osapi-io/osapi/internal/provider"
 )
@@ -64,41 +65,6 @@ var allowedSignals = map[string]syscall.Signal{
 	"USR2": syscall.SIGUSR2,
 }
 
-// gopsutilProcesses lists the running processes. Tests swap it via
-// export_test.go, because gopsutil.Processes always succeeds on a running
-// system.
-var gopsutilProcesses = gopsutil.Processes
-
-// gopsutilLister wraps gopsutil calls to satisfy Lister. The provider's
-// List/Get/Signal methods are tested via the mocked Lister/Signaler
-// interfaces.
-type gopsutilLister struct{}
-
-// Processes returns all running processes as Item instances.
-func (g *gopsutilLister) Processes() ([]Item, error) {
-	procs, err := gopsutilProcesses()
-	if err != nil {
-		return nil, err
-	}
-
-	result := make([]Item, len(procs))
-	for i, p := range procs {
-		result[i] = Item{
-			PID:     p.Pid,
-			Querier: p,
-		}
-	}
-
-	return result, nil
-}
-
-// NewProcess returns a Querier for the given PID.
-func (g *gopsutilLister) NewProcess(
-	pid int32,
-) (Querier, error) {
-	return gopsutil.NewProcess(pid)
-}
-
 // syscallSignaler wraps syscall.Kill to satisfy Signaler.
 type syscallSignaler struct{}
 
@@ -110,100 +76,77 @@ func (s *syscallSignaler) Kill(
 	return syscall.Kill(pid, sig)
 }
 
-// NewGopsutilLister returns the real gopsutil-backed Lister.
-func NewGopsutilLister() Lister {
-	return &gopsutilLister{}
-}
-
 // NewSyscallSignaler returns the real syscall-backed Signaler.
 func NewSyscallSignaler() Signaler {
 	return &syscallSignaler{}
 }
 
-// Compile-time checks.
 var (
-	_ Provider             = (*Debian)(nil)
-	_ provider.FactsSetter = (*Debian)(nil)
+	_ Provider             = (*Gohai)(nil)
+	_ provider.FactsSetter = (*Gohai)(nil)
 )
 
-// Debian implements the Provider interface for Debian-family systems.
-type Debian struct {
+// Gohai lists and reads processes with gohai's process collector, on
+// every Linux family and on macOS, and signals them with kill(2).
+type Gohai struct {
 	provider.FactsAware
+
 	logger   *slog.Logger
-	lister   Lister
 	signaler Signaler
+	// Sources are what the collector reads. A zero field is the real
+	// host's.
+	Sources source.Sources
 }
 
-// NewDebianProvider factory to create a new Debian instance.
-func NewDebianProvider(
+// New returns a provider that reads the real host and signals with
+// signaler.
+func New(
 	logger *slog.Logger,
-	lister Lister,
 	signaler Signaler,
-) *Debian {
-	return &Debian{
+) *Gohai {
+	return &Gohai{
 		logger:   logger.With(slog.String("subsystem", "provider.process")),
-		lister:   lister,
 		signaler: signaler,
 	}
 }
 
-// List returns all running processes.
-func (d *Debian) List(
-	_ context.Context,
+// List is each process of the host.
+func (g *Gohai) List(
+	ctx context.Context,
 ) ([]Info, error) {
-	procs, err := d.lister.Processes()
+	got, err := process.NewWith(g.Sources).Collect(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("process: list: %w", err)
 	}
-
-	var result []Info
-
-	for _, item := range procs {
-		info, err := gatherInfo(item.PID, item.Querier)
-		if err != nil {
-			d.logger.Debug(
-				"skipping process",
-				slog.Int("pid", int(item.PID)),
-				slog.String("error", err.Error()),
-			)
-
-			continue
-		}
-
-		result = append(result, *info)
+	procs := got.(*process.Info).Processes
+	result := make([]Info, 0, len(procs))
+	for _, p := range procs {
+		result = append(result, toInfo(p))
 	}
 
 	return result, nil
 }
 
-// Get returns details for a specific process by PID.
-func (d *Debian) Get(
-	_ context.Context,
+// Get is the process pid. A process that gohai cannot read, because it
+// is not there, is not found.
+func (g *Gohai) Get(
+	ctx context.Context,
 	pid int,
 ) (*Info, error) {
 	if err := validatePid(pid); err != nil {
 		return nil, err
 	}
-
-	p, err := d.lister.NewProcess(int32(pid))
+	p, err := process.NewWith(g.Sources).Read(ctx, int32(pid))
 	if err != nil {
-		if errors.Is(err, gopsutil.ErrorProcessNotRunning) {
-			return nil, fmt.Errorf("process: get %d: %w", pid, provider.ErrNotFound)
-		}
-
-		return nil, fmt.Errorf("process: get: %w", err)
+		return nil, fmt.Errorf("process: get %d: %w: %w", pid, provider.ErrNotFound, err)
 	}
+	info := toInfo(*p)
 
-	info, err := gatherInfo(int32(pid), p)
-	if err != nil {
-		return nil, fmt.Errorf("process: get: %w", err)
-	}
-
-	return info, nil
+	return &info, nil
 }
 
 // Signal sends a signal to a process by PID.
-func (d *Debian) Signal(
+func (g *Gohai) Signal(
 	_ context.Context,
 	pid int,
 	signal string,
@@ -217,7 +160,7 @@ func (d *Debian) Signal(
 		return nil, fmt.Errorf("process: signal: invalid signal %q", signal)
 	}
 
-	if err := d.signaler.Kill(pid, sig); err != nil {
+	if err := g.signaler.Kill(pid, sig); err != nil {
 		if err == syscall.ESRCH {
 			return nil, fmt.Errorf("process signal: %w", provider.ErrNotFound)
 		}
@@ -236,75 +179,24 @@ func (d *Debian) Signal(
 	}, nil
 }
 
-// gatherInfo extracts process information from a Querier.
-// PID is passed separately because gopsutil exposes it as a struct
-// field rather than a method.
-func gatherInfo(
-	pid int32,
-	p Querier,
-) (*Info, error) {
-	name, err := p.Name()
-	if err != nil {
-		return nil, err
+// toInfo is the Info of a gohai process. The start time is RFC 3339, in
+// UTC, as it was.
+func toInfo(
+	p process.Process,
+) Info {
+	info := Info{
+		PID:        int(p.PID),
+		Name:       p.Name,
+		User:       p.Owner,
+		State:      p.State,
+		CPUPercent: p.CPUPercent,
+		MemPercent: float32(p.MemPercent),
+		MemRSS:     p.RSS,
+		Command:    p.CmdLine,
+	}
+	if p.CreationTime > 0 {
+		info.StartTime = time.Unix(p.CreationTime, 0).UTC().Format(time.RFC3339)
 	}
 
-	user, err := p.Username()
-	if err != nil {
-		return nil, err
-	}
-
-	statuses, err := p.Status()
-	if err != nil {
-		return nil, err
-	}
-
-	state := ""
-	if len(statuses) > 0 {
-		state = statuses[0]
-	}
-
-	cpuPercent, err := p.CPUPercent()
-	if err != nil {
-		return nil, err
-	}
-
-	memPercent, err := p.MemoryPercent()
-	if err != nil {
-		return nil, err
-	}
-
-	var memRSS int64
-
-	memInfo, err := p.MemoryInfo()
-	if err != nil {
-		return nil, err
-	}
-
-	if memInfo != nil {
-		memRSS = int64(memInfo.RSS)
-	}
-
-	cmdline, err := p.Cmdline()
-	if err != nil {
-		return nil, err
-	}
-
-	createTime, err := p.CreateTime()
-	if err != nil {
-		return nil, err
-	}
-
-	startTime := time.UnixMilli(createTime).UTC().Format(time.RFC3339)
-
-	return &Info{
-		PID:        int(pid),
-		Name:       name,
-		User:       user,
-		State:      state,
-		CPUPercent: cpuPercent,
-		MemPercent: memPercent,
-		MemRSS:     memRSS,
-		Command:    cmdline,
-		StartTime:  startTime,
-	}, nil
+	return info
 }

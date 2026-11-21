@@ -24,7 +24,11 @@ import (
 	"errors"
 	"testing"
 
-	hostpkg "github.com/shirou/gopsutil/v4/host"
+	"github.com/osapi-io/osapi/internal/provider/gohaitest"
+
+	"github.com/avfs/avfs/vfs/memfs"
+
+	"github.com/osapi-io/gohai/pkg/gohai/source"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
@@ -48,7 +52,6 @@ func (s *HostnamePublicTestSuite) TearDownTest() {
 
 func (s *HostnamePublicTestSuite) TearDownSubTest() {
 	job.ResetDefaultHostnameProvider()
-	job.ResetHostInfoFn()
 }
 
 func (s *HostnamePublicTestSuite) TestGetAgentHostname() {
@@ -257,42 +260,17 @@ func (s *HostnamePublicTestSuite) TestGetLocalHostnameWithProvider() {
 	}
 }
 
-func (s *HostnamePublicTestSuite) TestGopsutilHostnameProvider() {
-	tests := []struct {
-		name         string
-		setup        func()
-		validateFunc func(string, error)
-	}{
-		{
-			name:  "should return non-empty hostname without error",
-			setup: func() {},
-			validateFunc: func(hostname string, err error) {
-				s.NoError(err)
-				s.NotEmpty(hostname)
-			},
-		},
-		{
-			name: "returns error when host.Info fails",
-			setup: func() {
-				job.SetHostInfoFn(func() (*hostpkg.InfoStat, error) {
-					return nil, errors.New("host info failed")
-				})
-			},
-			validateFunc: func(hostname string, err error) {
-				s.Error(err)
-				s.Empty(hostname)
-			},
-		},
-	}
+func (s *HostnamePublicTestSuite) TestGohaiHostnameProvider() {
+	hostname, err := job.ExportNewGohaiHostnameProvider().Hostname()
+	s.NoError(err)
+	s.NotEmpty(hostname)
+}
 
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			tt.setup()
-
-			provider := job.ExportNewGopsutilHostnameProvider()
-			tt.validateFunc(provider.Hostname())
-		})
-	}
+func (s *HostnamePublicTestSuite) TestMachineName() {
+	_, err := job.ExportMachineName(source.Sources{
+		FS: memfs.New(), Exec: gohaitest.Commands(s.T(), nil), Family: "debian",
+	})
+	s.Error(err, "no hostname command and no /proc/sys/kernel/hostname")
 }
 
 func TestHostnamePublicTestSuite(

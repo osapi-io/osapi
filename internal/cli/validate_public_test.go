@@ -27,7 +27,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/shirou/gopsutil/v4/host"
+	"github.com/osapi-io/gohai/pkg/gohai/collectors/platform"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/cli"
@@ -48,20 +48,26 @@ type ValidateDistributionPublicTestSuite struct {
 }
 
 func (suite *ValidateDistributionPublicTestSuite) TearDownTest() {
-	cli.ResetHostInfoFn()
+	cli.ResetPlatformFn()
 	_ = os.Unsetenv("IGNORE_LINUX")
+}
+
+func (suite *ValidateDistributionPublicTestSuite) TestReadPlatform() {
+	info, err := cli.ExportReadPlatform()
+	suite.Require().NoError(err)
+	suite.NotEmpty(info.OS, "gohai reads this host's platform")
 }
 
 func (suite *ValidateDistributionPublicTestSuite) TestValidateDistribution() {
 	tests := []struct {
 		name        string
 		ignoreLinux bool
-		hostInfoFn  func() (*host.InfoStat, error)
+		hostInfoFn  func() (*platform.Info, error)
 		wantErr     string
 	}{
 		{
 			name: "when host info fails returns the error",
-			hostInfoFn: func() (*host.InfoStat, error) {
+			hostInfoFn: func() (*platform.Info, error) {
 				return nil, fmt.Errorf("host info failed")
 			},
 			wantErr: "get host info: host info failed",
@@ -69,28 +75,28 @@ func (suite *ValidateDistributionPublicTestSuite) TestValidateDistribution() {
 		{
 			name:        "when IGNORE_LINUX is set returns early",
 			ignoreLinux: true,
-			hostInfoFn: func() (*host.InfoStat, error) {
-				return &host.InfoStat{
-					Platform:        "darwin",
-					PlatformVersion: "14.0",
+			hostInfoFn: func() (*platform.Info, error) {
+				return &platform.Info{
+					Name:    "darwin",
+					Version: "14.0",
 				}, nil
 			},
 		},
 		{
 			name: "when the version is supported returns no error",
-			hostInfoFn: func() (*host.InfoStat, error) {
-				return &host.InfoStat{
-					Platform:        "ubuntu",
-					PlatformVersion: "24.04",
+			hostInfoFn: func() (*platform.Info, error) {
+				return &platform.Info{
+					Name:    "ubuntu",
+					Version: "24.04",
 				}, nil
 			},
 		},
 		{
 			name: "when the version is not supported returns the error",
-			hostInfoFn: func() (*host.InfoStat, error) {
-				return &host.InfoStat{
-					Platform:        "centos",
-					PlatformVersion: "8",
+			hostInfoFn: func() (*platform.Info, error) {
+				return &platform.Info{
+					Name:    "centos",
+					Version: "8",
 				}, nil
 			},
 			wantErr: "os family not supported: centos 8 is not a supported distribution",
@@ -104,7 +110,7 @@ func (suite *ValidateDistributionPublicTestSuite) TestValidateDistribution() {
 			} else {
 				_ = os.Unsetenv("IGNORE_LINUX")
 			}
-			cli.SetHostInfoFn(tc.hostInfoFn)
+			cli.SetPlatformFn(tc.hostInfoFn)
 
 			var buf bytes.Buffer
 			err := cli.ValidateDistribution(slog.New(slog.NewTextHandler(&buf, nil)))

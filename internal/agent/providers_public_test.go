@@ -45,6 +45,12 @@ func TestProvidersPublicTestSuite(
 	suite.Run(t, new(ProvidersPublicTestSuite))
 }
 
+// gohaiReads are the areas that read the host through gohai, the same
+// provider on every family.
+var gohaiReads = map[string]bool{
+	"host": true, "disk": true, "memory": true, "load": true, "process": true,
+}
+
 func (s *ProvidersPublicTestSuite) TestProviders() {
 	areas := []string{
 		"host", "disk", "memory", "load", "dns", "ping", "cron",
@@ -67,7 +73,6 @@ func (s *ProvidersPublicTestSuite) TestProviders() {
 			platform: "debian",
 			buckets:  true,
 			want:     "Debian",
-			except:   map[string]string{"host": "Linux"},
 		},
 		{
 			name:      "when Debian runs in a container leaves out what a container cannot do",
@@ -76,7 +81,6 @@ func (s *ProvidersPublicTestSuite) TestProviders() {
 			buckets:   true,
 			want:      "Debian",
 			except: map[string]string{
-				"host":     "Linux",
 				"dns":      "DebianDocker",
 				"ntp":      "Linux",
 				"timezone": "Linux",
@@ -90,7 +94,6 @@ func (s *ProvidersPublicTestSuite) TestProviders() {
 			platform: "debian",
 			want:     "Debian",
 			except: map[string]string{
-				"host":        "Linux",
 				"cron":        "Linux",
 				"certificate": "Linux",
 				"service":     "Linux",
@@ -138,6 +141,10 @@ func (s *ProvidersPublicTestSuite) TestProviders() {
 				want := tc.want
 				if w, ok := tc.except[area]; ok {
 					want = w
+				}
+				// A read comes from gohai on every family.
+				if gohaiReads[area] {
+					want = "Gohai"
 				}
 				got := fmt.Sprintf("%T", providers[area])
 				name := got[strings.LastIndex(got, ".")+1:]

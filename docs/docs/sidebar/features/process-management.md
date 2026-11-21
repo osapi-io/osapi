@@ -5,8 +5,8 @@ sidebar_position: 20
 # Process management
 
 osapi shows the running processes on managed hosts, and can send signals to
-specific processes. The agent collects the process data from `/proc` on Linux,
-and from the system process table on other platforms.
+specific processes. The agent reads the processes with gohai's process
+collector: `/proc` on each Linux family, and `ps` on macOS.
 
 ## How it works
 
@@ -17,8 +17,9 @@ live. Each request returns the processes that run at that time.
 ### List
 
 Returns all running processes with their PID, name, user, state, CPU and memory
-usage, and command line. The agent reads `/proc/{pid}/stat`,
-`/proc/{pid}/status`, and `/proc/{pid}/cmdline` on Debian systems.
+usage, and command line. On Linux, gohai reads `/proc/{pid}/stat`,
+`/proc/{pid}/status` and `/proc/{pid}/cmdline`; on macOS, `ps`. The CPU usage is
+the average since the process started on Linux, and `ps`'s `%cpu` on macOS.
 
 ### Get
 
@@ -79,16 +80,13 @@ Skipped and failed hosts appear with their error in the output.
 
 ## Supported platforms
 
-| OS Family | Support |
-| --------- | ------- |
-| Debian    | Full    |
-| Darwin    | Skipped |
-| Linux     | Skipped |
+| OS Family         | List and get | Signal |
+| ----------------- | ------------ | ------ |
+| Each Linux family | Full         | Full   |
+| Darwin            | Full         | Full   |
 
-On a platform that is not supported, process operations return
-`status: skipped`. They do not fail. Refer to
-[Platform Detection](../sdk/platform/detection.md) for how osapi finds the OS
-family.
+List and get are reads, so they come from gohai on every family. Signal is
+`kill(2)`, which each of them has.
 
 ## Permissions
 

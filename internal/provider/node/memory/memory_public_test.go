@@ -18,21 +18,45 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package memory provides memory usage statistics.
-package memory
+package memory_test
 
 import (
-	"github.com/osapi-io/osapi/internal/provider"
+	"testing"
+
+	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi/internal/provider/gohaitest"
+	"github.com/osapi-io/osapi/internal/provider/node/memory"
 )
 
-var _ provider.FactsSetter = (*Linux)(nil)
-
-// Linux implements the Mem interface for Linux.
-type Linux struct {
-	provider.FactsAware
+type MemoryPublicTestSuite struct {
+	suite.Suite
 }
 
-// NewLinuxProvider factory to create a new Linux instance.
-func NewLinuxProvider() *Linux {
-	return &Linux{}
+func TestMemoryPublicTestSuite(
+	t *testing.T,
+) {
+	suite.Run(t, new(MemoryPublicTestSuite))
+}
+
+func (s *MemoryPublicTestSuite) TestGetStats() {
+	g := &memory.Gohai{Sources: gohaitest.Linux(s.T(), map[string]string{
+		"/proc/meminfo": "MemTotal: 4096 kB\nMemFree: 1024 kB\nMemAvailable: 2048 kB\nCached: 512 kB\nSReclaimable: 0 kB\n",
+	}, nil)}
+	got, err := g.GetStats()
+	s.Require().NoError(err)
+	s.Equal(
+		&memory.Result{
+			Total:     4096 * 1024,
+			Available: 2048 * 1024,
+			Free:      1024 * 1024,
+			Cached:    512 * 1024,
+		},
+		got,
+	)
+
+	_, err = (&memory.Gohai{Sources: gohaitest.Linux(s.T(), nil, nil)}).GetStats()
+	s.ErrorContains(err, "get memory")
+
+	s.NotNil(memory.New())
 }

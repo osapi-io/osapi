@@ -174,25 +174,24 @@ Refer to [Configuration](../usage/configuration.md) for all the settings.
 
 ## Platform support
 
-A provider for each platform collects the facts. All facts are available on
-Linux and on macOS. Linux is each Linux distribution: a distribution without a
-provider of its own, such as Fedora, reads its facts the same way as Debian and
-Ubuntu. A feature that is not supported on that distribution still reports
-`skipped`.
+gohai collects the facts, with one call to these collectors, on each Linux
+family and on macOS: Fedora, RHEL and Arch get the same facts as Debian. A
+feature that is not supported on a family still reports `skipped`.
 
-| Fact              | Linux provider                | macOS provider            |
-| ----------------- | ----------------------------- | ------------------------- |
-| Architecture      | `gopsutil`                    | `gopsutil`                |
-| Kernel Version    | `gopsutil`                    | `gopsutil`                |
-| FQDN              | `gopsutil`                    | `gopsutil`                |
-| CPU Count         | `gopsutil`                    | `gopsutil`                |
-| Service Manager   | stat of `/run/systemd/system` | always `launchd`          |
-| Package Manager   | looks for `apt`, `dnf`, `yum` | looks for `brew`          |
-| Interfaces        | `net.Interfaces` (stdlib)     | `net.Interfaces` (stdlib) |
-| Primary Interface | parses `/proc/net/route`      | parses `netstat -rn`      |
-| Routes            | parses `/proc/net/route`      | parses `netstat -rn`      |
+| Fact              | gohai collector  | Linux reads                         | macOS reads             |
+| ----------------- | ---------------- | ----------------------------------- | ----------------------- |
+| Architecture      | `kernel`         | `uname -m`                          | `uname -m`              |
+| Kernel Version    | `kernel`         | `uname -r`                          | `uname -r`              |
+| FQDN              | `hostname`       | `hostname -s`, then DNS             | `hostname -s`, then DNS |
+| CPU Count         | `cpu`            | `/proc/cpuinfo`                     | `sysctl hw.logicalcpu`  |
+| Service Manager   | `init`           | the init process                    | `launchd`               |
+| Package Manager   | `package_mgr`    | the manager of the family on `PATH` | `brew`, `port`          |
+| Interfaces        | `network`        | `/sys/class/net`, `ip addr`         | `ifconfig`              |
+| Primary Interface | `network`        | `ip route`                          | `netstat -rn`           |
+| Routes            | `network`        | `ip route`                          | `netstat -rn`           |
+| Containerized     | `virtualization` | Ohai's container cascade            | Ohai's cascade          |
 
-A provider error does not stop the agent. If a provider fails, the agent still
+A collector error does not stop the agent. If a collector fails, the agent still
 publishes the facts that it collected. Thus `@fact.interface.primary` can be
 unavailable when route collection fails, but `@fact.hostname` and `@fact.arch`
 still work.

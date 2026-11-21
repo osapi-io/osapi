@@ -75,44 +75,19 @@ type hostEnv struct {
 }
 
 func (e hostEnv) host() nodeHost.Provider {
-	if e.platform == "darwin" {
-		return nodeHost.NewDarwinProvider()
-	}
-
-	return nodeHost.NewLinuxProvider()
+	return nodeHost.New()
 }
 
 func (e hostEnv) disk() disk.Provider {
-	switch e.platform {
-	case "debian":
-		return disk.NewDebianProvider(e.log)
-	case "darwin":
-		return disk.NewDarwinProvider(e.log)
-	default:
-		return disk.NewLinuxProvider()
-	}
+	return disk.New()
 }
 
 func (e hostEnv) memory() memory.Provider {
-	switch e.platform {
-	case "debian":
-		return memory.NewDebianProvider()
-	case "darwin":
-		return memory.NewDarwinProvider()
-	default:
-		return memory.NewLinuxProvider()
-	}
+	return memory.New()
 }
 
 func (e hostEnv) load() load.Provider {
-	switch e.platform {
-	case "debian":
-		return load.NewDebianProvider()
-	case "darwin":
-		return load.NewDarwinProvider()
-	default:
-		return load.NewLinuxProvider()
-	}
+	return load.New()
 }
 
 func (e hostEnv) dns() dns.Provider {
@@ -235,18 +210,7 @@ func (e hostEnv) power() powerProv.Provider {
 }
 
 func (e hostEnv) process() processProv.Provider {
-	switch e.platform {
-	case "debian":
-		return processProv.NewDebianProvider(
-			e.log,
-			processProv.NewGopsutilLister(),
-			processProv.NewSyscallSignaler(),
-		)
-	case "darwin":
-		return processProv.NewDarwinProvider()
-	default:
-		return processProv.NewLinuxProvider()
-	}
+	return processProv.New(e.log, processProv.NewSyscallSignaler())
 }
 
 func (e hostEnv) user() userProv.Provider {
