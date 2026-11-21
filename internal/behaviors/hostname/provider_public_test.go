@@ -33,6 +33,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
+	hostmocks "github.com/osapi-io/osapi/internal/behavior/host/mocks"
 	"github.com/osapi-io/osapi/internal/behaviors/hostname"
 	"github.com/osapi-io/osapi/internal/behaviors/hostname/mocks"
 )
@@ -41,21 +42,29 @@ type ProviderPublicTestSuite struct {
 	suite.Suite
 }
 
-// exec answers each command by its line: an output, or an error.
+// exec is the output of each command line, and the error of each line
+// that fails. mock makes the generated host.Exec that answers it.
 type exec struct {
-	host.Exec
 	out map[string]string
 	err map[string]error
 }
 
-func (e exec) RunCmd(_ context.Context, name string, args []string) (string, error) {
-	line := strings.Join(append([]string{name}, args...), " ")
+func (e exec) mock(
+	t *testing.T,
+) host.Exec {
+	answer := func(_ context.Context, name string, args []string) (string, error) {
+		line := strings.Join(append([]string{name}, args...), " ")
 
-	return e.out[line], e.err[line]
-}
+		return e.out[line], e.err[line]
+	}
+	m := hostmocks.NewMockExec(gomock.NewController(t))
+	m.EXPECT().RunCmd(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(answer).AnyTimes()
+	m.EXPECT().
+		RunPrivilegedCmd(gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(answer).
+		AnyTimes()
 
-func (e exec) RunPrivilegedCmd(ctx context.Context, name string, args []string) (string, error) {
-	return e.RunCmd(ctx, name, args)
+	return m
 }
 
 // build is the provider on platform, with files, and commands that answer
@@ -71,7 +80,10 @@ func (s *ProviderPublicTestSuite) build(
 		s.Require().NoError(fs.MkdirAll(filepath.Dir(path), 0o755))
 		s.Require().NoError(fs.WriteFile(path, []byte(content), 0o444))
 	}
-	p, err := hostname.Behavior.Provider(platform, host.Host{FS: fs, Exec: e, Container: container})
+	p, err := hostname.Behavior.Provider(
+		platform,
+		host.Host{FS: fs, Exec: e.mock(s.T()), Container: container},
+	)
 	s.Require().NoError(err)
 
 	return p.(hostname.Provider)
@@ -85,13 +97,26 @@ func (s *ProviderPublicTestSuite) TestHostnameErrors() {
 		want     string
 	}{
 		{
-			name: "when /proc/sys/kernel/hostname is missing", platform: behavior.PlatformLinux,
-			want: "read /proc/sys/kernel/hostname",
+			name:     "when hostname fails and /proc/sys/kernel/hostname is missing",
+			platform: behavior.PlatformLinux,
+			exec: exec{
+				err: map[string]error{
+					"hostname -s": errors.New("boom"),
+					"hostname":    errors.New("boom"),
+				},
+			},
+			want: "read the hostname",
 		},
 		{
-			name: "when sysctl fails", platform: behavior.PlatformDarwin,
-			exec: exec{err: map[string]error{"sysctl -n kern.hostname": errors.New("boom")}},
-			want: "read kern.hostname: boom",
+			name:     "when hostname fails on macOS",
+			platform: behavior.PlatformDarwin,
+			exec: exec{
+				err: map[string]error{
+					"hostname -s": errors.New("boom"),
+					"hostname":    errors.New("boom"),
+				},
+			},
+			want: "read the hostname",
 		},
 	}
 	for _, tc := range tests {

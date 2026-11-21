@@ -29,9 +29,6 @@ func Get(
 	_ GetInput,
 ) (Entry, error) {
 	info, err := p.Release(ctx)
-	if err != nil {
-		return Entry{}, err
-	}
 
-	return Entry{OSInfo: info}, nil
+	return Entry{OSInfo: info}, err
 }

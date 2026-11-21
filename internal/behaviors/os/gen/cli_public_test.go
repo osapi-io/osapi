@@ -32,6 +32,15 @@ func (s *CLIPublicTestSuite) TestCommands() {
 				Body:   "",
 			},
 		},
+		{
+			name: "when the example \"A Mac\" is run",
+			args: []string{"node", "os", "get", "--target", "server1"},
+			want: commandtest.Request{
+				Method: "GET",
+				Path:   "/api/node/server1/os",
+				Body:   "",
+			},
+		},
 	}
 
 	for _, tc := range tests {

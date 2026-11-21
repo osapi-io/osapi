@@ -34,17 +34,17 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Node,
 	behavior.API,
 	behavior.CLI,
-	// Linux reads /proc/sys/kernel/hostname; macOS reads kern.hostname.
+	// gohai reads the name from hostname, on Linux and on macOS.
 	behavior.Platform(behavior.PlatformLinux, newLinux),
 	behavior.Platform(behavior.PlatformDarwin, newDarwin),
-	behavior.Runs("sysctl"),
+	behavior.Runs("hostname"),
 	behavior.Read("get", Get).
 		Describe("Get the hostname of the host").
-		Explain("Reads the kernel's hostname: /proc/sys/kernel/hostname on Linux, and "+
-			"kern.hostname on macOS.").
+		Explain("Reads the host's name as the hostname command prints it, on Linux and "+
+			"on macOS. It makes no DNS lookup.").
 		Example("A host named web-01", GetInput{}, Entry{Name: "web-01"},
-			behavior.Exists("/proc/sys/kernel/hostname", "web-01\n"),
-			behavior.Prints("sysctl -n kern.hostname", "web-01\n"),
+			behavior.Prints("hostname", "web-01\n"),
+			behavior.Prints("hostname -s", "web-01\n"),
 		),
 	behavior.Write("update", Update).
 		On(behavior.PlatformDebian).

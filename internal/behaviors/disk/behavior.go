@@ -30,25 +30,32 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Node,
 	behavior.API,
 	behavior.CLI,
-	behavior.Platform(behavior.PlatformLinux, newLinux),
-	behavior.Platform(behavior.PlatformDarwin, newDarwin),
-	behavior.Runs("df"),
+	// gohai reads /proc/mounts, df, lsblk and zfs on Linux, and mount and df
+	// on macOS.
+	behavior.Platform(behavior.PlatformLinux, newReader),
+	behavior.Platform(behavior.PlatformDarwin, newReader),
+	behavior.Runs("df", "lsblk", "zfs", "mount"),
 	behavior.Read("get", Get).
 		Describe("Get the disk usage of the host").
 		Explain("Reads the size, the used space and the free space of each local "+
-			"filesystem, in bytes, from df: ext4, xfs and btrfs on Linux, and apfs "+
-			"and hfs on macOS. Network and special filesystems are left out.").
+			"filesystem, in bytes: the mounts of /proc/mounts on Linux and of mount on "+
+			"macOS, with their sizes from df. Local is ext4, xfs and btrfs on Linux, and "+
+			"apfs and hfs on macOS. Network and special filesystems are left out.").
 		Example("A host with one local filesystem", GetInput{},
 			Entry{
 				Disks: []Disk{
 					{Name: "/", Total: 52428800000, Used: 20971520000, Free: 31457280000},
 				},
 			},
-			behavior.Prints("df -kP -t ext4 -t xfs -t btrfs",
+			behavior.Exists("/proc/mounts", "/dev/sda1 / ext4 rw,relatime 0 0\ntmpfs /run tmpfs rw 0 0\n"),
+			behavior.Prints("df -akP",
 				"Filesystem 1024-blocks Used Available Capacity Mounted on\n"+
-					"/dev/sda1 51200000 20480000 30720000 40% /\n"),
-			behavior.Prints("df -kP -T apfs,hfs",
-				"Filesystem 1024-blocks Used Available Capacity Mounted on\n"+
-					"/dev/disk3s1 51200000 20480000 30720000 40% /\n"),
+					"/dev/sda1 51200000 20480000 30720000 40% /\n"+
+					"tmpfs 1024 0 1024 0% /run\n"),
+			behavior.Prints("mount", "/dev/disk3s1 on / (apfs, local, journaled)\n"+
+				"devfs on /dev (devfs, local, nobrowse)\n"),
+			behavior.Prints("df -ki",
+				"Filesystem 1024-blocks Used Available Capacity iused ifree %iused Mounted on\n"+
+					"/dev/disk3s1 51200000 20480000 30720000 40% 100 200 1% /\n"),
 		),
 ))

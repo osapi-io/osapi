@@ -61,6 +61,40 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","os_info":{"distribution":"ubuntu","version":"24.04"},"status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
 		},
 		{
+			Name: "when the example \"A Mac\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/os",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"os.get",
+				os.GetInput{},
+				servertest.Completed("server1", `{"os_info":{"distribution":"darwin","version":"15.5"}}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","os_info":{"distribution":"darwin","version":"15.5"},"status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A Mac\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/os",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"os.get",
+				os.GetInput{},
+				servertest.Completed("server1", `{"os_info":{"distribution":"darwin","version":"15.5"}}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","os_info":{"distribution":"darwin","version":"15.5"},"status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodGet,

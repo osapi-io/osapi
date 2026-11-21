@@ -14,7 +14,7 @@ var hostnameGetCmd = &cobra.Command{
 	Annotations: map[string]string{reference.Permission: "hostname:read"},
 	Args:        cobra.NoArgs,
 	Example:     "  # A host named web-01\n  osapi client node hostname get --target web-01",
-	Long:        "Reads the kernel's hostname: /proc/sys/kernel/hostname on Linux, and kern.hostname on macOS.",
+	Long:        "Reads the host's name as the hostname command prints it, on Linux and on macOS. It makes no DNS lookup.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostnameFlag, _ := cmd.Flags().GetString("target")
 

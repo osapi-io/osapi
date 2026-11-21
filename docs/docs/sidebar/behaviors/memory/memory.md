@@ -26,10 +26,10 @@ Get the memory usage of target hosts.
 
 On `linux`, `darwin`. On any other platform its methods report `skipped`.
 
-It runs `sysctl`, which the host must have installed. `osapi agent start`
+It runs `sysctl`, `vm_stat`, which the host must have installed. `osapi agent start`
 warns about any that are missing.
 
-In a trace, a call is the span `behavior.memory.<method>`, with `exec sysctl` under it.
+In a trace, a call is the span `behavior.memory.<method>`, with `exec sysctl`, `exec vm_stat` under it.
 
 ## Methods
 

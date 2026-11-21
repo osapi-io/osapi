@@ -78,7 +78,12 @@ func Check(
 			if !b.Serves(m, pp.Name) {
 				continue
 			}
+			examples := 0
 			for _, ex := range m.Examples {
+				if !ex.RunsOn(pp.Name) {
+					continue
+				}
+				examples++
 				where := fmt.Sprintf("%s %s on %s, %q", b.Name, m.Name, pp.Name, ex.Doc)
 				for _, p := range checkExample(b, m, pp.Name, ex) {
 					problems = append(problems, where+": "+p)
@@ -86,6 +91,18 @@ func Check(
 				for _, p := range checkProbes(b, m, pp.Name, ex) {
 					problems = append(problems, where+": "+p)
 				}
+			}
+			if len(m.Examples) > 0 && examples == 0 {
+				problems = append(problems, fmt.Sprintf(
+					"%s %s on %s: %s",
+					b.Name,
+					m.Name,
+					pp.Name,
+					behavior.TestFailure(
+						behavior.TestPlatforms,
+						"no example runs on this platform; each OnPlatform names others",
+					),
+				))
 			}
 			for _, r := range m.Refusals {
 				where := fmt.Sprintf("%s %s on %s, refusal %q", b.Name, m.Name, pp.Name, r.Doc)

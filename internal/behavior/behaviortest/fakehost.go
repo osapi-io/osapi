@@ -29,6 +29,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"net"
 	"os"
 	"path"
 	"regexp"
@@ -41,6 +42,7 @@ import (
 	"github.com/avfs/avfs/vfs/failfs"
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/nats-io/nats.go/jetstream"
+	sourcemocks "github.com/osapi-io/gohai/pkg/gohai/source/mocks"
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/behavior"
@@ -127,6 +129,7 @@ func newHost(
 		Exec:      h.commands(ctrl),
 		FileState: fileState{h: h, ctrl: ctrl},
 		Now:       func() time.Time { return Now },
+		Resolver:  noNames(ctrl),
 	}
 
 	return h
@@ -393,4 +396,17 @@ func (h *fakeHost) entry(
 	e.EXPECT().Created().Return(time.Time{}).AnyTimes()
 
 	return e
+}
+
+// noNames is gohai's generated resolver, answering that no name resolves,
+// so an example makes no DNS lookup.
+func noNames(
+	ctrl *gomock.Controller,
+) *sourcemocks.MockResolver {
+	m := sourcemocks.NewMockResolver(ctrl)
+	notFound := &net.DNSError{Err: "no such host", IsNotFound: true}
+	m.EXPECT().LookupHost(gomock.Any(), gomock.Any()).Return(nil, notFound).AnyTimes()
+	m.EXPECT().LookupAddr(gomock.Any(), gomock.Any()).Return(nil, notFound).AnyTimes()
+
+	return m
 }

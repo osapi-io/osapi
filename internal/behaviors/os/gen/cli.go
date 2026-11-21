@@ -13,8 +13,8 @@ import (
 var osGetCmd = &cobra.Command{
 	Annotations: map[string]string{reference.Permission: "os:read"},
 	Args:        cobra.NoArgs,
-	Example:     "  # An Ubuntu host\n  osapi client node os get --target web-01",
-	Long:        "Reads the distribution and its version: the ID and VERSION_ID of /etc/os-release on Linux, and the system type and product version that sysctl gives on macOS, such as darwin 15.5.",
+	Example:     "  # An Ubuntu host\n  osapi client node os get --target web-01\n\n  # A Mac\n  osapi client node os get --target web-01",
+	Long:        "Reads the distribution and its version: the ID and VERSION_ID of /etc/os-release on Linux, and darwin with the ProductVersion of sw_vers on macOS, such as darwin 15.5.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("target")
 

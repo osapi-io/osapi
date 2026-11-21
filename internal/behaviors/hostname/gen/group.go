@@ -88,7 +88,7 @@ var Group = endpoint.Define(
 		Describe("Get the hostname of the host").
 		Permission("hostname:read").
 		Returns("Each target host's result.").
-		Explain("Reads the kernel's hostname: /proc/sys/kernel/hostname on Linux, and kern.hostname on macOS.").
+		Explain("Reads the host's name as the hostname command prints it, on Linux and on macOS. It makes no DNS lookup.").
 		Example("--target web-01", "A host named web-01"),
 	endpoint.Put[UpdateRequest, HostnameUpdateResponse]("update").
 		Handle(HandleUpdate).

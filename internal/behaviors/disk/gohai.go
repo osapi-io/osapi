@@ -18,48 +18,55 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package memory
+package disk
 
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
+
+	"github.com/osapi-io/gohai/pkg/gohai/collectors/filesystem"
+	"github.com/osapi-io/gohai/pkg/gohai/source"
 
 	"github.com/osapi-io/osapi/internal/behavior/host"
 )
 
-// darwin reads the memory and its page counts from sysctl.
-type darwin struct {
-	exec host.Exec
+// localTypes are the filesystem types of local disks. Network, virtual and
+// container mounts, such as nfs, tmpfs and overlay, are left out.
+var localTypes = map[string]bool{
+	"ext4": true, "xfs": true, "btrfs": true, "apfs": true, "hfs": true,
 }
 
-// newDarwin is the provider on macOS.
-func newDarwin(
+// reader reads the local filesystems with gohai's filesystem collector,
+// on Linux and on macOS, through the host's sources.
+type reader struct {
+	src source.Sources
+}
+
+func newReader(
 	h host.Host,
 ) (Provider, error) {
-	return &darwin{exec: h.Exec}, nil
+	return &reader{src: h.Sources()}, nil
 }
 
-// Memory is hw.memsize, the free pages, and the total less the free and
-// speculative pages, which the kernel can give back at once.
-func (d *darwin) Memory(
+// Disks is the size, the used and the free bytes of each local
+// filesystem. A mount without sizes is left out.
+func (r *reader) Disks(
 	ctx context.Context,
-) (Usage, error) {
-	var n [4]int
-	for i, name := range []string{"hw.memsize", "hw.pagesize", "vm.page_free_count", "vm.page_speculative_count"} {
-		out, err := d.exec.RunCmd(ctx, "sysctl", []string{"-n", name})
-		if err != nil {
-			return Usage{}, fmt.Errorf("read %s: %w", name, err)
-		}
-		v, err := strconv.Atoi(strings.TrimSpace(out))
-		if err != nil {
-			return Usage{}, fmt.Errorf("%s: %w", name, err)
-		}
-		n[i] = v
+) ([]Disk, error) {
+	got, err := filesystem.NewWith(r.src).Collect(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("read filesystems: %w", err)
 	}
-	total, page := n[0], n[1]
-	free := n[2] * page
+	disks := []Disk{}
+	for _, m := range got.(*filesystem.Info).Mounts {
+		if m.Device == "" || !localTypes[m.Type] || m.Total == 0 {
+			continue
+		}
+		disks = append(
+			disks,
+			Disk{Name: m.Mountpoint, Total: int(m.Total), Used: int(m.Used), Free: int(m.Free)},
+		)
+	}
 
-	return Usage{Total: total, Free: free, Used: total - free - n[3]*page}, nil
+	return disks, nil
 }

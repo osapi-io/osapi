@@ -31,6 +31,8 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/osapi-io/gohai/pkg/gohai/source"
+
 	"github.com/osapi-io/osapi/internal/provider"
 
 	"github.com/avfs/avfs"
@@ -67,6 +69,39 @@ type Host struct {
 	// fixed time, so an example that reads the time, such as an uptime from
 	// the boot time, has one answer. Time reads it.
 	Now func() time.Time
+	// Resolver resolves names for gohai, such as the canonical FQDN. The
+	// agent gives none, which is the system resolver; a test gives one that
+	// answers without the network.
+	Resolver source.Resolver
+}
+
+// Sources are the sources a gohai collector reads this host through: its
+// filesystem, its commands, its clock, its platform as the family, and its
+// resolver. A nil field is the real host's.
+func (h Host) Sources() source.Sources {
+	src := source.Sources{FS: h.FS, Now: h.Now, Family: h.Platform, Resolver: h.Resolver}
+	if h.Exec != nil {
+		src.Exec = runner{exec: h.Exec}
+	}
+
+	return src
+}
+
+// runner is the host's commands as gohai's source.Runner: each runs as the
+// agent's own user, with RunCmd.
+type runner struct {
+	exec Exec
+}
+
+// Execute runs name with args, and is its output.
+func (r runner) Execute(
+	ctx context.Context,
+	name string,
+	args ...string,
+) ([]byte, error) {
+	out, err := r.exec.RunCmd(ctx, name, args)
+
+	return []byte(out), err
 }
 
 // Time is the time on the host: h.Now, or time.Now when the host gives none.

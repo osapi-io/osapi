@@ -29,9 +29,9 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Node,
 	behavior.API,
 	behavior.CLI,
-	// Linux reads /proc/loadavg; macOS reads vm.loadavg from sysctl.
-	behavior.Platform(behavior.PlatformLinux, newLinux),
-	behavior.Platform(behavior.PlatformDarwin, newDarwin),
+	// gohai reads /proc/loadavg on Linux, and vm.loadavg from sysctl on macOS.
+	behavior.Platform(behavior.PlatformLinux, newReader),
+	behavior.Platform(behavior.PlatformDarwin, newReader),
 	behavior.Runs("sysctl"),
 	behavior.Read("get", Get).
 		Describe("Get the load averages of the host").

@@ -21,28 +21,36 @@
 package load
 
 import (
+	"context"
 	"fmt"
-	"strconv"
-	"strings"
+
+	gohai "github.com/osapi-io/gohai/pkg/gohai/collectors/load"
+	"github.com/osapi-io/gohai/pkg/gohai/source"
+
+	"github.com/osapi-io/osapi/internal/behavior/host"
 )
 
-// averages is the first three numbers of text, such as /proc/loadavg's
-// "0.32 0.28 0.25 1/412 12345" or sysctl's "{ 0.32 0.28 0.25 }".
-func averages(
-	text string,
-) (Averages, error) {
-	fields := strings.Fields(strings.Trim(strings.TrimSpace(text), "{}"))
-	if len(fields) < 3 {
-		return Averages{}, fmt.Errorf("no load averages in %q", text)
-	}
-	var v [3]float64
-	for i := range v {
-		n, err := strconv.ParseFloat(fields[i], 64)
-		if err != nil {
-			return Averages{}, fmt.Errorf("load average %q: %w", fields[i], err)
-		}
-		v[i] = n
-	}
+// reader reads the load averages with gohai's load collector, on Linux and
+// on macOS, through the host's sources.
+type reader struct {
+	src source.Sources
+}
 
-	return Averages{One: v[0], Five: v[1], Fifteen: v[2]}, nil
+func newReader(
+	h host.Host,
+) (Provider, error) {
+	return &reader{src: h.Sources()}, nil
+}
+
+// Load is the averages of the run queue over 1, 5 and 15 minutes.
+func (r *reader) Load(
+	ctx context.Context,
+) (Averages, error) {
+	got, err := gohai.NewWith(r.src).Collect(ctx, nil)
+	if err != nil {
+		return Averages{}, fmt.Errorf("read load: %w", err)
+	}
+	l := got.(*gohai.Info)
+
+	return Averages{One: l.One, Five: l.Five, Fifteen: l.Fifteen}, nil
 }

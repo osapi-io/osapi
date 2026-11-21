@@ -30,10 +30,10 @@ On `linux`, `darwin`. On any other platform its methods report `skipped`.
 
 `update` runs `hostnamectl` with sudo, only where it runs.
 
-It runs `sysctl`, which the host must have installed. `osapi agent start`
+It runs `hostname`, which the host must have installed. `osapi agent start`
 warns about any that are missing.
 
-In a trace, a call is the span `behavior.hostname.<method>`, with `exec hostnamectl`, `exec sysctl` under it.
+In a trace, a call is the span `behavior.hostname.<method>`, with `exec hostnamectl`, `exec hostname` under it.
 
 Its span records the input `name` (update).
 

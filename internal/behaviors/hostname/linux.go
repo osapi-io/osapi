@@ -25,18 +25,15 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/avfs/avfs"
+	"github.com/osapi-io/gohai/pkg/gohai/source"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 )
 
-// procHostname is the kernel's hostname.
-const procHostname = "/proc/sys/kernel/hostname"
-
 // linux reads the kernel's hostname and sets it with hostnamectl.
 type linux struct {
-	fs        avfs.VFS
+	src       source.Sources
 	exec      host.Exec
 	container bool
 }
@@ -45,19 +42,14 @@ type linux struct {
 func newLinux(
 	h host.Host,
 ) (Provider, error) {
-	return &linux{fs: h.FS, exec: h.Exec, container: h.Container}, nil
+	return &linux{src: h.Sources(), exec: h.Exec, container: h.Container}, nil
 }
 
-// Hostname is /proc/sys/kernel/hostname.
+// Hostname is the host's name, read with gohai.
 func (l *linux) Hostname(
-	_ context.Context,
+	ctx context.Context,
 ) (string, error) {
-	data, err := l.fs.ReadFile(procHostname)
-	if err != nil {
-		return "", fmt.Errorf("read %s: %w", procHostname, err)
-	}
-
-	return strings.TrimSpace(string(data)), nil
+	return machineName(ctx, l.src)
 }
 
 // SetHostname runs hostnamectl set-hostname when hostnamectl reports a

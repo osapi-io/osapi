@@ -53,7 +53,7 @@ var Group = endpoint.Define(
 		Describe("Get the disk usage of the host").
 		Permission("disk:read").
 		Returns("Each target host's result.").
-		Explain("Reads the size, the used space and the free space of each local filesystem, in bytes, from df: ext4, xfs and btrfs on Linux, and apfs and hfs on macOS. Network and special filesystems are left out.").
+		Explain("Reads the size, the used space and the free space of each local filesystem, in bytes: the mounts of /proc/mounts on Linux and of mount on macOS, with their sizes from df. Local is ext4, xfs and btrfs on Linux, and apfs and hfs on macOS. Network and special filesystems are left out.").
 		Example("--target web-01", "A host with one local filesystem"),
 )
 

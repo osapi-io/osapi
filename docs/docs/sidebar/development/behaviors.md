@@ -278,6 +278,7 @@ Example("Turn on IP forwarding",
 | `behavior.Prints(cmd, out)`           | The command line `cmd` prints `out`                                                                      |
 | `behavior.PrintsAfter(ran, cmd, out)` | Once `ran` has run, `cmd` prints `out`: state a program keeps, such as a package query after the install |
 | `behavior.Exists(path, text)`         | The file is there before the call                                                                        |
+| `behavior.OnPlatform(platforms...)`   | The example runs only on these platforms, for an answer that is the platform's own, such as the OS name  |
 | `behavior.Wrote(path, text)`          | The call leaves the file holding exactly `text`                                                          |
 | `behavior.Removed(path)`              | The call leaves the file gone                                                                            |
 | `behavior.Ran(prog, args...)`         | The call runs that command, with or without sudo                                                         |

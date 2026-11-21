@@ -26,10 +26,10 @@ Get the disk usage of target hosts.
 
 On `linux`, `darwin`. On any other platform its methods report `skipped`.
 
-It runs `df`, which the host must have installed. `osapi agent start`
+It runs `df`, `lsblk`, `zfs`, `mount`, which the host must have installed. `osapi agent start`
 warns about any that are missing.
 
-In a trace, a call is the span `behavior.disk.<method>`, with `exec df` under it.
+In a trace, a call is the span `behavior.disk.<method>`, with `exec df`, `exec lsblk`, `exec zfs`, `exec mount` under it.
 
 ## Methods
 

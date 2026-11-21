@@ -38,8 +38,14 @@ the result.
 **What a program reports.** Run it with `h.Exec` and parse its output: a package
 manager, `systemctl`, `ip`. Query before you act. Act only when the query shows that the host is different. An example gives the answer of the query with `Prints`. It gives the answer after the change with `PrintsAfter`. Thus the second run sees the change and reports `changed: false`.
 
-**The kernel's view, read only.** Read `/proc` or `/sys` through `h.FS`, declare
-the `linux` platform, and give examples their files with `Exists`.
+**A fact about the host, read only.** Call the gohai collector that has it, with
+`h.Sources()`: `memory.NewWith(h.Sources()).Collect(ctx, nil)`. gohai reads the
+host through the host's filesystem, commands, clock and resolver, so the fake
+host answers it. Declare each program gohai runs with `behavior.Runs`, and give
+the examples gohai's files with `Exists` and its commands with `Prints`. Do not
+parse `/proc` or `sysctl` in the behavior. When gohai does not have the read,
+add it to gohai first. When an answer is the platform's own, such as the name of
+the operating system, limit each example with `behavior.OnPlatform`.
 
 ## Input that reaches the host
 
