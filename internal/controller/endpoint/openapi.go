@@ -411,6 +411,12 @@ func constrained(
 	if p := f.Tag.Get("pattern"); p != "" {
 		s.Value.Pattern = p
 	}
+	// A secret is write-only, so a client never shows it, and a password,
+	// so a form hides it.
+	if f.Tag.Get("secret") == "true" {
+		s.Value.WriteOnly = true
+		s.Value.Format = "password"
+	}
 	// A path parameter is always given, so a default means nothing there:
 	// the CLI's default, such as --target _all, comes from the tag itself.
 	if d, ok := f.Tag.Lookup("default"); ok && f.Tag.Get("in") != "path" {
@@ -447,6 +453,16 @@ func (t target) Enum(values []string) {
 func (t target) Pattern(re string) { t.s.Pattern = re }
 
 func (t target) Format(format string) { t.s.Format = format }
+
+// Items is the target of the array's items. A schema with no items has
+// nothing to constrain, so the rules go to a schema nobody reads.
+func (t target) Items() rule.Target {
+	if t.s.Items == nil || t.s.Items.Value == nil {
+		return target{&openapi3.Schema{}}
+	}
+
+	return target{t.s.Items.Value}
+}
 
 // Bound sets min, max or len as the constraint that fits the type: the
 // length of a string, the items of an array, the value of a number.

@@ -27,6 +27,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/cli/command"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/validation"
 
 	"github.com/osapi-io/osapi/internal/validation/rule"
@@ -75,6 +77,9 @@ const (
 	// RuleOptional: an optional field of a write's request body is left out
 	// of the JSON when it is empty, so the client does not send "" for it.
 	RuleOptional = "optional"
+	// RuleInput: each input field has a json name, a doc and no default,
+	// and is not named hostname or target, which every request has.
+	RuleInput = "input"
 	// RulePlatform: a behavior declares a provider for at least one
 	// platform, once each, and each implements every method's provider type.
 	RulePlatform = "platform"
@@ -118,7 +123,7 @@ var readVerbs = map[string]bool{"list": true, "get": true, "status": true}
 // route, so it is refused until the platform has action methods.
 var writeVerbs = map[string]bool{"create": true, "update": true, "delete": true}
 
-var namePattern = regexp.MustCompile(`^[a-z][a-z0-9-]*$`)
+var namePattern = regexp.MustCompile(`^[a-z][a-z0-9]*$`)
 
 // reservedFields are what the platform puts in every per-host result, so an
 // output type that declares one would collide with it.
@@ -149,7 +154,75 @@ func Validate() []Problem {
 		problems = append(problems, ValidateBehavior(b)...)
 	}
 
+	problems = append(problems, schemaNameProblems(all)...)
+
 	return withFixes(append(problems, chainProblems(all)...))
+}
+
+// schemaNameProblems is each schema name that two Go types would have. A
+// method's input and output are named with the behavior's TypeName, but a
+// struct they hold is named by its own name, in one spec for every
+// behavior: a second Usage would replace the first.
+func schemaNameProblems(
+	all []*Behavior,
+) []Problem {
+	owner := map[string]reflect.Type{}
+	where := map[string]string{}
+	var problems []Problem
+	for _, b := range all {
+		for _, m := range b.Methods {
+			for _, t := range append(nested(m.In), nested(m.Out)...) {
+				prev, ok := owner[t.Name()]
+				switch {
+				case !ok:
+					owner[t.Name()], where[t.Name()] = t, b.Name
+				case prev != t:
+					problems = append(problems, Problem{
+						Behavior: b.Name,
+						Method:   m.Name,
+						Rule:     RuleSchema,
+						Message: fmt.Sprintf(
+							"%s is also a type of %s; in the spec the two are one schema",
+							t.Name(),
+							where[t.Name()],
+						),
+					})
+				}
+			}
+		}
+	}
+
+	return problems
+}
+
+// nested is each named struct that t's fields hold, at any depth, but not
+// t itself: those keep their own names in the spec.
+func nested(
+	t reflect.Type,
+) []reflect.Type {
+	var out []reflect.Type
+	seen := map[reflect.Type]bool{}
+	var walk func(t reflect.Type, top bool)
+	walk = func(t reflect.Type, top bool) {
+		for t.Kind() == reflect.Pointer || t.Kind() == reflect.Slice || t.Kind() == reflect.Map {
+			t = t.Elem()
+		}
+		if t.Kind() != reflect.Struct || seen[t] {
+			return
+		}
+		seen[t] = true
+		if !top && t.Name() != "" {
+			out = append(out, t)
+		}
+		for i := range t.NumField() {
+			if t.Field(i).IsExported() {
+				walk(t.Field(i).Type, false)
+			}
+		}
+	}
+	walk(t, true)
+
+	return out
 }
 
 // ValidateBehavior checks one behavior.
@@ -167,7 +240,12 @@ func ValidateBehavior(
 	}
 
 	if !namePattern.MatchString(b.Name) {
-		add("", RuleName, "name %q must be lowercase letters, digits and dashes", b.Name)
+		add(
+			"",
+			RuleName,
+			"name %q must be lowercase letters and digits, starting with a letter",
+			b.Name,
+		)
 	}
 	if b.Name == "all" || b.Group == "all" {
 		add(
@@ -177,7 +255,12 @@ func ValidateBehavior(
 		)
 	}
 	if b.Group != "" && !namePattern.MatchString(b.Group) {
-		add("", RuleName, "group %q must be lowercase letters, digits and dashes", b.Group)
+		add(
+			"",
+			RuleName,
+			"group %q must be lowercase letters and digits, starting with a letter",
+			b.Group,
+		)
 	}
 	if b.Placement == "" {
 		add("", RulePlacement, "no placement; add behavior.Node")
@@ -195,8 +278,9 @@ func ValidateBehavior(
 		for _, m := range b.Methods {
 			for _, name := range unflaggable(m.In) {
 				add(m.Name, RuleSurface,
-					"input field %s cannot be a CLI flag; flags hold a string, bool, number, "+
-						"float or map[string]string, so give it one of those types or leave CLI off", name)
+					"input field %s cannot be a CLI flag; a flag holds a string, bool, int, "+
+						"[]string, map[string]string or []byte (a file), so give it one of those "+
+						"types or leave CLI off", name)
 			}
 		}
 	}
@@ -374,7 +458,11 @@ func ValidateBehavior(
 		seen[m.Name] = true
 
 		if !namePattern.MatchString(m.Name) {
-			add(m.Name, RuleName, "method name must be lowercase letters, digits and dashes")
+			add(
+				m.Name,
+				RuleName,
+				"method name must be lowercase letters and digits, starting with a letter",
+			)
 		}
 		if m.Doc == "" {
 			add(m.Name, RuleDoc, "no description; add .Describe(...)")
@@ -386,7 +474,17 @@ func ValidateBehavior(
 		} else if m.KeyField != "" {
 			if _, ok := in.Properties[m.KeyField]; !ok {
 				add(m.Name, RuleKey, "key %q is not a field of the input", m.KeyField)
+			} else if !slices.Contains(in.Required, m.KeyField) {
+				add(
+					m.Name,
+					RuleKey,
+					"key %q is optional, but a key is a path segment, which is never empty",
+					m.KeyField,
+				)
 			}
+		}
+		for _, msg := range inputProblems(m.In) {
+			add(m.Name, RuleInput, "%s", msg)
 		}
 
 		out, err := SchemaFor(m.Out)
@@ -419,6 +517,10 @@ func ValidateBehavior(
 					name,
 				)
 			}
+		}
+
+		for _, msg := range outputProblems(elem) {
+			add(m.Name, RuleOutputShape, "%s", msg)
 		}
 
 		changed, ok := out.Properties["changed"]
@@ -498,15 +600,8 @@ func unflaggable(
 		if !f.IsExported() || name == "" || name == "-" {
 			continue
 		}
-		if f.Type == reflect.TypeFor[map[string]string]() {
-			continue
-		}
-		switch f.Type.Kind() {
-		case reflect.String, reflect.Bool,
-			reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-			reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
-			reflect.Float32, reflect.Float64:
-		default:
+		// The CLI owns which types a flag holds; its generator builds each.
+		if !command.Flaggable(f.Type) {
 			names = append(names, name)
 		}
 	}
@@ -540,27 +635,113 @@ func unrefused(
 	return out
 }
 
-// sentEmpty is each field of m's request body that is optional, its
-// validate tag starting with omitempty, but whose json tag has no
-// omitempty: the client sends "" or 0 for it, which its other rules can
-// refuse. The key is in the path, not the body.
+// sentEmpty is each field of m's request body that a client sends empty:
+// the endpoint layer owns the rule, and the body is every input field but
+// the key, which is in the path.
 func sentEmpty(
 	m *Method,
 ) []string {
-	var out []string
+	var body []reflect.StructField
 	for i := range m.In.NumField() {
 		f := m.In.Field(i)
-		name, opts, _ := strings.Cut(f.Tag.Get("json"), ",")
-		if name == "" || name == "-" || name == m.KeyField {
+		if name, _, _ := strings.Cut(f.Tag.Get("json"), ","); name != m.KeyField {
+			body = append(body, f)
+		}
+	}
+
+	return endpoint.SentEmpty(body)
+}
+
+// reservedInputs are what the generated request of every method has: the
+// target host is the hostname path segment and the --target flag. An input
+// field of the same name would be a second of each.
+var reservedInputs = map[string]bool{"hostname": true, "target": true}
+
+// inputProblems is each input field that the generators cannot build or
+// that would mislead: one with no json name, which the CLI and the tables
+// drop; one named like the target; one with no doc, which the spec, the
+// flag and the page show empty; one with a default, which the server does
+// not apply; and an array, which has no JSON shape of its own.
+func inputProblems(
+	in reflect.Type,
+) []string {
+	if in.Kind() != reflect.Struct {
+		return nil
+	}
+
+	var out []string
+	for i := range in.NumField() {
+		f := in.Field(i)
+		if !f.IsExported() {
 			continue
 		}
-		if !strings.HasPrefix(f.Tag.Get("validate"), "omitempty") {
+		name, _, _ := strings.Cut(f.Tag.Get("json"), ",")
+		switch name {
+		case "-":
+			continue
+		case "":
+			out = append(out, fmt.Sprintf("input field %s has no json name", f.Name))
+
 			continue
 		}
-		if !slices.Contains(strings.Split(opts, ","), "omitempty") {
-			out = append(out, name)
+		if reservedInputs[name] || f.Name == "Hostname" {
+			out = append(out, fmt.Sprintf(
+				"input field %s is named like the target, which every request has", name))
+		}
+		if f.Tag.Get("doc") == "" {
+			out = append(out, fmt.Sprintf("input field %s has no doc", name))
+		}
+		if _, ok := f.Tag.Lookup("default"); ok {
+			out = append(out, fmt.Sprintf(
+				"input field %s has a default, which the server does not apply", name))
+		}
+		if hasArray(f.Type) {
+			out = append(out, fmt.Sprintf("input field %s is an array; use a slice", name))
 		}
 	}
 
 	return out
+}
+
+// outputProblems is each output field with no json name, which the tables
+// drop, or an array, and each render tag that the output does not know.
+func outputProblems(
+	out reflect.Type,
+) []string {
+	var problems []string
+	for i := range out.NumField() {
+		f := out.Field(i)
+		if !f.IsExported() {
+			continue
+		}
+		name, _, _ := strings.Cut(f.Tag.Get("json"), ",")
+		if name == "" {
+			problems = append(problems, fmt.Sprintf("output field %s has no json name", f.Name))
+		}
+		if hasArray(f.Type) {
+			problems = append(
+				problems,
+				fmt.Sprintf("output field %s is an array; use a slice", f.Name),
+			)
+		}
+	}
+
+	return append(problems, command.TagProblems(out)...)
+}
+
+// hasArray reports whether t is a fixed-size array, or a slice, map or
+// pointer of one: the generators write each as a slice or a pointer.
+func hasArray(
+	t reflect.Type,
+) bool {
+	for {
+		switch t.Kind() {
+		case reflect.Array:
+			return true
+		case reflect.Slice, reflect.Pointer, reflect.Map:
+			t = t.Elem()
+		default:
+			return false
+		}
+	}
 }

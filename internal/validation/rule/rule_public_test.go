@@ -35,6 +35,7 @@ type got struct {
 	pattern string
 	format  string
 	bounds  map[string]float64
+	items   *got
 }
 
 func (g *got) Enum(values []string)      { g.enum = values }
@@ -42,6 +43,14 @@ func (g *got) Pattern(re string)         { g.pattern = re }
 func (g *got) Format(format string)      { g.format = format }
 func (g *got) Bound(r string, n float64) { g.bounds[r] = n }
 func newGot() *got                       { return &got{bounds: map[string]float64{}} }
+
+func (g *got) Items() rule.Target {
+	if g.items == nil {
+		g.items = newGot()
+	}
+
+	return g.items
+}
 
 type RulePublicTestSuite struct {
 	suite.Suite
@@ -77,6 +86,19 @@ func (s *RulePublicTestSuite) TestApply() {
 				s.Equal(map[string]float64{"min": 1, "max": 255, "len": 3}, g.bounds)
 				s.Equal([]string{"a", "b"}, g.enum)
 				s.Equal(`^/etc`, g.pattern)
+			},
+		},
+		{
+			name: "when the tag has dive, the rules after it are each item's",
+			tag:  "required,max=10,dive,max=255,oneof=a b",
+			validateFunc: func(g *got, required bool, err error) {
+				s.Require().NoError(err)
+				s.True(required)
+				s.Equal(map[string]float64{"max": 10}, g.bounds, "the array has at most 10 items")
+				s.Empty(g.enum)
+				s.Require().NotNil(g.items)
+				s.Equal(map[string]float64{"max": 255}, g.items.bounds, "each item is at most 255")
+				s.Equal([]string{"a", "b"}, g.items.enum)
 			},
 		},
 		{

@@ -286,6 +286,18 @@ var Spec = guide.Spec{
 
 		{
 			Kind: KindCheck,
+			Name: "Flaggable(type)",
+			Does: "Whether a flag holds a value of the type: string, bool, int, []string, map[string]string or []byte, a file. The command generator builds a flag of each, and behavior validate asks it of each CLI behavior's input, so the two agree.",
+			When: "Give an input field one of those types.",
+		},
+		{
+			Kind: KindCheck,
+			Name: "TagProblems(type)",
+			Does: "Each output tag, such as render, that the output does not know, in the type and the types it holds: the check that cli command validate makes of a registered command. behavior validate asks it of each behavior's output, so its author sees the problem in the validator they run.",
+			When: "Use a render value that cli command spec get lists.",
+		},
+		{
+			Kind: KindCheck,
 			Name: "osapi cli command validate",
 			Does: "Checks every local group against the rules of a definition, and the output of every group: each output tag is one the output knows, and each method with no output says what occurred. Each problem names the rule and ends with its fix. validate --help lists each rule. go generate fails on a local group that breaks one.",
 			When: "After each change to a group.",

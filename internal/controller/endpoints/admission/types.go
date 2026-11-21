@@ -52,7 +52,7 @@ type RejectInput struct {
 
 // RejectRequest is why the machine is rejected.
 type RejectRequest struct {
-	Reason string `json:"reason" validate:"omitempty,max=1024" doc:"Why the machine is rejected; the machine and the record keep it." example:"unknown host" flag:"reason"`
+	Reason string `json:"reason,omitempty" validate:"omitempty,max=1024" doc:"Why the machine is rejected; the machine and the record keep it." example:"unknown host" flag:"reason"`
 }
 
 // ListAdmissionResponse is the admission records.

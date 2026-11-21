@@ -10,5 +10,5 @@ export interface RejectRequest {
      * Why the machine is rejected; the machine and the record keep it.
      * @maxLength 1024
      */
-  reason: string;
+  reason?: string;
 }

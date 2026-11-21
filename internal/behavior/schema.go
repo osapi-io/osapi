@@ -164,6 +164,16 @@ func (t target) Pattern(re string) { t.s.Pattern = re }
 
 func (t target) Format(format string) { t.s.Format = format }
 
+// Items is the target of the array's items. A schema with no items has
+// nothing to constrain, so the rules go to a schema nobody reads.
+func (t target) Items() rule.Target {
+	if t.s.Items == nil {
+		return target{&Schema{}}
+	}
+
+	return target{t.s.Items}
+}
+
 // Bound sets min, max or len as the constraint that fits the type: length
 // for a string, items for an array, value for a number.
 func (t target) Bound(

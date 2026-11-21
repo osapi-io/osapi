@@ -207,8 +207,26 @@ before it puts a job on the queue. The spec has `schema`. A value that fails
 shows "`<value> <message>`". A tag without a schema fails the spec generation.
 Thus the spec never checks less than the server.
 
-With `CLI`, each input field must be a string, a bool or a number, because each
-field is a flag. `osapi behavior validate` fails a field that no flag can hold.
+With `CLI`, each input field is a flag. A flag holds a `string`, a `bool`, an
+`int`, a `[]string`, a `map[string]string` or a `[]byte`, a file. The CLI owns
+that list and its generator builds each one, so an `int64` or a `float64` fails
+`osapi behavior validate`.
+
+The generated layers need each field in a form they can build.
+`osapi behavior validate` fails a definition that breaks one of these rules:
+
+| Rule       | Requires                                                                                                                                                      |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`     | The behavior and its group are lowercase letters and digits, with no dash. A Go keyword, such as `package`, takes `osapi behavior create --package`           |
+| `input`    | Each input field has a `json` name and a `doc`, no `default` (the server does not apply it), no array, and is not named `hostname` or `target`                |
+| `optional` | An optional field of a write's body, `validate:"omitempty,..."`, is `json:"name,omitempty"` too, so the client does not send `""`. The endpoint layer owns it |
+| `key`      | A key is `validate:"required"`: it is a path segment                                                                                                          |
+| `output`   | Each output field has a `json` name and no array, and each `render` tag is one the output knows. The CLI owns the render values                               |
+| `schema`   | A struct that an output holds has a name that no other behavior's type has, because one spec names every behavior's types                                     |
+
+Each rule that another layer owns is asked of that layer. Flags and `render`
+values are the CLI's, and the `optional` rule is the endpoint layer's. Thus
+`behavior validate` and the other layer cannot disagree.
 
 ## methods.go and provider.go
 

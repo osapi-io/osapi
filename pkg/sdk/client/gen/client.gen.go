@@ -3828,7 +3828,7 @@ type ReadyResponse struct {
 // RejectRequest defines model for RejectRequest.
 type RejectRequest struct {
 	// Reason Why the machine is rejected; the machine and the record keep it.
-	Reason string `json:"reason" validate:"omitempty,max=1024"`
+	Reason *string `json:"reason,omitempty" validate:"omitempty,max=1024"`
 }
 
 // Release defines model for Release.

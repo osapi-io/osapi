@@ -186,6 +186,15 @@ var flagTypes = map[reflect.Type]bool{
 	reflect.TypeFor[[]byte]():            true,
 }
 
+// Flaggable reports whether a flag can hold a value of type t: the types
+// that the command generator builds a flag for. The behavior DSL asks it,
+// so the two cannot disagree.
+func Flaggable(
+	t reflect.Type,
+) bool {
+	return flagTypes[t]
+}
+
 // Validate is each rule g breaks. A group with no problems makes commands
 // that hold to the CLI's rules.
 func Validate(
@@ -426,6 +435,15 @@ func ValidateOutput() []Problem {
 
 // tagProblems says which output tags of t, and of each type in it, the
 // output does not know.
+// TagProblems is each tag of output type t, and of the types it holds,
+// that the output does not know: the check that ValidateOutput makes on a
+// registered command, for a validator that has the type before a command.
+func TagProblems(
+	t reflect.Type,
+) []string {
+	return tagProblems(t, map[reflect.Type]bool{})
+}
+
 func tagProblems(
 	t reflect.Type,
 	seen map[reflect.Type]bool,

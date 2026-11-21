@@ -48,6 +48,10 @@ The rules:
   .Fails("&lt;what is wrong&gt;", &lt;Input&gt;&#123;...&#125;) to the method,
   with the other fields valid and the field's value breaking the rule that the
   message names, such as a name of 256 characters for max=255.
+- `optional`: An optional field of a write's request body, with omitempty in its
+  validate tag, has omitempty in its json tag too, so a client leaves it out
+  when it is empty instead of sending "" or 0, which its other rules can refuse.
+  Fix: Add ,omitempty to the field's json tag, such as json:"reason,omitempty".
 - `schema`: The spec builds: each input and output type is one that JSON can
   encode, and each validate rule has a schema. Fix: Use structs, slices, maps,
   strings, numbers, bools and time.Time; not channels or functions. Register the

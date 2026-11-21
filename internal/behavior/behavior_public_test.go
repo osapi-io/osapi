@@ -34,25 +34,10 @@ import (
 
 type fakeProvider struct{ prefix string }
 
-// taggedIn has a list field, which no CLI flag holds, beside a field that is
-// not an input at all.
-type taggedIn struct {
-	Tags  []string `json:"tags" validate:"omitempty"`
-	Notes []string `json:"-"`
-}
-
-func listTagged(
-	_ context.Context,
-	_ fakeProvider,
-	_ taggedIn,
-) ([]entry, error) {
-	return nil, nil
-}
-
 // secretIn has a field that carries a secret.
 type secretIn struct {
-	Name       string `json:"name"`
-	Passphrase string `json:"passphrase" secret:"true"`
+	Name       string `json:"name"       doc:"test"`
+	Passphrase string `json:"passphrase" doc:"test" secret:"true"`
 }
 
 func readSecret(
@@ -65,7 +50,7 @@ func readSecret(
 
 // leakyIn records a secret on the span, which validate refuses.
 type leakyIn struct {
-	Token string `json:"token" secret:"true" telemetry:"attr" validate:"omitempty"`
+	Token string `json:"token" secret:"true" telemetry:"attr" validate:"omitempty" doc:"test"`
 }
 
 func readLeaky(
@@ -100,8 +85,8 @@ type entry struct {
 }
 
 type result struct {
-	Key     string `json:"key"`
-	Changed bool   `json:"changed"`
+	Key     string `json:"key"     doc:"test"`
+	Changed bool   `json:"changed" doc:"test"`
 }
 
 func get(

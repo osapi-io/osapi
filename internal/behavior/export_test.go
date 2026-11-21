@@ -48,3 +48,6 @@ func BreakScaffold() {
 func ResetScaffold() {
 	scaffoldSources = scaffoldGo
 }
+
+// ExportSchemaNameProblems exposes schemaNameProblems for testing.
+var ExportSchemaNameProblems = schemaNameProblems
