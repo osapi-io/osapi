@@ -34,7 +34,6 @@ op GET /api/health/status id=GetHealthStatus tags=[Health_Check_API_health] auth
 op GET /api/job id=GetJobs tags=[Job_Management_API_job_operations] auth=BearerAuth:job:read params=[query:limit:integer query:offset:integer query:status:string(submitted|processing|completed|failed|partial_failure)] body= responses=[200=application/json:ListJobsResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/job/{id} id=GetJobByID tags=[Job_Management_API_job_operations] auth=BearerAuth:job:read params=[path:id!:string/uuid] body= responses=[200=application/json:JobDetailResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/nats/status id=GetNATSStatus tags=[NATS_API_nats] auth=BearerAuth:health:read params=[] body= responses=[200=application/json:ComponentList 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op GET /api/node/{hostname} id=GetNodeStatus tags=[Node_Management_API_node_status] auth=BearerAuth:node:read params=[path:hostname!:string] body= responses=[200=application/json:NodeStatusCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/certificate/ca id=GetNodeCertificateCa tags=[Certificate_Management_API_certificate_operations] auth=BearerAuth:certificate:read params=[path:hostname!:string] body= responses=[200=application/json:CertificateCACollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/container/docker id=GetNodeContainerDocker tags=[Docker_Management_API_docker_operations] auth=BearerAuth:docker:read params=[path:hostname!:string query:limit:integer query:state:string(running|stopped|all)] body= responses=[200=application/json:DockerListCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/container/docker/{id} id=GetNodeContainerDockerByID tags=[Docker_Management_API_docker_operations] auth=BearerAuth:docker:read params=[path:hostname!:string path:id!:string] body= responses=[200=application/json:DockerDetailCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -64,6 +63,7 @@ op GET /api/node/{hostname}/schedule id=GetNodeSchedule tags=[Schedule_Managemen
 op GET /api/node/{hostname}/schedule/{name} id=GetNodeScheduleByName tags=[Schedule_Management_API_schedule_operations] auth=BearerAuth:schedule:read params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:ScheduleGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/service id=GetNodeService tags=[Service_Management_API_service_operations] auth=BearerAuth:service:read params=[path:hostname!:string] body= responses=[200=application/json:ServiceListResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/service/{name} id=GetNodeServiceByName tags=[Service_Management_API_service_operations] auth=BearerAuth:service:read params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:ServiceGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op GET /api/node/{hostname}/status id=GetNodeStatus tags=[Status_API_status_operations] auth=BearerAuth:status:read params=[path:hostname!:string] body= responses=[200=application/json:StatusGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/sysctl id=GetNodeSysctl tags=[Sysctl_API_sysctl_operations] auth=BearerAuth:sysctl:read params=[path:hostname!:string query:prefix:string] body= responses=[200=application/json:SysctlCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/sysctl/{key} id=GetNodeSysctlByKey tags=[Sysctl_API_sysctl_operations] auth=BearerAuth:sysctl:read params=[path:hostname!:string path:key!:string] body= responses=[200=application/json:SysctlGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/timezone id=GetNodeTimezone tags=[Timezone_Management_API_timezone_operations] auth=BearerAuth:timezone:read params=[path:hostname!:string] body= responses=[200=application/json:TimezoneCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -276,11 +276,6 @@ schema DiskEntry.hostname! = string
 schema DiskEntry.status! = string(ok|failed|skipped|timeout)
 schema DiskGetResponse.job_id = string/uuid
 schema DiskGetResponse.results! = [DiskEntry]
-schema DiskResponse.free! = integer
-schema DiskResponse.name! = string
-schema DiskResponse.total! = integer
-schema DiskResponse.used! = integer
-schema DisksResponse = [DiskResponse]
 schema DockerActionCollectionResponse.job_id = string/uuid
 schema DockerActionCollectionResponse.results! = [DockerActionResultItem]
 schema DockerActionResultItem.changed = boolean
@@ -360,6 +355,8 @@ schema DockerSummary.id = string
 schema DockerSummary.image = string
 schema DockerSummary.name = string
 schema DockerSummary.state = string
+schema Entry.seconds! = integer
+schema Entry.uptime! = string
 schema ErrorResponse.code = integer
 schema ErrorResponse.details = string
 schema ErrorResponse.error = string
@@ -566,19 +563,6 @@ schema NetworkInterfaceResponse.name! = string
 schema NodeCondition.last_transition_time! = string/date-time
 schema NodeCondition.reason = string
 schema NodeCondition.type! = string(MemoryPressure|HighLoad|DiskPressure)
-schema NodeStatusCollectionResponse.job_id = string/uuid
-schema NodeStatusCollectionResponse.results! = [NodeStatusResponse]
-schema NodeStatusResponse.changed = boolean
-schema NodeStatusResponse.disks = DisksResponse
-schema NodeStatusResponse.error = string
-schema NodeStatusResponse.field_errors = map[string]
-schema NodeStatusResponse.hostname! = string
-schema NodeStatusResponse.load_average = LoadAverageResponse
-schema NodeStatusResponse.memory = MemoryResponse
-schema NodeStatusResponse.os_info = OSInfoResponse
-schema NodeStatusResponse.partial = boolean
-schema NodeStatusResponse.status! = string(ok|failed|skipped|timeout)
-schema NodeStatusResponse.uptime = string
 schema NtpCollectionResponse.job_id = string/uuid
 schema NtpCollectionResponse.results! = [NtpStatusEntry]
 schema NtpCreateRequest.servers! = [string]
@@ -811,6 +795,18 @@ schema StaleDeployment.path! = string
 schema StaleDeployment.provider! = string
 schema StaleDeploymentsResponse.items! = [StaleDeployment]
 schema StaleDeploymentsResponse.total_items! = integer
+schema StatusEntry.disks = [Disk]
+schema StatusEntry.error = string
+schema StatusEntry.errors = [string]
+schema StatusEntry.hostname! = string
+schema StatusEntry.load_average = Averages
+schema StatusEntry.memory = Usage
+schema StatusEntry.name = string
+schema StatusEntry.os_info = Release
+schema StatusEntry.status! = string(ok|failed|skipped|timeout)
+schema StatusEntry.uptime = Entry
+schema StatusGetResponse.job_id = string/uuid
+schema StatusGetResponse.results! = [StatusEntry]
 schema StatusResponse.agents = AgentStats
 schema StatusResponse.checks! = [Check]
 schema StatusResponse.consumers! = integer
@@ -973,13 +969,13 @@ tag Network_Management_API_interface_operations
 tag Network_Management_API_network_operations
 tag Network_Management_API_route_operations
 tag Node_File_Operations_API_node_file_operations
-tag Node_Management_API_node_status
 tag Os_API_os_operations
 tag Package_Management_API_package_operations
 tag Power_Management_API_power_operations
 tag Process_Management_API_process_operations
 tag Schedule_Management_API_schedule_operations
 tag Service_Management_API_service_operations
+tag Status_API_status_operations
 tag Sysctl_API_sysctl_operations
 tag Telemetry_API_telemetry
 tag Timezone_Management_API_timezone_operations

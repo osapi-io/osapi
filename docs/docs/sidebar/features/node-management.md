@@ -77,7 +77,7 @@ You can target a specific host, broadcast to all hosts, or route by label. Refer
 to [Node CLI Reference](../usage/cli/client/node/node.mdx) for job-based
 commands and [Agent CLI Reference](../usage/cli/client/agent/agent.mdx) for
 registry-based fleet discovery, or the
-[API Reference](/gen/api/node-management-api-node-status) for the REST
+[API Reference](/gen/api/status-api-status-operations) for the REST
 endpoints.
 
 ## Configuration
@@ -100,7 +100,7 @@ each behavior's permissions. The `read` role includes each read permission only.
   commands
 - [Node CLI Reference](../usage/cli/client/node/node.mdx): node job commands
 - [System Facts](system-facts.md): fact collection and `@fact.*` references
-- [API Reference](/gen/api/node-management-api-node-status): REST API
+- [API Reference](/gen/api/status-api-status-operations): REST API
   documentation
 - [Job System](job-system.md): how async job processing works
 - [Architecture](../architecture/architecture.md): system design overview
