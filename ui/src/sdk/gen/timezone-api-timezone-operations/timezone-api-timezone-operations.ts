@@ -33,6 +33,16 @@ export type getNodeTimezoneResponse403 = {
   status: 403
 }
 
+export type getNodeTimezoneResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getNodeTimezoneResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type getNodeTimezoneResponse500 = {
   data: ErrorResponse
   status: 500
@@ -41,7 +51,7 @@ export type getNodeTimezoneResponse500 = {
 export type getNodeTimezoneResponseSuccess = (getNodeTimezoneResponse200) & {
   headers: Headers;
 };
-export type getNodeTimezoneResponseError = (getNodeTimezoneResponse400 | getNodeTimezoneResponse401 | getNodeTimezoneResponse403 | getNodeTimezoneResponse500) & {
+export type getNodeTimezoneResponseError = (getNodeTimezoneResponse400 | getNodeTimezoneResponse401 | getNodeTimezoneResponse403 | getNodeTimezoneResponse404 | getNodeTimezoneResponse409 | getNodeTimezoneResponse500) & {
   headers: Headers;
 };
 
@@ -91,6 +101,16 @@ export type putNodeTimezoneResponse403 = {
   status: 403
 }
 
+export type putNodeTimezoneResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type putNodeTimezoneResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type putNodeTimezoneResponse500 = {
   data: ErrorResponse
   status: 500
@@ -99,7 +119,7 @@ export type putNodeTimezoneResponse500 = {
 export type putNodeTimezoneResponseSuccess = (putNodeTimezoneResponse200) & {
   headers: Headers;
 };
-export type putNodeTimezoneResponseError = (putNodeTimezoneResponse400 | putNodeTimezoneResponse401 | putNodeTimezoneResponse403 | putNodeTimezoneResponse500) & {
+export type putNodeTimezoneResponseError = (putNodeTimezoneResponse400 | putNodeTimezoneResponse401 | putNodeTimezoneResponse403 | putNodeTimezoneResponse404 | putNodeTimezoneResponse409 | putNodeTimezoneResponse500) & {
   headers: Headers;
 };
 

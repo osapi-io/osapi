@@ -33,6 +33,16 @@ export type getNodeHostnameResponse403 = {
   status: 403
 }
 
+export type getNodeHostnameResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getNodeHostnameResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type getNodeHostnameResponse500 = {
   data: ErrorResponse
   status: 500
@@ -41,7 +51,7 @@ export type getNodeHostnameResponse500 = {
 export type getNodeHostnameResponseSuccess = (getNodeHostnameResponse200) & {
   headers: Headers;
 };
-export type getNodeHostnameResponseError = (getNodeHostnameResponse400 | getNodeHostnameResponse401 | getNodeHostnameResponse403 | getNodeHostnameResponse500) & {
+export type getNodeHostnameResponseError = (getNodeHostnameResponse400 | getNodeHostnameResponse401 | getNodeHostnameResponse403 | getNodeHostnameResponse404 | getNodeHostnameResponse409 | getNodeHostnameResponse500) & {
   headers: Headers;
 };
 
@@ -91,6 +101,16 @@ export type putNodeHostnameResponse403 = {
   status: 403
 }
 
+export type putNodeHostnameResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type putNodeHostnameResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type putNodeHostnameResponse500 = {
   data: ErrorResponse
   status: 500
@@ -99,7 +119,7 @@ export type putNodeHostnameResponse500 = {
 export type putNodeHostnameResponseSuccess = (putNodeHostnameResponse200) & {
   headers: Headers;
 };
-export type putNodeHostnameResponseError = (putNodeHostnameResponse400 | putNodeHostnameResponse401 | putNodeHostnameResponse403 | putNodeHostnameResponse500) & {
+export type putNodeHostnameResponseError = (putNodeHostnameResponse400 | putNodeHostnameResponse401 | putNodeHostnameResponse403 | putNodeHostnameResponse404 | putNodeHostnameResponse409 | putNodeHostnameResponse500) & {
   headers: Headers;
 };
 

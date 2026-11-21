@@ -267,7 +267,8 @@ var Group = endpoint.Define(
 		Permission("service:read").
 		Returns("Each target host's result.").
 		Explain("Lists each service that systemd has loaded, with its state, whether it starts at boot and its description, through gohai. A Mac has no systemd, and reports skipped.").
-		Example("--target web-01", "A host with two services"),
+		Example("--target web-01", "A host with two services").
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host does not have what the request names, such as the object of a deploy."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs."), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.")),
 	endpoint.Get[GetRequest, ServiceGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodeServiceByKey").
@@ -278,7 +279,7 @@ var Group = endpoint.Define(
 		Example("--target web-01 --name ssh", "A running service").
 		Example("--target web-01 --name ssh.service", "A name with .service").
 		Result("The command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A service that systemd has not loaded | `--name nosuch` | not found |\n| A name with a space | `--name \"a b\"` | Name |").
-		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no service with that name.")),
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no service with that name."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs."), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.")),
 	endpoint.Post[CreateRequest, ServiceCreateResponse]("create").
 		Handle(HandleCreate).
 		ID("PostNodeService").
@@ -288,7 +289,8 @@ var Group = endpoint.Define(
 		Explain("Gets the object from the object store and writes it as the unit file of the service, such as /etc/systemd/system/osapi-app.service for app, then reloads systemd. A unit file at that path that osapi did not write, such as the agent's own osapi-agent.service, is refused. A unit file that already has the content does not change. The service does not start: start and enable are their own actions.").
 		Example("--target web-01 --name app --object app.service", "Deploy a unit file").
 		Example("--target web-01 --name app --object app.service", "A unit file that has the content").
-		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Deploy a unit file | writes `/etc/systemd/system/osapi-app.service`: `[Unit]\\nDescription=Example app\\n\\n[Service]\\nExecStart=/bin/sleep infinity\\n\\n[Install]\\nWantedBy=multi-user.target`; runs `systemctl daemon-reload` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| An object the store does not have | `--name app --object nosuch` | not found |\n| A unit file that osapi did not deploy | `--name agent --object app.service` | osapi did not deploy it |\n| No object | `--name app` | Object |\n| An object name over 255 characters | `--name app --object aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | Object |\n| A name with a space | `--name \"a b\" --object app.service` | Name |\n| A name that is an option | `--name --now --object app.service` | not a valid service name |"),
+		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Deploy a unit file | writes `/etc/systemd/system/osapi-app.service`: `[Unit]\\nDescription=Example app\\n\\n[Service]\\nExecStart=/bin/sleep infinity\\n\\n[Install]\\nWantedBy=multi-user.target`; runs `systemctl daemon-reload` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| An object the store does not have | `--name app --object nosuch` | not found |\n| A unit file that osapi did not deploy | `--name agent --object app.service` | osapi did not deploy it |\n| No object | `--name app` | Object |\n| An object name over 255 characters | `--name app --object aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | Object |\n| A name with a space | `--name \"a b\" --object app.service` | Name |\n| A name that is an option | `--name --now --object app.service` | not a valid service name |").
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host does not have what the request names, such as the object of a deploy."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs."), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.")),
 	endpoint.Put[UpdateRequest, ServiceUpdateResponse]("update").
 		Handle(HandleUpdate).
 		ID("PutNodeService").
@@ -298,7 +300,7 @@ var Group = endpoint.Define(
 		Explain("Writes the object as the unit file of a service that osapi deployed, then reloads systemd when the file changed. A service that osapi did not deploy is not found.").
 		Example("--target web-01 --name app --object app-v2.service", "A new unit file").
 		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| A new unit file | writes `/etc/systemd/system/osapi-app.service`: `[Unit]\\nDescription=Example app\\n\\n[Service]\\nExecStart=/bin/sleep infinity\\n\\n[Install]\\nWantedBy=multi-user.target\\nRestart=always`; runs `systemctl daemon-reload` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A service that osapi did not deploy | `--name ssh --object app.service` | not found |\n| A unit file that osapi did not deploy | `--name agent --object app.service` | not found |\n| No object | `--name app` | Object |\n| An object name over 255 characters | `--name app --object aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | Object |\n| A name with a space | `--name \"a b\" --object app.service` | Name |\n| A name that is an option | `--name --now --object app.service` | not a valid service name |").
-		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no service with that name.")),
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no service with that name."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs."), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.")),
 	endpoint.Delete[DeleteRequest, ServiceDeleteResponse]("delete").
 		Handle(HandleDelete).
 		ID("DeleteNodeService").
@@ -310,7 +312,7 @@ var Group = endpoint.Define(
 		Example("--target web-01 --name app", "A service that osapi did not deploy").
 		Example("--target web-01 --name agent", "A unit file that osapi did not deploy").
 		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Remove a service | removes `/etc/systemd/system/osapi-app.service`; runs `systemctl disable --now osapi-app.service`; runs `systemctl daemon-reload` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A name with a space | `--name \"a b\"` | Name |\n| A name that is an option | `--name --now` | not a valid service name |").
-		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no service with that name.")),
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no service with that name."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs."), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.")),
 	endpoint.Post[StartRequest, ServiceStartResponse]("start").
 		Handle(HandleStart).
 		ID("PostNodeServiceStart").
@@ -321,7 +323,7 @@ var Group = endpoint.Define(
 		Explain("Starts the service. A service that runs does not change. A service that osapi did not deploy is not found.").
 		Example("--target web-01 --name app", "Start the service").
 		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Start the service | runs `systemctl start osapi-app.service` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A service that osapi did not deploy | `--name ssh` | not found |\n| A unit file that osapi did not deploy | `--name agent` | not found |\n| A name with a space | `--name \"a b\"` | Name |\n| A name that is an option | `--name --now` | not a valid service name |").
-		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no service with that name.")),
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no service with that name."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs."), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.")),
 	endpoint.Post[StopRequest, ServiceStopResponse]("stop").
 		Handle(HandleStop).
 		ID("PostNodeServiceStop").
@@ -332,7 +334,7 @@ var Group = endpoint.Define(
 		Explain("Stops the service. A service that does not run does not change. A service that osapi did not deploy is not found.").
 		Example("--target web-01 --name app", "Stop the service").
 		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Stop the service | runs `systemctl stop osapi-app.service` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A service that osapi did not deploy | `--name ssh` | not found |\n| A unit file that osapi did not deploy | `--name agent` | not found |\n| A name with a space | `--name \"a b\"` | Name |\n| A name that is an option | `--name --now` | not a valid service name |").
-		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no service with that name.")),
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no service with that name."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs."), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.")),
 	endpoint.Post[RestartRequest, ServiceRestartResponse]("restart").
 		Handle(HandleRestart).
 		ID("PostNodeServiceRestart").
@@ -343,7 +345,7 @@ var Group = endpoint.Define(
 		Explain("Restarts the service. It always changes the host. A service that osapi did not deploy is not found.").
 		Example("--target web-01 --name app", "Restart the service").
 		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Restart the service | runs `systemctl restart osapi-app.service` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A service that osapi did not deploy | `--name ssh` | not found |\n| A unit file that osapi did not deploy | `--name agent` | not found |\n| A name with a space | `--name \"a b\"` | Name |\n| A name that is an option | `--name --now` | not a valid service name |").
-		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no service with that name.")),
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no service with that name."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs."), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.")),
 	endpoint.Post[EnableRequest, ServiceEnableResponse]("enable").
 		Handle(HandleEnable).
 		ID("PostNodeServiceEnable").
@@ -355,7 +357,7 @@ var Group = endpoint.Define(
 		Example("--target web-01 --name app", "Enable the service").
 		Example("--target web-01 --name static", "A unit with no [Install] section").
 		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Enable the service | runs `systemctl enable osapi-app.service` |\n| A unit with no [Install] section | runs `systemctl enable osapi-static.service` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A service that osapi did not deploy | `--name ssh` | not found |\n| A unit file that osapi did not deploy | `--name agent` | not found |\n| A name with a space | `--name \"a b\"` | Name |\n| A name that is an option | `--name --now` | not a valid service name |").
-		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no service with that name.")),
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no service with that name."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs."), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.")),
 	endpoint.Post[DisableRequest, ServiceDisableResponse]("disable").
 		Handle(HandleDisable).
 		ID("PostNodeServiceDisable").
@@ -366,7 +368,7 @@ var Group = endpoint.Define(
 		Explain("Disables the service. A service that is not enabled does not change. A service that osapi did not deploy is not found.").
 		Example("--target web-01 --name app", "Disable the service").
 		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Disable the service | runs `systemctl disable osapi-app.service` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A service that osapi did not deploy | `--name ssh` | not found |\n| A unit file that osapi did not deploy | `--name agent` | not found |\n| A name with a space | `--name \"a b\"` | Name |\n| A name that is an option | `--name --now` | not a valid service name |").
-		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no service with that name.")),
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no service with that name."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs."), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.")),
 )
 
 func init() {

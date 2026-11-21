@@ -37,6 +37,16 @@ export type getNodeNetworkInterfaceResponse403 = {
   status: 403
 }
 
+export type getNodeNetworkInterfaceResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getNodeNetworkInterfaceResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type getNodeNetworkInterfaceResponse500 = {
   data: ErrorResponse
   status: 500
@@ -45,7 +55,7 @@ export type getNodeNetworkInterfaceResponse500 = {
 export type getNodeNetworkInterfaceResponseSuccess = (getNodeNetworkInterfaceResponse200) & {
   headers: Headers;
 };
-export type getNodeNetworkInterfaceResponseError = (getNodeNetworkInterfaceResponse400 | getNodeNetworkInterfaceResponse401 | getNodeNetworkInterfaceResponse403 | getNodeNetworkInterfaceResponse500) & {
+export type getNodeNetworkInterfaceResponseError = (getNodeNetworkInterfaceResponse400 | getNodeNetworkInterfaceResponse401 | getNodeNetworkInterfaceResponse403 | getNodeNetworkInterfaceResponse404 | getNodeNetworkInterfaceResponse409 | getNodeNetworkInterfaceResponse500) & {
   headers: Headers;
 };
 
@@ -100,6 +110,11 @@ export type deleteNodeNetworkInterfaceResponse404 = {
   status: 404
 }
 
+export type deleteNodeNetworkInterfaceResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type deleteNodeNetworkInterfaceResponse500 = {
   data: ErrorResponse
   status: 500
@@ -108,7 +123,7 @@ export type deleteNodeNetworkInterfaceResponse500 = {
 export type deleteNodeNetworkInterfaceResponseSuccess = (deleteNodeNetworkInterfaceResponse200) & {
   headers: Headers;
 };
-export type deleteNodeNetworkInterfaceResponseError = (deleteNodeNetworkInterfaceResponse400 | deleteNodeNetworkInterfaceResponse401 | deleteNodeNetworkInterfaceResponse403 | deleteNodeNetworkInterfaceResponse404 | deleteNodeNetworkInterfaceResponse500) & {
+export type deleteNodeNetworkInterfaceResponseError = (deleteNodeNetworkInterfaceResponse400 | deleteNodeNetworkInterfaceResponse401 | deleteNodeNetworkInterfaceResponse403 | deleteNodeNetworkInterfaceResponse404 | deleteNodeNetworkInterfaceResponse409 | deleteNodeNetworkInterfaceResponse500) & {
   headers: Headers;
 };
 
@@ -165,6 +180,11 @@ export type getNodeNetworkInterfaceByKeyResponse404 = {
   status: 404
 }
 
+export type getNodeNetworkInterfaceByKeyResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type getNodeNetworkInterfaceByKeyResponse500 = {
   data: ErrorResponse
   status: 500
@@ -173,7 +193,7 @@ export type getNodeNetworkInterfaceByKeyResponse500 = {
 export type getNodeNetworkInterfaceByKeyResponseSuccess = (getNodeNetworkInterfaceByKeyResponse200) & {
   headers: Headers;
 };
-export type getNodeNetworkInterfaceByKeyResponseError = (getNodeNetworkInterfaceByKeyResponse400 | getNodeNetworkInterfaceByKeyResponse401 | getNodeNetworkInterfaceByKeyResponse403 | getNodeNetworkInterfaceByKeyResponse404 | getNodeNetworkInterfaceByKeyResponse500) & {
+export type getNodeNetworkInterfaceByKeyResponseError = (getNodeNetworkInterfaceByKeyResponse400 | getNodeNetworkInterfaceByKeyResponse401 | getNodeNetworkInterfaceByKeyResponse403 | getNodeNetworkInterfaceByKeyResponse404 | getNodeNetworkInterfaceByKeyResponse409 | getNodeNetworkInterfaceByKeyResponse500) & {
   headers: Headers;
 };
 
@@ -230,6 +250,11 @@ export type postNodeNetworkInterfaceResponse404 = {
   status: 404
 }
 
+export type postNodeNetworkInterfaceResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type postNodeNetworkInterfaceResponse500 = {
   data: ErrorResponse
   status: 500
@@ -238,7 +263,7 @@ export type postNodeNetworkInterfaceResponse500 = {
 export type postNodeNetworkInterfaceResponseSuccess = (postNodeNetworkInterfaceResponse200) & {
   headers: Headers;
 };
-export type postNodeNetworkInterfaceResponseError = (postNodeNetworkInterfaceResponse400 | postNodeNetworkInterfaceResponse401 | postNodeNetworkInterfaceResponse403 | postNodeNetworkInterfaceResponse404 | postNodeNetworkInterfaceResponse500) & {
+export type postNodeNetworkInterfaceResponseError = (postNodeNetworkInterfaceResponse400 | postNodeNetworkInterfaceResponse401 | postNodeNetworkInterfaceResponse403 | postNodeNetworkInterfaceResponse404 | postNodeNetworkInterfaceResponse409 | postNodeNetworkInterfaceResponse500) & {
   headers: Headers;
 };
 
@@ -310,6 +335,11 @@ export type putNodeNetworkInterfaceResponse404 = {
   status: 404
 }
 
+export type putNodeNetworkInterfaceResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type putNodeNetworkInterfaceResponse500 = {
   data: ErrorResponse
   status: 500
@@ -318,7 +348,7 @@ export type putNodeNetworkInterfaceResponse500 = {
 export type putNodeNetworkInterfaceResponseSuccess = (putNodeNetworkInterfaceResponse200) & {
   headers: Headers;
 };
-export type putNodeNetworkInterfaceResponseError = (putNodeNetworkInterfaceResponse400 | putNodeNetworkInterfaceResponse401 | putNodeNetworkInterfaceResponse403 | putNodeNetworkInterfaceResponse404 | putNodeNetworkInterfaceResponse500) & {
+export type putNodeNetworkInterfaceResponseError = (putNodeNetworkInterfaceResponse400 | putNodeNetworkInterfaceResponse401 | putNodeNetworkInterfaceResponse403 | putNodeNetworkInterfaceResponse404 | putNodeNetworkInterfaceResponse409 | putNodeNetworkInterfaceResponse500) & {
   headers: Headers;
 };
 

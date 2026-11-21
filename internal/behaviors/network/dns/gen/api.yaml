@@ -207,6 +207,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: The host has no dns with that interface_name.
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.
         "500":
           content:
             application/json:
@@ -256,6 +262,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: The host has no dns with that interface_name.
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.
         "500":
           content:
             application/json:
@@ -311,6 +323,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: The host has no dns with that interface_name.
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.
         "500":
           content:
             application/json:

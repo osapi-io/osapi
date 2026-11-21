@@ -37,6 +37,7 @@ const (
 	KindExample    = "example"
 	KindCall       = "call"
 	KindHost       = "host"
+	KindError      = "error"
 	KindCompose    = "compose"
 	KindBlock      = "block"
 	KindTag        = "tag"
@@ -59,6 +60,7 @@ var Spec = guide.Spec{
 		{Kind: KindExample, Title: "Hosts and effects of an example"},
 		{Kind: KindHost, Title: "The host a provider gets"},
 		{Kind: KindCall, Title: "Calls in a provider"},
+		{Kind: KindError, Title: "Errors a provider returns"},
 		{Kind: KindCompose, Title: "Building on other behaviors"},
 		{Kind: KindTag, Title: "Tags on input, output and settings fields"},
 		{Kind: KindTemplate, Title: "What a template reads"},
@@ -391,6 +393,36 @@ var Spec = guide.Spec{
 			When: "Before a provider does generic work itself, such as writing a file that osapi manages.",
 		},
 
+		{
+			Kind: KindError,
+			Name: "behavior.ErrNotFound",
+			Does: "The item that the request names is not on the host: a service, a package, a key, or an object of a deploy. On one host the API answers 404, on any method; on a broadcast the row of the host is failed with the message.",
+			When: "Wrap it with what was missing: fmt.Errorf(\"service %q: %w\", name, behavior.ErrNotFound). An update, a delete or an action on an item that osapi does not have is not found; a delete of it is changed: false instead.",
+		},
+		{
+			Kind: KindError,
+			Name: "behavior.ErrNotManaged",
+			Does: "The item is on the host, but osapi did not deploy it, so osapi does not change it, such as a file with no record in managedfile. The API answers 409.",
+			When: "Before a write over an item that something else owns. Ask managedfile, not the path: the agent's own unit is osapi-agent.service.",
+		},
+		{
+			Kind: KindError,
+			Name: "behavior.ErrNotInstalled",
+			Does: "A program that the method needs is not on the host. The API answers 409.",
+			When: "When a method needs a program that the platform does not always have, and Runs or RunsIfPresent does not say it.",
+		},
+		{
+			Kind: KindError,
+			Name: "behavior.ErrUnsupported",
+			Does: "The method does not apply to this host: its platform, or a container. The row of the host is skipped, not failed.",
+			When: "From a builder, for a platform or a host that it cannot manage, or from a method that does not apply. Use .On or a reader builder first, so the definition says it.",
+		},
+		{
+			Kind: KindExample,
+			Name: "A write example on a live host",
+			Does: "CI runs each write example as root on a throwaway Linux runner, with OSAPI_INTEGRATION_WRITE_BEHAVIORS=1, and the lab can run it too. Each example starts with its item deleted, runs the calls of After, then must report its changed, and changed: false when it runs again. The test uploads each object of Stored first, and runs an .Always() action once. Prints, PrintsAfter and Exists only answer the fake host.",
+			When: "For each write example: give the state that it starts from with After, which a real host can run, such as After(StartInput{...}) before a stop, and make the content real, such as a unit file whose ExecStart exists. Run it against the lab with go test -tags integration before you push.",
+		},
 		{
 			Kind: KindTag,
 			Name: `json:"name"`,

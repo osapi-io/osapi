@@ -91,7 +91,8 @@ var Group = endpoint.Define(
 		Returns("Each target host's result.").
 		Explain("Reads the IANA name of the timezone and its offset from UTC now: the zone that /etc/localtime links to, or /etc/timezone on Linux.").
 		Example("--target web-01", "A Linux host on UTC").
-		Example("--target web-01", "A Mac on UTC"),
+		Example("--target web-01", "A Mac on UTC").
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host does not have what the request names, such as the object of a deploy."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs."), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.")),
 	endpoint.Put[UpdateRequest, TimezoneUpdateResponse]("update").
 		Handle(HandleUpdate).
 		ID("PutNodeTimezone").
@@ -101,7 +102,8 @@ var Group = endpoint.Define(
 		Explain("Sets the timezone with timedatectl set-timezone. A host that already has the timezone does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.").
 		Example("--target web-01 --timezone America/New_York", "Set a new timezone").
 		Example("--target web-01 --timezone UTC", "A host that already has the timezone").
-		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Set a new timezone | runs `timedatectl set-timezone America/New_York` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A name that is not a timezone | `--timezone ../../etc/passwd` | not a valid timezone name |\n| A name that starts with a dash | `--timezone -UTC` | not a valid timezone name |\n| A name longer than 64 characters | `--timezone aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | timezone |"),
+		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Set a new timezone | runs `timedatectl set-timezone America/New_York` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A name that is not a timezone | `--timezone ../../etc/passwd` | not a valid timezone name |\n| A name that starts with a dash | `--timezone -UTC` | not a valid timezone name |\n| A name longer than 64 characters | `--timezone aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | timezone |").
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host does not have what the request names, such as the object of a deploy."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs."), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.")),
 )
 
 func init() {

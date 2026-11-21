@@ -84,7 +84,8 @@ var Group = endpoint.Define(
 		Permission("updatepackages:read").
 		Returns("Each target host's result.").
 		Explain("Runs apt list --upgradable: each package with its installed version and the version the index has. Refresh the index first for what the repositories have now.").
-		Example("--target web-01", "Two updates"),
+		Example("--target web-01", "Two updates").
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host does not have what the request names, such as the object of a deploy."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs."), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.")),
 	endpoint.Put[UpdateRequest, UpdatepackagesUpdateResponse]("update").
 		Handle(HandleUpdate).
 		ID("PutNodeUpdatepackages").
@@ -92,7 +93,8 @@ var Group = endpoint.Define(
 		Permission("updatepackages:write").
 		Returns("Each target host's result, with whether it changed.").
 		Explain("Runs apt-get update. It reports changed: true when the Release file of a repository under /var/lib/apt/lists changed, and changed: false when each repository was unchanged.").
-		Example("--target web-01", "The repositories are unchanged since the last refresh"),
+		Example("--target web-01", "The repositories are unchanged since the last refresh").
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host does not have what the request names, such as the object of a deploy."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs."), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.")),
 )
 
 func init() {

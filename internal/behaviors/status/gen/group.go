@@ -66,7 +66,8 @@ var Group = endpoint.Define(
 		Returns("Each target host's result.").
 		Explain("Runs the get of the hostname, uptime, os, load, memory and disk behaviors on the host, and answers with each. A read that fails is in errors, as its name and its error, and the other fields still answer.").
 		Example("--target web-01", "An Ubuntu host").
-		Example("--target web-01", "A Mac"),
+		Example("--target web-01", "A Mac").
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host does not have what the request names, such as the object of a deploy."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs."), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.")),
 )
 
 func init() {

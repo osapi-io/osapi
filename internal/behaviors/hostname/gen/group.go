@@ -89,7 +89,8 @@ var Group = endpoint.Define(
 		Permission("hostname:read").
 		Returns("Each target host's result.").
 		Explain("Reads the host's name as the hostname command prints it, on Linux and on macOS. It makes no DNS lookup.").
-		Example("--target web-01", "A host named web-01"),
+		Example("--target web-01", "A host named web-01").
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host does not have what the request names, such as the object of a deploy."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs."), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.")),
 	endpoint.Put[UpdateRequest, HostnameUpdateResponse]("update").
 		Handle(HandleUpdate).
 		ID("PutNodeHostname").
@@ -99,7 +100,8 @@ var Group = endpoint.Define(
 		Explain("Sets the static hostname with hostnamectl set-hostname, which keeps it after a reboot. A host that already has the name does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped. In a container the runtime owns the hostname, so there it also reports skipped.").
 		Example("--target web-01 --name web-02", "Rename a host").
 		Example("--target web-01 --name web-01", "A host that already has the name").
-		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Rename a host | runs `hostnamectl set-hostname web-02` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A name that is not a hostname | `--name \"web 01;reboot\"` | invalid hostname |\n| A name longer than 253 characters | `--name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | invalid hostname |\n| No name |  | invalid hostname |"),
+		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Rename a host | runs `hostnamectl set-hostname web-02` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A name that is not a hostname | `--name \"web 01;reboot\"` | invalid hostname |\n| A name longer than 253 characters | `--name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | invalid hostname |\n| No name |  | invalid hostname |").
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host does not have what the request names, such as the object of a deploy."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs."), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.")),
 )
 
 func init() {

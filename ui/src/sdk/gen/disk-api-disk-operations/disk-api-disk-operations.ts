@@ -31,6 +31,16 @@ export type getNodeDiskResponse403 = {
   status: 403
 }
 
+export type getNodeDiskResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getNodeDiskResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type getNodeDiskResponse500 = {
   data: ErrorResponse
   status: 500
@@ -39,7 +49,7 @@ export type getNodeDiskResponse500 = {
 export type getNodeDiskResponseSuccess = (getNodeDiskResponse200) & {
   headers: Headers;
 };
-export type getNodeDiskResponseError = (getNodeDiskResponse400 | getNodeDiskResponse401 | getNodeDiskResponse403 | getNodeDiskResponse500) & {
+export type getNodeDiskResponseError = (getNodeDiskResponse400 | getNodeDiskResponse401 | getNodeDiskResponse403 | getNodeDiskResponse404 | getNodeDiskResponse409 | getNodeDiskResponse500) & {
   headers: Headers;
 };
 

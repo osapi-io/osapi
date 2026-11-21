@@ -169,6 +169,35 @@ func (s *SpecPublicTestSuite) TestSpecHasEveryHostService() {
 	}
 }
 
+// TestSpecHasEveryError: each error that errors.go exports has a term of the
+// kind error, which says what the API answers and when to return it.
+func (s *SpecPublicTestSuite) TestSpecHasEveryError() {
+	f, err := parser.ParseFile(token.NewFileSet(), "errors.go", nil, 0)
+	s.Require().NoError(err)
+	var names []string
+	for _, d := range f.Decls {
+		g, ok := d.(*ast.GenDecl)
+		if !ok || g.Tok != token.VAR {
+			continue
+		}
+		for _, spec := range g.Specs {
+			for _, n := range spec.(*ast.ValueSpec).Names {
+				if n.IsExported() {
+					names = append(names, n.Name)
+				}
+			}
+		}
+	}
+	s.Require().NotEmpty(names)
+	for _, name := range names {
+		found := false
+		for _, t := range behavior.Spec.Of(behavior.KindError) {
+			found = found || t.Name == "behavior."+name
+		}
+		s.True(found, "behavior.Spec has no error term for %s; add one", name)
+	}
+}
+
 func (s *SpecPublicTestSuite) TestSpecHasEveryFieldTag() {
 	get := regexp.MustCompile(`Tag\.Get\("([a-z]+)"\)`)
 	var tags []string

@@ -55,7 +55,8 @@ var Group = endpoint.Define(
 		Permission("uptime:read").
 		Returns("Each target host's result.").
 		Explain("Reads how long the host has run since it booted: /proc/uptime on Linux, and the boot time that sysctl gives on macOS. The uptime is in days, hours and minutes, and in seconds.").
-		Example("--target web-01", "A host up for a day, two hours and five minutes"),
+		Example("--target web-01", "A host up for a day, two hours and five minutes").
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host does not have what the request names, such as the object of a deploy."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs."), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.")),
 )
 
 func init() {

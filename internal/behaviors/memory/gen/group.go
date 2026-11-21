@@ -54,7 +54,8 @@ var Group = endpoint.Define(
 		Permission("memory:read").
 		Returns("Each target host's result.").
 		Explain("Reads the total, the free and the used memory, in bytes. Used is the total less what is available, which includes the cache, as free(1) reports it.").
-		Example("--target web-01", "A host with 8 GiB, 2 GiB of it free"),
+		Example("--target web-01", "A host with 8 GiB, 2 GiB of it free").
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host does not have what the request names, such as the object of a deploy."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs."), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.")),
 )
 
 func init() {

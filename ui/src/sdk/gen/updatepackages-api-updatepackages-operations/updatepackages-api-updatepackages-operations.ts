@@ -32,6 +32,16 @@ export type getNodeUpdatepackagesResponse403 = {
   status: 403
 }
 
+export type getNodeUpdatepackagesResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getNodeUpdatepackagesResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type getNodeUpdatepackagesResponse500 = {
   data: ErrorResponse
   status: 500
@@ -40,7 +50,7 @@ export type getNodeUpdatepackagesResponse500 = {
 export type getNodeUpdatepackagesResponseSuccess = (getNodeUpdatepackagesResponse200) & {
   headers: Headers;
 };
-export type getNodeUpdatepackagesResponseError = (getNodeUpdatepackagesResponse400 | getNodeUpdatepackagesResponse401 | getNodeUpdatepackagesResponse403 | getNodeUpdatepackagesResponse500) & {
+export type getNodeUpdatepackagesResponseError = (getNodeUpdatepackagesResponse400 | getNodeUpdatepackagesResponse401 | getNodeUpdatepackagesResponse403 | getNodeUpdatepackagesResponse404 | getNodeUpdatepackagesResponse409 | getNodeUpdatepackagesResponse500) & {
   headers: Headers;
 };
 
@@ -90,6 +100,16 @@ export type putNodeUpdatepackagesResponse403 = {
   status: 403
 }
 
+export type putNodeUpdatepackagesResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type putNodeUpdatepackagesResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type putNodeUpdatepackagesResponse500 = {
   data: ErrorResponse
   status: 500
@@ -98,7 +118,7 @@ export type putNodeUpdatepackagesResponse500 = {
 export type putNodeUpdatepackagesResponseSuccess = (putNodeUpdatepackagesResponse200) & {
   headers: Headers;
 };
-export type putNodeUpdatepackagesResponseError = (putNodeUpdatepackagesResponse400 | putNodeUpdatepackagesResponse401 | putNodeUpdatepackagesResponse403 | putNodeUpdatepackagesResponse500) & {
+export type putNodeUpdatepackagesResponseError = (putNodeUpdatepackagesResponse400 | putNodeUpdatepackagesResponse401 | putNodeUpdatepackagesResponse403 | putNodeUpdatepackagesResponse404 | putNodeUpdatepackagesResponse409 | putNodeUpdatepackagesResponse500) & {
   headers: Headers;
 };
 
