@@ -22,6 +22,53 @@ The network interfaces of the host.
 | ---- | ------- |
 | [netplan](../netplan/netplan.md) | Nothing |
 
+## Chain
+
+The calls that each example makes, each under the call that made it. `osapi behavior chain get --name interface` shows them, and `--json` has each in full.
+
+### A static address (`create`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `interface create` | `addresses=[10.0.1.5/24] name=osapi0` | `changed=true name=osapi0` |
+| `└─ netplan get` | `name=osapi0` | `id=osapi0 matches=[osapi0] name=osapi0 section=ethernets` |
+| `└─ netplan update` | `content=<8 lines> metadata={"domain":"interface","interface":"osapi0"} path=/etc/netplan/osapi-osap…` | `changed=true path=/etc/netplan/osapi-osapi0.yaml` |
+| `· └─ managedfile update` | `content=<8 lines> metadata={"domain":"interface","interface":"osapi0"} mode=0600 path=/etc/netplan/…` | `changed=true path=/etc/netplan/osapi-osapi0.yaml` |
+
+### Each setting (`create`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `interface create` | `addresses=[2001:db8::5/64] dhcp6=true mac_address=52:54:00:aa:bb:cc mtu=9000 name=osapi0 wakeonlan=…` | `changed=true name=osapi0` |
+| `└─ netplan get` | `name=osapi0` | `id=osapi0 matches=[osapi0] name=osapi0 section=ethernets` |
+| `└─ netplan update` | `content=<11 lines> metadata={"domain":"interface","interface":"osapi0"} path=/etc/netplan/osapi-osa…` | `changed=true path=/etc/netplan/osapi-osapi0.yaml` |
+| `· └─ managedfile update` | `content=<11 lines> metadata={"domain":"interface","interface":"osapi0"} mode=0600 path=/etc/netplan…` | `changed=true path=/etc/netplan/osapi-osapi0.yaml` |
+
+### Move an interface to DHCP (`update`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `interface update` | `dhcp4=true name=osapi0` | `changed=true name=osapi0` |
+| `└─ netplan get` | `name=osapi0` | `id=osapi0 matches=[osapi0] name=osapi0 section=ethernets` |
+| `└─ netplan update` | `content=<6 lines> metadata={"domain":"interface","interface":"osapi0"} path=/etc/netplan/osapi-osap…` | `changed=true path=/etc/netplan/osapi-osapi0.yaml` |
+| `· └─ managedfile update` | `content=<6 lines> metadata={"domain":"interface","interface":"osapi0"} mode=0600 path=/etc/netplan/…` | `changed=true path=/etc/netplan/osapi-osapi0.yaml` |
+
+### An interface osapi configures (`delete`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `interface delete` | `name=osapi0` | `changed=true name=osapi0` |
+| `└─ netplan delete` | `path=/etc/netplan/osapi-osapi0.yaml` | `changed=true path=/etc/netplan/osapi-osapi0.yaml` |
+| `· └─ managedfile delete` | `path=/etc/netplan/osapi-osapi0.yaml` | `changed=true path=/etc/netplan/osapi-osapi0.yaml` |
+
+### An interface osapi does not configure (`delete`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `interface delete` | `name=osapi0` | `changed=false name=osapi0` |
+| `└─ netplan delete` | `path=/etc/netplan/osapi-osapi0.yaml` | `changed=false path=/etc/netplan/osapi-osapi0.yaml` |
+| `· └─ managedfile delete` | `path=/etc/netplan/osapi-osapi0.yaml` | `changed=false path=/etc/netplan/osapi-osapi0.yaml` |
+
 ## Where it runs
 
 On `debian`, `linux`, `darwin`. On any other platform its methods report `skipped`.

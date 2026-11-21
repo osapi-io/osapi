@@ -22,10 +22,7 @@ package chain
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/behavior"
@@ -90,24 +87,9 @@ func Get(
 			continue
 		}
 		ex := ExampleCalls{Example: r.Example + " (" + r.Method + ")"}
-		var walk func(s *behavior.Step, depth int)
-		walk = func(s *behavior.Step, depth int) {
-			call := s.Behavior + " " + s.Method
-			// The table trims leading spaces, so a deeper call is marked
-			// with a dot for each level above it.
-			if depth > 0 {
-				call = strings.Repeat("· ", depth-1) + "└─ " + call
-			}
-			gets := fields(s.Output)
-			if s.Error != "" {
-				gets = "error: " + s.Error
-			}
-			ex.Calls = append(ex.Calls, Call{Call: call, Sends: fields(s.Input), Gets: gets})
-			for _, c := range s.Steps {
-				walk(c, depth+1)
-			}
+		for _, c := range r.Calls(maxValue) {
+			ex.Calls = append(ex.Calls, Call(c))
 		}
-		walk(r.Root, 0)
 		out.Examples = append(out.Examples, ex)
 	}
 
@@ -177,79 +159,4 @@ func names(
 	}
 
 	return out
-}
-
-// fields is v as the fields that have a value, key=value in key order: a
-// text of several lines is its count of lines, and the whole is cut to
-// maxValue for the table.
-func fields(
-	v any,
-) string {
-	data, _ := json.Marshal(v)
-	var m map[string]any
-	if err := json.Unmarshal(data, &m); err != nil {
-		return cut(string(data))
-	}
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	parts := make([]string, 0, len(keys))
-	for _, k := range keys {
-		if text := value(m[k]); text != "" {
-			parts = append(parts, k+"="+text)
-		}
-	}
-
-	return cut(strings.Join(parts, " "))
-}
-
-// value is one field's value as fields shows it, or "" for one with none.
-func value(
-	v any,
-) string {
-	switch t := v.(type) {
-	case nil:
-		return ""
-	case string:
-		if n := strings.Count(strings.TrimRight(t, "\n"), "\n") + 1; n > 1 {
-			return fmt.Sprintf("<%d lines>", n)
-		}
-		if strings.ContainsAny(t, " ") {
-			return strconv.Quote(t)
-		}
-
-		return t
-	case []any:
-		if len(t) == 0 {
-			return ""
-		}
-		items := make([]string, 0, len(t))
-		for _, item := range t {
-			items = append(items, value(item))
-		}
-
-		return "[" + strings.Join(items, ", ") + "]"
-	case map[string]any:
-		if len(t) == 0 {
-			return ""
-		}
-		data, _ := json.Marshal(t)
-
-		return string(data)
-	default:
-		return fmt.Sprint(t)
-	}
-}
-
-// cut is s cut to maxValue, with … where it was cut.
-func cut(
-	s string,
-) string {
-	if r := []rune(s); len(r) > maxValue {
-		return string(r[:maxValue-1]) + "…"
-	}
-
-	return s
 }

@@ -23,6 +23,7 @@ package behaviortest_test
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -188,6 +189,43 @@ func (s *ChainPublicTestSuite) TestChainProblems() {
 		s.Contains(r.errs, "lazy requires echo, and no example calls it. Fix: "+
 			behavior.ChainChecks.Fix(behavior.RuleUsed))
 	})
+}
+
+func (s *ChainPublicTestSuite) TestCalls() {
+	run := behaviortest.ChainRun{Root: &behavior.Step{
+		Behavior: "dns", Method: "update",
+		Input: map[string]any{
+			"server": "9.9.9.9", "empty": "", "none": nil, "list": []string{},
+			"tags": []string{"a", "b"}, "text": "two words", "obj": map[string]any{},
+		},
+		Output: map[string]bool{"changed": true},
+		Steps: []*behavior.Step{{
+			Behavior: "netcfg", Method: "update",
+			Input:  map[string]any{"content": "a\nb\nc\n", "meta": map[string]string{"k": "v"}},
+			Output: []string{"a"},
+			Steps: []*behavior.Step{{
+				Behavior: "files", Method: "update", Error: "disk full",
+				Input: map[string]string{"path": strings.Repeat("x", 100)},
+			}},
+		}},
+	}}
+
+	calls := run.Calls(70)
+
+	s.Require().Len(calls, 3)
+	s.Equal(behaviortest.ChainCall{
+		Call:  "dns update",
+		Sends: `server=9.9.9.9 tags=[a, b] text="two words"`,
+		Gets:  "changed=true",
+	}, calls[0], "a field with no value is left out")
+	s.Equal("└─ netcfg update", calls[1].Call)
+	s.Equal(`content=<3 lines> meta={"k":"v"}`, calls[1].Sends)
+	s.Equal(`["a"]`, calls[1].Gets, "an output that is not an object is shown as it is")
+	s.Equal("· └─ files update", calls[2].Call)
+	s.Equal("error: disk full", calls[2].Gets)
+	s.Len([]rune(calls[2].Sends), 70, "a long value is cut to the width")
+	s.True(strings.HasSuffix(calls[2].Sends, "…"))
+	s.Len(run.Calls(0)[2].Sends, len("path=")+100, "a width of 0 cuts nothing")
 }
 
 func TestChainPublicTestSuite(

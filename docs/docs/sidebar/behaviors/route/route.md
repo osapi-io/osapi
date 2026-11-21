@@ -22,6 +22,44 @@ The routes of the host.
 | ---- | ------- |
 | [netplan](../netplan/netplan.md) | Nothing |
 
+## Chain
+
+The calls that each example makes, each under the call that made it. `osapi behavior chain get --name route` shows them, and `--json` has each in full.
+
+### Two routes (`create`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `route create` | `interface_name=osapi0 routes=["198.51.100.0/24 via 192.0.2.1", "2001:db8:1::/48 via 2001:db8::1 met…` | `changed=true interface_name=osapi0` |
+| `└─ netplan get` | `name=osapi0` | `id=osapi0 matches=[osapi0] name=osapi0 section=ethernets` |
+| `└─ netplan update` | `content=<10 lines> metadata={"domain":"route","interface":"osapi0"} path=/etc/netplan/osapi-osapi0-…` | `changed=true path=/etc/netplan/osapi-osapi0-routes.yaml` |
+| `· └─ managedfile update` | `content=<10 lines> metadata={"domain":"route","interface":"osapi0"} mode=0600 path=/etc/netplan/osa…` | `changed=true path=/etc/netplan/osapi-osapi0-routes.yaml` |
+
+### One route in place of two (`update`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `route update` | `interface_name=osapi0 routes=["203.0.113.0/24 via 192.0.2.1 metric 10"]` | `changed=true interface_name=osapi0` |
+| `└─ netplan get` | `name=osapi0` | `id=osapi0 matches=[osapi0] name=osapi0 section=ethernets` |
+| `└─ netplan update` | `content=<8 lines> metadata={"domain":"route","interface":"osapi0"} path=/etc/netplan/osapi-osapi0-r…` | `changed=true path=/etc/netplan/osapi-osapi0-routes.yaml` |
+| `· └─ managedfile update` | `content=<8 lines> metadata={"domain":"route","interface":"osapi0"} mode=0600 path=/etc/netplan/osap…` | `changed=true path=/etc/netplan/osapi-osapi0-routes.yaml` |
+
+### An interface osapi has routes of (`delete`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `route delete` | `interface_name=osapi0` | `changed=true interface_name=osapi0` |
+| `└─ netplan delete` | `path=/etc/netplan/osapi-osapi0-routes.yaml` | `changed=true path=/etc/netplan/osapi-osapi0-routes.yaml` |
+| `· └─ managedfile delete` | `path=/etc/netplan/osapi-osapi0-routes.yaml` | `changed=true path=/etc/netplan/osapi-osapi0-routes.yaml` |
+
+### An interface osapi has no routes of (`delete`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `route delete` | `interface_name=osapi0` | `changed=false interface_name=osapi0` |
+| `└─ netplan delete` | `path=/etc/netplan/osapi-osapi0-routes.yaml` | `changed=false path=/etc/netplan/osapi-osapi0-routes.yaml` |
+| `· └─ managedfile delete` | `path=/etc/netplan/osapi-osapi0-routes.yaml` | `changed=false path=/etc/netplan/osapi-osapi0-routes.yaml` |
+
 ## Where it runs
 
 On `debian`, `linux`, `darwin`. On any other platform its methods report `skipped`.

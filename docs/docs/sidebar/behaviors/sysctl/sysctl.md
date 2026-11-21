@@ -22,6 +22,101 @@ Kernel parameters, written to sysctl.d files and applied.
 | ---- | ------- |
 | [managedfile](../managedfile/managedfile.md) | Nothing |
 
+## Chain
+
+The calls that each example makes, each under the call that made it. `osapi behavior chain get --name sysctl` shows them, and `--json` has each in full.
+
+### Every parameter, and which osapi manages (`list`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `sysctl list` |  | `[{"key":"kernel.panic","value":"0","managed":false},{"key":"net.ipv4.ip_forward","value":"1","manag…` |
+| `└─ managedfile get` | `path=/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf` | `metadata={"key":"net.ipv4.ip_forward","value":"1"} path=/etc/sysctl.d/osapi-net.ipv4.ip_forward.con…` |
+
+### One part of the tree (`list`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `sysctl list` | `prefix=net.ipv4` | `[{"key":"net.ipv4.ip_forward","value":"1","managed":true},{"key":"net.ipv4.ping_group_range","value…` |
+| `└─ managedfile get` | `path=/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf` | `metadata={"key":"net.ipv4.ip_forward","value":"1"} path=/etc/sysctl.d/osapi-net.ipv4.ip_forward.con…` |
+
+### A managed parameter the kernel does not have right now (`list`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `sysctl list` | `prefix=net.bridge` | `[{"key":"net.bridge.bridge-nf-call-iptables","value":"1","managed":true}]` |
+| `└─ managedfile get` | `path=/etc/sysctl.d/osapi-net.bridge.bridge-nf-call-iptables.conf` | `metadata={"key":"net.bridge.bridge-nf-call-iptables","value":"1"} path=/etc/sysctl.d/osapi-net.brid…` |
+
+### A parameter osapi manages (`get`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `sysctl get` | `key=vm.swappiness` | `key=vm.swappiness managed=true value=10` |
+| `└─ managedfile get` | `path=/etc/sysctl.d/osapi-vm.swappiness.conf` | `metadata={"key":"vm.swappiness","value":"10"} path=/etc/sysctl.d/osapi-vm.swappiness.conf sha256=a7…` |
+
+### A parameter osapi does not manage (`get`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `sysctl get` | `key=vm.swappiness` | `key=vm.swappiness managed=false value=60` |
+| `└─ managedfile get` | `path=/etc/sysctl.d/osapi-vm.swappiness.conf` | `error: /etc/sysctl.d/osapi-vm.swappiness.conf: not managed` |
+
+### A value of several fields (`get`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `sysctl get` | `key=net.ipv4.ping_group_range` | `key=net.ipv4.ping_group_range managed=false value="0 2147483647"` |
+| `└─ managedfile get` | `path=/etc/sysctl.d/osapi-net.ipv4.ping_group_range.conf` | `error: /etc/sysctl.d/osapi-net.ipv4.ping_group_range.conf: not managed` |
+
+### A managed parameter the kernel does not have right now (`get`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `sysctl get` | `key=net.bridge.bridge-nf-call-iptables` | `key=net.bridge.bridge-nf-call-iptables managed=true value=1` |
+| `└─ managedfile get` | `path=/etc/sysctl.d/osapi-net.bridge.bridge-nf-call-iptables.conf` | `metadata={"key":"net.bridge.bridge-nf-call-iptables","value":"1"} path=/etc/sysctl.d/osapi-net.brid…` |
+
+### Turn on IP forwarding (`create`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `sysctl create` | `key=net.ipv4.ip_forward value=1` | `changed=true key=net.ipv4.ip_forward` |
+| `└─ managedfile update` | `content="net.ipv4.ip_forward = 1\n" metadata={"key":"net.ipv4.ip_forward","value":"1"} path=/etc/sy…` | `changed=true path=/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf` |
+
+### Lower swappiness (`update`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `sysctl update` | `key=vm.swappiness value=10` | `changed=true key=vm.swappiness` |
+| `└─ managedfile update` | `content="vm.swappiness = 10\n" metadata={"key":"vm.swappiness","value":"10"} path=/etc/sysctl.d/osa…` | `changed=true path=/etc/sysctl.d/osapi-vm.swappiness.conf` |
+
+### A parameter osapi did not manage (`update`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `sysctl update` | `key=vm.swappiness value=10` | `changed=true key=vm.swappiness` |
+| `└─ managedfile update` | `content="vm.swappiness = 10\n" metadata={"key":"vm.swappiness","value":"10"} path=/etc/sysctl.d/osa…` | `changed=true path=/etc/sysctl.d/osapi-vm.swappiness.conf` |
+
+### Remove a parameter (`delete`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `sysctl delete` | `key=vm.swappiness` | `changed=true key=vm.swappiness` |
+| `└─ managedfile delete` | `path=/etc/sysctl.d/osapi-vm.swappiness.conf` | `changed=true path=/etc/sysctl.d/osapi-vm.swappiness.conf` |
+
+### A parameter osapi does not manage (`delete`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `sysctl delete` | `key=vm.swappiness` | `changed=false key=vm.swappiness` |
+| `└─ managedfile delete` | `path=/etc/sysctl.d/osapi-vm.swappiness.conf` | `changed=false path=/etc/sysctl.d/osapi-vm.swappiness.conf` |
+
+### A parameter osapi already stopped managing (`delete`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `sysctl delete` | `key=vm.swappiness` | `changed=false key=vm.swappiness` |
+| `└─ managedfile delete` | `path=/etc/sysctl.d/osapi-vm.swappiness.conf` | `changed=false path=/etc/sysctl.d/osapi-vm.swappiness.conf` |
+
 ## Where it runs
 
 On `debian`. On any other platform its methods report `skipped`.

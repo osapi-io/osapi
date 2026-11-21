@@ -501,6 +501,60 @@ func (s *BehaviorcmdPublicTestSuite) TestExampleFlags() {
 	s.Equal("--target web-01 --key k", command.ExampleFlags(input{Key: "k"}))
 }
 
+type echoIn struct {
+	Text string `json:"text,omitempty"`
+}
+
+type echoOut struct {
+	Text string `json:"text,omitempty"`
+}
+
+type echoP struct{}
+
+func echoGet(context.Context, echoP, echoIn) (echoOut, error) { return echoOut{Text: "a`b|c"}, nil }
+
+type relayP struct{}
+
+func relayGet(ctx context.Context, _ relayP, in echoIn) (echoOut, error) {
+	if in.Text == "alone" {
+		return echoOut(in), nil
+	}
+
+	return behavior.Call(ctx, pageEcho, echoGet, echoP{}, in)
+}
+
+var pageEcho = behavior.Define("echo", "Answers", behavior.Node, behavior.Internal,
+	behavior.Platform("debian", func(host.Host) (echoP, error) { return echoP{}, nil }),
+	behavior.Read("get", echoGet))
+
+func (s *BehaviorcmdPublicTestSuite) TestChainSection() {
+	behavior.Reset()
+	defer behavior.Reset()
+	behavior.Register(pageEcho)
+	relay := behavior.Register(behavior.Define("relay", "Relays", behavior.Node,
+		behavior.Requires(pageEcho),
+		behavior.Platform("debian", func(host.Host) (relayP, error) { return relayP{}, nil }),
+		behavior.Read("get", relayGet).
+			Example("An empty text", echoIn{}, echoOut{Text: "a`b|c"}).
+			Example("No call", echoIn{Text: "alone"}, echoOut{Text: "alone"}),
+	))
+
+	page := command.IndexPage(relay)
+
+	s.Contains(page, "## Chain\n")
+	s.Contains(page, "`osapi behavior chain get --name relay`")
+	s.Contains(page, "### An empty text (`get`)")
+	s.NotContains(page, "### No call", "an example that calls no behavior has no table")
+	s.Contains(page, "| `relay get` |  | `text=a'b\\|c` |",
+		"an empty value is empty, a backtick is a quote, and a pipe is escaped")
+	s.Contains(page, "| `└─ echo get` |  | `text=a'b\\|c` |")
+	s.NotContains(
+		command.IndexPage(pageEcho),
+		"## Chain",
+		"a behavior that calls none has no section",
+	)
+}
+
 func TestBehaviorcmdPublicTestSuite(
 	t *testing.T,
 ) {

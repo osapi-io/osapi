@@ -22,6 +22,53 @@ The DNS resolvers of each interface of the host.
 | ---- | ------- |
 | [netplan](../netplan/netplan.md) | Nothing |
 
+## Chain
+
+The calls that each example makes, each under the call that made it. `osapi behavior chain get --name dns` shows them, and `--json` has each in full.
+
+### Set the servers of an interface (`update`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `dns update` | `interface_name=eth0 servers=[9.9.9.9]` | `changed=true interface_name=eth0` |
+| `└─ netplan get` | `name=eth0` | `id=eth0 matches=[eth0] name=eth0 section=ethernets type=ethernet` |
+| `└─ netplan update` | `content=<9 lines> metadata={"domain":"dns","interface":"eth0"} path=/etc/netplan/osapi-dns-eth0.yaml` | `changed=true path=/etc/netplan/osapi-dns-eth0.yaml` |
+| `· └─ managedfile update` | `content=<9 lines> metadata={"domain":"dns","interface":"eth0"} mode=0600 path=/etc/netplan/osapi-dn…` | `changed=true path=/etc/netplan/osapi-dns-eth0.yaml` |
+
+### Set the search domains, and keep the servers (`update`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `dns update` | `interface_name=eth0 override_dhcp=true search_domains=[corp.example]` | `changed=true interface_name=eth0` |
+| `└─ netplan get` | `name=eth0` | `id=eth0 matches=[eth0] name=eth0 section=ethernets type=ethernet` |
+| `└─ netplan update` | `content=<14 lines> metadata={"domain":"dns","interface":"eth0"} path=/etc/netplan/osapi-dns-eth0.ya…` | `changed=true path=/etc/netplan/osapi-dns-eth0.yaml` |
+| `· └─ managedfile update` | `content=<14 lines> metadata={"domain":"dns","interface":"eth0"} mode=0600 path=/etc/netplan/osapi-d…` | `changed=true path=/etc/netplan/osapi-dns-eth0.yaml` |
+
+### An interface with no resolvers yet (`update`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `dns update` | `interface_name=eth0 servers=[9.9.9.9]` | `changed=true interface_name=eth0` |
+| `└─ netplan get` | `name=eth0` | `id=eth0 matches=[eth0] name=eth0 section=ethernets type=ethernet` |
+| `└─ netplan update` | `content=<7 lines> metadata={"domain":"dns","interface":"eth0"} path=/etc/netplan/osapi-dns-eth0.yaml` | `changed=true path=/etc/netplan/osapi-dns-eth0.yaml` |
+| `· └─ managedfile update` | `content=<7 lines> metadata={"domain":"dns","interface":"eth0"} mode=0600 path=/etc/netplan/osapi-dn…` | `changed=true path=/etc/netplan/osapi-dns-eth0.yaml` |
+
+### An interface osapi set (`delete`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `dns delete` | `interface_name=eth0` | `changed=true interface_name=eth0` |
+| `└─ netplan delete` | `path=/etc/netplan/osapi-dns-eth0.yaml` | `changed=true path=/etc/netplan/osapi-dns-eth0.yaml` |
+| `· └─ managedfile delete` | `path=/etc/netplan/osapi-dns-eth0.yaml` | `changed=true path=/etc/netplan/osapi-dns-eth0.yaml` |
+
+### An interface osapi set nothing on (`delete`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `dns delete` | `interface_name=eth0` | `changed=false interface_name=eth0` |
+| `└─ netplan delete` | `path=/etc/netplan/osapi-dns-eth0.yaml` | `changed=false path=/etc/netplan/osapi-dns-eth0.yaml` |
+| `· └─ managedfile delete` | `path=/etc/netplan/osapi-dns-eth0.yaml` | `changed=false path=/etc/netplan/osapi-dns-eth0.yaml` |
+
 ## Where it runs
 
 On `debian`, `linux`, `darwin`. On any other platform its methods report `skipped`.

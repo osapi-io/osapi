@@ -19,6 +19,31 @@ on the same host, so it has no route, no command and no permissions.
 | ---- | ------- |
 | [managedfile](../managedfile/managedfile.md) | [dns](../dns/dns.md), [interface](../interface/interface.md), [route](../route/route.md) |
 
+## Chain
+
+The calls that each example makes, each under the call that made it. `osapi behavior chain get --name netplan` shows them, and `--json` has each in full.
+
+### A new file (`update`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `netplan update` | `content=<6 lines> path=/etc/netplan/osapi-dns.yaml` | `changed=true path=/etc/netplan/osapi-dns.yaml` |
+| `└─ managedfile update` | `content=<6 lines> mode=0600 path=/etc/netplan/osapi-dns.yaml secret=false` | `changed=true path=/etc/netplan/osapi-dns.yaml` |
+
+### A file osapi wrote (`delete`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `netplan delete` | `path=/etc/netplan/osapi-dns.yaml` | `changed=true path=/etc/netplan/osapi-dns.yaml` |
+| `└─ managedfile delete` | `path=/etc/netplan/osapi-dns.yaml` | `changed=true path=/etc/netplan/osapi-dns.yaml` |
+
+### A file that is not there (`delete`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `netplan delete` | `path=/etc/netplan/osapi-dns.yaml` | `changed=false path=/etc/netplan/osapi-dns.yaml` |
+| `└─ managedfile delete` | `path=/etc/netplan/osapi-dns.yaml` | `changed=false path=/etc/netplan/osapi-dns.yaml` |
+
 ## Where it runs
 
 On `debian`. On any other platform its methods report `skipped`.

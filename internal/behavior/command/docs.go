@@ -28,6 +28,7 @@ import (
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
 	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/internal/config"
 )
@@ -80,6 +81,8 @@ func IndexPage(
 	sb.WriteString("\n## Built on\n\n")
 	fmt.Fprintf(&sb, "| Uses | Used by |\n| ---- | ------- |\n| %s | %s |\n",
 		behaviorLinks(b.Requires), behaviorLinks(behavior.RequiredBy(b)))
+
+	chainSection(&sb, b)
 
 	sb.WriteString("\n## Where it runs\n\n")
 	if len(b.Platforms) == 0 {
@@ -528,4 +531,53 @@ func ticked(
 	}
 
 	return strings.Join(out, ", ")
+}
+
+// pageWidth is the length of a value in a table of a page.
+const pageWidth = 100
+
+// chainSection is the calls that each example of b makes to the behaviors
+// that it requires, as osapi behavior chain get shows them: one table for
+// each example that calls another behavior. It runs the examples on the fake
+// host, so the page shows what the code does now.
+func chainSection(
+	sb *strings.Builder,
+	b *behavior.Behavior,
+) {
+	if len(b.Requires) == 0 {
+		return
+	}
+	var tables strings.Builder
+	for _, r := range behaviortest.Chains(b) {
+		if len(r.Root.Steps) == 0 {
+			continue
+		}
+		fmt.Fprintf(&tables, "\n### %s (`%s`)\n\n", mdx(r.Example), r.Method)
+		tables.WriteString("| Call | Sends | Gets |\n| ---- | ----- | ---- |\n")
+		for _, c := range r.Calls(pageWidth) {
+			fmt.Fprintf(&tables, "| %s | %s | %s |\n", code(c.Call), code(c.Sends), code(c.Gets))
+		}
+	}
+	if tables.Len() == 0 {
+		return
+	}
+	fmt.Fprintf(
+		sb,
+		"\n## Chain\n\nThe calls that each example makes, each under the call that made it. "+
+			"`osapi behavior chain get --name %s` shows them, and `--json` has each in full.\n",
+		b.Name,
+	)
+	sb.WriteString(tables.String())
+}
+
+// code is s as code in a cell of a table, so that MDX reads no markup in a
+// value such as <9 lines> or {"k":"v"}. An empty value stays empty.
+func code(
+	s string,
+) string {
+	if s == "" {
+		return ""
+	}
+
+	return "`" + cell(strings.ReplaceAll(s, "`", "'")) + "`"
 }

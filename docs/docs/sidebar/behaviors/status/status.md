@@ -22,6 +22,34 @@ The status summary of a node.
 | ---- | ------- |
 | [hostname](../hostname/hostname.md), [uptime](../uptime/uptime.md), [os](../os/os.md), [load](../load/load.md), [memory](../memory/memory.md), [disk](../disk/disk.md) | Nothing |
 
+## Chain
+
+The calls that each example makes, each under the call that made it. `osapi behavior chain get --name status` shows them, and `--json` has each in full.
+
+### An Ubuntu host (`get`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `status get` |  | `disks=[{"free":31457280000,"name":"/","total":52428800000,"used":20971520000}] load_average={"15min…` |
+| `└─ hostname get` |  | `name=web-01` |
+| `└─ uptime get` |  | `seconds=93900 uptime="1 day, 2 hours, 5 minutes"` |
+| `└─ os get` |  | `os_info={"distribution":"ubuntu","version":"24.04"}` |
+| `└─ load get` |  | `load_average={"15min":0.25,"1min":0.32,"5min":0.28}` |
+| `└─ memory get` |  | `memory={"free":2147483648,"total":8589934592,"used":4294967296}` |
+| `└─ disk get` |  | `disks=[{"free":31457280000,"name":"/","total":52428800000,"used":20971520000}]` |
+
+### A Mac (`get`)
+
+| Call | Sends | Gets |
+| ---- | ----- | ---- |
+| `status get` |  | `disks=[{"free":31457280000,"name":"/","total":52428800000,"used":20971520000}] load_average={"15min…` |
+| `└─ hostname get` |  | `name=web-01` |
+| `└─ uptime get` |  | `seconds=93900 uptime="1 day, 2 hours, 5 minutes"` |
+| `└─ os get` |  | `os_info={"distribution":"darwin","version":"15.5"}` |
+| `└─ load get` |  | `load_average={"15min":0.25,"1min":0.32,"5min":0.28}` |
+| `└─ memory get` |  | `memory={"free":2147483648,"total":8589934592,"used":4294967296}` |
+| `└─ disk get` |  | `disks=[{"free":31457280000,"name":"/","total":52428800000,"used":20971520000}]` |
+
 ## Where it runs
 
 On `linux`, `darwin`. On any other platform its methods report `skipped`.

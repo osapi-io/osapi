@@ -25,6 +25,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
+	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 )
@@ -131,4 +134,116 @@ func ChainProblems(
 	}
 
 	return problems
+}
+
+// ChainCall is one call of a run as a row: the call, indented under the call
+// that made it, and the fields that it sends and gets.
+type ChainCall struct {
+	Call  string `json:"call"`
+	Sends string `json:"sends"`
+	Gets  string `json:"gets"`
+}
+
+// Calls are the calls of r, the method first and each call under the one
+// that made it. A table trims leading spaces, so a deeper call is marked with
+// a dot for each level above it. Each value is cut to width runes; 0 cuts
+// nothing.
+func (r ChainRun) Calls(
+	width int,
+) []ChainCall {
+	var out []ChainCall
+	var walk func(s *behavior.Step, depth int)
+	walk = func(s *behavior.Step, depth int) {
+		call := s.Behavior + " " + s.Method
+		if depth > 0 {
+			call = strings.Repeat("· ", depth-1) + "└─ " + call
+		}
+		gets := fields(s.Output, width)
+		if s.Error != "" {
+			gets = "error: " + s.Error
+		}
+		out = append(out, ChainCall{Call: call, Sends: fields(s.Input, width), Gets: gets})
+		for _, c := range s.Steps {
+			walk(c, depth+1)
+		}
+	}
+	walk(r.Root, 0)
+
+	return out
+}
+
+// fields is v as the fields that have a value, key=value in key order: a
+// text of several lines is its count of lines, and the whole is cut to width.
+func fields(
+	v any,
+	width int,
+) string {
+	data, _ := json.Marshal(v)
+	var m map[string]any
+	if err := json.Unmarshal(data, &m); err != nil {
+		return cut(string(data), width)
+	}
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	parts := make([]string, 0, len(keys))
+	for _, k := range keys {
+		if text := value(m[k]); text != "" {
+			parts = append(parts, k+"="+text)
+		}
+	}
+
+	return cut(strings.Join(parts, " "), width)
+}
+
+// value is one field's value as fields shows it, or "" for one with none.
+func value(
+	v any,
+) string {
+	switch t := v.(type) {
+	case nil:
+		return ""
+	case string:
+		if n := strings.Count(strings.TrimRight(t, "\n"), "\n") + 1; n > 1 {
+			return fmt.Sprintf("<%d lines>", n)
+		}
+		if strings.ContainsAny(t, " ") {
+			return strconv.Quote(t)
+		}
+
+		return t
+	case []any:
+		if len(t) == 0 {
+			return ""
+		}
+		items := make([]string, 0, len(t))
+		for _, item := range t {
+			items = append(items, value(item))
+		}
+
+		return "[" + strings.Join(items, ", ") + "]"
+	case map[string]any:
+		if len(t) == 0 {
+			return ""
+		}
+		data, _ := json.Marshal(t)
+
+		return string(data)
+	default:
+		return fmt.Sprint(t)
+	}
+}
+
+// cut is s cut to width, with … where it was cut, or s when width is 0.
+func cut(
+	s string,
+	width int,
+) string {
+	if r := []rune(s); width > 0 && len(r) > width {
+		return string(r[:width-1]) + "…"
+	}
+
+	return s
 }
