@@ -119,6 +119,8 @@ func top() *behavior.Behavior {
 		behavior.Write("update", set).Key("key"),
 		behavior.Write("delete", set).Key("key"),
 		behavior.Write("apply", set),
+		behavior.Action("restart", set).Key("key"),
+		behavior.Action("reboot", set),
 	)
 }
 
@@ -148,7 +150,7 @@ func (s *BehaviorPublicTestSuite) TestDefine() {
 				assert.Equal(s.T(), "Kernel parameters", b.Doc)
 				assert.Equal(s.T(), behavior.NodePlacement, b.Placement)
 				assert.Empty(s.T(), b.Group)
-				assert.Len(s.T(), b.Methods, 6)
+				assert.Len(s.T(), b.Methods, 8)
 			},
 		},
 		{
@@ -257,6 +259,18 @@ func (s *BehaviorPublicTestSuite) TestPath() {
 			method: "get",
 			want:   "/api/node/{hostname}/network/dns",
 		},
+		{
+			name:   "when an action on one item",
+			b:      top(),
+			method: "restart",
+			want:   "/api/node/{hostname}/sysctl/{key}/restart",
+		},
+		{
+			name:   "when an action on the host",
+			b:      top(),
+			method: "reboot",
+			want:   "/api/node/{hostname}/sysctl/reboot",
+		},
 	}
 
 	for _, tc := range tests {
@@ -306,6 +320,7 @@ func (s *BehaviorPublicTestSuite) TestHTTPMethod() {
 		{name: "when an update", method: "update", want: "PUT"},
 		{name: "when a delete", method: "delete", want: "DELETE"},
 		{name: "when any other write", method: "apply", want: "POST"},
+		{name: "when an action", method: "restart", want: "POST"},
 	}
 
 	for _, tc := range tests {
@@ -313,6 +328,19 @@ func (s *BehaviorPublicTestSuite) TestHTTPMethod() {
 			assert.Equal(s.T(), tc.want, top().Method(tc.method).HTTPMethod())
 		})
 	}
+}
+
+func (s *BehaviorPublicTestSuite) TestAction() {
+	m := behavior.Action("restart", set)
+	s.True(m.Action)
+	s.Equal(behavior.VerbWrite, m.Verb, "an action is a write: <group>:write and a modify job")
+	s.False(behavior.Write("update", set).Action)
+	s.True(behavior.Action("restart", set).Always().AlwaysChanges)
+}
+
+func (s *BehaviorPublicTestSuite) TestNotAFact() {
+	s.Equal("not a fact", behavior.Read("list", set).NotAFact("not a fact").NonFact)
+	s.Empty(behavior.Read("list", set).NonFact, "a read goes through gohai unless it says why")
 }
 
 func (s *BehaviorPublicTestSuite) TestKey() {

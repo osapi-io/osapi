@@ -17,169 +17,133 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-
 package client
 
 import (
 	"context"
 	"fmt"
+	"net/http"
+
+	openapi_types "github.com/oapi-codegen/runtime/types"
 
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
-// ServiceService provides systemd service management operations.
+// ServiceService reads the systemd services of a host, and deploys, removes,
+// starts, stops, restarts, enables and disables the services that osapi
+// deploys. The unit file of each is an object of the object store, which
+// File.Upload stores.
 type ServiceService struct {
 	client *gen.ClientWithResponses
 }
 
-// List returns all services on the target host.
+// List lists the services of the target, one row per service per host.
 func (s *ServiceService) List(
 	ctx context.Context,
 	hostname string,
-) (*Response[Collection[ServiceInfoResult]], error) {
+) (*Response[Collection[ServiceInfo]], error) {
 	resp, err := s.client.GetNodeServiceWithResponse(ctx, hostname)
 	if err != nil {
 		return nil, fmt.Errorf("service list: %w", err)
 	}
-
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
-
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
+		return nil, failed(
+			resp.StatusCode(),
+			resp.JSON400,
+			resp.JSON401,
+			resp.JSON403,
+			resp.JSON500,
+		)
 	}
 
 	return newResponse(
-		serviceListCollectionFromGen(resp.JSON200),
+		serviceInfosFromGen(resp.JSON200.JobId, resp.JSON200.Results),
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
 }
 
-// Get returns information about a specific service on the target host.
+// Get gets one service of the target, by its name with .service or without
+// it.
 func (s *ServiceService) Get(
 	ctx context.Context,
 	hostname string,
 	name string,
-) (*Response[Collection[ServiceGetResult]], error) {
-	resp, err := s.client.GetNodeServiceByNameWithResponse(ctx, hostname, name)
+) (*Response[Collection[ServiceInfo]], error) {
+	resp, err := s.client.GetNodeServiceByKeyWithResponse(ctx, hostname, name)
 	if err != nil {
 		return nil, fmt.Errorf("service get: %w", err)
 	}
-
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON404,
-		resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
-
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
+		return nil, failed(resp.StatusCode(),
+			resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON500)
 	}
 
-	return newResponse(serviceGetCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
+	return newResponse(
+		serviceInfosFromGen(resp.JSON200.JobId, resp.JSON200.Results),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
-// Create creates a new service unit file on the target host.
+// Create deploys the object as the unit file of the service name on the
+// target, and reloads systemd. Idempotent.
 func (s *ServiceService) Create(
 	ctx context.Context,
 	hostname string,
 	opts ServiceCreateOpts,
 ) (*Response[Collection[ServiceMutationResult]], error) {
-	body := gen.ServiceCreateRequest{
-		Name:   opts.Name,
-		Object: opts.Object,
-	}
-
-	resp, err := s.client.PostNodeServiceWithResponse(ctx, hostname, body)
+	resp, err := s.client.PostNodeServiceWithResponse(ctx, hostname,
+		gen.ServiceCreateRequest{Name: opts.Name, Object: opts.Object})
 	if err != nil {
 		return nil, fmt.Errorf("service create: %w", err)
 	}
-
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
-
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
+		return nil, failed(
+			resp.StatusCode(),
+			resp.JSON400,
+			resp.JSON401,
+			resp.JSON403,
+			resp.JSON500,
+		)
 	}
 
-	return newResponse(
-		serviceMutationCollectionFromGen(resp.JSON200),
+	return serviceMutation(
+		resp.JSON200.JobId,
+		resp.JSON200.Results,
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
 }
 
-// Update updates an existing service unit file on the target host.
+// Update deploys the object as the unit file of a service that osapi
+// deployed on the target. Idempotent.
 func (s *ServiceService) Update(
 	ctx context.Context,
 	hostname string,
 	name string,
 	opts ServiceUpdateOpts,
 ) (*Response[Collection[ServiceMutationResult]], error) {
-	body := gen.ServiceUpdateRequest{
-		Object: opts.Object,
-	}
-
-	resp, err := s.client.PutNodeServiceWithResponse(ctx, hostname, name, body)
+	resp, err := s.client.PutNodeServiceWithResponse(ctx, hostname, name,
+		gen.ServiceUpdateRequest{Object: opts.Object})
 	if err != nil {
 		return nil, fmt.Errorf("service update: %w", err)
 	}
-
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON404,
-		resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
-
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
+		return nil, failed(resp.StatusCode(),
+			resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON500)
 	}
 
-	return newResponse(
-		serviceMutationCollectionFromGen(resp.JSON200),
+	return serviceMutation(
+		resp.JSON200.JobId,
+		resp.JSON200.Results,
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
 }
 
-// Delete deletes a service unit file on the target host.
+// Delete stops, disables and removes a service that osapi deployed on the
+// target. Idempotent.
 func (s *ServiceService) Delete(
 	ctx context.Context,
 	hostname string,
@@ -189,32 +153,20 @@ func (s *ServiceService) Delete(
 	if err != nil {
 		return nil, fmt.Errorf("service delete: %w", err)
 	}
-
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
-
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
+		return nil, failed(resp.StatusCode(),
+			resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON500)
 	}
 
-	return newResponse(
-		serviceMutationCollectionFromGen(resp.JSON200),
+	return serviceMutation(
+		resp.JSON200.JobId,
+		resp.JSON200.Results,
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
 }
 
-// Start starts a service on the target host.
+// Start starts a service that osapi deployed on the target. Idempotent.
 func (s *ServiceService) Start(
 	ctx context.Context,
 	hostname string,
@@ -224,32 +176,20 @@ func (s *ServiceService) Start(
 	if err != nil {
 		return nil, fmt.Errorf("service start: %w", err)
 	}
-
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
-
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
+		return nil, failed(resp.StatusCode(),
+			resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON500)
 	}
 
-	return newResponse(
-		serviceMutationCollectionFromGen(resp.JSON200),
+	return serviceMutation(
+		resp.JSON200.JobId,
+		resp.JSON200.Results,
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
 }
 
-// Stop stops a service on the target host.
+// Stop stops a service that osapi deployed on the target. Idempotent.
 func (s *ServiceService) Stop(
 	ctx context.Context,
 	hostname string,
@@ -259,32 +199,21 @@ func (s *ServiceService) Stop(
 	if err != nil {
 		return nil, fmt.Errorf("service stop: %w", err)
 	}
-
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
-
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
+		return nil, failed(resp.StatusCode(),
+			resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON500)
 	}
 
-	return newResponse(
-		serviceMutationCollectionFromGen(resp.JSON200),
+	return serviceMutation(
+		resp.JSON200.JobId,
+		resp.JSON200.Results,
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
 }
 
-// Restart restarts a service on the target host.
+// Restart restarts a service that osapi deployed on the target. It changes
+// the host each time.
 func (s *ServiceService) Restart(
 	ctx context.Context,
 	hostname string,
@@ -294,32 +223,21 @@ func (s *ServiceService) Restart(
 	if err != nil {
 		return nil, fmt.Errorf("service restart: %w", err)
 	}
-
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
-
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
+		return nil, failed(resp.StatusCode(),
+			resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON500)
 	}
 
-	return newResponse(
-		serviceMutationCollectionFromGen(resp.JSON200),
+	return serviceMutation(
+		resp.JSON200.JobId,
+		resp.JSON200.Results,
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
 }
 
-// Enable enables a service to start on boot on the target host.
+// Enable makes a service that osapi deployed on the target start at boot.
+// Idempotent.
 func (s *ServiceService) Enable(
 	ctx context.Context,
 	hostname string,
@@ -329,32 +247,21 @@ func (s *ServiceService) Enable(
 	if err != nil {
 		return nil, fmt.Errorf("service enable: %w", err)
 	}
-
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
-
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
+		return nil, failed(resp.StatusCode(),
+			resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON500)
 	}
 
-	return newResponse(
-		serviceMutationCollectionFromGen(resp.JSON200),
+	return serviceMutation(
+		resp.JSON200.JobId,
+		resp.JSON200.Results,
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
 }
 
-// Disable disables a service from starting on boot on the target host.
+// Disable makes a service that osapi deployed on the target not start at
+// boot. Idempotent.
 func (s *ServiceService) Disable(
 	ctx context.Context,
 	hostname string,
@@ -364,27 +271,53 @@ func (s *ServiceService) Disable(
 	if err != nil {
 		return nil, fmt.Errorf("service disable: %w", err)
 	}
-
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
-
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
+		return nil, failed(resp.StatusCode(),
+			resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON500)
 	}
 
-	return newResponse(
-		serviceMutationCollectionFromGen(resp.JSON200),
+	return serviceMutation(
+		resp.JSON200.JobId,
+		resp.JSON200.Results,
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
+}
+
+// failed is the error of a response with no body for its success: the API
+// error of its status, or a nil body.
+func failed(
+	statusCode int,
+	responses ...*gen.ErrorResponse,
+) error {
+	if err := checkError(statusCode, responses...); err != nil {
+		return err
+	}
+
+	return &UnexpectedStatusError{APIError{StatusCode: statusCode, Message: "nil response body"}}
+}
+
+// serviceMutation is the response of a write or an action.
+func serviceMutation(
+	jobID *openapi_types.UUID,
+	rows []gen.ServiceResult,
+	body []byte,
+	httpResp *http.Response,
+) *Response[Collection[ServiceMutationResult]] {
+	results := make([]ServiceMutationResult, 0, len(rows))
+	for _, r := range rows {
+		results = append(results, ServiceMutationResult{
+			Hostname: r.Hostname,
+			Status:   string(r.Status),
+			Error:    derefString(r.Error),
+			Name:     derefString(r.Name),
+			Changed:  derefBool(r.Changed),
+		})
+	}
+
+	return newResponse(
+		Collection[ServiceMutationResult]{Results: results, JobID: jobIDFromGen(jobID)},
+		body,
+		httpResp,
+	)
 }

@@ -12,22 +12,22 @@ same.
 
 ## Behavior
 
-|             |                                                                 |
-| ----------- | --------------------------------------------------------------- |
-| Name        | managedfile                                                     |
-| Description | Files osapi writes on a host and keeps a record of              |
-| Placement   | node                                                            |
-| Internal    | yes                                                             |
-| API         | no                                                              |
-| CLI         | no                                                              |
-| Next        | no                                                              |
-| Platforms   | debian                                                          |
-| Sudo        | chown                                                           |
-| Runs        | stat                                                            |
-| Writes      | *                                                               |
-| Keeps state | yes                                                             |
-| Uses        | none                                                            |
-| Used by     | [netplan](../netplan/netplan.md), [sysctl](../sysctl/sysctl.md) |
+|             |                                                                                                   |
+| ----------- | ------------------------------------------------------------------------------------------------- |
+| Name        | managedfile                                                                                       |
+| Description | Files osapi writes on a host and keeps a record of                                                |
+| Placement   | node                                                                                              |
+| Internal    | yes                                                                                               |
+| API         | no                                                                                                |
+| CLI         | no                                                                                                |
+| Next        | no                                                                                                |
+| Platforms   | debian                                                                                            |
+| Sudo        | chown                                                                                             |
+| Runs        | stat                                                                                              |
+| Writes      | *                                                                                                 |
+| Keeps state | yes                                                                                               |
+| Uses        | none                                                                                              |
+| Used by     | [netplan](../netplan/netplan.md), [service](../service/service.md), [sysctl](../sysctl/sysctl.md) |
 
 ### Methods (3)
 
@@ -87,10 +87,10 @@ None. Declare them with behavior.Config.
 
 ### Examples (2)
 
-| EXAMPLE                       | INPUT                        | OUTPUT                                                                                                                                            |
-| ----------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A file osapi wrote            | path=/etc/osapi/example.conf | path=/etc/osapi/example.conf, sha256=b6ac5bc39377e44ee783dff946f6703a994f5eb31a438e69dc0735b40060d2e8, metadata=map[setting:on], undeployed=false |
-| A file osapi stopped managing | path=/etc/osapi/example.conf | path=/etc/osapi/example.conf, sha256=b6ac5bc39377e44ee783dff946f6703a994f5eb31a438e69dc0735b40060d2e8, metadata=map[setting:on], undeployed=true  |
+| EXAMPLE                       | INPUT                        | OUTPUT                                                                                                                                             |
+| ----------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A file osapi wrote            | path=/etc/osapi/example.conf | path=/etc/osapi/example.conf, sha256=b6ac5bc39377e44ee783dff946f6703a994f5eb31a438e69dc0735b40060d2e8, metadata=map\[setting:on], undeployed=false |
+| A file osapi stopped managing | path=/etc/osapi/example.conf | path=/etc/osapi/example.conf, sha256=b6ac5bc39377e44ee783dff946f6703a994f5eb31a438e69dc0735b40060d2e8, metadata=map\[setting:on], undeployed=true  |
 
 ## Method update
 
@@ -106,15 +106,15 @@ None. Declare them with behavior.Config.
 
 ### Input (7)
 
-| FIELD    | TYPE    | REQUIRED | CONSTRAINTS                    | DESCRIPTION                                                              |
-| -------- | ------- | -------- | ------------------------------ | ------------------------------------------------------------------------ |
-| path     | string  | yes      | pattern ^/                     | Absolute path of the file                                                |
-| content  | string  | yes      |                                | The file's whole content                                                 |
-| mode     | string  | no       | pattern ^[0-7]&#123;3,4&#125;$ | Permissions in octal, such as 0600; 0644 when empty                      |
-| owner    | string  | no       | pattern ^[a-z_][a-z0-9_-]*\$?$ | User that owns the file; left as written when empty                      |
-| group    | string  | no       | pattern ^[a-z_][a-z0-9_-]*\$?$ | Group that owns the file; left as written when empty                     |
-| secret   | boolean | no       |                                | The content is a secret: its record keeps no checksum of it              |
-| metadata | object  | no       |                                | What the caller keeps in the file's record, such as the setting it holds |
+| FIELD    | TYPE    | REQUIRED | CONSTRAINTS                      | DESCRIPTION                                                              |
+| -------- | ------- | -------- | -------------------------------- | ------------------------------------------------------------------------ |
+| path     | string  | yes      | pattern ^/                       | Absolute path of the file                                                |
+| content  | string  | yes      |                                  | The file's whole content                                                 |
+| mode     | string  | no       | pattern ^\[0-7]&#123;3,4&#125;$  | Permissions in octal, such as 0600; 0644 when empty                      |
+| owner    | string  | no       | pattern ^\[a-z_]\[a-z0-9_-]*\$?$ | User that owns the file; left as written when empty                      |
+| group    | string  | no       | pattern ^\[a-z_]\[a-z0-9_-]*\$?$ | Group that owns the file; left as written when empty                     |
+| secret   | boolean | no       |                                  | The content is a secret: its record keeps no checksum of it              |
+| metadata | object  | no       |                                  | What the caller keeps in the file's record, such as the setting it holds |
 
 ### Output (2)
 

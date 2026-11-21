@@ -38,8 +38,8 @@ export function ServiceBlock({
       <div className="grid grid-cols-2 gap-3">
         <Input
           id="service-name"
-          label="Unit Name"
-          placeholder="myapp.service"
+          label="Service Name"
+          placeholder="app, for osapi-app.service"
           value={name}
           onChange={(e) => update("name", e.target.value)}
         />

@@ -20,30 +20,30 @@ The behaviors that interface calls, and each call that its examples make.
 
 ## A static address (create)
 
-| CALL                    | SENDS                                                                             | GETS                                                     |
-| ----------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| interface create        | addresses=[10.0.1.5/24] name=osapi0                                               | changed=true name=osapi0                                 |
-| └─ netplan get          | name=osapi0                                                                       | id=osapi0 matches=[osapi0] name=osapi0 section=ethernets |
-| └─ netplan update       | content=&lt;8 lines&gt; metadata=&#123;"domain":"interface","interface":"osapi0"… | changed=true path=/etc/netplan/osapi-osapi0.yaml         |
-| · └─ managedfile update | content=&lt;8 lines&gt; metadata=&#123;"domain":"interface","interface":"osapi0"… | changed=true path=/etc/netplan/osapi-osapi0.yaml         |
+| CALL                    | SENDS                                                                             | GETS                                                      |
+| ----------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| interface create        | addresses=\[10.0.1.5/24] name=osapi0                                              | changed=true name=osapi0                                  |
+| └─ netplan get          | name=osapi0                                                                       | id=osapi0 matches=\[osapi0] name=osapi0 section=ethernets |
+| └─ netplan update       | content=&lt;8 lines&gt; metadata=&#123;"domain":"interface","interface":"osapi0"… | changed=true path=/etc/netplan/osapi-osapi0.yaml          |
+| · └─ managedfile update | content=&lt;8 lines&gt; metadata=&#123;"domain":"interface","interface":"osapi0"… | changed=true path=/etc/netplan/osapi-osapi0.yaml          |
 
 ## Each setting (create)
 
-| CALL                    | SENDS                                                                             | GETS                                                     |
-| ----------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| interface create        | addresses=[2001:db8::5/64] dhcp6=true mac_address=52:54:00:aa:bb:cc m…            | changed=true name=osapi0                                 |
-| └─ netplan get          | name=osapi0                                                                       | id=osapi0 matches=[osapi0] name=osapi0 section=ethernets |
-| └─ netplan update       | content=&lt;11 lines&gt; metadata=&#123;"domain":"interface","interface":"osapi0… | changed=true path=/etc/netplan/osapi-osapi0.yaml         |
-| · └─ managedfile update | content=&lt;11 lines&gt; metadata=&#123;"domain":"interface","interface":"osapi0… | changed=true path=/etc/netplan/osapi-osapi0.yaml         |
+| CALL                    | SENDS                                                                             | GETS                                                      |
+| ----------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| interface create        | addresses=\[2001:db8::5/64] dhcp6=true mac_address=52:54:00:aa:bb:cc m…           | changed=true name=osapi0                                  |
+| └─ netplan get          | name=osapi0                                                                       | id=osapi0 matches=\[osapi0] name=osapi0 section=ethernets |
+| └─ netplan update       | content=&lt;11 lines&gt; metadata=&#123;"domain":"interface","interface":"osapi0… | changed=true path=/etc/netplan/osapi-osapi0.yaml          |
+| · └─ managedfile update | content=&lt;11 lines&gt; metadata=&#123;"domain":"interface","interface":"osapi0… | changed=true path=/etc/netplan/osapi-osapi0.yaml          |
 
 ## Move an interface to DHCP (update)
 
-| CALL                    | SENDS                                                                             | GETS                                                     |
-| ----------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| interface update        | dhcp4=true name=osapi0                                                            | changed=true name=osapi0                                 |
-| └─ netplan get          | name=osapi0                                                                       | id=osapi0 matches=[osapi0] name=osapi0 section=ethernets |
-| └─ netplan update       | content=&lt;6 lines&gt; metadata=&#123;"domain":"interface","interface":"osapi0"… | changed=true path=/etc/netplan/osapi-osapi0.yaml         |
-| · └─ managedfile update | content=&lt;6 lines&gt; metadata=&#123;"domain":"interface","interface":"osapi0"… | changed=true path=/etc/netplan/osapi-osapi0.yaml         |
+| CALL                    | SENDS                                                                             | GETS                                                      |
+| ----------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| interface update        | dhcp4=true name=osapi0                                                            | changed=true name=osapi0                                  |
+| └─ netplan get          | name=osapi0                                                                       | id=osapi0 matches=\[osapi0] name=osapi0 section=ethernets |
+| └─ netplan update       | content=&lt;6 lines&gt; metadata=&#123;"domain":"interface","interface":"osapi0"… | changed=true path=/etc/netplan/osapi-osapi0.yaml          |
+| · └─ managedfile update | content=&lt;6 lines&gt; metadata=&#123;"domain":"interface","interface":"osapi0"… | changed=true path=/etc/netplan/osapi-osapi0.yaml          |
 
 ## An interface osapi configures (delete)
 

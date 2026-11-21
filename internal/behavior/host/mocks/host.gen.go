@@ -84,3 +84,43 @@ func (mr *MockExecMockRecorder) RunPrivilegedCmdWithStdin(ctx, name, args, stdin
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunPrivilegedCmdWithStdin", reflect.TypeOf((*MockExec)(nil).RunPrivilegedCmdWithStdin), ctx, name, args, stdin)
 }
+
+// MockObjects is a mock of Objects interface.
+type MockObjects struct {
+	ctrl     *gomock.Controller
+	recorder *MockObjectsMockRecorder
+	isgomock struct{}
+}
+
+// MockObjectsMockRecorder is the mock recorder for MockObjects.
+type MockObjectsMockRecorder struct {
+	mock *MockObjects
+}
+
+// NewMockObjects creates a new mock instance.
+func NewMockObjects(ctrl *gomock.Controller) *MockObjects {
+	mock := &MockObjects{ctrl: ctrl}
+	mock.recorder = &MockObjectsMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockObjects) EXPECT() *MockObjectsMockRecorder {
+	return m.recorder
+}
+
+// Object mocks base method.
+func (m *MockObjects) Object(ctx context.Context, name string) ([]byte, string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Object", ctx, name)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// Object indicates an expected call of Object.
+func (mr *MockObjectsMockRecorder) Object(ctx, name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Object", reflect.TypeOf((*MockObjects)(nil).Object), ctx, name)
+}

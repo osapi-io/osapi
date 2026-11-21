@@ -82,6 +82,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A name that leaves the directory", DeleteInput{Path: Dir + "/osapi-../../shadow.yaml"},
 			"not one of osapi's netplan files"),
 	behavior.Read("get", Get).Key("name").
+		NotAFact("the definition that netplan has of an interface is the configuration of netplan, not a fact of the host").
 		Describe("Get what netplan status reports for an interface").
 		Explain("Reads netplan status: the interface's type, its section and the ID of the "+
 			"definition that matches it, which a write goes under, and each interface that "+

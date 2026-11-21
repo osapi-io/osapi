@@ -129,6 +129,18 @@ func (s *ExamplePublicTestSuite) TestHostOptions() {
 			}},
 		},
 		{
+			name:   "when Stored puts an object in the object store first",
+			option: behavior.Stored("app.conf", "x", "template"),
+			want: behavior.Example{Given: []behavior.Given{
+				{
+					Kind:        behavior.GivenObject,
+					Path:        "app.conf",
+					Content:     "x",
+					ContentType: "template",
+				},
+			}},
+		},
+		{
 			name:   "when Wrote says a file's content after",
 			option: behavior.Wrote("/etc/a", "a = 1\n"),
 			want: behavior.Example{Effects: []behavior.Effect{

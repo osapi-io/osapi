@@ -22,9 +22,12 @@ package agent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
+
+	"github.com/osapi-io/osapi/internal/behavior"
 
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
@@ -133,7 +136,7 @@ func Setup(
 		container: containerFn(),
 		hostname:  hostname,
 	}
-	e.files, e.fileStateBucket = openFiles(ctx, e, conn.NATS, namespace, cfg.NATS)
+	e.files, e.fileStateBucket, e.objects = openFiles(ctx, e, conn.NATS, namespace, cfg.NATS)
 	if e.fileStateBucket != "" {
 		e.fileState = conn.NATS
 	}
@@ -191,17 +194,18 @@ type fileStores interface {
 }
 
 // openFiles makes the file provider, and returns it with the file-state
-// bucket. Both are nil if cfg names no Object Store or file-state bucket, or
-// if either does not open. The agent runs without the file operations then.
+// bucket and the objects that behaviors read. Each is nil if cfg names no
+// Object Store or file-state bucket, or if either does not open. The agent
+// runs without the file operations then.
 func openFiles(
 	ctx context.Context,
 	e hostEnv,
 	nc fileStores,
 	namespace string,
 	cfg config.NATS,
-) (fileProv.Provider, string) {
+) (fileProv.Provider, string, host.Objects) {
 	if cfg.Objects.Bucket == "" || cfg.FileState.Bucket == "" {
-		return nil, ""
+		return nil, "", nil
 	}
 
 	objBucket := job.ApplyNamespaceToInfraName(namespace, cfg.Objects.Bucket)
@@ -211,7 +215,7 @@ func openFiles(
 			slog.String("bucket", objBucket),
 			slog.String("error", err.Error()),
 		)
-		return nil, ""
+		return nil, "", nil
 	}
 
 	fileStateCfg := bus.FileStateKV(namespace, cfg.FileState)
@@ -221,7 +225,7 @@ func openFiles(
 			slog.String("bucket", fileStateCfg.Bucket),
 			slog.String("error", err.Error()),
 		)
-		return nil, ""
+		return nil, "", nil
 	}
 
 	if err := SeedSystemTemplates(ctx, e.log, nc, objBucket); err != nil {
@@ -233,7 +237,36 @@ func openFiles(
 
 	return fileProv.New(
 		e.log, e.fs, nc, objBucket, nc, fileStateCfg.Bucket, e.hostname, e.exec,
-	), fileStateCfg.Bucket
+	), fileStateCfg.Bucket, storeObjects{store: nc, bucket: objBucket}
+}
+
+// storeObjects is the object store of the fleet as behaviors read it.
+type storeObjects struct {
+	store  fileProv.Objects
+	bucket string
+}
+
+// Object is the content of the object name and its content type, from the
+// Osapi-Content-Type header that the upload gave it: raw when it has none.
+func (o storeObjects) Object(
+	ctx context.Context,
+	name string,
+) ([]byte, string, error) {
+	content, err := o.store.ObjectGetBytes(ctx, o.bucket, name)
+	if errors.Is(err, jetstream.ErrObjectNotFound) {
+		return nil, "", fmt.Errorf("object %q: %w", name, behavior.ErrNotFound)
+	}
+	if err != nil {
+		return nil, "", fmt.Errorf("object %q: %w", name, err)
+	}
+	contentType := "raw"
+	if info, err := o.store.ObjectInfo(ctx, o.bucket, name); err == nil && info.Headers != nil {
+		if ct := info.Headers.Get("Osapi-Content-Type"); ct != "" {
+			contentType = ct
+		}
+	}
+
+	return content, contentType, nil
 }
 
 // subComponents returns the parts of the agent that its heartbeat reports.
@@ -280,7 +313,6 @@ func buildRegistry(
 	processProvider := e.process()
 	userProvider := e.user()
 	logProvider := e.logs()
-	serviceProvider := e.service()
 	pingProvider := e.ping()
 	commandProvider := command.New(e.log, e.exec)
 	dockerProvider := e.docker(ctx)
@@ -297,7 +329,6 @@ func buildRegistry(
 			processProvider,
 			userProvider,
 			logProvider,
-			serviceProvider,
 			e.log,
 		),
 		hostProvider,
@@ -309,7 +340,6 @@ func buildRegistry(
 		processProvider,
 		userProvider,
 		logProvider,
-		serviceProvider,
 	)
 
 	r.Register(
@@ -351,6 +381,7 @@ func buildRegistry(
 		Exec:            e.exec,
 		FileState:       e.fileState,
 		FileStateBucket: e.fileStateBucket,
+		Objects:         e.objects,
 		Now:             time.Now,
 	}, e.log)
 	r.Register(

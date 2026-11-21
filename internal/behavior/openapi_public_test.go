@@ -41,6 +41,8 @@ func (s *OpenAPIPublicTestSuite) TestOperationID() {
 		{method: "list", want: "GetNodeSysctl"},
 		{method: "get", want: "GetNodeSysctlByKey"},
 		{method: "update", want: "PutNodeSysctl"},
+		{method: "restart", want: "PostNodeSysctlRestart"},
+		{method: "reboot", want: "PostNodeSysctlReboot"},
 	}
 
 	for _, tc := range tests {

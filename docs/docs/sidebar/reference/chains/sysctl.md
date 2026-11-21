@@ -20,23 +20,23 @@ The behaviors that sysctl calls, and each call that its examples make.
 
 ## Every parameter, and which osapi manages (list)
 
-| CALL               | SENDS                                             | GETS                                                                                  |
-| ------------------ | ------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| sysctl list        |                                                   | [&#123;"key":"kernel.panic","value":"0","managed":false&#125;,&#123;"key":"net.ipv4.… |
-| └─ managedfile get | path=/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf | metadata=&#123;"key":"net.ipv4.ip_forward","value":"1"&#125; path=/etc/sysctl.d…      |
+| CALL               | SENDS                                             | GETS                                                                                   |
+| ------------------ | ------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| sysctl list        |                                                   | \[&#123;"key":"kernel.panic","value":"0","managed":false&#125;,&#123;"key":"net.ipv4.… |
+| └─ managedfile get | path=/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf | metadata=&#123;"key":"net.ipv4.ip_forward","value":"1"&#125; path=/etc/sysctl.d…       |
 
 ## One part of the tree (list)
 
-| CALL               | SENDS                                             | GETS                                                                                  |
-| ------------------ | ------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| sysctl list        | prefix=net.ipv4                                   | [&#123;"key":"net.ipv4.ip_forward","value":"1","managed":true&#125;,&#123;"key":"net… |
-| └─ managedfile get | path=/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf | metadata=&#123;"key":"net.ipv4.ip_forward","value":"1"&#125; path=/etc/sysctl.d…      |
+| CALL               | SENDS                                             | GETS                                                                                   |
+| ------------------ | ------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| sysctl list        | prefix=net.ipv4                                   | \[&#123;"key":"net.ipv4.ip_forward","value":"1","managed":true&#125;,&#123;"key":"net… |
+| └─ managedfile get | path=/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf | metadata=&#123;"key":"net.ipv4.ip_forward","value":"1"&#125; path=/etc/sysctl.d…       |
 
 ## A managed parameter the kernel does not have right now (list)
 
 | CALL               | SENDS                                                            | GETS                                                                             |
 | ------------------ | ---------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| sysctl list        | prefix=net.bridge                                                | [&#123;"key":"net.bridge.bridge-nf-call-iptables","value":"1","managed":tr…      |
+| sysctl list        | prefix=net.bridge                                                | \[&#123;"key":"net.bridge.bridge-nf-call-iptables","value":"1","managed":tr…     |
 | └─ managedfile get | path=/etc/sysctl.d/osapi-net.bridge.bridge-nf-call-iptables.conf | metadata=&#123;"key":"net.bridge.bridge-nf-call-iptables","value":"1"&#125; pat… |
 
 ## A parameter osapi manages (get)

@@ -125,6 +125,7 @@ func (s *GuidePublicTestSuite) TestChecks() {
 func (s *GuidePublicTestSuite) TestMDX() {
 	s.Equal("osapi-&lt;key&gt;.conf and &#123;k&#125;", guide.MDX("osapi-<key>.conf and {k}"))
 	s.Equal("a `<b>` c &lt;d&gt;", guide.MDX("a `<b>` c <d>"), "text in a code span stays")
+	s.Equal(`Uses\[Deps]()`, guide.MDX("Uses[Deps]()"), "a bracket does not start a link")
 }
 
 func (s *GuidePublicTestSuite) TestMarkdown() {

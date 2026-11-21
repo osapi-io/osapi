@@ -227,16 +227,17 @@ The rules of the value, which Run checks before the handler runs: a value that
 breaks one is a usage error that names the flag, and the command exits 2.
 required makes the flag required. The rules are those of internal/validation,
 which endpoints and behaviors use; dive applies the rules after it to each value
-of a []string. A custom rule, such as permission, is declared with rule.Declare.
+of a \[]string. A custom rule, such as permission, is declared with
+rule.Declare.
 
 Use: On each input field. A field with no limit is validate:"omitempty";
 validate refuses an input field with no tag.
 
 ### `the type of a field`
 
-Is the kind of its flag: a string, a bool, an int, a []string (a flag given once
-for each value, or with commas), a map[string]string (key=value pairs) or a
-[]byte (the path of a local file, whose content the field gets).
+Is the kind of its flag: a string, a bool, an int, a \[]string (a flag given
+once for each value, or with commas), a map\[string]string (key=value pairs) or
+a \[]byte (the path of a local file, whose content the field gets).
 
 Use: Pick the type of the value a person types.
 
@@ -284,7 +285,7 @@ method, or what .Says gives.
 
 The columns and the keys have the order of the fields. A field with omitempty or
 omitzero and no value is not shown. A bool is yes or no. A float32 or float64
-has two decimals, such as 0.00. A []string is its values, joined with commas. A
+has two decimals, such as 0.00. A \[]string is its values, joined with commas. A
 time.Time is in the one time format of the CLI. A label is the json name in
 sentence case, with an initialism such as ID in capitals: machine_id is Machine
 ID. A column header is the label in capitals. A table leaves out a column that
@@ -369,8 +370,8 @@ the real config, file system or client.
 
 ### `Flaggable(type)`
 
-Whether a flag holds a value of the type: string, bool, int, []string,
-map[string]string or []byte, a file. The command generator builds a flag of
+Whether a flag holds a value of the type: string, bool, int, \[]string,
+map\[string]string or \[]byte, a file. The command generator builds a flag of
 each, and behavior validate asks it of each CLI behavior's input, so the two
 agree.
 

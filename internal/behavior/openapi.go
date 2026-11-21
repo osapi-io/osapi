@@ -39,6 +39,9 @@ func (b *Behavior) OperationID(
 	if m.Verb == VerbRead && m.KeyField != "" {
 		id += "ByKey"
 	}
+	if m.Action {
+		id += title(m.Name)
+	}
 
 	return id
 }

@@ -8,9 +8,8 @@ manages. Writes nothing when the name is taken. A behavior that belongs to a
 group, such as `network`, is nested under it: its routes are
 `/api/node/{hostname}/network/<name>`, its commands
 `osapi client node network <name>`, and its directory
-`internal/behaviors/network/<name>/`.
-[Your first behavior](../../../development/your-first-behavior.md) walks through
-the rest.
+`internal/behaviors/network/<name>/`. \[Your first
+behavior](../../../development/your-first-behavior.md) walks through the rest.
 
 A new behavior is one an operator calls, with an API and commands. Work that two
 behaviors share, such as writing a file, becomes an internal behavior that the

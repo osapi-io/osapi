@@ -42,7 +42,6 @@ import (
 	powerAPI "github.com/osapi-io/osapi/internal/controller/api/node/power"
 	processAPI "github.com/osapi-io/osapi/internal/controller/api/node/process"
 	scheduleAPI "github.com/osapi-io/osapi/internal/controller/api/node/schedule"
-	serviceAPI "github.com/osapi-io/osapi/internal/controller/api/node/service"
 	userAPI "github.com/osapi-io/osapi/internal/controller/api/node/user"
 	uihandler "github.com/osapi-io/osapi/internal/controller/api/ui"
 	endpointserver "github.com/osapi-io/osapi/internal/controller/endpoint/server"
@@ -133,7 +132,6 @@ func handlers(
 	handlers = append(handlers, processAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, userAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, certificateAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
-	handlers = append(handlers, serviceAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, logAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, nodeFileAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 

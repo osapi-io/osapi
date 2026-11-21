@@ -32,7 +32,6 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/node/ntp"
 	"github.com/osapi-io/osapi/internal/provider/node/power"
 	processProv "github.com/osapi-io/osapi/internal/provider/node/process"
-	serviceProv "github.com/osapi-io/osapi/internal/provider/node/service"
 	"github.com/osapi-io/osapi/internal/provider/node/user"
 )
 
@@ -57,7 +56,6 @@ func NewNodeProcessor(
 	processProvider processProv.Provider,
 	userProvider user.Provider,
 	logProvider logProv.Provider,
-	serviceProvider serviceProv.Provider,
 	logger *slog.Logger,
 ) ProcessorFunc {
 	logger = logger.With(slog.String("subsystem", "agent.processor.node"))
@@ -81,8 +79,6 @@ func NewNodeProcessor(
 			return processSSHKeyOperation(ctx, userProvider, logger, req)
 		case "log":
 			return processLogOperation(ctx, logProvider, logger, req)
-		case "service":
-			return processServiceOperation(ctx, serviceProvider, logger, req)
 		default:
 			return nil, fmt.Errorf("unsupported node operation: %s", req.Operation)
 		}

@@ -28,9 +28,9 @@ The rules:
   Add .Short("&lt;what it does&gt;") and .Example("--flag value") to the method.
 - `flag`: Each value is a flag: the input is a struct, each field has a json
   name that is its flag with _ as -, no flag or in tag, and a type a flag holds
-  (string, bool, int, []string, map[string]string or []byte). A command takes no
-  positional argument. Fix: Make the input a struct, tag each field json:"name",
-  drop the flag and in tags, and use one of the flag types.
+  (string, bool, int, \[]string, map\[string]string or \[]byte). A command takes
+  no positional argument. Fix: Make the input a struct, tag each field
+  json:"name", drop the flag and in tags, and use one of the flag types.
 - `doc`: Each input field has a doc tag: the help of its flag. Fix: Add
   doc:"..." to the field: a capital letter first and no period at the end.
 - `validate`: Each input field has a validate tag: its rules, or omitempty for
@@ -50,7 +50,7 @@ The rules:
   commands do, such as Read the roles and what each grants.
 - `handler`: The group Uses a type, and each method has a handler,
   func(context.Context, D, In) (Out, error), with D that type and In and Out the
-  method's types. Fix: Add command.Uses[Deps](<>) to Define, and .Handle(fn) to
+  method's types. Fix: Add command.Uses\[Deps]() to Define, and .Handle(fn) to
   each method, with the signature that the message names.
 - `tag`: Each render tag of an output field is one the output knows: -, bytes,
   age, time, duration, duration=ms, status or short=N with N above 0. An empty

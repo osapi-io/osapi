@@ -137,6 +137,8 @@ const (
 	GivenFile GivenKind = "file"
 	// GivenLink is a symbolic link already on the host.
 	GivenLink GivenKind = "link"
+	// GivenObject is an object in the object store of the fleet.
+	GivenObject GivenKind = "object"
 )
 
 // Given is one thing true of the host before an example runs.
@@ -154,6 +156,9 @@ type Given struct {
 	// After is the command line that must have run before Command prints
 	// Content, for a GivenOutput declared with PrintsAfter.
 	After string `json:"after,omitempty"`
+	// ContentType is the object's content type, for GivenObject, whose name
+	// is Path.
+	ContentType string `json:"content_type,omitempty"`
 }
 
 func (g Given) applyExample(
@@ -219,6 +224,17 @@ func PrintsAfter(
 	output string,
 ) Given {
 	return Given{Kind: GivenOutput, Command: command, Content: output, After: after}
+}
+
+// Stored says the object store of the fleet has the object name, with
+// content and the content type its uploader gave it, raw or template, as
+// osapi client file upload stores it.
+func Stored(
+	name string,
+	content string,
+	contentType string,
+) Given {
+	return Given{Kind: GivenObject, Path: name, Content: content, ContentType: contentType}
 }
 
 // Exists says a file holds content before the example runs.

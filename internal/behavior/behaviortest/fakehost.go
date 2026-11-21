@@ -81,6 +81,9 @@ type fakeHost struct {
 	values   map[string][]byte
 	revision uint64
 
+	// objects are the objects of the object store, by name.
+	objects map[string]behavior.Given
+
 	// calls counts filesystem, command and store calls; the one numbered
 	// failAt fails, counting from 1, and 0 fails none.
 	calls  int
@@ -108,6 +111,10 @@ type fakeHost struct {
 	writes     []string
 	keepsState bool
 	setup      bool
+
+	// read is the read under test that must read through gohai: set while
+	// a read with no NotAFact runs.
+	read bool
 }
 
 func newHost(
@@ -117,6 +124,7 @@ func newHost(
 	h := &fakeHost{
 		outputs: map[string]string{},
 		values:  map[string][]byte{},
+		objects: map[string]behavior.Given{},
 		writes:  b.Writes,
 	}
 	h.declare(b, platform)
@@ -128,6 +136,7 @@ func newHost(
 		FS:        h.filesystem(),
 		Exec:      h.commands(ctrl),
 		FileState: fileState{h: h, ctrl: ctrl},
+		Objects:   objects{h: h},
 		Now:       func() time.Time { return Now },
 		Resolver:  noNames(ctrl),
 	}
@@ -313,6 +322,10 @@ func (h *fakeHost) commands(
 	m.EXPECT().RunCmd(gomock.Any(), gomock.Any(), gomock.Any()).
 		DoAndReturn(func(ctx context.Context, name string, args []string) (string, error) {
 			h.check(name, false)
+			if h.read && !h.setup && !host.FromGohai(ctx) {
+				h.report(behavior.TestFailure(behavior.TestGohai,
+					fmt.Sprintf("a read runs %s outside gohai", name)))
+			}
 
 			return run(ctx, name, args)
 		}).
@@ -410,4 +423,26 @@ func noNames(
 	m.EXPECT().LookupAddr(gomock.Any(), gomock.Any()).Return(nil, notFound).AnyTimes()
 
 	return m
+}
+
+// objects is the object store of the fake host. A read counts, and fails,
+// with the filesystem, command and store calls.
+type objects struct {
+	h *fakeHost
+}
+
+// Object is the object name that the example stores with Stored.
+func (o objects) Object(
+	_ context.Context,
+	name string,
+) ([]byte, string, error) {
+	if err := o.h.next(); err != nil {
+		return nil, "", err
+	}
+	g, ok := o.h.objects[name]
+	if !ok {
+		return nil, "", fmt.Errorf("object %q: %w", name, behavior.ErrNotFound)
+	}
+
+	return []byte(g.Content), g.ContentType, nil
 }

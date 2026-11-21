@@ -77,9 +77,9 @@ None. Declare them with behavior.Config.
 
 ### Input (1)
 
-| FIELD          | TYPE   | REQUIRED | CONSTRAINTS                                                               | DESCRIPTION                                                            |
-| -------------- | ------ | -------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| interface_name | string | yes      | pattern ^(@fact\.[a-z0-9_.]+\|[a-zA-Z0-9][a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary |
+| FIELD          | TYPE   | REQUIRED | CONSTRAINTS                                                                  | DESCRIPTION                                                            |
+| -------------- | ------ | -------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| interface_name | string | yes      | pattern ^(@fact\.\[a-z0-9_.]+\|\[a-zA-Z0-9]\[a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary |
 
 ### Output (2)
 
@@ -90,11 +90,11 @@ None. Declare them with behavior.Config.
 
 ### Examples (3)
 
-| EXAMPLE                                     | INPUT               | OUTPUT                                                  |
-| ------------------------------------------- | ------------------- | ------------------------------------------------------- |
-| An interface with servers and a domain      | interface_name=eth0 | servers=[1.1.1.1 8.8.8.8], search_domains=[example.com] |
-| A container with no resolvers per interface | interface_name=eth0 | servers=[10.0.0.2], search_domains=[svc.local]          |
-| A Mac                                       | interface_name=en0  | servers=[1.1.1.1], search_domains=[]                    |
+| EXAMPLE                                     | INPUT               | OUTPUT                                                    |
+| ------------------------------------------- | ------------------- | --------------------------------------------------------- |
+| An interface with servers and a domain      | interface_name=eth0 | servers=\[1.1.1.1 8.8.8.8], search_domains=\[example.com] |
+| A container with no resolvers per interface | interface_name=eth0 | servers=\[10.0.0.2], search_domains=\[svc.local]          |
+| A Mac                                       | interface_name=en0  | servers=\[1.1.1.1], search_domains=\[]                    |
 
 ## Method update
 
@@ -113,12 +113,12 @@ None. Declare them with behavior.Config.
 
 ### Input (4)
 
-| FIELD          | TYPE    | REQUIRED | CONSTRAINTS                                                               | DESCRIPTION                                                            |
-| -------------- | ------- | -------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| interface_name | string  | yes      | pattern ^(@fact\.[a-z0-9_.]+\|[a-zA-Z0-9][a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary |
-| servers        | array   | no       |                                                                           | The DNS servers, IPv4 or IPv6; the interface's own when empty          |
-| search_domains | array   | no       |                                                                           | The search domains; the interface's own when empty                     |
-| override_dhcp  | boolean | no       |                                                                           | Use only these servers: drop the ones DHCP gives                       |
+| FIELD          | TYPE    | REQUIRED | CONSTRAINTS                                                                  | DESCRIPTION                                                            |
+| -------------- | ------- | -------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| interface_name | string  | yes      | pattern ^(@fact\.\[a-z0-9_.]+\|\[a-zA-Z0-9]\[a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary |
+| servers        | array   | no       |                                                                              | The DNS servers, IPv4 or IPv6; the interface's own when empty          |
+| search_domains | array   | no       |                                                                              | The search domains; the interface's own when empty                     |
+| override_dhcp  | boolean | no       |                                                                              | Use only these servers: drop the ones DHCP gives                       |
 
 ### Output (2)
 
@@ -129,11 +129,11 @@ None. Declare them with behavior.Config.
 
 ### Examples (3)
 
-| EXAMPLE                                      | INPUT                                                                  | OUTPUT                            |
-| -------------------------------------------- | ---------------------------------------------------------------------- | --------------------------------- |
-| Set the servers of an interface              | interface_name=eth0, servers=[9.9.9.9]                                 | interface_name=eth0, changed=true |
-| Set the search domains, and keep the servers | interface_name=eth0, search_domains=[corp.example], override_dhcp=true | interface_name=eth0, changed=true |
-| An interface with no resolvers yet           | interface_name=eth0, servers=[9.9.9.9]                                 | interface_name=eth0, changed=true |
+| EXAMPLE                                      | INPUT                                                                   | OUTPUT                            |
+| -------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------- |
+| Set the servers of an interface              | interface_name=eth0, servers=\[9.9.9.9]                                 | interface_name=eth0, changed=true |
+| Set the search domains, and keep the servers | interface_name=eth0, search_domains=\[corp.example], override_dhcp=true | interface_name=eth0, changed=true |
+| An interface with no resolvers yet           | interface_name=eth0, servers=\[9.9.9.9]                                 | interface_name=eth0, changed=true |
 
 ## Method delete
 
@@ -152,9 +152,9 @@ None. Declare them with behavior.Config.
 
 ### Input (1)
 
-| FIELD          | TYPE   | REQUIRED | CONSTRAINTS                                                               | DESCRIPTION                                                            |
-| -------------- | ------ | -------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| interface_name | string | yes      | pattern ^(@fact\.[a-z0-9_.]+\|[a-zA-Z0-9][a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary |
+| FIELD          | TYPE   | REQUIRED | CONSTRAINTS                                                                  | DESCRIPTION                                                            |
+| -------------- | ------ | -------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| interface_name | string | yes      | pattern ^(@fact\.\[a-z0-9_.]+\|\[a-zA-Z0-9]\[a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary |
 
 ### Output (2)
 

@@ -18,11 +18,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates systemd service management: list services,
-// get details for a specific service, and start a service.
+// Package main demonstrates systemd service management: list the services
+// of a host, get one, then deploy a unit file that was uploaded once with
+// File.Upload, and start it.
 //
-// All responses return Collection[T] with per-host results.
-// Use .Data.Results to iterate over the per-host entries.
+// List and Get return one row per service per host. Use .Data.Results to
+// iterate over them.
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run service.go
 package main
@@ -51,7 +52,7 @@ func main() {
 	ctx := context.Background()
 	target := "_any"
 
-	// List all services on the host.
+	// List the services of the host: one row per service per host.
 	fmt.Println("=== Listing services ===")
 	listResp, err := c.Service.List(ctx, target)
 	if err != nil {
@@ -62,36 +63,40 @@ func main() {
 			fmt.Printf("  %s: ERROR %s\n", r.Hostname, r.Error)
 			continue
 		}
-		for _, svc := range r.Services {
-			fmt.Printf("  %s: %s status=%s enabled=%v\n",
-				r.Hostname, svc.Name, svc.Status, svc.Enabled)
-		}
+		fmt.Printf("  %s: %s state=%s enabled=%v\n",
+			r.Hostname, r.Name, r.State, r.Enabled)
 	}
 
-	// Get details for a specific service.
-	fmt.Println("\n=== Getting ssh.service ===")
-	getResp, err := c.Service.Get(ctx, target, "ssh.service")
+	// Get one service.
+	fmt.Println("\n=== Getting ssh ===")
+	getResp, err := c.Service.Get(ctx, target, "ssh")
 	if err != nil {
 		log.Fatalf("get failed: %v", err)
 	}
 	for _, r := range getResp.Data.Results {
-		if r.Error != "" {
-			fmt.Printf("  %s: ERROR %s\n", r.Hostname, r.Error)
-		} else if r.Service != nil {
-			fmt.Printf("  %s: %s status=%s enabled=%v pid=%d\n",
-				r.Hostname, r.Service.Name, r.Service.Status,
-				r.Service.Enabled, r.Service.PID)
-		}
+		fmt.Printf("  %s: %s state=%s enabled=%v error=%s\n",
+			r.Hostname, r.Name, r.State, r.Enabled, r.Error)
+	}
+
+	// Deploy the unit file of the object app.service, which
+	// osapi client file upload stored, as osapi-app.service (idempotent).
+	fmt.Println("\n=== Deploying app ===")
+	createResp, err := c.Service.Create(ctx, target,
+		client.ServiceCreateOpts{Name: "app", Object: "app.service"})
+	if err != nil {
+		log.Fatalf("create failed: %v", err)
+	}
+	for _, r := range createResp.Data.Results {
+		fmt.Printf("  %s: changed=%v error=%s\n", r.Hostname, r.Changed, r.Error)
 	}
 
 	// Start the service (idempotent).
-	fmt.Println("\n=== Starting ssh.service ===")
-	startResp, err := c.Service.Start(ctx, target, "ssh.service")
+	fmt.Println("\n=== Starting app ===")
+	startResp, err := c.Service.Start(ctx, target, "app")
 	if err != nil {
 		log.Fatalf("start failed: %v", err)
 	}
 	for _, r := range startResp.Data.Results {
-		fmt.Printf("  %s: changed=%v error=%s\n",
-			r.Hostname, r.Changed, r.Error)
+		fmt.Printf("  %s: changed=%v error=%s\n", r.Hostname, r.Changed, r.Error)
 	}
 }

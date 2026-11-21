@@ -26,10 +26,13 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/osapi-io/osapi/internal/behavior/host"
 
 	"github.com/stretchr/testify/suite"
 
@@ -136,6 +139,32 @@ func (s *SpecPublicTestSuite) TestSpecHasEveryPartOfTheDSL() {
 				}
 			}
 			s.True(found, "behavior.Spec and behavior.ChainSpec have no term for %s; add one", name)
+		})
+	}
+}
+
+// TestSpecHasEveryHostService: each field of host.Host, and Sources and
+// Time, has a term of the kind host, so an author learns each service that a
+// provider gets and how the tests fake it.
+func (s *SpecPublicTestSuite) TestSpecHasEveryHostService() {
+	t := reflect.TypeFor[host.Host]()
+	names := make([]string, 0, 2+t.NumField())
+	names = append(names, "Sources()", "Time()")
+	for i := range t.NumField() {
+		names = append(names, t.Field(i).Name)
+	}
+	for _, name := range names {
+		s.Run(name, func() {
+			word := regexp.MustCompile(
+				`(^|[^A-Za-z])h\.` + regexp.QuoteMeta(name) + `([^A-Za-z(]|$)`,
+			)
+			found := false
+			for _, term := range behavior.Spec.Terms {
+				if term.Kind == behavior.KindHost && word.MatchString(term.Name) {
+					found = true
+				}
+			}
+			s.True(found, "behavior.Spec has no host term for h.%s; add one", name)
 		})
 	}
 }

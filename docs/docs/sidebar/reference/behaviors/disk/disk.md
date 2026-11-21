@@ -81,6 +81,6 @@ None. The method takes no input; its command needs only --target.
 
 ### Examples (1)
 
-| EXAMPLE                          | INPUT  | OUTPUT                                                                    |
-| -------------------------------- | ------ | ------------------------------------------------------------------------- |
-| A host with one local filesystem | (none) | disks=[map[free:3.145728e+10 name:/ total:5.24288e+10 used:2.097152e+10]] |
+| EXAMPLE                          | INPUT  | OUTPUT                                                                      |
+| -------------------------------- | ------ | --------------------------------------------------------------------------- |
+| A host with one local filesystem | (none) | disks=\[map\[free:3.145728e+10 name:/ total:5.24288e+10 used:2.097152e+10]] |

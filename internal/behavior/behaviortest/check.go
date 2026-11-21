@@ -135,7 +135,9 @@ func checkExample(
 
 	var problems []string
 	before, gets := h.calls, h.gets
+	h.read = m.Verb == behavior.VerbRead && m.NonFact == ""
 	out, err := call(m, p, ex.Input)
+	h.read = false
 	if err != nil {
 		return []string{behavior.TestFailure(behavior.TestOutput, fmt.Sprintf("failed: %v", err))}
 	}
@@ -152,7 +154,7 @@ func checkExample(
 				behavior.TestFailure(behavior.TestEffects, "a write declares no effects"))
 		}
 		again, err := call(m, p, ex.Input)
-		if changed, _ := behavior.Changed(again); err == nil && changed {
+		if changed, _ := behavior.Changed(again); err == nil && changed && !m.AlwaysChanges {
 			problems = append(
 				problems,
 				behavior.TestFailure(
@@ -251,6 +253,8 @@ func prepare(
 			_ = h.FS.MkdirAll(filepath.Dir(g.Path), 0o755)
 			_ = h.FS.WriteFile(g.Path, []byte(g.Content), 0o644)
 			h.setup = false
+		case behavior.GivenObject:
+			h.objects[g.Path] = g
 		case behavior.GivenLink:
 			h.setup = true
 			_ = h.FS.MkdirAll(filepath.Dir(g.Path), 0o755)

@@ -55,7 +55,7 @@ func (s *ProvidersPublicTestSuite) TestProviders() {
 	areas := []string{
 		"host", "disk", "memory", "load", "ping", "cron",
 		"ntp", "power", "process", "user",
-		"logs", "certificate", "service",
+		"logs", "certificate",
 	}
 
 	tests := []struct {
@@ -81,10 +81,9 @@ func (s *ProvidersPublicTestSuite) TestProviders() {
 			buckets:   true,
 			want:      "Debian",
 			except: map[string]string{
-				"ntp":     "Linux",
-				"power":   "Linux",
-				"logs":    "Linux",
-				"service": "Linux",
+				"ntp":   "Linux",
+				"power": "Linux",
+				"logs":  "Linux",
 			},
 		},
 		{
@@ -94,7 +93,6 @@ func (s *ProvidersPublicTestSuite) TestProviders() {
 			except: map[string]string{
 				"cron":        "Linux",
 				"certificate": "Linux",
-				"service":     "Linux",
 			},
 		},
 		{

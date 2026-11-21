@@ -134,9 +134,11 @@ func (c Checks) Help() string {
 	return sb.String()
 }
 
-// mdxEscapes are the characters that MDX reads as the start of a tag or of an
-// expression.
-var mdxEscapes = strings.NewReplacer("<", "&lt;", ">", "&gt;", "{", "&#123;", "}", "&#125;")
+// mdxEscapes are the characters that MDX reads as the start of a tag, of an
+// expression or of a link: Uses[Deps]() is an empty link to it.
+var mdxEscapes = strings.NewReplacer(
+	"<", "&lt;", ">", "&gt;", "{", "&#123;", "}", "&#125;", "[", "\\[",
+)
 
 // MDX escapes the characters of s that MDX would parse, outside code spans:
 // osapi-<key>.conf is a tag to MDX, and {key} an expression. Inside a code

@@ -26,11 +26,11 @@ same.
 
 ### Flags (3)
 
-| FLAG          | SHORT | TYPE     | VALIDATE                             | HELP                                                                                            |
-| ------------- | ----- | -------- | ------------------------------------ | ----------------------------------------------------------------------------------------------- |
-| --roles       | r     | []string | required,dive,oneof=admin read write | Roles for the token                                                                             |
-| --subject     | u     | string   | required                             | Subject for the token (e.g., user ID or unique identifier)                                      |
-| --permissions | p     | []string | omitempty,dive,permission            | Direct permissions, which override the roles; osapi token roles get --name admin lists each one |
+| FLAG          | SHORT | TYPE      | VALIDATE                             | HELP                                                                                            |
+| ------------- | ----- | --------- | ------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| --roles       | r     | \[]string | required,dive,oneof=admin read write | Roles for the token                                                                             |
+| --subject     | u     | string    | required                             | Subject for the token (e.g., user ID or unique identifier)                                      |
+| --permissions | p     | \[]string | omitempty,dive,permission            | Direct permissions, which override the roles; osapi token roles get --name admin lists each one |
 
 ## [osapi token roles list](../../usage/cli/token/roles/list.md)
 

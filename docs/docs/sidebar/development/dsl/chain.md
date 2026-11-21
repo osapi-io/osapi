@@ -120,3 +120,11 @@ get.
 
 Use: Require it, and call its methods with Call. osapi behavior get --name
 netplan shows its inputs.
+
+### `object`
+
+The objects of the object store of the fleet, such as a file uploaded with osapi
+client file upload. Methods: get.
+
+Use: Require it, and call its methods with Call. osapi behavior get --name
+object shows its inputs.

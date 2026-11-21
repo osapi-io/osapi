@@ -20,30 +20,30 @@ The behaviors that dns calls, and each call that its examples make.
 
 ## Set the servers of an interface (update)
 
-| CALL                    | SENDS                                                                                  | GETS                                                             |
-| ----------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| dns update              | interface_name=eth0 servers=[9.9.9.9]                                                  | changed=true interface_name=eth0                                 |
-| └─ netplan get          | name=eth0                                                                              | id=eth0 matches=[eth0] name=eth0 section=ethernets type=ethernet |
-| └─ netplan update       | content=&lt;9 lines&gt; metadata=&#123;"domain":"dns","interface":"eth0"&#125; path=/… | changed=true path=/etc/netplan/osapi-dns-eth0.yaml               |
-| · └─ managedfile update | content=&lt;9 lines&gt; metadata=&#123;"domain":"dns","interface":"eth0"&#125; mode=0… | changed=true path=/etc/netplan/osapi-dns-eth0.yaml               |
+| CALL                    | SENDS                                                                                  | GETS                                                              |
+| ----------------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| dns update              | interface_name=eth0 servers=\[9.9.9.9]                                                 | changed=true interface_name=eth0                                  |
+| └─ netplan get          | name=eth0                                                                              | id=eth0 matches=\[eth0] name=eth0 section=ethernets type=ethernet |
+| └─ netplan update       | content=&lt;9 lines&gt; metadata=&#123;"domain":"dns","interface":"eth0"&#125; path=/… | changed=true path=/etc/netplan/osapi-dns-eth0.yaml                |
+| · └─ managedfile update | content=&lt;9 lines&gt; metadata=&#123;"domain":"dns","interface":"eth0"&#125; mode=0… | changed=true path=/etc/netplan/osapi-dns-eth0.yaml                |
 
 ## Set the search domains, and keep the servers (update)
 
-| CALL                    | SENDS                                                                                  | GETS                                                             |
-| ----------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| dns update              | interface_name=eth0 override_dhcp=true search_domains=[corp.example]                   | changed=true interface_name=eth0                                 |
-| └─ netplan get          | name=eth0                                                                              | id=eth0 matches=[eth0] name=eth0 section=ethernets type=ethernet |
-| └─ netplan update       | content=&lt;14 lines&gt; metadata=&#123;"domain":"dns","interface":"eth0"&#125; path=… | changed=true path=/etc/netplan/osapi-dns-eth0.yaml               |
-| · └─ managedfile update | content=&lt;14 lines&gt; metadata=&#123;"domain":"dns","interface":"eth0"&#125; mode=… | changed=true path=/etc/netplan/osapi-dns-eth0.yaml               |
+| CALL                    | SENDS                                                                                  | GETS                                                              |
+| ----------------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| dns update              | interface_name=eth0 override_dhcp=true search_domains=\[corp.example]                  | changed=true interface_name=eth0                                  |
+| └─ netplan get          | name=eth0                                                                              | id=eth0 matches=\[eth0] name=eth0 section=ethernets type=ethernet |
+| └─ netplan update       | content=&lt;14 lines&gt; metadata=&#123;"domain":"dns","interface":"eth0"&#125; path=… | changed=true path=/etc/netplan/osapi-dns-eth0.yaml                |
+| · └─ managedfile update | content=&lt;14 lines&gt; metadata=&#123;"domain":"dns","interface":"eth0"&#125; mode=… | changed=true path=/etc/netplan/osapi-dns-eth0.yaml                |
 
 ## An interface with no resolvers yet (update)
 
-| CALL                    | SENDS                                                                                  | GETS                                                             |
-| ----------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| dns update              | interface_name=eth0 servers=[9.9.9.9]                                                  | changed=true interface_name=eth0                                 |
-| └─ netplan get          | name=eth0                                                                              | id=eth0 matches=[eth0] name=eth0 section=ethernets type=ethernet |
-| └─ netplan update       | content=&lt;7 lines&gt; metadata=&#123;"domain":"dns","interface":"eth0"&#125; path=/… | changed=true path=/etc/netplan/osapi-dns-eth0.yaml               |
-| · └─ managedfile update | content=&lt;7 lines&gt; metadata=&#123;"domain":"dns","interface":"eth0"&#125; mode=0… | changed=true path=/etc/netplan/osapi-dns-eth0.yaml               |
+| CALL                    | SENDS                                                                                  | GETS                                                              |
+| ----------------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| dns update              | interface_name=eth0 servers=\[9.9.9.9]                                                 | changed=true interface_name=eth0                                  |
+| └─ netplan get          | name=eth0                                                                              | id=eth0 matches=\[eth0] name=eth0 section=ethernets type=ethernet |
+| └─ netplan update       | content=&lt;7 lines&gt; metadata=&#123;"domain":"dns","interface":"eth0"&#125; path=/… | changed=true path=/etc/netplan/osapi-dns-eth0.yaml                |
+| · └─ managedfile update | content=&lt;7 lines&gt; metadata=&#123;"domain":"dns","interface":"eth0"&#125; mode=0… | changed=true path=/etc/netplan/osapi-dns-eth0.yaml                |
 
 ## An interface osapi set (delete)
 

@@ -139,7 +139,7 @@ Use: On each method of a group that Uses a type. Validate checks the signature.
 ### `.Sub("segment")`
 
 Puts a fixed segment after the group's name, before the key:
-/api/&lt;group&gt;/&lt;segment&gt;[/&#123;key&#125;]. When the segment is not
+/api/&lt;group&gt;/&lt;segment&gt;\[/&#123;key&#125;]. When the segment is not
 the method's name, the CLI command is under it too: osapi client &lt;group&gt;
 &lt;segment&gt; &lt;method&gt;.
 
@@ -377,7 +377,7 @@ Use: For a filter, a page or an option, such as status, limit or force.
 
 ### `in:"form"`
 
-Makes the field a part of a multipart/form-data body. A []byte field is the
+Makes the field a part of a multipart/form-data body. A \[]byte field is the
 file, a string of format binary.
 
 Use: For an upload of a file, such as POST /api/file.

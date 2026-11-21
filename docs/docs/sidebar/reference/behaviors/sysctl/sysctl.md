@@ -42,13 +42,13 @@ make.
 
 ### Types (5)
 
-| NAME                     | INPUT                                  | OUTPUT                                    |
-| ------------------------ | -------------------------------------- | ----------------------------------------- |
-| [list](#method-list)     | ListInput &#123; prefix &#125;         | []Entry &#123; key, value, managed &#125; |
-| [get](#method-get)       | GetInput &#123; key* &#125;            | Entry &#123; key, value, managed &#125;   |
-| [create](#method-create) | CreateInput &#123; key*, value* &#125; | MutationResult &#123; key, changed &#125; |
-| [update](#method-update) | UpdateInput &#123; key*, value* &#125; | MutationResult &#123; key, changed &#125; |
-| [delete](#method-delete) | DeleteInput &#123; key* &#125;         | MutationResult &#123; key, changed &#125; |
+| NAME                     | INPUT                                  | OUTPUT                                     |
+| ------------------------ | -------------------------------------- | ------------------------------------------ |
+| [list](#method-list)     | ListInput &#123; prefix &#125;         | \[]Entry &#123; key, value, managed &#125; |
+| [get](#method-get)       | GetInput &#123; key* &#125;            | Entry &#123; key, value, managed &#125;    |
+| [create](#method-create) | CreateInput &#123; key*, value* &#125; | MutationResult &#123; key, changed &#125;  |
+| [update](#method-update) | UpdateInput &#123; key*, value* &#125; | MutationResult &#123; key, changed &#125;  |
+| [delete](#method-delete) | DeleteInput &#123; key* &#125;         | MutationResult &#123; key, changed &#125;  |
 
 ### Settings (1)
 
@@ -79,13 +79,13 @@ make.
 | Permission  | sysctl:read                                                                                                                                                                                                                                                                                                                                               |
 | Command     | [osapi client node sysctl list](../../../usage/cli/client/node/sysctl/list.md)                                                                                                                                                                                                                                                                            |
 | Input type  | ListInput                                                                                                                                                                                                                                                                                                                                                 |
-| Output type | []Entry                                                                                                                                                                                                                                                                                                                                                   |
+| Output type | \[]Entry                                                                                                                                                                                                                                                                                                                                                  |
 
 ### Input (1)
 
-| FIELD  | TYPE   | REQUIRED | CONSTRAINTS                          | DESCRIPTION                                                 |
-| ------ | ------ | -------- | ------------------------------------ | ----------------------------------------------------------- |
-| prefix | string | no       | pattern ^[a-zA-Z0-9][a-zA-Z0-9._-]*$ | Only this parameter and the ones under it, such as net.ipv4 |
+| FIELD  | TYPE   | REQUIRED | CONSTRAINTS                            | DESCRIPTION                                                 |
+| ------ | ------ | -------- | -------------------------------------- | ----------------------------------------------------------- |
+| prefix | string | no       | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9._-]*$ | Only this parameter and the ones under it, such as net.ipv4 |
 
 ### Output (3)
 
@@ -97,11 +97,11 @@ make.
 
 ### Examples (3)
 
-| EXAMPLE                                                | INPUT             | OUTPUT                                                                                                                                                         |
-| ------------------------------------------------------ | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Every parameter, and which osapi manages               | prefix=           | [key=kernel.panic, managed=false, value=0] [key=net.ipv4.ip_forward, managed=true, value=1] [key=net.ipv4.ping_group_range, managed=false, value=0 2147483647] |
-| One part of the tree                                   | prefix=net.ipv4   | [key=net.ipv4.ip_forward, managed=true, value=1] [key=net.ipv4.ping_group_range, managed=false, value=0 2147483647]                                            |
-| A managed parameter the kernel does not have right now | prefix=net.bridge | [key=net.bridge.bridge-nf-call-iptables, managed=true, value=1]                                                                                                |
+| EXAMPLE                                                | INPUT             | OUTPUT                                                                                                                                                            |
+| ------------------------------------------------------ | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Every parameter, and which osapi manages               | prefix=           | \[key=kernel.panic, managed=false, value=0] \[key=net.ipv4.ip_forward, managed=true, value=1] \[key=net.ipv4.ping_group_range, managed=false, value=0 2147483647] |
+| One part of the tree                                   | prefix=net.ipv4   | \[key=net.ipv4.ip_forward, managed=true, value=1] \[key=net.ipv4.ping_group_range, managed=false, value=0 2147483647]                                             |
+| A managed parameter the kernel does not have right now | prefix=net.bridge | \[key=net.bridge.bridge-nf-call-iptables, managed=true, value=1]                                                                                                  |
 
 ## Method get
 
@@ -119,9 +119,9 @@ make.
 
 ### Input (1)
 
-| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                        | DESCRIPTION                                 |
-| ----- | ------ | -------- | -------------------------------------------------- | ------------------------------------------- |
-| key   | string | yes      | pattern ^[a-zA-Z0-9][a-zA-Z0-9._-]*$, min length 1 | Parameter name, such as net.ipv4.ip_forward |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                          | DESCRIPTION                                 |
+| ----- | ------ | -------- | ---------------------------------------------------- | ------------------------------------------- |
+| key   | string | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9._-]*$, min length 1 | Parameter name, such as net.ipv4.ip_forward |
 
 ### Output (3)
 
@@ -157,10 +157,10 @@ make.
 
 ### Input (2)
 
-| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                        | DESCRIPTION                                 |
-| ----- | ------ | -------- | -------------------------------------------------- | ------------------------------------------- |
-| key   | string | yes      | pattern ^[a-zA-Z0-9][a-zA-Z0-9._-]*$, min length 1 | Parameter name, such as net.ipv4.ip_forward |
-| value | string | yes      | pattern ^[^\r\n]*$                                 | Value to set                                |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                          | DESCRIPTION                                 |
+| ----- | ------ | -------- | ---------------------------------------------------- | ------------------------------------------- |
+| key   | string | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9._-]*$, min length 1 | Parameter name, such as net.ipv4.ip_forward |
+| value | string | yes      | pattern ^\[^\r\n]*$                                  | Value to set                                |
 
 ### Output (2)
 
@@ -192,10 +192,10 @@ make.
 
 ### Input (2)
 
-| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                        | DESCRIPTION                                 |
-| ----- | ------ | -------- | -------------------------------------------------- | ------------------------------------------- |
-| key   | string | yes      | pattern ^[a-zA-Z0-9][a-zA-Z0-9._-]*$, min length 1 | Parameter name, such as net.ipv4.ip_forward |
-| value | string | yes      | pattern ^[^\r\n]*$                                 | Value to set                                |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                          | DESCRIPTION                                 |
+| ----- | ------ | -------- | ---------------------------------------------------- | ------------------------------------------- |
+| key   | string | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9._-]*$, min length 1 | Parameter name, such as net.ipv4.ip_forward |
+| value | string | yes      | pattern ^\[^\r\n]*$                                  | Value to set                                |
 
 ### Output (2)
 
@@ -228,9 +228,9 @@ make.
 
 ### Input (1)
 
-| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                        | DESCRIPTION                                 |
-| ----- | ------ | -------- | -------------------------------------------------- | ------------------------------------------- |
-| key   | string | yes      | pattern ^[a-zA-Z0-9][a-zA-Z0-9._-]*$, min length 1 | Parameter name, such as net.ipv4.ip_forward |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                          | DESCRIPTION                                 |
+| ----- | ------ | -------- | ---------------------------------------------------- | ------------------------------------------- |
+| key   | string | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9._-]*$, min length 1 | Parameter name, such as net.ipv4.ip_forward |
 
 ### Output (2)
 
