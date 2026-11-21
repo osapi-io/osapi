@@ -71,45 +71,6 @@ func (s *NodeSmokeSuite) TestNodeHostnameGet() {
 	}
 }
 
-func (s *NodeSmokeSuite) TestNodeStatusGet() {
-	tests := []struct {
-		name         string
-		args         []string
-		validateFunc func(stdout string, exitCode int)
-	}{
-		{
-			name: "returns status results",
-			args: []string{"client", "node", "status", "--json"},
-			validateFunc: func(
-				stdout string,
-				exitCode int,
-			) {
-				s.Require().Equal(0, exitCode)
-
-				var result map[string]any
-				err := parseJSON(stdout, &result)
-				s.Require().NoError(err)
-
-				results, ok := result["results"].([]any)
-				s.Require().True(ok)
-				s.GreaterOrEqual(len(results), 1)
-
-				first, ok := results[0].(map[string]any)
-				s.Require().True(ok)
-				s.Contains(first, "changed")
-				s.Equal(false, first["changed"])
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			stdout, _, exitCode := runCLI(tt.args...)
-			tt.validateFunc(stdout, exitCode)
-		})
-	}
-}
-
 func (s *NodeSmokeSuite) TestNodeHostnameUpdate() {
 	skipWriteOp(s.T(), "HOSTNAME_UPDATE")
 

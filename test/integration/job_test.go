@@ -67,7 +67,7 @@ func (s *JobSmokeSuite) TestJobGet() {
 	// A status read makes the job: it runs on every agent, whatever the
 	// agent's config allows, as a command does not.
 	triggerOut, _, triggerCode := runCLI(
-		"client", "node", "status",
+		"client", "node", "status", "get",
 		"--target", target,
 		"--json",
 	)

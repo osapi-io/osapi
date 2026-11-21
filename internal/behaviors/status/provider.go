@@ -18,48 +18,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node
+package status
 
-import (
-	"log/slog"
+import "context"
 
-	"github.com/labstack/echo/v5"
-
-	"github.com/osapi-io/osapi/internal/authtoken"
-	"github.com/osapi-io/osapi/internal/controller/api"
-	gen "github.com/osapi-io/osapi/internal/controller/api/node/gen"
-	"github.com/osapi-io/osapi/internal/job/client"
-)
-
-// Handler returns node route registration functions.
-func Handler(
-	logger *slog.Logger,
-	jobClient client.JobClient,
-	signingKey string,
-	customRoles map[string][]string,
-) []func(e *echo.Echo) {
-	var tokenManager api.TokenValidator = authtoken.New(logger)
-
-	nodeHandler := New(logger, jobClient)
-
-	strictHandler := gen.NewStrictHandler(
-		nodeHandler,
-		[]gen.StrictMiddlewareFunc{
-			func(handler gen.StrictHandlerFunc, _ string) gen.StrictHandlerFunc {
-				return gen.StrictHandlerFunc(api.ScopeMiddleware(
-					api.StrictHandlerFunc(handler),
-					tokenManager,
-					signingKey,
-					string(gen.BearerAuthScopes),
-					customRoles,
-				))
-			},
-		},
-	)
-
-	return []func(e *echo.Echo){
-		func(e *echo.Echo) {
-			gen.RegisterHandlers(e, strictHandler)
-		},
-	}
+// Provider reads the status summary of the host.
+type Provider interface {
+	Status(ctx context.Context) (Entry, error)
 }

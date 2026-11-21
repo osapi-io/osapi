@@ -18,20 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node
+// Package mocks holds the generated double of the status provider, for the
+// methods' tests.
+package mocks
 
-import (
-	"context"
-
-	"github.com/osapi-io/osapi/internal/validation"
-)
-
-// validateHostname validates a `{hostname}` path parameter addressing managed
-// machines, delegating to the one implementation in internal/validation so this
-// package and its siblings cannot drift apart.
-func validateHostname(
-	ctx context.Context,
-	hostname string,
-) (string, bool) {
-	return validation.TargetHostname(ctx, hostname)
-}
+//go:generate go tool go.uber.org/mock/mockgen -source=../provider.go -destination=provider.gen.go -package=mocks

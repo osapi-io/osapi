@@ -323,6 +323,3 @@ func TestTypesPublicTestSuite(
 ) {
 	suite.Run(t, new(TypesPublicTestSuite))
 }
-
-// TestNodeStatusResponsePartial covers the question a caller asks of a status
-// assembled from six independent reads.

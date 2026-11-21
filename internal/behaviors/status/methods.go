@@ -18,20 +18,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node
+package status
 
-import "time"
+import "context"
 
-// ExportFormatDuration exposes the private formatDuration for testing.
-func ExportFormatDuration(
-	d time.Duration,
-) string {
-	return formatDuration(d)
-}
-
-// ExportUint64ToInt exposes the private uint64ToInt for testing.
-func ExportUint64ToInt(
-	v uint64,
-) int {
-	return uint64ToInt(v)
+// Get is the status summary of the host.
+func Get(
+	ctx context.Context,
+	p Provider,
+	_ GetInput,
+) (Entry, error) {
+	return p.Status(ctx)
 }

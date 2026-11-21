@@ -256,7 +256,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "test-job-123",
 						"operation": {
-							"type": "node.status.get",
+							"type": "network.dns.get",
 							"data": {}
 						}
 					}`), nil)
@@ -399,7 +399,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					GetJobData(gomock.Any(), "jobs.missing-id-job").
 					Return([]byte(`{
 						"operation": {
-							"type": "node.status.get",
+							"type": "network.dns.get",
 							"data": {}
 						}
 					}`), nil)
@@ -490,7 +490,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "ack-err-job",
 						"operation": {
-							"type": "node.status.get",
+							"type": "network.dns.get",
 							"data": {}
 						}
 					}`), nil)
@@ -527,7 +527,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "start-err-job",
 						"operation": {
-							"type": "node.status.get",
+							"type": "network.dns.get",
 							"data": {}
 						}
 					}`), nil)
@@ -564,7 +564,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "comp-err-job",
 						"operation": {
-							"type": "node.status.get",
+							"type": "network.dns.get",
 							"data": {}
 						}
 					}`), nil)
@@ -644,7 +644,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "skip-job",
 						"operation": {
-							"type": "node.status.get",
+							"type": "node.ntp.get",
 							"data": {}
 						}
 					}`), nil)
@@ -684,7 +684,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "skip-err-job",
 						"operation": {
-							"type": "node.status.get",
+							"type": "node.ntp.get",
 							"data": {}
 						}
 					}`), nil)
@@ -725,7 +725,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "fact-resolve-job",
 						"operation": {
-							"type": "node.status.get",
+							"type": "network.dns.get",
 							"data": {"iface": "@fact.interface.primary"}
 						}
 					}`), nil)
@@ -806,7 +806,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "fact-fail-job",
 						"operation": {
-							"type": "node.status.get",
+							"type": "network.dns.get",
 							"data": {"iface": "@fact.nonexistent"}
 						}
 					}`), nil)
@@ -846,7 +846,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "storage-fail-job",
 						"operation": {
-							"type": "node.status.get",
+							"type": "network.dns.get",
 							"data": {}
 						}
 					}`), nil)
@@ -894,7 +894,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "storage-fail-double-job",
 						"operation": {
-							"type": "node.status.get",
+							"type": "network.dns.get",
 							"data": {}
 						}
 					}`), nil)
@@ -974,7 +974,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "check-err-job",
 						"operation": {
-							"type": "node.status.get",
+							"type": "network.dns.get",
 							"data": {}
 						}
 					}`), nil)
@@ -1164,11 +1164,11 @@ func (s *HandlerPublicTestSuite) TestUnwrapJobEnvelope() {
 				return nil
 			},
 			data: func() []byte {
-				return []byte(`{"id":"test","operation":{"type":"node.status.get"}}`)
+				return []byte(`{"id":"test","operation":{"type":"network.dns.get"}}`)
 			},
 			expectError: false,
 			validateFunc: func(got string) {
-				s.Equal(`{"id":"test","operation":{"type":"node.status.get"}}`, got)
+				s.Equal(`{"id":"test","operation":{"type":"network.dns.get"}}`, got)
 			},
 		},
 		{
@@ -1255,7 +1255,7 @@ func (s *HandlerPublicTestSuite) TestUnwrapJobEnvelope() {
 				return m
 			},
 			data: func() []byte {
-				return []byte(`{"id":"raw-job","operation":{"type":"node.status.get"}}`)
+				return []byte(`{"id":"raw-job","operation":{"type":"network.dns.get"}}`)
 			},
 			expectError: true,
 			errorMsg:    "not a signed envelope",
@@ -1364,7 +1364,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 			setupMocks: func() {
 				// Create signed job data.
 				payload := []byte(
-					`{"id":"signed-job-ok","operation":{"type":"node.status.get","data":{}}}`,
+					`{"id":"signed-job-ok","operation":{"type":"network.dns.get","data":{}}}`,
 				)
 				sig := ed25519.Sign(controllerPriv, payload)
 				envelope := job.SignedEnvelope{
@@ -1412,7 +1412,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 			},
 			setupMocks: func() {
 				// Create job data with invalid signature.
-				payload := []byte(`{"id":"bad-sig-job","operation":{"type":"node.status.get"}}`)
+				payload := []byte(`{"id":"bad-sig-job","operation":{"type":"network.dns.get"}}`)
 				envelope := job.SignedEnvelope{
 					Payload: payload,
 					Signature: []byte(
@@ -1448,7 +1448,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 			},
 			setupMocks: func() {
 				payload := []byte(
-					`{"id":"not-enrolled-job","operation":{"type":"node.status.get"}}`,
+					`{"id":"not-enrolled-job","operation":{"type":"network.dns.get"}}`,
 				)
 				sig := ed25519.Sign(controllerPriv, payload)
 				envelope := job.SignedEnvelope{
@@ -1491,7 +1491,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 				s.expectNotAnswered("unwrapped-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.unwrapped-job").
-					Return([]byte(`{"id":"unwrapped-job","operation":{"type":"node.status.get"}}`), nil)
+					Return([]byte(`{"id":"unwrapped-job","operation":{"type":"network.dns.get"}}`), nil)
 
 				// No WriteStatusEvent/WriteJobResponse expectations: an
 				// unsigned envelope must be refused before touching the

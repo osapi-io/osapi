@@ -94,10 +94,6 @@ func newTestAgent(
 	registry.Register(
 		"node",
 		agent.NewNodeProcessor(
-			p.hostProvider,
-			p.diskProvider,
-			p.memoryProvider,
-			p.loadProvider,
 			p.ntpProvider,
 			p.timezoneProvider,
 			p.powerProvider,

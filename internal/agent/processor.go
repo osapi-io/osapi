@@ -29,11 +29,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider/node/apt"
-	"github.com/osapi-io/osapi/internal/provider/node/disk"
-	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
-	"github.com/osapi-io/osapi/internal/provider/node/load"
 	logProv "github.com/osapi-io/osapi/internal/provider/node/log"
-	"github.com/osapi-io/osapi/internal/provider/node/memory"
 	"github.com/osapi-io/osapi/internal/provider/node/ntp"
 	"github.com/osapi-io/osapi/internal/provider/node/power"
 	processProv "github.com/osapi-io/osapi/internal/provider/node/process"
@@ -58,10 +54,6 @@ func (a *Agent) processJobOperation(
 
 // NewNodeProcessor returns a ProcessorFunc that handles node-related operations.
 func NewNodeProcessor(
-	hostProvider nodeHost.Provider,
-	diskProvider disk.Provider,
-	memoryProvider memory.Provider,
-	loadProvider load.Provider,
 	ntpProvider ntp.Provider,
 	timezoneProvider timezone.Provider,
 	powerProvider power.Provider,
@@ -79,8 +71,6 @@ func NewNodeProcessor(
 		baseOperation := strings.Split(req.Operation, ".")[0]
 
 		switch baseOperation {
-		case "status":
-			return getNodeStatus(hostProvider, diskProvider, memoryProvider, loadProvider, logger)
 		case "ntp":
 			return processNtpOperation(ctx, ntpProvider, logger, req)
 		case "timezone":
@@ -105,66 +95,4 @@ func NewNodeProcessor(
 			return nil, fmt.Errorf("unsupported node operation: %s", req.Operation)
 		}
 	}
-}
-
-// getNodeStatus retrieves comprehensive node status.
-func getNodeStatus(
-	hostProvider nodeHost.Provider,
-	diskProvider disk.Provider,
-	memoryProvider memory.Provider,
-	loadProvider load.Provider,
-	logger *slog.Logger,
-) (json.RawMessage, error) {
-	logger.Debug("executing node.GetStatus")
-
-	// Six independent reads. One failing is not a reason to answer nothing, so
-	// each is recorded under the field it would have filled and the rest are
-	// returned: a zero-valued field otherwise reads as a host with nothing to
-	// report.
-	fieldErrors := map[string]string{}
-
-	record := func(field string, err error) {
-		if err != nil {
-			fieldErrors[field] = err.Error()
-			logger.Warn(
-				"node status read failed",
-				slog.String("field", field),
-				slog.String("error", err.Error()),
-			)
-		}
-	}
-
-	hostname, err := hostProvider.GetHostname()
-	record("hostname", err)
-
-	osInfo, err := hostProvider.GetOSInfo()
-	record("os_info", err)
-
-	uptime, err := hostProvider.GetUptime()
-	record("uptime", err)
-
-	diskUsage, err := diskProvider.GetLocalUsageStats()
-	record("disk_usage", err)
-
-	memInfo, err := memoryProvider.GetStats()
-	record("memory_stats", err)
-
-	loadAvg, err := loadProvider.GetAverageStats()
-	record("load_averages", err)
-
-	result := map[string]interface{}{
-		"hostname":      hostname,
-		"os_info":       osInfo,
-		"uptime":        uptime,
-		"disk_usage":    diskUsage,
-		"memory_stats":  memInfo,
-		"load_averages": loadAvg,
-		"changed":       false,
-	}
-
-	if len(fieldErrors) > 0 {
-		result["field_errors"] = fieldErrors
-	}
-
-	return json.Marshal(result)
 }

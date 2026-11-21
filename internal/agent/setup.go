@@ -296,10 +296,6 @@ func buildRegistry(
 	r.Register(
 		"node",
 		NewNodeProcessor(
-			hostProvider,
-			diskProvider,
-			memoryProvider,
-			loadProvider,
 			ntpProvider,
 			timezoneProvider,
 			powerProvider,

@@ -37,9 +37,7 @@ const (
 type JobOperation = string
 
 // Node operations — read-only operations that query node state.
-const (
-	OpNodeStatusGet JobOperation = "node.status.get"
-)
+const ()
 
 // Network operations.
 const (

@@ -144,9 +144,7 @@ type Response struct {
 type OperationType = client.JobOperation
 
 // Node operations — read-only operations that query node state.
-const (
-	OperationNodeStatusGet = client.OpNodeStatusGet
-)
+const ()
 
 // Network operations.
 const (
@@ -731,27 +729,4 @@ type NodeDiskResponse struct {
 type NodeUptimeResponse struct {
 	UptimeSeconds float64 `json:"uptime_seconds"`
 	Uptime        string  `json:"uptime"`
-}
-
-// NodeStatusResponse aggregates node status information from multiple providers.
-// This represents the response for node.status.get operations in the job queue.
-type NodeStatusResponse struct {
-	// Hostname from the host provider
-	Hostname string `json:"hostname"`
-	// Uptime from the host provider
-	Uptime time.Duration `json:"uptime"`
-	// OSInfo from the host provider
-	OSInfo *host.Result `json:"os_info"`
-	// LoadAverages from the load provider
-	LoadAverages *load.Result `json:"load_averages"`
-	// MemoryStats from the memory provider
-	MemoryStats *memory.Result `json:"memory_stats"`
-	// DiskUsage from the disk provider
-	DiskUsage []disk.Result `json:"disk_usage"`
-	// FieldErrors names the reads that failed, by the field they would have
-	// filled. A status is assembled from six independent providers and one of
-	// them failing is not a reason to answer nothing, but it is a reason to say
-	// so: a zero-valued field is otherwise indistinguishable from a host with
-	// nothing to report.
-	FieldErrors map[string]string `json:"field_errors,omitempty"`
 }

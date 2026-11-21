@@ -294,22 +294,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Status",
-      link: {
-        type: "doc",
-        id: "gen/api/node-management-api-node-status",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/get-node-status",
-          label: "Retrieve node status",
-          className: "api-method get",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Node/Certificate",
       link: {
         type: "doc",
@@ -1076,6 +1060,22 @@ const sidebar: SidebarsConfig = {
           type: "doc",
           id: "gen/api/get-node-os",
           label: "Get the operating system of the host",
+          className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Status",
+      link: {
+        type: "doc",
+        id: "gen/api/status-api-status-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-status",
+          label: "Get the status summary of the host",
           className: "api-method get",
         },
       ],

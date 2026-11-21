@@ -1,4 +1,4 @@
-// Copyright (c) 2024 John Dewey
+// Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,17 +18,35 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package node
+package status_test
 
 import (
-	"log/slog"
+	"testing"
 
-	"github.com/osapi-io/osapi/internal/job/client"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
+	"github.com/osapi-io/osapi/internal/behaviors/status"
 )
 
-// Node implementation of the Node APIs operations.
-type Node struct {
-	// JobClient provides job-based operations for system queries.
-	JobClient client.JobClient
-	logger    *slog.Logger
+type BehaviorPublicTestSuite struct {
+	suite.Suite
+}
+
+func (s *BehaviorPublicTestSuite) TestBehavior() {
+	s.Same(status.Behavior, behavior.Lookup("status"))
+	s.Empty(behavior.ValidateBehavior(status.Behavior))
+}
+
+// TestExamples runs every example and refusal on a fake host with each
+// platform's provider, through the methods, and checks what each changes.
+func (s *BehaviorPublicTestSuite) TestExamples() {
+	behaviortest.Run(s.T(), status.Behavior)
+}
+
+func TestBehaviorPublicTestSuite(
+	t *testing.T,
+) {
+	suite.Run(t, new(BehaviorPublicTestSuite))
 }

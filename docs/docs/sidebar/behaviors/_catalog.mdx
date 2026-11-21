@@ -2,11 +2,12 @@
 
 | Behavior | Manages | Served | Uses | Used by |
 | -------- | ------- | ------ | ---- | ------- |
-| [disk](disk/disk.md) | Get the disk usage of target hosts | API and CLI | - | - |
-| [hostname](hostname/hostname.md) | Get or set the hostname of target hosts | API and CLI | - | - |
-| [load](load/load.md) | Get the load averages of target hosts | API and CLI | - | - |
+| [disk](disk/disk.md) | Get the disk usage of target hosts | API and CLI | - | status |
+| [hostname](hostname/hostname.md) | Get or set the hostname of target hosts | API and CLI | - | status |
+| [load](load/load.md) | Get the load averages of target hosts | API and CLI | - | status |
 | [managedfile](managedfile/managedfile.md) | Files osapi writes on a host and keeps a record of | Internal | - | sysctl |
-| [memory](memory/memory.md) | Get the memory usage of target hosts | API and CLI | - | - |
-| [os](os/os.md) | Get the operating system of target hosts | API and CLI | - | - |
+| [memory](memory/memory.md) | Get the memory usage of target hosts | API and CLI | - | status |
+| [os](os/os.md) | Get the operating system of target hosts | API and CLI | - | status |
+| [status](status/status.md) | The status summary of a node | API and CLI | hostname, uptime, os, load, memory, disk | - |
 | [sysctl](sysctl/sysctl.md) | Kernel parameters, written to sysctl.d files and applied | API and CLI | managedfile | - |
-| [uptime](uptime/uptime.md) | Get the uptime of target hosts | API and CLI | - | - |
+| [uptime](uptime/uptime.md) | Get the uptime of target hosts | API and CLI | - | status |

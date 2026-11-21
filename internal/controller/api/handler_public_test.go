@@ -30,7 +30,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/api"
-	nodeAPI "github.com/osapi-io/osapi/internal/controller/api/node"
+	ntpAPI "github.com/osapi-io/osapi/internal/controller/api/node/ntp"
 	"github.com/osapi-io/osapi/internal/job/mocks"
 )
 
@@ -83,7 +83,7 @@ func (s *HandlerPublicTestSuite) TestRegisterHandlers() {
 			handlers := make([]func(e *echo.Echo), 0, 5)
 			handlers = append(
 				handlers,
-				nodeAPI.Handler(slog.Default(), s.mockJobClient, signingKey, nil)...,
+				ntpAPI.Handler(slog.Default(), s.mockJobClient, signingKey, nil)...,
 			)
 
 			routesBefore := len(s.server.Echo.Router().Routes())

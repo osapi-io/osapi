@@ -9,10 +9,10 @@
  * Memory usage information.
  */
 export interface MemoryResponse {
-  /** Total memory in bytes. */
-  total: number;
   /** Free memory in bytes. */
   free: number;
+  /** Total memory in bytes. */
+  total: number;
   /** Used memory in bytes. */
   used: number;
 }

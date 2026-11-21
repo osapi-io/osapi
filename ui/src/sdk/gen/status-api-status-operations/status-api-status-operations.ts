@@ -6,13 +6,13 @@
  */
 import type {
   ErrorResponse,
-  NodeStatusCollectionResponse
+  StatusGetResponse
 } from '../schemas';
 
 import { apiFetch } from '../../fetch';
 
 export type getNodeStatusResponse200 = {
-  data: NodeStatusCollectionResponse
+  data: StatusGetResponse
   status: 200
 }
 
@@ -50,12 +50,12 @@ export const getGetNodeStatusUrl = (hostname: string,) => {
 
 
 
-  return `/api/node/${hostname}`
+  return `/api/node/${hostname}/status`
 }
 
 /**
- * Get the current status of the node including hostname, uptime, load averages, memory, and disk usage.
- * @summary Retrieve node status
+ * Runs the get of the hostname, uptime, os, load, memory and disk behaviors on the host, and answers with each. A read that fails is in errors, as its name and its error, and the other fields still answer.
+ * @summary Get the status summary of the host
  */
 export const getNodeStatus = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeStatusResponse> => {
 
