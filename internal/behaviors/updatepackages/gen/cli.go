@@ -28,7 +28,7 @@ var updatepackagesUpdateCmd = &cobra.Command{
 	Annotations: map[string]string{reference.Permission: "updatepackages:write"},
 	Args:        cobra.NoArgs,
 	Example:     "  # The repositories are unchanged\n  osapi client node updatepackages update --target web-01",
-	Long:        "Runs apt-get update. It reports changed: true when apt-get got new index data, and changed: false when each repository was unchanged.",
+	Long:        "Runs apt-get update. It reports changed: true when the Release file of a repository under /var/lib/apt/lists changed, and changed: false when each repository was unchanged.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("target")
 

@@ -91,7 +91,7 @@ var Group = endpoint.Define(
 		Describe("Refresh the package index").
 		Permission("updatepackages:write").
 		Returns("Each target host's result, with whether it changed.").
-		Explain("Runs apt-get update. It reports changed: true when apt-get got new index data, and changed: false when each repository was unchanged.").
+		Explain("Runs apt-get update. It reports changed: true when the Release file of a repository under /var/lib/apt/lists changed, and changed: false when each repository was unchanged.").
 		Example("--target web-01", "The repositories are unchanged"),
 )
 

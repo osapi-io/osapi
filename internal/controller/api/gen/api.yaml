@@ -6717,8 +6717,9 @@ paths:
         - Updatepackages_API_updatepackages_operations
     put:
       description: >-
-        Runs apt-get update. It reports changed: true when apt-get got new index
-        data, and changed: false when each repository was unchanged.
+        Runs apt-get update. It reports changed: true when the Release file of a
+        repository under /var/lib/apt/lists changed, and changed: false when
+        each repository was unchanged.
       operationId: PutNodeUpdatepackages
       parameters:
         - $ref: '#/components/parameters/Hostname'

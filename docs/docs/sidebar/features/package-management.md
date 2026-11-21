@@ -39,8 +39,10 @@ The index is not a fact about the host. It is what the repositories have, so
 
 - The list runs `apt list --upgradable`: each package with its installed version
   and the version that the index has.
-- The update runs `apt-get update`. It reports `changed: true` when apt-get got
-  new index data, and `changed: false` when each repository was unchanged.
+- The update runs `apt-get update`. It reports `changed: true` when the Release
+  file of a repository under `/var/lib/apt/lists` changed, and `changed: false`
+  when each repository was unchanged. apt-get prints `Get:` lines on some hosts
+  even when nothing changed, so its output does not tell.
 
 ## Operations
 

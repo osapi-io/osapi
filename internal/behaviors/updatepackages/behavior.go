@@ -48,8 +48,9 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Write("update", Update).
 		Sudo("apt-get").
 		Describe("Refresh the package index").
-		Explain("Runs apt-get update. It reports changed: true when apt-get got new "+
-			"index data, and changed: false when each repository was unchanged.").
+		Explain("Runs apt-get update. It reports changed: true when the Release file "+
+			"of a repository under /var/lib/apt/lists changed, and changed: false when "+
+			"each repository was unchanged.").
 		// The integration test runs this on CI's runner, whose index the
 		// workflow has just refreshed. A refresh that gets new data is in
 		// debian_public_test.go: what the mirrors have is not an example.

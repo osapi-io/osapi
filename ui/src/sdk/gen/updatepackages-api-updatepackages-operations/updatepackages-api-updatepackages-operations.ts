@@ -113,7 +113,7 @@ export const getPutNodeUpdatepackagesUrl = (hostname: string,) => {
 }
 
 /**
- * Runs apt-get update. It reports changed: true when apt-get got new index data, and changed: false when each repository was unchanged.
+ * Runs apt-get update. It reports changed: true when the Release file of a repository under /var/lib/apt/lists changed, and changed: false when each repository was unchanged.
  * @summary Refresh the package index
  */
 export const putNodeUpdatepackages = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<putNodeUpdatepackagesResponse> => {

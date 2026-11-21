@@ -25,6 +25,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/avfs/avfs"
+
 	"github.com/osapi-io/osapi/internal/behavior/host"
 )
 
@@ -33,12 +35,16 @@ import (
 // have, so it is not gohai's.
 type debian struct {
 	exec host.Exec
+	fs   avfs.VFS
 }
+
+// lists is where apt keeps the index it got from each repository.
+const lists = "/var/lib/apt/lists"
 
 func newDebian(
 	h host.Host,
 ) (Provider, error) {
-	return &debian{exec: h.Exec}, nil
+	return &debian{exec: h.Exec, fs: h.FS}, nil
 }
 
 // Updates runs apt list --upgradable.
@@ -53,17 +59,31 @@ func (d *debian) Updates(
 	return parse(out), nil
 }
 
-// Refresh runs apt-get update. It got new data when apt-get fetched a
-// file: a Get: line. A refresh with only Hit: lines changed nothing.
+// Refresh runs apt-get update. It got new data when a repository's
+// Release or InRelease file under /var/lib/apt/lists changed: apt-get
+// prints Get: lines on each run, so its output does not tell.
 func (d *debian) Refresh(
 	ctx context.Context,
 ) (bool, error) {
-	out, err := d.exec.RunPrivilegedCmd(ctx, "apt-get", []string{"update"})
-	if err != nil {
+	before := d.releases()
+	if _, err := d.exec.RunPrivilegedCmd(ctx, "apt-get", []string{"update"}); err != nil {
 		return false, fmt.Errorf("refresh the package index: %w", err)
 	}
 
-	return strings.Contains(out, "\nGet:") || strings.HasPrefix(out, "Get:"), nil
+	return d.releases() != before, nil
+}
+
+// releases is each Release and InRelease file of the index, by name, with
+// its contents. A file it cannot read is left out.
+func (d *debian) releases() string {
+	var sb strings.Builder
+	names, _ := d.fs.Glob(lists + "/*Release")
+	for _, name := range names {
+		data, _ := d.fs.ReadFile(name)
+		sb.WriteString(name + "\n" + string(data) + "\n")
+	}
+
+	return sb.String()
 }
 
 // parse reads apt list --upgradable: a line per update, as

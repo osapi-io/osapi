@@ -24,6 +24,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
@@ -37,20 +38,30 @@ type DebianPublicTestSuite struct {
 }
 
 func (s *DebianPublicTestSuite) TestRefresh() {
+	const release = "/var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_noble_InRelease"
 	for name, tc := range map[string]struct {
-		out  string
-		want bool
+		before string
+		after  string
+		want   bool
 	}{
-		"when apt-get gets new data first":  {out: "Get:1 http://archive.ubuntu.com/ubuntu noble InRelease [126 kB]\n", want: true},
-		"when apt-get gets new data later":  {out: "Hit:1 http://a noble InRelease\nGet:2 http://a noble-updates InRelease [126 kB]\n", want: true},
-		"when each repository is unchanged": {out: "Hit:1 http://archive.ubuntu.com/ubuntu noble InRelease\n"},
+		"when a repository publishes new data": {before: "Date: Mon\n", after: "Date: Tue\n", want: true},
+		"when a repository is first fetched":   {after: "Date: Tue\n", want: true},
+		"when each repository is unchanged":    {before: "Date: Mon\n", after: "Date: Mon\n"},
 	} {
 		s.Run(name, func() {
+			fs := memfs.New()
+			s.Require().NoError(fs.MkdirAll("/var/lib/apt/lists", 0o755))
+			if tc.before != "" {
+				s.Require().NoError(fs.WriteFile(release, []byte(tc.before), 0o644))
+			}
 			exec := hostmocks.NewMockExec(gomock.NewController(s.T()))
-			exec.EXPECT().
-				RunPrivilegedCmd(gomock.Any(), "apt-get", []string{"update"}).
-				Return(tc.out, nil)
-			p, err := updatepackages.ExportNewDebian(host.Host{Exec: exec})
+			exec.EXPECT().RunPrivilegedCmd(gomock.Any(), "apt-get", []string{"update"}).
+				DoAndReturn(func(context.Context, string, []string) (string, error) {
+					// apt-get prints Get: on each run; only the file tells.
+					return "Get:1 http://archive.ubuntu.com/ubuntu noble InRelease\n",
+						fs.WriteFile(release, []byte(tc.after), 0o644)
+				})
+			p, err := updatepackages.ExportNewDebian(host.Host{Exec: exec, FS: fs})
 			s.Require().NoError(err)
 
 			got, err := p.Refresh(context.Background())

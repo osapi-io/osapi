@@ -2,8 +2,9 @@
 
 Refresh the package index.
 
-Runs apt-get update. It reports changed: true when apt-get got new index data,
-and changed: false when each repository was unchanged.
+Runs apt-get update. It reports changed: true when the Release file of a
+repository under /var/lib/apt/lists changed, and changed: false when each
+repository was unchanged.
 
 ```bash
 osapi client node updatepackages update [flags]
