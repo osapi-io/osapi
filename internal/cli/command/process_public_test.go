@@ -27,6 +27,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/cli/command/mocks"
+	"go.uber.org/mock/gomock"
+
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
 
@@ -39,27 +42,33 @@ type ProcessPublicTestSuite struct {
 
 type ctxKey struct{}
 
-// fakeComponent is a component that records what Serve did with it.
-type fakeComponent struct {
+// seen is what Serve did with the component: whether it started, and the
+// context of its stop. Serve calls them from other goroutines.
+type seen struct {
 	mu      sync.Mutex
 	started bool
 	stopCtx context.Context
 	stopErr error
 }
 
-func (p *fakeComponent) Start() {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	p.started = true
-}
+// component is a mock component that records its calls in p.
+func (s *ProcessPublicTestSuite) component(
+	p *seen,
+) command.Component {
+	c := mocks.NewMockComponent(gomock.NewController(s.T()))
+	c.EXPECT().Start().Do(func() {
+		p.mu.Lock()
+		defer p.mu.Unlock()
+		p.started = true
+	}).AnyTimes()
+	c.EXPECT().Stop(gomock.Any()).Do(func(ctx context.Context) {
+		p.mu.Lock()
+		defer p.mu.Unlock()
+		p.stopCtx = ctx
+		p.stopErr = ctx.Err()
+	}).AnyTimes()
 
-func (p *fakeComponent) Stop(
-	ctx context.Context,
-) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	p.stopCtx = ctx
-	p.stopErr = ctx.Err()
+	return c
 }
 
 func (s *ProcessPublicTestSuite) TestServe() {
@@ -68,13 +77,13 @@ func (s *ProcessPublicTestSuite) TestServe() {
 		setup        func(context.Context, localDeps) (command.Running, error)
 		method       string
 		uses         bool
-		validateFunc func(err error, setupCtx context.Context, p *fakeComponent, cleaned context.Context)
+		validateFunc func(err error, setupCtx context.Context, p *seen, cleaned context.Context)
 	}{
 		{
 			name:   "when the setup works, the parts run until the context ends, then stop and clean up",
 			method: "start",
 			uses:   true,
-			validateFunc: func(err error, setupCtx context.Context, p *fakeComponent, cleaned context.Context) {
+			validateFunc: func(err error, setupCtx context.Context, p *seen, cleaned context.Context) {
 				s.Require().NoError(err)
 				s.Equal("root", setupCtx.Value(ctxKey{}), "setup gets the command's context")
 				s.True(p.started)
@@ -93,7 +102,7 @@ func (s *ProcessPublicTestSuite) TestServe() {
 			setup: func(context.Context, localDeps) (command.Running, error) {
 				return command.Running{}, errors.New("no port")
 			},
-			validateFunc: func(err error, _ context.Context, p *fakeComponent, _ context.Context) {
+			validateFunc: func(err error, _ context.Context, p *seen, _ context.Context) {
 				s.EqualError(err, "no port")
 				s.False(p.started)
 			},
@@ -102,14 +111,14 @@ func (s *ProcessPublicTestSuite) TestServe() {
 			name:   "when the method is not the group's, it is an error",
 			method: "stop",
 			uses:   true,
-			validateFunc: func(err error, _ context.Context, _ *fakeComponent, _ context.Context) {
+			validateFunc: func(err error, _ context.Context, _ *seen, _ context.Context) {
 				s.ErrorContains(err, "has no method stop")
 			},
 		},
 		{
 			name:   "when nothing gives the deps, it is an error",
 			method: "start",
-			validateFunc: func(err error, _ context.Context, _ *fakeComponent, _ context.Context) {
+			validateFunc: func(err error, _ context.Context, _ *seen, _ context.Context) {
 				s.ErrorContains(err, "is not given")
 			},
 		},
@@ -117,7 +126,8 @@ func (s *ProcessPublicTestSuite) TestServe() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			p := &fakeComponent{}
+			p := &seen{}
+			c := s.component(p)
 			var setupCtx, cleaned context.Context
 			setup := tc.setup
 			if setup == nil {
@@ -125,7 +135,7 @@ func (s *ProcessPublicTestSuite) TestServe() {
 					setupCtx = ctx
 
 					return command.Running{
-						Components: []command.Component{p},
+						Components: []command.Component{c},
 						Cleanup:    func(ctx context.Context) { cleaned = ctx },
 					}, nil
 				}

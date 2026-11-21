@@ -21,10 +21,12 @@
 package command_test
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -150,6 +152,69 @@ func (s *SpecPublicTestSuite) TestSpecCoversTheDSL() {
 		}
 		s.True(found, "the spec has no term for %s", name)
 	}
+}
+
+// TestSpecHasEveryDeps: the type of each field of each group's Deps has a
+// term of the kind deps, so an author learns what a Deps can take and how a
+// test replaces it.
+func (s *SpecPublicTestSuite) TestSpecHasEveryDeps() {
+	files, err := filepath.Glob("../commands/*/deps.go")
+	s.Require().NoError(err)
+	s.Require().NotEmpty(files)
+	deps := command.Spec.Of(command.KindDeps)
+	names := make([]string, 0, len(deps))
+	for _, t := range deps {
+		names = append(names, t.Name)
+	}
+	terms := strings.Join(names, "\n")
+	for _, file := range files {
+		f, err := parser.ParseFile(token.NewFileSet(), file, nil, 0)
+		s.Require().NoError(err)
+		ast.Inspect(f, func(n ast.Node) bool {
+			spec, ok := n.(*ast.TypeSpec)
+			if !ok || spec.Name.Name != "Deps" {
+				return true
+			}
+			for _, field := range spec.Type.(*ast.StructType).Fields.List {
+				kind := depsKind(field.Type)
+				s.Contains(
+					terms,
+					kind,
+					"%s: a Deps field of type %s has no term of the kind deps; add one",
+					file,
+					kind,
+				)
+			}
+
+			return false
+		})
+	}
+}
+
+// depsKind is the term that names the type of a Deps field.
+func depsKind(
+	expr ast.Expr,
+) string {
+	switch t := expr.(type) {
+	case *ast.FuncType:
+		return "func(...)"
+	case *ast.Ident:
+		if t.Name == "string" {
+			return "string"
+		}
+
+		return "an interface of the group"
+	case *ast.StarExpr:
+		return "*" + depsKind(t.X)
+	case *ast.SelectorExpr:
+		if t.Sel.Name == "Deps" {
+			return "another group's Deps"
+		}
+
+		return t.X.(*ast.Ident).Name + "." + t.Sel.Name
+	}
+
+	return fmt.Sprintf("%T", expr)
 }
 
 func (s *SpecPublicTestSuite) TestSpecKinds() {

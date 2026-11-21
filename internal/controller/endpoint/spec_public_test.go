@@ -25,6 +25,8 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -135,6 +137,42 @@ func (s *SpecPublicTestSuite) TestSpecCoversTheDSL() {
 			}
 		}
 		s.True(found, "the spec has no term for %s", name)
+	}
+}
+
+// TestSpecHasEveryDeps: each field of each group's Deps has a term of the
+// kind deps, so an author learns each service of the controller that a
+// handler can take, and how its tests replace it.
+func (s *SpecPublicTestSuite) TestSpecHasEveryDeps() {
+	files, err := filepath.Glob("../endpoints/*/deps.go")
+	s.Require().NoError(err)
+	s.Require().NotEmpty(files)
+	for _, file := range files {
+		f, err := parser.ParseFile(token.NewFileSet(), file, nil, 0)
+		s.Require().NoError(err)
+		ast.Inspect(f, func(n ast.Node) bool {
+			spec, ok := n.(*ast.TypeSpec)
+			if !ok || spec.Name.Name != "Deps" {
+				return true
+			}
+			for _, field := range spec.Type.(*ast.StructType).Fields.List {
+				for _, name := range field.Names {
+					word := regexp.MustCompile(`(^|[^A-Za-z])` + name.Name + `([^A-Za-z]|$)`)
+					found := false
+					for _, t := range endpoint.Spec.Of(endpoint.KindDeps) {
+						found = found || word.MatchString(t.Name)
+					}
+					s.True(
+						found,
+						"%s: Deps.%s has no term of the kind deps; add one",
+						file,
+						name.Name,
+					)
+				}
+			}
+
+			return false
+		})
 	}
 }
 
