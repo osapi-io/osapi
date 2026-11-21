@@ -114,6 +114,48 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","interface_name":"eth0","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
 		},
 		{
+			Name: "when the example \"An interface with no resolvers yet\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/network/dns/eth0",
+				Body:   `{"interface_name":"eth0","servers":["9.9.9.9"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"dns.update",
+				dns.UpdateInput{
+					InterfaceName: "eth0",
+					Servers:       []string{"9.9.9.9"},
+				},
+				servertest.Completed("server1", `{"interface_name":"eth0","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","interface_name":"eth0","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"An interface with no resolvers yet\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/network/dns/eth0",
+				Body:   `{"interface_name":"eth0","servers":["9.9.9.9"]}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"dns.update",
+				dns.UpdateInput{
+					InterfaceName: "eth0",
+					Servers:       []string{"9.9.9.9"},
+				},
+				servertest.Completed("server1", `{"interface_name":"eth0","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","interface_name":"eth0","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodPut,

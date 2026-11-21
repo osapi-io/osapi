@@ -268,6 +268,14 @@ func ValidateBehavior(
 	if b.Doc == "" {
 		add("", RuleDoc, "no description")
 	}
+	if markup(b.Doc) {
+		add(
+			"",
+			RuleDoc,
+			"description %q has < > { or }, which the docs site reads as markup",
+			b.Doc,
+		)
+	}
 	if b.CLI && !b.API {
 		add("", RuleSurface, "CLI without API; the commands call the API, so add behavior.API")
 	}
@@ -466,6 +474,16 @@ func ValidateBehavior(
 		}
 		if m.Doc == "" {
 			add(m.Name, RuleDoc, "no description; add .Describe(...)")
+		}
+		for _, text := range []string{m.Doc, m.Long} {
+			if markup(text) {
+				add(
+					m.Name,
+					RuleDoc,
+					"description %q has < > { or }, which the docs site reads as markup",
+					text,
+				)
+			}
 		}
 
 		in, err := SchemaFor(m.In)
@@ -744,4 +762,12 @@ func hasArray(
 			return false
 		}
 	}
+}
+
+// markup reports whether text has a character that the docs site's MDX reads
+// as a tag or an expression, so the page fails to build.
+func markup(
+	text string,
+) bool {
+	return strings.ContainsAny(text, "<>{}")
 }

@@ -69,6 +69,15 @@ func (s *CLIPublicTestSuite) TestCommands() {
 			},
 		},
 		{
+			name: "when the example \"An interface with no resolvers yet\" is run",
+			args: []string{"node", "network", "dns", "update", "--target", "server1", "--interface-name", "eth0", "--servers", "9.9.9.9"},
+			want: commandtest.Request{
+				Method: "PUT",
+				Path:   "/api/node/server1/network/dns/eth0",
+				Body:   "{\"servers\":[\"9.9.9.9\"]}",
+			},
+		},
+		{
 			name: "when the example \"An interface osapi set\" is run",
 			args: []string{"node", "network", "dns", "delete", "--target", "server1", "--interface-name", "eth0"},
 			want: commandtest.Request{

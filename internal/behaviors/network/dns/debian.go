@@ -70,10 +70,10 @@ func (d *debian) Set(
 	}
 	servers, domains := in.Servers, in.SearchDomains
 	if len(servers) == 0 || len(domains) == 0 {
-		current, err := d.Resolvers(ctx, in.InterfaceName)
-		if err != nil {
-			return false, err
-		}
+		// The one error is an interface with no resolvers yet, such as one
+		// with a static address: it starts from none. netplan.Get below
+		// refuses an interface the host does not have.
+		current, _ := d.Resolvers(ctx, in.InterfaceName)
 		if len(servers) == 0 {
 			servers = current.Servers
 		}

@@ -52,7 +52,7 @@ var sysctlCreateCmd = &cobra.Command{
 	},
 	Args:    cobra.NoArgs,
 	Example: "  # Turn on IP forwarding\n  osapi client node sysctl create --target web-01 --key net.ipv4.ip_forward --value 1",
-	Long:    "Writes osapi-<key>.conf to behaviors.sysctl.dir, /etc/sysctl.d by default, and applies it with sysctl -p. It fails when sysctl -p fails, because the value is not set. A second run with the same value changes nothing and reports changed: false. If the kernel has a different value, for example after a failed apply, it applies the value again.",
+	Long:    "Writes osapi-net.ipv4.ip_forward.conf for net.ipv4.ip_forward to behaviors.sysctl.dir, /etc/sysctl.d by default, and applies it with sysctl -p. It fails when sysctl -p fails, because the value is not set. A second run with the same value changes nothing and reports changed: false. If the kernel has a different value, for example after a failed apply, it applies the value again.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("target")
 		key, _ := cmd.Flags().GetString("key")

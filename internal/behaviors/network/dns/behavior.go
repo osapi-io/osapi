@@ -95,10 +95,10 @@ var Behavior = behavior.Register(behavior.Define(
 		On(behavior.PlatformDebian).
 		Describe("Set the DNS resolvers of an interface").
 		Explain("Writes a netplan file of the interface's own, "+
-			"/etc/netplan/osapi-dns-<interface>.yaml, under the netplan definition that "+
+			"such as /etc/netplan/osapi-dns-eth0.yaml for eth0, under the netplan definition that "+
 			"matches the interface, and applies it. A definition that matches several "+
 			"interfaces, such as cloud-init's all for en*, gives each of them the resolvers. An empty list keeps "+
-			"the interface's servers or domains. override_dhcp drops the servers DHCP "+
+			"the interface's servers or domains, and an interface with no resolvers yet starts from none. override_dhcp drops the servers DHCP "+
 			"gives. It runs on the Debian family, and elsewhere, and in a container, "+
 			"reports skipped.").
 		Example("Set the servers of an interface", UpdateInput{InterfaceName: "eth0", Servers: []string{"9.9.9.9"}},
@@ -132,6 +132,17 @@ var Behavior = behavior.Register(behavior.Define(
 				behavior.Ran("netplan", "apply"),
 			}, linuxHost...)...,
 		).
+		Example("An interface with no resolvers yet",
+			UpdateInput{InterfaceName: "eth0", Servers: []string{"9.9.9.9"}},
+			Result{InterfaceName: "eth0", Changed: true},
+			behavior.Prints("resolvectl dns", "Global:\nLink 3 (eth1): 1.1.1.1\n"),
+			behavior.Prints("resolvectl domain", "Global:\n"),
+			behavior.Prints("netplan status --format json", `{"eth0":{"type":"ethernet","id":"eth0"}}`),
+			behavior.Wrote(eth0File, "network:\n  version: 2\n  ethernets:\n    eth0:\n      nameservers:\n"+
+				"        addresses:\n          - 9.9.9.9\n"),
+			behavior.Ran("netplan", "generate"),
+			behavior.Ran("netplan", "apply"),
+		).
 		Fails("No servers and no search domains", UpdateInput{InterfaceName: "eth0"},
 			"give servers or search domains").
 		Fails("An interface the host does not have, to keep the servers of",
@@ -139,7 +150,12 @@ var Behavior = behavior.Register(behavior.Define(
 				InterfaceName: "eth9",
 				SearchDomains: []string{"corp.example"},
 			}, "not found",
-			linuxHost...).
+			append([]behavior.HostOption{
+				behavior.Prints(
+					"netplan status --format json",
+					`{"eth0":{"type":"ethernet","id":"eth0"}}`,
+				),
+			}, linuxHost...)...).
 		Fails("A server that is not an IP address",
 			UpdateInput{InterfaceName: "eth0", Servers: []string{"one.one"}}, "ip").
 		Fails("A search domain that is not a host name",

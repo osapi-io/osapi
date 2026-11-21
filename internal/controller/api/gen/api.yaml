@@ -5941,13 +5941,14 @@ paths:
         - Dns_API_network_dns_operations
     put:
       description: >-
-        Writes a netplan file of the interface's own,
-        /etc/netplan/osapi-dns-<interface>.yaml, under the netplan definition
+        Writes a netplan file of the interface's own, such as
+        /etc/netplan/osapi-dns-eth0.yaml for eth0, under the netplan definition
         that matches the interface, and applies it. A definition that matches
         several interfaces, such as cloud-init's all for en*, gives each of them
-        the resolvers. An empty list keeps the interface's servers or domains.
-        override_dhcp drops the servers DHCP gives. It runs on the Debian
-        family, and elsewhere, and in a container, reports skipped.
+        the resolvers. An empty list keeps the interface's servers or domains,
+        and an interface with no resolvers yet starts from none. override_dhcp
+        drops the servers DHCP gives. It runs on the Debian family, and
+        elsewhere, and in a container, reports skipped.
       operationId: PutNodeNetworkDns
       parameters:
         - $ref: '#/components/parameters/Hostname'
@@ -6357,11 +6358,12 @@ paths:
         - Sysctl_API_sysctl_operations
     post:
       description: >-
-        Writes osapi-<key>.conf to behaviors.sysctl.dir, /etc/sysctl.d by
-        default, and applies it with sysctl -p. It fails when sysctl -p fails,
-        because the value is not set. A second run with the same value changes
-        nothing and reports changed: false. If the kernel has a different value,
-        for example after a failed apply, it applies the value again.
+        Writes osapi-net.ipv4.ip_forward.conf for net.ipv4.ip_forward to
+        behaviors.sysctl.dir, /etc/sysctl.d by default, and applies it with
+        sysctl -p. It fails when sysctl -p fails, because the value is not set.
+        A second run with the same value changes nothing and reports changed:
+        false. If the kernel has a different value, for example after a failed
+        apply, it applies the value again.
       operationId: PostNodeSysctl
       parameters:
         - $ref: '#/components/parameters/Hostname'

@@ -83,7 +83,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Describe("Get what netplan status reports for an interface").
 		Explain("Reads netplan status: the interface's type, its section and the ID of the "+
 			"definition that matches it, which a write goes under. An interface that it does "+
-			"not list is an ethernet under its own name.").
+			"not list is not found. A netplan without status is an ethernet under its own name.").
 		Example("A bond", GetInput{Name: "bond0"},
 			Interface{Name: "bond0", Type: "bond", Section: "bonds", ID: "bond0"},
 			behavior.Prints("netplan status --format json", status),
@@ -92,8 +92,11 @@ var Behavior = behavior.Register(behavior.Define(
 			Interface{Name: "enp0s1", Type: "ethernet", Section: "ethernets", ID: "all"},
 			behavior.Prints("netplan status --format json", status),
 		).
-		Example("An interface netplan does not list", GetInput{Name: "eth9"},
-			Interface{Name: "eth9", Section: "ethernets", ID: "eth9"},
+		Example("A netplan without status", GetInput{Name: "eth0"},
+			Interface{Name: "eth0", Section: "ethernets", ID: "eth0"},
+			behavior.Prints("netplan status --format json", "Invalid command: status\n"),
+		).
+		Fails("An interface the host does not have", GetInput{Name: "eth9"}, "not found",
 			behavior.Prints("netplan status --format json", status),
 		),
 ))

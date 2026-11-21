@@ -14,8 +14,11 @@ The rules:
   it, such as sysctl or updatepackages. A name that is a Go keyword, such as
   package, takes osapi behavior create --package for its Go package.
 - `placement`: The behavior has a placement. Fix: Add behavior.Node to Define.
-- `doc`: The behavior and each method have a description. Fix: Give Define a
-  one-line description, and each method .Describe("...").
+- `doc`: The behavior and each method have a description. No description or
+  .Explain text has &lt; &gt; &#123; or &#125;: the docs site reads them as
+  markup, and the page fails to build. Fix: Give Define a one-line description,
+  and each method .Describe("..."). Name a placeholder with an example, such as
+  osapi-dns-eth0.yaml for eth0, not osapi-dns-&lt;interface&gt;.yaml.
 - `methods`: The behavior has one or more methods. Fix: Add behavior.Read or
   behavior.Write to Define.
 - `duplicate`: Each behavior is registered one time, and each method name is

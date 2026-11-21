@@ -118,8 +118,14 @@ func (d *debian) Interface(
 		Type string `json:"type"`
 		ID   string `json:"id"`
 	}
-	_ = json.Unmarshal([]byte(out), &status)
-	s := status[name]
+	// netplan status lists every interface of the host, with or without a
+	// definition. A netplan without status, or with output that is not JSON,
+	// gives nothing to check, so the name stands as an ethernet.
+	parsed := json.Unmarshal([]byte(out), &status) == nil && len(status) > 0
+	s, ok := status[name]
+	if parsed && !ok {
+		return Interface{}, fmt.Errorf("interface %q: %w", name, behavior.ErrNotFound)
+	}
 	// A definition that matches several interfaces, such as cloud-init's
 	// all for en*, is the one netplan applies: a second definition under
 	// the interface's name is ignored, so a write goes under the ID.
