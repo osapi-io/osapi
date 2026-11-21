@@ -39,16 +39,25 @@ func (s *Container) PostNodeContainerDockerStop(
 	request gen.PostNodeContainerDockerStopRequestObject,
 ) (gen.PostNodeContainerDockerStopResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.PostNodeContainerDockerStop400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerStop400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	if errMsg, ok := validation.Var(ctx, request.Id, "required,container_id"); !ok {
-		return gen.PostNodeContainerDockerStop400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerStop400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	if request.Body != nil {
 		if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
-			return gen.PostNodeContainerDockerStop400JSONResponse{Error: &errMsg}, nil
+			return gen.PostNodeContainerDockerStop400JSONResponse{
+				Error:  &errMsg,
+				Reason: apierr.Invalid(),
+			}, nil
 		}
 	}
 
@@ -88,9 +97,15 @@ func (s *Container) PostNodeContainerDockerStop(
 	if err != nil {
 		errMsg := err.Error()
 		if apierr.IsMissing(err) {
-			return gen.PostNodeContainerDockerStop404JSONResponse{Error: &errMsg}, nil
+			return gen.PostNodeContainerDockerStop404JSONResponse{
+				Error:  &errMsg,
+				Reason: apierr.Reason(err),
+			}, nil
 		}
-		return gen.PostNodeContainerDockerStop500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerStop500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -150,7 +165,10 @@ func (s *Container) postNodeContainerDockerStopBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeContainerDockerStop500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeContainerDockerStop500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	msg := "container stopped"

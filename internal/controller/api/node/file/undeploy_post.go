@@ -24,6 +24,8 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/file/gen"
@@ -38,12 +40,16 @@ func (s *File) PostNodeFileUndeploy(
 	request gen.PostNodeFileUndeployRequestObject,
 ) (gen.PostNodeFileUndeployResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.PostNodeFileUndeploy400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeFileUndeploy400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
 		return gen.PostNodeFileUndeploy400JSONResponse{
-			Error: &errMsg,
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
 		}, nil
 	}
 
@@ -71,7 +77,8 @@ func (s *File) PostNodeFileUndeploy(
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeFileUndeploy500JSONResponse{
-			Error: &errMsg,
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
 		}, nil
 	}
 
@@ -121,7 +128,8 @@ func (s *File) postNodeFileUndeployBroadcast(
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeFileUndeploy500JSONResponse{
-			Error: &errMsg,
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
 		}, nil
 	}
 

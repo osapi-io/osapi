@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/user/gen"
@@ -38,7 +40,7 @@ func (u *User) GetNodeUser(
 	request gen.GetNodeUserRequestObject,
 ) (gen.GetNodeUserResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.GetNodeUser400JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeUser400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	hostname := request.Hostname
@@ -56,7 +58,7 @@ func (u *User) GetNodeUser(
 	jobID, resp, err := u.JobClient.Query(ctx, hostname, "user", job.OperationUserList, nil)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeUser500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeUser500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -97,7 +99,7 @@ func (u *User) getNodeUserBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeUser500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeUser500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	allResults := make([]gen.UserEntry, 0)

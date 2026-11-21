@@ -25,6 +25,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/labstack/echo/v5"
 
 	"github.com/osapi-io/osapi/internal/authtoken"
@@ -69,7 +71,8 @@ func ScopeMiddleware(
 			if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
 				errMsg := "Bearer token required"
 				return nil, ctx.JSON(http.StatusUnauthorized, gen.ErrorResponse{
-					Error: &errMsg,
+					Error:  &errMsg,
+					Reason: apierr.Unauthorized(),
 				})
 			}
 
@@ -78,7 +81,8 @@ func ScopeMiddleware(
 			if err != nil {
 				errMsg := "Invalid token: " + err.Error()
 				return nil, ctx.JSON(http.StatusUnauthorized, gen.ErrorResponse{
-					Error: &errMsg,
+					Error:  &errMsg,
+					Reason: apierr.Unauthorized(),
 				})
 			}
 
@@ -109,7 +113,8 @@ func ScopeMiddleware(
 				resolved,
 			)
 			return nil, ctx.JSON(http.StatusForbidden, gen.ErrorResponse{
-				Error: &errMsg,
+				Error:  &errMsg,
+				Reason: apierr.Forbidden(),
 			})
 		},
 	)

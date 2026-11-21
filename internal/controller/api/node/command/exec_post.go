@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/command/gen"
@@ -39,12 +41,13 @@ func (s *Command) PostNodeCommandExec(
 	request gen.PostNodeCommandExecRequestObject,
 ) (gen.PostNodeCommandExecResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.PostNodeCommandExec400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeCommandExec400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
 		return gen.PostNodeCommandExec400JSONResponse{
-			Error: &errMsg,
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
 		}, nil
 	}
 
@@ -94,7 +97,8 @@ func (s *Command) PostNodeCommandExec(
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeCommandExec500JSONResponse{
-			Error: &errMsg,
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
 		}, nil
 	}
 
@@ -166,7 +170,8 @@ func (s *Command) postNodeCommandExecBroadcast(
 	if err != nil {
 		errMsg := err.Error()
 		return gen.PostNodeCommandExec500JSONResponse{
-			Error: &errMsg,
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
 		}, nil
 	}
 

@@ -742,6 +742,20 @@ func (response DeleteNodeSchedule404JSONResponse) VisitDeleteNodeScheduleRespons
 	return err
 }
 
+type DeleteNodeSchedule409JSONResponse externalRef0.ErrorResponse
+
+func (response DeleteNodeSchedule409JSONResponse) VisitDeleteNodeScheduleResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type DeleteNodeSchedule500JSONResponse externalRef0.ErrorResponse
 
 func (response DeleteNodeSchedule500JSONResponse) VisitDeleteNodeScheduleResponse(w http.ResponseWriter) error {
@@ -831,6 +845,20 @@ func (response GetNodeScheduleByName404JSONResponse) VisitGetNodeScheduleByNameR
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetNodeScheduleByName409JSONResponse externalRef0.ErrorResponse
+
+func (response GetNodeScheduleByName409JSONResponse) VisitGetNodeScheduleByNameResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
 	_, err := buf.WriteTo(w)
 	return err
 }
@@ -925,6 +953,20 @@ func (response PutNodeSchedule404JSONResponse) VisitPutNodeScheduleResponse(w ht
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutNodeSchedule409JSONResponse externalRef0.ErrorResponse
+
+func (response PutNodeSchedule409JSONResponse) VisitPutNodeScheduleResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
 	_, err := buf.WriteTo(w)
 	return err
 }

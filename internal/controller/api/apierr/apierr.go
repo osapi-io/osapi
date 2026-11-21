@@ -31,21 +31,61 @@ package apierr
 import (
 	"errors"
 
+	components "github.com/osapi-io/osapi/internal/controller/api/components/gen"
 	"github.com/osapi-io/osapi/internal/job"
 )
 
 // IsMissing reports whether a failed job means the thing the endpoint addresses
-// is not there as far as osapi is concerned, which the API answers with 404.
-//
-// Three causes qualify, and they stay distinct behind this one question because
-// they are not the same thing to an operator: the host has no such user, the file
-// is there but osapi does not manage it, and the program the operation needs is
-// not installed. An endpoint that ever needs to answer them differently asks
-// errors.Is directly.
+// is not there as far as osapi is concerned: the host has no such item, the
+// item is there but osapi does not manage it, or the program the operation
+// needs is not installed. Reason tells them apart in the answer, so a program
+// does not read the message.
 func IsMissing(
 	err error,
 ) bool {
 	return errors.Is(err, job.ErrNotFound) ||
 		errors.Is(err, job.ErrNotManaged) ||
 		errors.Is(err, job.ErrNotInstalled)
+}
+
+// Reason is the reason of the answer to a failed job: not_managed or
+// not_installed when the job says so, and else not_found.
+func Reason(
+	err error,
+) *components.ErrorResponseReason {
+	switch {
+	case errors.Is(err, job.ErrNotManaged):
+		return reason(components.NotManaged)
+	case errors.Is(err, job.ErrNotInstalled):
+		return reason(components.NotInstalled)
+	}
+
+	return reason(components.NotFound)
+}
+
+// Invalid is the reason of a request that the handler refuses, a 400.
+func Invalid() *components.ErrorResponseReason {
+	return reason(components.InvalidRequest)
+}
+
+// ServerError is the reason of a failure of the controller, a 500.
+func ServerError() *components.ErrorResponseReason {
+	return reason(components.ServerError)
+}
+
+// Unauthorized and Forbidden are the reasons of a request that the token
+// does not allow.
+func Unauthorized() *components.ErrorResponseReason {
+	return reason(components.Unauthorized)
+}
+
+// Forbidden is the reason of a token that lacks the permission.
+func Forbidden() *components.ErrorResponseReason {
+	return reason(components.Forbidden)
+}
+
+func reason(
+	r components.ErrorResponseReason,
+) *components.ErrorResponseReason {
+	return &r
 }

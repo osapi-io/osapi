@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/log/gen"
@@ -47,15 +49,15 @@ func (s *Log) GetNodeLogUnit(
 	request gen.GetNodeLogUnitRequestObject,
 ) (gen.GetNodeLogUnitResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.GetNodeLogUnit400JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeLogUnit400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	if errMsg, ok := validateUnit(ctx, request.Name); !ok {
-		return gen.GetNodeLogUnit400JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeLogUnit400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	if errMsg, ok := validation.Struct(ctx, request.Params); !ok {
-		return gen.GetNodeLogUnit400JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeLogUnit400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	hostname := request.Hostname
@@ -87,7 +89,7 @@ func (s *Log) GetNodeLogUnit(
 	jobID, resp, err := s.JobClient.Query(ctx, hostname, "node", job.OperationLogQueryUnit, payload)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeLogUnit500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeLogUnit500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -152,7 +154,7 @@ func (s *Log) getNodeLogUnitBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeLogUnit500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeLogUnit500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	var items []gen.LogResultEntry

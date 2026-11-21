@@ -24,6 +24,8 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/container/gen"
@@ -37,11 +39,17 @@ func (s *Container) DeleteNodeContainerDockerImage(
 	request gen.DeleteNodeContainerDockerImageRequestObject,
 ) (gen.DeleteNodeContainerDockerImageResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.DeleteNodeContainerDockerImage400JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeContainerDockerImage400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	if errMsg, ok := validation.Var(ctx, request.Image, "required,min=1"); !ok {
-		return gen.DeleteNodeContainerDockerImage400JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeContainerDockerImage400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	hostname := request.Hostname
@@ -75,7 +83,10 @@ func (s *Container) DeleteNodeContainerDockerImage(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.DeleteNodeContainerDockerImage500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeContainerDockerImage500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -128,7 +139,10 @@ func (s *Container) deleteNodeContainerDockerImageRemoveBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.DeleteNodeContainerDockerImage500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeContainerDockerImage500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	msg := "image removed"

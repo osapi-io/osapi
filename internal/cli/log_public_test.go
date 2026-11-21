@@ -105,7 +105,7 @@ func (suite *LogPublicTestSuite) TestLogFatal() {
 			tc.validateFunc(jsonBuf.String())
 			var doc cli.ErrorDocument
 			suite.Require().NoError(json.Unmarshal(jsonBuf.Bytes(), &doc))
-			assert.Equal(suite.T(), cli.CodeFatal, doc.Code)
+			assert.Equal(suite.T(), cli.ReasonFatal, doc.Reason)
 			assert.Empty(suite.T(), buf.String())
 
 			// Without it the error is a line for a person, details beneath.

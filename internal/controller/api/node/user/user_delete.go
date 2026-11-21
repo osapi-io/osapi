@@ -40,11 +40,11 @@ func (u *User) DeleteNodeUser(
 	request gen.DeleteNodeUserRequestObject,
 ) (gen.DeleteNodeUserResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.DeleteNodeUser400JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeUser400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	if errMsg, ok := validateName(ctx, request.Name); !ok {
-		return gen.DeleteNodeUser400JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeUser400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	hostname := request.Hostname
@@ -71,9 +71,12 @@ func (u *User) DeleteNodeUser(
 	if err != nil {
 		errMsg := err.Error()
 		if apierr.IsMissing(err) {
-			return gen.DeleteNodeUser404JSONResponse{Error: &errMsg}, nil
+			return gen.DeleteNodeUser404JSONResponse{
+				Error:  &errMsg,
+				Reason: apierr.Reason(err),
+			}, nil
 		}
-		return gen.DeleteNodeUser500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeUser500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -129,7 +132,7 @@ func (u *User) deleteNodeUserBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.DeleteNodeUser500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeUser500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	var apiResponses []gen.UserMutationResult

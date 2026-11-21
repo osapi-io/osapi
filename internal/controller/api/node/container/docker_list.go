@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/container/gen"
@@ -38,11 +40,17 @@ func (s *Container) GetNodeContainerDocker(
 	request gen.GetNodeContainerDockerRequestObject,
 ) (gen.GetNodeContainerDockerResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.GetNodeContainerDocker400JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeContainerDocker400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	if errMsg, ok := validation.Struct(ctx, request.Params); !ok {
-		return gen.GetNodeContainerDocker400JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeContainerDocker400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	data := &job.DockerListData{}
@@ -69,7 +77,10 @@ func (s *Container) GetNodeContainerDocker(
 	jobID, resp, err := s.JobClient.Query(ctx, hostname, "docker", job.OperationDockerList, data)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeContainerDocker500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeContainerDocker500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -153,7 +164,10 @@ func (s *Container) getNodeContainerDockerListBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeContainerDocker500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeContainerDocker500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	var items []gen.DockerListItem

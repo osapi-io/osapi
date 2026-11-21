@@ -215,6 +215,28 @@ func (suite *SysctlPublicTestSuite) TestSysctlList() {
 	}
 }
 
+// TestErrorReason: the reason of an error answer is on the error, and an
+// answer with none leaves it empty.
+func (suite *SysctlPublicTestSuite) TestErrorReason() {
+	for body, want := range map[string]string{
+		`{"error":"no such key","reason":"not_found"}`: "not_found",
+		`{"error":"no such key"}`:                      "",
+	} {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotFound)
+			_, _ = w.Write([]byte(body))
+		}))
+		sut := client.New(server.URL, "test-token", client.WithLogger(slog.Default()))
+
+		_, err := sut.Sysctl.Get(suite.ctx, "server1", "vm.nosuch")
+		var apiErr *client.APIError
+		suite.Require().ErrorAs(err, &apiErr)
+		suite.Equal(want, apiErr.Reason, body)
+		server.Close()
+	}
+}
+
 // TestSysctlListPrefix: a prefix goes to the API as the prefix query.
 func (suite *SysctlPublicTestSuite) TestSysctlListPrefix() {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

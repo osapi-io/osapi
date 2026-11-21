@@ -230,7 +230,7 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 					Return(nil, errors.New("dial tcp 10.0.0.9:16686: refused"))
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: `{"error":"failed to read the trace from the tracing backend"}`,
+			wantBody: `{"error":"failed to read the trace from the tracing backend","reason":"server_error"}`,
 		},
 	}
 

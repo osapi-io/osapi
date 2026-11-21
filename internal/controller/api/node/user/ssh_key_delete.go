@@ -24,6 +24,8 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/user/gen"
@@ -37,15 +39,24 @@ func (u *User) DeleteNodeUserSSHKey(
 	request gen.DeleteNodeUserSSHKeyRequestObject,
 ) (gen.DeleteNodeUserSSHKeyResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.DeleteNodeUserSSHKey400JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeUserSSHKey400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	if errMsg, ok := validateFingerprint(ctx, request.Fingerprint); !ok {
-		return gen.DeleteNodeUserSSHKey400JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeUserSSHKey400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	if errMsg, ok := validateName(ctx, request.Name); !ok {
-		return gen.DeleteNodeUserSSHKey400JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeUserSSHKey400JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Invalid(),
+		}, nil
 	}
 
 	hostname := request.Hostname
@@ -78,7 +89,10 @@ func (u *User) DeleteNodeUserSSHKey(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.DeleteNodeUserSSHKey500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeUserSSHKey500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -127,7 +141,10 @@ func (u *User) deleteNodeUserSSHKeyBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.DeleteNodeUserSSHKey500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeUserSSHKey500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	var apiResponses []gen.SSHKeyMutationEntry

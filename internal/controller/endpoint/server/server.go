@@ -49,6 +49,8 @@ const scopesKey = "BearerAuth.Scopes"
 // ErrorResponse is the body of every answer that is not a success.
 type ErrorResponse struct {
 	Error string `json:"error"`
+	// Reason is why, as one of endpoint.Reasons.
+	Reason string `json:"reason"`
 }
 
 // Route is one generated endpoint: its HTTP method, its echo path, the
@@ -200,7 +202,8 @@ func Serve[D, In, Out any](
 	return func(c *echo.Context) error {
 		in, msg, ok := decode(c)
 		if !ok {
-			return c.JSON(http.StatusBadRequest, ErrorResponse{Error: msg})
+			return c.JSON(http.StatusBadRequest,
+				ErrorResponse{Error: msg, Reason: endpoint.ReasonInvalidRequest})
 		}
 
 		out, err := run(c.Request().Context(), deps, in)
@@ -211,7 +214,9 @@ func Serve[D, In, Out any](
 			return c.JSON(answer.Code, out)
 		}
 		if err != nil {
-			return c.JSON(status(s, g, m, err), ErrorResponse{Error: err.Error()})
+			code, reason := status(s, g, m, err)
+
+			return c.JSON(code, ErrorResponse{Error: err.Error(), Reason: reason})
 		}
 
 		respspan.Handled(c)
@@ -226,17 +231,17 @@ func Serve[D, In, Out any](
 	}
 }
 
-// status is the code an error maps to, by errors.Is, or 500, which is
-// logged: it is a failure of the controller.
+// status is the code and the reason that an error maps to, by errors.Is,
+// or 500, which is logged: it is a failure of the controller.
 func status(
 	s *Server,
 	g *endpoint.Group,
 	m *endpoint.Method,
 	err error,
-) int {
+) (int, string) {
 	for _, e := range m.Mapped() {
 		if errors.Is(err, e.Err) {
-			return e.Code
+			return e.Code, e.Reason
 		}
 	}
 	cause := err.Error()
@@ -249,7 +254,7 @@ func status(
 		slog.String("method", m.Name),
 		slog.String("error", cause))
 
-	return http.StatusInternalServerError
+	return http.StatusInternalServerError, endpoint.ReasonServerError
 }
 
 // Path is the echo path of a method: its route, with {param} written as

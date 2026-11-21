@@ -1104,6 +1104,20 @@ func (suite *UIPublicTestSuite) TestHandleError() {
 			},
 		},
 		{
+			name: "when the API names the reason, it is the reason of the document",
+			err: &client.ConflictError{
+				APIError: client.APIError{
+					StatusCode: 409,
+					Message:    "not managed",
+					Reason:     "not_managed",
+				},
+			},
+			validateFunc: func(log string, exitCode int) {
+				assert.Contains(suite.T(), log, "not managed")
+				assert.Equal(suite.T(), 1, exitCode)
+			},
+		},
+		{
 			name: "when not found error logs api error with status code",
 			err: &client.NotFoundError{
 				APIError: client.APIError{StatusCode: 404, Message: "job not found"},
@@ -1162,7 +1176,7 @@ func (suite *UIPublicTestSuite) TestHandleError() {
 			tc.validateFunc(jsonBuf.String(), exitCode)
 			var doc cli.ErrorDocument
 			suite.Require().NoError(json.Unmarshal(jsonBuf.Bytes(), &doc))
-			assert.NotEmpty(suite.T(), doc.Code)
+			assert.NotEmpty(suite.T(), doc.Reason)
 			assert.Empty(suite.T(), logBuf.String())
 
 			// Without it the error is one line for a person, and no log.

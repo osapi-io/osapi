@@ -26,6 +26,10 @@ import "fmt"
 type APIError struct {
 	StatusCode int
 	Message    string
+	// Reason is why the request failed, as the API names it, such as
+	// not_found or not_managed. A program branches on it, not on Message.
+	// It is empty when the answer gives none.
+	Reason string
 	// Body is the answer as it came, for a status whose body is not an
 	// error, such as a probe's 503. Request sets it.
 	Body []byte

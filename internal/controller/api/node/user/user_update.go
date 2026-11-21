@@ -41,21 +41,21 @@ func (u *User) PutNodeUser(
 	request gen.PutNodeUserRequestObject,
 ) (gen.PutNodeUserResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.PutNodeUser400JSONResponse{Error: &errMsg}, nil
+		return gen.PutNodeUser400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	if errMsg, ok := validateName(ctx, request.Name); !ok {
-		return gen.PutNodeUser400JSONResponse{Error: &errMsg}, nil
+		return gen.PutNodeUser400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	// Defense in depth: current fields use omitempty so validation
 	// always passes, but guards against future field additions.
 	if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
-		return gen.PutNodeUser400JSONResponse{Error: &errMsg}, nil
+		return gen.PutNodeUser400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	if errMsg, ok := validation.AtLeastOneField(request.Body); !ok {
-		return gen.PutNodeUser400JSONResponse{Error: &errMsg}, nil
+		return gen.PutNodeUser400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	opts := userProv.UpdateUserOpts{}
@@ -101,9 +101,9 @@ func (u *User) PutNodeUser(
 	if err != nil {
 		errMsg := err.Error()
 		if apierr.IsMissing(err) {
-			return gen.PutNodeUser404JSONResponse{Error: &errMsg}, nil
+			return gen.PutNodeUser404JSONResponse{Error: &errMsg, Reason: apierr.Reason(err)}, nil
 		}
-		return gen.PutNodeUser500JSONResponse{Error: &errMsg}, nil
+		return gen.PutNodeUser500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -159,7 +159,7 @@ func (u *User) putNodeUserUpdateBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PutNodeUser500JSONResponse{Error: &errMsg}, nil
+		return gen.PutNodeUser500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	var apiResponses []gen.UserMutationResult

@@ -40,11 +40,11 @@ func (u *User) DeleteNodeGroup(
 	request gen.DeleteNodeGroupRequestObject,
 ) (gen.DeleteNodeGroupResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.DeleteNodeGroup400JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeGroup400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	if errMsg, ok := validateName(ctx, request.Name); !ok {
-		return gen.DeleteNodeGroup400JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeGroup400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	hostname := request.Hostname
@@ -71,9 +71,12 @@ func (u *User) DeleteNodeGroup(
 	if err != nil {
 		errMsg := err.Error()
 		if apierr.IsMissing(err) {
-			return gen.DeleteNodeGroup404JSONResponse{Error: &errMsg}, nil
+			return gen.DeleteNodeGroup404JSONResponse{
+				Error:  &errMsg,
+				Reason: apierr.Reason(err),
+			}, nil
 		}
-		return gen.DeleteNodeGroup500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeGroup500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -129,7 +132,7 @@ func (u *User) deleteNodeGroupBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.DeleteNodeGroup500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeGroup500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	var apiResponses []gen.GroupMutationResult

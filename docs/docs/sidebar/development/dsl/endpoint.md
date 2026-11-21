@@ -309,6 +309,27 @@ gets msg and a 500, and the log gets the cause.
 Use: When the cause has what a caller must not see, such as the address or the
 error of a backend.
 
+### `.Because(reason)`
+
+Gives a mapped error a reason other than the reason of its status, such as
+Conflict(behavior.ErrNotManaged, doc).Because(ReasonNotManaged). Each error
+answer is &#123;error, reason&#125;: the status is the class of the problem, the
+reason is the cause that a program branches on, one of Reasons, and the message
+is for a person. Each helper sets the reason of its status: NotFound not_found,
+Conflict conflict, Invalid invalid_request, Forbidden forbidden, Unavailable
+unavailable.
+
+Use: When two errors of one status are different causes, such as not_managed and
+not_installed beside conflict.
+
+### `ReasonFor(status)`
+
+The reason of a status that no mapped error names, such as a route that does not
+exist, or a 500, which is server_error.
+
+Use: In a writer of error answers outside the generated routes, such as the
+error handler of the API.
+
 ### `NotFound(err, "doc")`
 
 Maps err to 404.

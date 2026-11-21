@@ -31,6 +31,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
+
 	echootel "github.com/labstack/echo-opentelemetry"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
@@ -235,5 +237,5 @@ func errorHandler(
 
 		return
 	}
-	_ = c.JSON(code, map[string]string{"error": msg})
+	_ = c.JSON(code, map[string]string{"error": msg, "reason": endpoint.ReasonFor(code)})
 }

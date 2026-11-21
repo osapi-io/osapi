@@ -403,6 +403,27 @@ func (s *ScheduleUpdatePublicTestSuite) TestPutNodeSchedule() {
 			},
 		},
 		{
+			name: "when osapi did not deploy the entry, it is a 409 not_managed",
+			request: gen.PutNodeScheduleRequestObject{
+				Hostname: "server1",
+				Name:     "unmanaged",
+				Body: &gen.PutNodeScheduleJSONRequestBody{
+					Schedule: ptr.To("0 3 * * *"),
+				},
+			},
+			setupMock: func() {
+				s.mockJobClient.EXPECT().
+					Modify(gomock.Any(), "server1", "schedule", job.OperationCronUpdate, gomock.Any()).
+					Return("", nil, fmt.Errorf("cron entry not managed: %w", job.ErrNotManaged))
+			},
+			validateFunc: func(resp gen.PutNodeScheduleResponseObject) {
+				r, ok := resp.(gen.PutNodeSchedule409JSONResponse)
+				s.True(ok)
+				s.Require().NotNil(r.Reason)
+				s.Equal("not_managed", string(*r.Reason))
+			},
+		},
+		{
 			name: "not found error",
 			request: gen.PutNodeScheduleRequestObject{
 				Hostname: "server1",

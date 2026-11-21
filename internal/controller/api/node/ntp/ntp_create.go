@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/ntp/gen"
@@ -39,11 +41,11 @@ func (s *Ntp) PostNodeNtp(
 	request gen.PostNodeNtpRequestObject,
 ) (gen.PostNodeNtpResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.PostNodeNtp400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeNtp400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
-		return gen.PostNodeNtp400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeNtp400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	config := ntpProv.Config{
@@ -72,7 +74,7 @@ func (s *Ntp) PostNodeNtp(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeNtp500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeNtp500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -126,7 +128,7 @@ func (s *Ntp) postNodeNtpBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodeNtp500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodeNtp500JSONResponse{Error: &errMsg, Reason: apierr.ServerError()}, nil
 	}
 
 	var apiResponses []gen.NtpMutationResult

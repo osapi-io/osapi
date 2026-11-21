@@ -157,9 +157,11 @@ func groupFile(
 			jen.Qual(endpointPath, "NotFound").
 				Call(jen.Qual(behaviorPkg, "ErrNotFound"), jen.Lit(missing)),
 			jen.Qual(endpointPath, "Conflict").
-				Call(jen.Qual(behaviorPkg, "ErrNotManaged"), jen.Lit(conflict)),
+				Call(jen.Qual(behaviorPkg, "ErrNotManaged"), jen.Lit(conflict)).
+				Dot("Because").Call(jen.Qual(endpointPath, "ReasonNotManaged")),
 			jen.Qual(endpointPath, "Conflict").
-				Call(jen.Qual(behaviorPkg, "ErrNotInstalled"), jen.Lit(conflict)),
+				Call(jen.Qual(behaviorPkg, "ErrNotInstalled"), jen.Lit(conflict)).
+				Dot("Because").Call(jen.Qual(endpointPath, "ReasonNotInstalled")),
 		}
 		if len(behavior.TemplateFields(m.In)) > 0 {
 			errs = append(errs, jen.Qual(endpointPath, "Invalid").Call(

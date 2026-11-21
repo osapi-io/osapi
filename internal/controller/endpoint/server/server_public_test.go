@@ -199,7 +199,7 @@ func (s *ServerPublicTestSuite) TestServe() {
 			path:     "/api/thing/bad",
 			token:    token("thing:read"),
 			wantCode: http.StatusBadRequest,
-			wantBody: `{"error":"bad name"}`,
+			wantBody: `{"error":"bad name","reason":"invalid_request"}`,
 		},
 		{
 			name:     "when the handler answers a status with its output, the output is the body",
@@ -216,7 +216,7 @@ func (s *ServerPublicTestSuite) TestServe() {
 			path:     "/api/thing/web",
 			token:    token("thing:read"),
 			wantCode: http.StatusNotFound,
-			wantBody: `{"error":"no such thing"}`,
+			wantBody: `{"error":"no such thing","reason":"not_found"}`,
 		},
 		{
 			name:     "when the handler wraps a mapped error, errors.Is finds it",
@@ -233,7 +233,7 @@ func (s *ServerPublicTestSuite) TestServe() {
 			path:     "/api/thing/web",
 			token:    token("thing:read"),
 			wantCode: http.StatusInternalServerError,
-			wantBody: `{"error":"nats: timeout"}`,
+			wantBody: `{"error":"nats: timeout","reason":"server_error"}`,
 		},
 		{
 			name:     "when the handler returns an Internal error, the caller gets only its message",
@@ -242,7 +242,7 @@ func (s *ServerPublicTestSuite) TestServe() {
 			path:     "/api/thing/web",
 			token:    token("thing:read"),
 			wantCode: http.StatusInternalServerError,
-			wantBody: `{"error":"could not read"}`,
+			wantBody: `{"error":"could not read","reason":"server_error"}`,
 		},
 		{
 			name:     "when an Internal error has no cause, its message is logged",
@@ -251,7 +251,7 @@ func (s *ServerPublicTestSuite) TestServe() {
 			path:     "/api/thing/web",
 			token:    token("thing:read"),
 			wantCode: http.StatusInternalServerError,
-			wantBody: `{"error":"could not read"}`,
+			wantBody: `{"error":"could not read","reason":"server_error"}`,
 		},
 		{
 			name:     "when the success status is 204, there is no body",

@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/process/gen"
@@ -38,11 +40,11 @@ func (s *Process) GetNodeProcessByPid(
 	request gen.GetNodeProcessByPidRequestObject,
 ) (gen.GetNodeProcessByPidResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.GetNodeProcessByPid400JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeProcessByPid400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	if errMsg, ok := validatePid(ctx, request.Pid); !ok {
-		return gen.GetNodeProcessByPid400JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeProcessByPid400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	hostname := request.Hostname
@@ -68,7 +70,10 @@ func (s *Process) GetNodeProcessByPid(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeProcessByPid500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeProcessByPid500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -88,12 +93,18 @@ func (s *Process) GetNodeProcessByPid(
 
 	if resp.Status == job.StatusFailed && resp.ErrorCode == job.ErrorCodeNotFound {
 		errMsg := resp.Error
-		return gen.GetNodeProcessByPid404JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeProcessByPid404JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.Reason(err),
+		}, nil
 	}
 
 	if resp.Status == job.StatusFailed {
 		errMsg := resp.Error
-		return gen.GetNodeProcessByPid500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeProcessByPid500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	var info processProv.Info
@@ -131,7 +142,10 @@ func (s *Process) getNodeProcessByPidBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.GetNodeProcessByPid500JSONResponse{Error: &errMsg}, nil
+		return gen.GetNodeProcessByPid500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	var items []gen.ProcessGetEntry

@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"github.com/osapi-io/osapi/internal/controller/api/apierr"
+
 	"github.com/google/uuid"
 
 	"github.com/osapi-io/osapi/internal/controller/api/node/power/gen"
@@ -39,13 +41,16 @@ func (s *Power) PostNodePowerReboot(
 	request gen.PostNodePowerRebootRequestObject,
 ) (gen.PostNodePowerRebootResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.PostNodePowerReboot400JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodePowerReboot400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	opts := powerProv.Opts{}
 	if request.Body != nil {
 		if errMsg, ok := validation.Struct(ctx, request.Body); !ok {
-			return gen.PostNodePowerReboot400JSONResponse{Error: &errMsg}, nil
+			return gen.PostNodePowerReboot400JSONResponse{
+				Error:  &errMsg,
+				Reason: apierr.Invalid(),
+			}, nil
 		}
 
 		if request.Body.Delay != nil {
@@ -78,7 +83,10 @@ func (s *Power) PostNodePowerReboot(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodePowerReboot500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodePowerReboot500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -136,7 +144,10 @@ func (s *Power) postNodePowerRebootBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.PostNodePowerReboot500JSONResponse{Error: &errMsg}, nil
+		return gen.PostNodePowerReboot500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	var apiResponses []gen.PowerResult

@@ -549,7 +549,7 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 				s.jobs.EXPECT().DeleteJob(gomock.Any(), jobID).Return(errors.New("nats: timeout"))
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: `{"error":"failed to delete job"}`,
+			wantBody: `{"error":"failed to delete job","reason":"server_error"}`,
 		},
 	}
 	for _, tc := range tests {

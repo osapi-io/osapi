@@ -310,11 +310,11 @@ func PrintError(
 ) {
 	FlushKV()
 	if jsonOutput {
-		code := CodeError
+		reason := ReasonError
 		if IsUsageError(err) {
-			code = CodeUsage
+			reason = ReasonUsage
 		}
-		WriteErrorJSON(w, ErrorDocument{Error: err.Error(), Code: code})
+		WriteErrorJSON(w, ErrorDocument{Error: err.Error(), Reason: reason})
 
 		return
 	}

@@ -377,10 +377,12 @@ func (s *ScheduleGetPublicTestSuite) TestGetNodeScheduleByName() {
 					Return("", nil, fmt.Errorf("cron entry not managed: %w", job.ErrNotManaged))
 			},
 			validateFunc: func(resp gen.GetNodeScheduleByNameResponseObject) {
-				r, ok := resp.(gen.GetNodeScheduleByName404JSONResponse)
-				s.True(ok)
+				r, ok := resp.(gen.GetNodeScheduleByName409JSONResponse)
+				s.True(ok, "an entry osapi did not deploy is a conflict, not missing")
 				s.Require().NotNil(r.Error)
 				s.Contains(*r.Error, "not managed")
+				s.Require().NotNil(r.Reason)
+				s.Equal("not_managed", string(*r.Reason))
 			},
 		},
 		{

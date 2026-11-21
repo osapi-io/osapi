@@ -55,7 +55,7 @@ var Group = endpoint.Define(
 		Returns("Each target host's result.").
 		Explain("Reads the size, the used space and the free space of each local filesystem, in bytes: the mounts of /proc/mounts on Linux and of mount on macOS, with their sizes from df. Local is ext4, xfs and btrfs on Linux, and apfs and hfs on macOS. Network and special filesystems are left out.").
 		Example("--target web-01", "A host with one local filesystem").
-		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host does not have what the request names, such as the object of a deploy."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs."), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.")),
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host does not have what the request names, such as the object of a deploy."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotManaged), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotInstalled)),
 )
 
 func init() {

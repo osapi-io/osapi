@@ -744,12 +744,12 @@ func HandleError(
 		return
 	}
 
-	doc := ErrorDocument{Error: err.Error(), Code: CodeError}
+	doc := ErrorDocument{Error: err.Error(), Reason: ReasonError}
 	var apiErr *client.APIError
 	if errors.As(err, &apiErr) {
 		doc = ErrorDocument{
 			Error:  apiErr.Message,
-			Code:   APICode(apiErr.StatusCode),
+			Reason: apiReason(apiErr),
 			Status: apiErr.StatusCode,
 		}
 	}
@@ -837,4 +837,16 @@ func FormatDuration(
 	default:
 		return d.Round(time.Second).String()
 	}
+}
+
+// apiReason is the reason that the API gave, or the reason of its status
+// when it gave none.
+func apiReason(
+	e *client.APIError,
+) string {
+	if e.Reason != "" {
+		return e.Reason
+	}
+
+	return APIReason(e.StatusCode)
 }

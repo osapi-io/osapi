@@ -23,6 +23,7 @@ package schedule
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 
 	"github.com/google/uuid"
@@ -40,11 +41,11 @@ func (s *Schedule) DeleteNodeSchedule(
 	request gen.DeleteNodeScheduleRequestObject,
 ) (gen.DeleteNodeScheduleResponseObject, error) {
 	if errMsg, ok := validateHostname(ctx, request.Hostname); !ok {
-		return gen.DeleteNodeSchedule400JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeSchedule400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	if errMsg, ok := validateName(ctx, request.Name); !ok {
-		return gen.DeleteNodeSchedule400JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeSchedule400JSONResponse{Error: &errMsg, Reason: apierr.Invalid()}, nil
 	}
 
 	hostname := request.Hostname
@@ -70,10 +71,22 @@ func (s *Schedule) DeleteNodeSchedule(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		if apierr.IsMissing(err) {
-			return gen.DeleteNodeSchedule404JSONResponse{Error: &errMsg}, nil
+		if errors.Is(err, job.ErrNotManaged) {
+			return gen.DeleteNodeSchedule409JSONResponse{
+				Error:  &errMsg,
+				Reason: apierr.Reason(err),
+			}, nil
 		}
-		return gen.DeleteNodeSchedule500JSONResponse{Error: &errMsg}, nil
+		if apierr.IsMissing(err) {
+			return gen.DeleteNodeSchedule404JSONResponse{
+				Error:  &errMsg,
+				Reason: apierr.Reason(err),
+			}, nil
+		}
+		return gen.DeleteNodeSchedule500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	if resp.Status == job.StatusSkipped {
@@ -129,7 +142,10 @@ func (s *Schedule) deleteNodeScheduleBroadcast(
 	)
 	if err != nil {
 		errMsg := err.Error()
-		return gen.DeleteNodeSchedule500JSONResponse{Error: &errMsg}, nil
+		return gen.DeleteNodeSchedule500JSONResponse{
+			Error:  &errMsg,
+			Reason: apierr.ServerError(),
+		}, nil
 	}
 
 	var apiResponses []gen.ScheduleMutationResult

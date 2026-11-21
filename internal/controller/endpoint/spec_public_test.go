@@ -21,6 +21,7 @@
 package endpoint_test
 
 import (
+	"errors"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -29,6 +30,8 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/stretchr/testify/suite"
 
@@ -135,6 +138,11 @@ func (s *SpecPublicTestSuite) TestSpecCoversTheDSL() {
 			if strings.Contains(t.Name, name+"(") || strings.Contains(t.Name, name+"[") {
 				found = true
 			}
+			// A refinement of another type, such as Because on Error, is
+			// written as a call on a value: .Because(reason).
+			if base, _, ok := strings.Cut(name, ":"); ok && strings.Contains(t.Name, "."+base+"(") {
+				found = true
+			}
 		}
 		s.True(found, "the spec has no term for %s", name)
 	}
@@ -183,6 +191,51 @@ func (s *SpecPublicTestSuite) TestSpecKinds() {
 	for _, t := range endpoint.Spec.Terms {
 		s.NotEmpty(t.Does, t.Name)
 		s.NotEmpty(t.When, t.Name)
+	}
+}
+
+// TestReasonsMatchTheSchema: the reasons that the server sends are the enum
+// of the ErrorResponse schema, in its order, and the schema says what each
+// one means, so a client's typed reason and the server cannot drift.
+func (s *SpecPublicTestSuite) TestReasonsMatchTheSchema() {
+	raw, err := os.ReadFile("../api/components/gen/api.yaml")
+	s.Require().NoError(err)
+	var doc struct {
+		Components struct {
+			Schemas map[string]struct {
+				Properties map[string]struct {
+					Description string   `yaml:"description"`
+					Enum        []string `yaml:"enum"`
+				} `yaml:"properties"`
+			} `yaml:"schemas"`
+		} `yaml:"components"`
+	}
+	s.Require().NoError(yaml.Unmarshal(raw, &doc))
+	reason := doc.Components.Schemas["ErrorResponse"].Properties["reason"]
+	s.Equal(endpoint.Reasons, reason.Enum)
+	for _, r := range endpoint.Reasons {
+		s.Contains(reason.Description, r+":", "the schema says what %s means", r)
+	}
+}
+
+// TestReasons: each helper gives the reason of its status, Because names
+// another, and a status that no error names has the reason of its class.
+func (s *SpecPublicTestSuite) TestReasons() {
+	err := errors.New("x")
+	s.Equal(endpoint.ReasonNotFound, endpoint.NotFound(err, "").Reason)
+	s.Equal(endpoint.ReasonConflict, endpoint.Conflict(err, "").Reason)
+	s.Equal(endpoint.ReasonNotManaged,
+		endpoint.Conflict(err, "").Because(endpoint.ReasonNotManaged).Reason)
+	s.Equal(endpoint.ReasonInvalidRequest, endpoint.Invalid(err, "").Reason)
+	s.Equal(endpoint.ReasonForbidden, endpoint.Forbidden(err, "").Reason)
+	s.Equal(endpoint.ReasonUnavailable, endpoint.Unavailable(err, "").Reason)
+	for status, want := range map[int]string{
+		401: endpoint.ReasonUnauthorized, 403: endpoint.ReasonForbidden,
+		404: endpoint.ReasonNotFound, 405: endpoint.ReasonInvalidRequest,
+		409: endpoint.ReasonConflict, 503: endpoint.ReasonUnavailable,
+		500: endpoint.ReasonServerError,
+	} {
+		s.Equal(want, endpoint.ReasonFor(status), "status %d", status)
 	}
 }
 
