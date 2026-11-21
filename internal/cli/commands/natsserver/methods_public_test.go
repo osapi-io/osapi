@@ -26,6 +26,9 @@ import (
 	"log/slog"
 	"testing"
 
+	"github.com/osapi-io/osapi/internal/cli/commands/natsserver/mocks"
+	"go.uber.org/mock/gomock"
+
 	"github.com/stretchr/testify/suite"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
@@ -37,36 +40,25 @@ type MethodsPublicTestSuite struct {
 	suite.Suite
 }
 
-// fakeServer records the heartbeat that Start began.
-type fakeServer struct {
-	version string
-}
-
-func (*fakeServer) Start()               {}
-func (*fakeServer) Stop(context.Context) {}
-func (f *fakeServer) StartHeartbeat(_ context.Context, v string, _ config.ProcessConditions) {
-	f.version = v
-}
-
 func (s *MethodsPublicTestSuite) TestStart() {
 	tests := []struct {
 		name         string
 		metrics      bool
 		newErr       error
-		validateFunc func(n int, srv *fakeServer, err error)
+		validateFunc func(n int, version string, err error)
 	}{
 		{
 			name: "when the metrics server is off, the NATS server is the one component",
-			validateFunc: func(n int, srv *fakeServer, err error) {
+			validateFunc: func(n int, version string, err error) {
 				s.Require().NoError(err)
 				s.Equal(1, n)
-				s.Equal("v1.2.3", srv.version, "the heartbeat has the version")
+				s.Equal("v1.2.3", version, "the heartbeat has the version")
 			},
 		},
 		{
 			name:    "when the metrics server is on, it is a component too",
 			metrics: true,
-			validateFunc: func(n int, _ *fakeServer, err error) {
+			validateFunc: func(n int, _ string, err error) {
 				s.Require().NoError(err)
 				s.Equal(2, n)
 			},
@@ -74,7 +66,7 @@ func (s *MethodsPublicTestSuite) TestStart() {
 		{
 			name:   "when the NATS server cannot start, it is the error",
 			newErr: errors.New("port in use"),
-			validateFunc: func(_ int, _ *fakeServer, err error) {
+			validateFunc: func(_ int, _ string, err error) {
 				s.EqualError(err, "start the NATS server: port in use")
 			},
 		},
@@ -82,7 +74,11 @@ func (s *MethodsPublicTestSuite) TestStart() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			srv := &fakeServer{}
+			var version string
+			srv := mocks.NewMockServer(gomock.NewController(s.T()))
+			srv.EXPECT().StartHeartbeat(gomock.Any(), gomock.Any(), gomock.Any()).
+				Do(func(_ context.Context, v string, _ config.ProcessConditions) { version = v }).
+				AnyTimes()
 			cfg := config.Config{}
 			cfg.NATS.Server.Metrics = config.MetricsServer{Enabled: tc.metrics, Host: "127.0.0.1"}
 			d := natsserver.Deps{
@@ -100,7 +96,7 @@ func (s *MethodsPublicTestSuite) TestStart() {
 			}
 
 			r, err := natsserver.Start(context.Background(), d)
-			tc.validateFunc(len(r.Components), srv, err)
+			tc.validateFunc(len(r.Components), version, err)
 		})
 	}
 }

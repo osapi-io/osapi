@@ -352,6 +352,61 @@ Maps err to 503.
 
 Use: When a backend the method needs is not set, such as the trace backend.
 
+## What a Deps takes
+
+### `an interface of the group, in deps.go`
+
+Each field of Deps is an interface that the group declares in its deps.go, with
+only the methods that its handlers call. internal/controller/handlers.go gives
+the real service of the controller. The tests give the mockgen mock from the
+group's mocks/, so a handler test sets what each call returns and asserts each
+call it makes.
+
+Use: For each service that a handler uses. Declare a narrow interface, not the
+concrete type, and never write a fake by hand. A group whose service the
+controller may not have, such as a store with no bucket, checks for nil.
+
+### `Jobs`
+
+The job client of the controller: it lists and reads the agents and the jobs,
+sets the drain flag, writes the timeline of an agent, and deletes and retries
+jobs. handlers.go gives d.jobs.
+
+Use: For a group that reads or changes the agents or the jobs, such as agent,
+job and admission. A request that runs on a host is a behavior, not a Jobs call
+of an endpoint.
+
+### `Store`
+
+A store of the controller in its own KV bucket: the admission records of the
+agents, or the entries of the audit log.
+
+Use: For the group that owns the records. A Store can be nil when the controller
+has no bucket for it; the group answers that the feature is off.
+
+### `Objects, States`
+
+The Object Store, which holds the files that osapi client file upload stores,
+and the file-state KV, whose keys are the files that agents deployed. fileDeps
+in handlers.go opens both.
+
+Use: For the file group. An agent reads an object through the object behavior,
+not through an endpoint.
+
+### `Health`
+
+The health.Reporter of the controller: the state of NATS, the controller and its
+parts, for the health, controller, nats and agent groups.
+
+Use: For a group that reports whether a part of osapi is up.
+
+### `Traces`
+
+The TraceReader: it reads one trace from the tracing backend that the config
+names, for osapi client telemetry trace get.
+
+Use: For the telemetry group.
+
 ## Tags on input and output fields
 
 ### `param:"Name"`

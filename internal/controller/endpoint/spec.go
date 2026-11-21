@@ -32,6 +32,7 @@ const (
 	KindMethod     = "method"
 	KindRefine     = "refine"
 	KindError      = "error"
+	KindDeps       = "deps"
 	KindTag        = "tag"
 	KindCheck      = "check"
 	KindGenerated  = "generated"
@@ -48,6 +49,7 @@ var Spec = guide.Spec{
 		{Kind: KindMethod, Title: "Methods"},
 		{Kind: KindRefine, Title: "Refinements of a method"},
 		{Kind: KindError, Title: "Errors a method maps"},
+		{Kind: KindDeps, Title: "What a Deps takes"},
 		{Kind: KindTag, Title: "Tags on input and output fields"},
 		{Kind: KindCheck, Title: "What holds a group to its spec"},
 		{Kind: KindGenerated, Title: "Generated, never edited"},
@@ -310,6 +312,42 @@ var Spec = guide.Spec{
 			When: "When a backend the method needs is not set, such as the trace backend.",
 		},
 
+		{
+			Kind: KindDeps,
+			Name: "an interface of the group, in deps.go",
+			Does: "Each field of Deps is an interface that the group declares in its deps.go, with only the methods that its handlers call. internal/controller/handlers.go gives the real service of the controller. The tests give the mockgen mock from the group's mocks/, so a handler test sets what each call returns and asserts each call it makes.",
+			When: "For each service that a handler uses. Declare a narrow interface, not the concrete type, and never write a fake by hand. A group whose service the controller may not have, such as a store with no bucket, checks for nil.",
+		},
+		{
+			Kind: KindDeps,
+			Name: "Jobs",
+			Does: "The job client of the controller: it lists and reads the agents and the jobs, sets the drain flag, writes the timeline of an agent, and deletes and retries jobs. handlers.go gives d.jobs.",
+			When: "For a group that reads or changes the agents or the jobs, such as agent, job and admission. A request that runs on a host is a behavior, not a Jobs call of an endpoint.",
+		},
+		{
+			Kind: KindDeps,
+			Name: "Store",
+			Does: "A store of the controller in its own KV bucket: the admission records of the agents, or the entries of the audit log.",
+			When: "For the group that owns the records. A Store can be nil when the controller has no bucket for it; the group answers that the feature is off.",
+		},
+		{
+			Kind: KindDeps,
+			Name: "Objects, States",
+			Does: "The Object Store, which holds the files that osapi client file upload stores, and the file-state KV, whose keys are the files that agents deployed. fileDeps in handlers.go opens both.",
+			When: "For the file group. An agent reads an object through the object behavior, not through an endpoint.",
+		},
+		{
+			Kind: KindDeps,
+			Name: "Health",
+			Does: "The health.Reporter of the controller: the state of NATS, the controller and its parts, for the health, controller, nats and agent groups.",
+			When: "For a group that reports whether a part of osapi is up.",
+		},
+		{
+			Kind: KindDeps,
+			Name: "Traces",
+			Does: "The TraceReader: it reads one trace from the tracing backend that the config names, for osapi client telemetry trace get.",
+			When: "For the telemetry group.",
+		},
 		{
 			Kind: KindTag,
 			Name: `param:"Name"`,

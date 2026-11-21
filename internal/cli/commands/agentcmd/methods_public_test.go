@@ -27,19 +27,22 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/cli/commands/agentcmd/mocks"
+	"go.uber.org/mock/gomock"
+
 	"github.com/avfs/avfs"
 	"github.com/stretchr/testify/suite"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/osapi-io/osapi/internal/cli/commands/agentcmd"
 	"github.com/osapi-io/osapi/internal/config"
-	"github.com/osapi-io/osapi/internal/job"
 )
 
 // result is what Start made, and what its cleanup did.
 type result struct {
 	n       int
-	agent   *fakeAgent
+	version string
+	metered bool
 	err     error
 	cleanup func()
 	closed  *bool
@@ -49,22 +52,6 @@ type result struct {
 type MethodsPublicTestSuite struct {
 	suite.Suite
 }
-
-// fakeAgent records what Components set on it.
-type fakeAgent struct {
-	version string
-	metered bool
-}
-
-func (*fakeAgent) Start()                       {}
-func (*fakeAgent) Stop(context.Context)         {}
-func (*fakeAgent) IsReady() error               { return nil }
-func (*fakeAgent) LastHeartbeatTime() time.Time { return time.Time{} }
-func (*fakeAgent) SubComponents() map[string]job.SubComponentInfo {
-	return nil
-}
-func (f *fakeAgent) SetVersion(v string)                       { f.version = v }
-func (f *fakeAgent) SetMeterProvider(*sdkmetric.MeterProvider) { f.metered = true }
 
 func (s *MethodsPublicTestSuite) TestStart() {
 	tests := []struct {
@@ -80,8 +67,8 @@ func (s *MethodsPublicTestSuite) TestStart() {
 			validateFunc: func(got result) {
 				s.Require().NoError(got.err)
 				s.Equal(1, got.n)
-				s.Equal("v1.2.3", got.agent.version)
-				s.False(got.agent.metered)
+				s.Equal("v1.2.3", got.version)
+				s.False(got.metered)
 				got.cleanup()
 				s.True(*got.closed)
 				s.True(*got.stopped)
@@ -93,7 +80,7 @@ func (s *MethodsPublicTestSuite) TestStart() {
 			validateFunc: func(got result) {
 				s.Require().NoError(got.err)
 				s.Equal(2, got.n)
-				s.True(got.agent.metered)
+				s.True(got.metered)
 			},
 		},
 		{
@@ -121,7 +108,15 @@ func (s *MethodsPublicTestSuite) TestStart() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			a := &fakeAgent{}
+			var version string
+			var metered bool
+			a := mocks.NewMockAgent(gomock.NewController(s.T()))
+			a.EXPECT().SetVersion(gomock.Any()).Do(func(v string) { version = v }).AnyTimes()
+			a.EXPECT().SubComponents().Return(nil).AnyTimes()
+			a.EXPECT().IsReady().Return(nil).AnyTimes()
+			a.EXPECT().LastHeartbeatTime().Return(time.Time{}).AnyTimes()
+			a.EXPECT().SetMeterProvider(gomock.Any()).
+				Do(func(*sdkmetric.MeterProvider) { metered = true }).AnyTimes()
 			var closed, stopped bool
 			cfg := config.Config{}
 			cfg.Agent.Metrics = config.MetricsServer{Enabled: tc.metrics, Host: "127.0.0.1"}
@@ -147,7 +142,8 @@ func (s *MethodsPublicTestSuite) TestStart() {
 			r, err := agentcmd.Start(context.Background(), d)
 			tc.validateFunc(result{
 				n:       len(r.Components),
-				agent:   a,
+				version: version,
+				metered: metered,
 				err:     err,
 				cleanup: func() { r.Cleanup(context.Background()) },
 				closed:  &closed,

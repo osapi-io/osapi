@@ -51,6 +51,7 @@ Ask the code and the binary before you read prose:
 | Question | Ask |
 | --- | --- |
 | Each part of the DSL, what it does and when to use it, and what is not built | `go run . controller endpoint spec get` |
+| Each service of the controller that a `Deps` can take, and how a test replaces it | `go run . controller endpoint spec get`, under "What a Deps takes" |
 | Each rule a definition must pass, with its fix | `go run . controller endpoint validate --help` |
 | Which groups exist, and their methods | `go run . controller endpoint list` |
 | The routes, permissions and operationIds of a group | `go run . controller endpoint get --name <group>` |

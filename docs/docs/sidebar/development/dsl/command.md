@@ -355,6 +355,74 @@ blank field is not in the JSON or the spec.
 Use: When the name of the group is not what the output is, such as Stale
 deployments in the file group.
 
+## What a Deps takes
+
+### `avfs.VFS`
+
+The filesystem, for a command that reads or writes files on the machine where it
+runs, such as a key or the config. cmd/commands.go gives the real one. A test
+gives memfs.New(), an in-memory filesystem, and reads what the command wrote
+from it.
+
+Use: For each file that a command reads or writes. Never the os package, which a
+test cannot replace.
+
+### `fs.FS`
+
+A read-only tree of files, such as the skills and templates that the binary
+embeds. A test gives fstest.MapFS with the files that it needs.
+
+Use: For files that the binary carries, not files on the host.
+
+### `config.Config, string`
+
+The config that osapi read, and plain values such as the path of the config
+file, a directory or the version. A test gives the value.
+
+Use: For what the command reads and does not change. A value is not a service,
+so it needs no interface.
+
+### `*slog.Logger`
+
+The logger of the process. A test gives slog.New(slog.DiscardHandler).
+
+Use: For a process, such as osapi agent start, that logs while it runs. A
+command that prints its result returns it as its output instead.
+
+### `func(...)`
+
+A function that the CLI gives, such as Behaviors, Validate or NewAgent: it reads
+the registry of this binary, or makes a part of the process. A test gives a
+function that returns what the case needs.
+
+Use: For one call, or a constructor. When a test must check the calls that a
+part gets, make the part an interface, as Agent is, and return it from the
+function.
+
+### `an interface of the group, in deps.go`
+
+A service with methods, such as Tokens, or a part that a constructor returns,
+such as Agent, Controller and Server. The tests give the mockgen mock from the
+group's mocks/, from go generate ./internal/cli/commands/&lt;group&gt;/mocks.
+
+Use: For a service whose calls a test asserts. Never write a fake by hand: a
+fake does not fail on a call that the test did not expect.
+
+### `*cobra.Command`
+
+The root command of the CLI, for a group that reads the tree of commands, such
+as cli docs and cli command.
+
+Use: Only to read the commands of this binary.
+
+### `another group's Deps`
+
+The Deps of a different group, for a command that runs that group's work, as
+osapi start runs the NATS server, the controller and the agent.
+
+Use: For a command that is several other commands at one time. Each part keeps
+its own Deps.
+
 ## Wiring
 
 ### `Provide[Deps](Group, fn)`

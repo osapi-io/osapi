@@ -53,6 +53,7 @@ The design is `components/osapi/commands.md` in osapi-io/specs. Read it first.
 | Question | Ask |
 | --- | --- |
 | Each part of the DSL, what it does and when to use it | `go run . cli command spec get` |
+| What a `Deps` can take, such as `avfs.VFS` or an interface, and how a test replaces each: memfs, fstest.MapFS, a mockgen mock | `go run . cli command spec get`, under "What a Deps takes" |
 | Each rule a definition must pass, with its fix | `go run . cli command validate --help` |
 | Each command of the binary, and the layer that made it | `go run . cli command list` |
 | The commands, flags and refused inputs of a group | `go run . cli command get --name <group>` |

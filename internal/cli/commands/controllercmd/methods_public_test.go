@@ -26,25 +26,18 @@ import (
 	"log/slog"
 	"testing"
 
+	"github.com/osapi-io/osapi/internal/cli/commands/controllercmd/mocks"
+	"go.uber.org/mock/gomock"
+
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/cli/commands/controllercmd"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller"
-	"github.com/osapi-io/osapi/internal/job"
 )
 
 type MethodsPublicTestSuite struct {
 	suite.Suite
-}
-
-type fakeController struct{}
-
-func (fakeController) Start()                            {}
-func (fakeController) Stop(context.Context)              {}
-func (fakeController) CheckHealth(context.Context) error { return nil }
-func (fakeController) SubComponents() map[string]job.SubComponentInfo {
-	return nil
 }
 
 // result is what Start made, and what its cleanup did.
@@ -117,7 +110,10 @@ func (s *MethodsPublicTestSuite) TestStart() {
 				) (controllercmd.Controller, error) {
 					opts = len(o)
 
-					return fakeController{}, tc.newErr
+					c := mocks.NewMockController(gomock.NewController(s.T()))
+					c.EXPECT().SubComponents().Return(nil).AnyTimes()
+
+					return c, tc.newErr
 				},
 			}
 
