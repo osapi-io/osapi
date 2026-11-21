@@ -29,6 +29,7 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/require"
 
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
@@ -78,8 +79,32 @@ func Sent(
 		JSON:  testing.Short,
 		Error: func(error) {},
 	}))
+	reset(root)
 	root.SetArgs(args)
 	require.NoError(t, root.Execute())
 
 	return sent
+}
+
+// reset puts each flag of cmd and the commands under it back to its
+// default. The commands are package values that each Sent attaches again,
+// so a flag keeps what an earlier command line set: a list flag would keep
+// the values of the example before.
+func reset(
+	cmd *cobra.Command,
+) {
+	cmd.Flags().VisitAll(func(f *pflag.Flag) {
+		if !f.Changed {
+			return
+		}
+		if list, ok := f.Value.(pflag.SliceValue); ok {
+			_ = list.Replace(nil)
+		} else {
+			_ = f.Value.Set(f.DefValue)
+		}
+		f.Changed = false
+	})
+	for _, c := range cmd.Commands() {
+		reset(c)
+	}
 }

@@ -27,9 +27,9 @@ stop the network connection.
 
 ### DNS delete
 
-The DNS provider also supports delete: removes the OSAPI-managed
-`/etc/netplan/osapi-dns.yaml` for the interface and runs `netplan apply`.
-Returns `changed: true` if the file existed.
+The DNS behavior also supports delete: it removes the interface's own
+`/etc/netplan/osapi-dns-<interface>.yaml` and runs `netplan apply`. It returns
+`changed: true` if the file existed.
 
 ## Safety features
 

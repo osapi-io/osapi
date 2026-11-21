@@ -76,7 +76,7 @@ Get the DNS configuration of the primary network interface:
 
 ```bash
 osapi client node network dns get \
-  --interface @fact.interface.primary
+  --interface-name @fact.interface.primary
 ```
 
 Print the hostname on the remote host:
@@ -139,7 +139,7 @@ This includes:
 # Fact reference in an array field
 osapi client node network dns update \
   --servers 1.1.1.1 --servers @fact.custom.backup_dns \
-  --interface @fact.interface.primary
+  --interface-name @fact.interface.primary
 
 # Each agent resolves its own facts, so broadcast works:
 # web-01 might resolve @fact.interface.primary to "eth0"

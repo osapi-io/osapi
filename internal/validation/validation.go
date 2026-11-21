@@ -63,6 +63,9 @@ var sysctlKeyPattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]*$`)
 // part of an apt-get argument, so the provider checks it again.
 var PackageVersionPattern = regexp.MustCompile(`^[0-9][A-Za-z0-9.+~:-]*$`)
 
+// itemIndex is the index of a list item in a field's name, such as [0].
+var itemIndex = regexp.MustCompile(`\[\d+\]`)
+
 var TimezonePattern = regexp.MustCompile(`^[A-Za-z0-9_+][A-Za-z0-9_+-]*(/[A-Za-z0-9_+-]+)*$`)
 
 // accountNamePattern matches a POSIX system account name: it must start with
@@ -547,7 +550,9 @@ func Breaks(
 
 	for _, fe := range errs {
 		_, field, _ := strings.Cut(fe.StructNamespace(), ".")
-		out = append(out, field+":"+fe.Tag())
+		// A rule after dive breaks an item, Servers[0]: it is the rule of
+		// the field, which a refusal names.
+		out = append(out, itemIndex.ReplaceAllString(field, "")+":"+fe.Tag())
 	}
 
 	return out

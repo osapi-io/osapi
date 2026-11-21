@@ -22,13 +22,17 @@ For interface and route management details, see
 
 ## How it works
 
-**DNS.** A query reads the current nameserver configuration of a network
-interface with `resolvectl`. An update writes a Netplan configuration file
-(`/etc/netplan/osapi-dns.yaml`) for the primary interface. It validates the file
-with `netplan generate` and applies it with `netplan apply`. Thus DNS changes
-stay after a reboot.
+**DNS.** DNS is the [dns behavior](../behaviors/dns/dns.md). A query reads the
+servers and the search domains of an interface through gohai on every platform:
+`resolvectl` on Linux, `resolv.conf` on a host that has no resolvers per
+interface, such as a container, and `scutil` on macOS. An update writes a
+Netplan file of the interface's own, `/etc/netplan/osapi-dns-<interface>.yaml`,
+on the Debian family. It validates the file with `netplan generate`, removes it
+again when that fails, and applies it with `netplan apply`. Thus DNS changes
+stay after a reboot, and the resolvers of each interface are separate. An update
+or a delete reports skipped in a container and on other platforms.
 
-The `--interface` parameter accepts [fact references](system-facts.md). Use
+The `--interface-name` parameter accepts [fact references](system-facts.md). Use
 `@fact.interface.primary` to target the default route interface automatically.
 Use `--override-dhcp` to disable the DNS servers from DHCP, so that the host
 uses only the configured servers. Without it, the host uses the DHCP DNS servers
@@ -81,12 +85,12 @@ authentication settings.
 
 ## Permissions
 
-| Operation  | Permission      |
-| ---------- | --------------- |
-| DNS get    | `network:read`  |
-| DNS update | `network:write` |
-| DNS delete | `network:write` |
-| Ping       | `network:read`  |
+| Operation  | Permission     |
+| ---------- | -------------- |
+| DNS get    | `dns:read`     |
+| DNS update | `dns:write`    |
+| DNS delete | `dns:write`    |
+| Ping       | `network:read` |
 
 The `admin` and `write` roles include both `network:read` and `network:write`.
 The `read` role includes only `network:read`.

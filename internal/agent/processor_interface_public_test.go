@@ -115,12 +115,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceOperation() {
 				ifaceProvider = tt.setupMock()
 			}
 
-			processor := agent.NewNetworkProcessor(
-				nil, nil,
-				ifaceProvider,
-				nil,
-				slog.Default(),
-			)
+			processor := agent.NewNetworkProcessor(nil, ifaceProvider, nil, slog.Default())
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
 		})
 	}
@@ -179,12 +174,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceList() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			processor := agent.NewNetworkProcessor(
-				nil, nil,
-				tt.setupMock(),
-				nil,
-				slog.Default(),
-			)
+			processor := agent.NewNetworkProcessor(nil, tt.setupMock(), nil, slog.Default())
 			result, err := processor(context.Background(), tt.jobRequest)
 
 			if tt.expectError {
@@ -265,12 +255,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceGet() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			processor := agent.NewNetworkProcessor(
-				nil, nil,
-				tt.setupMock(),
-				nil,
-				slog.Default(),
-			)
+			processor := agent.NewNetworkProcessor(nil, tt.setupMock(), nil, slog.Default())
 			result, err := processor(context.Background(), tt.jobRequest)
 
 			if tt.expectError {
@@ -358,12 +343,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceCreate() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			processor := agent.NewNetworkProcessor(
-				nil, nil,
-				tt.setupMock(),
-				nil,
-				slog.Default(),
-			)
+			processor := agent.NewNetworkProcessor(nil, tt.setupMock(), nil, slog.Default())
 			result, err := processor(context.Background(), tt.jobRequest)
 
 			if tt.expectError {
@@ -451,12 +431,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceUpdate() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			processor := agent.NewNetworkProcessor(
-				nil, nil,
-				tt.setupMock(),
-				nil,
-				slog.Default(),
-			)
+			processor := agent.NewNetworkProcessor(nil, tt.setupMock(), nil, slog.Default())
 			result, err := processor(context.Background(), tt.jobRequest)
 
 			if tt.expectError {
@@ -539,12 +514,7 @@ func (s *ProcessorInterfacePublicTestSuite) TestProcessInterfaceDelete() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			processor := agent.NewNetworkProcessor(
-				nil, nil,
-				tt.setupMock(),
-				nil,
-				slog.Default(),
-			)
+			processor := agent.NewNetworkProcessor(nil, tt.setupMock(), nil, slog.Default())
 			result, err := processor(context.Background(), tt.jobRequest)
 
 			if tt.expectError {

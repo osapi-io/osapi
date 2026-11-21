@@ -136,78 +136,6 @@ func (e CommandResultItemStatus) Valid() bool {
 	}
 }
 
-// Defines values for DNSConfigResponseStatus.
-const (
-	DNSConfigResponseStatusFailed  DNSConfigResponseStatus = "failed"
-	DNSConfigResponseStatusOk      DNSConfigResponseStatus = "ok"
-	DNSConfigResponseStatusSkipped DNSConfigResponseStatus = "skipped"
-	DNSConfigResponseStatusTimeout DNSConfigResponseStatus = "timeout"
-)
-
-// Valid indicates whether the value is a known member of the DNSConfigResponseStatus enum.
-func (e DNSConfigResponseStatus) Valid() bool {
-	switch e {
-	case DNSConfigResponseStatusFailed:
-		return true
-	case DNSConfigResponseStatusOk:
-		return true
-	case DNSConfigResponseStatusSkipped:
-		return true
-	case DNSConfigResponseStatusTimeout:
-		return true
-	default:
-		return false
-	}
-}
-
-// Defines values for DNSDeleteResultItemStatus.
-const (
-	DNSDeleteResultItemStatusFailed  DNSDeleteResultItemStatus = "failed"
-	DNSDeleteResultItemStatusOk      DNSDeleteResultItemStatus = "ok"
-	DNSDeleteResultItemStatusSkipped DNSDeleteResultItemStatus = "skipped"
-	DNSDeleteResultItemStatusTimeout DNSDeleteResultItemStatus = "timeout"
-)
-
-// Valid indicates whether the value is a known member of the DNSDeleteResultItemStatus enum.
-func (e DNSDeleteResultItemStatus) Valid() bool {
-	switch e {
-	case DNSDeleteResultItemStatusFailed:
-		return true
-	case DNSDeleteResultItemStatusOk:
-		return true
-	case DNSDeleteResultItemStatusSkipped:
-		return true
-	case DNSDeleteResultItemStatusTimeout:
-		return true
-	default:
-		return false
-	}
-}
-
-// Defines values for DNSUpdateResultItemStatus.
-const (
-	DNSUpdateResultItemStatusFailed  DNSUpdateResultItemStatus = "failed"
-	DNSUpdateResultItemStatusOk      DNSUpdateResultItemStatus = "ok"
-	DNSUpdateResultItemStatusSkipped DNSUpdateResultItemStatus = "skipped"
-	DNSUpdateResultItemStatusTimeout DNSUpdateResultItemStatus = "timeout"
-)
-
-// Valid indicates whether the value is a known member of the DNSUpdateResultItemStatus enum.
-func (e DNSUpdateResultItemStatus) Valid() bool {
-	switch e {
-	case DNSUpdateResultItemStatusFailed:
-		return true
-	case DNSUpdateResultItemStatusOk:
-		return true
-	case DNSUpdateResultItemStatusSkipped:
-		return true
-	case DNSUpdateResultItemStatusTimeout:
-		return true
-	default:
-		return false
-	}
-}
-
 // Defines values for DiskEntryStatus.
 const (
 	DiskEntryStatusFailed  DiskEntryStatus = "failed"
@@ -700,6 +628,54 @@ func (e MemoryEntryStatus) Valid() bool {
 	case MemoryEntryStatusSkipped:
 		return true
 	case MemoryEntryStatusTimeout:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for NetworkDnsEntryStatus.
+const (
+	NetworkDnsEntryStatusFailed  NetworkDnsEntryStatus = "failed"
+	NetworkDnsEntryStatusOk      NetworkDnsEntryStatus = "ok"
+	NetworkDnsEntryStatusSkipped NetworkDnsEntryStatus = "skipped"
+	NetworkDnsEntryStatusTimeout NetworkDnsEntryStatus = "timeout"
+)
+
+// Valid indicates whether the value is a known member of the NetworkDnsEntryStatus enum.
+func (e NetworkDnsEntryStatus) Valid() bool {
+	switch e {
+	case NetworkDnsEntryStatusFailed:
+		return true
+	case NetworkDnsEntryStatusOk:
+		return true
+	case NetworkDnsEntryStatusSkipped:
+		return true
+	case NetworkDnsEntryStatusTimeout:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for NetworkDnsResultStatus.
+const (
+	NetworkDnsResultStatusFailed  NetworkDnsResultStatus = "failed"
+	NetworkDnsResultStatusOk      NetworkDnsResultStatus = "ok"
+	NetworkDnsResultStatusSkipped NetworkDnsResultStatus = "skipped"
+	NetworkDnsResultStatusTimeout NetworkDnsResultStatus = "timeout"
+)
+
+// Valid indicates whether the value is a known member of the NetworkDnsResultStatus enum.
+func (e NetworkDnsResultStatus) Valid() bool {
+	switch e {
+	case NetworkDnsResultStatusFailed:
+		return true
+	case NetworkDnsResultStatusOk:
+		return true
+	case NetworkDnsResultStatusSkipped:
+		return true
+	case NetworkDnsResultStatusTimeout:
 		return true
 	default:
 		return false
@@ -1662,25 +1638,25 @@ func (e PutFileByNameMultipartBodyContentType) Valid() bool {
 
 // Defines values for GetJobsParamsStatus.
 const (
-	GetJobsParamsStatusCompleted      GetJobsParamsStatus = "completed"
-	GetJobsParamsStatusFailed         GetJobsParamsStatus = "failed"
-	GetJobsParamsStatusPartialFailure GetJobsParamsStatus = "partial_failure"
-	GetJobsParamsStatusProcessing     GetJobsParamsStatus = "processing"
-	GetJobsParamsStatusSubmitted      GetJobsParamsStatus = "submitted"
+	Completed      GetJobsParamsStatus = "completed"
+	Failed         GetJobsParamsStatus = "failed"
+	PartialFailure GetJobsParamsStatus = "partial_failure"
+	Processing     GetJobsParamsStatus = "processing"
+	Submitted      GetJobsParamsStatus = "submitted"
 )
 
 // Valid indicates whether the value is a known member of the GetJobsParamsStatus enum.
 func (e GetJobsParamsStatus) Valid() bool {
 	switch e {
-	case GetJobsParamsStatusCompleted:
+	case Completed:
 		return true
-	case GetJobsParamsStatusFailed:
+	case Failed:
 		return true
-	case GetJobsParamsStatusPartialFailure:
+	case PartialFailure:
 		return true
-	case GetJobsParamsStatusProcessing:
+	case Processing:
 		return true
-	case GetJobsParamsStatusSubmitted:
+	case Submitted:
 		return true
 	default:
 		return false
@@ -2136,102 +2112,6 @@ type CreateJobResponse struct {
 	// Timestamp Creation timestamp.
 	Timestamp *string `json:"timestamp,omitempty"`
 }
-
-// DNSConfigCollectionResponse defines model for DNSConfigCollectionResponse.
-type DNSConfigCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []DNSConfigResponse `json:"results"`
-}
-
-// DNSConfigResponse defines model for DNSConfigResponse.
-type DNSConfigResponse struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname The hostname of the agent that served this config.
-	Hostname string `json:"hostname"`
-
-	// SearchDomains List of search domains.
-	SearchDomains *[]string `json:"search_domains,omitempty"`
-
-	// Servers List of configured DNS servers.
-	Servers *[]string `json:"servers,omitempty"`
-
-	// Status The status of the operation for this host.
-	Status DNSConfigResponseStatus `json:"status"`
-}
-
-// DNSConfigResponseStatus The status of the operation for this host.
-type DNSConfigResponseStatus string
-
-// DNSConfigUpdateRequest defines model for DNSConfigUpdateRequest.
-type DNSConfigUpdateRequest struct {
-	// InterfaceName The name of the network interface to apply DNS configuration to. Accepts alphanumeric names or @fact. references.
-	InterfaceName string `json:"interface_name" validate:"required,alphanum_or_fact"`
-
-	// OverrideDhcp When true, disables DHCP-provided DNS servers so only the configured servers are used. When false or omitted, DHCP DNS servers are merged alongside the configured ones (default Netplan behavior).
-	OverrideDhcp *bool `json:"override_dhcp,omitempty" validate:"omitempty"`
-
-	// SearchDomains New list of search domains to configure.
-	SearchDomains *[]string `json:"search_domains,omitempty" validate:"required_without=Servers,omitempty,dive,hostname,min=1"`
-
-	// Servers New list of DNS servers to configure.
-	Servers *[]string `json:"servers,omitempty" validate:"required_without=SearchDomains,omitempty,dive,ip,min=1"`
-}
-
-// DNSDeleteCollectionResponse defines model for DNSDeleteCollectionResponse.
-type DNSDeleteCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID   `json:"job_id,omitempty"`
-	Results []DNSDeleteResultItem `json:"results"`
-}
-
-// DNSDeleteRequest defines model for DNSDeleteRequest.
-type DNSDeleteRequest struct {
-	// InterfaceName The name of the network interface to delete DNS configuration from.
-	InterfaceName string `json:"interface_name" validate:"required,alphanum_or_fact"`
-}
-
-// DNSDeleteResultItem defines model for DNSDeleteResultItem.
-type DNSDeleteResultItem struct {
-	// Changed Whether the DNS configuration was actually modified.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname Hostname of the agent that processed this operation.
-	Hostname string `json:"hostname"`
-
-	// Status The status of the operation for this host.
-	Status DNSDeleteResultItemStatus `json:"status"`
-}
-
-// DNSDeleteResultItemStatus The status of the operation for this host.
-type DNSDeleteResultItemStatus string
-
-// DNSUpdateCollectionResponse defines model for DNSUpdateCollectionResponse.
-type DNSUpdateCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID   `json:"job_id,omitempty"`
-	Results []DNSUpdateResultItem `json:"results"`
-}
-
-// DNSUpdateResultItem defines model for DNSUpdateResultItem.
-type DNSUpdateResultItem struct {
-	// Changed Whether the DNS configuration was actually modified.
-	Changed  *bool                     `json:"changed,omitempty"`
-	Error    *string                   `json:"error,omitempty"`
-	Hostname string                    `json:"hostname"`
-	Status   DNSUpdateResultItemStatus `json:"status"`
-}
-
-// DNSUpdateResultItemStatus defines model for DNSUpdateResultItem.Status.
-type DNSUpdateResultItemStatus string
 
 // Disk defines model for Disk.
 type Disk struct {
@@ -3361,6 +3241,81 @@ type NATSInfo struct {
 
 	// Version NATS server version.
 	Version string `json:"version"`
+}
+
+// NetworkDnsDeleteResponse defines model for NetworkDnsDeleteResponse.
+type NetworkDnsDeleteResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []NetworkDnsResult  `json:"results"`
+}
+
+// NetworkDnsEntry defines model for NetworkDnsEntry.
+type NetworkDnsEntry struct {
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that produced this result.
+	Hostname string `json:"hostname"`
+
+	// SearchDomains The search domains
+	SearchDomains *[]string `json:"search_domains,omitempty"`
+
+	// Servers The DNS servers
+	Servers *[]string `json:"servers,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status NetworkDnsEntryStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
+}
+
+// NetworkDnsEntryStatus The status of the operation for this host.
+type NetworkDnsEntryStatus string
+
+// NetworkDnsGetResponse defines model for NetworkDnsGetResponse.
+type NetworkDnsGetResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []NetworkDnsEntry   `json:"results"`
+}
+
+// NetworkDnsResult defines model for NetworkDnsResult.
+type NetworkDnsResult struct {
+	// Changed Whether the host changed
+	Changed *bool `json:"changed,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that produced this result.
+	Hostname string `json:"hostname"`
+
+	// InterfaceName The interface
+	InterfaceName *string `json:"interface_name,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status NetworkDnsResultStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
+}
+
+// NetworkDnsResultStatus The status of the operation for this host.
+type NetworkDnsResultStatus string
+
+// NetworkDnsUpdateRequest defines model for NetworkDnsUpdateRequest.
+type NetworkDnsUpdateRequest struct {
+	// OverrideDhcp Use only these servers: drop the ones DHCP gives
+	OverrideDhcp *bool `json:"override_dhcp,omitempty" validate:"omitempty"`
+
+	// SearchDomains The search domains; the interface's own when empty
+	SearchDomains *[]string `json:"search_domains,omitempty" validate:"omitempty,max=16,dive,hostname"`
+
+	// Servers The DNS servers, IPv4 or IPv6; the interface's own when empty
+	Servers *[]string `json:"servers,omitempty" validate:"omitempty,max=16,dive,ip"`
+}
+
+// NetworkDnsUpdateResponse defines model for NetworkDnsUpdateResponse.
+type NetworkDnsUpdateResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []NetworkDnsResult  `json:"results"`
 }
 
 // NetworkInterfaceResponse defines model for NetworkInterfaceResponse.
@@ -4898,6 +4853,9 @@ type Hostname = string
 // InterfaceName defines model for InterfaceName.
 type InterfaceName = string
 
+// NetworkDnsInterfaceName defines model for NetworkDnsInterface_name.
+type NetworkDnsInterfaceName = string
+
 // PackageName defines model for PackageName.
 type PackageName = string
 
@@ -5113,11 +5071,8 @@ type PutNodeGroupJSONRequestBody = GroupUpdateRequest
 // PutNodeHostnameJSONRequestBody defines body for PutNodeHostname for application/json ContentType.
 type PutNodeHostnameJSONRequestBody = HostnameUpdateRequest
 
-// DeleteNodeNetworkDNSJSONRequestBody defines body for DeleteNodeNetworkDNS for application/json ContentType.
-type DeleteNodeNetworkDNSJSONRequestBody = DNSDeleteRequest
-
-// PutNodeNetworkDNSJSONRequestBody defines body for PutNodeNetworkDNS for application/json ContentType.
-type PutNodeNetworkDNSJSONRequestBody = DNSConfigUpdateRequest
+// PutNodeNetworkDnsJSONRequestBody defines body for PutNodeNetworkDns for application/json ContentType.
+type PutNodeNetworkDnsJSONRequestBody = NetworkDnsUpdateRequest
 
 // PostNodeNetworkInterfaceJSONRequestBody defines body for PostNodeNetworkInterface for application/json ContentType.
 type PostNodeNetworkInterfaceJSONRequestBody = InterfaceConfigRequest
@@ -5473,18 +5428,16 @@ type ClientInterface interface {
 	// GetNodeMemory request
 	GetNodeMemory(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// DeleteNodeNetworkDNSWithBody request with any body
-	DeleteNodeNetworkDNSWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// DeleteNodeNetworkDns request
+	DeleteNodeNetworkDns(ctx context.Context, hostname Hostname, interfaceName NetworkDnsInterfaceName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	DeleteNodeNetworkDNS(ctx context.Context, hostname Hostname, body DeleteNodeNetworkDNSJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetNodeNetworkDnsByKey request
+	GetNodeNetworkDnsByKey(ctx context.Context, hostname Hostname, interfaceName NetworkDnsInterfaceName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PutNodeNetworkDNSWithBody request with any body
-	PutNodeNetworkDNSWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PutNodeNetworkDnsWithBody request with any body
+	PutNodeNetworkDnsWithBody(ctx context.Context, hostname Hostname, interfaceName NetworkDnsInterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PutNodeNetworkDNS(ctx context.Context, hostname Hostname, body PutNodeNetworkDNSJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetNodeNetworkDNSByInterface request
-	GetNodeNetworkDNSByInterface(ctx context.Context, hostname Hostname, interfaceName string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PutNodeNetworkDns(ctx context.Context, hostname Hostname, interfaceName NetworkDnsInterfaceName, body PutNodeNetworkDnsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNodeNetworkInterface request
 	GetNodeNetworkInterface(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -6638,8 +6591,8 @@ func (c *Client) GetNodeMemory(ctx context.Context, hostname Hostname, reqEditor
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteNodeNetworkDNSWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteNodeNetworkDNSRequestWithBody(c.Server, hostname, contentType, body)
+func (c *Client) DeleteNodeNetworkDns(ctx context.Context, hostname Hostname, interfaceName NetworkDnsInterfaceName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteNodeNetworkDnsRequest(c.Server, hostname, interfaceName)
 	if err != nil {
 		return nil, err
 	}
@@ -6650,8 +6603,8 @@ func (c *Client) DeleteNodeNetworkDNSWithBody(ctx context.Context, hostname Host
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteNodeNetworkDNS(ctx context.Context, hostname Hostname, body DeleteNodeNetworkDNSJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteNodeNetworkDNSRequest(c.Server, hostname, body)
+func (c *Client) GetNodeNetworkDnsByKey(ctx context.Context, hostname Hostname, interfaceName NetworkDnsInterfaceName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeNetworkDnsByKeyRequest(c.Server, hostname, interfaceName)
 	if err != nil {
 		return nil, err
 	}
@@ -6662,8 +6615,8 @@ func (c *Client) DeleteNodeNetworkDNS(ctx context.Context, hostname Hostname, bo
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutNodeNetworkDNSWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutNodeNetworkDNSRequestWithBody(c.Server, hostname, contentType, body)
+func (c *Client) PutNodeNetworkDnsWithBody(ctx context.Context, hostname Hostname, interfaceName NetworkDnsInterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNodeNetworkDnsRequestWithBody(c.Server, hostname, interfaceName, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -6674,20 +6627,8 @@ func (c *Client) PutNodeNetworkDNSWithBody(ctx context.Context, hostname Hostnam
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutNodeNetworkDNS(ctx context.Context, hostname Hostname, body PutNodeNetworkDNSJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutNodeNetworkDNSRequest(c.Server, hostname, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetNodeNetworkDNSByInterface(ctx context.Context, hostname Hostname, interfaceName string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetNodeNetworkDNSByInterfaceRequest(c.Server, hostname, interfaceName)
+func (c *Client) PutNodeNetworkDns(ctx context.Context, hostname Hostname, interfaceName NetworkDnsInterfaceName, body PutNodeNetworkDnsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNodeNetworkDnsRequest(c.Server, hostname, interfaceName, body)
 	if err != nil {
 		return nil, err
 	}
@@ -10294,102 +10235,8 @@ func NewGetNodeMemoryRequest(server string, hostname Hostname) (*http.Request, e
 	return req, nil
 }
 
-// NewDeleteNodeNetworkDNSRequest calls the generic DeleteNodeNetworkDNS builder with application/json body
-func NewDeleteNodeNetworkDNSRequest(server string, hostname Hostname, body DeleteNodeNetworkDNSJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewDeleteNodeNetworkDNSRequestWithBody(server, hostname, "application/json", bodyReader)
-}
-
-// NewDeleteNodeNetworkDNSRequestWithBody generates requests for DeleteNodeNetworkDNS with any type of body
-func NewDeleteNodeNetworkDNSRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/node/%s/network/dns", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewPutNodeNetworkDNSRequest calls the generic PutNodeNetworkDNS builder with application/json body
-func NewPutNodeNetworkDNSRequest(server string, hostname Hostname, body PutNodeNetworkDNSJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPutNodeNetworkDNSRequestWithBody(server, hostname, "application/json", bodyReader)
-}
-
-// NewPutNodeNetworkDNSRequestWithBody generates requests for PutNodeNetworkDNS with any type of body
-func NewPutNodeNetworkDNSRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/node/%s/network/dns", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewGetNodeNetworkDNSByInterfaceRequest generates requests for GetNodeNetworkDNSByInterface
-func NewGetNodeNetworkDNSByInterfaceRequest(server string, hostname Hostname, interfaceName string) (*http.Request, error) {
+// NewDeleteNodeNetworkDnsRequest generates requests for DeleteNodeNetworkDns
+func NewDeleteNodeNetworkDnsRequest(server string, hostname Hostname, interfaceName NetworkDnsInterfaceName) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -10401,7 +10248,48 @@ func NewGetNodeNetworkDNSByInterfaceRequest(server string, hostname Hostname, in
 
 	var pathParam1 string
 
-	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "interfaceName", interfaceName, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "interface_name", interfaceName, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/node/%s/network/dns/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetNodeNetworkDnsByKeyRequest generates requests for GetNodeNetworkDnsByKey
+func NewGetNodeNetworkDnsByKeyRequest(server string, hostname Hostname, interfaceName NetworkDnsInterfaceName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "interface_name", interfaceName, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
 	if err != nil {
 		return nil, err
 	}
@@ -10425,6 +10313,60 @@ func NewGetNodeNetworkDNSByInterfaceRequest(server string, hostname Hostname, in
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewPutNodeNetworkDnsRequest calls the generic PutNodeNetworkDns builder with application/json body
+func NewPutNodeNetworkDnsRequest(server string, hostname Hostname, interfaceName NetworkDnsInterfaceName, body PutNodeNetworkDnsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutNodeNetworkDnsRequestWithBody(server, hostname, interfaceName, "application/json", bodyReader)
+}
+
+// NewPutNodeNetworkDnsRequestWithBody generates requests for PutNodeNetworkDns with any type of body
+func NewPutNodeNetworkDnsRequestWithBody(server string, hostname Hostname, interfaceName NetworkDnsInterfaceName, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "interface_name", interfaceName, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/node/%s/network/dns/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -13339,18 +13281,16 @@ type ClientWithResponsesInterface interface {
 	// GetNodeMemoryWithResponse request
 	GetNodeMemoryWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeMemoryResponse, error)
 
-	// DeleteNodeNetworkDNSWithBodyWithResponse request with any body
-	DeleteNodeNetworkDNSWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteNodeNetworkDNSResponse, error)
+	// DeleteNodeNetworkDnsWithResponse request
+	DeleteNodeNetworkDnsWithResponse(ctx context.Context, hostname Hostname, interfaceName NetworkDnsInterfaceName, reqEditors ...RequestEditorFn) (*DeleteNodeNetworkDnsResponse, error)
 
-	DeleteNodeNetworkDNSWithResponse(ctx context.Context, hostname Hostname, body DeleteNodeNetworkDNSJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteNodeNetworkDNSResponse, error)
+	// GetNodeNetworkDnsByKeyWithResponse request
+	GetNodeNetworkDnsByKeyWithResponse(ctx context.Context, hostname Hostname, interfaceName NetworkDnsInterfaceName, reqEditors ...RequestEditorFn) (*GetNodeNetworkDnsByKeyResponse, error)
 
-	// PutNodeNetworkDNSWithBodyWithResponse request with any body
-	PutNodeNetworkDNSWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeNetworkDNSResponse, error)
+	// PutNodeNetworkDnsWithBodyWithResponse request with any body
+	PutNodeNetworkDnsWithBodyWithResponse(ctx context.Context, hostname Hostname, interfaceName NetworkDnsInterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeNetworkDnsResponse, error)
 
-	PutNodeNetworkDNSWithResponse(ctx context.Context, hostname Hostname, body PutNodeNetworkDNSJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeNetworkDNSResponse, error)
-
-	// GetNodeNetworkDNSByInterfaceWithResponse request
-	GetNodeNetworkDNSByInterfaceWithResponse(ctx context.Context, hostname Hostname, interfaceName string, reqEditors ...RequestEditorFn) (*GetNodeNetworkDNSByInterfaceResponse, error)
+	PutNodeNetworkDnsWithResponse(ctx context.Context, hostname Hostname, interfaceName NetworkDnsInterfaceName, body PutNodeNetworkDnsJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeNetworkDnsResponse, error)
 
 	// GetNodeNetworkInterfaceWithResponse request
 	GetNodeNetworkInterfaceWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeNetworkInterfaceResponse, error)
@@ -15676,44 +15616,10 @@ func (r GetNodeMemoryResponse) ContentType() string {
 	return ""
 }
 
-type DeleteNodeNetworkDNSResponse struct {
+type DeleteNodeNetworkDnsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *DNSDeleteCollectionResponse
-	JSON400      *ErrorResponse
-	JSON401      *ErrorResponse
-	JSON403      *ErrorResponse
-	JSON500      *ErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r DeleteNodeNetworkDNSResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r DeleteNodeNetworkDNSResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r DeleteNodeNetworkDNSResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type PutNodeNetworkDNSResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *DNSUpdateCollectionResponse
+	JSON200      *NetworkDnsDeleteResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -15722,7 +15628,7 @@ type PutNodeNetworkDNSResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PutNodeNetworkDNSResponse) Status() string {
+func (r DeleteNodeNetworkDnsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -15730,7 +15636,7 @@ func (r PutNodeNetworkDNSResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PutNodeNetworkDNSResponse) StatusCode() int {
+func (r DeleteNodeNetworkDnsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -15738,17 +15644,17 @@ func (r PutNodeNetworkDNSResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r PutNodeNetworkDNSResponse) ContentType() string {
+func (r DeleteNodeNetworkDnsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetNodeNetworkDNSByInterfaceResponse struct {
+type GetNodeNetworkDnsByKeyResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *DNSConfigCollectionResponse
+	JSON200      *NetworkDnsGetResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -15757,7 +15663,7 @@ type GetNodeNetworkDNSByInterfaceResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetNodeNetworkDNSByInterfaceResponse) Status() string {
+func (r GetNodeNetworkDnsByKeyResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -15765,7 +15671,7 @@ func (r GetNodeNetworkDNSByInterfaceResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetNodeNetworkDNSByInterfaceResponse) StatusCode() int {
+func (r GetNodeNetworkDnsByKeyResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -15773,7 +15679,42 @@ func (r GetNodeNetworkDNSByInterfaceResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetNodeNetworkDNSByInterfaceResponse) ContentType() string {
+func (r GetNodeNetworkDnsByKeyResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PutNodeNetworkDnsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NetworkDnsUpdateResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PutNodeNetworkDnsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutNodeNetworkDnsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PutNodeNetworkDnsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -18559,47 +18500,39 @@ func (c *ClientWithResponses) GetNodeMemoryWithResponse(ctx context.Context, hos
 	return ParseGetNodeMemoryResponse(rsp)
 }
 
-// DeleteNodeNetworkDNSWithBodyWithResponse request with arbitrary body returning *DeleteNodeNetworkDNSResponse
-func (c *ClientWithResponses) DeleteNodeNetworkDNSWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteNodeNetworkDNSResponse, error) {
-	rsp, err := c.DeleteNodeNetworkDNSWithBody(ctx, hostname, contentType, body, reqEditors...)
+// DeleteNodeNetworkDnsWithResponse request returning *DeleteNodeNetworkDnsResponse
+func (c *ClientWithResponses) DeleteNodeNetworkDnsWithResponse(ctx context.Context, hostname Hostname, interfaceName NetworkDnsInterfaceName, reqEditors ...RequestEditorFn) (*DeleteNodeNetworkDnsResponse, error) {
+	rsp, err := c.DeleteNodeNetworkDns(ctx, hostname, interfaceName, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseDeleteNodeNetworkDNSResponse(rsp)
+	return ParseDeleteNodeNetworkDnsResponse(rsp)
 }
 
-func (c *ClientWithResponses) DeleteNodeNetworkDNSWithResponse(ctx context.Context, hostname Hostname, body DeleteNodeNetworkDNSJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteNodeNetworkDNSResponse, error) {
-	rsp, err := c.DeleteNodeNetworkDNS(ctx, hostname, body, reqEditors...)
+// GetNodeNetworkDnsByKeyWithResponse request returning *GetNodeNetworkDnsByKeyResponse
+func (c *ClientWithResponses) GetNodeNetworkDnsByKeyWithResponse(ctx context.Context, hostname Hostname, interfaceName NetworkDnsInterfaceName, reqEditors ...RequestEditorFn) (*GetNodeNetworkDnsByKeyResponse, error) {
+	rsp, err := c.GetNodeNetworkDnsByKey(ctx, hostname, interfaceName, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseDeleteNodeNetworkDNSResponse(rsp)
+	return ParseGetNodeNetworkDnsByKeyResponse(rsp)
 }
 
-// PutNodeNetworkDNSWithBodyWithResponse request with arbitrary body returning *PutNodeNetworkDNSResponse
-func (c *ClientWithResponses) PutNodeNetworkDNSWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeNetworkDNSResponse, error) {
-	rsp, err := c.PutNodeNetworkDNSWithBody(ctx, hostname, contentType, body, reqEditors...)
+// PutNodeNetworkDnsWithBodyWithResponse request with arbitrary body returning *PutNodeNetworkDnsResponse
+func (c *ClientWithResponses) PutNodeNetworkDnsWithBodyWithResponse(ctx context.Context, hostname Hostname, interfaceName NetworkDnsInterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeNetworkDnsResponse, error) {
+	rsp, err := c.PutNodeNetworkDnsWithBody(ctx, hostname, interfaceName, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePutNodeNetworkDNSResponse(rsp)
+	return ParsePutNodeNetworkDnsResponse(rsp)
 }
 
-func (c *ClientWithResponses) PutNodeNetworkDNSWithResponse(ctx context.Context, hostname Hostname, body PutNodeNetworkDNSJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeNetworkDNSResponse, error) {
-	rsp, err := c.PutNodeNetworkDNS(ctx, hostname, body, reqEditors...)
+func (c *ClientWithResponses) PutNodeNetworkDnsWithResponse(ctx context.Context, hostname Hostname, interfaceName NetworkDnsInterfaceName, body PutNodeNetworkDnsJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeNetworkDnsResponse, error) {
+	rsp, err := c.PutNodeNetworkDns(ctx, hostname, interfaceName, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePutNodeNetworkDNSResponse(rsp)
-}
-
-// GetNodeNetworkDNSByInterfaceWithResponse request returning *GetNodeNetworkDNSByInterfaceResponse
-func (c *ClientWithResponses) GetNodeNetworkDNSByInterfaceWithResponse(ctx context.Context, hostname Hostname, interfaceName string, reqEditors ...RequestEditorFn) (*GetNodeNetworkDNSByInterfaceResponse, error) {
-	rsp, err := c.GetNodeNetworkDNSByInterface(ctx, hostname, interfaceName, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetNodeNetworkDNSByInterfaceResponse(rsp)
+	return ParsePutNodeNetworkDnsResponse(rsp)
 }
 
 // GetNodeNetworkInterfaceWithResponse request returning *GetNodeNetworkInterfaceResponse
@@ -22775,76 +22708,22 @@ func ParseGetNodeMemoryResponse(rsp *http.Response) (*GetNodeMemoryResponse, err
 	return response, nil
 }
 
-// ParseDeleteNodeNetworkDNSResponse parses an HTTP response from a DeleteNodeNetworkDNSWithResponse call
-func ParseDeleteNodeNetworkDNSResponse(rsp *http.Response) (*DeleteNodeNetworkDNSResponse, error) {
+// ParseDeleteNodeNetworkDnsResponse parses an HTTP response from a DeleteNodeNetworkDnsWithResponse call
+func ParseDeleteNodeNetworkDnsResponse(rsp *http.Response) (*DeleteNodeNetworkDnsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &DeleteNodeNetworkDNSResponse{
+	response := &DeleteNodeNetworkDnsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest DNSDeleteCollectionResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON403 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePutNodeNetworkDNSResponse parses an HTTP response from a PutNodeNetworkDNSWithResponse call
-func ParsePutNodeNetworkDNSResponse(rsp *http.Response) (*PutNodeNetworkDNSResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PutNodeNetworkDNSResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest DNSUpdateCollectionResponse
+		var dest NetworkDnsDeleteResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -22890,22 +22769,83 @@ func ParsePutNodeNetworkDNSResponse(rsp *http.Response) (*PutNodeNetworkDNSRespo
 	return response, nil
 }
 
-// ParseGetNodeNetworkDNSByInterfaceResponse parses an HTTP response from a GetNodeNetworkDNSByInterfaceWithResponse call
-func ParseGetNodeNetworkDNSByInterfaceResponse(rsp *http.Response) (*GetNodeNetworkDNSByInterfaceResponse, error) {
+// ParseGetNodeNetworkDnsByKeyResponse parses an HTTP response from a GetNodeNetworkDnsByKeyWithResponse call
+func ParseGetNodeNetworkDnsByKeyResponse(rsp *http.Response) (*GetNodeNetworkDnsByKeyResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetNodeNetworkDNSByInterfaceResponse{
+	response := &GetNodeNetworkDnsByKeyResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest DNSConfigCollectionResponse
+		var dest NetworkDnsGetResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutNodeNetworkDnsResponse parses an HTTP response from a PutNodeNetworkDnsWithResponse call
+func ParsePutNodeNetworkDnsResponse(rsp *http.Response) (*PutNodeNetworkDnsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutNodeNetworkDnsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NetworkDnsUpdateResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

@@ -76,20 +76,6 @@ func ExportHostnameCollectionFromGen(
 	return hostnameCollectionFromGen(input)
 }
 
-func ExportDNSConfigCollectionFromGen(
-	input *gen.DNSConfigCollectionResponse,
-) Collection[DNSConfig] {
-	return dnsConfigCollectionFromGen(input)
-}
-
-// ExportDNSUpdateCollectionFromGen exposes the private
-// dnsUpdateCollectionFromGen for testing.
-func ExportDNSUpdateCollectionFromGen(
-	input *gen.DNSUpdateCollectionResponse,
-) Collection[DNSUpdateResult] {
-	return dnsUpdateCollectionFromGen(input)
-}
-
 func ExportAuditEntryFromGen(
 	input gen.AuditEntry,
 ) AuditEntry {
@@ -443,14 +429,6 @@ func LogEntryInfoFromGen(
 	input gen.LogEntryInfo,
 ) LogEntry {
 	return logEntryInfoFromGen(input)
-}
-
-// ExportDNSDeleteCollectionFromGen exposes the private
-// dnsDeleteCollectionFromGen for testing.
-func ExportDNSDeleteCollectionFromGen(
-	input *gen.DNSDeleteCollectionResponse,
-) Collection[DNSDeleteResult] {
-	return dnsDeleteCollectionFromGen(input)
 }
 
 // InterfaceInfoFromGen exposes the private interfaceInfoFromGen for testing.

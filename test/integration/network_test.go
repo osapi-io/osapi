@@ -49,7 +49,7 @@ func (s *NetworkSmokeSuite) TestNetworkDnsGet() {
 				"get",
 				"--target",
 				target,
-				"--interface",
+				"--interface-name",
 				"@fact.interface.primary",
 				"--json",
 			},
@@ -69,59 +69,8 @@ func (s *NetworkSmokeSuite) TestNetworkDnsGet() {
 
 				first, ok := results[0].(map[string]any)
 				s.Require().True(ok)
-				s.Contains(first, "changed")
-				s.Equal(false, first["changed"])
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			stdout, _, exitCode := runCLI(tt.args...)
-			tt.validateFunc(stdout, exitCode)
-		})
-	}
-}
-
-func (s *NetworkSmokeSuite) TestNetworkDnsUpdate() {
-	skipWriteOp(s.T(), "DNS_UPDATE")
-
-	tests := []struct {
-		name         string
-		args         []string
-		validateFunc func(stdout string, exitCode int)
-	}{
-		{
-			name: "returns dns update results",
-			args: []string{
-				"client",
-				"node",
-				"network",
-				"dns",
-				"update",
-				"--target",
-				target,
-				"--interface",
-				"@fact.interface.primary",
-				"--servers",
-				"1.1.1.1,8.8.8.8",
-				"--search-domains",
-				"example.com",
-				"--json",
-			},
-			validateFunc: func(
-				stdout string,
-				exitCode int,
-			) {
-				s.Require().Equal(0, exitCode)
-
-				var result map[string]any
-				err := parseJSON(stdout, &result)
-				s.Require().NoError(err)
-
-				results, ok := result["results"].([]any)
-				s.Require().True(ok)
-				s.GreaterOrEqual(len(results), 1)
+				s.Contains(first, "servers")
+				s.Contains(first, "search_domains")
 			},
 		},
 	}

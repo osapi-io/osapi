@@ -31,7 +31,6 @@ import (
 	"github.com/osapi-io/osapi/internal/exec"
 	dockerProv "github.com/osapi-io/osapi/internal/provider/container/docker"
 	fileProv "github.com/osapi-io/osapi/internal/provider/file"
-	"github.com/osapi-io/osapi/internal/provider/network/netplan/dns"
 	ifaceProv "github.com/osapi-io/osapi/internal/provider/network/netplan/iface"
 	routeProv "github.com/osapi-io/osapi/internal/provider/network/netplan/route"
 	"github.com/osapi-io/osapi/internal/provider/network/ping"
@@ -86,27 +85,6 @@ func (e hostEnv) memory() memory.Provider {
 
 func (e hostEnv) load() load.Provider {
 	return load.New()
-}
-
-func (e hostEnv) dns() dns.Provider {
-	switch e.platform {
-	case "debian":
-		if e.container {
-			return dns.NewDebianDockerProvider(e.log, e.fs)
-		}
-		return dns.NewDebianProvider(
-			e.log,
-			e.fs,
-			e.fileState,
-			e.fileStateBucket,
-			e.exec,
-			e.hostname,
-		)
-	case "darwin":
-		return dns.NewDarwinProvider(e.log, e.exec)
-	default:
-		return dns.NewLinuxProvider()
-	}
 }
 
 func (e hostEnv) ping() ping.Provider {

@@ -1,46 +1,58 @@
 # Delete
 
-Delete the DNS configuration.
+Drop the DNS resolvers osapi set on an interface.
 
-The agent removes the `/etc/netplan/osapi-dns.yaml` file and runs
-`netplan apply`.
+Removes the interface's netplan file and applies what is left. An interface
+osapi set nothing on does not change.
 
 ```bash
-osapi client node network dns delete
+osapi client node network dns delete [flags]
 ```
 
 ## Examples
 
 ```bash
-osapi client node network dns delete \
-  --interface eth0
-osapi client node network dns delete \
-  --interface eth0 \
-  --target _all
-osapi client node network dns delete \
-  --interface eth0 --json
+# An interface osapi set
+osapi client node network dns delete --target web-01 --interface-name eth0
+
+# An interface osapi set nothing on
+osapi client node network dns delete --target web-01 --interface-name eth0
 ```
 
 ## Result
 
-If osapi does not manage a DNS configuration, the command returns
-`changed: false`.
+With the default settings, each example does this on the host:
+
+| Example                | On the host                                                      |
+| ---------------------- | ---------------------------------------------------------------- |
+| An interface osapi set | removes `/etc/netplan/osapi-dns-eth0.yaml`; runs `netplan apply` |
+
+The command fails in these cases:
+
+| Call                                       | Flags                            | Fails with    |
+| ------------------------------------------ | -------------------------------- | ------------- |
+| An interface name that is not alphanumeric | `--interface-name "eth0;reboot"` | InterfaceName |
+
+## Permission
+
+It needs the `network:write` permission. `osapi token roles get --name <role>`
+shows what a role grants.
 
 ## Flags
 
-| Flag          | Description                              | Default |
-| ------------- | ---------------------------------------- | ------- |
-| `--interface` | Name of the network interface (required) |         |
+| Flag               | Description                                                                       | Default |
+| ------------------ | --------------------------------------------------------------------------------- | ------- |
+| `--interface-name` | The interface, such as eth0, or a fact such as @fact.interface.primary (required) |         |
+| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev)                            | `_all`  |
 
 ## Global flags
 
-| Flag               | Description                                            | Default                 |
-| ------------------ | ------------------------------------------------------ | ----------------------- |
-| `-d, --debug`      | Enable or disable debug mode                           |                         |
-| `-j, --json`       | Enable JSON output                                     |                         |
-| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
-| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
-| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+| Flag               | Description                    | Default                 |
+| ------------------ | ------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode   |                         |
+| `-j, --json`       | Enable JSON output             |                         |
+| `-f, --osapi-file` | Path to config file            | `/etc/osapi/osapi.yaml` |
+| `--url`            | URL the client will connect to | `http://0.0.0.0:8080`   |
 
 [Output](../../../../output.md) tells how the result is printed, and what
 `--json` gives.

@@ -148,10 +148,7 @@ const ()
 
 // Network operations.
 const (
-	OperationNetworkDNSGet    = client.OpNetworkDNSGet
-	OperationNetworkDNSUpdate = client.OpNetworkDNSUpdate
-	OperationNetworkDNSDelete = client.OpNetworkDNSDelete
-	OperationNetworkPingDo    = client.OpNetworkPingDo
+	OperationNetworkPingDo = client.OpNetworkPingDo
 )
 
 // Command operations — execute arbitrary commands on agents.
@@ -358,16 +355,6 @@ type QueueStats struct {
 // NodeHostnameGetData represents data for hostname retrieval
 type NodeHostnameGetData struct {
 	// No additional data needed for hostname retrieval
-}
-
-// NetworkDNSUpdateData represents data for DNS configuration changes
-type NetworkDNSUpdateData struct {
-	// DNSServers is a list of DNS server IP addresses (IPv4 or IPv6)
-	DNSServers []string `json:"dns_servers"`
-	// SearchDomains is a list of search domains for DNS resolution
-	SearchDomains []string `json:"search_domains"`
-	// InterfaceName is the name of the network interface to apply DNS settings to
-	InterfaceName string `json:"interface_name"`
 }
 
 // NetworkPingExecuteData represents data for ping operations

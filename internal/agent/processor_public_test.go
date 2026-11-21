@@ -36,8 +36,6 @@ import (
 	"github.com/osapi-io/osapi/internal/job/mocks"
 	commandMocks "github.com/osapi-io/osapi/internal/provider/command/mocks"
 	fileMocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
-	"github.com/osapi-io/osapi/internal/provider/network/netplan/dns"
-	dnsMocks "github.com/osapi-io/osapi/internal/provider/network/netplan/dns/mocks"
 	"github.com/osapi-io/osapi/internal/provider/network/ping"
 	pingMocks "github.com/osapi-io/osapi/internal/provider/network/ping/mocks"
 	diskMocks "github.com/osapi-io/osapi/internal/provider/node/disk/mocks"
@@ -77,18 +75,6 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 	memMock := memoryMocks.NewDefaultMockProvider(s.mockCtrl)
 	loadMock := loadMocks.NewDefaultMockProvider(s.mockCtrl)
 
-	// Use plain DNS mock to avoid hardcoded interface expectations
-	dnsMock := dnsMocks.NewPlainMockProvider(s.mockCtrl)
-	// Set up expectations for eth0 interface used in tests
-	dnsMock.EXPECT().GetResolvConfByInterface(gomock.Any(), "eth0").Return(&dns.GetResult{
-		DNSServers:    []string{"192.168.1.1", "8.8.8.8"},
-		SearchDomains: []string{"example.com"},
-	}, nil).AnyTimes()
-	dnsMock.EXPECT().
-		UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-		Return(&dns.UpdateResult{Changed: true}, nil).
-		AnyTimes()
-
 	// Use plain ping mock to avoid hardcoded address expectations
 	pingMock := pingMocks.NewPlainMockProvider(s.mockCtrl)
 	// Set up expectations for addresses used in tests
@@ -116,7 +102,6 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 		diskProvider:    diskMock,
 		memoryProvider:  memMock,
 		loadProvider:    loadMock,
-		dnsProvider:     dnsMock,
 		pingProvider:    pingMock,
 		commandProvider: commandMock,
 		fileProvider:    fMock,
@@ -134,46 +119,6 @@ func (s *ProcessorPublicTestSuite) TestProcessJobOperation() {
 		jobRequest   job.Request
 		validateFunc func(json.RawMessage, error)
 	}{
-		{
-			name: "successful network DNS query operation",
-			jobRequest: job.Request{
-				Type:      job.TypeQuery,
-				Category:  "network",
-				Operation: "dns.get",
-				Data:      json.RawMessage(`{"interface": "eth0"}`),
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Equal(false, response["changed"])
-			},
-		},
-		{
-			name: "successful network DNS modify operation",
-			jobRequest: job.Request{
-				Type:      job.TypeModify,
-				Category:  "network",
-				Operation: "dns.update",
-				Data: json.RawMessage(
-					`{"servers": ["8.8.8.8"], "search_domains": ["example.com"], "interface": "eth0"}`,
-				),
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Contains(response, "success")
-				s.Contains(response, "message")
-				s.Equal(true, response["changed"])
-			},
-		},
 		{
 			name: "successful network ping operation",
 			jobRequest: job.Request{
@@ -350,20 +295,6 @@ func (s *ProcessorPublicTestSuite) TestProcessJobOperation() {
 				s.Nil(result)
 			},
 		},
-		{
-			name: "network DNS invalid data format",
-			jobRequest: job.Request{
-				Type:      job.TypeQuery,
-				Category:  "network",
-				Operation: "dns.get",
-				Data:      json.RawMessage(`invalid json`),
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.Error(err)
-				s.Contains(err.Error(), "failed to parse DNS data")
-				s.Nil(result)
-			},
-		},
 	}
 
 	for _, tt := range tests {
@@ -385,34 +316,6 @@ func (s *ProcessorPublicTestSuite) TestNetworkOperations() {
 		createAgent  func() *agent.Agent
 		validateFunc func(json.RawMessage, error)
 	}{
-		{
-			name:      "DNS query with interface",
-			operation: "dns.get",
-			data:      `{"interface": "eth0"}`,
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Equal(false, response["changed"])
-			},
-		},
-		{
-			name:      "DNS query without interface",
-			operation: "dns.get",
-			data:      `{}`,
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Equal(false, response["changed"])
-			},
-		},
 		{
 			name:      "ping with valid address",
 			operation: "ping.do",
@@ -446,64 +349,6 @@ func (s *ProcessorPublicTestSuite) TestNetworkOperations() {
 			},
 		},
 		{
-			name:      "DNS get error",
-			operation: "dns.get",
-			jobType:   job.TypeQuery,
-			data:      `{"interface": "eth0"}`,
-			createAgent: func() *agent.Agent {
-				dnsMock := dnsMocks.NewPlainMockProvider(s.mockCtrl)
-				dnsMock.EXPECT().
-					GetResolvConfByInterface(gomock.Any(), "eth0").
-					Return(nil, errors.New("DNS lookup failed"))
-				return newTestAgent(newTestAgentParams{
-					appFs:           memfs.New(),
-					appConfig:       config.Config{},
-					jobClient:       s.mockJobClient,
-					hostProvider:    hostMocks.NewPlainMockProvider(s.mockCtrl),
-					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memoryProvider:  memoryMocks.NewPlainMockProvider(s.mockCtrl),
-					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
-					dnsProvider:     dnsMock,
-					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
-					commandProvider: commandMocks.NewPlainMockProvider(s.mockCtrl),
-				})
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.Error(err)
-				s.Contains(err.Error(), "DNS lookup failed")
-				s.Nil(result)
-			},
-		},
-		{
-			name:      "DNS update error",
-			operation: "dns.update",
-			jobType:   job.TypeModify,
-			data:      `{"servers": ["8.8.8.8"], "search_domains": ["example.com"], "interface": "eth0"}`,
-			createAgent: func() *agent.Agent {
-				dnsMock := dnsMocks.NewPlainMockProvider(s.mockCtrl)
-				dnsMock.EXPECT().
-					UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(nil, errors.New("DNS update failed"))
-				return newTestAgent(newTestAgentParams{
-					appFs:           memfs.New(),
-					appConfig:       config.Config{},
-					jobClient:       s.mockJobClient,
-					hostProvider:    hostMocks.NewPlainMockProvider(s.mockCtrl),
-					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memoryProvider:  memoryMocks.NewPlainMockProvider(s.mockCtrl),
-					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
-					dnsProvider:     dnsMock,
-					pingProvider:    pingMocks.NewPlainMockProvider(s.mockCtrl),
-					commandProvider: commandMocks.NewPlainMockProvider(s.mockCtrl),
-				})
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.Error(err)
-				s.Contains(err.Error(), "DNS update failed")
-				s.Nil(result)
-			},
-		},
-		{
 			name:      "ping provider error",
 			operation: "ping.do",
 			jobType:   job.TypeQuery,
@@ -521,7 +366,6 @@ func (s *ProcessorPublicTestSuite) TestNetworkOperations() {
 					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
 					memoryProvider:  memoryMocks.NewPlainMockProvider(s.mockCtrl),
 					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
-					dnsProvider:     dnsMocks.NewPlainMockProvider(s.mockCtrl),
 					pingProvider:    pingMock,
 					commandProvider: commandMocks.NewPlainMockProvider(s.mockCtrl),
 				})
@@ -588,13 +432,6 @@ func (s *ProcessorPublicTestSuite) TestProviderFactoryMethods() {
 		{
 			name:        "getLoadProvider",
 			getProvider: func() interface{} { return agent.ExportGetLoadProvider(s.testAgent) },
-			validateFunc: func(provider interface{}) {
-				s.NotNil(provider)
-			},
-		},
-		{
-			name:        "getDNSProvider",
-			getProvider: func() interface{} { return agent.ExportGetDNSProvider(s.testAgent) },
 			validateFunc: func(provider interface{}) {
 				s.NotNil(provider)
 			},

@@ -40,7 +40,7 @@ import (
 	agentmocks "github.com/osapi-io/osapi/internal/agent/mocks"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/mocks"
-	dnsMocks "github.com/osapi-io/osapi/internal/provider/network/netplan/dns/mocks"
+	pingMocks "github.com/osapi-io/osapi/internal/provider/network/ping/mocks"
 	diskMocks "github.com/osapi-io/osapi/internal/provider/node/disk/mocks"
 	hostMocks "github.com/osapi-io/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/osapi-io/osapi/internal/provider/node/load/mocks"
@@ -209,14 +209,14 @@ func (s *SpanPublicTestSuite) TestJobProcessJoinsTheTrace() {
 		diskProvider:   diskMocks.NewDefaultMockProvider(ctrl),
 		memoryProvider: memoryMocks.NewDefaultMockProvider(ctrl),
 		loadProvider:   loadMocks.NewDefaultMockProvider(ctrl),
-		dnsProvider:    dnsMocks.NewDefaultMockProvider(ctrl),
+		pingProvider:   pingMocks.NewDefaultMockProvider(ctrl),
 	})
 	agent.ExportIdentityAttrs(a, "web-01", "abc123", nil)
 
 	jobs.EXPECT().HasJobResponse(gomock.Any(), "trace-job", gomock.Any()).Return(false, nil)
 	jobs.EXPECT().GetJobData(gomock.Any(), "jobs.trace-job").Return([]byte(`{
 		"id": "trace-job",
-		"operation": {"type": "network.dns.get", "data": {"interface": "wlp0s20f3"}}
+		"operation": {"type": "network.ping.do", "data": {"address": "1.1.1.1"}}
 	}`), nil)
 	jobs.EXPECT().
 		WriteStatusEvent(gomock.Any(), "trace-job", gomock.Any(), gomock.Any(), gomock.Any()).
@@ -247,5 +247,5 @@ func (s *SpanPublicTestSuite) TestJobProcessJoinsTheTrace() {
 	s.Equal("web-01", got["osapi.agent.hostname"])
 	s.Equal("abc123", got["osapi.agent.machine_id"])
 	s.Equal("completed", got["job.status"])
-	s.Equal("dns.get", got["job.operation"])
+	s.Equal("ping.do", got["job.operation"])
 }

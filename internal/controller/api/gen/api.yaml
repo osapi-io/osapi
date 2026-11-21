@@ -71,9 +71,6 @@ tags:
   - name: Network_Management_API_network_operations
     x-displayName: Node/Network
     description: Network operations on a target node.
-  - name: Network_Management_API_dns_operations
-    x-displayName: Node/Network/DNS
-    description: DNS configuration operations on a target node.
   - name: Network_Management_API_interface_operations
     x-displayName: Node/Network/Interface
     description: Network interface configuration on a target node.
@@ -113,6 +110,9 @@ tags:
   - description: Get the memory usage of target hosts
     name: Memory_API_memory_operations
     x-displayName: Node/Memory
+  - description: The DNS resolvers of each interface of the host
+    name: Dns_API_network_dns_operations
+    x-displayName: Node/Dns
   - description: Get the operating system of target hosts
     name: Os_API_os_operations
     x-displayName: Node/Os
@@ -3156,174 +3156,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/network/dns/{interfaceName}:
-    servers: []
-    get:
-      summary: List DNS servers
-      description: >
-        Retrieve the list of currently configured DNS servers for a specific
-        network interface.
-      tags:
-        - Network_Management_API_dns_operations
-      operationId: GetNodeNetworkDNSByInterface
-      security:
-        - BearerAuth:
-            - network:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - name: interfaceName
-          in: path
-          required: true
-          x-oapi-codegen-extra-tags:
-            validate: required,alphanum_or_fact
-          schema:
-            type: string
-          description: >
-            The name of the network interface to retrieve DNS configuration for.
-            Must only contain letters and numbers.
-      responses:
-        '200':
-          description: List of DNS servers.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DNSConfigCollectionResponse'
-        '400':
-          description: Invalid interface name provided.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: The host has no interface with that name.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error retrieving DNS servers.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/network/dns:
-    servers: []
-    put:
-      summary: Update DNS servers
-      description: Update the system's DNS server configuration.
-      tags:
-        - Network_Management_API_dns_operations
-      operationId: PutNodeNetworkDNS
-      security:
-        - BearerAuth:
-            - network:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DNSConfigUpdateRequest'
-      responses:
-        '200':
-          description: DNS servers update successfully accepted.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DNSUpdateCollectionResponse'
-        '400':
-          description: Invalid input.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: The host has no interface with that name.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error updating DNS servers.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    delete:
-      summary: Delete DNS configuration
-      description: >
-        Delete the managed DNS configuration from the target node, restoring the
-        system default.
-      tags:
-        - Network_Management_API_dns_operations
-      operationId: DeleteNodeNetworkDNS
-      security:
-        - BearerAuth:
-            - network:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DNSDeleteRequest'
-      responses:
-        '200':
-          description: DNS configuration deleted.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DNSDeleteCollectionResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error deleting DNS configuration.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /api/node/{hostname}/network/interface:
     servers: []
     get:
@@ -6002,6 +5834,173 @@ paths:
       summary: Get the memory usage of the host
       tags:
         - Memory_API_memory_operations
+  /api/node/{hostname}/network/dns/{interface_name}:
+    servers: []
+    delete:
+      description: >-
+        Removes the interface's netplan file and applies what is left. An
+        interface osapi set nothing on does not change.
+      operationId: DeleteNodeNetworkDns
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/NetworkDnsInterface_name'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkDnsDeleteResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host has no dns with that interface_name.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - network:write
+      summary: Drop the DNS resolvers osapi set on an interface
+      tags:
+        - Dns_API_network_dns_operations
+    get:
+      description: >-
+        Reads the servers and the search domains of the interface: resolvectl on
+        Linux, with resolv.conf on a host that has no resolvers per interface,
+        such as a container, and scutil on macOS.
+      operationId: GetNodeNetworkDnsByKey
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/NetworkDnsInterface_name'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkDnsGetResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host has no dns with that interface_name.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - network:read
+      summary: Get the DNS resolvers of an interface
+      tags:
+        - Dns_API_network_dns_operations
+    put:
+      description: >-
+        Writes a netplan file of the interface's own,
+        /etc/netplan/osapi-dns-<interface>.yaml, under the netplan definition
+        that matches the interface, and applies it. A definition that matches
+        several interfaces, such as cloud-init's all for en*, gives each of them
+        the resolvers. An empty list keeps the interface's servers or domains.
+        override_dhcp drops the servers DHCP gives. It runs on the Debian
+        family, and elsewhere, and in a container, reports skipped.
+      operationId: PutNodeNetworkDns
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/NetworkDnsInterface_name'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NetworkDnsUpdateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkDnsUpdateResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host has no dns with that interface_name.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - network:write
+      summary: Set the DNS resolvers of an interface
+      tags:
+        - Dns_API_network_dns_operations
   /api/node/{hostname}/os:
     servers: []
     get:
@@ -9141,171 +9140,6 @@ components:
             $ref: '#/components/schemas/PingResponse'
       required:
         - results
-    DNSConfigResponse:
-      type: object
-      properties:
-        hostname:
-          type: string
-          description: The hostname of the agent that served this config.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        servers:
-          type: array
-          description: List of configured DNS servers.
-          items:
-            type: string
-            description: IPv4 or IPv6 address of the DNS server.
-        search_domains:
-          type: array
-          description: List of search domains.
-          items:
-            type: string
-        changed:
-          type: boolean
-          description: Whether the operation modified system state.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    DNSConfigCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/DNSConfigResponse'
-      required:
-        - results
-    DNSUpdateResultItem:
-      type: object
-      properties:
-        hostname:
-          type: string
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-        changed:
-          type: boolean
-          description: Whether the DNS configuration was actually modified.
-        error:
-          type: string
-      required:
-        - hostname
-        - status
-    DNSUpdateCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/DNSUpdateResultItem'
-      required:
-        - results
-    DNSConfigUpdateRequest:
-      type: object
-      properties:
-        servers:
-          type: array
-          x-oapi-codegen-extra-tags:
-            validate: required_without=SearchDomains,omitempty,dive,ip,min=1
-          description: New list of DNS servers to configure.
-          items:
-            type: string
-            description: IPv4 or IPv6 address of the DNS server.
-        search_domains:
-          type: array
-          x-oapi-codegen-extra-tags:
-            validate: required_without=Servers,omitempty,dive,hostname,min=1
-          description: New list of search domains to configure.
-          items:
-            type: string
-        interface_name:
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: required,alphanum_or_fact
-          description: >
-            The name of the network interface to apply DNS configuration to.
-            Accepts alphanumeric names or @fact. references.
-        override_dhcp:
-          type: boolean
-          x-oapi-codegen-extra-tags:
-            validate: omitempty
-          description: >
-            When true, disables DHCP-provided DNS servers so only the configured
-            servers are used. When false or omitted, DHCP DNS servers are merged
-            alongside the configured ones (default Netplan behavior).
-      required:
-        - interface_name
-    DNSDeleteRequest:
-      type: object
-      properties:
-        interface_name:
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: required,alphanum_or_fact
-          description: |
-            The name of the network interface to delete DNS configuration from.
-      required:
-        - interface_name
-    DNSDeleteResultItem:
-      type: object
-      properties:
-        hostname:
-          type: string
-          description: Hostname of the agent that processed this operation.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        changed:
-          type: boolean
-          description: Whether the DNS configuration was actually modified.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    DNSDeleteCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/DNSDeleteResultItem'
-      required:
-        - results
     InterfaceInfo:
       type: object
       description: Information about a network interface.
@@ -11225,6 +11059,140 @@ components:
         - free
         - used
       type: object
+    NetworkDnsDeleteResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/NetworkDnsResult'
+          type: array
+      required:
+        - results
+      type: object
+    NetworkDnsEntry:
+      properties:
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        search_domains:
+          description: The search domains
+          items:
+            type: string
+          type: array
+        servers:
+          description: The DNS servers
+          items:
+            type: string
+          type: array
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
+      type: object
+    NetworkDnsGetResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/NetworkDnsEntry'
+          type: array
+      required:
+        - results
+      type: object
+    NetworkDnsResult:
+      properties:
+        changed:
+          description: Whether the host changed
+          type: boolean
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        interface_name:
+          description: The interface
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
+      type: object
+    NetworkDnsUpdateRequest:
+      properties:
+        override_dhcp:
+          description: 'Use only these servers: drop the ones DHCP gives'
+          type: boolean
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
+        search_domains:
+          description: The search domains; the interface's own when empty
+          items:
+            format: hostname
+            type: string
+          maxItems: 16
+          type: array
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,max=16,dive,hostname
+        servers:
+          description: The DNS servers, IPv4 or IPv6; the interface's own when empty
+          items:
+            format: ip
+            type: string
+          maxItems: 16
+          type: array
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,max=16,dive,ip
+      type: object
+    NetworkDnsUpdateResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/NetworkDnsResult'
+          type: array
+      required:
+        - results
+      type: object
     OsEntry:
       properties:
         error:
@@ -12060,6 +12028,15 @@ components:
         type: string
         minLength: 1
         pattern: ^SHA256:[A-Za-z0-9+/]+=*$
+    NetworkDnsInterface_name:
+      description: The interface, such as eth0, or a fact such as @fact.interface.primary
+      in: path
+      name: interface_name
+      required: true
+      schema:
+        type: string
+      x-oapi-codegen-extra-tags:
+        validate: required,alphanum_or_fact
     PackageName:
       description: The package to remove, such as curl
       in: path
@@ -12133,7 +12110,6 @@ x-tagGroups:
   - name: Network Management API
     tags:
       - Network_Management_API_network_operations
-      - Network_Management_API_dns_operations
       - Network_Management_API_interface_operations
       - Network_Management_API_route_operations
   - name: NTP Management API
@@ -12167,6 +12143,9 @@ x-tagGroups:
   - name: Memory API
     tags:
       - Memory_API_memory_operations
+  - name: Dns API
+    tags:
+      - Dns_API_network_dns_operations
   - name: Os API
     tags:
       - Os_API_os_operations
