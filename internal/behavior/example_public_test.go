@@ -92,6 +92,17 @@ func (s *ExamplePublicTestSuite) TestHostOptions() {
 			want:   behavior.Example{Platforms: []string{behavior.PlatformDarwin, "debian"}},
 		},
 		{
+			name:   "when Links gives a symbolic link",
+			option: behavior.Links("/etc/localtime", "/usr/share/zoneinfo/UTC"),
+			want: behavior.Example{Given: []behavior.Given{
+				{
+					Kind:    behavior.GivenLink,
+					Path:    "/etc/localtime",
+					Content: "/usr/share/zoneinfo/UTC",
+				},
+			}},
+		},
+		{
 			name:   "when Prints gives a command's output",
 			option: behavior.Prints("sysctl -n a", "1"),
 			want: behavior.Example{Given: []behavior.Given{

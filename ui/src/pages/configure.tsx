@@ -116,7 +116,7 @@ import {
 import {
   getNodeTimezone,
   putNodeTimezone,
-} from "@/sdk/gen/timezone-management-api-timezone-operations/timezone-management-api-timezone-operations";
+} from "@/sdk/gen/timezone-api-timezone-operations/timezone-api-timezone-operations";
 import {
   getNodeHostname,
   putNodeHostname,

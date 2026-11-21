@@ -40,7 +40,6 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/node/memory"
 	ntpProv "github.com/osapi-io/osapi/internal/provider/node/ntp"
 	powerProv "github.com/osapi-io/osapi/internal/provider/node/power"
-	timezoneProv "github.com/osapi-io/osapi/internal/provider/node/timezone"
 	cronProv "github.com/osapi-io/osapi/internal/provider/schedule/cron"
 	"github.com/osapi-io/osapi/internal/telemetry/process"
 )
@@ -48,29 +47,28 @@ import (
 // newTestAgentParams holds all provider dependencies for building a test agent.
 // This mirrors the old agent.New() parameter list, making test migration mechanical.
 type newTestAgentParams struct {
-	appFs            avfs.VFS
-	appConfig        config.Config
-	logger           *slog.Logger
-	jobClient        client.JobClient
-	streamName       string
-	hostProvider     nodeHost.Provider
-	diskProvider     disk.Provider
-	memoryProvider   memory.Provider
-	loadProvider     load.Provider
-	dnsProvider      dns.Provider
-	pingProvider     ping.Provider
-	commandProvider  command.Provider
-	fileProvider     fileProv.Provider
-	dockerProvider   dockerProv.Provider
-	cronProvider     cronProv.Provider
-	ntpProvider      ntpProv.Provider
-	timezoneProvider timezoneProv.Provider
-	powerProvider    powerProv.Provider
-	processProvider  process.Provider
-	execManager      exec.Manager
-	registryBucket   string
-	factsBucket      string
-	natsClient       agent.NATSClient
+	appFs           avfs.VFS
+	appConfig       config.Config
+	logger          *slog.Logger
+	jobClient       client.JobClient
+	streamName      string
+	hostProvider    nodeHost.Provider
+	diskProvider    disk.Provider
+	memoryProvider  memory.Provider
+	loadProvider    load.Provider
+	dnsProvider     dns.Provider
+	pingProvider    ping.Provider
+	commandProvider command.Provider
+	fileProvider    fileProv.Provider
+	dockerProvider  dockerProv.Provider
+	cronProvider    cronProv.Provider
+	ntpProvider     ntpProv.Provider
+	powerProvider   powerProv.Provider
+	processProvider process.Provider
+	execManager     exec.Manager
+	registryBucket  string
+	factsBucket     string
+	natsClient      agent.NATSClient
 }
 
 // newTestAgent builds a ProviderRegistry from the supplied providers and
@@ -95,7 +93,6 @@ func newTestAgent(
 		"node",
 		agent.NewNodeProcessor(
 			p.ntpProvider,
-			p.timezoneProvider,
 			p.powerProvider,
 			nil,
 			nil,

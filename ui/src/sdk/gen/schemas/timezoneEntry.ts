@@ -6,18 +6,15 @@
  */
 import type { TimezoneEntryStatus } from './timezoneEntryStatus';
 
-/**
- * Timezone information for a single host.
- */
 export interface TimezoneEntry {
-  /** Hostname of the agent that reported this entry. */
+  /** Error message if the agent failed. */
+  error?: string;
+  /** Hostname of the agent that produced this result. */
   hostname: string;
   /** The status of the operation for this host. */
   status: TimezoneEntryStatus;
-  /** Current timezone name. */
+  /** The IANA name of the timezone, such as America/New_York */
   timezone?: string;
-  /** Current UTC offset (e.g., "-05:00"). */
+  /** The offset from UTC now, such as -05:00 */
   utc_offset?: string;
-  /** Error message if the agent failed. */
-  error?: string;
 }

@@ -60,7 +60,6 @@ func (s *ProcessorServicePublicTestSuite) newNodeProcessor(
 		nil,
 		nil,
 		nil,
-		nil,
 		serviceProvider,
 		slog.Default(),
 	)

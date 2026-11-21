@@ -117,7 +117,6 @@ func (s *ProcessorPowerPublicTestSuite) TestProcessPowerOperation() {
 
 			processor := agent.NewNodeProcessor(
 				nil,
-				nil,
 				powerProvider,
 				nil,
 				nil,
@@ -240,7 +239,6 @@ func (s *ProcessorPowerPublicTestSuite) TestProcessPowerReboot() {
 		s.Run(tt.name, func() {
 			processor := agent.NewNodeProcessor(
 				nil,
-				nil,
 				tt.setupMock(),
 				nil,
 				nil,
@@ -362,7 +360,6 @@ func (s *ProcessorPowerPublicTestSuite) TestProcessPowerShutdown() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := agent.NewNodeProcessor(
-				nil,
 				nil,
 				tt.setupMock(),
 				nil,

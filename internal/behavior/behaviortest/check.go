@@ -235,6 +235,11 @@ func prepare(
 			_ = h.FS.MkdirAll(filepath.Dir(g.Path), 0o755)
 			_ = h.FS.WriteFile(g.Path, []byte(g.Content), 0o644)
 			h.setup = false
+		case behavior.GivenLink:
+			h.setup = true
+			_ = h.FS.MkdirAll(filepath.Dir(g.Path), 0o755)
+			_ = h.FS.Symlink(g.Content, g.Path)
+			h.setup = false
 		case behavior.GivenOutput:
 			if g.After != "" {
 				h.later = append(h.later, g)

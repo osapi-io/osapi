@@ -32,7 +32,7 @@ export * from './service-management-api-service-operations/service-management-ap
 export * from './status-api-status-operations/status-api-status-operations';
 export * from './sysctl-api-sysctl-operations/sysctl-api-sysctl-operations';
 export * from './telemetry-api-telemetry/telemetry-api-telemetry';
-export * from './timezone-management-api-timezone-operations/timezone-management-api-timezone-operations';
+export * from './timezone-api-timezone-operations/timezone-api-timezone-operations';
 export * from './uptime-api-uptime-operations/uptime-api-uptime-operations';
 export * from './user-and-group-management-api-group-operations/user-and-group-management-api-group-operations';
 export * from './user-and-group-management-api-user-operations/user-and-group-management-api-user-operations';

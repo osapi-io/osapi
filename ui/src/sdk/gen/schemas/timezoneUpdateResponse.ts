@@ -4,10 +4,10 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { TimezoneMutationResult } from './timezoneMutationResult';
+import type { TimezoneResult } from './timezoneResult';
 
 export interface TimezoneUpdateResponse {
   /** The job ID used to process this request. */
   job_id?: string;
-  results: TimezoneMutationResult[];
+  results: TimezoneResult[];
 }

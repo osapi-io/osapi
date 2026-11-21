@@ -46,7 +46,6 @@ import (
 	powerProv "github.com/osapi-io/osapi/internal/provider/node/power"
 	processProv "github.com/osapi-io/osapi/internal/provider/node/process"
 	serviceProv "github.com/osapi-io/osapi/internal/provider/node/service"
-	timezoneProv "github.com/osapi-io/osapi/internal/provider/node/timezone"
 	userProv "github.com/osapi-io/osapi/internal/provider/node/user"
 	cronProv "github.com/osapi-io/osapi/internal/provider/schedule/cron"
 )
@@ -176,21 +175,6 @@ func (e hostEnv) ntp() ntpProv.Provider {
 		return ntpProv.NewDarwinProvider()
 	default:
 		return ntpProv.NewLinuxProvider()
-	}
-}
-
-func (e hostEnv) timezone() timezoneProv.Provider {
-	switch e.platform {
-	case "debian":
-		if e.container {
-			e.log.Info("running in container, timezone operations disabled")
-			return timezoneProv.NewLinuxProvider()
-		}
-		return timezoneProv.NewDebianProvider(e.log, e.exec)
-	case "darwin":
-		return timezoneProv.NewDarwinProvider()
-	default:
-		return timezoneProv.NewLinuxProvider()
 	}
 }
 

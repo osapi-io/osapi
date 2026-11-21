@@ -48,10 +48,10 @@ type TimezoneUpdateOpts struct {
 	Timezone string
 }
 
-// timezoneCollectionFromGen converts a gen.TimezoneCollectionResponse
+// timezoneCollectionFromGen converts a gen.TimezoneGetResponse
 // to a Collection[TimezoneResult].
 func timezoneCollectionFromGen(
-	g *gen.TimezoneCollectionResponse,
+	g *gen.TimezoneGetResponse,
 ) Collection[TimezoneResult] {
 	results := make([]TimezoneResult, 0, len(g.Results))
 	for _, r := range g.Results {

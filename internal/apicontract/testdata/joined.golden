@@ -66,7 +66,7 @@ op GET /api/node/{hostname}/service/{name} id=GetNodeServiceByName tags=[Service
 op GET /api/node/{hostname}/status id=GetNodeStatus tags=[Status_API_status_operations] auth=BearerAuth:status:read params=[path:hostname!:string] body= responses=[200=application/json:StatusGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/sysctl id=GetNodeSysctl tags=[Sysctl_API_sysctl_operations] auth=BearerAuth:sysctl:read params=[path:hostname!:string query:prefix:string] body= responses=[200=application/json:SysctlCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/sysctl/{key} id=GetNodeSysctlByKey tags=[Sysctl_API_sysctl_operations] auth=BearerAuth:sysctl:read params=[path:hostname!:string path:key!:string] body= responses=[200=application/json:SysctlGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op GET /api/node/{hostname}/timezone id=GetNodeTimezone tags=[Timezone_Management_API_timezone_operations] auth=BearerAuth:timezone:read params=[path:hostname!:string] body= responses=[200=application/json:TimezoneCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op GET /api/node/{hostname}/timezone id=GetNodeTimezone tags=[Timezone_API_timezone_operations] auth=BearerAuth:timezone:read params=[path:hostname!:string] body= responses=[200=application/json:TimezoneGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/uptime id=GetNodeUptime tags=[Uptime_API_uptime_operations] auth=BearerAuth:uptime:read params=[path:hostname!:string] body= responses=[200=application/json:UptimeGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/user id=GetNodeUser tags=[User_and_Group_Management_API_user_operations] auth=BearerAuth:user:read params=[path:hostname!:string] body= responses=[200=application/json:UserCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/user/{name} id=GetNodeUserByName tags=[User_and_Group_Management_API_user_operations] auth=BearerAuth:user:read params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:UserCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -121,7 +121,7 @@ op PUT /api/node/{hostname}/ntp id=PutNodeNtp tags=[NTP_Management_API_ntp_opera
 op PUT /api/node/{hostname}/schedule/{name} id=PutNodeSchedule tags=[Schedule_Management_API_schedule_operations] auth=BearerAuth:schedule:write params=[path:hostname!:string path:name!:string] body=application/json:ScheduleUpdateRequest! responses=[200=application/json:ScheduleUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op PUT /api/node/{hostname}/service/{name} id=PutNodeService tags=[Service_Management_API_service_operations] auth=BearerAuth:service:write params=[path:hostname!:string path:name!:string] body=application/json:ServiceUpdateRequest! responses=[200=application/json:ServiceMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op PUT /api/node/{hostname}/sysctl/{key} id=PutNodeSysctl tags=[Sysctl_API_sysctl_operations] auth=BearerAuth:sysctl:write params=[path:hostname!:string path:key!:string] body=application/json:SysctlUpdateRequest! responses=[200=application/json:SysctlUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op PUT /api/node/{hostname}/timezone id=PutNodeTimezone tags=[Timezone_Management_API_timezone_operations] auth=BearerAuth:timezone:write params=[path:hostname!:string] body=application/json:TimezoneUpdateRequest! responses=[200=application/json:TimezoneUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op PUT /api/node/{hostname}/timezone id=PutNodeTimezone tags=[Timezone_API_timezone_operations] auth=BearerAuth:timezone:write params=[path:hostname!:string] body=application/json:TimezoneUpdateRequest! responses=[200=application/json:TimezoneUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op PUT /api/node/{hostname}/user/{name} id=PutNodeUser tags=[User_and_Group_Management_API_user_operations] auth=BearerAuth:user:write params=[path:hostname!:string path:name!:string] body=application/json:UserUpdateRequest! responses=[200=application/json:UserMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 schema Admission.admitted_at = string/date-time
 schema Admission.decided_at = string/date-time
@@ -852,21 +852,21 @@ schema TimelineEvent.event! = string
 schema TimelineEvent.hostname = string
 schema TimelineEvent.message = string
 schema TimelineEvent.timestamp! = string/date-time
-schema TimezoneCollectionResponse.job_id = string/uuid
-schema TimezoneCollectionResponse.results! = [TimezoneEntry]
 schema TimezoneEntry.error = string
 schema TimezoneEntry.hostname! = string
 schema TimezoneEntry.status! = string(ok|failed|skipped|timeout)
 schema TimezoneEntry.timezone = string
 schema TimezoneEntry.utc_offset = string
-schema TimezoneMutationResult.changed = boolean
-schema TimezoneMutationResult.error = string
-schema TimezoneMutationResult.hostname! = string
-schema TimezoneMutationResult.status! = string(ok|failed|skipped|timeout)
-schema TimezoneMutationResult.timezone = string
+schema TimezoneGetResponse.job_id = string/uuid
+schema TimezoneGetResponse.results! = [TimezoneEntry]
+schema TimezoneResult.changed = boolean
+schema TimezoneResult.error = string
+schema TimezoneResult.hostname! = string
+schema TimezoneResult.status! = string(ok|failed|skipped|timeout)
+schema TimezoneResult.timezone = string
 schema TimezoneUpdateRequest.timezone! = string
 schema TimezoneUpdateResponse.job_id = string/uuid
-schema TimezoneUpdateResponse.results! = [TimezoneMutationResult]
+schema TimezoneUpdateResponse.results! = [TimezoneResult]
 schema TraceNode.children = [TraceNode]
 schema TraceNode.detail = string
 schema TraceNode.duration! = string
@@ -978,7 +978,7 @@ tag Service_Management_API_service_operations
 tag Status_API_status_operations
 tag Sysctl_API_sysctl_operations
 tag Telemetry_API_telemetry
-tag Timezone_Management_API_timezone_operations
+tag Timezone_API_timezone_operations
 tag Uptime_API_uptime_operations
 tag User_and_Group_Management_API_group_operations
 tag User_and_Group_Management_API_user_operations

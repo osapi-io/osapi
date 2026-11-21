@@ -854,28 +854,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Timezone",
-      link: {
-        type: "doc",
-        id: "gen/api/timezone-management-api-timezone-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/get-node-timezone",
-          label: "Get system timezone",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/put-node-timezone",
-          label: "Update system timezone",
-          className: "api-method put",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Node/User",
       link: {
         type: "doc",
@@ -1116,6 +1094,28 @@ const sidebar: SidebarsConfig = {
           type: "doc",
           id: "gen/api/put-node-sysctl",
           label: "Set a kernel parameter, manage it, and apply it",
+          className: "api-method put",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Timezone",
+      link: {
+        type: "doc",
+        id: "gen/api/timezone-api-timezone-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-timezone",
+          label: "Get the timezone of the host",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-timezone",
+          label: "Set the timezone of the host",
           className: "api-method put",
         },
       ],

@@ -54,6 +54,12 @@ const MinSigningKeyLen = 32
 // an argument.
 var sysctlKeyPattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]*$`)
 
+// TimezonePattern is an IANA timezone name, such as UTC or
+// America/Argentina/Buenos_Aires: segments of letters, digits, _, + and -
+// joined by /, never starting with - and with no dot. It becomes an
+// argument of timedatectl, so the provider checks it again.
+var TimezonePattern = regexp.MustCompile(`^[A-Za-z0-9_+][A-Za-z0-9_+-]*(/[A-Za-z0-9_+-]+)*$`)
+
 // accountNamePattern matches a POSIX system account name: it must start with
 // a lowercase letter or underscore, followed by lowercase letters, digits,
 // underscores, or hyphens, with an optional trailing dollar sign (used by
@@ -168,6 +174,12 @@ func init() {
 		return sysctlKeyPattern.MatchString(fl.Field().String())
 	})
 
+	// timezone_name validates an IANA timezone name; TimezonePattern says
+	// what it permits.
+	_ = instance.RegisterValidation("timezone_name", func(fl validator.FieldLevel) bool {
+		return TimezonePattern.MatchString(fl.Field().String())
+	})
+
 	// resource_name validates a name osapi writes as a file name, rejecting
 	// path separators, dots, and anything else that could escape the
 	// directory. The same pattern is enforced again in the provider, which is
@@ -216,6 +228,7 @@ func init() {
 	// spec validates what the server does. A tag without one fails schema
 	// generation rather than being dropped.
 	rule.Register("sysctl_key", rule.Pattern(sysctlKeyPattern.String()))
+	rule.Register("timezone_name", rule.Pattern(TimezonePattern.String()))
 	rule.Register("no_linebreak", rule.Pattern(`^[^\r\n]*$`))
 	rule.Register("file_mode", rule.Pattern(`^[0-7]{3,4}$`))
 	rule.Register("resource_name", rule.Pattern(resourceNamePattern.String()))
@@ -294,6 +307,12 @@ var customHints = map[string]func(ctx context.Context, fe validator.FieldError) 
 	"cron_schedule": func(_ context.Context, fe validator.FieldError) string {
 		return fmt.Sprintf(
 			"%q is not a valid cron expression (expected: minute hour day-of-month month day-of-week)",
+			fe.Value(),
+		)
+	},
+	"timezone_name": func(_ context.Context, fe validator.FieldError) string {
+		return fmt.Sprintf(
+			"%q is not a valid timezone name, such as UTC or America/New_York",
 			fe.Value(),
 		)
 	},

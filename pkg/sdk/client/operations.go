@@ -90,12 +90,6 @@ const (
 	OpNtpDelete JobOperation = "node.ntp.delete"
 )
 
-// Timezone operations.
-const (
-	OpTimezoneGet    JobOperation = "node.timezone.get"
-	OpTimezoneUpdate JobOperation = "node.timezone.update"
-)
-
 // Power operations.
 const (
 	OpPowerReboot   JobOperation = "node.power.reboot"
