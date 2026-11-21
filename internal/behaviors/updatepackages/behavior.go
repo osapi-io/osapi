@@ -54,7 +54,10 @@ var Behavior = behavior.Register(behavior.Define(
 		// The integration test runs this on CI's runner, whose index the
 		// workflow has just refreshed. A refresh that gets new data is in
 		// debian_public_test.go: what the mirrors have is not an example.
-		Example("The repositories are unchanged", UpdateInput{}, Result{},
+		// After refreshes first, as a live host can run it: the runner's index
+		// can be out of date, and then its first refresh gets new data.
+		Example("The repositories are unchanged since the last refresh", UpdateInput{}, Result{},
+			behavior.After(UpdateInput{}),
 			behavior.Prints("apt-get update", "Hit:1 http://archive.ubuntu.com/ubuntu noble-updates InRelease\n"),
 		),
 ))

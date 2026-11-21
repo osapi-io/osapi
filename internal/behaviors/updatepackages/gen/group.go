@@ -92,7 +92,7 @@ var Group = endpoint.Define(
 		Permission("updatepackages:write").
 		Returns("Each target host's result, with whether it changed.").
 		Explain("Runs apt-get update. It reports changed: true when the Release file of a repository under /var/lib/apt/lists changed, and changed: false when each repository was unchanged.").
-		Example("--target web-01", "The repositories are unchanged"),
+		Example("--target web-01", "The repositories are unchanged since the last refresh"),
 )
 
 func init() {

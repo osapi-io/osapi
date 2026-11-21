@@ -28,7 +28,7 @@ func (s *APIUpdatePublicTestSuite) SetupSuite() {
 func (s *APIUpdatePublicTestSuite) TestUpdate() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
-			Name: "when the example \"The repositories are unchanged\" is sent, the host's result is returned",
+			Name: "when the example \"The repositories are unchanged since the last refresh\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPut,
 				Path:   "/api/node/server1/updatepackages",
@@ -45,7 +45,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			WantBody: `{"job_id":"job-1","results":[{"changed":false,"hostname":"server1","status":"ok"}]}`,
 		},
 		{
-			Name: "when the example \"The repositories are unchanged\" is broadcast, every host's result is returned",
+			Name: "when the example \"The repositories are unchanged since the last refresh\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPut,
 				Path:   "/api/node/_all/updatepackages",

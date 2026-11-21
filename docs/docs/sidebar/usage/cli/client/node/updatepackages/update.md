@@ -13,7 +13,7 @@ osapi client node updatepackages update [flags]
 ## Examples
 
 ```bash
-# The repositories are unchanged
+# The repositories are unchanged since the last refresh
 osapi client node updatepackages update --target web-01
 ```
 

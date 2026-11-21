@@ -33,7 +33,7 @@ func (s *CLIPublicTestSuite) TestCommands() {
 			},
 		},
 		{
-			name: "when the example \"The repositories are unchanged\" is run",
+			name: "when the example \"The repositories are unchanged since the last refresh\" is run",
 			args: []string{"node", "updatepackages", "update", "--target", "server1"},
 			want: commandtest.Request{
 				Method: "PUT",
