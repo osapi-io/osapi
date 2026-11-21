@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Network management | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/network-management"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Network management | OSAPI"><meta data-rh="true" name="description" content="osapi can query and update the network configuration of managed hosts. Network"><meta data-rh="true" property="og:description" content="osapi can query and update the network configuration of managed hosts. Network"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/network-management"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/network-management" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/network-management" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Network management","item":"https://osapi-io.github.io/osapi/sidebar/features/network-management"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.e2403e11.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.a1ef8962.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.99b88a8f.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.91d4c98b.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -46,7 +46,7 @@ privileges, and the agents make the changes.</p>
 
 
 
-<table><thead><tr><th>Resource</th><th>Operations</th><th>Description</th></tr></thead><tbody><tr><td>DNS</td><td>Read, Update, Delete</td><td>Nameservers and search domains per interface</td></tr><tr><td>Ping</td><td>Read</td><td>ICMP connectivity check to a target host</td></tr><tr><td>Interface</td><td>Full CRUD</td><td>Netplan interface configuration</td></tr><tr><td>Route</td><td>Full CRUD</td><td>Netplan static route configuration</td></tr></tbody></table>
+<table><thead><tr><th>Resource</th><th>Operations</th><th>Description</th></tr></thead><tbody><tr><td>DNS</td><td>Read, Update, Delete</td><td>Nameservers and search domains per interface</td></tr><tr><td>Ping</td><td>Read</td><td>ICMP connectivity check to a target host</td></tr><tr><td>Interface</td><td>Full CRUD</td><td>Each interface, and osapi&#x27;s Netplan config</td></tr><tr><td>Route</td><td>Full CRUD</td><td>Netplan static route configuration</td></tr></tbody></table>
 <p>For interface and route management details, see
 <a class="" href="/osapi/sidebar/features/network-interface-management">Network Interface Management</a>.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-it-works">How it works<a href="#how-it-works" class="hash-link" aria-label="Direct link to How it works" title="Direct link to How it works" translate="no">​</a></h2>
@@ -120,7 +120,27 @@ authentication settings.</p>
 
 
 
-<table><thead><tr><th>Operation</th><th>Permission</th></tr></thead><tbody><tr><td>DNS get</td><td><code>dns:read</code></td></tr><tr><td>DNS update</td><td><code>dns:write</code></td></tr><tr><td>DNS delete</td><td><code>dns:write</code></td></tr><tr><td>Ping</td><td><code>network:read</code></td></tr></tbody></table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Operation</th><th>Permission</th></tr></thead><tbody><tr><td>DNS get</td><td><code>network:read</code></td></tr><tr><td>DNS update</td><td><code>network:write</code></td></tr><tr><td>DNS delete</td><td><code>network:write</code></td></tr><tr><td>Interface list</td><td><code>network:read</code></td></tr><tr><td>Interface get</td><td><code>network:read</code></td></tr><tr><td>Interface create</td><td><code>network:write</code></td></tr><tr><td>Interface update</td><td><code>network:write</code></td></tr><tr><td>Interface delete</td><td><code>network:write</code></td></tr><tr><td>Ping</td><td><code>network:read</code></td></tr></tbody></table>
 <p>The <code>admin</code> and <code>write</code> roles include both <code>network:read</code> and <code>network:write</code>.
 The <code>read</code> role includes only <code>network:read</code>.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="related">Related<a href="#related" class="hash-link" aria-label="Direct link to Related" title="Direct link to Related" translate="no">​</a></h2>
