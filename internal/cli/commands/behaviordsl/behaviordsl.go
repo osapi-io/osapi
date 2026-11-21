@@ -28,6 +28,7 @@ import (
 	// Each behavior registers itself, so these commands read them.
 	_ "github.com/osapi-io/osapi/internal/behaviors/all"
 	"github.com/osapi-io/osapi/internal/cli/command"
+	"github.com/osapi-io/osapi/internal/guide"
 )
 
 // Group is the behavior group's definition.
@@ -119,8 +120,23 @@ var Group = command.Register(command.Define(
 			"get` describes each part of a behavior.\n\n"+
 			"The rules:\n\n"+behavior.Checks.Help()+"\n"+
 			"`go test` runs the examples and refusals of each behavior on a fake host,\n"+
-			"and checks these. Each failure ends with its fix:\n\n"+behavior.TestChecks.Help()).
+			"and checks these. Each failure ends with its fix:\n\n"+behavior.TestChecks.Help()+
+			"\n`go test` also checks the chain rules that need a run of the examples.\n"+
+			"`osapi behavior chain validate` checks them too:\n\n"+runChainChecks().Help()).
 		Example("").
 		Example("--json").
 		Handle(Validate),
 ))
+
+// runChainChecks are the chain rules that need a run of the examples, which
+// go test checks for each behavior.
+func runChainChecks() guide.Checks {
+	var out guide.Checks
+	for _, c := range behavior.ChainChecks {
+		if c.Rule == behavior.RuleCalled || c.Rule == behavior.RuleUsed {
+			out = append(out, c)
+		}
+	}
+
+	return out
+}
