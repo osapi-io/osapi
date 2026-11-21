@@ -5,7 +5,7 @@ op DELETE /api/node/{hostname}/certificate/ca/{name} id=DeleteNodeCertificateCa 
 op DELETE /api/node/{hostname}/container/docker/image/{image} id=DeleteNodeContainerDockerImage tags=[Docker_Management_API_docker_image] auth=BearerAuth:docker:write params=[path:hostname!:string path:image!:string query:force:boolean] body= responses=[200=application/json:DockerActionCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op DELETE /api/node/{hostname}/container/docker/{id} id=DeleteNodeContainerDockerByID tags=[Docker_Management_API_docker_operations] auth=BearerAuth:docker:write params=[path:hostname!:string path:id!:string query:force:boolean] body= responses=[200=application/json:DockerActionCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op DELETE /api/node/{hostname}/group/{name} id=DeleteNodeGroup tags=[User_and_Group_Management_API_group_operations] auth=BearerAuth:user:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:GroupMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op DELETE /api/node/{hostname}/network/dns id=DeleteNodeNetworkDNS tags=[Network_Management_API_dns_operations] auth=BearerAuth:network:write params=[path:hostname!:string] body=application/json:DNSDeleteRequest! responses=[200=application/json:DNSDeleteCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op DELETE /api/node/{hostname}/network/dns/{interface_name} id=DeleteNodeNetworkDns tags=[Dns_API_network_dns_operations] auth=BearerAuth:network:write params=[path:hostname!:string path:interface_name!:string] body= responses=[200=application/json:NetworkDnsDeleteResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op DELETE /api/node/{hostname}/network/interface/{name} id=DeleteNodeNetworkInterface tags=[Network_Management_API_interface_operations] auth=BearerAuth:network:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:InterfaceMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op DELETE /api/node/{hostname}/network/route/{interfaceName} id=DeleteNodeNetworkRoute tags=[Network_Management_API_route_operations] auth=BearerAuth:network:write params=[path:hostname!:string path:interfaceName!:string] body= responses=[200=application/json:RouteMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op DELETE /api/node/{hostname}/ntp id=DeleteNodeNtp tags=[NTP_Management_API_ntp_operations] auth=BearerAuth:ntp:write params=[path:hostname!:string] body= responses=[200=application/json:NtpDeleteResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -47,7 +47,7 @@ op GET /api/node/{hostname}/log id=GetNodeLog tags=[Log_Management_API_log_opera
 op GET /api/node/{hostname}/log/source id=GetNodeLogSource tags=[Log_Management_API_log_operations] auth=BearerAuth:log:read params=[path:hostname!:string] body= responses=[200=application/json:LogSourceCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/log/unit/{name} id=GetNodeLogUnit tags=[Log_Management_API_log_operations] auth=BearerAuth:log:read params=[path:hostname!:string path:name!:string query:lines:integer query:priority:string query:since:string] body= responses=[200=application/json:LogCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/memory id=GetNodeMemory tags=[Memory_API_memory_operations] auth=BearerAuth:memory:read params=[path:hostname!:string] body= responses=[200=application/json:MemoryGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op GET /api/node/{hostname}/network/dns/{interfaceName} id=GetNodeNetworkDNSByInterface tags=[Network_Management_API_dns_operations] auth=BearerAuth:network:read params=[path:hostname!:string path:interfaceName!:string] body= responses=[200=application/json:DNSConfigCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op GET /api/node/{hostname}/network/dns/{interface_name} id=GetNodeNetworkDnsByKey tags=[Dns_API_network_dns_operations] auth=BearerAuth:network:read params=[path:hostname!:string path:interface_name!:string] body= responses=[200=application/json:NetworkDnsGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/network/interface id=GetNodeNetworkInterface tags=[Network_Management_API_interface_operations] auth=BearerAuth:network:read params=[path:hostname!:string] body= responses=[200=application/json:InterfaceListResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/network/interface/{name} id=GetNodeNetworkInterfaceByName tags=[Network_Management_API_interface_operations] auth=BearerAuth:network:read params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:InterfaceGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/network/route id=GetNodeNetworkRoute tags=[Network_Management_API_route_operations] auth=BearerAuth:network:read params=[path:hostname!:string] body= responses=[200=application/json:RouteListResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -113,7 +113,7 @@ op PUT /api/file/{name} id=PutFileByName tags=[File_Management_API_file_operatio
 op PUT /api/node/{hostname}/certificate/ca/{name} id=PutNodeCertificateCa tags=[Certificate_Management_API_certificate_operations] auth=BearerAuth:certificate:write params=[path:hostname!:string path:name!:string] body=application/json:CertificateCAUpdateRequest! responses=[200=application/json:CertificateCAMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op PUT /api/node/{hostname}/group/{name} id=PutNodeGroup tags=[User_and_Group_Management_API_group_operations] auth=BearerAuth:user:write params=[path:hostname!:string path:name!:string] body=application/json:GroupUpdateRequest! responses=[200=application/json:GroupMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op PUT /api/node/{hostname}/hostname id=PutNodeHostname tags=[Hostname_API_hostname_operations] auth=BearerAuth:hostname:write params=[path:hostname!:string] body=application/json:HostnameUpdateRequest! responses=[200=application/json:HostnameUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op PUT /api/node/{hostname}/network/dns id=PutNodeNetworkDNS tags=[Network_Management_API_dns_operations] auth=BearerAuth:network:write params=[path:hostname!:string] body=application/json:DNSConfigUpdateRequest! responses=[200=application/json:DNSUpdateCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op PUT /api/node/{hostname}/network/dns/{interface_name} id=PutNodeNetworkDns tags=[Dns_API_network_dns_operations] auth=BearerAuth:network:write params=[path:hostname!:string path:interface_name!:string] body=application/json:NetworkDnsUpdateRequest! responses=[200=application/json:NetworkDnsUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op PUT /api/node/{hostname}/network/interface/{name} id=PutNodeNetworkInterface tags=[Network_Management_API_interface_operations] auth=BearerAuth:network:write params=[path:hostname!:string path:name!:string] body=application/json:InterfaceConfigRequest! responses=[200=application/json:InterfaceMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op PUT /api/node/{hostname}/network/route/{interfaceName} id=PutNodeNetworkRoute tags=[Network_Management_API_route_operations] auth=BearerAuth:network:write params=[path:hostname!:string path:interfaceName!:string] body=application/json:RouteConfigRequest! responses=[200=application/json:RouteMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op PUT /api/node/{hostname}/ntp id=PutNodeNtp tags=[NTP_Management_API_ntp_operations] auth=BearerAuth:ntp:write params=[path:hostname!:string] body=application/json:NtpUpdateRequest! responses=[200=application/json:NtpUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -241,31 +241,6 @@ schema CreateJobResponse.job_id! = string/uuid
 schema CreateJobResponse.revision = integer/int64
 schema CreateJobResponse.status! = string
 schema CreateJobResponse.timestamp = string
-schema DNSConfigCollectionResponse.job_id = string/uuid
-schema DNSConfigCollectionResponse.results! = [DNSConfigResponse]
-schema DNSConfigResponse.changed = boolean
-schema DNSConfigResponse.error = string
-schema DNSConfigResponse.hostname! = string
-schema DNSConfigResponse.search_domains = [string]
-schema DNSConfigResponse.servers = [string]
-schema DNSConfigResponse.status! = string(ok|failed|skipped|timeout)
-schema DNSConfigUpdateRequest.interface_name! = string
-schema DNSConfigUpdateRequest.override_dhcp = boolean
-schema DNSConfigUpdateRequest.search_domains = [string]
-schema DNSConfigUpdateRequest.servers = [string]
-schema DNSDeleteCollectionResponse.job_id = string/uuid
-schema DNSDeleteCollectionResponse.results! = [DNSDeleteResultItem]
-schema DNSDeleteRequest.interface_name! = string
-schema DNSDeleteResultItem.changed = boolean
-schema DNSDeleteResultItem.error = string
-schema DNSDeleteResultItem.hostname! = string
-schema DNSDeleteResultItem.status! = string(ok|failed|skipped|timeout)
-schema DNSUpdateCollectionResponse.job_id = string/uuid
-schema DNSUpdateCollectionResponse.results! = [DNSUpdateResultItem]
-schema DNSUpdateResultItem.changed = boolean
-schema DNSUpdateResultItem.error = string
-schema DNSUpdateResultItem.hostname! = string
-schema DNSUpdateResultItem.status! = string(ok|failed|skipped|timeout)
 schema Disk.free! = integer
 schema Disk.name! = string
 schema Disk.total! = integer
@@ -555,6 +530,25 @@ schema MemoryResponse.total! = integer
 schema MemoryResponse.used! = integer
 schema NATSInfo.url! = string
 schema NATSInfo.version! = string
+schema NetworkDnsDeleteResponse.job_id = string/uuid
+schema NetworkDnsDeleteResponse.results! = [NetworkDnsResult]
+schema NetworkDnsEntry.error = string
+schema NetworkDnsEntry.hostname! = string
+schema NetworkDnsEntry.search_domains = [string]
+schema NetworkDnsEntry.servers = [string]
+schema NetworkDnsEntry.status! = string(ok|failed|skipped|timeout)
+schema NetworkDnsGetResponse.job_id = string/uuid
+schema NetworkDnsGetResponse.results! = [NetworkDnsEntry]
+schema NetworkDnsResult.changed = boolean
+schema NetworkDnsResult.error = string
+schema NetworkDnsResult.hostname! = string
+schema NetworkDnsResult.interface_name = string
+schema NetworkDnsResult.status! = string(ok|failed|skipped|timeout)
+schema NetworkDnsUpdateRequest.override_dhcp = boolean
+schema NetworkDnsUpdateRequest.search_domains = [string/hostname]
+schema NetworkDnsUpdateRequest.servers = [string/ip]
+schema NetworkDnsUpdateResponse.job_id = string/uuid
+schema NetworkDnsUpdateResponse.results! = [NetworkDnsResult]
 schema NetworkInterfaceResponse.family = string(inet|inet6|dual)
 schema NetworkInterfaceResponse.ipv4 = string
 schema NetworkInterfaceResponse.ipv6 = string
@@ -961,6 +955,7 @@ tag Certificate_Management_API_certificate_operations
 tag Command_Execution_API_command_operations
 tag Controller_API_controller
 tag Disk_API_disk_operations
+tag Dns_API_network_dns_operations
 tag Docker_Management_API_docker_exec
 tag Docker_Management_API_docker_image
 tag Docker_Management_API_docker_operations
@@ -974,7 +969,6 @@ tag Log_Management_API_log_operations
 tag Memory_API_memory_operations
 tag NATS_API_nats
 tag NTP_Management_API_ntp_operations
-tag Network_Management_API_dns_operations
 tag Network_Management_API_interface_operations
 tag Network_Management_API_network_operations
 tag Network_Management_API_route_operations

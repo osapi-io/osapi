@@ -48,8 +48,6 @@ import (
 	"github.com/osapi-io/osapi/internal/provider"
 	commandMocks "github.com/osapi-io/osapi/internal/provider/command/mocks"
 	fileMocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
-	"github.com/osapi-io/osapi/internal/provider/network/netplan/dns"
-	dnsMocks "github.com/osapi-io/osapi/internal/provider/network/netplan/dns/mocks"
 	"github.com/osapi-io/osapi/internal/provider/network/ping"
 	pingMocks "github.com/osapi-io/osapi/internal/provider/network/ping/mocks"
 	diskMocks "github.com/osapi-io/osapi/internal/provider/node/disk/mocks"
@@ -103,17 +101,6 @@ func (s *HandlerPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
 
-	// Use plain DNS mock with appropriate expectations
-	dnsMock := dnsMocks.NewPlainMockProvider(s.mockCtrl)
-	dnsMock.EXPECT().GetResolvConfByInterface(gomock.Any(), gomock.Any()).Return(&dns.GetResult{
-		DNSServers:    []string{"192.168.1.1", "8.8.8.8"},
-		SearchDomains: []string{"example.com"},
-	}, nil).AnyTimes()
-	dnsMock.EXPECT().
-		UpdateResolvConfByInterface(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-		Return(&dns.UpdateResult{Changed: true}, nil).
-		AnyTimes()
-
 	// Use plain ping mock with appropriate expectations
 	pingMock := pingMocks.NewPlainMockProvider(s.mockCtrl)
 	pingMock.EXPECT().Do(gomock.Any(), gomock.Any()).Return(&ping.Result{
@@ -129,7 +116,6 @@ func (s *HandlerPublicTestSuite) SetupTest() {
 		diskProvider:    diskMocks.NewDefaultMockProvider(s.mockCtrl),
 		memoryProvider:  memoryMocks.NewDefaultMockProvider(s.mockCtrl),
 		loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
-		dnsProvider:     dnsMock,
 		pingProvider:    pingMock,
 		commandProvider: commandMocks.NewDefaultMockProvider(s.mockCtrl),
 		fileProvider:    fileMocks.NewDefaultMockProvider(s.mockCtrl),
@@ -256,8 +242,8 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "test-job-123",
 						"operation": {
-							"type": "network.dns.get",
-							"data": {}
+							"type": "network.ping.do",
+							"data": {"address": "1.1.1.1"}
 						}
 					}`), nil)
 
@@ -399,8 +385,8 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					GetJobData(gomock.Any(), "jobs.missing-id-job").
 					Return([]byte(`{
 						"operation": {
-							"type": "network.dns.get",
-							"data": {}
+							"type": "network.ping.do",
+							"data": {"address": "1.1.1.1"}
 						}
 					}`), nil)
 			},
@@ -490,8 +476,8 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "ack-err-job",
 						"operation": {
-							"type": "network.dns.get",
-							"data": {}
+							"type": "network.ping.do",
+							"data": {"address": "1.1.1.1"}
 						}
 					}`), nil)
 
@@ -527,8 +513,8 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "start-err-job",
 						"operation": {
-							"type": "network.dns.get",
-							"data": {}
+							"type": "network.ping.do",
+							"data": {"address": "1.1.1.1"}
 						}
 					}`), nil)
 
@@ -564,8 +550,8 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "comp-err-job",
 						"operation": {
-							"type": "network.dns.get",
-							"data": {}
+							"type": "network.ping.do",
+							"data": {"address": "1.1.1.1"}
 						}
 					}`), nil)
 
@@ -725,8 +711,8 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "fact-resolve-job",
 						"operation": {
-							"type": "network.dns.get",
-							"data": {"iface": "@fact.interface.primary"}
+							"type": "network.ping.do",
+							"data": {"address": "@fact.interface.primary"}
 						}
 					}`), nil)
 
@@ -764,8 +750,8 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "fact-nil-job",
 						"operation": {
-							"type": "network.dns.get",
-							"data": {"interface": "@fact.interface.primary"}
+							"type": "network.ping.do",
+							"data": {"address": "@fact.interface.primary"}
 						}
 					}`), nil)
 
@@ -806,8 +792,8 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "fact-fail-job",
 						"operation": {
-							"type": "network.dns.get",
-							"data": {"iface": "@fact.nonexistent"}
+							"type": "network.ping.do",
+							"data": {"address": "@fact.nonexistent"}
 						}
 					}`), nil)
 
@@ -846,8 +832,8 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "storage-fail-job",
 						"operation": {
-							"type": "network.dns.get",
-							"data": {}
+							"type": "network.ping.do",
+							"data": {"address": "1.1.1.1"}
 						}
 					}`), nil)
 
@@ -894,8 +880,8 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "storage-fail-double-job",
 						"operation": {
-							"type": "network.dns.get",
-							"data": {}
+							"type": "network.ping.do",
+							"data": {"address": "1.1.1.1"}
 						}
 					}`), nil)
 
@@ -974,8 +960,8 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessage() {
 					Return([]byte(`{
 						"id": "check-err-job",
 						"operation": {
-							"type": "network.dns.get",
-							"data": {}
+							"type": "network.ping.do",
+							"data": {"address": "1.1.1.1"}
 						}
 					}`), nil)
 
@@ -1025,12 +1011,8 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageModifyJobs() {
 			jobData: `{
 				"id": "modify-job-123",
 				"operation": {
-					"type": "network.dns.update",
-					"data": {
-						"servers": ["8.8.8.8"],
-						"search_domains": ["example.com"],
-						"interface": "eth0"
-					}
+					"type": "network.ping.do",
+					"data": {"address": "1.1.1.1"}
 				}
 			}`,
 			setupMocks: func() {
@@ -1041,12 +1023,8 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageModifyJobs() {
 					Return([]byte(`{
 						"id": "modify-job-123",
 						"operation": {
-							"type": "network.dns.update",
-							"data": {
-								"servers": ["8.8.8.8"],
-								"search_domains": ["example.com"],
-								"interface": "eth0"
-							}
+							"type": "network.ping.do",
+							"data": {"address": "1.1.1.1"}
 						}
 					}`), nil)
 
@@ -1164,11 +1142,16 @@ func (s *HandlerPublicTestSuite) TestUnwrapJobEnvelope() {
 				return nil
 			},
 			data: func() []byte {
-				return []byte(`{"id":"test","operation":{"type":"network.dns.get"}}`)
+				return []byte(
+					`{"id":"test","operation":{"type":"network.ping.do","data":{"address":"1.1.1.1"}}}`,
+				)
 			},
 			expectError: false,
 			validateFunc: func(got string) {
-				s.Equal(`{"id":"test","operation":{"type":"network.dns.get"}}`, got)
+				s.Equal(
+					`{"id":"test","operation":{"type":"network.ping.do","data":{"address":"1.1.1.1"}}}`,
+					got,
+				)
 			},
 		},
 		{
@@ -1255,7 +1238,9 @@ func (s *HandlerPublicTestSuite) TestUnwrapJobEnvelope() {
 				return m
 			},
 			data: func() []byte {
-				return []byte(`{"id":"raw-job","operation":{"type":"network.dns.get"}}`)
+				return []byte(
+					`{"id":"raw-job","operation":{"type":"network.ping.do","data":{"address":"1.1.1.1"}}}`,
+				)
 			},
 			expectError: true,
 			errorMsg:    "not a signed envelope",
@@ -1364,7 +1349,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 			setupMocks: func() {
 				// Create signed job data.
 				payload := []byte(
-					`{"id":"signed-job-ok","operation":{"type":"network.dns.get","data":{}}}`,
+					`{"id":"signed-job-ok","operation":{"type":"network.ping.do","data":{"address":"1.1.1.1"}}}`,
 				)
 				sig := ed25519.Sign(controllerPriv, payload)
 				envelope := job.SignedEnvelope{
@@ -1412,7 +1397,9 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 			},
 			setupMocks: func() {
 				// Create job data with invalid signature.
-				payload := []byte(`{"id":"bad-sig-job","operation":{"type":"network.dns.get"}}`)
+				payload := []byte(
+					`{"id":"bad-sig-job","operation":{"type":"network.ping.do","data":{"address":"1.1.1.1"}}}`,
+				)
 				envelope := job.SignedEnvelope{
 					Payload: payload,
 					Signature: []byte(
@@ -1448,7 +1435,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 			},
 			setupMocks: func() {
 				payload := []byte(
-					`{"id":"not-enrolled-job","operation":{"type":"network.dns.get"}}`,
+					`{"id":"not-enrolled-job","operation":{"type":"network.ping.do","data":{"address":"1.1.1.1"}}}`,
 				)
 				sig := ed25519.Sign(controllerPriv, payload)
 				envelope := job.SignedEnvelope{
@@ -1491,7 +1478,7 @@ func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSignedEnvelope() {
 				s.expectNotAnswered("unwrapped-job")
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.unwrapped-job").
-					Return([]byte(`{"id":"unwrapped-job","operation":{"type":"network.dns.get"}}`), nil)
+					Return([]byte(`{"id":"unwrapped-job","operation":{"type":"network.ping.do","data":{"address":"1.1.1.1"}}}`), nil)
 
 				// No WriteStatusEvent/WriteJobResponse expectations: an
 				// unsigned envelope must be refused before touching the

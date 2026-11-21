@@ -53,7 +53,7 @@ var gohaiReads = map[string]bool{
 
 func (s *ProvidersPublicTestSuite) TestProviders() {
 	areas := []string{
-		"host", "disk", "memory", "load", "dns", "ping", "cron",
+		"host", "disk", "memory", "load", "ping", "cron",
 		"ntp", "power", "process", "user",
 		"logs", "certificate", "service", "iface", "route",
 	}
@@ -81,7 +81,6 @@ func (s *ProvidersPublicTestSuite) TestProviders() {
 			buckets:   true,
 			want:      "Debian",
 			except: map[string]string{
-				"dns":     "DebianDocker",
 				"ntp":     "Linux",
 				"power":   "Linux",
 				"logs":    "Linux",

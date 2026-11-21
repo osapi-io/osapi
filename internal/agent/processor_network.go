@@ -28,7 +28,6 @@ import (
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/job"
-	"github.com/osapi-io/osapi/internal/provider/network/netplan/dns"
 	"github.com/osapi-io/osapi/internal/provider/network/netplan/iface"
 	"github.com/osapi-io/osapi/internal/provider/network/netplan/route"
 	"github.com/osapi-io/osapi/internal/provider/network/ping"
@@ -36,7 +35,6 @@ import (
 
 // NewNetworkProcessor returns a ProcessorFunc that handles network-related operations.
 func NewNetworkProcessor(
-	dnsProvider dns.Provider,
 	pingProvider ping.Provider,
 	interfaceProvider iface.Provider,
 	routeProvider route.Provider,
@@ -45,12 +43,10 @@ func NewNetworkProcessor(
 	logger = logger.With(slog.String("subsystem", "agent.processor.network"))
 
 	return func(ctx context.Context, req job.Request) (json.RawMessage, error) {
-		// Extract base operation from dotted operation (e.g., "dns.get" -> "dns")
+		// Extract base operation from dotted operation (e.g., "ping.do" -> "ping")
 		baseOperation := strings.Split(req.Operation, ".")[0]
 
 		switch baseOperation {
-		case "dns":
-			return processNetworkDNS(ctx, dnsProvider, logger, req)
 		case "ping":
 			return processNetworkPing(ctx, pingProvider, logger, req)
 		case "interface":
@@ -61,114 +57,6 @@ func NewNetworkProcessor(
 			return nil, fmt.Errorf("unsupported network operation: %s", req.Operation)
 		}
 	}
-}
-
-// processNetworkDNS handles DNS configuration operations.
-func processNetworkDNS(
-	ctx context.Context,
-	dnsProvider dns.Provider,
-	logger *slog.Logger,
-	jobRequest job.Request,
-) (json.RawMessage, error) {
-	var dnsData map[string]interface{}
-	if err := json.Unmarshal(jobRequest.Data, &dnsData); err != nil {
-		return nil, fmt.Errorf("failed to parse DNS data: %w", err)
-	}
-
-	// Extract sub-operation: "dns.delete" -> "delete"
-	parts := strings.Split(jobRequest.Operation, ".")
-	subOp := ""
-	if len(parts) >= 2 {
-		subOp = parts[1]
-	}
-
-	if jobRequest.Type == job.TypeQuery {
-		// Get DNS configuration
-		interfaceName, _ := dnsData["interface"].(string)
-		if interfaceName == "" {
-			interfaceName = "eth0" // Default interface
-		}
-
-		logger.Debug(
-			"executing dns.GetResolvConfByInterface",
-			slog.String("interface", interfaceName),
-		)
-
-		config, err := dnsProvider.GetResolvConfByInterface(ctx, interfaceName)
-		if err != nil {
-			return nil, err
-		}
-
-		return json.Marshal(config)
-	}
-
-	// Delete DNS configuration
-	if subOp == "delete" {
-		interfaceName, _ := dnsData["interface"].(string)
-
-		logger.Debug(
-			"executing dns.DeleteResolvConf",
-			slog.String("interface", interfaceName),
-		)
-
-		changed, err := dnsProvider.DeleteNetplanConfig(ctx, interfaceName)
-		if err != nil {
-			return nil, err
-		}
-
-		result := map[string]interface{}{
-			"success": true,
-			"changed": changed,
-			"message": "DNS configuration deleted",
-		}
-
-		return json.Marshal(result)
-	}
-
-	// Set DNS configuration
-	servers, _ := dnsData["servers"].([]interface{})
-	searchDomains, _ := dnsData["search_domains"].([]interface{})
-	interfaceName, _ := dnsData["interface"].(string)
-	overrideDHCP, _ := dnsData["override_dhcp"].(bool)
-
-	var serverStrings []string
-	for _, s := range servers {
-		if str, ok := s.(string); ok {
-			serverStrings = append(serverStrings, str)
-		}
-	}
-
-	var searchStrings []string
-	for _, s := range searchDomains {
-		if str, ok := s.(string); ok {
-			searchStrings = append(searchStrings, str)
-		}
-	}
-
-	logger.Debug(
-		"executing dns.UpdateResolvConfByInterface",
-		slog.String("interface", interfaceName),
-		slog.Int("servers", len(serverStrings)),
-	)
-
-	dnsResult, err := dnsProvider.UpdateResolvConfByInterface(
-		ctx,
-		serverStrings,
-		searchStrings,
-		interfaceName,
-		overrideDHCP,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	result := map[string]interface{}{
-		"success": true,
-		"changed": dnsResult.Changed,
-		"message": "DNS configuration updated successfully",
-	}
-
-	return json.Marshal(result)
 }
 
 // processNetworkPing handles ping operations.

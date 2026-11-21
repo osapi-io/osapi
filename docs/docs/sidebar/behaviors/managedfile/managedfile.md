@@ -17,7 +17,7 @@ on the same host, so it has no route, no command and no permissions.
 
 | Uses | Used by |
 | ---- | ------- |
-| Nothing | [sysctl](../sysctl/sysctl.md) |
+| Nothing | [netplan](../netplan/netplan.md), [sysctl](../sysctl/sysctl.md) |
 
 ## Where it runs
 

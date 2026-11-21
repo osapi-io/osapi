@@ -363,8 +363,11 @@ func (s *CheckPublicTestSuite) TestCheck() {
 					Fails("An unmanaged note", getIn{Strict: true}, "not managed"),
 				behavior.Write("set", setNote).
 					Fails("A refused note", noteIn{Mode: "fail"}, "refused"),
+				// The method's validate rules refuse it before the method
+				// runs, as the agent does: the provider need not check it.
 				behavior.Read("hidden", readHidden).
-					Fails("A text over 3 characters", hiddenIn{Text: "abcd"}, "refused"),
+					Fails("A text over 3 characters", hiddenIn{Text: "abcd"}, "'max' tag").
+					Fails("A text the provider refuses as well", hiddenIn{Text: "abcd"}, "refused"),
 			},
 		},
 		{

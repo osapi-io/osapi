@@ -201,6 +201,19 @@ func checkRefusal(
 		return problem
 	}
 
+	// The agent and behavior.Call run the method's validate rules before
+	// the method, so a refusal that they refuse with its text holds, and the
+	// provider need not check it again. Otherwise the provider refuses it: a
+	// rule no tag can say, or a check it makes as well, such as of a
+	// program's argument.
+	data, _ := json.Marshal(r.Input)
+	if err := m.Check(
+		context.Background(),
+		data,
+	); err != nil &&
+		strings.Contains(err.Error(), r.Error) {
+		return ""
+	}
 	out, err := call(m, p, r.Input)
 	switch {
 	case err == nil:

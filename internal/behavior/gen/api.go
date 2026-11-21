@@ -340,8 +340,13 @@ func validationCases(
 			if fl.JSON == m.KeyField {
 				continue
 			}
+			// A list is the wrong type for every field but a list.
+			wrong := "[]"
+			if fl.Kind == reflect.Slice {
+				wrong = `"one"`
+			}
 			c := base
-			c.body = `{"` + fl.JSON + `":[]}`
+			c.body = `{"` + fl.JSON + `":` + wrong + `}`
 			add(c, "when "+fl.JSON+" has the wrong type, it is a 400")
 
 			break
@@ -444,7 +449,16 @@ func request(
 	} else {
 		q := url.Values{}
 		for _, fl := range command.Flags(m.In) {
-			if fv := v.Field(fl.Index); fl.JSON != m.KeyField && !fv.IsZero() {
+			fv := v.Field(fl.Index)
+			switch {
+			case fl.JSON == m.KeyField || fv.IsZero():
+			case fl.Kind == reflect.Slice:
+				// A list is the parameter given once for each value.
+				values, _ := fv.Interface().([]string)
+				for _, value := range values {
+					q.Add(fl.JSON, value)
+				}
+			default:
 				q.Set(fl.JSON, fmt.Sprint(fv.Interface()))
 			}
 		}

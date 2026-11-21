@@ -73,10 +73,10 @@ import {
   deleteNodeContainerDockerImage,
 } from "@/sdk/gen/docker-management-api-docker-image/docker-management-api-docker-image";
 import {
-  getNodeNetworkDNSByInterface,
-  putNodeNetworkDNS,
-  deleteNodeNetworkDNS,
-} from "@/sdk/gen/network-management-api-dns-operations/network-management-api-dns-operations";
+  getNodeNetworkDnsByKey,
+  putNodeNetworkDns,
+  deleteNodeNetworkDns,
+} from "@/sdk/gen/dns-api-network-dns-operations/dns-api-network-dns-operations";
 import {
   getNodeNetworkInterface,
   getNodeNetworkInterfaceByName,
@@ -565,25 +565,29 @@ export function Configure() {
             });
             break;
           case "dns-list":
-            result = await getNodeNetworkDNSByInterface(
+            result = await getNodeNetworkDnsByKey(
               t,
               block.data.interface_name as string,
             );
             break;
           case "dns-update": {
             const serversStr = (block.data.servers as string) || "";
-            result = await putNodeNetworkDNS(t, {
-              interface_name: block.data.interface_name as string,
-              servers: serversStr
-                ? serversStr.split(",").map((s) => s.trim())
-                : undefined,
-            });
+            result = await putNodeNetworkDns(
+              t,
+              block.data.interface_name as string,
+              {
+                servers: serversStr
+                  ? serversStr.split(",").map((s) => s.trim())
+                  : undefined,
+              },
+            );
             break;
           }
           case "dns-delete":
-            result = await deleteNodeNetworkDNS(t, {
-              interface_name: block.data.interface_name as string,
-            });
+            result = await deleteNodeNetworkDns(
+              t,
+              block.data.interface_name as string,
+            );
             break;
           case "interface-list":
             result = await getNodeNetworkInterface(t);
