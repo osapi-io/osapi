@@ -24,7 +24,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/shirou/gopsutil/v4/host"
+	"github.com/osapi-io/gohai/pkg/gohai/collectors/platform"
 )
 
 // SetOsExit overrides the osExit variable for testing.
@@ -39,16 +39,23 @@ func ResetOsExit() {
 	osExit = os.Exit
 }
 
-// SetHostInfoFn overrides the hostInfoFn variable for testing.
-func SetHostInfoFn(
-	fn func() (*host.InfoStat, error),
+// SetPlatformFn overrides how the host's platform is read, for testing.
+func SetPlatformFn(
+	fn func() (*platform.Info, error),
 ) {
-	hostInfoFn = fn
+	platformFn = fn
 }
 
-// ResetHostInfoFn restores the hostInfoFn variable to its default.
-func ResetHostInfoFn() {
-	hostInfoFn = host.Info
+// ExportReadPlatform reads this host's platform with gohai, as the agent
+// does at start.
+func ExportReadPlatform() (*platform.Info, error) {
+	return realPlatformFn()
+}
+
+// ResetPlatformFn restores the gohai platform read, and keeps it so a
+// reset reads the real host again.
+func ResetPlatformFn() {
+	platformFn = realPlatformFn
 }
 
 // ExportStatusWeight exposes the private statusWeight function for testing.

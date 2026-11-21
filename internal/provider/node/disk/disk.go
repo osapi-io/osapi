@@ -1,4 +1,4 @@
-// Copyright (c) 2026 John Dewey
+// Copyright (c) 2024 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -21,29 +21,56 @@
 package disk
 
 import (
-	"os"
-	"strings"
-	"syscall"
+	"context"
+	"fmt"
+
+	"github.com/osapi-io/gohai/pkg/gohai/collectors/filesystem"
+	"github.com/osapi-io/gohai/pkg/gohai/source"
+
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
-// isPermissionError checks if an error is a filesystem permission error.
-// Used by platform-specific providers to skip inaccessible mount points.
-func isPermissionError(
-	err error,
-) bool {
-	if err == nil {
-		return false
-	}
+var (
+	_ Provider             = (*Gohai)(nil)
+	_ provider.FactsSetter = (*Gohai)(nil)
+)
 
-	if pathErr, ok := err.(*os.PathError); ok {
-		if errno, ok := pathErr.Err.(syscall.Errno); ok && errno == syscall.EACCES {
-			return true
+// localTypes are the filesystem types of local disks. Network, virtual
+// and container mounts, such as nfs, tmpfs and overlay, are left out.
+var localTypes = map[string]bool{
+	"ext4": true, "xfs": true, "btrfs": true, "apfs": true, "hfs": true,
+}
+
+// Gohai reads the usage of the host's local disks with gohai's filesystem
+// collector, on every Linux family and on macOS.
+type Gohai struct {
+	provider.FactsAware
+
+	// Sources are what the collector reads. A zero field is the real
+	// host's.
+	Sources source.Sources
+}
+
+// New returns a provider that reads the real host.
+func New() *Gohai {
+	return &Gohai{}
+}
+
+// GetLocalUsageStats is the total, used and free bytes of each local
+// disk's mount. A mount without sizes, such as one that df cannot read,
+// is left out.
+func (g *Gohai) GetLocalUsageStats() ([]Result, error) {
+	got, err := filesystem.NewWith(g.Sources).Collect(context.Background(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("get disk usage: %w", err)
+	}
+	out := []Result{}
+	for _, m := range got.(*filesystem.Info).Mounts {
+		if m.Device == "" || !localTypes[m.Type] || m.Total == 0 {
+			continue
 		}
+		out = append(out, Result{Name: m.Mountpoint, Total: m.Total, Used: m.Used, Free: m.Free})
 	}
 
-	if strings.Contains(err.Error(), "permission denied") {
-		return true
-	}
-
-	return false
+	return out, nil
 }

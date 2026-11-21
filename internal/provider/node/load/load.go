@@ -1,4 +1,4 @@
-// Copyright (c) 2026 John Dewey
+// Copyright (c) 2024 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,20 +18,45 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package process
+package load
 
 import (
-	gopsutil "github.com/shirou/gopsutil/v4/process"
+	"context"
+	"fmt"
+
+	"github.com/osapi-io/gohai/pkg/gohai/collectors/load"
+	"github.com/osapi-io/gohai/pkg/gohai/source"
+
+	"github.com/osapi-io/osapi/internal/provider"
 )
 
-// SetGopsutilProcesses overrides the process listing for testing.
-func SetGopsutilProcesses(
-	fn func() ([]*gopsutil.Process, error),
-) {
-	gopsutilProcesses = fn
+var (
+	_ Provider             = (*Gohai)(nil)
+	_ provider.FactsSetter = (*Gohai)(nil)
+)
+
+// Gohai reads the host's load averages with gohai's load collector, on
+// every Linux family and on macOS.
+type Gohai struct {
+	provider.FactsAware
+
+	// Sources are what the collector reads. A zero field is the real
+	// host's.
+	Sources source.Sources
 }
 
-// ResetGopsutilProcesses restores the real process listing.
-func ResetGopsutilProcesses() {
-	gopsutilProcesses = gopsutil.Processes
+// New returns a provider that reads the real host.
+func New() *Gohai {
+	return &Gohai{}
+}
+
+// GetAverageStats is the 1, 5 and 15 minute load averages.
+func (g *Gohai) GetAverageStats() (*Result, error) {
+	got, err := load.NewWith(g.Sources).Collect(context.Background(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("get load: %w", err)
+	}
+	l := got.(*load.Info)
+
+	return &Result{Load1: float32(l.One), Load5: float32(l.Five), Load15: float32(l.Fifteen)}, nil
 }

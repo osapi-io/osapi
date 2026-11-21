@@ -18,20 +18,41 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package disk
+package gohaitest_test
 
 import (
-	"github.com/osapi-io/osapi/internal/provider"
+	"context"
+	"testing"
+
+	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi/internal/provider/gohaitest"
 )
 
-var _ provider.FactsSetter = (*Linux)(nil)
-
-// Linux implements the Disk interface for Linux.
-type Linux struct {
-	provider.FactsAware
+type GohaitestPublicTestSuite struct {
+	suite.Suite
 }
 
-// NewLinuxProvider factory to create a new Linux instance.
-func NewLinuxProvider() *Linux {
-	return &Linux{}
+func TestGohaitestPublicTestSuite(
+	t *testing.T,
+) {
+	suite.Run(t, new(GohaitestPublicTestSuite))
+}
+
+func (s *GohaitestPublicTestSuite) TestLinux() {
+	src := gohaitest.Linux(s.T(), map[string]string{"/proc/loadavg": "1 2 3"}, map[string]string{
+		"sysctl -n vm.loadavg": "{ 1 2 3 }",
+	})
+	s.Equal("debian", src.Family)
+
+	b, err := src.FS.ReadFile("/proc/loadavg")
+	s.Require().NoError(err)
+	s.Equal("1 2 3", string(b))
+
+	out, err := src.Exec.Execute(context.Background(), "sysctl", "-n", "vm.loadavg")
+	s.Require().NoError(err)
+	s.Equal("{ 1 2 3 }", string(out))
+
+	_, err = src.Exec.Execute(context.Background(), "nope")
+	s.ErrorContains(err, "exec nope: not found")
 }

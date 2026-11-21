@@ -21,13 +21,11 @@
 package disk_test
 
 import (
-	"errors"
-	"os"
-	"syscall"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osapi-io/osapi/internal/provider/gohaitest"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 )
 
@@ -35,76 +33,32 @@ type DiskPublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *DiskPublicTestSuite) SetupTest() {}
-
-func (suite *DiskPublicTestSuite) TearDownTest() {}
-
-func (suite *DiskPublicTestSuite) TestIsPermissionError() {
-	tests := []struct {
-		name         string
-		err          error
-		validateFunc func(bool)
-	}{
-		{
-			name: "when error is EACCES wrapped in os.PathError",
-			err: &os.PathError{
-				Op:   "open",
-				Path: "/restricted",
-				Err:  syscall.EACCES,
-			},
-			validateFunc: func(got bool) {
-				suite.Equal(true, got)
-			},
-		},
-		{
-			name: "when error is a different syscall errno",
-			err: &os.PathError{
-				Op:   "open",
-				Path: "/file",
-				Err:  syscall.EPERM, // Not EACCES.
-			},
-			validateFunc: func(got bool) {
-				suite.Equal(false, got)
-			},
-		},
-		{
-			name: "when error is not a PathError",
-			err:  errors.New("some other error"),
-			validateFunc: func(got bool) {
-				suite.Equal(false, got)
-			},
-		},
-		{
-			name: "when PathError contains non-syscall error",
-			err: &os.PathError{
-				Op:   "open",
-				Path: "/file",
-				Err:  errors.New("some random error"),
-			},
-			validateFunc: func(got bool) {
-				suite.Equal(false, got)
-			},
-		},
-		{
-			name: "when error is nil",
-			err:  nil,
-			validateFunc: func(got bool) {
-				suite.Equal(false, got)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			got := disk.ExportIsPermissionError(tc.err)
-
-			tc.validateFunc(got)
-		})
-	}
-}
-
 func TestDiskPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(DiskPublicTestSuite))
+}
+
+func (s *DiskPublicTestSuite) TestGetLocalUsageStats() {
+	const dfHead = "Filesystem 1024-blocks Used Available Capacity Mounted on\n"
+	g := &disk.Gohai{Sources: gohaitest.Linux(s.T(), map[string]string{
+		"/proc/mounts": "/dev/sda1 / ext4 rw 0 0\n" +
+			"tmpfs /run tmpfs rw 0 0\n" +
+			"/dev/sdb1 /data xfs rw 0 0\n" +
+			"server:/export /mnt/nfs nfs rw 0 0\n",
+	}, map[string]string{
+		"df -akP": dfHead +
+			"/dev/sda1 100 40 60 40% /\n" +
+			"tmpfs 10 1 9 10% /run\n" +
+			"server:/export 1000 1 999 1% /mnt/nfs\n",
+	})}
+	got, err := g.GetLocalUsageStats()
+	s.Require().NoError(err)
+	s.Equal([]disk.Result{{Name: "/", Total: 100 * 1024, Used: 40 * 1024, Free: 60 * 1024}}, got,
+		"tmpfs and nfs are not local; /data has no sizes")
+
+	_, err = (&disk.Gohai{Sources: gohaitest.Linux(s.T(), nil, nil)}).GetLocalUsageStats()
+	s.ErrorContains(err, "get disk usage")
+
+	s.NotNil(disk.New())
 }

@@ -21,11 +21,13 @@
 package process_test
 
 import (
-	"errors"
-	"os"
+	"strconv"
 	"testing"
+	"time"
 
-	gopsutil "github.com/shirou/gopsutil/v4/process"
+	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/memfs"
+	"github.com/osapi-io/gohai/pkg/gohai/source"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/telemetry/process"
@@ -35,176 +37,71 @@ type ProcessPublicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *ProcessPublicTestSuite) SetupTest() {}
-
-func (suite *ProcessPublicTestSuite) TearDownTest() {}
-
-func (suite *ProcessPublicTestSuite) TestGetMetrics() {
-	tests := []struct {
-		name         string
-		validateFunc func(got *process.Metrics, err error)
-	}{
-		{
-			name: "returns non-nil metrics",
-			validateFunc: func(got *process.Metrics, err error) {
-				suite.NoError(err)
-				suite.NotNil(got)
-			},
-		},
-		{
-			name: "goroutines is positive",
-			validateFunc: func(got *process.Metrics, err error) {
-				suite.NoError(err)
-				suite.Require().NotNil(got)
-				suite.Greater(got.Goroutines, 0)
-			},
-		},
-		{
-			name: "rss is positive",
-			validateFunc: func(got *process.Metrics, err error) {
-				suite.NoError(err)
-				suite.Require().NotNil(got)
-				suite.Greater(got.RSSBytes, int64(0))
-			},
-		},
-		{
-			name: "cpu is non-negative",
-			validateFunc: func(got *process.Metrics, err error) {
-				suite.NoError(err)
-				suite.Require().NotNil(got)
-				suite.GreaterOrEqual(got.CPUPercent, float64(0))
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			p := process.New()
-
-			got, err := p.GetMetrics()
-
-			tc.validateFunc(got, err)
-		})
-	}
+// statLine is /proc/7/stat of a process 100 ticks after boot with utime
+// and stime in ticks of 1/100 s.
+func statLine(
+	utime, stime int,
+) string {
+	return "7 (osapi) S 1 7 7 0 -1 4194560 1 2 3 4 " +
+		itoa(utime) + " " + itoa(stime) + " 7 8 20 0 1 0 100 9 10\n"
 }
 
-func (suite *ProcessPublicTestSuite) TestGetMetricsWithInjection() {
-	tests := []struct {
-		name         string
-		pid          int32
-		setup        func()
-		teardown     func()
-		validateFunc func(got *process.Metrics, err error)
-	}{
-		{
-			name: "returns metrics for current process using real functions",
-			pid:  int32(os.Getpid()),
-			validateFunc: func(got *process.Metrics, err error) {
-				suite.NoError(err)
-				suite.NotNil(got)
-				suite.GreaterOrEqual(got.CPUPercent, float64(0))
-				suite.Greater(got.RSSBytes, int64(0))
-				suite.Greater(got.Goroutines, 0)
-			},
-		},
-		{
-			name: "returns error for invalid pid",
-			pid:  -99999,
-			validateFunc: func(got *process.Metrics, err error) {
-				suite.Nil(got)
-				suite.Error(err)
-				suite.Contains(err.Error(), "get process")
-			},
-		},
-		{
-			name: "returns error when CPUPercent fails",
-			pid:  0,
-			setup: func() {
-				process.SetNewProcessFn(func(_ int32) (*gopsutil.Process, error) {
-					return &gopsutil.Process{}, nil
-				})
-				process.SetCPUPercentFn(func(_ *gopsutil.Process) (float64, error) {
-					return 0, errors.New("cpu error")
-				})
-			},
-			teardown: func() {
-				process.ResetNewProcessFn()
-				process.ResetCPUPercentFn()
-			},
-			validateFunc: func(got *process.Metrics, err error) {
-				suite.Nil(got)
-				suite.Error(err)
-				suite.Contains(err.Error(), "get cpu percent")
-			},
-		},
-		{
-			name: "returns error when MemoryInfo fails",
-			pid:  0,
-			setup: func() {
-				process.SetNewProcessFn(func(_ int32) (*gopsutil.Process, error) {
-					return &gopsutil.Process{}, nil
-				})
-				process.SetCPUPercentFn(func(_ *gopsutil.Process) (float64, error) {
-					return 1.5, nil
-				})
-				process.SetMemoryInfoFn(func(_ *gopsutil.Process) (uint64, error) {
-					return 0, errors.New("memory error")
-				})
-			},
-			teardown: func() {
-				process.ResetNewProcessFn()
-				process.ResetCPUPercentFn()
-				process.ResetMemoryInfoFn()
-			},
-			validateFunc: func(got *process.Metrics, err error) {
-				suite.Nil(got)
-				suite.Error(err)
-				suite.Contains(err.Error(), "get memory info")
-			},
-		},
-		{
-			name: "returns error when the underlying MemoryInfo call fails",
-			pid:  0,
-			setup: func() {
-				process.SetNewProcessFn(func(_ int32) (*gopsutil.Process, error) {
-					return &gopsutil.Process{}, nil
-				})
-				process.SetCPUPercentFn(func(_ *gopsutil.Process) (float64, error) {
-					return 1.5, nil
-				})
-				process.SetProcMemoryInfoFn(
-					func(_ *gopsutil.Process) (*gopsutil.MemoryInfoStat, error) {
-						return nil, errors.New("memory info error")
-					},
-				)
-			},
-			teardown: func() {
-				process.ResetNewProcessFn()
-				process.ResetCPUPercentFn()
-				process.ResetProcMemoryInfoFn()
-			},
-			validateFunc: func(got *process.Metrics, err error) {
-				suite.Nil(got)
-				suite.Error(err)
-				suite.Contains(err.Error(), "get memory info")
-			},
-		},
-	}
+func itoa(
+	n int,
+) string {
+	return strconv.Itoa(n)
+}
 
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			if tc.setup != nil {
-				tc.setup()
-			}
-			if tc.teardown != nil {
-				defer tc.teardown()
-			}
+func (suite *ProcessPublicTestSuite) writeHost(
+	fs avfs.VFS,
+	utime int,
+) {
+	suite.Require().NoError(fs.MkdirAll("/proc/7", 0o755))
+	suite.Require().NoError(fs.WriteFile("/proc/stat", []byte("btime 1700000000\n"), 0o644))
+	suite.Require().NoError(fs.WriteFile("/proc/7/stat", []byte(statLine(utime, 0)), 0o644))
+	suite.Require().NoError(fs.WriteFile("/proc/7/status", []byte("VmRSS:\t2048 kB\n"), 0o644))
+}
 
-			p := process.ExportNewProviderWithPID(tc.pid)
-			got, err := p.GetMetrics()
-			tc.validateFunc(got, err)
-		})
-	}
+func (suite *ProcessPublicTestSuite) TestGetMetrics() {
+	suite.Run("the real process", func() {
+		got, err := process.New().GetMetrics()
+		suite.Require().NoError(err)
+		suite.Greater(got.Goroutines, 0)
+		suite.Positive(got.RSSBytes)
+	})
+
+	suite.Run("the CPU share between two samples", func() {
+		fs := memfs.New()
+		suite.writeHost(fs, 200) // 2 s of CPU, 9 s after start
+		now := time.Unix(1700000010, 0)
+		p := process.ExportNewProvider(7, source.Sources{
+			FS: fs, Family: "debian", Now: func() time.Time { return now },
+		}, func() time.Time { return now })
+
+		first, err := p.GetMetrics()
+		suite.Require().NoError(err)
+		suite.InDelta(
+			2.0/9*100,
+			first.CPUPercent,
+			0.001,
+			"the first sample is the average since start",
+		)
+		suite.Equal(int64(2048*1024), first.RSSBytes)
+
+		suite.writeHost(fs, 300) // 1 s more CPU in the next 4 s
+		now = now.Add(4 * time.Second)
+		second, err := p.GetMetrics()
+		suite.Require().NoError(err)
+		suite.InDelta(25.0, second.CPUPercent, 0.001)
+	})
+
+	suite.Run("no such process", func() {
+		p := process.ExportNewProvider(7, source.Sources{
+			FS: memfs.New(), Family: "debian", Now: time.Now,
+		}, time.Now)
+		_, err := p.GetMetrics()
+		suite.ErrorContains(err, "get process")
+	})
 }
 
 // In order for `go test` to run this suite, we need to create

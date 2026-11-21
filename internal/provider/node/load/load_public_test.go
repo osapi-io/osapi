@@ -1,4 +1,4 @@
-// Copyright (c) 2026 John Dewey
+// Copyright (c) 2024 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -18,43 +18,37 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package process
+package load_test
 
 import (
-	"context"
+	"testing"
 
-	"github.com/osapi-io/osapi/internal/provider"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi/internal/provider/gohaitest"
+	"github.com/osapi-io/osapi/internal/provider/node/load"
 )
 
-// Linux implements the Provider interface for generic Linux.
-// All methods return ErrUnsupported as this is a generic Linux stub.
-type Linux struct{}
-
-// NewLinuxProvider factory to create a new Linux instance.
-func NewLinuxProvider() *Linux {
-	return &Linux{}
+type LoadPublicTestSuite struct {
+	suite.Suite
 }
 
-// List returns ErrUnsupported on generic Linux.
-func (l *Linux) List(
-	_ context.Context,
-) ([]Info, error) {
-	return nil, provider.ErrUnsupported
+func TestLoadPublicTestSuite(
+	t *testing.T,
+) {
+	suite.Run(t, new(LoadPublicTestSuite))
 }
 
-// Get returns ErrUnsupported on generic Linux.
-func (l *Linux) Get(
-	_ context.Context,
-	_ int,
-) (*Info, error) {
-	return nil, provider.ErrUnsupported
-}
+func (s *LoadPublicTestSuite) TestGetAverageStats() {
+	g := &load.Gohai{Sources: gohaitest.Linux(s.T(), map[string]string{
+		"/proc/loadavg": "1.00 0.50 0.25 1/100 1234\n",
+	}, nil)}
+	got, err := g.GetAverageStats()
+	s.Require().NoError(err)
+	s.Equal(&load.Result{Load1: 1, Load5: 0.5, Load15: 0.25}, got)
 
-// Signal returns ErrUnsupported on generic Linux.
-func (l *Linux) Signal(
-	_ context.Context,
-	_ int,
-	_ string,
-) (*SignalResult, error) {
-	return nil, provider.ErrUnsupported
+	_, err = (&load.Gohai{Sources: gohaitest.Linux(s.T(), nil, nil)}).GetAverageStats()
+	s.ErrorContains(err, "get load")
+
+	s.NotNil(load.New())
 }

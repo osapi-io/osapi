@@ -21,34 +21,49 @@
 package job
 
 import (
-	"github.com/shirou/gopsutil/v4/host"
+	"context"
+
+	"github.com/osapi-io/gohai/pkg/gohai/collectors/hostname"
+	"github.com/osapi-io/gohai/pkg/gohai/source"
 )
 
-// hostInfoFn is the function used to get host info (injectable for testing).
-var hostInfoFn = host.Info
+// hostnameFn is the host's name as `hostname` prints it, from gohai's
+// hostname collector (injectable for testing).
+var hostnameFn = func() (string, error) {
+	return machineName(source.Sources{})
+}
+
+// machineName is the name `hostname` prints on the host of src.
+func machineName(
+	src source.Sources,
+) (string, error) {
+	got, err := hostname.NewWith(src).Collect(context.Background(), nil)
+	if err != nil {
+		return "", err
+	}
+
+	return got.(*hostname.Info).MachineName, nil
+}
 
 // HostnameProvider defines the interface for getting hostname
 type HostnameProvider interface {
 	Hostname() (string, error)
 }
 
-// gopsutilHostnameProvider implements HostnameProvider using gopsutil/host
-type gopsutilHostnameProvider struct{}
+// gohaiHostnameProvider implements HostnameProvider with gohai.
+type gohaiHostnameProvider struct{}
 
-func (p gopsutilHostnameProvider) Hostname() (string, error) {
-	info, err := hostInfoFn()
-	if err != nil {
-		return "", err
-	}
-	return info.Hostname, nil
+// Hostname is the host's name, as `hostname` prints it.
+func (p gohaiHostnameProvider) Hostname() (string, error) {
+	return hostnameFn()
 }
 
-// defaultHostnameProvider is the default provider using gopsutil
-var defaultHostnameProvider HostnameProvider = gopsutilHostnameProvider{}
+// defaultHostnameProvider is the default provider, gohai
+var defaultHostnameProvider HostnameProvider = gohaiHostnameProvider{}
 
 // GetAgentHostname returns the hostname that should be used by agents.
-// It first checks the configured hostname, then falls back to system hostname using gopsutil.
-// This function respects configuration while using gopsutil for system detection.
+// It first checks the configured hostname, then falls back to the host's
+// name from gohai.
 func GetAgentHostname(
 	configuredHostname string,
 ) (string, error) {
@@ -57,7 +72,7 @@ func GetAgentHostname(
 		return configuredHostname, nil
 	}
 
-	// Use gopsutil to get system hostname
+	// Use gohai to get the host's name
 	hostname, err := defaultHostnameProvider.Hostname()
 	if err != nil || hostname == "" {
 		return "unknown", nil
@@ -86,7 +101,7 @@ func GetAgentHostnameWithProvider(
 	return hostname, nil
 }
 
-// GetLocalHostname returns the current system hostname using gopsutil.
+// GetLocalHostname returns the host's name, from gohai.
 // This is for backward compatibility with existing code.
 func GetLocalHostname() (string, error) {
 	return GetLocalHostnameWithProvider(defaultHostnameProvider)

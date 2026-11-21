@@ -29,6 +29,8 @@ import (
 	"testing"
 	"testing/fstest"
 
+	"github.com/osapi-io/osapi/internal/provider/gohaitest"
+
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/osapi-io/gohai/pkg/gohai"
 	"github.com/osapi-io/gohai/pkg/gohai/source"
@@ -218,17 +220,6 @@ func (s *SetupPublicTestSuite) TestSetup() {
 	}
 }
 
-// noCommands is a gohai command runner on a host that has no commands.
-type noCommands struct{}
-
-func (noCommands) Execute(
-	_ context.Context,
-	name string,
-	_ ...string,
-) ([]byte, error) {
-	return nil, errors.New("exec " + name + ": not found")
-}
-
 func (s *SetupPublicTestSuite) TestInContainer() {
 	tests := []struct {
 		name  string
@@ -264,7 +255,7 @@ func (s *SetupPublicTestSuite) TestInContainer() {
 				s.Require().NoError(fs.WriteFile(path, []byte(content), 0o644))
 			}
 			got := agent.ExportInContainer(source.Sources{
-				FS: fs, Exec: noCommands{}, Family: "debian",
+				FS: fs, Exec: gohaitest.Commands(s.T(), nil), Family: "debian",
 			})
 			s.Equal(tt.want, got)
 		})

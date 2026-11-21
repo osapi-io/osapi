@@ -18,16 +18,45 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package disk
+package memory
 
 import (
+	"context"
+	"fmt"
+
+	"github.com/osapi-io/gohai/pkg/gohai/collectors/memory"
+	"github.com/osapi-io/gohai/pkg/gohai/source"
+
 	"github.com/osapi-io/osapi/internal/provider"
 )
 
-// GetLocalUsageStats retrieves disk space statistics for local disks only.
-// It returns a slice of Result structs, each containing the total, used,
-// and free space in bytes for the corresponding local disk.
-// An error is returned if somethng goes wrong.
-func (l *Linux) GetLocalUsageStats() ([]Result, error) {
-	return nil, provider.ErrUnsupported
+var (
+	_ Provider             = (*Gohai)(nil)
+	_ provider.FactsSetter = (*Gohai)(nil)
+)
+
+// Gohai reads the host's memory with gohai's memory collector, on every
+// Linux family and on macOS.
+type Gohai struct {
+	provider.FactsAware
+
+	// Sources are what the collector reads. A zero field is the real
+	// host's.
+	Sources source.Sources
+}
+
+// New returns a provider that reads the real host.
+func New() *Gohai {
+	return &Gohai{}
+}
+
+// GetStats is the total, available, free and cached memory, in bytes.
+func (g *Gohai) GetStats() (*Result, error) {
+	got, err := memory.NewWith(g.Sources).Collect(context.Background(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("get memory: %w", err)
+	}
+	m := got.(*memory.Info)
+
+	return &Result{Total: m.Total, Available: m.Available, Free: m.Free, Cached: m.Cached}, nil
 }

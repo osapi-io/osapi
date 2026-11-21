@@ -18,73 +18,60 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package process provides resource usage metrics for the current process.
 package process
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"runtime"
+	"sync"
+	"time"
 
-	gopsutil "github.com/shirou/gopsutil/v4/process"
+	"github.com/osapi-io/gohai/pkg/gohai/collectors/process"
+	"github.com/osapi-io/gohai/pkg/gohai/source"
 )
 
-// Injectable functions for testing.
-var (
-	newProcessFn = gopsutil.NewProcess
-	cpuPercentFn = func(proc *gopsutil.Process) (float64, error) { return proc.CPUPercent() }
-	// procMemoryInfoFn wraps the raw gopsutil call so the error branch in
-	// defaultMemoryInfoFn below can be exercised: gopsutil's MemoryInfo()
-	// never fails in practice on any platform this runs on, so the failure
-	// path needs its own seam to test.
-	procMemoryInfoFn = func(proc *gopsutil.Process) (*gopsutil.MemoryInfoStat, error) { return proc.MemoryInfo() }
-	memoryInfoFn     = defaultMemoryInfoFn
-)
-
-// defaultMemoryInfoFn is the default value of memoryInfoFn, named so
-// ResetMemoryInfoFn in export_test.go can restore this exact function
-// rather than a duplicate closure at a different source location.
-func defaultMemoryInfoFn(
-	proc *gopsutil.Process,
-) (uint64, error) {
-	info, err := procMemoryInfoFn(proc)
-	if err != nil {
-		return 0, err
-	}
-
-	return info.RSS, nil
-}
-
+// provider reads this process with gohai's process collector, which
+// reads one PID and not the others.
 type provider struct {
-	pid int32
+	pid     int32
+	sources source.Sources
+	now     func() time.Time
+
+	mu      sync.Mutex
+	last    float64   // cpu_seconds of the last sample
+	lastAt  time.Time // when the last sample was read
+	sampled bool
 }
 
-// New creates a new Provider that reports metrics for the current process.
+// New returns a Provider for the current process on the real host.
 func New() Provider {
-	return &provider{pid: int32(os.Getpid())}
+	return &provider{pid: int32(os.Getpid()), now: time.Now}
 }
 
-// GetMetrics retrieves CPU percent, RSS memory, and goroutine count for
-// the current process.
+// GetMetrics is this process's CPU share, RSS and goroutine count. The CPU
+// share is the change of gohai's cpu_seconds since the last call, over the
+// time between them, so a spike shows in the next heartbeat. The first call
+// has no sample before it and uses gohai's cpu_percent.
 func (p *provider) GetMetrics() (*Metrics, error) {
-	proc, err := newProcessFn(p.pid)
+	proc, err := process.NewWith(p.sources).Read(context.Background(), p.pid)
 	if err != nil {
 		return nil, fmt.Errorf("get process: %w", err)
 	}
+	now := p.now()
 
-	cpuPercent, err := cpuPercentFn(proc)
-	if err != nil {
-		return nil, fmt.Errorf("get cpu percent: %w", err)
+	p.mu.Lock()
+	cpu := proc.CPUPercent
+	if elapsed := now.Sub(p.lastAt).Seconds(); p.sampled && elapsed > 0 {
+		cpu = (proc.CPUSeconds - p.last) / elapsed * 100
 	}
-
-	rss, err := memoryInfoFn(proc)
-	if err != nil {
-		return nil, fmt.Errorf("get memory info: %w", err)
-	}
+	p.last, p.lastAt, p.sampled = proc.CPUSeconds, now, true
+	p.mu.Unlock()
 
 	return &Metrics{
-		CPUPercent: cpuPercent,
-		RSSBytes:   int64(rss),
+		CPUPercent: cpu,
+		RSSBytes:   proc.RSS,
 		Goroutines: runtime.NumGoroutine(),
 	}, nil
 }

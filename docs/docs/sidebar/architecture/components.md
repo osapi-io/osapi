@@ -111,7 +111,7 @@ writes through sudo, with a fixed sudoers drop-in.
 | [NATS][] / JetStream          | Messages, the KV store and streams                  |
 | [oapi-codegen][]              | Code generation for the OpenAPI strict server       |
 | [OpenTelemetry][]             | Distributed traces and Prometheus metrics           |
-| [gopsutil][]                  | System metrics on more than one platform            |
+| [gohai][]                     | Every read of the host: facts, metrics, processes   |
 | [pro-bing][]                  | The ICMP ping implementation                        |
 | [golang-jwt][]                | JWT creation and validation                         |
 | `nats-client` / `nats-server` | Related repositories, pinned by version in `go.mod` |
@@ -132,7 +132,7 @@ writes through sudo, with a fixed sudoers drop-in.
 [Viper]: https://github.com/spf13/viper
 [NATS]: https://nats.io
 [oapi-codegen]: https://github.com/oapi-codegen/oapi-codegen
-[gopsutil]: https://github.com/shirou/gopsutil
+[gohai]: https://github.com/osapi-io/gohai
 [pro-bing]: https://github.com/prometheus-community/pro-bing
 [golang-jwt]: https://github.com/golang-jwt/jwt
 [OpenTelemetry]: https://opentelemetry.io
