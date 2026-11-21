@@ -44,6 +44,18 @@ Makes osapi client commands and their docs pages. Needs API.
 
 Use: When an operator calls the behavior from a shell.
 
+### `Of(parent.Behavior)`
+
+Puts the behavior's items under an item of another behavior: Of(user.Behavior)
+puts sshkey at /api/node/&#123;hostname&#125;/user/&#123;name&#125;/sshkey and
+osapi client node user sshkey. Each input has the parent's key, such as name,
+which goes in the path before the method's own key. The permissions are the
+parent's: the keys of a user need user:read and user:write. The parent's
+provider is not required: a child that needs it declares Requires too.
+
+Use: For a resource that exists only inside another, such as the SSH keys of a
+user. Not with Under: the parent's path is the group.
+
 ### `Under("group")`
 
 Nests the behavior in a group: its routes, commands and directory.
@@ -636,12 +648,6 @@ in the definition or in internal/behavior/gen.
 ### `A command or a shell from the caller`
 
 There is no execute permission.
-
-Use: Stop, and tell the person what is missing. Do not build around it.
-
-### `A resource under another`
-
-Two keys in the path, such as the SSH keys of a user.
 
 Use: Stop, and tell the person what is missing. Do not build around it.
 

@@ -132,6 +132,33 @@ func grouped() *behavior.Behavior {
 	)
 }
 
+// partIn is the input of a child: the parent's key, and the child's own.
+type partIn struct {
+	Key  string `json:"key"  validate:"required" doc:"The parent item"`
+	Part string `json:"part" validate:"required" doc:"The part"`
+}
+
+func setPart(
+	_ context.Context,
+	_ fakeProvider,
+	in partIn,
+) (result, error) {
+	return result{Key: in.Key, Changed: true}, nil
+}
+
+// child is a behavior whose items are under an item of top, keyed by key.
+func child(
+	parent *behavior.Behavior,
+) *behavior.Behavior {
+	return behavior.Define("part", "The parts of an item",
+		behavior.Node,
+		behavior.Of(parent),
+		behavior.Read("list", get),
+		behavior.Write("delete", setPart).Key("part"),
+		behavior.Action("restart", setPart).Key("part"),
+	)
+}
+
 type BehaviorPublicTestSuite struct {
 	suite.Suite
 }
@@ -202,6 +229,12 @@ func (s *BehaviorPublicTestSuite) TestPermission() {
 			verb: behavior.VerbRead,
 			want: "network:read",
 		},
+		{
+			name: "when under a parent the parent's permission is the child's",
+			b:    child(grouped()),
+			verb: behavior.VerbWrite,
+			want: "network:write",
+		},
 	}
 
 	for _, tc := range tests {
@@ -271,6 +304,32 @@ func (s *BehaviorPublicTestSuite) TestPath() {
 			method: "reboot",
 			want:   "/api/node/{hostname}/sysctl/reboot",
 		},
+		{
+			name:   "when under a parent, the collection is under the parent's item",
+			b:      child(top()),
+			method: "list",
+			want:   "/api/node/{hostname}/sysctl/{key}/part",
+		},
+		{
+			name:   "when under a parent, an item has the two keys",
+			b:      child(top()),
+			method: "delete",
+			want:   "/api/node/{hostname}/sysctl/{key}/part/{part}",
+		},
+		{
+			name: "when under a parent that is under a group, the group comes first",
+			b: child(
+				behavior.Define(
+					"iface",
+					"x",
+					behavior.Node,
+					behavior.Under("network"),
+					behavior.Read("get", get).Key("key"),
+				),
+			),
+			method: "restart",
+			want:   "/api/node/{hostname}/network/iface/{key}/part/{part}/restart",
+		},
 	}
 
 	for _, tc := range tests {
@@ -287,6 +346,25 @@ func (s *BehaviorPublicTestSuite) TestServedAt() {
 	s.Equal("osapi client node sysctl get", b.Command(m))
 }
 
+// TestPathKeys: a child's methods put the parent's key in the path before
+// their own; a behavior with no parent has only its own.
+func (s *BehaviorPublicTestSuite) TestPathKeys() {
+	c := child(top())
+	s.Equal("key", c.ParentKey())
+	s.Equal([]string{"key"}, c.Method("list").PathKeys())
+	s.Equal([]string{"key", "part"}, c.Method("delete").PathKeys())
+	s.True(c.Method("delete").InPath("part"))
+	s.False(c.Method("list").InPath("part"))
+	s.Equal([]string{"key"}, top().Method("get").PathKeys())
+	s.Empty(top().Method("list").PathKeys())
+	s.Empty(top().ParentKey(), "a behavior of the host has no parent key")
+	s.Empty(child(grouped()).ParentKey(), "a parent with no keyed method gives no key")
+	s.Empty(
+		behavior.Read("get", get).Key("key").PathKeys()[1:],
+		"a method of no behavior has its own key only",
+	)
+}
+
 func (s *BehaviorPublicTestSuite) TestExplain() {
 	m := behavior.Read("get", get).Explain("Reads the value.")
 	s.Equal("Reads the value.", m.Long)
@@ -301,6 +379,8 @@ func (s *BehaviorPublicTestSuite) TestCommand() {
 		{name: "when at the top level", b: top(), want: "osapi client node sysctl get"},
 		{name: "when under a group", b: grouped(), want: "osapi client node network dns get"},
 	}
+	s.Equal("osapi client node sysctl part list", child(top()).Command(child(top()).Method("list")),
+		"a child's command is under its parent's")
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {

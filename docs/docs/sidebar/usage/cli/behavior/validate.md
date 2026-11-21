@@ -32,8 +32,16 @@ The rules:
 - `route`: No two methods have the same route. Fix: Give one of them a key with
   .Key("field").
 - `key`: The key of a method is a field of its input, and is required: it is a
-  path segment, which is never empty. Fix: Give .Key the JSON name of an input
-  field, or add the field to the input, and tag it validate:"required,...".
+  path segment, which is never empty. Its name in the spec, the TypeName and its
+  title, is not also the name of a row type of the behavior. Fix: Give .Key the
+  JSON name of an input field, or add the field to the input, and tag it
+  validate:"required,...". When the message names a type, rename the type, such
+  as Part to PartEntry.
+- `parent`: A behavior declared with Of is under a registered behavior whose
+  items have a key, such as name for a user, and is not also under a group: the
+  parent's path is its group. Fix: Give Of a behavior that has a keyed method,
+  such as user, and drop Under; the child takes the parent's path, command and
+  permissions.
 - `schema`: Each input is a struct, and each input and output type has a JSON
   Schema. A struct that an input or output holds is named in one spec for every
   behavior, so no two behaviors have a different type of the same name. Fix: Use

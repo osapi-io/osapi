@@ -59,6 +59,9 @@ const (
 	RuleExample     = "example"
 	RuleVerb        = "verb"
 	RuleRoute       = "route"
+	// RuleParent: a behavior declared with Of is under a registered
+	// behavior that has a key, and does not also declare Under.
+	RuleParent = "parent"
 	// RuleSettings fails settings that are not a struct, or a field
 	// without the mapstructure name or doc the config needs.
 	RuleSettings = "settings"
@@ -253,6 +256,28 @@ func ValidateBehavior(
 			RuleName,
 			"all is internal/behaviors/all, which registers every behavior; choose another name",
 		)
+	}
+	problems = append(problems, keyNameProblems(b)...)
+	if b.Parent != nil {
+		switch {
+		case b.Group != "":
+			add(
+				"",
+				RuleParent,
+				"it declares Of(%s) and Under(%q); a child is under its parent only",
+				b.Parent.Name,
+				b.Group,
+			)
+		case b.ParentKey() == "":
+			add(
+				"",
+				RuleParent,
+				"its parent %s has no keyed method, so its items have no key to be under",
+				b.Parent.Name,
+			)
+		case Lookup(b.Parent.Name) != b.Parent:
+			add("", RuleParent, "its parent %s is not registered", b.Parent.Name)
+		}
 	}
 	if b.Group != "" && !namePattern.MatchString(b.Group) {
 		add(
@@ -496,16 +521,18 @@ func ValidateBehavior(
 		in, err := SchemaFor(m.In)
 		if err != nil {
 			add(m.Name, RuleSchema, "input: %v", err)
-		} else if m.KeyField != "" {
-			if _, ok := in.Properties[m.KeyField]; !ok {
-				add(m.Name, RuleKey, "key %q is not a field of the input", m.KeyField)
-			} else if !slices.Contains(in.Required, m.KeyField) {
-				add(
-					m.Name,
-					RuleKey,
-					"key %q is optional, but a key is a path segment, which is never empty",
-					m.KeyField,
-				)
+		} else {
+			for _, key := range m.PathKeys() {
+				if _, ok := in.Properties[key]; !ok {
+					add(m.Name, RuleKey, "key %q is not a field of the input", key)
+				} else if !slices.Contains(in.Required, key) {
+					add(
+						m.Name,
+						RuleKey,
+						"key %q is optional, but a key is a path segment, which is never empty",
+						key,
+					)
+				}
 			}
 		}
 		for _, msg := range inputProblems(m.In) {
@@ -777,4 +804,39 @@ func markup(
 	text string,
 ) bool {
 	return strings.ContainsAny(text, "<>{}")
+}
+
+// keyNameProblems is each path key whose name in the spec is the name of a
+// row type of the behavior: both are the TypeName and the title, so the key
+// part of sshkey and a row type Part are both SshkeyPart, and the spec
+// cannot have the two.
+func keyNameProblems(
+	b *Behavior,
+) []Problem {
+	rows := map[string]bool{}
+	for _, m := range b.Methods {
+		t := m.Out
+		for t != nil && (t.Kind() == reflect.Pointer || t.Kind() == reflect.Slice) {
+			t = t.Elem()
+		}
+		if t != nil {
+			rows[t.Name()] = true
+		}
+	}
+	var problems []Problem
+	seen := map[string]bool{}
+	for _, m := range b.Methods {
+		for _, key := range m.PathKeys() {
+			if rows[title(key)] && !seen[key] {
+				seen[key] = true
+				problems = append(problems, Problem{
+					Behavior: b.Name, Method: m.Name, Rule: RuleKey,
+					Message: fmt.Sprintf("key %q and the type %s are both %s%s in the spec; "+
+						"rename the type, such as %sEntry", key, title(key), b.TypeName(), title(key), title(key)),
+				})
+			}
+		}
+	}
+
+	return problems
 }

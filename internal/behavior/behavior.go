@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"reflect"
 	"runtime"
+	"slices"
 
 	"github.com/osapi-io/osapi/internal/validation"
 )
@@ -61,6 +62,10 @@ type Behavior struct {
 	// Group nests the behavior under another path and command, such as
 	// network for dns. Empty sits it directly under node.
 	Group string
+	// Parent is the behavior whose items this one's items are under, set
+	// with Of: a user's SSH keys are under the user. Nil for a behavior of
+	// the host.
+	Parent *Behavior
 	// API serves the behavior over REST: routes, the OpenAPI spec and its
 	// API docs. Without it the behavior is reachable only through another
 	// behavior or the job system.
@@ -139,6 +144,58 @@ func Under(
 	return optionFunc(func(b *Behavior) { b.Group = group })
 }
 
+// Of puts a behavior's items under an item of parent: Of(user.Behavior)
+// puts sshkey at /api/node/{hostname}/user/{name}/sshkey and
+// `osapi client node user sshkey`. Each input of the behavior has the
+// parent's key, such as name, which goes in the path. Its permissions are
+// the parent's, so the keys of a user need user:read and user:write.
+func Of(
+	parent *Behavior,
+) Option {
+	return optionFunc(func(b *Behavior) { b.Parent = parent })
+}
+
+// ParentKey is the key of the parent's items, such as name for a user: the
+// key that the parent's keyed methods have. Empty for a behavior with no
+// parent, or a parent with no keyed method.
+func (b *Behavior) ParentKey() string {
+	if b.Parent == nil {
+		return ""
+	}
+	for _, m := range b.Parent.Methods {
+		if m.KeyField != "" {
+			return m.KeyField
+		}
+	}
+
+	return ""
+}
+
+// base is the route of the behavior's collection: the group and the name,
+// or the parent's item and the name.
+func (b *Behavior) base() string {
+	if b.Parent != nil {
+		return b.Parent.base() + "/{" + b.ParentKey() + "}/" + b.Name
+	}
+	if b.Group != "" {
+		return b.Group + "/" + b.Name
+	}
+
+	return b.Name
+}
+
+// words are the words of the behavior's command after osapi client node.
+func (b *Behavior) words() string {
+	if b.Parent != nil {
+		return b.Parent.words() + " " + b.Name
+	}
+	if b.Group != "" {
+		return b.Group + " " + b.Name
+	}
+
+	return b.Name
+}
+
 // Define declares a behavior. Methods are options too, so a definition reads
 // top to bottom as name, description, placement and methods.
 func Define(
@@ -163,6 +220,9 @@ func Define(
 func (b *Behavior) Permission(
 	v Verb,
 ) string {
+	if b.Parent != nil {
+		return b.Parent.Permission(v)
+	}
 	prefix := b.Name
 	if b.Group != "" {
 		prefix = b.Group
@@ -259,6 +319,30 @@ func (m *Method) Key(
 	m.KeyField = field
 
 	return m
+}
+
+// PathKeys are the input fields that go in the method's path, by their JSON
+// names: the parent's key for a behavior with Of, then the method's own key.
+func (m *Method) PathKeys() []string {
+	var keys []string
+	if m.owner != nil {
+		if k := m.owner.ParentKey(); k != "" {
+			keys = append(keys, k)
+		}
+	}
+	if m.KeyField != "" {
+		keys = append(keys, m.KeyField)
+	}
+
+	return keys
+}
+
+// InPath reports whether the input field name, by its JSON name, goes in
+// the method's path.
+func (m *Method) InPath(
+	name string,
+) bool {
+	return slices.Contains(m.PathKeys(), name)
 }
 
 // On limits the method to platforms, as Platform names them: a hostname
@@ -511,11 +595,7 @@ func (m *Method) HTTPMethod() string {
 func (b *Behavior) Path(
 	m *Method,
 ) string {
-	p := "/api/node/{hostname}/"
-	if b.Group != "" {
-		p += b.Group + "/"
-	}
-	p += b.Name
+	p := "/api/node/{hostname}/" + b.base()
 	if m.KeyField != "" {
 		p += "/{" + m.KeyField + "}"
 	}
@@ -531,10 +611,5 @@ func (b *Behavior) Path(
 func (b *Behavior) Command(
 	m *Method,
 ) string {
-	c := "osapi client node "
-	if b.Group != "" {
-		c += b.Group + " "
-	}
-
-	return c + b.Name + " " + m.Name
+	return "osapi client node " + b.words() + " " + m.Name
 }

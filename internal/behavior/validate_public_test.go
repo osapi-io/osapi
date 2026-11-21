@@ -185,6 +185,24 @@ func (s *ValidatePublicTestSuite) SetupSuite() {
 	rule.Register("test_custom", rule.Pattern(`^x+$`))
 }
 
+// resultIn is an input whose key, result, is named as the row type Result.
+type resultIn struct {
+	Result string `json:"result" validate:"required" doc:"The result"`
+}
+
+func getResult(
+	_ context.Context,
+	_ fakeProvider,
+	_ resultIn,
+) (Result, error) {
+	return Result{}, nil
+}
+
+// Result is a row type that a key named result collides with.
+type Result struct {
+	Value string `json:"value" doc:"The value"`
+}
+
 func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 	tests := []struct {
 		name      string
@@ -372,6 +390,66 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 				behavior.Action("status", set).Key("key").Describe("Status"),
 			),
 			wantRules: []string{behavior.RuleVerb},
+		},
+		{
+			name: "when a key's name in the spec is a row type's",
+			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
+				behavior.Read("get", getResult).Key("result").Describe("Get"),
+			),
+			wantRules: []string{behavior.RuleKey},
+		},
+		{
+			name: "when a child is also under a group",
+			b: behavior.Define(
+				"part",
+				"x",
+				behavior.Node,
+				onDebian,
+				behavior.Of(
+					behavior.Define(
+						"item",
+						"x",
+						behavior.Node,
+						behavior.Read("get", get).Key("key"),
+					),
+				),
+				behavior.Under("network"),
+				behavior.Read("list", get).Describe("List"),
+			),
+			wantRules: []string{behavior.RuleParent},
+		},
+		{
+			name: "when a child's parent has no key",
+			b: behavior.Define(
+				"part",
+				"x",
+				behavior.Node,
+				onDebian,
+				behavior.Of(
+					behavior.Define("item", "x", behavior.Node, behavior.Read("list", get)),
+				),
+				behavior.Read("list", get).Describe("List"),
+			),
+			wantRules: []string{behavior.RuleParent},
+		},
+		{
+			name: "when a child's parent is not registered",
+			b: behavior.Define(
+				"part",
+				"x",
+				behavior.Node,
+				onDebian,
+				behavior.Of(
+					behavior.Define(
+						"item",
+						"x",
+						behavior.Node,
+						behavior.Read("get", get).Key("key"),
+					),
+				),
+				behavior.Read("list", get).Describe("List"),
+			),
+			wantRules: []string{behavior.RuleParent},
 		},
 		{
 			name: "when a write that is not an action always changes",
