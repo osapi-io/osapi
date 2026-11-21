@@ -32,12 +32,13 @@ osapi behavior create --group network --name neighbors --description "The host's
 
 ## Flags
 
-| Flag            | Description                                                                | Default |
-| --------------- | -------------------------------------------------------------------------- | ------- |
-| `--description` | What it manages, in one line (required)                                    |         |
-| `--group`       | Nest it under a group, such as network: its routes, commands and directory |         |
-| `--name`        | The behavior's name: lowercase letters and digits (required)               |         |
-| `--root`        | The osapi checkout to write into                                           | `.`     |
+| Flag            | Description                                                                                                          | Default |
+| --------------- | -------------------------------------------------------------------------------------------------------------------- | ------- |
+| `--description` | What it manages, in one line (required)                                                                              |         |
+| `--group`       | Nest it under a group, such as network: its routes, commands and directory                                           |         |
+| `--name`        | The behavior's name: lowercase letters and digits (required)                                                         |         |
+| `--package`     | The Go package and directory, when it is not the name: package is a Go keyword, so --name package --package packages |         |
+| `--root`        | The osapi checkout to write into                                                                                     | `.`     |
 
 ## Global flags
 

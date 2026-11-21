@@ -116,6 +116,8 @@ write the bad value, because a generator cannot know one for a custom rule.
 
 1. Write it: `go run . behavior create --name <name> --description "<one line>"`,
    with `--group <group>` for a behavior nested under one, such as `network`,
+   and `--package <go-package>` when the name is a Go keyword, such as
+   `--name package --package packages` (the directory is then that package),
    then `go generate ./internal/behaviors/<name>/mocks ./internal/behaviors/all`
    (`<group>/<name>` for a grouped one). The
    result builds, validates and passes every test before you change it.

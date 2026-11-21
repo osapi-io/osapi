@@ -25,6 +25,7 @@ import (
 	"errors"
 	"fmt"
 	gofmt "go/format"
+	"go/token"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -37,7 +38,8 @@ const module = "github.com/osapi-io/osapi"
 // allFile registers every behavior, one blank import each.
 const allFile = "internal/behaviors/all/all.go"
 
-// scaffoldName is a behavior name that is also a Go package name.
+// scaffoldName is a behavior name or a Go package name of a new behavior:
+// lowercase letters and digits.
 var scaffoldName = regexp.MustCompile(`^[a-z][a-z0-9]*$`)
 
 // Scaffold writes a new behavior's standard layout under
@@ -50,11 +52,26 @@ func Scaffold(
 	root string,
 	group string,
 	name string,
+	goPackage string,
 	doc string,
 ) ([]string, error) {
 	if !scaffoldName.MatchString(name) {
 		return nil, fmt.Errorf(
 			"name %q must be lowercase letters and digits, starting with a letter", name)
+	}
+	// The Go package is what the caller names; with none it is the name.
+	// Nothing changes a name to make it a Go package name.
+	if goPackage == "" {
+		goPackage = name
+	}
+	if !scaffoldName.MatchString(goPackage) {
+		return nil, fmt.Errorf(
+			"package %q must be lowercase letters and digits, starting with a letter", goPackage)
+	}
+	if token.IsKeyword(goPackage) {
+		return nil, fmt.Errorf(
+			"%q is a Go keyword, so it cannot be the Go package: pass --package with another name",
+			goPackage)
 	}
 	if group != "" && !scaffoldName.MatchString(group) {
 		return nil, fmt.Errorf(
@@ -71,9 +88,9 @@ func Scaffold(
 
 	// A grouped behavior lives under its group, as its routes and commands
 	// do: internal/behaviors/network/dns.
-	path := name
+	path := goPackage
 	if group != "" {
-		path = group + "/" + name
+		path = group + "/" + goPackage
 	}
 	dir := filepath.Join("internal", "behaviors", filepath.FromSlash(path))
 	if _, err := os.Stat(filepath.Join(root, dir)); err == nil {
@@ -93,7 +110,9 @@ func Scaffold(
 		rel  string
 		data []byte
 	}
-	sources := scaffoldSources(scaffold{group: group, name: name, path: path, doc: doc})
+	sources := scaffoldSources(
+		scaffold{group: group, name: name, goPackage: goPackage, path: path, doc: doc},
+	)
 	files := make([]file, 0, len(sources)+1)
 	for _, src := range sources {
 		data, err := renderGo(src.file)

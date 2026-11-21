@@ -56,9 +56,10 @@ var behaviorCreateCmd = &cobra.Command{
 		name, _ := cmd.Flags().GetString("name")
 		description, _ := cmd.Flags().GetString("description")
 		group, _ := cmd.Flags().GetString("group")
+		packageFlag, _ := cmd.Flags().GetString("package")
 		root, _ := cmd.Flags().GetString("root")
 
-		return clicommand.Run(cmd, behaviordsl.Group, "create", behaviordsl.CreateInput{Name: name, Description: description, Group: group, Root: root})
+		return clicommand.Run(cmd, behaviordsl.Group, "create", behaviordsl.CreateInput{Name: name, Description: description, Group: group, Package: packageFlag, Root: root})
 	},
 	Short: "Write a new behavior's standard layout in an osapi checkout",
 	Use:   "create",
@@ -99,6 +100,7 @@ func init() {
 	behaviorCreateCmd.Flags().String("description", "", "What it manages, in one line")
 	_ = behaviorCreateCmd.MarkFlagRequired("description")
 	behaviorCreateCmd.Flags().String("group", "", "Nest it under a group, such as network: its routes, commands and directory")
+	behaviorCreateCmd.Flags().String("package", "", "The Go package and directory, when it is not the name: package is a Go keyword, so --name package --package packages")
 	behaviorCreateCmd.Flags().String("root", ".", "The osapi checkout to write into")
 	clicommand.AddCommands(behaviordsl.Group, behaviorListCmd, behaviorGetCmd, behaviorMethodGetCmd, behaviorCreateCmd, behaviorSpecGetCmd, behaviorValidateCmd)
 }

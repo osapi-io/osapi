@@ -216,13 +216,17 @@ func Create(
 	if root == "" {
 		root = "."
 	}
-	files, err := behavior.Scaffold(root, in.Group, in.Name, in.Description)
+	files, err := behavior.Scaffold(root, in.Group, in.Name, in.Package, in.Description)
 	if err != nil {
 		return CreateOutput{}, err
 	}
-	path := in.Name
+	dir := in.Package
+	if dir == "" {
+		dir = in.Name
+	}
+	path := dir
 	if in.Group != "" {
-		path = in.Group + "/" + in.Name
+		path = in.Group + "/" + dir
 	}
 	out := CreateOutput{Name: in.Name}
 	for _, f := range files {
