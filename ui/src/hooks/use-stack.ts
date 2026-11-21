@@ -167,10 +167,11 @@ export const ALL_BLOCK_TYPES: BlockType[] = [
   },
   {
     type: "package-update",
-    label: "Update",
-    description: "Update a package",
+    label: "Refresh Index",
+    description: "Refresh the package index",
     category: "package",
     group: "software",
+    readyOnAdd: true,
   },
   {
     type: "package-check-updates",
@@ -246,6 +247,7 @@ export const ALL_BLOCK_TYPES: BlockType[] = [
     description: "Remove NTP configuration",
     category: "ntp",
     group: "config",
+    readyOnAdd: true,
   },
   {
     type: "timezone-get",

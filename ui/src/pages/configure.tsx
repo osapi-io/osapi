@@ -1062,6 +1062,7 @@ export function Configure() {
             data={block.data}
             onChange={(data) => updateBlockData(block.id, data)}
             onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
+            anyService={block.type === "service-get"}
           />
         );
       case "command":

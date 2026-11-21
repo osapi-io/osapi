@@ -562,7 +562,38 @@ function ServiceListResult({ data }: { data: Record<string, unknown> }) {
     }[];
     error?: string;
   };
-  const hosts = data.results as ServiceListEntry[];
+  // The API answers one row per service, with its systemd state: group them
+  // by host, keeping a host that failed or was skipped as a row without one.
+  type ServiceRow = {
+    hostname: string;
+    status?: string;
+    error?: string;
+    name?: string;
+    state?: string;
+    enabled?: boolean;
+    description?: string;
+  };
+  const hosts: ServiceListEntry[] = [];
+  for (const row of data.results as ServiceRow[]) {
+    let host = hosts.find((h) => h.hostname === row.hostname);
+    if (!host) {
+      host = {
+        hostname: row.hostname,
+        status: row.status,
+        error: row.error,
+        services: [],
+      };
+      hosts.push(host);
+    }
+    if (row.name) {
+      host.services?.push({
+        name: row.name,
+        status: row.state,
+        enabled: row.enabled,
+        description: row.description,
+      });
+    }
+  }
   const totalServices = hosts.reduce(
     (n, h) => n + (h.services?.length ?? 0),
     0,
@@ -622,9 +653,9 @@ function ServiceListResult({ data }: { data: Record<string, unknown> }) {
                   <KeyValue label="name" value={s.name} variant="strong" />
                   {s.status && (
                     <KeyValue
-                      label="status"
+                      label="state"
                       value={s.status}
-                      variant={s.status === "active" ? "accent" : "default"}
+                      variant={s.status === "running" ? "accent" : "default"}
                     />
                   )}
                   {s.enabled !== undefined && (
@@ -667,7 +698,43 @@ function PackageListResult({
     }[];
     error?: string;
   };
-  const hosts = data.results as PkgHost[];
+  // The API answers one row per package, or per update with its current and
+  // new version: group them by host, keeping a host that failed or was
+  // skipped as a row without a package.
+  type PkgRow = {
+    hostname: string;
+    status?: string;
+    error?: string;
+    name?: string;
+    version?: string;
+    current_version?: string;
+    new_version?: string;
+    description?: string;
+    size?: number;
+  };
+  const hosts: PkgHost[] = [];
+  for (const row of data.results as PkgRow[]) {
+    let host = hosts.find((h) => h.hostname === row.hostname);
+    if (!host) {
+      host = {
+        hostname: row.hostname,
+        status: row.status,
+        error: row.error,
+        packages: [],
+      };
+      hosts.push(host);
+    }
+    if (row.name) {
+      host.packages?.push({
+        name: row.name,
+        version: row.new_version
+          ? `${row.current_version ?? "?"} → ${row.new_version}`
+          : row.version,
+        description: row.description,
+        size: row.size,
+      });
+    }
+  }
   const totalPackages = hosts.reduce(
     (n, h) => n + (h.packages?.length ?? 0),
     0,
@@ -1770,16 +1837,13 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
 
   // Service get — show per-host service details
   if (type === "service-get" && Array.isArray(data.results)) {
+    // One row per host: the service, with its systemd state.
     type ServiceGetEntry = {
       hostname: string;
       status?: string;
-      service?: {
-        name?: string;
-        status?: string;
-        enabled?: boolean;
-        description?: string;
-        pid?: number;
-      };
+      name?: string;
+      state?: string;
+      enabled?: boolean;
       error?: string;
     };
     const entries = data.results as ServiceGetEntry[];
@@ -1791,19 +1855,17 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
           hostname: r.hostname,
           status: hostStatus(r),
           error: r.error,
-          extra: r.service ? (
+          extra: r.name ? (
             <span className="flex items-center gap-1.5">
-              {r.service.name && <Text>{r.service.name}</Text>}
-              {r.service.status && (
-                <Text
-                  variant={r.service.status === "active" ? "primary" : "muted"}
-                >
-                  {r.service.status}
+              <Text>{r.name}</Text>
+              {r.state && (
+                <Text variant={r.state === "running" ? "primary" : "muted"}>
+                  {r.state}
                 </Text>
               )}
-              {r.service.enabled !== undefined && (
+              {r.enabled !== undefined && (
                 <Text variant="muted">
-                  {r.service.enabled ? "enabled" : "disabled"}
+                  {r.enabled ? "enabled" : "disabled"}
                 </Text>
               )}
             </span>
