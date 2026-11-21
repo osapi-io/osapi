@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Validate | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/usage/cli/behavior/validate"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Validate | OSAPI"><meta data-rh="true" name="description" content="Check every behavior against the rules the platform relies on."><meta data-rh="true" property="og:description" content="Check every behavior against the rules the platform relies on."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/behavior/validate"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/behavior/validate" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/behavior/validate" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Usage","item":"https://osapi-io.github.io/osapi/sidebar/usage/"},{"@type":"ListItem","position":2,"name":"CLI","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/"},{"@type":"ListItem","position":3,"name":"Behavior","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/behavior/"},{"@type":"ListItem","position":4,"name":"Validate","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/behavior/validate"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.5a49c94c.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.dff3b0b0.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.e9068601.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.d5b766a2.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -34,7 +34,11 @@ behavior.Write to Define.</li>
 <li class=""><code>duplicate</code>: Each behavior is registered one time, and each method name is
 used one time. Fix: Rename or remove the second one.</li>
 <li class=""><code>verb</code>: A read is named list, get or status. A write is named create, update
-or delete. Fix: Rename the method to the standard verb that the message names.</li>
+or delete. An action, declared with Action, is named for what it does with one
+of the CLI&#x27;s actions, such as restart, and not with a standard verb. Fix:
+Rename the method to the standard verb that the message names, or declare a
+write named for what it does with behavior.Action and a name from osapi cli
+command spec get.</li>
 <li class=""><code>route</code>: No two methods have the same route. Fix: Give one of them a key with
 .Key(&quot;field&quot;).</li>
 <li class=""><code>key</code>: The key of a method is a field of its input, and is required: it is a
@@ -153,6 +157,12 @@ arguments, not through sh -c.</li>
 <li class=""><code>runs</code>: Each program that the provider runs is declared. Fix: Add
 behavior.Runs(&quot;program&quot;), or behavior.Sudo(&quot;program&quot;) for a program run as
 root.</li>
+<li class=""><code>gohai</code>: A read runs each command through gohai: it reads the facts of the
+host with a gohai collector and h.Sources(), not with h.Exec. Fix: Read the
+fact with the gohai collector that has it, such as
+services.NewWith(h.Sources()). A fact that gohai does not read is a change to
+gohai first. A read of what is not a fact of the host, such as the updates of
+the package index, declares why with .NotAFact(&quot;...&quot;).</li>
 <li class=""><code>writes</code>: Each path that the provider writes, removes or changes the mode of
 is declared, also through a required behavior. Fix: Add a pattern that covers
 the path to behavior.Writes.</li>

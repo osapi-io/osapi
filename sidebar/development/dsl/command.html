@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Command DSL | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/development/dsl/command"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Command DSL | OSAPI"><meta data-rh="true" name="description" content="Each part of a local group: a command that runs in the CLI and calls no API."><meta data-rh="true" property="og:description" content="Each part of a local group: a command that runs in the CLI and calls no API."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/development/dsl/command"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/dsl/command" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/dsl/command" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Development","item":"https://osapi-io.github.io/osapi/sidebar/development/"},{"@type":"ListItem","position":2,"name":"DSLs","item":"https://osapi-io.github.io/osapi/sidebar/development/dsl/"},{"@type":"ListItem","position":3,"name":"Command DSL","item":"https://osapi-io.github.io/osapi/sidebar/development/dsl/command"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.5a49c94c.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.dff3b0b0.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.e9068601.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.d5b766a2.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -156,13 +156,14 @@ default is never a required flag.</p>
 breaks one is a usage error that names the flag, and the command exits 2.
 required makes the flag required. The rules are those of internal/validation,
 which endpoints and behaviors use; dive applies the rules after it to each value
-of a []string. A custom rule, such as permission, is declared with rule.Declare.</p>
+of a []string. A custom rule, such as permission, is declared with
+rule.Declare.</p>
 <p>Use: On each input field. A field with no limit is validate:&quot;omitempty&quot;;
 validate refuses an input field with no tag.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-type-of-a-field"><code>the type of a field</code><a href="#the-type-of-a-field" class="hash-link" aria-label="Direct link to the-type-of-a-field" title="Direct link to the-type-of-a-field" translate="no">​</a></h3>
-<p>Is the kind of its flag: a string, a bool, an int, a []string (a flag given once
-for each value, or with commas), a map[string]string (key=value pairs) or a
-[]byte (the path of a local file, whose content the field gets).</p>
+<p>Is the kind of its flag: a string, a bool, an int, a []string (a flag given
+once for each value, or with commas), a map[string]string (key=value pairs) or
+a []byte (the path of a local file, whose content the field gets).</p>
 <p>Use: Pick the type of the value a person types.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="output-from-the-output-type">Output, from the output type<a href="#output-from-the-output-type" class="hash-link" aria-label="Direct link to Output, from the output type" title="Direct link to Output, from the output type" translate="no">​</a></h2>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="renderp-group-out"><code>Render(p, group, out)</code><a href="#renderp-group-out" class="hash-link" aria-label="Direct link to renderp-group-out" title="Direct link to renderp-group-out" translate="no">​</a></h3>

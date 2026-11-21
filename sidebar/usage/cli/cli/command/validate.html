@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Validate | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/command/validate"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Validate | OSAPI"><meta data-rh="true" name="description" content="Check every local group against the rules of a definition, and the output of"><meta data-rh="true" property="og:description" content="Check every local group against the rules of a definition, and the output of"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/command/validate"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/command/validate" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/command/validate" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Usage","item":"https://osapi-io.github.io/osapi/sidebar/usage/"},{"@type":"ListItem","position":2,"name":"CLI","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/"},{"@type":"ListItem","position":3,"name":"CLI","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/"},{"@type":"ListItem","position":4,"name":"Command","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/command/"},{"@type":"ListItem","position":5,"name":"Validate","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/command/validate"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.5a49c94c.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.dff3b0b0.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.e9068601.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.d5b766a2.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -38,9 +38,9 @@ belongs at the root.</li>
 Add .Short(&quot;&lt;what it does&gt;&quot;) and .Example(&quot;--flag value&quot;) to the method.</li>
 <li class=""><code>flag</code>: Each value is a flag: the input is a struct, each field has a json
 name that is its flag with _ as -, no flag or in tag, and a type a flag holds
-(string, bool, int, []string, map[string]string or []byte). A command takes no
-positional argument. Fix: Make the input a struct, tag each field json:&quot;name&quot;,
-drop the flag and in tags, and use one of the flag types.</li>
+(string, bool, int, []string, map[string]string or []byte). A command takes
+no positional argument. Fix: Make the input a struct, tag each field
+json:&quot;name&quot;, drop the flag and in tags, and use one of the flag types.</li>
 <li class=""><code>doc</code>: Each input field has a doc tag: the help of its flag. Fix: Add
 doc:&quot;...&quot; to the field: a capital letter first and no period at the end.</li>
 <li class=""><code>validate</code>: Each input field has a validate tag: its rules, or omitempty for
@@ -60,7 +60,7 @@ Fix: Add command.SubDoc(&quot;segment&quot;, &quot;...&quot;) to Define, with wh
 commands do, such as Read the roles and what each grants.</li>
 <li class=""><code>handler</code>: The group Uses a type, and each method has a handler,
 func(context.Context, D, In) (Out, error), with D that type and In and Out the
-method&#x27;s types. Fix: Add command.Uses<a href="" class="">Deps</a> to Define, and .Handle(fn) to
+method&#x27;s types. Fix: Add command.Uses[Deps]() to Define, and .Handle(fn) to
 each method, with the signature that the message names.</li>
 <li class=""><code>tag</code>: Each render tag of an output field is one the output knows: -, bytes,
 age, time, duration, duration=ms, status or short=N with N above 0. An empty

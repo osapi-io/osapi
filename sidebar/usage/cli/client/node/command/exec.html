@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Exec | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/usage/cli/client/node/command/exec"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Exec | OSAPI"><meta data-rh="true" name="description" content="Execute a command directly."><meta data-rh="true" property="og:description" content="Execute a command directly."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/client/node/command/exec"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/client/node/command/exec" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/client/node/command/exec" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Usage","item":"https://osapi-io.github.io/osapi/sidebar/usage/"},{"@type":"ListItem","position":2,"name":"CLI","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/"},{"@type":"ListItem","position":3,"name":"Client","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/client/"},{"@type":"ListItem","position":4,"name":"Node","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/client/node/"},{"@type":"ListItem","position":5,"name":"Command","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/client/node/command/"},{"@type":"ListItem","position":6,"name":"Exec","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/client/node/command/exec"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.5a49c94c.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.dff3b0b0.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.e9068601.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.d5b766a2.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -15,12 +15,12 @@
 <p>Execute a command directly.</p>
 <p>The executable gets the arguments as they are, without shell expansion. The
 table view shortens long output. Use <code>--json</code> to get the full response. Use
-<code>@fact.*</code> references to put live system values in the command. Refer to
-<a class="" href="/osapi/sidebar/features/system-facts">System Facts</a> for all <code>@fact.*</code>
-references. Use <code>--stdout</code> or <code>--stderr</code> to print only that output of the remote
-command. The exit code of the CLI is the exit code of the remote command. Thus
-you can use it in scripts. Each agent resolves its own facts, so <code>@fact.*</code> works
-with a broadcast target.</p>
+<code>@fact.*</code> references to put live system values in the command. Refer to [System
+Facts](../../../../../features/system-facts.md) for all <code>@fact.*</code> references.
+Use <code>--stdout</code> or <code>--stderr</code> to print only that output of the remote command.
+The exit code of the CLI is the exit code of the remote command. Thus you can
+use it in scripts. Each agent resolves its own facts, so <code>@fact.*</code> works with a
+broadcast target.</p>
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node command exec</span><br></div></code></pre></div></div>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="examples">Examples<a href="#examples" class="hash-link" aria-label="Direct link to Examples" title="Direct link to Examples" translate="no">​</a></h2>
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node command exec --command ls --args &quot;-la,/tmp&quot;</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node command exec \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --command cat \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --args &quot;config.yaml&quot; \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --cwd /etc/osapi \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --timeout 10</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">osapi client node command exec --command whoami --target group:web</span><br></div></code></pre></div></div>
