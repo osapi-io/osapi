@@ -20,6 +20,10 @@ to contribute:
 - [Your first behavior](your-first-behavior.md): a tutorial that builds a new
   behavior, from its types to a command that runs.
 - [Building a behavior](behaviors.md): every option, tag and generated file.
+- [Building an endpoint](endpoints.md): an operation of the controller itself.
+- [Building a command](commands.md): a command that runs in the CLI and calls no
+  API.
+- [DSLs](dsl/dsl.mdx): the reference of each DSL, generated from the binary.
 
 <!-- prettier-ignore-start -->
 [contributing]: https://github.com/osapi-io/osapi/blob/main/CONTRIBUTING.md

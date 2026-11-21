@@ -52,6 +52,15 @@ type GetOutput struct {
 	Name    string   `                       json:"name"`
 	Doc     string   `                       json:"doc"     label:"Description"`
 	Methods []Method `                       json:"methods"`
+	Types   []Type   `                       json:"types"`
+}
+
+// Type is the input and the output type of one method, with their fields:
+// a required input field is marked *.
+type Type struct {
+	Name   string `json:"name"`
+	Input  string `json:"input"`
+	Output string `json:"output"`
 }
 
 // Method is one method of a group: its route, permission and operation.

@@ -31,3 +31,26 @@ type GenerateOutput struct {
 	Dir   string   `                      json:"dir"`
 	Pages int      `                      json:"pages"`
 }
+
+// DSLInput is where to write the DSL pages.
+type DSLInput struct {
+	Dir string `json:"dir" validate:"omitempty" doc:"Directory of the DSL pages" default:"docs/docs/sidebar/development/dsl"`
+}
+
+// DSLOutput is where the DSL pages are, and how many there are.
+type DSLOutput struct {
+	_     struct{} `title:"DSL reference"`
+	Dir   string   `                      json:"dir"`
+	Pages int      `                      json:"pages"`
+}
+
+// ReferenceInput is the root of the repository whose reference to write.
+type ReferenceInput struct {
+	Root string `json:"root" validate:"omitempty" doc:"Root of the osapi repository" default:"."`
+}
+
+// ReferenceOutput is how many pages the reference has.
+type ReferenceOutput struct {
+	_     struct{} `title:"Reference"`
+	Pages int      `                  json:"pages"`
+}

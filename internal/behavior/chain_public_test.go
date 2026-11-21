@@ -116,6 +116,19 @@ func (s *ChainPublicTestSuite) TestChainProblems() {
 	}
 }
 
+func (s *ChainPublicTestSuite) TestTree() {
+	files := behavior.Define("files", "x")
+	netcfg := behavior.Define("netcfg", "x", behavior.Requires(files))
+	disk := behavior.Define("disk", "x")
+	s.Equal("files", behavior.Tree(files))
+	s.Equal(
+		"dns → netcfg → files",
+		behavior.Tree(behavior.Define("dns", "x", behavior.Requires(netcfg))),
+	)
+	s.Equal("status → (disk, netcfg → files)",
+		behavior.Tree(behavior.Define("status", "x", behavior.Requires(disk, netcfg))))
+}
+
 func (s *ChainPublicTestSuite) TestRequires() {
 	files := behavior.Define("files", "x")
 	state := behavior.Define("state", "x")

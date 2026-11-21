@@ -392,9 +392,9 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindGenerated,
-			Name: "docs/docs/sidebar/behaviors/<name>/",
-			Does: "The docs page of the behavior, from go generate ./internal/behaviors/all.",
-			When: "Change the definition, then generate. A generated test that fails is fixed in the definition or in internal/behavior/gen.",
+			Name: "docs/docs/sidebar/reference/behaviors/<name>/",
+			Does: "The docs page of the behavior: the output of osapi behavior get and osapi behavior method get, as markdown, from just cli-docs-generate (osapi cli docs reference generate).",
+			When: "Change the definition, then run just cli-docs-generate. A page that shows the wrong thing is fixed in the definition, or in the get command that shows it.",
 		},
 		{
 			Kind: KindGenerated,

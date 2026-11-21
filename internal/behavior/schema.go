@@ -23,6 +23,7 @@ package behavior
 import (
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/validation/rule"
@@ -213,4 +214,75 @@ func Secret(
 	f reflect.StructField,
 ) bool {
 	return f.Tag.Get("secret") == "true"
+}
+
+// TypeName is the name of t as a type list shows it: []Entry for a list.
+func TypeName(
+	t reflect.Type,
+) string {
+	if t.Kind() == reflect.Slice {
+		return "[]" + t.Elem().Name()
+	}
+
+	return t.Name()
+}
+
+// Shape is t with the fields of its schema s, as behavior get and
+// controller endpoint get show a type: CreateInput { key*, value* }, with
+// each required field of an input marked *.
+func Shape(
+	t reflect.Type,
+	s *Schema,
+	input bool,
+) string {
+	name := TypeName(t)
+	if s.Items != nil {
+		s = s.Items
+	}
+	if len(s.Order) == 0 {
+		return name
+	}
+	parts := make([]string, 0, len(s.Order))
+	for _, f := range s.Order {
+		if input && slices.Contains(s.Required, f) {
+			f += "*"
+		}
+		parts = append(parts, f)
+	}
+
+	return name + " { " + strings.Join(parts, ", ") + " }"
+}
+
+// FieldShape is t with its top-level JSON fields, as Shape shows a type,
+// from its struct tags alone: a required input field, validate:"required",
+// is marked *. It does not walk into the fields, so a type that holds itself,
+// such as a span tree, has a shape too.
+func FieldShape(
+	t reflect.Type,
+	input bool,
+) string {
+	name := TypeName(t)
+	for t.Kind() == reflect.Slice || t.Kind() == reflect.Pointer {
+		t = t.Elem()
+	}
+	if t.Kind() != reflect.Struct {
+		return name
+	}
+	var parts []string
+	for i := range t.NumField() {
+		f := t.Field(i)
+		json := strings.Split(f.Tag.Get("json"), ",")[0]
+		if !f.IsExported() || json == "-" || json == "" {
+			continue
+		}
+		if input && slices.Contains(strings.Split(f.Tag.Get("validate"), ","), "required") {
+			json += "*"
+		}
+		parts = append(parts, json)
+	}
+	if len(parts) == 0 {
+		return name
+	}
+
+	return name + " { " + strings.Join(parts, ", ") + " }"
 }

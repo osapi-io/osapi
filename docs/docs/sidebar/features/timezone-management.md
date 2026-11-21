@@ -5,9 +5,9 @@ sidebar_position: 12
 # Timezone management
 
 osapi reads the system timezone of each host, and sets it on the Debian family.
-It is the [timezone behavior](../behaviors/timezone/timezone.md). The update is
-idempotent. If the host already has the timezone, the agent changes nothing and
-returns `changed: false`.
+It is the [timezone behavior](../reference/behaviors/timezone/timezone.md). The
+update is idempotent. If the host already has the timezone, the agent changes
+nothing and returns `changed: false`.
 
 ## How it works
 

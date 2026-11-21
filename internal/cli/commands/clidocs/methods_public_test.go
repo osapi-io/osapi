@@ -22,14 +22,17 @@ package clidocs_test
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/cli/commands/clidocs"
+	"github.com/osapi-io/osapi/internal/guide"
 )
 
 type MethodsPublicTestSuite struct {
@@ -69,6 +72,152 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 		clidocs.GenerateInput{Dir: filepath.Join(file, "pages")},
 	)
 	s.ErrorContains(err, "write the CLI reference into")
+}
+
+func (s *MethodsPublicTestSuite) TestGenerateDSL() {
+	spec := guide.Spec{
+		Kinds: []guide.Kind{{Kind: "a", Title: "Parts"}},
+		Terms: []guide.Term{{Kind: "a", Name: "Key", Does: "x", When: "y"}},
+	}
+	d := clidocs.Deps{DSLs: func() []clidocs.DSL {
+		return []clidocs.DSL{
+			{Slug: "behavior", Title: "Behavior DSL", Intro: "i", Position: 2, Spec: spec},
+		}
+	}}
+	dir := s.T().TempDir()
+	stale := filepath.Join(dir, "old.md")
+	s.Require().NoError(os.WriteFile(stale, []byte(guide.Generated), 0o644))
+	mine := filepath.Join(dir, "dsl.mdx")
+	s.Require().NoError(os.WriteFile(mine, []byte("written by a person"), 0o644))
+	kept := filepath.Join(dir, "notes.md")
+	s.Require().NoError(os.WriteFile(kept, []byte("written by a person"), 0o644))
+
+	got, err := clidocs.GenerateDSL(context.Background(), d, clidocs.DSLInput{Dir: dir})
+
+	s.Require().NoError(err)
+	s.Equal(clidocs.DSLOutput{Dir: dir, Pages: 1}, got)
+	page, err := os.ReadFile(filepath.Join(dir, "behavior.md"))
+	s.Require().NoError(err)
+	s.Contains(string(page), "# Behavior DSL")
+	s.NoFileExists(stale, "a generated page that no DSL has is removed")
+	s.FileExists(mine)
+	s.FileExists(kept, "a page that a person wrote stays")
+
+	wd, _ := os.Getwd()
+	work := s.T().TempDir()
+	s.Require().NoError(os.Chdir(work))
+	defer func() { _ = os.Chdir(wd) }()
+	got, err = clidocs.GenerateDSL(context.Background(), d, clidocs.DSLInput{})
+	s.Require().NoError(err)
+	s.Equal(
+		"docs/docs/sidebar/development/dsl",
+		got.Dir,
+		"with no dir, it writes to the docs site's",
+	)
+
+	file := filepath.Join(work, "file")
+	s.Require().NoError(os.WriteFile(file, nil, 0o644))
+	_, err = clidocs.GenerateDSL(
+		context.Background(),
+		d,
+		clidocs.DSLInput{Dir: filepath.Join(file, "dsl")},
+	)
+	s.ErrorContains(err, "write the DSL pages")
+	s.Require().NoError(os.MkdirAll(filepath.Join(work, "ro"), 0o555))
+	_, err = clidocs.GenerateDSL(
+		context.Background(),
+		d,
+		clidocs.DSLInput{Dir: filepath.Join(work, "ro")},
+	)
+	s.ErrorContains(err, "write the DSL pages", "a directory it cannot write into")
+}
+
+type refOut struct {
+	_    struct{} `title:"Thing"`
+	Name string   `              json:"name"`
+}
+
+func (s *MethodsPublicTestSuite) TestGenerateReference() {
+	pages := []clidocs.Page{
+		{
+			Path:  "docs/docs/sidebar/reference/behaviors/dns/dns.md",
+			Title: "DNS",
+			Intro: "The resolvers.",
+			Parts: []clidocs.Part{
+				{Group: "behavior", Out: refOut{Name: "dns"}},
+				{
+					Group: "behavior", Out: refOut{Name: "get"}, Heading: "Method get",
+					Link: func(string, string) string { return "" },
+				},
+			},
+		},
+		{
+			Path: "docs/docs/sidebar/reference/behaviors/_catalog.mdx", Partial: true,
+			Parts: []clidocs.Part{{Group: "behavior", Out: refOut{Name: "all"}}},
+		},
+	}
+	d := clidocs.Deps{Pages: func() ([]clidocs.Page, error) { return pages, nil }}
+	root := s.T().TempDir()
+	staleDir := filepath.Join(root, "docs/docs/sidebar/reference/chains")
+	s.Require().NoError(os.MkdirAll(staleDir, 0o755))
+	stale := filepath.Join(staleDir, "gone.md")
+	s.Require().NoError(os.WriteFile(stale, []byte(guide.Generated), 0o644))
+	landing := filepath.Join(staleDir, "chains.mdx")
+	s.Require().NoError(os.WriteFile(landing, []byte("written by a person"), 0o644))
+
+	got, err := clidocs.GenerateReference(
+		context.Background(),
+		d,
+		clidocs.ReferenceInput{Root: root},
+	)
+
+	s.Require().NoError(err)
+	s.Equal(2, got.Pages)
+	page, err := os.ReadFile(filepath.Join(root, pages[0].Path))
+	s.Require().NoError(err)
+	s.Contains(
+		string(page),
+		"---\ntitle: DNS\n---\n\n"+guide.Generated+"\n\n# DNS\n\nThe resolvers.\n",
+	)
+	s.Contains(string(page), "\n## Thing\n")
+	s.Contains(string(page), "\n## Method get\n", "a part's heading takes the place of its title")
+	part, err := os.ReadFile(filepath.Join(root, pages[1].Path))
+	s.Require().NoError(err)
+	s.True(strings.HasPrefix(string(part), "{/* Code generated"), "a partial has no front matter")
+	s.NoFileExists(stale, "a generated page that no command writes is removed")
+	s.FileExists(landing, "a page that a person wrote stays")
+
+	wd, _ := os.Getwd()
+	s.Require().NoError(os.Chdir(root))
+	defer func() { _ = os.Chdir(wd) }()
+	_, err = clidocs.GenerateReference(context.Background(), d, clidocs.ReferenceInput{})
+	s.Require().NoError(err, "with no root, it writes under the working directory")
+
+	_, err = clidocs.GenerateReference(context.Background(), clidocs.Deps{
+		Pages: func() ([]clidocs.Page, error) { return nil, errors.New("no registry") },
+	}, clidocs.ReferenceInput{Root: root})
+	s.ErrorContains(err, "no registry")
+
+	bad := []clidocs.Page{{Path: "x.md", Parts: []clidocs.Part{{Group: "g", Out: func() {}}}}}
+	_, err = clidocs.GenerateReference(context.Background(), clidocs.Deps{
+		Pages: func() ([]clidocs.Page, error) { return bad, nil },
+	}, clidocs.ReferenceInput{Root: root})
+	s.ErrorContains(err, "x.md", "an output that does not render names its page")
+
+	file := filepath.Join(root, "file")
+	s.Require().NoError(os.WriteFile(file, nil, 0o644))
+	inFile := []clidocs.Page{{Path: "file/sub/x.md", Title: "X"}}
+	_, err = clidocs.GenerateReference(context.Background(), clidocs.Deps{
+		Pages: func() ([]clidocs.Page, error) { return inFile, nil },
+	}, clidocs.ReferenceInput{Root: root})
+	s.Error(err, "a page under a file")
+
+	s.Require().NoError(os.MkdirAll(filepath.Join(root, "ro"), 0o555))
+	inRO := []clidocs.Page{{Path: "ro/x.md", Title: "X"}}
+	_, err = clidocs.GenerateReference(context.Background(), clidocs.Deps{
+		Pages: func() ([]clidocs.Page, error) { return inRO, nil },
+	}, clidocs.ReferenceInput{Root: root})
+	s.Error(err, "a page in a directory it cannot write into")
 }
 
 func TestMethodsPublicTestSuite(

@@ -31,6 +31,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/guide"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -206,10 +208,10 @@ func Page(
 	}
 	fmt.Fprintf(&b, "# %s\n\n", title)
 	if c.Short != "" {
-		fmt.Fprintf(&b, "%s.\n\n", mdx(strings.TrimSuffix(c.Short, ".")))
+		fmt.Fprintf(&b, "%s.\n\n", guide.MDX(strings.TrimSuffix(c.Short, ".")))
 	}
 	if c.Long != "" {
-		fmt.Fprintf(&b, "%s\n\n", mdx(strings.TrimSpace(c.Long)))
+		fmt.Fprintf(&b, "%s\n\n", guide.MDX(strings.TrimSpace(c.Long)))
 	}
 
 	if len(subs) > 0 || len(path) == 0 {
@@ -225,7 +227,7 @@ func Page(
 			)
 		}
 		if n := c.Annotations[Notes]; n != "" {
-			fmt.Fprintf(&b, "\n## Notes\n\n%s\n", mdx(n))
+			fmt.Fprintf(&b, "\n## Notes\n\n%s\n", guide.MDX(n))
 		}
 		if t := flagTable(c.LocalNonPersistentFlags(), c.PersistentFlags()); t != "" {
 			fmt.Fprintf(&b, "\n## Flags\n\n%s", t)
@@ -244,7 +246,7 @@ func Page(
 		)
 	}
 	if r := c.Annotations[Result]; r != "" {
-		fmt.Fprintf(&b, "\n## Result\n\n%s\n", mdx(r))
+		fmt.Fprintf(&b, "\n## Result\n\n%s\n", guide.MDX(r))
 	}
 	if p := c.Annotations[Permission]; p != "" {
 		fmt.Fprintf(
@@ -254,7 +256,7 @@ func Page(
 		)
 	}
 	if n := c.Annotations[Notes]; n != "" {
-		fmt.Fprintf(&b, "\n## Notes\n\n%s\n", mdx(n))
+		fmt.Fprintf(&b, "\n## Notes\n\n%s\n", guide.MDX(n))
 	}
 	if t := flagTable(c.LocalFlags()); t != "" {
 		fmt.Fprintf(&b, "\n## Flags\n\n%s", t)
@@ -300,7 +302,7 @@ func flagTable(
 		if f.Shorthand != "" {
 			name = "`-" + f.Shorthand + ", --" + f.Name + "`"
 		}
-		usage := mdx(strings.ReplaceAll(f.Usage, "|", `\|`))
+		usage := guide.MDX(strings.ReplaceAll(f.Usage, "|", `\|`))
 		if _, ok := f.Annotations[cobra.BashCompOneRequiredFlag]; ok &&
 			!strings.Contains(strings.ToLower(usage), "required") {
 			usage += " (required)"
@@ -345,20 +347,4 @@ func dedent(
 	}
 
 	return strings.Join(lines, "\n")
-}
-
-// mdxEscapes are the characters that MDX reads as the start of a tag or of an
-// expression.
-var mdxEscapes = strings.NewReplacer("<", "&lt;", ">", "&gt;", "{", "&#123;", "}", "&#125;")
-
-// mdx escapes the characters of s that MDX would parse, outside code spans.
-func mdx(
-	s string,
-) string {
-	parts := strings.Split(s, "`")
-	for i := 0; i < len(parts); i += 2 {
-		parts[i] = mdxEscapes.Replace(parts[i])
-	}
-
-	return strings.Join(parts, "`")
 }

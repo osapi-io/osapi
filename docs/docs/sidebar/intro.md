@@ -104,9 +104,10 @@ operation for.
 ### 4. Or run it yourself
 
 The agent runs the same commands that you can run. Each operation is a
-[behavior](behaviors/behaviors.mdx): a typed definition. osapi generates its API
-route, command, permission, docs and tests from the definition. No model runs at
-run time. The same input always does the same thing.
+[behavior](reference/behaviors/behaviors.mdx): a typed definition. osapi
+generates its API route, command, permission, docs and tests from the
+definition. No model runs at run time. The same input always does the same
+thing.
 
 ```bash
 $ osapi client node sysctl get --key vm.swappiness --target _all
@@ -165,8 +166,8 @@ does not run on its platform.
 
 - [Core concepts](concepts.md): behaviors, building blocks, jobs, targets,
   skills, and what comes next
-- [Behaviors](behaviors/behaviors.mdx): every behavior, generated from its
-  definition
+- [Behaviors](reference/behaviors/behaviors.mdx): every behavior, generated from
+  its definition
 - [Working with an agent](usage/agents.md): `osapi init`, the skills, and the
   prompts
 - [Features](features/node-management.md): what OSAPI can manage and how each

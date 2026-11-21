@@ -51,7 +51,7 @@ default:
 ```
 
 A family with no case gets the Linux provider. A
-[behavior](../../behaviors/behaviors.mdx) names a family with
+[behavior](../../reference/behaviors/behaviors.mdx) names a family with
 `behavior.Platform`, and can limit one method to a family with `.On`.
 `behavior.PlatformDebian` and `behavior.PlatformDarwin` are gohai's values.
 

@@ -217,7 +217,9 @@ examples-check:
 cli-docs-generate:
     just _docs-bun-install
     go run . cli docs generate --dir docs/docs/sidebar/usage/cli
-    cd docs && bun run prettier docs/sidebar/usage/cli --write --config prettier.config.js --ignore-path .prettierignore > /dev/null
+    go run . cli docs dsl generate --dir docs/docs/sidebar/development/dsl
+    go run . cli docs reference generate
+    cd docs && bun run prettier docs/sidebar/usage/cli docs/sidebar/development/dsl docs/sidebar/reference --write --config prettier.config.js --ignore-path .prettierignore > /dev/null
 
 # The CLI reference pages are generated from the cobra command tree. A command
 # without a page, a page without a command, or a flag that changed fails here.
@@ -225,7 +227,7 @@ cli-docs-gen-check:
     #!/usr/bin/env bash
     set -euo pipefail
     pages() {
-        find docs/docs/sidebar/usage/cli -type f -print | sort | xargs shasum
+        find docs/docs/sidebar/usage/cli docs/docs/sidebar/development/dsl docs/docs/sidebar/reference -type f -print | sort | xargs shasum
     }
     before=$(pages)
     just cli-docs-generate
@@ -286,8 +288,6 @@ behavior-gen-check:
     generated() {
         {
             find internal/behaviors -type f -path '*/gen/*'
-            find docs/docs/sidebar/behaviors -type f \
-                -not -name behaviors.mdx -not -name _category_.json
         } 2>/dev/null | sort | xargs shasum
     }
     before=$(generated)

@@ -46,7 +46,7 @@ var Group = endpoint.Define(
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("disk_operations", "Node/Disk", "Get the disk usage of target hosts"),
-	endpoint.CommandNotes("The [disk behavior](../../../../../behaviors/disk/disk.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.CommandNotes("The [disk behavior](../../../../../reference/behaviors/disk/disk.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[GetRequest, DiskGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodeDisk").

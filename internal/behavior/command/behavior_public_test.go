@@ -228,6 +228,11 @@ func (s *BehaviorcmdPublicTestSuite) TestTable() {
 	}
 }
 
+func (s *BehaviorcmdPublicTestSuite) TestTitle() {
+	s.Equal("DNS", command.Title(behavior.Define("dns", "x")), "an initialism is in capitals")
+	s.Equal("Sysctl", command.Title(behavior.Define("sysctl", "x")))
+}
+
 func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 	b := behavior.Define(
 		"kv",
@@ -260,97 +265,10 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 			Fails("A key on two lines", input{Key: "a\nb"}, "line breaks"),
 	)
 
-	s.Equal("docs/docs/sidebar/behaviors/kv", command.DocsDir(b))
-	index := command.IndexPage(b)
-	s.Contains(index, "# Kv")
-	s.Contains(index, "| API | `/api/node/{hostname}/store/kv`, in [API](/category/api) |")
-	s.Contains(index, "| CLI | `osapi client node store kv` |")
-
-	s.Contains(
-		index,
-		"| [`list`](../../usage/cli/client/node/store/kv/list.md) | read | `store:read` | List &lt;them&gt; |",
-	)
-	s.NotContains(index, "<DocCardList />", "the method pages are in the CLI reference")
-	s.Contains(index, "None. A behavior declares settings with `behavior.Config`.")
-	s.Contains(index, "On `debian`. On any other platform its methods report `skipped`.")
-	s.Contains(index, "`create` runs only on `debian`. On any other platform it reports `skipped`.")
-	s.Contains(index, "`create` runs `kvsync` with sudo, only where it runs.")
-	s.Contains(index, "`create` runs `kvcheck`, only where it runs.")
-	s.Contains(index, "It runs `kvctl` with sudo")
-	s.Contains(index, "It runs `kvstat`, which the host must have installed.")
-	s.Contains(index, "On darwin it also runs `vm_stat`.")
-	s.Contains(index, "It runs `zfs` when the host has it")
-
-	// A behavior with settings lists them; one without API or CLI says
-	// only where its jobs run.
-	behavior.Reset()
-	defer behavior.Reset()
-	files := behavior.Register(behavior.Define(
-		"files", "Files it keeps", behavior.Node, behavior.Internal,
-		behavior.Writes("*"),
-		behavior.Read("get", read).Describe("Read one"),
-	))
-	quiet := behavior.Register(behavior.Define(
-		"quiet", "Runs only as jobs", behavior.Node,
-		behavior.Requires(files),
-		behavior.Writes("/var/kv/*.conf"),
-		behavior.Config(kvSettings{Dir: "/var/kv"}),
-		behavior.Read("list", read),
-		behavior.Read("get", read).Key("key"),
-	))
-	apiOnly := behavior.Define("served", "Served, no commands", behavior.Node, behavior.API,
-		behavior.Read("get", read))
-
-	internal := command.IndexPage(files)
-	s.Contains(internal, "Nowhere: it is internal.")
-	s.Contains(internal, "It writes the path its caller names.")
-	s.Contains(internal, "with `file.write`, `file.remove`, `file.chmod` under it.")
-	quietPage := command.IndexPage(quiet)
-	s.Contains(quietPage, "It writes `/var/kv/*.conf`.")
-	s.Contains(quietPage, "Its span records the input `key` (get).")
-	s.NotContains(internal, "Its span records", "no key and no tagged field")
-	s.Contains(
-		quietPage,
-		"In a trace, a call is the span `behavior.quiet.<method>`, with `behavior.files.<method>`,",
-	)
-	s.NotContains(internal, "| Jobs |")
-	s.Contains(internal, "| Method | Verb | Description |")
-	s.Contains(internal, "| `get` | read | Read one |", "no method page to link to")
-	s.Contains(
-		internal,
-		"| Nothing | [quiet](../quiet/quiet.md) |",
-		"what it is built on and used by",
-	)
-	s.NotContains(internal, "<DocCardList />")
-	s.Contains(command.IndexPage(quiet), "| [files](../files/files.md) | Nothing |")
-
-	catalog := command.CatalogPage([]*behavior.Behavior{files, b, quiet, apiOnly})
-	s.Contains(catalog, "| [files](files/files.md) | Files it keeps | Internal | - | quiet |")
-	s.Contains(catalog, "| [kv](kv/kv.md) | Key values | API and CLI | - | - |")
-	s.Contains(catalog, "| [quiet](quiet/quiet.md) | Runs only as jobs | Jobs only | files | - |")
-	s.Contains(catalog, "| [served](served/served.md) | Served, no commands | API | - | - |")
-
-	index = command.IndexPage(quiet)
-	s.Contains(index, "Nowhere yet")
-	s.NotContains(index, "| API |")
-	s.NotContains(index, "| CLI |")
-	s.Contains(
-		index,
-		"| `behaviors.quiet.dir` | `--quiet-dir` | `OSAPI_BEHAVIORS_QUIET_DIR` | string | `/var/kv` | Where it writes. |",
-	)
-	s.Contains(
-		index,
-		"| `behaviors.quiet.ratio` | `--quiet-ratio` | `OSAPI_BEHAVIORS_QUIET_RATIO` | float | `0` |",
-	)
-
 	s.Equal(
 		"  # Every key\n  osapi client node store kv list --target web-01 --key k --force --count 2\n\n"+
 			"  # No keys\n  osapi client node store kv list --target web-01 --key none",
 		command.Example(b, b.Method("list")),
-	)
-	s.Equal(
-		"../../usage/cli/client/node/store/kv/create.md",
-		command.CLIPage(b, b.Method("create")),
 	)
 	s.Equal(
 		map[string]string{reference.Permission: "store:read"},
@@ -388,7 +306,7 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 
 	s.Equal(
 		map[string]string{
-			reference.Notes: "The [kv behavior](../../../../../../behaviors/kv/kv.md) page tells " +
+			reference.Notes: "The [kv behavior](../../../../../../reference/behaviors/kv/kv.md) page tells " +
 				"where the behavior runs, what it is built on and its settings.",
 		},
 		command.GroupAnnotations(b),

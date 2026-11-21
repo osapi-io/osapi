@@ -573,10 +573,43 @@ func derive(
 
 		return nil
 	}
+	if err := render(p, g.GroupName(), t, answer); err != nil {
+		return fmt.Errorf("decode %s %s: %w", g.GroupName(), m.MethodName(), err)
+	}
 
+	return nil
+}
+
+// Render prints out, the output of a method of the group name, through p as
+// the CLI prints it: thus a page of the docs site that a markdown printer
+// writes from a command's output shows the same thing as the command.
+func Render(
+	p Printer,
+	name string,
+	out any,
+) error {
+	answer, err := json.Marshal(out)
+	if err != nil {
+		return err
+	}
+	t := reflect.TypeOf(out)
+	for t.Kind() == reflect.Pointer {
+		t = t.Elem()
+	}
+
+	return render(p, name, t, answer)
+}
+
+// render prints answer, the JSON of an output of type t, of the group name.
+func render(
+	p Printer,
+	name string,
+	t reflect.Type,
+	answer []byte,
+) error {
 	var v any
 	if err := json.Unmarshal(answer, &v); err != nil {
-		return fmt.Errorf("decode %s %s: %w", g.GroupName(), m.MethodName(), err)
+		return err
 	}
 	// A field tagged render:"body" is the whole output, such as a document.
 	for _, c := range Columns(t) {
@@ -601,7 +634,7 @@ func derive(
 		}
 		if isList(cols[0].Type) {
 			if heading == "" {
-				heading = plural(sentence(g.GroupName()))
+				heading = plural(sentence(name))
 			}
 			items, _ := v.([]any)
 			list(p, heading, cols[0], items, -1)
@@ -611,17 +644,17 @@ func derive(
 		t = element(cols[0].Type)
 	}
 
-	name := sentence(g.GroupName())
+	label := sentence(name)
 	switch {
 	case t.Kind() == reflect.Slice:
 		if heading == "" {
-			heading = plural(name)
+			heading = plural(label)
 		}
 		items, _ := v.([]any)
 		list(p, heading, Column{Type: t}, items, -1)
 	case listOf(t) != nil:
 		if heading == "" {
-			heading = plural(name)
+			heading = plural(label)
 		}
 		obj, _ := v.(map[string]any)
 		items, _ := obj["items"].([]any)
@@ -644,7 +677,7 @@ func derive(
 		}
 	default:
 		if heading == "" {
-			heading = name
+			heading = label
 		}
 		obj, _ := v.(map[string]any)
 		object(p, heading, t, obj)

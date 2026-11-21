@@ -270,7 +270,7 @@ One directory, one import line, and a behavior with:
 - provider, API, CLI and integration tests, from the examples.
 
 Next: [Building a behavior](behaviors.md) has every option and tag, and
-[Behaviors](../behaviors/behaviors.mdx) shows the ones osapi ships.
+[Behaviors](../reference/behaviors/behaviors.mdx) shows the ones osapi ships.
 
 ## Changing a hand-written domain
 

@@ -26,6 +26,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/behavior"
+
 	"gopkg.in/yaml.v3"
 
 	"github.com/osapi-io/osapi/internal/cli/command"
@@ -78,11 +80,16 @@ func Get(
 	if err != nil {
 		return GetOutput{}, err
 	}
-	out := GetOutput{Name: g.Name, Doc: g.Doc, Methods: []Method{}}
+	out := GetOutput{Name: g.Name, Doc: g.Doc, Methods: []Method{}, Types: []Type{}}
 	for _, m := range g.Methods {
 		out.Methods = append(out.Methods, Method{
 			Name: m.Name, Verb: m.Verb, Path: g.Path(m),
 			Permission: g.Permission(m), OperationID: m.OperationID(g),
+		})
+		out.Types = append(out.Types, Type{
+			Name:   m.Name,
+			Input:  behavior.FieldShape(m.In, true),
+			Output: behavior.FieldShape(m.Out, false),
 		})
 	}
 

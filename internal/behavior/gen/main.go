@@ -40,7 +40,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/osapi-io/osapi/internal/behavior"
-	"github.com/osapi-io/osapi/internal/behavior/command"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all"
 	_ "github.com/osapi-io/osapi/internal/validation"
 )
@@ -80,15 +79,6 @@ func run(
 	w := &genfile.Writer{Root: root}
 
 	for _, b := range behavior.All() {
-		// Every behavior has a docs page, internal ones included, so the
-		// docs list everything the binary has.
-		dir := command.DocsDir(b)
-		if err := w.Write(
-			filepath.Join(dir, b.Name+".md"),
-			[]byte(command.IndexPage(b)),
-		); err != nil {
-			return err
-		}
 		if !b.API && !b.CLI {
 			continue
 		}
@@ -100,20 +90,8 @@ func run(
 		if err := writeBehavior(w, b, gen); err != nil {
 			return fmt.Errorf("%s: %w", b.Name, err)
 		}
-
-		// A behavior with commands had a page per method here. Its commands
-		// have their pages in the CLI reference now, so the old ones go.
-		for _, m := range b.Methods {
-			if err := w.Remove(filepath.Join(dir, m.Name+".mdx")); err != nil {
-				return err
-			}
-		}
 	}
 
-	catalog := filepath.Join(filepath.Dir(command.DocsDir(behavior.All()[0])), "_catalog.mdx")
-	if err := w.Write(catalog, []byte(command.CatalogPage(behavior.All()))); err != nil {
-		return err
-	}
 	if err := w.Registry("internal/behaviors/all/gen", generated, wrap("Package gen imports the "+
 		"generated code of every behavior with an API or a CLI: its commands and its routes.", 76),
 		served(behavior.All())); err != nil {

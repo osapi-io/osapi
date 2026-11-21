@@ -28,16 +28,16 @@ OSAPI separates agent fleet discovery from node system queries:
 
 ## What it manages
 
-| Resource                                      | Description                                                     |
-| --------------------------------------------- | --------------------------------------------------------------- |
-| [Hostname](../behaviors/hostname/hostname.md) | Get the hostname, or set it on Debian                           |
-| Status                                        | Uptime, OS name and version, kernel, platform info              |
-| [Uptime](../behaviors/uptime/uptime.md)       | The time since the host started                                 |
-| [OS](../behaviors/os/os.md)                   | The distribution and its version                                |
-| [Disk](../behaviors/disk/disk.md)             | The size, used and free space of each local filesystem          |
-| [Memory](../behaviors/memory/memory.md)       | The total, used and free memory                                 |
-| [Load](../behaviors/load/load.md)             | The 1, 5 and 15 minute load averages                            |
-| [System Facts](system-facts.md)               | Architecture, kernel, FQDN, CPUs, NICs, routes, service/pkg mgr |
+| Resource                                                | Description                                                     |
+| ------------------------------------------------------- | --------------------------------------------------------------- |
+| [Hostname](../reference/behaviors/hostname/hostname.md) | Get the hostname, or set it on Debian                           |
+| Status                                                  | Uptime, OS name and version, kernel, platform info              |
+| [Uptime](../reference/behaviors/uptime/uptime.md)       | The time since the host started                                 |
+| [OS](../reference/behaviors/os/os.md)                   | The distribution and its version                                |
+| [Disk](../reference/behaviors/disk/disk.md)             | The size, used and free space of each local filesystem          |
+| [Memory](../reference/behaviors/memory/memory.md)       | The total, used and free memory                                 |
+| [Load](../reference/behaviors/load/load.md)             | The 1, 5 and 15 minute load averages                            |
+| [System Facts](system-facts.md)                         | Architecture, kernel, FQDN, CPUs, NICs, routes, service/pkg mgr |
 
 ## How it works
 
@@ -48,11 +48,11 @@ and shows it.
 
 ### When part of a status cannot be read
 
-`node status` is the [status behavior](../behaviors/status/status.md). It runs
-six separate reads: hostname, uptime, OS, load, memory and disks. When one read
-fails, the others still return. The response names the failure in `errors`, and
-does not show a zero. A zero value looks the same as a host with nothing to
-report.
+`node status` is the [status behavior](../reference/behaviors/status/status.md).
+It runs six separate reads: hostname, uptime, OS, load, memory and disks. When
+one read fails, the others still return. The response names the failure in
+`errors`, and does not show a zero. A zero value looks the same as a host with
+nothing to report.
 
 Each item of `errors` is the name of the read and its error:
 

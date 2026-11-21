@@ -143,6 +143,26 @@ func Redact(
 	return fields
 }
 
+// Tree is b and the behaviors that it calls, down the chain:
+// dns → netplan → managedfile, or status → (hostname, uptime) when a
+// behavior calls more than one.
+func Tree(
+	b *Behavior,
+) string {
+	if len(b.Requires) == 0 {
+		return b.Name
+	}
+	parts := make([]string, 0, len(b.Requires))
+	for _, r := range b.Requires {
+		parts = append(parts, Tree(r))
+	}
+	if len(parts) == 1 {
+		return b.Name + " → " + parts[0]
+	}
+
+	return b.Name + " → (" + strings.Join(parts, ", ") + ")"
+}
+
 // add appends c to the steps of s. Calls can run at the same time, as
 // status reads its behaviors.
 func (s *Step) add(

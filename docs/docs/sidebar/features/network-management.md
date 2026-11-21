@@ -22,10 +22,10 @@ For interface and route management details, see
 
 ## How it works
 
-**DNS.** DNS is the [dns behavior](../behaviors/dns/dns.md). A query reads the
-servers and the search domains of an interface through gohai on every platform:
-`resolvectl` on Linux, `resolv.conf` on a host that has no resolvers per
-interface, such as a container, and `scutil` on macOS. An update writes a
+**DNS.** DNS is the [dns behavior](../reference/behaviors/dns/dns.md). A query
+reads the servers and the search domains of an interface through gohai on every
+platform: `resolvectl` on Linux, `resolv.conf` on a host that has no resolvers
+per interface, such as a container, and `scutil` on macOS. An update writes a
 Netplan file of the interface's own, `/etc/netplan/osapi-dns-<interface>.yaml`,
 on the Debian family. It validates the file with `netplan generate`, removes it
 again when that fails, and applies it with `netplan apply`. Thus DNS changes

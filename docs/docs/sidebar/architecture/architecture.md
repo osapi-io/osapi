@@ -54,4 +54,5 @@ the reason for it, is in the
 [osapi specifications](https://github.com/osapi-io/specs/tree/main/components/osapi).
 Each page links to the parts that it summarizes.
 [Features](../features/features.md) tells what each operation does. Each
-behavior has its own page under [Behaviors](../behaviors/behaviors.mdx).
+behavior has its own page under
+[Behaviors](../reference/behaviors/behaviors.mdx).

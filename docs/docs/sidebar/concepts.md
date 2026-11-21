@@ -28,7 +28,7 @@ osapi behavior list                  # each behavior in this build
 osapi behavior get --name sysctl     # its methods, inputs, platforms and permissions
 ```
 
-Refer to [Behaviors](behaviors/behaviors.mdx).
+Refer to [Behaviors](reference/behaviors/behaviors.mdx).
 
 ## Method
 

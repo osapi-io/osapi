@@ -124,8 +124,8 @@ side. Checks name the code that is left to delete. sysctl is the first behavior.
 
 ## Where to read more
 
-- [Behaviors](../behaviors/behaviors.mdx): the page of each behavior in this
-  build, generated from its definition.
+- [Behaviors](../reference/behaviors/behaviors.mdx): the page of each behavior
+  in this build, generated from its definition.
 - [Building a behavior](../development/behaviors.md) and
   [Your first behavior](../development/your-first-behavior.md), for a
   contributor.

@@ -157,7 +157,7 @@ var Group = endpoint.Define(
 	endpoint.Prefix("node/{hostname}/network"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("network_route_operations", "Node/Route", "The routes of the host"),
-	endpoint.CommandNotes("The [route behavior](../../../../../../behaviors/route/route.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.CommandNotes("The [route behavior](../../../../../../reference/behaviors/route/route.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[ListRequest, NetworkRouteCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeNetworkRoute").

@@ -129,7 +129,7 @@ var Group = endpoint.Define(
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("package_operations", "Node/Package", "The packages installed on the host"),
-	endpoint.CommandNotes("The [package behavior](../../../../../behaviors/package/package.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.CommandNotes("The [package behavior](../../../../../reference/behaviors/package/package.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[ListRequest, PackageCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodePackage").

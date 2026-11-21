@@ -122,6 +122,28 @@ func (s *GuidePublicTestSuite) TestChecks() {
 	}
 }
 
+func (s *GuidePublicTestSuite) TestMDX() {
+	s.Equal("osapi-&lt;key&gt;.conf and &#123;k&#125;", guide.MDX("osapi-<key>.conf and {k}"))
+	s.Equal("a `<b>` c &lt;d&gt;", guide.MDX("a `<b>` c <d>"), "text in a code span stays")
+}
+
+func (s *GuidePublicTestSuite) TestMarkdown() {
+	spec := guide.Spec{
+		Kinds: []guide.Kind{{Kind: "a", Title: "Parts"}, {Kind: "b", Title: "Empty"}},
+		Terms: []guide.Term{
+			{Kind: "a", Name: `Key("field")`, Does: "Puts <it> in the path.", When: "On a get."},
+			{Kind: "a", Name: "json:\"`x`\"", Does: "Names it.", When: "Always."},
+		},
+	}
+	page := spec.Markdown("Behavior DSL", "The parts.", 2)
+	s.Contains(page, "---\ntitle: Behavior DSL\nsidebar_position: 2\n---\n\n"+guide.Generated+
+		"\n\n# Behavior DSL\n\nThe parts.\n")
+	s.Contains(page, "\n## Parts\n")
+	s.NotContains(page, "## Empty", "a kind with no term has no section")
+	s.Contains(page, "\n### `Key(\"field\")`\n\nPuts &lt;it&gt; in the path.\n\nUse: On a get.\n")
+	s.Contains(page, "### `` json:\"`x`\" ``", "a name with a backtick gets a longer fence")
+}
+
 func TestGuidePublicTestSuite(
 	t *testing.T,
 ) {

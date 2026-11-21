@@ -11,22 +11,23 @@ management of Ubuntu.
 
 ## How it works
 
-Interfaces are the [interface behavior](../behaviors/interface/interface.md).
-`list` and `get` read each interface through gohai on every platform:
-`/sys/class/net` and `ip` on Linux, and `ifconfig` and `netstat` on macOS. An
-interface has its state, MAC address, MTU and addresses. `dhcp4` is true when a
-route of the interface has proto `dhcp`. `primary` is true when the interface
-has the default route. `list` leaves out the loopback.
+Interfaces are the
+[interface behavior](../reference/behaviors/interface/interface.md). `list` and
+`get` read each interface through gohai on every platform: `/sys/class/net` and
+`ip` on Linux, and `ifconfig` and `netstat` on macOS. An interface has its
+state, MAC address, MTU and addresses. `dhcp4` is true when a route of the
+interface has proto `dhcp`. `primary` is true when the interface has the default
+route. `list` leaves out the loopback.
 
-Routes are the [route behavior](../behaviors/route/route.md). `list` reads each
-route of the main table through gohai on every platform: `ip route` on Linux,
-and `netstat` on macOS. `get` reads the routes that go out of one interface. A
-route has its destination, gateway, interface, family, metric, `proto` (where it
-came from, such as `dhcp`, `kernel` or `static`) and scope.
+Routes are the [route behavior](../reference/behaviors/route/route.md). `list`
+reads each route of the main table through gohai on every platform: `ip route`
+on Linux, and `netstat` on macOS. `get` reads the routes that go out of one
+interface. A route has its destination, gateway, interface, family, metric,
+`proto` (where it came from, such as `dhcp`, `kernel` or `static`) and scope.
 
 `create`, `update` and `delete` write a Netplan file of the interface's own on
 the Debian family, through the internal
-[netplan behavior](../behaviors/netplan/netplan.md):
+[netplan behavior](../reference/behaviors/netplan/netplan.md):
 
 - **Interfaces**: `osapi-{name}.yaml` has the addresses, DHCP, default gateways,
   MTU, MAC and Wake-on-LAN of the named interface. `dhcp4` and `dhcp6` are

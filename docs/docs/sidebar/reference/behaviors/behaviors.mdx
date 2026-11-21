@@ -1,0 +1,48 @@
+---
+sidebar_position: 1
+---
+
+import Catalog from './_catalog.mdx';
+import DocCardList from '@theme/DocCardList';
+
+# Behaviors
+
+A behavior is one thing that osapi manages on a host, for example kernel
+parameters. You define it one time, in Go. osapi builds its routes, commands,
+permissions, spec, docs and tests from that definition.
+[Behaviors in the architecture](../../architecture/behaviors.md) tells how. It
+also tells about behaviors that only other behaviors use, and about behaviors
+that use other behaviors.
+
+## Every behavior in this build
+
+<Catalog />
+
+osapi does not serve an **internal** behavior. Other behaviors require it and
+call it on the same host. **Uses** and **Used by** show those chains.
+
+<DocCardList />
+
+## See what a binary has
+
+The binary describes its own behaviors. Thus the answer is always correct for
+the build that you run:
+
+```bash
+osapi behavior list                                      # every behavior, internal ones marked
+osapi behavior get --name sysctl                         # surfaces, platforms, chains, methods, settings
+osapi behavior method get --name sysctl --method create  # one method's input and output
+osapi behavior validate                                  # the rules every definition must meet
+```
+
+`behavior get --json` prints the input and the output of each method as JSON
+Schema. It also prints the route, the command, the permission, the examples and
+the refusals. An agent reads this before it calls a method.
+
+## Where they are defined
+
+Each behavior is a directory under
+[`internal/behavior/`](https://github.com/osapi-io/osapi/tree/main/internal/behavior),
+and `internal/behaviors/sysctl` is the reference.
+[Building a behavior](../../development/behaviors.md) covers the layout, the
+tags and what is generated.
