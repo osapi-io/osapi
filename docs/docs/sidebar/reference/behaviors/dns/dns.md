@@ -90,11 +90,11 @@ None. Declare them with behavior.Config.
 
 ### Examples (3)
 
-| EXAMPLE                                     | INPUT               | OUTPUT                                                    |
-| ------------------------------------------- | ------------------- | --------------------------------------------------------- |
-| An interface with servers and a domain      | interface_name=eth0 | servers=\[1.1.1.1 8.8.8.8], search_domains=\[example.com] |
-| A container with no resolvers per interface | interface_name=eth0 | servers=\[10.0.0.2], search_domains=\[svc.local]          |
-| A Mac                                       | interface_name=en0  | servers=\[1.1.1.1], search_domains=\[]                    |
+| EXAMPLE                                     | INPUT                 | OUTPUT                                                    |
+| ------------------------------------------- | --------------------- | --------------------------------------------------------- |
+| An interface with servers and a domain      | interface_name=osapi0 | servers=\[1.1.1.1 8.8.8.8], search_domains=\[example.com] |
+| A container with no resolvers per interface | interface_name=osapi0 | servers=\[10.0.0.2], search_domains=\[svc.local]          |
+| A Mac                                       | interface_name=en0    | servers=\[1.1.1.1], search_domains=\[]                    |
 
 ## Method update
 
@@ -129,11 +129,11 @@ None. Declare them with behavior.Config.
 
 ### Examples (3)
 
-| EXAMPLE                                      | INPUT                                                                   | OUTPUT                            |
-| -------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------- |
-| Set the servers of an interface              | interface_name=eth0, servers=\[9.9.9.9]                                 | interface_name=eth0, changed=true |
-| Set the search domains, and keep the servers | interface_name=eth0, search_domains=\[corp.example], override_dhcp=true | interface_name=eth0, changed=true |
-| An interface with no resolvers yet           | interface_name=eth0, servers=\[9.9.9.9]                                 | interface_name=eth0, changed=true |
+| EXAMPLE                                      | INPUT                                                                     | OUTPUT                              |
+| -------------------------------------------- | ------------------------------------------------------------------------- | ----------------------------------- |
+| Set the servers of an interface              | interface_name=osapi0, servers=\[9.9.9.9]                                 | interface_name=osapi0, changed=true |
+| Set the search domains, and keep the servers | interface_name=osapi0, search_domains=\[corp.example], override_dhcp=true | interface_name=osapi0, changed=true |
+| An interface with no resolvers yet           | interface_name=osapi0, servers=\[9.9.9.9]                                 | interface_name=osapi0, changed=true |
 
 ## Method delete
 
@@ -165,7 +165,7 @@ None. Declare them with behavior.Config.
 
 ### Examples (2)
 
-| EXAMPLE                           | INPUT               | OUTPUT                             |
-| --------------------------------- | ------------------- | ---------------------------------- |
-| An interface osapi set            | interface_name=eth0 | interface_name=eth0, changed=true  |
-| An interface osapi set nothing on | interface_name=eth0 | interface_name=eth0, changed=false |
+| EXAMPLE                           | INPUT                 | OUTPUT                               |
+| --------------------------------- | --------------------- | ------------------------------------ |
+| An interface osapi set            | interface_name=osapi0 | interface_name=osapi0, changed=true  |
+| An interface osapi set nothing on | interface_name=osapi0 | interface_name=osapi0, changed=false |

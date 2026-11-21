@@ -14,10 +14,10 @@ osapi client node network dns get [flags]
 
 ```bash
 # An interface with servers and a domain
-osapi client node network dns get --target web-01 --interface-name eth0
+osapi client node network dns get --target web-01 --interface-name osapi0
 
 # A container with no resolvers per interface
-osapi client node network dns get --target web-01 --interface-name eth0
+osapi client node network dns get --target web-01 --interface-name osapi0
 
 # A Mac
 osapi client node network dns get --target web-01 --interface-name en0
@@ -27,10 +27,10 @@ osapi client node network dns get --target web-01 --interface-name en0
 
 The command fails in these cases:
 
-| Call                                       | Flags                            | Fails with    |
-| ------------------------------------------ | -------------------------------- | ------------- |
-| An interface the host does not have        | `--interface-name eth9`          | not found     |
-| An interface name that is not alphanumeric | `--interface-name "eth0;reboot"` | InterfaceName |
+| Call                                       | Flags                              | Fails with    |
+| ------------------------------------------ | ---------------------------------- | ------------- |
+| An interface the host does not have        | `--interface-name eth9`            | not found     |
+| An interface name that is not alphanumeric | `--interface-name "osapi0;reboot"` | InterfaceName |
 
 ## Permission
 

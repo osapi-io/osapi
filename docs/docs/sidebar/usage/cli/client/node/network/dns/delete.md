@@ -13,25 +13,25 @@ osapi client node network dns delete [flags]
 
 ```bash
 # An interface osapi set
-osapi client node network dns delete --target web-01 --interface-name eth0
+osapi client node network dns delete --target web-01 --interface-name osapi0
 
 # An interface osapi set nothing on
-osapi client node network dns delete --target web-01 --interface-name eth0
+osapi client node network dns delete --target web-01 --interface-name osapi0
 ```
 
 ## Result
 
 With the default settings, each example does this on the host:
 
-| Example                | On the host                                                      |
-| ---------------------- | ---------------------------------------------------------------- |
-| An interface osapi set | removes `/etc/netplan/osapi-dns-eth0.yaml`; runs `netplan apply` |
+| Example                | On the host                                                        |
+| ---------------------- | ------------------------------------------------------------------ |
+| An interface osapi set | removes `/etc/netplan/osapi-dns-osapi0.yaml`; runs `netplan apply` |
 
 The command fails in these cases:
 
-| Call                                       | Flags                            | Fails with    |
-| ------------------------------------------ | -------------------------------- | ------------- |
-| An interface name that is not alphanumeric | `--interface-name "eth0;reboot"` | InterfaceName |
+| Call                                       | Flags                              | Fails with    |
+| ------------------------------------------ | ---------------------------------- | ------------- |
+| An interface name that is not alphanumeric | `--interface-name "osapi0;reboot"` | InterfaceName |
 
 ## Permission
 
