@@ -79,8 +79,8 @@ func main() {
 			fmt.Printf("  %s: ERROR %s\n", r.Hostname, r.Error)
 		} else if r.Interface != nil {
 			iface := r.Interface
-			fmt.Printf("  %s: %s addresses=%v gateway4=%s\n",
-				r.Hostname, iface.Name, iface.Addresses, iface.Gateway4)
+			fmt.Printf("  %s: %s addresses=%v dhcp4=%v primary=%v\n",
+				r.Hostname, iface.Name, iface.Addresses, iface.DHCP4, iface.Primary)
 		}
 	}
 

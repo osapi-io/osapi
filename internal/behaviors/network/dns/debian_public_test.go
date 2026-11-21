@@ -25,6 +25,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
@@ -69,7 +70,10 @@ func (s *DebianPublicTestSuite) TestContainerSkips() {
 func (s *DebianPublicTestSuite) TestNetplanReadFails() {
 	np := netplanmocks.NewMockProvider(gomock.NewController(s.T()))
 	np.EXPECT().Interface(gomock.Any(), "eth0").Return(netplan.Interface{}, errors.New("boom"))
-	p := s.build(host.Host{}, np)
+	fs := memfs.New()
+	s.Require().NoError(fs.MkdirAll("/sys/class/net/eth0", 0o755))
+	s.Require().NoError(fs.WriteFile("/sys/class/net/eth0/ifindex", []byte("2"), 0o644))
+	p := s.build(host.Host{Platform: behavior.PlatformDebian, FS: fs}, np)
 	_, err := p.Set(context.Background(), dns.UpdateInput{
 		InterfaceName: "eth0", Servers: []string{"9.9.9.9"}, SearchDomains: []string{"a.example"},
 	})

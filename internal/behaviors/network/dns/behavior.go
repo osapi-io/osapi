@@ -21,6 +21,7 @@
 package dns
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/behavior"
@@ -29,6 +30,7 @@ import (
 
 // The host of the examples: eth0 has resolvectl's servers and domain.
 var linuxHost = []behavior.HostOption{
+	behavior.Exists("/sys/class/net/eth0/ifindex", "2"),
 	behavior.Prints("resolvectl dns", "Global:\nLink 2 (eth0): 1.1.1.1 8.8.8.8\n"),
 	behavior.Prints("resolvectl domain", "Global:\nLink 2 (eth0): example.com\n"),
 }
@@ -53,7 +55,8 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Platform(behavior.PlatformLinux, newReader),
 	behavior.Platform(behavior.PlatformDarwin, newReader),
 	behavior.Requires(netplan.Behavior),
-	behavior.RunsOnPlatform(behavior.PlatformLinux, "resolvectl"),
+	behavior.RunsOnPlatform(behavior.PlatformLinux, "resolvectl", "ip"),
+	behavior.RunsIfPresent("ethtool"),
 	behavior.RunsOnPlatform(behavior.PlatformDarwin, "scutil"),
 	behavior.Writes(netplan.Dir+"/osapi-dns-*.yaml"),
 	behavior.Read("get", Get).Key("interface_name").
@@ -135,6 +138,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Example("An interface with no resolvers yet",
 			UpdateInput{InterfaceName: "eth0", Servers: []string{"9.9.9.9"}},
 			Result{InterfaceName: "eth0", Changed: true},
+			behavior.Exists("/sys/class/net/eth0/ifindex", "2"),
 			behavior.Prints("resolvectl dns", "Global:\nLink 3 (eth1): 1.1.1.1\n"),
 			behavior.Prints("resolvectl domain", "Global:\n"),
 			behavior.Prints("netplan status --format json", `{"eth0":{"type":"ethernet","id":"eth0"}}`),
@@ -184,12 +188,13 @@ var Behavior = behavior.Register(behavior.Define(
 			"interface osapi set nothing on does not change.").
 		Example("An interface osapi set", DeleteInput{InterfaceName: "eth0"},
 			Result{InterfaceName: "eth0", Changed: true},
-			append([]behavior.HostOption{
+			append(
+				slices.Clone(linuxHost),
 				behavior.After(UpdateInput{InterfaceName: "eth0", Servers: []string{"9.9.9.9"}}),
 				behavior.Prints("netplan status --format json", `{"eth0":{"type":"ethernet","id":"eth0"}}`),
 				behavior.Removed(eth0File),
 				behavior.Ran("netplan", "apply"),
-			}, linuxHost...)...,
+			)...,
 		).
 		Example("An interface osapi set nothing on", DeleteInput{InterfaceName: "eth0"},
 			Result{InterfaceName: "eth0"}).

@@ -27,12 +27,13 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
-// InterfaceService provides network interface management operations.
+// InterfaceService reads the network interfaces of a host and writes the
+// config osapi has of one.
 type InterfaceService struct {
 	client *gen.ClientWithResponses
 }
 
-// List lists all network interfaces on the target host.
+// List is the network interfaces of each target host, one result per host.
 func (s *InterfaceService) List(
 	ctx context.Context,
 	target string,
@@ -41,7 +42,6 @@ func (s *InterfaceService) List(
 	if err != nil {
 		return nil, fmt.Errorf("interface list: %w", err)
 	}
-
 	if err := checkError(
 		resp.StatusCode(),
 		resp.JSON400,
@@ -51,71 +51,56 @@ func (s *InterfaceService) List(
 	); err != nil {
 		return nil, err
 	}
-
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
+		return nil, &UnexpectedStatusError{
+			APIError{StatusCode: resp.StatusCode(), Message: "nil response body"},
+		}
 	}
 
-	return newResponse(
-		interfaceListCollectionFromGen(resp.JSON200),
-		resp.Body,
-		resp.HTTPResponse,
-	), nil
+	return newResponse(interfaceListFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
-// Get retrieves a single network interface by name on the target host.
+// Get is one network interface of each target host.
 func (s *InterfaceService) Get(
 	ctx context.Context,
 	target string,
 	name string,
 ) (*Response[Collection[InterfaceGetResult]], error) {
-	resp, err := s.client.GetNodeNetworkInterfaceByNameWithResponse(ctx, target, name)
+	resp, err := s.client.GetNodeNetworkInterfaceByKeyWithResponse(ctx, target, name)
 	if err != nil {
 		return nil, fmt.Errorf("interface get: %w", err)
 	}
-
 	if err := checkError(
 		resp.StatusCode(),
 		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
-		resp.JSON404,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
 	}
-
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
+		return nil, &UnexpectedStatusError{
+			APIError{StatusCode: resp.StatusCode(), Message: "nil response body"},
+		}
 	}
 
-	return newResponse(
-		interfaceGetCollectionFromGen(resp.JSON200),
-		resp.Body,
-		resp.HTTPResponse,
-	), nil
+	return newResponse(interfaceGetFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
-// Create creates a network interface configuration on the target host.
+// Create writes osapi's config of an interface on the target. An interface
+// osapi already configures does not change.
 func (s *InterfaceService) Create(
 	ctx context.Context,
 	target string,
 	name string,
 	opts InterfaceConfigOpts,
 ) (*Response[Collection[InterfaceMutationResult]], error) {
-	body := interfaceConfigRequestFromOpts(opts)
-
-	resp, err := s.client.PostNodeNetworkInterfaceWithResponse(ctx, target, name, body)
+	resp, err := s.client.PostNodeNetworkInterfaceWithResponse(
+		ctx, target, name, gen.NetworkInterfaceCreateRequest(interfaceRequest(opts)))
 	if err != nil {
 		return nil, fmt.Errorf("interface create: %w", err)
 	}
-
 	if err := checkError(
 		resp.StatusCode(),
 		resp.JSON400,
@@ -125,61 +110,53 @@ func (s *InterfaceService) Create(
 	); err != nil {
 		return nil, err
 	}
-
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
+		return nil, &UnexpectedStatusError{
+			APIError{StatusCode: resp.StatusCode(), Message: "nil response body"},
+		}
 	}
 
-	return newResponse(
-		interfaceMutationCollectionFromCreate(resp.JSON200),
-		resp.Body,
-		resp.HTTPResponse,
-	), nil
+	return newResponse(interfaceMutationsFromGen(resp.JSON200.Results, resp.JSON200.JobId),
+		resp.Body, resp.HTTPResponse), nil
 }
 
-// Update updates a network interface configuration on the target host.
+// Update writes osapi's config of an interface over the one it has on the
+// target.
 func (s *InterfaceService) Update(
 	ctx context.Context,
 	target string,
 	name string,
 	opts InterfaceConfigOpts,
 ) (*Response[Collection[InterfaceMutationResult]], error) {
-	body := interfaceConfigRequestFromOpts(opts)
-
-	resp, err := s.client.PutNodeNetworkInterfaceWithResponse(ctx, target, name, body)
+	resp, err := s.client.PutNodeNetworkInterfaceWithResponse(
+		ctx,
+		target,
+		name,
+		interfaceRequest(opts),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("interface update: %w", err)
 	}
-
 	if err := checkError(
 		resp.StatusCode(),
 		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
-		resp.JSON404,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
 	}
-
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
+		return nil, &UnexpectedStatusError{
+			APIError{StatusCode: resp.StatusCode(), Message: "nil response body"},
+		}
 	}
 
-	return newResponse(
-		interfaceMutationCollectionFromUpdate(resp.JSON200),
-		resp.Body,
-		resp.HTTPResponse,
-	), nil
+	return newResponse(interfaceMutationsFromGen(resp.JSON200.Results, resp.JSON200.JobId),
+		resp.Body, resp.HTTPResponse), nil
 }
 
-// Delete removes a network interface configuration on the target host.
+// Delete drops osapi's config of an interface on the target.
 func (s *InterfaceService) Delete(
 	ctx context.Context,
 	target string,
@@ -189,7 +166,6 @@ func (s *InterfaceService) Delete(
 	if err != nil {
 		return nil, fmt.Errorf("interface delete: %w", err)
 	}
-
 	if err := checkError(
 		resp.StatusCode(),
 		resp.JSON400,
@@ -199,59 +175,12 @@ func (s *InterfaceService) Delete(
 	); err != nil {
 		return nil, err
 	}
-
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
+		return nil, &UnexpectedStatusError{
+			APIError{StatusCode: resp.StatusCode(), Message: "nil response body"},
+		}
 	}
 
-	return newResponse(
-		interfaceMutationCollectionFromDelete(resp.JSON200),
-		resp.Body,
-		resp.HTTPResponse,
-	), nil
-}
-
-// interfaceConfigRequestFromOpts builds a gen.InterfaceConfigRequest
-// from SDK options.
-func interfaceConfigRequestFromOpts(
-	opts InterfaceConfigOpts,
-) gen.InterfaceConfigRequest {
-	body := gen.InterfaceConfigRequest{}
-
-	if opts.DHCP4 != nil {
-		body.Dhcp4 = opts.DHCP4
-	}
-
-	if opts.DHCP6 != nil {
-		body.Dhcp6 = opts.DHCP6
-	}
-
-	if len(opts.Addresses) > 0 {
-		body.Addresses = &opts.Addresses
-	}
-
-	if opts.Gateway4 != "" {
-		body.Gateway4 = &opts.Gateway4
-	}
-
-	if opts.Gateway6 != "" {
-		body.Gateway6 = &opts.Gateway6
-	}
-
-	if opts.MTU != nil {
-		body.Mtu = opts.MTU
-	}
-
-	if opts.MACAddress != "" {
-		body.MacAddress = &opts.MACAddress
-	}
-
-	if opts.WakeOnLAN != nil {
-		body.Wakeonlan = opts.WakeOnLAN
-	}
-
-	return body
+	return newResponse(interfaceMutationsFromGen(resp.JSON200.Results, resp.JSON200.JobId),
+		resp.Body, resp.HTTPResponse), nil
 }

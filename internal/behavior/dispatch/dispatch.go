@@ -151,11 +151,17 @@ func Run[Out any](
 			send = d.JobClient.Modify
 		}
 		jobID, resp, err := send(ctx, target, job.CategoryBehavior, op, input)
-		if err != nil {
-			if apierr.IsMissing(err) {
-				return out, fmt.Errorf("%w: %s", behavior.ErrNotFound, err)
+		var failed *job.ResponseError
+		switch {
+		case err != nil && apierr.IsMissing(err):
+			return out, fmt.Errorf("%w: %s", behavior.ErrNotFound, err)
+		case errors.As(err, &failed):
+			// The job ran and the provider refused it: the host's row
+			// says why, as a broadcast's does.
+			resp = &job.Response{
+				Hostname: failed.Hostname, Status: job.StatusFailed, Error: failed.Message,
 			}
-
+		case err != nil:
 			return out, endpoint.Internal("the job could not be sent", err)
 		}
 		answer.JobID = jobID

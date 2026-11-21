@@ -833,7 +833,27 @@ function InterfaceListResult({ data }: { data: Record<string, unknown> }) {
     }[];
     error?: string;
   };
-  const hosts = data.results as InterfaceHost[];
+  // The API answers one row per interface: group them by host, keeping a
+  // host that failed or was skipped as a row without an interface.
+  type InterfaceRow = NonNullable<InterfaceHost["interfaces"]>[number] & {
+    hostname: string;
+    status?: string;
+    error?: string;
+  };
+  const hosts: InterfaceHost[] = [];
+  for (const row of data.results as InterfaceRow[]) {
+    let host = hosts.find((h) => h.hostname === row.hostname);
+    if (!host) {
+      host = {
+        hostname: row.hostname,
+        status: row.status,
+        error: row.error,
+        interfaces: [],
+      };
+      hosts.push(host);
+    }
+    if (row.name) host.interfaces?.push(row);
+  }
   const totalInterfaces = hosts.reduce(
     (n, h) => n + (h.interfaces?.length ?? 0),
     0,

@@ -25,6 +25,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/osapi-io/gohai/pkg/gohai/collectors/network"
+
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	"github.com/osapi-io/osapi/internal/behaviors/netplan"
@@ -68,11 +70,13 @@ func (d *debian) Set(
 	if len(in.Servers) == 0 && len(in.SearchDomains) == 0 {
 		return false, fmt.Errorf("give servers or search domains: nothing to set")
 	}
+	if err := d.has(ctx, in.InterfaceName); err != nil {
+		return false, err
+	}
 	servers, domains := in.Servers, in.SearchDomains
 	if len(servers) == 0 || len(domains) == 0 {
 		// The one error is an interface with no resolvers yet, such as one
-		// with a static address: it starts from none. netplan.Get below
-		// refuses an interface the host does not have.
+		// with a static address: it starts from none.
 		current, _ := d.Resolvers(ctx, in.InterfaceName)
 		if len(servers) == 0 {
 			servers = current.Servers
@@ -99,6 +103,25 @@ func (d *debian) Set(
 	)
 
 	return result.Changed, err
+}
+
+// has is nil when the host has the interface, read through gohai: netplan
+// lists only the interfaces it manages.
+func (d *debian) has(
+	ctx context.Context,
+	name string,
+) error {
+	out, err := network.NewWith(d.src).Collect(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("read the interfaces: %w", err)
+	}
+	for _, i := range out.(*network.Info).Interfaces {
+		if i.Name == name {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("interface %q: %w", name, behavior.ErrNotFound)
 }
 
 // Remove drops the netplan file of the interface's resolvers.

@@ -79,11 +79,11 @@ import {
 } from "@/sdk/gen/dns-api-network-dns-operations/dns-api-network-dns-operations";
 import {
   getNodeNetworkInterface,
-  getNodeNetworkInterfaceByName,
+  getNodeNetworkInterfaceByKey,
   postNodeNetworkInterface,
   putNodeNetworkInterface,
   deleteNodeNetworkInterface,
-} from "@/sdk/gen/network-management-api-interface-operations/network-management-api-interface-operations";
+} from "@/sdk/gen/interface-api-network-interface-operations/interface-api-network-interface-operations";
 import {
   getNodeNetworkRoute,
   getNodeNetworkRouteByInterface,
@@ -593,7 +593,7 @@ export function Configure() {
             result = await getNodeNetworkInterface(t);
             break;
           case "interface-get":
-            result = await getNodeNetworkInterfaceByName(
+            result = await getNodeNetworkInterfaceByKey(
               t,
               block.data.name as string,
             );

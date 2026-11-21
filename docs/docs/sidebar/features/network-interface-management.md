@@ -11,19 +11,37 @@ management of Ubuntu.
 
 ## How it works
 
-The interface and route providers write Netplan drop-in configuration files to
-`/etc/netplan/` on Debian-family systems. Each managed resource uses an `osapi-`
-filename prefix to identify OSAPI-owned files:
+Interfaces are the [interface behavior](../behaviors/interface/interface.md).
+`list` and `get` read each interface through gohai on every platform:
+`/sys/class/net` and `ip` on Linux, and `ifconfig` and `netstat` on macOS. An
+interface has its state, MAC address, MTU and addresses. `dhcp4` is true when a
+route of the interface has proto `dhcp`. `primary` is true when the interface
+has the default route. `list` leaves out the loopback.
 
-- **Interfaces**: `osapi-{name}.yaml` configures the addresses, DHCP, gateway,
-  MTU, MAC and Wake-on-LAN of the named interface.
+`create`, `update` and `delete` write a Netplan file of the interface's own on
+the Debian family, through the internal
+[netplan behavior](../behaviors/netplan/netplan.md):
+
+- **Interfaces**: `osapi-{name}.yaml` has the addresses, DHCP, default gateways,
+  MTU, MAC and Wake-on-LAN of the named interface. `dhcp4` and `dhcp6` are
+  `false` unless you give them, so the interface has only the addresses that you
+  give. A gateway is a default route: Netplan deprecates `gateway4` and
+  `gateway6`.
 - **Routes**: `osapi-{name}-routes.yaml` configures the static routes of the
   named interface.
 
+osapi writes the config only under a Netplan definition that is the interface's
+own. If a match defines the interface, such as the `all` definition of
+cloud-init for `en*`, osapi refuses the write: Netplan applies that definition,
+so the config would change each interface that the match takes, now and later.
+Give the interface a definition of its own first. An interface that the host
+does not have is not found: `netplan status` lists only the interfaces that
+Netplan manages, so osapi reads the interfaces through gohai.
+
 After it writes each file, the agent runs `netplan generate` to validate the
 syntax before it applies the file. If validation fails, the agent puts back the
-previous file, and the job returns an error. Thus a bad configuration does not
-stop the network connection.
+content that the file had, or removes a new file, and the job returns an error.
+Thus a bad configuration does not stop the network connection.
 
 ### DNS delete
 
@@ -79,24 +97,24 @@ osapi client node network interface get \
 
 # Create a static interface config
 osapi client node network interface create \
-  --target web-01 --name eth0 \
-  --address 192.168.1.100/24 \
+  --target web-01 --name eth1 \
+  --addresses 192.168.1.100/24 \
   --gateway4 192.168.1.1
 
 # Create an interface with DHCP
 osapi client node network interface create \
-  --target web-01 --name eth0 --dhcp4
+  --target web-01 --name eth1 --dhcp4
 
 # Update an interface (replace config)
 osapi client node network interface update \
-  --target web-01 --name eth0 \
-  --address 192.168.1.200/24 \
+  --target web-01 --name eth1 \
+  --addresses 192.168.1.200/24 \
   --gateway4 192.168.1.1 \
   --mtu 9000
 
 # Delete an interface config
 osapi client node network interface delete \
-  --target web-01 --name eth0
+  --target web-01 --name eth1
 
 # List all routes
 osapi client node network route list --target web-01
@@ -117,7 +135,7 @@ osapi client node network route delete \
 
 # Delete DNS config for an interface
 osapi client node network dns delete \
-  --target web-01 --interface eth0
+  --target web-01 --interface-name eth0
 
 # Broadcast interface create to all hosts
 osapi client node network interface create \
@@ -146,21 +164,21 @@ Skipped and failed hosts appear with their error in the output.
 
 ## Supported platforms
 
-| OS Family | Support |
-| --------- | ------- |
-| Debian    | Full    |
-| Darwin    | Skipped |
-| Linux     | Skipped |
+| OS Family | Interface list, get | Interface writes, routes |
+| --------- | ------------------- | ------------------------ |
+| Debian    | Yes                 | Yes                      |
+| Linux     | Yes                 | Skipped                  |
+| Darwin    | Yes                 | Skipped                  |
 
-On a platform that is not supported, interface and route operations return
-`status: skipped`. They do not fail. Refer to
-[Platform Detection](../sdk/platform/detection.md) for how osapi finds the OS
-family.
+On a platform that is not supported, an operation returns `status: skipped`. It
+does not fail. Refer to [Platform Detection](../sdk/platform/detection.md) for
+how osapi finds the OS family.
 
 ## Container behavior
 
-Interface and route operations return `status: skipped` inside containers.
-Netplan requires direct host access and is not available in standard container
+Interface writes and route operations return `status: skipped` inside
+containers. Interface list and get read the container's own interfaces. Netplan
+requires direct host access and is not available in standard container
 environments.
 
 ## Permissions

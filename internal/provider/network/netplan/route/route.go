@@ -27,11 +27,11 @@ import (
 	"fmt"
 	"io/fs"
 	"log/slog"
+	"regexp"
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	"github.com/osapi-io/osapi/internal/provider/network/netplan"
-	"github.com/osapi-io/osapi/internal/provider/network/netplan/iface"
 
 	"github.com/osapi-io/osapi/internal/provider"
 )
@@ -149,7 +149,7 @@ func (d *Debian) Create(
 	ctx context.Context,
 	entry Entry,
 ) (*Result, error) {
-	if err := iface.ValidateInterfaceName(entry.Interface); err != nil {
+	if err := validateInterfaceName(entry.Interface); err != nil {
 		return nil, fmt.Errorf("route create: %w", err)
 	}
 
@@ -212,7 +212,7 @@ func (d *Debian) Update(
 	ctx context.Context,
 	entry Entry,
 ) (*Result, error) {
-	if err := iface.ValidateInterfaceName(entry.Interface); err != nil {
+	if err := validateInterfaceName(entry.Interface); err != nil {
 		return nil, fmt.Errorf("route update: %w", err)
 	}
 
@@ -373,4 +373,23 @@ func buildRouteMetadata(
 		"interface": entry.Interface,
 		"routes":    string(routesJSON),
 	}, nil
+}
+
+// validName matches alphanumeric characters and dashes.
+var validName = regexp.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$`)
+
+// validateInterfaceName checks that the interface name is non-empty and
+// matches the allowed pattern (alphanumeric and dashes).
+func validateInterfaceName(
+	name string,
+) error {
+	if name == "" {
+		return fmt.Errorf("name must not be empty")
+	}
+
+	if !validName.MatchString(name) {
+		return fmt.Errorf("name %q contains invalid characters", name)
+	}
+
+	return nil
 }

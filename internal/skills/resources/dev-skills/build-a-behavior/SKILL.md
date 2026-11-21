@@ -144,11 +144,19 @@ as well, such as of a program's argument, holds with the provider's error.
 
 Work that two behaviors share is a building block, not a copy. The `netplan`
 behavior writes a file under `/etc/netplan`, validates it with `netplan
-generate`, removes it again when that fails, and applies it. dns requires it,
-and so will interfaces and routes. Its `get` gives the netplan ID of the
-definition that matches an interface, such as cloud-init's `all` for `en*`. A
-write goes under that ID, because netplan ignores a second definition of the
-same interface.
+generate`, and applies it. When `netplan generate` refuses the file, the file
+gets back the content that it had, or a new file is removed. dns and interface
+require it, and so will routes. Its `get` gives the netplan ID of the definition
+that matches an interface, such as cloud-init's `all` for `en*`, and each
+interface that the definition matches. netplan ignores a second definition of
+the same interface: dns writes under that ID, and interface refuses an
+interface that a match defines. `netplan status` lists only the interfaces that
+netplan manages, so a behavior asks gohai whether the host has an interface.
+
+A write example runs on a live host in the integration tests. Thus it uses an
+item that it cannot harm, such as `osapi0`, a dummy interface that the
+integration job makes. An effect that is not safe on a live host, such as a
+default route, goes in a unit test of the provider, not in an example.
 
 ## Build a new one
 

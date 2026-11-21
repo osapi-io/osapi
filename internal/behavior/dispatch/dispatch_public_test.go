@@ -229,7 +229,22 @@ func (s *DispatchPublicTestSuite) TestRun() {
 			wantErr: func(err error) { s.ErrorIs(err, behavior.ErrNotFound) },
 		},
 		{
-			name: "when the job fails, it is an internal error", method: "set", target: "server1",
+			name:   "when the job runs and fails, the host's row says why",
+			method: "set",
+			target: "server1",
+			setup: func() {
+				s.jobs.EXPECT().
+					Modify(gomock.Any(), "server1", job.CategoryBehavior, op+"set", kvIn{}).
+					Return("job-1", nil, job.NewResponseError(&job.Response{
+						Hostname: "server1", Status: job.StatusFailed, Error: "refused",
+					}))
+			},
+			wantBody: `{"job_id":"job-1","results":[{"error":"refused","hostname":"server1","status":"failed"}]}`,
+		},
+		{
+			name:   "when the job cannot be sent, it is an internal error",
+			method: "set",
+			target: "server1",
 			setup: func() {
 				s.jobs.EXPECT().
 					Modify(gomock.Any(), "server1", job.CategoryBehavior, op+"set", kvIn{}).

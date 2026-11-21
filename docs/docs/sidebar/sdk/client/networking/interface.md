@@ -4,7 +4,8 @@ sidebar_position: 3
 
 # Interface
 
-Manage the network interface configuration through Netplan.
+Read the network interfaces of a host, and manage the Netplan config that osapi
+has of one.
 
 ## Methods
 
@@ -30,23 +31,22 @@ Manage the network interface configuration through Netplan.
 | ------------ | ----------------- | ------------------------------- |
 | `Hostname`   | `string`          | Agent hostname                  |
 | `Status`     | `string`          | Result status (`ok`, `skipped`) |
-| `Interfaces` | `[]InterfaceInfo` | List of interfaces on the host  |
+| `Interfaces` | `[]InterfaceInfo` | Each interface but the loopback |
 | `Error`      | `string`          | Error message (if any)          |
 
 ### InterfaceInfo
 
-| Field        | Type       | Description                    |
-| ------------ | ---------- | ------------------------------ |
-| `Name`       | `string`   | Interface name                 |
-| `DHCP4`      | `bool`     | Whether DHCPv4 is enabled      |
-| `DHCP6`      | `bool`     | Whether DHCPv6 is enabled      |
-| `Addresses`  | `[]string` | IP addresses in CIDR notation  |
-| `Gateway4`   | `string`   | IPv4 gateway address           |
-| `Gateway6`   | `string`   | IPv6 gateway address           |
-| `MTU`        | `int`      | Maximum transmission unit      |
-| `MACAddress` | `string`   | Hardware MAC address           |
-| `WakeOnLAN`  | `bool`     | Whether Wake-on-LAN is enabled |
-| `State`      | `string`   | Interface state (up, down)     |
+| Field       | Type       | Description                                 |
+| ----------- | ---------- | ------------------------------------------- |
+| `Name`      | `string`   | Interface name                              |
+| `State`     | `string`   | Interface state (up, down)                  |
+| `MAC`       | `string`   | Hardware MAC address                        |
+| `MTU`       | `int`      | Maximum transmission unit                   |
+| `IPv4`      | `string`   | First IPv4 address that is not link-local   |
+| `IPv6`      | `string`   | First IPv6 address that is not link-local   |
+| `Addresses` | `[]string` | Each address, in CIDR notation              |
+| `DHCP4`     | `bool`     | Whether DHCP gave the interface its address |
+| `Primary`   | `bool`     | Whether the interface has the default route |
 
 ### InterfaceGetResult (Get)
 
@@ -131,6 +131,8 @@ for a complete working example.
 | List, Get              | `network:read`  |
 | Create, Update, Delete | `network:write` |
 
-Interface management is supported on the Debian OS family (Ubuntu, Debian,
-Raspbian). On unsupported platforms (Darwin, generic Linux), operations return
-`status: skipped`.
+List and Get run on every platform. Create, Update and Delete run on the Debian
+OS family (Ubuntu, Debian, Raspbian). On other platforms (Darwin, generic
+Linux), and in a container, they return `status: skipped`. A host that refuses a
+write, such as for an interface that a Netplan match defines, returns
+`status: failed` with the reason in `Error`.

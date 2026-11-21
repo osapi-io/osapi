@@ -43,10 +43,11 @@ type GetInput struct {
 
 // Interface is an interface as netplan status reports it.
 type Interface struct {
-	Name    string `json:"name"    doc:"The interface"`
-	Type    string `json:"type"    doc:"Its type, such as ethernet, bond or wifi; empty when netplan does not report it"`
-	Section string `json:"section" doc:"The netplan section that configures it, such as ethernets or bonds"`
-	ID      string `json:"id"      doc:"The netplan ID of the definition that matches it, such as all for a match on en*; the interface's name when netplan does not define it"`
+	Name    string   `json:"name"    doc:"The interface"`
+	Type    string   `json:"type"    doc:"Its type, such as ethernet, bond or wifi; empty when netplan does not report it"`
+	Section string   `json:"section" doc:"The netplan section that configures it, such as ethernets or bonds"`
+	ID      string   `json:"id"      doc:"The netplan ID of the definition that matches it, such as all for a match on en*; the interface's name when netplan does not define it"`
+	Matches []string `json:"matches" doc:"Each interface that the definition matches, this one too, in name order"`
 }
 
 // Result is a netplan file after a write or a removal.
