@@ -4,29 +4,27 @@ sidebar_position: 12
 
 # Timezone management
 
-osapi manages the system timezone of target hosts with `timedatectl`. The agent
-reads and sets the timezone atomically. The update operation is idempotent. If
-the timezone already has the requested value, the agent changes nothing and
+osapi reads the system timezone of each host, and sets it on the Debian family.
+It is the [timezone behavior](../behaviors/timezone/timezone.md). The update is
+idempotent. If the host already has the timezone, the agent changes nothing and
 returns `changed: false`.
 
 ## How it works
 
-The timezone provider uses `timedatectl` to read and set the system timezone.
-The get operation reads the current timezone name and the UTC offset. The update
-operation compares the current timezone with the requested value. It calls
-`timedatectl set-timezone` only when a change is necessary.
-
 ### Get
 
-Runs `timedatectl show -p Timezone --value` to read the IANA timezone name, for
-example `America/New_York`, and `date +%:z` to read the current UTC offset, for
-example `-05:00`.
+gohai reads the timezone on every Linux family and on macOS. The name is the
+zone that `/etc/localtime` links to, such as `America/New_York`. On Linux, when
+there is no link, the name is in `/etc/timezone`. The offset is the offset of
+the host's clock from UTC now, such as `-05:00`.
 
 ### Update
 
-Compares the current timezone against the requested value. If they match,
-returns `changed: false`. Otherwise, runs `timedatectl set-timezone <timezone>`
-and returns `changed: true`.
+Runs `timedatectl show -p Timezone --value` to read the current timezone. If it
+is the requested value, the update returns `changed: false`. Otherwise it runs
+`timedatectl set-timezone <timezone>` and returns `changed: true`. The update
+runs on the Debian family only. On other hosts it reports skipped. The name must
+be an IANA name, such as `UTC` or `America/Argentina/Buenos_Aires`.
 
 ## Operations
 

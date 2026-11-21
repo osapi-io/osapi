@@ -59,7 +59,6 @@ func (s *ProcessorLogPublicTestSuite) newProcessor(
 		nil,
 		nil,
 		nil,
-		nil,
 		logProvider,
 		nil,
 		slog.Default(),

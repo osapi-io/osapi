@@ -638,6 +638,33 @@ func (s *ValidationPublicTestSuite) TestGoDuration() {
 	}
 }
 
+func (s *ValidationPublicTestSuite) TestTimezoneName() {
+	for name, want := range map[string]bool{
+		"UTC":                            true,
+		"America/Argentina/Buenos_Aires": true,
+		"Etc/GMT+5":                      true,
+		"America/Port-au-Prince":         true,
+		"../../etc/passwd":               false,
+		"-UTC":                           false,
+		"/UTC":                           false,
+		"America//New_York":              false,
+		"UTC;reboot":                     false,
+		"":                               false,
+	} {
+		s.Run(name, func() {
+			_, ok := validation.Var(context.Background(), name, "timezone_name")
+			s.Equal(want, ok)
+		})
+	}
+
+	type tzReq struct {
+		Timezone string `validate:"required,timezone_name"`
+	}
+	errMsg, ok := validation.Struct(context.Background(), tzReq{Timezone: "a b"})
+	s.False(ok)
+	s.Contains(errMsg, "not a valid timezone name")
+}
+
 func (s *ValidationPublicTestSuite) TestSysctlKey() {
 	tests := []struct {
 		name         string

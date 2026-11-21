@@ -58,7 +58,6 @@ func (s *ProcessorPackagePublicTestSuite) newProcessor(
 		nil,
 		nil,
 		nil,
-		nil,
 		packageProvider,
 		nil,
 		nil,

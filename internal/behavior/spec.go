@@ -250,6 +250,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindExample,
+			Name: `Links("path", "target")`,
+			Does: "Puts a symbolic link to target on the fake host before the call.",
+			When: "When the call reads a link, such as /etc/localtime for the timezone.",
+		},
+		{
+			Kind: KindExample,
 			Name: `Wrote("path", "content")`,
 			Does: "Says that the call leaves the file with that content.",
 			When: "For each file that the call writes.",

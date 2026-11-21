@@ -197,12 +197,6 @@ const (
 	OperationNtpDelete = client.OpNtpDelete
 )
 
-// Timezone operations.
-const (
-	OperationTimezoneGet    = client.OpTimezoneGet
-	OperationTimezoneUpdate = client.OpTimezoneUpdate
-)
-
 // Power operations.
 const (
 	OperationPowerReboot   = client.OpPowerReboot

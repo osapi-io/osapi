@@ -208,6 +208,16 @@ func (s *CheckPublicTestSuite) TestCheck() {
 			},
 		},
 		{
+			name:     "when an example gives a symbolic link",
+			platform: onDebian(nil),
+			methods: []behavior.Option{
+				behavior.Read("get", getNote).Describe("Get it").
+					Example("The note through a link", getIn{}, noteOut{Text: "hello"},
+						behavior.Links("/etc/note.link", notePath),
+						behavior.Prints("cat /etc/note", "hello")),
+			},
+		},
+		{
 			name:     "when an example runs only on its platform",
 			platform: onDebian(nil),
 			methods: []behavior.Option{

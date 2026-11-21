@@ -115,7 +115,6 @@ func (s *ProcessorProcessPublicTestSuite) TestProcessProcessOperation() {
 			processor := agent.NewNodeProcessor(
 				nil,
 				nil,
-				nil,
 				processProvider,
 				nil,
 				nil,
@@ -197,7 +196,6 @@ func (s *ProcessorProcessPublicTestSuite) TestProcessProcessList() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := agent.NewNodeProcessor(
-				nil,
 				nil,
 				nil,
 				tt.setupMock(),
@@ -292,7 +290,6 @@ func (s *ProcessorProcessPublicTestSuite) TestProcessProcessGet() {
 			processor := agent.NewNodeProcessor(
 				nil,
 				nil,
-				nil,
 				tt.setupMock(),
 				nil,
 				nil,
@@ -383,7 +380,6 @@ func (s *ProcessorProcessPublicTestSuite) TestProcessProcessSignal() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			processor := agent.NewNodeProcessor(
-				nil,
 				nil,
 				nil,
 				tt.setupMock(),

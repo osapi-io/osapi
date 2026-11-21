@@ -1438,24 +1438,24 @@ func (e TimezoneEntryStatus) Valid() bool {
 	}
 }
 
-// Defines values for TimezoneMutationResultStatus.
+// Defines values for TimezoneResultStatus.
 const (
-	TimezoneMutationResultStatusFailed  TimezoneMutationResultStatus = "failed"
-	TimezoneMutationResultStatusOk      TimezoneMutationResultStatus = "ok"
-	TimezoneMutationResultStatusSkipped TimezoneMutationResultStatus = "skipped"
-	TimezoneMutationResultStatusTimeout TimezoneMutationResultStatus = "timeout"
+	TimezoneResultStatusFailed  TimezoneResultStatus = "failed"
+	TimezoneResultStatusOk      TimezoneResultStatus = "ok"
+	TimezoneResultStatusSkipped TimezoneResultStatus = "skipped"
+	TimezoneResultStatusTimeout TimezoneResultStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the TimezoneMutationResultStatus enum.
-func (e TimezoneMutationResultStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the TimezoneResultStatus enum.
+func (e TimezoneResultStatus) Valid() bool {
 	switch e {
-	case TimezoneMutationResultStatusFailed:
+	case TimezoneResultStatusFailed:
 		return true
-	case TimezoneMutationResultStatusOk:
+	case TimezoneResultStatusOk:
 		return true
-	case TimezoneMutationResultStatusSkipped:
+	case TimezoneResultStatusSkipped:
 		return true
-	case TimezoneMutationResultStatusTimeout:
+	case TimezoneResultStatusTimeout:
 		return true
 	default:
 		return false
@@ -4477,66 +4477,66 @@ type TimelineEvent struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
-// TimezoneCollectionResponse defines model for TimezoneCollectionResponse.
-type TimezoneCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []TimezoneEntry     `json:"results"`
-}
-
-// TimezoneEntry Timezone information for a single host.
+// TimezoneEntry defines model for TimezoneEntry.
 type TimezoneEntry struct {
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
-	// Hostname Hostname of the agent that reported this entry.
+	// Hostname Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
 	// Status The status of the operation for this host.
-	Status TimezoneEntryStatus `json:"status"`
+	Status TimezoneEntryStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
 
-	// Timezone Current timezone name.
+	// Timezone The IANA name of the timezone, such as America/New_York
 	Timezone *string `json:"timezone,omitempty"`
 
-	// UtcOffset Current UTC offset (e.g., "-05:00").
+	// UtcOffset The offset from UTC now, such as -05:00
 	UtcOffset *string `json:"utc_offset,omitempty"`
 }
 
 // TimezoneEntryStatus The status of the operation for this host.
 type TimezoneEntryStatus string
 
-// TimezoneMutationResult Result of a timezone update operation for one host.
-type TimezoneMutationResult struct {
-	// Changed Whether the operation modified system state.
+// TimezoneGetResponse defines model for TimezoneGetResponse.
+type TimezoneGetResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []TimezoneEntry     `json:"results"`
+}
+
+// TimezoneResult defines model for TimezoneResult.
+type TimezoneResult struct {
+	// Changed Whether the host changed
 	Changed *bool `json:"changed,omitempty"`
 
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
-	// Hostname Hostname of the agent that processed this operation.
+	// Hostname Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
 	// Status The status of the operation for this host.
-	Status TimezoneMutationResultStatus `json:"status"`
+	Status TimezoneResultStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
 
-	// Timezone Timezone that was set.
+	// Timezone The timezone of the host
 	Timezone *string `json:"timezone,omitempty"`
 }
 
-// TimezoneMutationResultStatus The status of the operation for this host.
-type TimezoneMutationResultStatus string
+// TimezoneResultStatus The status of the operation for this host.
+type TimezoneResultStatus string
 
 // TimezoneUpdateRequest defines model for TimezoneUpdateRequest.
 type TimezoneUpdateRequest struct {
-	// Timezone IANA timezone name (e.g., "America/New_York", "UTC").
-	Timezone string `json:"timezone" validate:"required,min=1"`
+	// Timezone The IANA name of the timezone, such as UTC or America/New_York
+	Timezone string `json:"timezone" validate:"required,max=64,timezone_name"`
 }
 
 // TimezoneUpdateResponse defines model for TimezoneUpdateResponse.
 type TimezoneUpdateResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID      `json:"job_id,omitempty"`
-	Results []TimezoneMutationResult `json:"results"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []TimezoneResult    `json:"results"`
 }
 
 // TraceNode defines model for TraceNode.
@@ -17380,7 +17380,7 @@ func (r PutNodeSysctlResponse) ContentType() string {
 type GetNodeTimezoneResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *TimezoneCollectionResponse
+	JSON200      *TimezoneGetResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -25655,7 +25655,7 @@ func ParseGetNodeTimezoneResponse(rsp *http.Response) (*GetNodeTimezoneResponse,
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest TimezoneCollectionResponse
+		var dest TimezoneGetResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

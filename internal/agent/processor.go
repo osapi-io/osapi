@@ -34,7 +34,6 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/node/power"
 	processProv "github.com/osapi-io/osapi/internal/provider/node/process"
 	serviceProv "github.com/osapi-io/osapi/internal/provider/node/service"
-	"github.com/osapi-io/osapi/internal/provider/node/timezone"
 	"github.com/osapi-io/osapi/internal/provider/node/user"
 )
 
@@ -55,7 +54,6 @@ func (a *Agent) processJobOperation(
 // NewNodeProcessor returns a ProcessorFunc that handles node-related operations.
 func NewNodeProcessor(
 	ntpProvider ntp.Provider,
-	timezoneProvider timezone.Provider,
 	powerProvider power.Provider,
 	processProvider processProv.Provider,
 	userProvider user.Provider,
@@ -73,8 +71,6 @@ func NewNodeProcessor(
 		switch baseOperation {
 		case "ntp":
 			return processNtpOperation(ctx, ntpProvider, logger, req)
-		case "timezone":
-			return processTimezoneOperation(ctx, timezoneProvider, logger, req)
 		case "power":
 			return processPowerOperation(ctx, powerProvider, logger, req)
 		case "process":

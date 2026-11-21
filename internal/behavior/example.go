@@ -135,6 +135,8 @@ const (
 	GivenOutput GivenKind = "output"
 	// GivenFile is a file already on the host.
 	GivenFile GivenKind = "file"
+	// GivenLink is a symbolic link already on the host.
+	GivenLink GivenKind = "link"
 )
 
 // Given is one thing true of the host before an example runs.
@@ -225,6 +227,15 @@ func Exists(
 	content string,
 ) Given {
 	return Given{Kind: GivenFile, Path: path, Content: content}
+}
+
+// Links gives the host a symbolic link at path to target before the call,
+// such as /etc/localtime to the zone file of the host's timezone.
+func Links(
+	path string,
+	target string,
+) Given {
+	return Given{Kind: GivenLink, Path: path, Content: target}
 }
 
 // Wrote says the call leaves path holding exactly content.
