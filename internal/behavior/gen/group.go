@@ -242,9 +242,9 @@ func requestFields(
 		}
 		field := func() *jen.Statement { return jen.Id(fld.Name).Add(typeOf(fld.Type)) }
 		switch {
-		case name == m.KeyField:
+		case m.InPath(name):
 			tags["in"] = "path"
-			tags["param"] = b.TypeName() + title(m.KeyField)
+			tags["param"] = b.TypeName() + title(name)
 			out = append(out, field().Tag(tags))
 		case m.Verb == behavior.VerbRead:
 			tags["in"] = "query"
@@ -347,7 +347,7 @@ func input(
 			continue
 		}
 		from := jen.Id("in").Dot(fld.Name)
-		if name != m.KeyField && m.Verb != behavior.VerbRead {
+		if !m.InPath(name) && m.Verb != behavior.VerbRead {
 			from = jen.Id("in").Dot("Body").Dot(fld.Name)
 		}
 		values = append(values, jen.Id(fld.Name).Op(":").Add(from))

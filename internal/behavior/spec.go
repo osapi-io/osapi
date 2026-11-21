@@ -95,6 +95,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindOption,
+			Name: "Of(parent.Behavior)",
+			Does: "Puts the behavior's items under an item of another behavior: Of(user.Behavior) puts sshkey at /api/node/{hostname}/user/{name}/sshkey and osapi client node user sshkey. Each input has the parent's key, such as name, which goes in the path before the method's own key. The permissions are the parent's: the keys of a user need user:read and user:write. The parent's provider is not required: a child that needs it declares Requires too.",
+			When: "For a resource that exists only inside another, such as the SSH keys of a user. Not with Under: the parent's path is the group.",
+		},
+		{
+			Kind: KindOption,
 			Name: `Under("group")`,
 			Does: "Nests the behavior in a group: its routes, commands and directory.",
 			When: "When the behavior belongs to a group, such as network.",
@@ -530,12 +536,6 @@ var Spec = guide.Spec{
 			Kind: KindNotYet,
 			Name: "A command or a shell from the caller",
 			Does: "There is no execute permission.",
-			When: "Stop, and tell the person what is missing. Do not build around it.",
-		},
-		{
-			Kind: KindNotYet,
-			Name: "A resource under another",
-			Does: "Two keys in the path, such as the SSH keys of a user.",
 			When: "Stop, and tell the person what is missing. Do not build around it.",
 		},
 		{

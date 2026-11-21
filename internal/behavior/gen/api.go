@@ -315,7 +315,7 @@ func validationCases(
 	add(empty, "when the target is empty, it is a 400")
 
 	for _, fl := range command.Flags(m.In) {
-		if !fl.Required || fl.JSON == m.KeyField {
+		if !fl.Required || m.InPath(fl.JSON) {
 			continue
 		}
 		c, err := request(b, m, "server1", without(input, fl.Index))
@@ -330,14 +330,14 @@ func validationCases(
 	// reads none.
 	hasBody := false
 	for _, fl := range command.Flags(m.In) {
-		hasBody = hasBody || fl.JSON != m.KeyField
+		hasBody = hasBody || !m.InPath(fl.JSON)
 	}
 	if m.Verb == behavior.VerbWrite && hasBody {
 		c := base
 		c.body = "{"
 		add(c, "when the body is not JSON, it is a 400")
 		for _, fl := range command.Flags(m.In) {
-			if fl.JSON == m.KeyField {
+			if m.InPath(fl.JSON) {
 				continue
 			}
 			// A list is the wrong type for every field but a list.
@@ -368,11 +368,8 @@ func validationCases(
 		if data, _ := json.Marshal(r.Input); m.Check(context.Background(), data) == nil {
 			continue
 		}
-		if m.KeyField != "" {
-			if field, ok := fieldByJSON(m.In, m.KeyField); ok &&
-				reflect.ValueOf(r.Input).FieldByIndex(field.Index).IsZero() {
-				continue
-			}
+		if emptyKey(m, r.Input) {
+			continue
 		}
 		c, err := request(b, m, "server1", r.Input)
 		if err != nil {
@@ -434,9 +431,9 @@ func request(
 
 	path := strings.Replace(b.Path(m), "{hostname}", url.PathEscape(target), 1)
 	v := reflect.ValueOf(input)
-	if m.KeyField != "" {
-		field, _ := fieldByJSON(m.In, m.KeyField)
-		path = strings.Replace(path, "{"+m.KeyField+"}",
+	for _, key := range m.PathKeys() {
+		field, _ := fieldByJSON(m.In, key)
+		path = strings.Replace(path, "{"+key+"}",
 			url.PathEscape(fmt.Sprint(v.FieldByIndex(field.Index).Interface())), 1)
 	}
 
@@ -451,7 +448,7 @@ func request(
 		for _, fl := range command.Flags(m.In) {
 			fv := v.Field(fl.Index)
 			switch {
-			case fl.JSON == m.KeyField || fv.IsZero():
+			case m.InPath(fl.JSON) || fv.IsZero():
 			case fl.Kind == reflect.Slice:
 				// A list is the parameter given once for each value.
 				values, _ := fv.Interface().([]string)
@@ -699,4 +696,20 @@ func echoRoute(
 	p := strings.ReplaceAll(b.Path(m), "{", ":")
 
 	return strings.ReplaceAll(p, "}", "")
+}
+
+// emptyKey reports whether input leaves a key of the method's path empty: a
+// request with no route.
+func emptyKey(
+	m *behavior.Method,
+	input any,
+) bool {
+	for _, key := range m.PathKeys() {
+		if field, ok := fieldByJSON(m.In, key); ok &&
+			reflect.ValueOf(input).FieldByIndex(field.Index).IsZero() {
+			return true
+		}
+	}
+
+	return false
 }

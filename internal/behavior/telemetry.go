@@ -82,7 +82,7 @@ func (b *Behavior) SpanName(
 }
 
 // SpanInputs are the input fields, by JSON name, that a call of m records on
-// its span: the key field first, then each field tagged telemetry:"attr". A
+// its span: the fields of its path first, then each field tagged telemetry:"attr". A
 // secret is never one of them.
 func (m *Method) SpanInputs() []string {
 	t := m.In
@@ -93,8 +93,7 @@ func (m *Method) SpanInputs() []string {
 		return nil
 	}
 
-	var key string
-	var tagged []string
+	var keys, tagged []string
 	for i := range t.NumField() {
 		f := t.Field(i)
 		if !f.IsExported() || Secret(f) {
@@ -102,17 +101,13 @@ func (m *Method) SpanInputs() []string {
 		}
 		name := JSONName(f)
 		switch {
-		case m.KeyField != "" && name == m.KeyField:
-			key = name
+		case m.InPath(name):
+			keys = append(keys, name)
 		case f.Tag.Get("telemetry") == "attr":
 			tagged = append(tagged, name)
 		}
 	}
-	if key == "" {
-		return tagged
-	}
-
-	return append([]string{key}, tagged...)
+	return append(keys, tagged...)
 }
 
 type instruments struct {
