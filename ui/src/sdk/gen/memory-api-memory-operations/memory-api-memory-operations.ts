@@ -31,6 +31,16 @@ export type getNodeMemoryResponse403 = {
   status: 403
 }
 
+export type getNodeMemoryResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getNodeMemoryResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type getNodeMemoryResponse500 = {
   data: ErrorResponse
   status: 500
@@ -39,7 +49,7 @@ export type getNodeMemoryResponse500 = {
 export type getNodeMemoryResponseSuccess = (getNodeMemoryResponse200) & {
   headers: Headers;
 };
-export type getNodeMemoryResponseError = (getNodeMemoryResponse400 | getNodeMemoryResponse401 | getNodeMemoryResponse403 | getNodeMemoryResponse500) & {
+export type getNodeMemoryResponseError = (getNodeMemoryResponse400 | getNodeMemoryResponse401 | getNodeMemoryResponse403 | getNodeMemoryResponse404 | getNodeMemoryResponse409 | getNodeMemoryResponse500) & {
   headers: Headers;
 };
 

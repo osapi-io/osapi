@@ -139,7 +139,8 @@ var Group = endpoint.Define(
 		Explain("Lists each installed package with its version: dpkg on the Debian family, rpm on the other Linux families, and Homebrew on macOS.").
 		Example("--target web-01", "A Debian host").
 		Example("--target web-01", "A Fedora host").
-		Example("--target web-01", "A Mac"),
+		Example("--target web-01", "A Mac").
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host does not have what the request names, such as the object of a deploy."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs."), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.")),
 	endpoint.Get[GetRequest, PackageGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodePackageByKey").
@@ -151,7 +152,7 @@ var Group = endpoint.Define(
 		Example("--target web-01 --name jq", "An installed formula").
 		Example("--target web-01 --name curl", "An installed RPM").
 		Result("The command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A package that is not installed | `--name tree` | not found |\n| A name that is an option | `--name -oAPT::Get=x` | not a valid package name |\n| A name longer than 255 characters | `--name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | not a valid package name |").
-		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no package with that name.")),
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no package with that name."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs."), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.")),
 	endpoint.Post[CreateRequest, PackageCreateResponse]("create").
 		Handle(HandleCreate).
 		ID("PostNodePackage").
@@ -160,7 +161,8 @@ var Group = endpoint.Define(
 		Returns("Each target host's result, with whether it changed.").
 		Explain("Installs the package with apt-get install, at the version when one is given. A package that is installed, at that version when one is given, does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.").
 		Example("--target web-01 --name tree", "Install a package").
-		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Install a package | runs `apt-get install -y -- tree` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A name that is an option | `--name -oAPT::Get=x` | not a valid package name |\n| A name longer than 255 characters | `--name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | not a valid package name |\n| A version that is an option | `--name tree --version -x` | not a valid package version |\n| A version longer than 255 characters | `--name tree --version 1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111` | not a valid package version |"),
+		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Install a package | runs `apt-get install -y -- tree` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A name that is an option | `--name -oAPT::Get=x` | not a valid package name |\n| A name longer than 255 characters | `--name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | not a valid package name |\n| A version that is an option | `--name tree --version -x` | not a valid package version |\n| A version longer than 255 characters | `--name tree --version 1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111` | not a valid package version |").
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host does not have what the request names, such as the object of a deploy."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs."), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.")),
 	endpoint.Delete[DeleteRequest, PackageDeleteResponse]("delete").
 		Handle(HandleDelete).
 		ID("DeleteNodePackage").
@@ -171,7 +173,7 @@ var Group = endpoint.Define(
 		Example("--target web-01 --name tree", "Remove a package").
 		Example("--target web-01 --name tree", "A package that is not installed").
 		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Remove a package | runs `apt-get remove -y -- tree` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A name that is an option | `--name -oAPT::Get=x` | not a valid package name |\n| A name longer than 255 characters | `--name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | not a valid package name |").
-		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no package with that name.")),
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no package with that name."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs."), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.")),
 )
 
 func init() {

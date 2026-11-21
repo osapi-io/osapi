@@ -146,11 +146,20 @@ func groupFile(
 		if r := command.Annotations(b, m)[reference.Result]; r != "" {
 			def = def.Op(".").Line().Id("Result").Call(jen.Lit(r))
 		}
-		var errs []jen.Code
+		// What a provider returns, as the API answers it on one host.
+		missing := "The host does not have what the request names, such as the object of a deploy."
 		if m.KeyField != "" {
-			errs = append(errs, jen.Qual(endpointPath, "NotFound").Call(
-				jen.Qual(behaviorPkg, "ErrNotFound"),
-				jen.Lit(fmt.Sprintf("The host has no %s with that %s.", b.Name, m.KeyField))))
+			missing = fmt.Sprintf("The host has no %s with that %s.", b.Name, m.KeyField)
+		}
+		conflict := "osapi did not deploy the item, so it does not change it, " +
+			"or the host does not have a program that the method needs."
+		errs := []jen.Code{
+			jen.Qual(endpointPath, "NotFound").
+				Call(jen.Qual(behaviorPkg, "ErrNotFound"), jen.Lit(missing)),
+			jen.Qual(endpointPath, "Conflict").
+				Call(jen.Qual(behaviorPkg, "ErrNotManaged"), jen.Lit(conflict)),
+			jen.Qual(endpointPath, "Conflict").
+				Call(jen.Qual(behaviorPkg, "ErrNotInstalled"), jen.Lit(conflict)),
 		}
 		if len(behavior.TemplateFields(m.In)) > 0 {
 			errs = append(errs, jen.Qual(endpointPath, "Invalid").Call(

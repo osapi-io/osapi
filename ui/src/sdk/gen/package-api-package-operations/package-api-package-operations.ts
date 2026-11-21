@@ -35,6 +35,16 @@ export type getNodePackageResponse403 = {
   status: 403
 }
 
+export type getNodePackageResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getNodePackageResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type getNodePackageResponse500 = {
   data: ErrorResponse
   status: 500
@@ -43,7 +53,7 @@ export type getNodePackageResponse500 = {
 export type getNodePackageResponseSuccess = (getNodePackageResponse200) & {
   headers: Headers;
 };
-export type getNodePackageResponseError = (getNodePackageResponse400 | getNodePackageResponse401 | getNodePackageResponse403 | getNodePackageResponse500) & {
+export type getNodePackageResponseError = (getNodePackageResponse400 | getNodePackageResponse401 | getNodePackageResponse403 | getNodePackageResponse404 | getNodePackageResponse409 | getNodePackageResponse500) & {
   headers: Headers;
 };
 
@@ -93,6 +103,16 @@ export type postNodePackageResponse403 = {
   status: 403
 }
 
+export type postNodePackageResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type postNodePackageResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type postNodePackageResponse500 = {
   data: ErrorResponse
   status: 500
@@ -101,7 +121,7 @@ export type postNodePackageResponse500 = {
 export type postNodePackageResponseSuccess = (postNodePackageResponse200) & {
   headers: Headers;
 };
-export type postNodePackageResponseError = (postNodePackageResponse400 | postNodePackageResponse401 | postNodePackageResponse403 | postNodePackageResponse500) & {
+export type postNodePackageResponseError = (postNodePackageResponse400 | postNodePackageResponse401 | postNodePackageResponse403 | postNodePackageResponse404 | postNodePackageResponse409 | postNodePackageResponse500) & {
   headers: Headers;
 };
 
@@ -171,6 +191,11 @@ export type deleteNodePackageResponse404 = {
   status: 404
 }
 
+export type deleteNodePackageResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type deleteNodePackageResponse500 = {
   data: ErrorResponse
   status: 500
@@ -179,7 +204,7 @@ export type deleteNodePackageResponse500 = {
 export type deleteNodePackageResponseSuccess = (deleteNodePackageResponse200) & {
   headers: Headers;
 };
-export type deleteNodePackageResponseError = (deleteNodePackageResponse400 | deleteNodePackageResponse401 | deleteNodePackageResponse403 | deleteNodePackageResponse404 | deleteNodePackageResponse500) & {
+export type deleteNodePackageResponseError = (deleteNodePackageResponse400 | deleteNodePackageResponse401 | deleteNodePackageResponse403 | deleteNodePackageResponse404 | deleteNodePackageResponse409 | deleteNodePackageResponse500) & {
   headers: Headers;
 };
 
@@ -236,6 +261,11 @@ export type getNodePackageByKeyResponse404 = {
   status: 404
 }
 
+export type getNodePackageByKeyResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type getNodePackageByKeyResponse500 = {
   data: ErrorResponse
   status: 500
@@ -244,7 +274,7 @@ export type getNodePackageByKeyResponse500 = {
 export type getNodePackageByKeyResponseSuccess = (getNodePackageByKeyResponse200) & {
   headers: Headers;
 };
-export type getNodePackageByKeyResponseError = (getNodePackageByKeyResponse400 | getNodePackageByKeyResponse401 | getNodePackageByKeyResponse403 | getNodePackageByKeyResponse404 | getNodePackageByKeyResponse500) & {
+export type getNodePackageByKeyResponseError = (getNodePackageByKeyResponse400 | getNodePackageByKeyResponse401 | getNodePackageByKeyResponse403 | getNodePackageByKeyResponse404 | getNodePackageByKeyResponse409 | getNodePackageByKeyResponse500) & {
   headers: Headers;
 };
 

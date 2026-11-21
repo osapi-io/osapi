@@ -31,6 +31,16 @@ export type getNodeStatusResponse403 = {
   status: 403
 }
 
+export type getNodeStatusResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getNodeStatusResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type getNodeStatusResponse500 = {
   data: ErrorResponse
   status: 500
@@ -39,7 +49,7 @@ export type getNodeStatusResponse500 = {
 export type getNodeStatusResponseSuccess = (getNodeStatusResponse200) & {
   headers: Headers;
 };
-export type getNodeStatusResponseError = (getNodeStatusResponse400 | getNodeStatusResponse401 | getNodeStatusResponse403 | getNodeStatusResponse500) & {
+export type getNodeStatusResponseError = (getNodeStatusResponse400 | getNodeStatusResponse401 | getNodeStatusResponse403 | getNodeStatusResponse404 | getNodeStatusResponse409 | getNodeStatusResponse500) & {
   headers: Headers;
 };
 

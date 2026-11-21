@@ -36,7 +36,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/osapi-io/osapi/internal/behavior"
-	"github.com/osapi-io/osapi/internal/controller/api/apierr"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/job"
 )
@@ -101,9 +100,11 @@ type response struct {
 }
 
 // Run sends input to method of b on the host, or the hosts, that target
-// names, and returns the answer as Out, the method's response type. A host
-// that does not have the item is behavior.ErrNotFound, which the group maps
-// to 404. A job that cannot be sent is a 500 that does not tell its cause.
+// names, and returns the answer as Out, the method's response type. On one
+// host, a provider's behavior.ErrNotFound is a 404, and its ErrNotManaged
+// and ErrNotInstalled are a 409, as the group maps them; on a broadcast each
+// host's row says it. A job that cannot be sent is a 500 that does not tell
+// its cause.
 func Run[Out any](
 	ctx context.Context,
 	d Deps,
@@ -153,8 +154,12 @@ func Run[Out any](
 		jobID, resp, err := send(ctx, target, job.CategoryBehavior, op, input)
 		var failed *job.ResponseError
 		switch {
-		case err != nil && apierr.IsMissing(err):
+		case errors.Is(err, job.ErrNotFound):
 			return out, fmt.Errorf("%w: %s", behavior.ErrNotFound, err)
+		case errors.Is(err, job.ErrNotManaged):
+			return out, fmt.Errorf("%w: %s", behavior.ErrNotManaged, err)
+		case errors.Is(err, job.ErrNotInstalled):
+			return out, fmt.Errorf("%w: %s", behavior.ErrNotInstalled, err)
 		case errors.As(err, &failed):
 			// The job ran and the provider refused it: the host's row
 			// says why, as a broadcast's does.

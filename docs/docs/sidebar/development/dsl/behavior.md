@@ -294,6 +294,20 @@ Says that the call runs the command.
 
 Use: For each command that the call runs to make a change.
 
+### `A write example on a live host`
+
+CI runs each write example as root on a throwaway Linux runner, with
+OSAPI_INTEGRATION_WRITE_BEHAVIORS=1, and the lab can run it too. Each example
+starts with its item deleted, runs the calls of After, then must report its
+changed, and changed: false when it runs again. The test uploads each object of
+Stored first, and runs an .Always() action once. Prints, PrintsAfter and Exists
+only answer the fake host.
+
+Use: For each write example: give the state that it starts from with After,
+which a real host can run, such as After(StartInput&#123;...&#125;) before a
+stop, and make the content real, such as a unit file whose ExecStart exists. Run
+it against the lab with go test -tags integration before you push.
+
 ## The host a provider gets
 
 ### `h.Platform, h.Container, h.Hostname`
@@ -421,6 +435,42 @@ rule.Format(f), or rule.None for a rule that the spec cannot show, such as a
 target the controller resolves.
 
 Use: Beside the validator of a new custom rule, in internal/validation.
+
+## Errors a provider returns
+
+### `behavior.ErrNotFound`
+
+The item that the request names is not on the host: a service, a package, a key,
+or an object of a deploy. On one host the API answers 404, on any method; on a
+broadcast the row of the host is failed with the message.
+
+Use: Wrap it with what was missing: fmt.Errorf("service %q: %w", name,
+behavior.ErrNotFound). An update, a delete or an action on an item that osapi
+does not have is not found; a delete of it is changed: false instead.
+
+### `behavior.ErrNotManaged`
+
+The item is on the host, but osapi did not deploy it, so osapi does not change
+it, such as a file with no record in managedfile. The API answers 409.
+
+Use: Before a write over an item that something else owns. Ask managedfile, not
+the path: the agent's own unit is osapi-agent.service.
+
+### `behavior.ErrNotInstalled`
+
+A program that the method needs is not on the host. The API answers 409.
+
+Use: When a method needs a program that the platform does not always have, and
+Runs or RunsIfPresent does not say it.
+
+### `behavior.ErrUnsupported`
+
+The method does not apply to this host: its platform, or a container. The row of
+the host is skipped, not failed.
+
+Use: From a builder, for a platform or a host that it cannot manage, or from a
+method that does not apply. Use .On or a reader builder first, so the definition
+says it.
 
 ## Building on other behaviors
 

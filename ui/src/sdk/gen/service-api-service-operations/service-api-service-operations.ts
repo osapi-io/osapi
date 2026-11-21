@@ -42,6 +42,16 @@ export type getNodeServiceResponse403 = {
   status: 403
 }
 
+export type getNodeServiceResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getNodeServiceResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type getNodeServiceResponse500 = {
   data: ErrorResponse
   status: 500
@@ -50,7 +60,7 @@ export type getNodeServiceResponse500 = {
 export type getNodeServiceResponseSuccess = (getNodeServiceResponse200) & {
   headers: Headers;
 };
-export type getNodeServiceResponseError = (getNodeServiceResponse400 | getNodeServiceResponse401 | getNodeServiceResponse403 | getNodeServiceResponse500) & {
+export type getNodeServiceResponseError = (getNodeServiceResponse400 | getNodeServiceResponse401 | getNodeServiceResponse403 | getNodeServiceResponse404 | getNodeServiceResponse409 | getNodeServiceResponse500) & {
   headers: Headers;
 };
 
@@ -100,6 +110,16 @@ export type postNodeServiceResponse403 = {
   status: 403
 }
 
+export type postNodeServiceResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type postNodeServiceResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type postNodeServiceResponse500 = {
   data: ErrorResponse
   status: 500
@@ -108,7 +128,7 @@ export type postNodeServiceResponse500 = {
 export type postNodeServiceResponseSuccess = (postNodeServiceResponse200) & {
   headers: Headers;
 };
-export type postNodeServiceResponseError = (postNodeServiceResponse400 | postNodeServiceResponse401 | postNodeServiceResponse403 | postNodeServiceResponse500) & {
+export type postNodeServiceResponseError = (postNodeServiceResponse400 | postNodeServiceResponse401 | postNodeServiceResponse403 | postNodeServiceResponse404 | postNodeServiceResponse409 | postNodeServiceResponse500) & {
   headers: Headers;
 };
 
@@ -178,6 +198,11 @@ export type deleteNodeServiceResponse404 = {
   status: 404
 }
 
+export type deleteNodeServiceResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type deleteNodeServiceResponse500 = {
   data: ErrorResponse
   status: 500
@@ -186,7 +211,7 @@ export type deleteNodeServiceResponse500 = {
 export type deleteNodeServiceResponseSuccess = (deleteNodeServiceResponse200) & {
   headers: Headers;
 };
-export type deleteNodeServiceResponseError = (deleteNodeServiceResponse400 | deleteNodeServiceResponse401 | deleteNodeServiceResponse403 | deleteNodeServiceResponse404 | deleteNodeServiceResponse500) & {
+export type deleteNodeServiceResponseError = (deleteNodeServiceResponse400 | deleteNodeServiceResponse401 | deleteNodeServiceResponse403 | deleteNodeServiceResponse404 | deleteNodeServiceResponse409 | deleteNodeServiceResponse500) & {
   headers: Headers;
 };
 
@@ -243,6 +268,11 @@ export type getNodeServiceByKeyResponse404 = {
   status: 404
 }
 
+export type getNodeServiceByKeyResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type getNodeServiceByKeyResponse500 = {
   data: ErrorResponse
   status: 500
@@ -251,7 +281,7 @@ export type getNodeServiceByKeyResponse500 = {
 export type getNodeServiceByKeyResponseSuccess = (getNodeServiceByKeyResponse200) & {
   headers: Headers;
 };
-export type getNodeServiceByKeyResponseError = (getNodeServiceByKeyResponse400 | getNodeServiceByKeyResponse401 | getNodeServiceByKeyResponse403 | getNodeServiceByKeyResponse404 | getNodeServiceByKeyResponse500) & {
+export type getNodeServiceByKeyResponseError = (getNodeServiceByKeyResponse400 | getNodeServiceByKeyResponse401 | getNodeServiceByKeyResponse403 | getNodeServiceByKeyResponse404 | getNodeServiceByKeyResponse409 | getNodeServiceByKeyResponse500) & {
   headers: Headers;
 };
 
@@ -308,6 +338,11 @@ export type putNodeServiceResponse404 = {
   status: 404
 }
 
+export type putNodeServiceResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type putNodeServiceResponse500 = {
   data: ErrorResponse
   status: 500
@@ -316,7 +351,7 @@ export type putNodeServiceResponse500 = {
 export type putNodeServiceResponseSuccess = (putNodeServiceResponse200) & {
   headers: Headers;
 };
-export type putNodeServiceResponseError = (putNodeServiceResponse400 | putNodeServiceResponse401 | putNodeServiceResponse403 | putNodeServiceResponse404 | putNodeServiceResponse500) & {
+export type putNodeServiceResponseError = (putNodeServiceResponse400 | putNodeServiceResponse401 | putNodeServiceResponse403 | putNodeServiceResponse404 | putNodeServiceResponse409 | putNodeServiceResponse500) & {
   headers: Headers;
 };
 
@@ -388,6 +423,11 @@ export type postNodeServiceDisableResponse404 = {
   status: 404
 }
 
+export type postNodeServiceDisableResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type postNodeServiceDisableResponse500 = {
   data: ErrorResponse
   status: 500
@@ -396,7 +436,7 @@ export type postNodeServiceDisableResponse500 = {
 export type postNodeServiceDisableResponseSuccess = (postNodeServiceDisableResponse200) & {
   headers: Headers;
 };
-export type postNodeServiceDisableResponseError = (postNodeServiceDisableResponse400 | postNodeServiceDisableResponse401 | postNodeServiceDisableResponse403 | postNodeServiceDisableResponse404 | postNodeServiceDisableResponse500) & {
+export type postNodeServiceDisableResponseError = (postNodeServiceDisableResponse400 | postNodeServiceDisableResponse401 | postNodeServiceDisableResponse403 | postNodeServiceDisableResponse404 | postNodeServiceDisableResponse409 | postNodeServiceDisableResponse500) & {
   headers: Headers;
 };
 
@@ -453,6 +493,11 @@ export type postNodeServiceEnableResponse404 = {
   status: 404
 }
 
+export type postNodeServiceEnableResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type postNodeServiceEnableResponse500 = {
   data: ErrorResponse
   status: 500
@@ -461,7 +506,7 @@ export type postNodeServiceEnableResponse500 = {
 export type postNodeServiceEnableResponseSuccess = (postNodeServiceEnableResponse200) & {
   headers: Headers;
 };
-export type postNodeServiceEnableResponseError = (postNodeServiceEnableResponse400 | postNodeServiceEnableResponse401 | postNodeServiceEnableResponse403 | postNodeServiceEnableResponse404 | postNodeServiceEnableResponse500) & {
+export type postNodeServiceEnableResponseError = (postNodeServiceEnableResponse400 | postNodeServiceEnableResponse401 | postNodeServiceEnableResponse403 | postNodeServiceEnableResponse404 | postNodeServiceEnableResponse409 | postNodeServiceEnableResponse500) & {
   headers: Headers;
 };
 
@@ -518,6 +563,11 @@ export type postNodeServiceRestartResponse404 = {
   status: 404
 }
 
+export type postNodeServiceRestartResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type postNodeServiceRestartResponse500 = {
   data: ErrorResponse
   status: 500
@@ -526,7 +576,7 @@ export type postNodeServiceRestartResponse500 = {
 export type postNodeServiceRestartResponseSuccess = (postNodeServiceRestartResponse200) & {
   headers: Headers;
 };
-export type postNodeServiceRestartResponseError = (postNodeServiceRestartResponse400 | postNodeServiceRestartResponse401 | postNodeServiceRestartResponse403 | postNodeServiceRestartResponse404 | postNodeServiceRestartResponse500) & {
+export type postNodeServiceRestartResponseError = (postNodeServiceRestartResponse400 | postNodeServiceRestartResponse401 | postNodeServiceRestartResponse403 | postNodeServiceRestartResponse404 | postNodeServiceRestartResponse409 | postNodeServiceRestartResponse500) & {
   headers: Headers;
 };
 
@@ -583,6 +633,11 @@ export type postNodeServiceStartResponse404 = {
   status: 404
 }
 
+export type postNodeServiceStartResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type postNodeServiceStartResponse500 = {
   data: ErrorResponse
   status: 500
@@ -591,7 +646,7 @@ export type postNodeServiceStartResponse500 = {
 export type postNodeServiceStartResponseSuccess = (postNodeServiceStartResponse200) & {
   headers: Headers;
 };
-export type postNodeServiceStartResponseError = (postNodeServiceStartResponse400 | postNodeServiceStartResponse401 | postNodeServiceStartResponse403 | postNodeServiceStartResponse404 | postNodeServiceStartResponse500) & {
+export type postNodeServiceStartResponseError = (postNodeServiceStartResponse400 | postNodeServiceStartResponse401 | postNodeServiceStartResponse403 | postNodeServiceStartResponse404 | postNodeServiceStartResponse409 | postNodeServiceStartResponse500) & {
   headers: Headers;
 };
 
@@ -648,6 +703,11 @@ export type postNodeServiceStopResponse404 = {
   status: 404
 }
 
+export type postNodeServiceStopResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type postNodeServiceStopResponse500 = {
   data: ErrorResponse
   status: 500
@@ -656,7 +716,7 @@ export type postNodeServiceStopResponse500 = {
 export type postNodeServiceStopResponseSuccess = (postNodeServiceStopResponse200) & {
   headers: Headers;
 };
-export type postNodeServiceStopResponseError = (postNodeServiceStopResponse400 | postNodeServiceStopResponse401 | postNodeServiceStopResponse403 | postNodeServiceStopResponse404 | postNodeServiceStopResponse500) & {
+export type postNodeServiceStopResponseError = (postNodeServiceStopResponse400 | postNodeServiceStopResponse401 | postNodeServiceStopResponse403 | postNodeServiceStopResponse404 | postNodeServiceStopResponse409 | postNodeServiceStopResponse500) & {
   headers: Headers;
 };
 

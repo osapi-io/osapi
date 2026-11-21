@@ -37,6 +37,16 @@ export type getNodeNetworkRouteResponse403 = {
   status: 403
 }
 
+export type getNodeNetworkRouteResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getNodeNetworkRouteResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type getNodeNetworkRouteResponse500 = {
   data: ErrorResponse
   status: 500
@@ -45,7 +55,7 @@ export type getNodeNetworkRouteResponse500 = {
 export type getNodeNetworkRouteResponseSuccess = (getNodeNetworkRouteResponse200) & {
   headers: Headers;
 };
-export type getNodeNetworkRouteResponseError = (getNodeNetworkRouteResponse400 | getNodeNetworkRouteResponse401 | getNodeNetworkRouteResponse403 | getNodeNetworkRouteResponse500) & {
+export type getNodeNetworkRouteResponseError = (getNodeNetworkRouteResponse400 | getNodeNetworkRouteResponse401 | getNodeNetworkRouteResponse403 | getNodeNetworkRouteResponse404 | getNodeNetworkRouteResponse409 | getNodeNetworkRouteResponse500) & {
   headers: Headers;
 };
 
@@ -100,6 +110,11 @@ export type deleteNodeNetworkRouteResponse404 = {
   status: 404
 }
 
+export type deleteNodeNetworkRouteResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type deleteNodeNetworkRouteResponse500 = {
   data: ErrorResponse
   status: 500
@@ -108,7 +123,7 @@ export type deleteNodeNetworkRouteResponse500 = {
 export type deleteNodeNetworkRouteResponseSuccess = (deleteNodeNetworkRouteResponse200) & {
   headers: Headers;
 };
-export type deleteNodeNetworkRouteResponseError = (deleteNodeNetworkRouteResponse400 | deleteNodeNetworkRouteResponse401 | deleteNodeNetworkRouteResponse403 | deleteNodeNetworkRouteResponse404 | deleteNodeNetworkRouteResponse500) & {
+export type deleteNodeNetworkRouteResponseError = (deleteNodeNetworkRouteResponse400 | deleteNodeNetworkRouteResponse401 | deleteNodeNetworkRouteResponse403 | deleteNodeNetworkRouteResponse404 | deleteNodeNetworkRouteResponse409 | deleteNodeNetworkRouteResponse500) & {
   headers: Headers;
 };
 
@@ -165,6 +180,11 @@ export type getNodeNetworkRouteByKeyResponse404 = {
   status: 404
 }
 
+export type getNodeNetworkRouteByKeyResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type getNodeNetworkRouteByKeyResponse500 = {
   data: ErrorResponse
   status: 500
@@ -173,7 +193,7 @@ export type getNodeNetworkRouteByKeyResponse500 = {
 export type getNodeNetworkRouteByKeyResponseSuccess = (getNodeNetworkRouteByKeyResponse200) & {
   headers: Headers;
 };
-export type getNodeNetworkRouteByKeyResponseError = (getNodeNetworkRouteByKeyResponse400 | getNodeNetworkRouteByKeyResponse401 | getNodeNetworkRouteByKeyResponse403 | getNodeNetworkRouteByKeyResponse404 | getNodeNetworkRouteByKeyResponse500) & {
+export type getNodeNetworkRouteByKeyResponseError = (getNodeNetworkRouteByKeyResponse400 | getNodeNetworkRouteByKeyResponse401 | getNodeNetworkRouteByKeyResponse403 | getNodeNetworkRouteByKeyResponse404 | getNodeNetworkRouteByKeyResponse409 | getNodeNetworkRouteByKeyResponse500) & {
   headers: Headers;
 };
 
@@ -230,6 +250,11 @@ export type postNodeNetworkRouteResponse404 = {
   status: 404
 }
 
+export type postNodeNetworkRouteResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type postNodeNetworkRouteResponse500 = {
   data: ErrorResponse
   status: 500
@@ -238,7 +263,7 @@ export type postNodeNetworkRouteResponse500 = {
 export type postNodeNetworkRouteResponseSuccess = (postNodeNetworkRouteResponse200) & {
   headers: Headers;
 };
-export type postNodeNetworkRouteResponseError = (postNodeNetworkRouteResponse400 | postNodeNetworkRouteResponse401 | postNodeNetworkRouteResponse403 | postNodeNetworkRouteResponse404 | postNodeNetworkRouteResponse500) & {
+export type postNodeNetworkRouteResponseError = (postNodeNetworkRouteResponse400 | postNodeNetworkRouteResponse401 | postNodeNetworkRouteResponse403 | postNodeNetworkRouteResponse404 | postNodeNetworkRouteResponse409 | postNodeNetworkRouteResponse500) & {
   headers: Headers;
 };
 
@@ -310,6 +335,11 @@ export type putNodeNetworkRouteResponse404 = {
   status: 404
 }
 
+export type putNodeNetworkRouteResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type putNodeNetworkRouteResponse500 = {
   data: ErrorResponse
   status: 500
@@ -318,7 +348,7 @@ export type putNodeNetworkRouteResponse500 = {
 export type putNodeNetworkRouteResponseSuccess = (putNodeNetworkRouteResponse200) & {
   headers: Headers;
 };
-export type putNodeNetworkRouteResponseError = (putNodeNetworkRouteResponse400 | putNodeNetworkRouteResponse401 | putNodeNetworkRouteResponse403 | putNodeNetworkRouteResponse404 | putNodeNetworkRouteResponse500) & {
+export type putNodeNetworkRouteResponseError = (putNodeNetworkRouteResponse400 | putNodeNetworkRouteResponse401 | putNodeNetworkRouteResponse403 | putNodeNetworkRouteResponse404 | putNodeNetworkRouteResponse409 | putNodeNetworkRouteResponse500) & {
   headers: Headers;
 };
 

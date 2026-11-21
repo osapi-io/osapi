@@ -219,6 +219,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Forbidden - Insufficient permissions
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host does not have what the request names, such as the object of a deploy.
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.
         "500":
           content:
             application/json:
@@ -267,6 +279,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Forbidden - Insufficient permissions
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host does not have what the request names, such as the object of a deploy.
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.
         "500":
           content:
             application/json:
@@ -317,6 +341,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: The host has no package with that name.
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.
         "500":
           content:
             application/json:
@@ -366,6 +396,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: The host has no package with that name.
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.
         "500":
           content:
             application/json:
