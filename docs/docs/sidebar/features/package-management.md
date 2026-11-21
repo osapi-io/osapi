@@ -7,9 +7,9 @@ sidebar_position: 15
 osapi reads the packages installed on each host, and installs and removes them
 on the Debian family. It is two behaviors:
 
-- [package](../behaviors/package/package.md): the installed packages.
-- [updatepackages](../behaviors/updatepackages/updatepackages.md): the updates
-  that the package index has, and the refresh of the index.
+- [package](../reference/behaviors/package/package.md): the installed packages.
+- [updatepackages](../reference/behaviors/updatepackages/updatepackages.md): the
+  updates that the package index has, and the refresh of the index.
 
 ## How it works
 

@@ -1,0 +1,22 @@
+---
+sidebar_position: 0
+---
+
+import DocCardList from '@theme/DocCardList';
+
+# Reference
+
+What this build of osapi has. Each page here is generated from the definitions
+in the binary. Thus a page always agrees with the build that you run, and
+`just test` fails when a page does not match it.
+
+- [Behaviors](behaviors/behaviors.mdx): what osapi manages on a host.
+- [Chains](chains/chains.mdx): the behaviors that each behavior calls.
+- [Endpoints](endpoints/endpoints.mdx): the operations of the controller itself.
+- [API](api.md): each route, from the OpenAPI spec.
+- [CLI](cli/cli.mdx): each command, and the layer that made it.
+
+[DSLs](../development/dsl/dsl.mdx), under Development, tell how to write a
+behavior, an endpoint or a command.
+
+<DocCardList />

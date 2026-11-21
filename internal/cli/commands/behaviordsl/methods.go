@@ -24,7 +24,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"slices"
 	"strings"
 
@@ -135,8 +134,8 @@ func Get(
 		out.Methods = append(out.Methods, row)
 		out.Types = append(out.Types, Type{
 			Name:   m.Name,
-			Input:  shape(typeName(m.In), in, true),
-			Output: shape(typeName(m.Out), res, false),
+			Input:  behavior.Shape(m.In, in, true),
+			Output: behavior.Shape(m.Out, res, false),
 		})
 	}
 	out.Telemetry.Recorded = recordedInputs(out.Telemetry.Inputs, b.Methods)
@@ -186,7 +185,7 @@ func MethodGet(
 	}
 	out := MethodOutput{
 		Name: m.Name, Verb: m.Verb, Doc: m.Doc, Long: m.Long,
-		InputType: typeName(m.In), OutputType: typeName(m.Out),
+		InputType: behavior.TypeName(m.In), OutputType: behavior.TypeName(m.Out),
 		Fields: fields(input), Results: results(output), Examples: []ExampleRow{},
 		Input: input, Output: output, Calls: m.Examples, Refusals: m.Refusals,
 	}
@@ -274,42 +273,6 @@ func Validate(
 	}
 
 	return out, command.Fail()
-}
-
-// typeName is a type's name, with [] for a list: []Entry, MutationResult.
-func typeName(
-	t reflect.Type,
-) string {
-	if t.Kind() == reflect.Slice {
-		return "[]" + t.Elem().Name()
-	}
-
-	return t.Name()
-}
-
-// shape is a type as its name and fields: CreateInput { key*, value* },
-// []Entry { key, value }. A required input field is marked *. A list is
-// described by its element.
-func shape(
-	name string,
-	s *behavior.Schema,
-	input bool,
-) string {
-	if s.Items != nil {
-		s = s.Items
-	}
-	if len(s.Order) == 0 {
-		return name
-	}
-	parts := make([]string, 0, len(s.Order))
-	for _, f := range s.Order {
-		if input && slices.Contains(s.Required, f) {
-			f += "*"
-		}
-		parts = append(parts, f)
-	}
-
-	return name + " { " + strings.Join(parts, ", ") + " }"
 }
 
 // fields are the input's fields in declared order, with their

@@ -1,0 +1,21 @@
+---
+sidebar_position: 1
+---
+
+import Catalog from './_catalog.mdx';
+import DocCardList from '@theme/DocCardList';
+
+# Endpoints
+
+An endpoint is one operation of the controller itself, such as the list of
+agents or the retry of a job. It runs on the controller, in the request, and it
+has no target and no result for each host. An operation on a host is a
+[behavior](../behaviors/behaviors.mdx). Each group of endpoints is a definition
+in Go, and osapi builds its routes, its spec and its commands from it.
+[Building an endpoint](../../development/endpoints.md) tells how to write one.
+
+## Every endpoint group in this build
+
+<Catalog />
+
+<DocCardList />

@@ -85,8 +85,8 @@ gives the fix for each one.
 
 To review the result, read the definition in `internal/behaviors/<name>/`. Then
 read `osapi behavior get --name <name>` and the generated page under
-[Behaviors](../behaviors/behaviors.mdx). osapi generates all of the rest of the
-change from those.
+[Behaviors](../reference/behaviors/behaviors.mdx). osapi generates all of the
+rest of the change from those.
 
 ## What it will refuse
 

@@ -29,6 +29,8 @@ var Group = command.Register(command.Define(
 	"docs", "Write the CLI reference pages of the docs site",
 	command.Under("cli"),
 	command.Uses[Deps](),
+	command.SubDoc("dsl", "Write the DSL reference pages of the docs site"),
+	command.SubDoc("reference", "Write the reference pages of the docs site"),
 	command.Method[GenerateInput, GenerateOutput]("generate").
 		Short("Write the CLI reference pages of the docs site").
 		Long("It writes a page for each command of this binary into `--dir`, and\n"+
@@ -37,4 +39,29 @@ var Group = command.Register(command.Define(
 		Example("").
 		Example("--dir /tmp/cli").
 		Handle(Generate),
+	command.Method[DSLInput, DSLOutput]("generate").
+		Sub("dsl").
+		Short("Write the DSL reference pages of the docs site").
+		Long("It writes a page for each DSL of this binary into `--dir`: the behavior\n"+
+			"DSL, chains, the endpoint DSL and the command DSL. Each page lists what the\n"+
+			"`spec get` command of the DSL prints, from the same spec. It removes each\n"+
+			"generated page there that no DSL has, and keeps a page that a person wrote.\n"+
+			"`just cli-docs-generate` runs it, and `just test` checks that the pages\n"+
+			"match the binary.").
+		Example("").
+		Example("--dir /tmp/dsl").
+		Handle(GenerateDSL),
+	command.Method[ReferenceInput, ReferenceOutput]("generate").
+		Sub("reference").
+		Short("Write the reference pages of the docs site").
+		Long("It writes a page for each behavior, chain, endpoint group and local group\n"+
+			"of this binary under `docs/docs/sidebar/reference`. Each page is the output\n"+
+			"of the `list` or `get` command that shows it, such as `osapi behavior get\n"+
+			"--name dns`, printed as markdown. Thus a page shows what its command shows.\n"+
+			"It removes each generated page there that no command writes now. `just\n"+
+			"cli-docs-generate` runs it, and `just test` checks that the pages match the\n"+
+			"binary.").
+		Example("").
+		Example("--root ~/src/osapi").
+		Handle(GenerateReference),
 ))

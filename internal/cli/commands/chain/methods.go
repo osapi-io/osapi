@@ -51,7 +51,7 @@ func List(
 		out.Items = append(out.Items, Summary{
 			Behavior: b.Name,
 			Internal: b.Internal,
-			Chain:    tree(b),
+			Chain:    behavior.Tree(b),
 			Calls:    names(b.Requires),
 			UsedBy:   usedBy,
 		})
@@ -79,7 +79,7 @@ func Get(
 
 	out := GetOutput{
 		Behavior: b.Name,
-		Chain:    tree(b),
+		Chain:    behavior.Tree(b),
 		Calls:    names(b.Requires),
 		UsedBy:   names(behavior.RequiredBy(b)),
 		Examples: []ExampleCalls{},
@@ -145,26 +145,6 @@ func Spec(
 	_ SpecInput,
 ) (SpecOutput, error) {
 	return SpecOutput{Kinds: d.Spec().Sections()}, nil
-}
-
-// tree is b and the behaviors that it calls, down the chain:
-// dns → netplan → managedfile, or status → (hostname, uptime) when a
-// behavior calls more than one.
-func tree(
-	b *behavior.Behavior,
-) string {
-	if len(b.Requires) == 0 {
-		return b.Name
-	}
-	parts := make([]string, 0, len(b.Requires))
-	for _, r := range b.Requires {
-		parts = append(parts, tree(r))
-	}
-	if len(parts) == 1 {
-		return b.Name + " → " + parts[0]
-	}
-
-	return b.Name + " → (" + strings.Join(parts, ", ") + ")"
 }
 
 // names are the names of bs.

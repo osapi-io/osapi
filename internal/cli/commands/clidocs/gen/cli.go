@@ -22,7 +22,37 @@ var docsGenerateCmd = &cobra.Command{
 	Use:   "generate",
 }
 
+var docsDslGenerateCmd = &cobra.Command{
+	Annotations: map[string]string{clicommand.SubKey: "dsl"},
+	Args:        cobra.NoArgs,
+	Example:     "  osapi cli docs dsl generate\n  osapi cli docs dsl generate --dir /tmp/dsl",
+	Long:        "It writes a page for each DSL of this binary into `--dir`: the behavior\nDSL, chains, the endpoint DSL and the command DSL. Each page lists what the\n`spec get` command of the DSL prints, from the same spec. It removes each\ngenerated page there that no DSL has, and keeps a page that a person wrote.\n`just cli-docs-generate` runs it, and `just test` checks that the pages\nmatch the binary.",
+	RunE: func(cmd *cobra.Command, _ []string) error {
+		dir, _ := cmd.Flags().GetString("dir")
+
+		return clicommand.Run(cmd, clidocs.Group, "dsl generate", clidocs.DSLInput{Dir: dir})
+	},
+	Short: "Write the DSL reference pages of the docs site",
+	Use:   "generate",
+}
+
+var docsReferenceGenerateCmd = &cobra.Command{
+	Annotations: map[string]string{clicommand.SubKey: "reference"},
+	Args:        cobra.NoArgs,
+	Example:     "  osapi cli docs reference generate\n  osapi cli docs reference generate --root ~/src/osapi",
+	Long:        "It writes a page for each behavior, chain, endpoint group and local group\nof this binary under `docs/docs/sidebar/reference`. Each page is the output\nof the `list` or `get` command that shows it, such as `osapi behavior get\n--name dns`, printed as markdown. Thus a page shows what its command shows.\nIt removes each generated page there that no command writes now. `just\ncli-docs-generate` runs it, and `just test` checks that the pages match the\nbinary.",
+	RunE: func(cmd *cobra.Command, _ []string) error {
+		root, _ := cmd.Flags().GetString("root")
+
+		return clicommand.Run(cmd, clidocs.Group, "reference generate", clidocs.ReferenceInput{Root: root})
+	},
+	Short: "Write the reference pages of the docs site",
+	Use:   "generate",
+}
+
 func init() {
 	docsGenerateCmd.Flags().String("dir", "docs/docs/sidebar/usage/cli", "Directory of the CLI reference pages")
-	clicommand.AddCommands(clidocs.Group, docsGenerateCmd)
+	docsDslGenerateCmd.Flags().String("dir", "docs/docs/sidebar/development/dsl", "Directory of the DSL pages")
+	docsReferenceGenerateCmd.Flags().String("root", ".", "Root of the osapi repository")
+	clicommand.AddCommands(clidocs.Group, docsGenerateCmd, docsDslGenerateCmd, docsReferenceGenerateCmd)
 }

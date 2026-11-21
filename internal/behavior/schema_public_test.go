@@ -184,3 +184,42 @@ func TestSchemaPublicTestSuite(
 ) {
 	suite.Run(t, new(SchemaPublicTestSuite))
 }
+
+type shapeIn struct {
+	Key   string `json:"key"   validate:"required"`
+	Value string `json:"value" validate:"omitempty"`
+	Skip  string `json:"-"`
+}
+
+type emptyIn struct{}
+
+type spanTree struct {
+	Name     string     `json:"name"`
+	Children []spanTree `json:"children,omitempty"`
+}
+
+func (s *SchemaPublicTestSuite) TestShape() {
+	in, err := behavior.SchemaFor(reflect.TypeFor[shapeIn]())
+	s.Require().NoError(err)
+	s.Equal("shapeIn { key*, value }", behavior.Shape(reflect.TypeFor[shapeIn](), in, true))
+	s.Equal("shapeIn { key, value }", behavior.Shape(reflect.TypeFor[shapeIn](), in, false),
+		"an output marks no field required")
+	list, err := behavior.SchemaFor(reflect.TypeFor[[]shapeIn]())
+	s.Require().NoError(err)
+	s.Equal("[]shapeIn { key, value }", behavior.Shape(reflect.TypeFor[[]shapeIn](), list, false))
+	s.Equal("emptyIn", behavior.Shape(reflect.TypeFor[emptyIn](), &behavior.Schema{}, true),
+		"a type with no field is its name")
+}
+
+func (s *SchemaPublicTestSuite) TestFieldShape() {
+	s.Equal("shapeIn { key*, value }", behavior.FieldShape(reflect.TypeFor[shapeIn](), true),
+		"a field with no json name, or json \"-\", or unexported, is left out")
+	s.Equal("spanTree { name, children }", behavior.FieldShape(reflect.TypeFor[spanTree](), false),
+		"a type that holds itself has a shape")
+	s.Equal(
+		"[]spanTree { name, children }",
+		behavior.FieldShape(reflect.TypeFor[[]spanTree](), false),
+	)
+	s.Equal("string", behavior.FieldShape(reflect.TypeFor[string](), true))
+	s.Equal("", behavior.FieldShape(reflect.TypeFor[struct{ quiet int }](), true))
+}

@@ -42,14 +42,6 @@ func (s *MethodsTestSuite) TestConstraints() {
 	s.Equal("pattern ^a$, format ipv4, one of a b, min length 1, max length 2, min 0.5, max 9", got)
 }
 
-func (s *MethodsTestSuite) TestShape() {
-	s.Equal(
-		"ListInput",
-		shape("ListInput", &behavior.Schema{}, true),
-		"a type with no field is its name",
-	)
-}
-
 func (s *MethodsTestSuite) TestPairs() {
 	s.Equal("key=a, value=1", pairs(map[string]any{"key": "a", "value": 1}))
 	s.Equal("[key=a] [key=b]", pairs([]map[string]string{{"key": "a"}, {"key": "b"}}))

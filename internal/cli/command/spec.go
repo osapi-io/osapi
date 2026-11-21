@@ -212,6 +212,12 @@ var Spec = guide.Spec{
 
 		{
 			Kind: KindOutput,
+			Name: "Render(p, group, out)",
+			Does: "Prints the output of a method through a Printer, as the CLI prints it. The terminal and the pages of the docs site both use it, so a page written from a command's output shows what the command shows.",
+			When: "To write an output somewhere other than the terminal, such as a page of the reference.",
+		},
+		{
+			Kind: KindOutput,
 			Name: "a list: Items []T, with TotalItems or not, or []T",
 			Does: "Prints a heading with the count, such as Files (6):, then a table with one column for each field of T. A list with fewer items than TotalItems counts as (3 of 120). An empty list prints its heading with (0), then None. and the hint of its empty tag.",
 			When: "For each method that returns a list. Name the fields Items and TotalItems, and add no other field.",

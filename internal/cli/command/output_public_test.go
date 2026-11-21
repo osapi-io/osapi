@@ -578,6 +578,14 @@ func (s *OutputPublicTestSuite) TestPrintsGroups() {
 	s.Equal("list:{}", printed)
 }
 
+func (s *OutputPublicTestSuite) TestRender() {
+	r := &recorder{}
+	s.Require().NoError(command.Render(r, "zzrender", &plain{Items: []row{{Name: "web-01"}}}))
+	s.Contains(r.b.String(), "web-01", "a pointer prints as its value, as the CLI prints it")
+
+	s.Error(command.Render(&recorder{}, "zzrender", func() {}), "a value JSON cannot hold")
+}
+
 func TestOutputPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(OutputPublicTestSuite))
 }

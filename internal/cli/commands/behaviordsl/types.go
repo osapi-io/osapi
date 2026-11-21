@@ -133,13 +133,13 @@ type MethodOutput struct {
 	Command    string             `               json:"command,omitempty"`
 	InputType  string             `               json:"input_type"            label:"Input type"`
 	OutputType string             `               json:"output_type"           label:"Output type"`
-	Fields     []Field            `               json:"fields"                label:"Input"`
+	Fields     []Field            `               json:"fields"                label:"Input"                                                     empty:"The method takes no input; its command needs only --target."`
 	Results    []Result           `               json:"results"               label:"Output"`
 	Examples   []ExampleRow       `               json:"example_rows"          label:"Examples"`
-	Input      *behavior.Schema   `               json:"input"                                                                                   render:"-"`
-	Output     *behavior.Schema   `               json:"output"                                                                                  render:"-"`
-	Calls      []behavior.Example `               json:"examples,omitempty"                                                                      render:"-"`
-	Refusals   []behavior.Refusal `               json:"refusals,omitempty"                                                                      render:"-"`
+	Input      *behavior.Schema   `               json:"input"                                                                                                                                                       render:"-"`
+	Output     *behavior.Schema   `               json:"output"                                                                                                                                                      render:"-"`
+	Calls      []behavior.Example `               json:"examples,omitempty"                                                                                                                                          render:"-"`
+	Refusals   []behavior.Refusal `               json:"refusals,omitempty"                                                                                                                                          render:"-"`
 }
 
 // Field is one input field: its flag and request field.

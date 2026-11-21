@@ -181,6 +181,12 @@ Telemetry:
   Writes:           /etc/sysctl.d/osapi-*.conf
 ```
 
+The behaviors that a behavior calls, and the ones that they call, are its chain.
+`osapi behavior chain get --name <name>` shows each call that its examples make,
+and `osapi behavior chain validate` checks the chain rules. The
+[Chains](dsl/chain.md) reference has how to build one, and each building block
+of the build.
+
 ## types.go: the contract
 
 The tags of the input and output types hold all of the contract. Each field of
@@ -368,7 +374,7 @@ error that a struct of strings cannot cause.
 ## The checks
 
 ```bash
-go generate ./internal/behaviors/all  # write gen/, the spec and the behavior pages
+go generate ./internal/behaviors/all  # write gen/ and the spec; just cli-docs-generate writes the pages
 just cli-docs-generate                # write the CLI pages of the commands
 osapi behavior spec get               # each part of the DSL, and when to use it
 osapi behavior validate               # the definition's rules, each with its fix
@@ -399,15 +405,15 @@ golden diff is the change to the API: write it again with `-update` and read it.
 
 ## Generated, never edited
 
-| File                                              | From                                                                                  |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `internal/behaviors/<name>/gen/*.go`              | the definition, its types and its examples, built with jen                            |
-| `internal/behaviors/<name>/gen/api.yaml`          | `gen/group.go`, by the endpoint layer's spec builder in `internal/behavior/gen/group` |
-| `internal/controller/api/gen/api.yaml`            | the hand-written specs and every `gen/api.yaml`, by `just generate`                   |
-| `internal/behaviors/<name>/mocks/provider.gen.go` | the Provider interface, by mockgen                                                    |
-| `internal/behaviors/all/gen/gen.go`               | every behavior with `API` or `CLI`                                                    |
-| `docs/docs/sidebar/behaviors/<name>/<name>.md`    | the definition and its settings                                                       |
-| `docs/docs/sidebar/usage/cli/client/...`          | the generated commands, by `just cli-docs-generate`                                   |
+| File                                                     | From                                                                                  |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `internal/behaviors/<name>/gen/*.go`                     | the definition, its types and its examples, built with jen                            |
+| `internal/behaviors/<name>/gen/api.yaml`                 | `gen/group.go`, by the endpoint layer's spec builder in `internal/behavior/gen/group` |
+| `internal/controller/api/gen/api.yaml`                   | the hand-written specs and every `gen/api.yaml`, by `just generate`                   |
+| `internal/behaviors/<name>/mocks/provider.gen.go`        | the Provider interface, by mockgen                                                    |
+| `internal/behaviors/all/gen/gen.go`                      | every behavior with `API` or `CLI`                                                    |
+| `docs/docs/sidebar/reference/behaviors/<name>/<name>.md` | `osapi behavior get` and `method get`, as markdown, by `just cli-docs-generate`       |
+| `docs/docs/sidebar/usage/cli/client/...`                 | the generated commands, by `just cli-docs-generate`                                   |
 
 `gen/cli.go` puts the docs of a method on its command. `.Describe` is the
 `Short` of the command, `.Explain` is its `Long`, and the examples are its

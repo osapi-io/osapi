@@ -1,0 +1,29 @@
+---
+sidebar_position: 1
+---
+
+import DocCardList from '@theme/DocCardList';
+
+# DSLs
+
+osapi is built from definitions. You write a definition in Go, and osapi builds
+the routes, commands, spec, docs and tests from it. There are three DSLs and one
+set of rules for how behaviors call each other:
+
+| DSL                         | You define                                      | osapi builds                                               |
+| --------------------------- | ----------------------------------------------- | ---------------------------------------------------------- |
+| [Behavior DSL](behavior.md) | one thing that osapi manages on a host          | its routes, agent dispatch, commands, spec, docs and tests |
+| [Chains](chain.md)          | the behaviors that a behavior calls             | nothing new: the rules, and the view of each call          |
+| [Endpoint DSL](endpoint.md) | a route of the controller, such as the job list | its route, its part of the spec, and its commands          |
+| [Command DSL](command.md)   | a command that runs in the CLI and calls no API | the command, its flags, its help and its page              |
+
+Each page here comes from the binary. It lists the same terms that the
+`spec get` command of the DSL prints, such as `osapi behavior spec get`. Thus a
+page always agrees with the build that you run. `just cli-docs-generate` writes
+them, and `just test` fails when a page does not match the binary.
+
+[Building a behavior](../behaviors.md), [Building an endpoint](../endpoints.md)
+and [Building a command](../commands.md) tell how to build with each DSL. The
+[Reference](../../reference/reference.mdx) shows what this build has.
+
+<DocCardList />

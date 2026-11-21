@@ -97,40 +97,13 @@ func init() {
 			},
 		}
 	})
-	command.Provide(commanddsl.Group, func() commanddsl.Deps {
-		return commanddsl.Deps{
-			Root:       rootCmd,
-			Dir:        ".",
-			IsBehavior: func(name string) bool { return behavior.Lookup(name) != nil },
-		}
+	command.Provide(commanddsl.Group, commandDSLDeps)
+	command.Provide(endpointdsl.Group, endpointDSLDeps)
+	command.Provide(behaviordsl.Group, behaviorDSLDeps)
+	command.Provide(chain.Group, chainDeps)
+	command.Provide(clidocs.Group, func() clidocs.Deps {
+		return clidocs.Deps{Root: rootCmd, DSLs: dslPages, Pages: referencePages}
 	})
-	command.Provide(endpointdsl.Group, func() endpointdsl.Deps {
-		return endpointdsl.Deps{
-			Groups: endpoint.All,
-			OpenAPI: func(g *endpoint.Group) (any, error) {
-				return endpoint.OpenAPI(g, endpoint.ErrorRef)
-			},
-			Dir: ".",
-		}
-	})
-	command.Provide(behaviordsl.Group, func() behaviordsl.Deps {
-		return behaviordsl.Deps{
-			Behaviors: behavior.All,
-			Validate:  behavior.Validate,
-			Keys:      config.Keys,
-			Spec:      func() guide.Spec { return behavior.CurrentSpec(job.FactKeys()...) },
-		}
-	})
-	command.Provide(chain.Group, func() chain.Deps {
-		return chain.Deps{
-			Behaviors:   behavior.All,
-			Runs:        behaviortest.Chains,
-			Problems:    behavior.ChainProblems,
-			RunProblems: behaviortest.ChainProblems,
-			Spec:        behavior.CurrentChainSpec,
-		}
-	})
-	command.Provide(clidocs.Group, func() clidocs.Deps { return clidocs.Deps{Root: rootCmd} })
 	command.Provide(startcmd.Group, func() startcmd.Deps {
 		return startcmd.Deps{NATS: natsDeps(), Controller: controllerDeps(), Agent: agentDeps()}
 	})
@@ -173,4 +146,83 @@ func (tokenConfig) CustomRoles() (map[string][]string, error) {
 	}
 
 	return out, nil
+}
+
+// dslPages are the DSLs of the binary as pages of the docs site, each from the
+// spec that its spec get command prints. osapi cli docs dsl generate writes
+// them.
+func dslPages() []clidocs.DSL {
+	return []clidocs.DSL{
+		{
+			Slug:     "behavior",
+			Title:    "Behavior DSL",
+			Position: 2,
+			Intro: "Each part of a behavior definition: what it makes osapi do, and when to use it. " +
+				"`osapi behavior spec get` prints the same list from this build. " +
+				"[Building a behavior](../behaviors.md) tells how to write one.",
+			Spec: behavior.CurrentSpec(job.FactKeys()...),
+		},
+		{
+			Slug: "chain", Title: "Chains", Position: 3,
+			Intro: "How a behavior builds on others and calls them on the same host, what occurs " +
+				"when a step fails, and the building blocks of this build. " +
+				"`osapi behavior chain spec get` prints the same list.",
+			Spec: behavior.CurrentChainSpec(),
+		},
+		{
+			Slug: "endpoint", Title: "Endpoint DSL", Position: 4,
+			Intro: "Each part of an endpoint group: a route of the controller, its spec and its " +
+				"commands. `osapi controller endpoint spec get` prints the same list from this build. " +
+				"[Building an endpoint](../endpoints.md) tells how to write one.",
+			Spec: endpoint.Spec,
+		},
+		{
+			Slug: "command", Title: "Command DSL", Position: 5,
+			Intro: "Each part of a local group: a command that runs in the CLI and calls no API. " +
+				"`osapi cli command spec get` prints the same list from this build. " +
+				"[Building a command](../commands.md) tells how to write one.",
+			Spec: command.Spec,
+		},
+	}
+}
+
+// commandDSLDeps is what the commanddsl commands use, and the reference pages too.
+func commandDSLDeps() commanddsl.Deps {
+	return commanddsl.Deps{
+		Root:       rootCmd,
+		Dir:        ".",
+		IsBehavior: func(name string) bool { return behavior.Lookup(name) != nil },
+	}
+}
+
+// endpointDSLDeps is what the endpointdsl commands use, and the reference pages too.
+func endpointDSLDeps() endpointdsl.Deps {
+	return endpointdsl.Deps{
+		Groups: endpoint.All,
+		OpenAPI: func(g *endpoint.Group) (any, error) {
+			return endpoint.OpenAPI(g, endpoint.ErrorRef)
+		},
+		Dir: ".",
+	}
+}
+
+// behaviorDSLDeps is what the behaviordsl commands use, and the reference pages too.
+func behaviorDSLDeps() behaviordsl.Deps {
+	return behaviordsl.Deps{
+		Behaviors: behavior.All,
+		Validate:  behavior.Validate,
+		Keys:      config.Keys,
+		Spec:      func() guide.Spec { return behavior.CurrentSpec(job.FactKeys()...) },
+	}
+}
+
+// chainDeps is what the chain commands use, and the reference pages too.
+func chainDeps() chain.Deps {
+	return chain.Deps{
+		Behaviors:   behavior.All,
+		Runs:        behaviortest.Chains,
+		Problems:    behavior.ChainProblems,
+		RunProblems: behaviortest.ChainProblems,
+		Spec:        behavior.CurrentChainSpec,
+	}
 }

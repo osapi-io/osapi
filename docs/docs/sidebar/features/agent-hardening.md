@@ -210,9 +210,9 @@ too.
 
 The agent checks the programs above, and each program that a behavior declares
 with `behavior.Sudo`. The page of a behavior under
-[Behaviors](../behaviors/behaviors.mdx) names the programs that it runs with
-sudo. `osapi behavior get --name <name>` also lists them. Thus you find the
-sudoers entry of a new behavior there.
+[Behaviors](../reference/behaviors/behaviors.mdx) names the programs that it
+runs with sudo. `osapi behavior get --name <name>` also lists them. Thus you
+find the sudoers entry of a new behavior there.
 
 Example log, with no rule for `useradd`:
 
