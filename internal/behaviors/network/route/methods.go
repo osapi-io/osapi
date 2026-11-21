@@ -22,53 +22,44 @@ package route
 
 import "context"
 
-// List is every route of the host's main table.
+// List is the routes of an interface.
 func List(
 	ctx context.Context,
 	p Provider,
-	_ ListInput,
+	in ListInput,
 ) ([]Entry, error) {
-	return p.Routes(ctx)
+	return p.Routes(ctx, in.Name)
 }
 
-// Get is the routes of one interface of the host.
-func Get(
-	ctx context.Context,
-	p Provider,
-	in GetInput,
-) ([]Entry, error) {
-	return p.InterfaceRoutes(ctx, in.InterfaceName)
-}
-
-// Create writes osapi's routes of an interface.
+// Create adds a route to an interface.
 func Create(
 	ctx context.Context,
 	p Provider,
 	in CreateInput,
 ) (Result, error) {
-	changed, err := p.Create(ctx, Config(in))
+	changed, err := p.Set(ctx, Route(in), true)
 
-	return Result{InterfaceName: in.InterfaceName, Changed: changed}, err
+	return Result{Destination: in.Destination, Changed: changed}, err
 }
 
-// Update writes osapi's routes of an interface over the ones it has.
+// Update changes the gateway or the metric of a route that osapi has.
 func Update(
 	ctx context.Context,
 	p Provider,
 	in UpdateInput,
 ) (Result, error) {
-	changed, err := p.Update(ctx, Config(in))
+	changed, err := p.Set(ctx, Route(in), false)
 
-	return Result{InterfaceName: in.InterfaceName, Changed: changed}, err
+	return Result{Destination: in.Destination, Changed: changed}, err
 }
 
-// Delete drops osapi's routes of an interface.
+// Delete drops a route that osapi wrote.
 func Delete(
 	ctx context.Context,
 	p Provider,
 	in DeleteInput,
 ) (Result, error) {
-	changed, err := p.Remove(ctx, in.InterfaceName)
+	changed, err := p.Remove(ctx, in.Name, in.Destination)
 
-	return Result{InterfaceName: in.InterfaceName, Changed: changed}, err
+	return Result{Destination: in.Destination, Changed: changed}, err
 }

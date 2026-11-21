@@ -43,21 +43,9 @@ func newReader(
 	return &reader{src: h.Sources()}, nil
 }
 
-// Routes is every route of the host's main table.
+// Routes is the routes of one interface. An interface the host does not
+// have is not found; one with no routes has none.
 func (r *reader) Routes(
-	ctx context.Context,
-) ([]Entry, error) {
-	info, err := r.read(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return entries(info, func(network.Route) bool { return true }), nil
-}
-
-// InterfaceRoutes is the routes of one interface. An interface the host does
-// not have is not found; one with no routes has none.
-func (r *reader) InterfaceRoutes(
 	ctx context.Context,
 	name string,
 ) ([]Entry, error) {
@@ -72,18 +60,11 @@ func (r *reader) InterfaceRoutes(
 	return entries(info, func(rt network.Route) bool { return rt.Interface == name }), nil
 }
 
-// Create is unsupported where no writer is declared.
-func (r *reader) Create(
+// Set is unsupported where no writer is declared.
+func (r *reader) Set(
 	context.Context,
-	Config,
-) (bool, error) {
-	return false, behavior.ErrUnsupported
-}
-
-// Update is unsupported where no writer is declared.
-func (r *reader) Update(
-	context.Context,
-	Config,
+	Route,
+	bool,
 ) (bool, error) {
 	return false, behavior.ErrUnsupported
 }
@@ -91,6 +72,7 @@ func (r *reader) Update(
 // Remove is unsupported where no writer is declared.
 func (r *reader) Remove(
 	context.Context,
+	string,
 	string,
 ) (bool, error) {
 	return false, behavior.ErrUnsupported

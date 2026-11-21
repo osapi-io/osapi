@@ -718,48 +718,48 @@ func (e NetworkInterfaceResultStatus) Valid() bool {
 	}
 }
 
-// Defines values for NetworkRouteEntryStatus.
+// Defines values for NetworkInterfaceRouteEntryStatus.
 const (
-	NetworkRouteEntryStatusFailed  NetworkRouteEntryStatus = "failed"
-	NetworkRouteEntryStatusOk      NetworkRouteEntryStatus = "ok"
-	NetworkRouteEntryStatusSkipped NetworkRouteEntryStatus = "skipped"
-	NetworkRouteEntryStatusTimeout NetworkRouteEntryStatus = "timeout"
+	NetworkInterfaceRouteEntryStatusFailed  NetworkInterfaceRouteEntryStatus = "failed"
+	NetworkInterfaceRouteEntryStatusOk      NetworkInterfaceRouteEntryStatus = "ok"
+	NetworkInterfaceRouteEntryStatusSkipped NetworkInterfaceRouteEntryStatus = "skipped"
+	NetworkInterfaceRouteEntryStatusTimeout NetworkInterfaceRouteEntryStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the NetworkRouteEntryStatus enum.
-func (e NetworkRouteEntryStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the NetworkInterfaceRouteEntryStatus enum.
+func (e NetworkInterfaceRouteEntryStatus) Valid() bool {
 	switch e {
-	case NetworkRouteEntryStatusFailed:
+	case NetworkInterfaceRouteEntryStatusFailed:
 		return true
-	case NetworkRouteEntryStatusOk:
+	case NetworkInterfaceRouteEntryStatusOk:
 		return true
-	case NetworkRouteEntryStatusSkipped:
+	case NetworkInterfaceRouteEntryStatusSkipped:
 		return true
-	case NetworkRouteEntryStatusTimeout:
+	case NetworkInterfaceRouteEntryStatusTimeout:
 		return true
 	default:
 		return false
 	}
 }
 
-// Defines values for NetworkRouteResultStatus.
+// Defines values for NetworkInterfaceRouteResultStatus.
 const (
-	NetworkRouteResultStatusFailed  NetworkRouteResultStatus = "failed"
-	NetworkRouteResultStatusOk      NetworkRouteResultStatus = "ok"
-	NetworkRouteResultStatusSkipped NetworkRouteResultStatus = "skipped"
-	NetworkRouteResultStatusTimeout NetworkRouteResultStatus = "timeout"
+	NetworkInterfaceRouteResultStatusFailed  NetworkInterfaceRouteResultStatus = "failed"
+	NetworkInterfaceRouteResultStatusOk      NetworkInterfaceRouteResultStatus = "ok"
+	NetworkInterfaceRouteResultStatusSkipped NetworkInterfaceRouteResultStatus = "skipped"
+	NetworkInterfaceRouteResultStatusTimeout NetworkInterfaceRouteResultStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the NetworkRouteResultStatus enum.
-func (e NetworkRouteResultStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the NetworkInterfaceRouteResultStatus enum.
+func (e NetworkInterfaceRouteResultStatus) Valid() bool {
 	switch e {
-	case NetworkRouteResultStatusFailed:
+	case NetworkInterfaceRouteResultStatusFailed:
 		return true
-	case NetworkRouteResultStatusOk:
+	case NetworkInterfaceRouteResultStatusOk:
 		return true
-	case NetworkRouteResultStatusSkipped:
+	case NetworkInterfaceRouteResultStatusSkipped:
 		return true
-	case NetworkRouteResultStatusTimeout:
+	case NetworkInterfaceRouteResultStatusTimeout:
 		return true
 	default:
 		return false
@@ -3281,6 +3281,121 @@ type NetworkInterfaceResult struct {
 // NetworkInterfaceResultStatus The status of the operation for this host.
 type NetworkInterfaceResultStatus string
 
+// NetworkInterfaceRouteCollectionResponse defines model for NetworkInterfaceRouteCollectionResponse.
+type NetworkInterfaceRouteCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID          `json:"job_id,omitempty" validate:"uuid"`
+	Results []NetworkInterfaceRouteEntry `json:"results"`
+}
+
+// NetworkInterfaceRouteCreateRequest defines model for NetworkInterfaceRouteCreateRequest.
+type NetworkInterfaceRouteCreateRequest struct {
+	// Destination Where the route goes, in CIDR notation, such as 10.0.0.0/8; not a default route
+	Destination string `json:"destination" validate:"required,cidr"`
+
+	// Metric The metric, from 0 to 4294967295; none when it is 0
+	Metric *int `json:"metric,omitempty" validate:"omitempty,min=0,max=4294967295"`
+
+	// Via The gateway, an address of the destination's family, such as 192.168.1.1
+	Via string `json:"via" validate:"required,ip"`
+}
+
+// NetworkInterfaceRouteCreateResponse defines model for NetworkInterfaceRouteCreateResponse.
+type NetworkInterfaceRouteCreateResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID           `json:"job_id,omitempty" validate:"uuid"`
+	Results []NetworkInterfaceRouteResult `json:"results"`
+}
+
+// NetworkInterfaceRouteDeleteRequest defines model for NetworkInterfaceRouteDeleteRequest.
+type NetworkInterfaceRouteDeleteRequest struct {
+	// Destination The destination of the route, in CIDR notation, such as 10.0.0.0/8
+	Destination string `json:"destination" validate:"required,cidr"`
+}
+
+// NetworkInterfaceRouteDeleteResponse defines model for NetworkInterfaceRouteDeleteResponse.
+type NetworkInterfaceRouteDeleteResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID           `json:"job_id,omitempty" validate:"uuid"`
+	Results []NetworkInterfaceRouteResult `json:"results"`
+}
+
+// NetworkInterfaceRouteEntry defines model for NetworkInterfaceRouteEntry.
+type NetworkInterfaceRouteEntry struct {
+	// Destination The destination in CIDR notation, or default
+	Destination *string `json:"destination,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Family inet or inet6
+	Family *string `json:"family,omitempty"`
+
+	// Gateway The gateway; empty for a route on the link
+	Gateway *string `json:"gateway,omitempty"`
+
+	// Hostname Hostname of the agent that produced this result.
+	Hostname string `json:"hostname"`
+
+	// Interface The interface the route goes out of
+	Interface *string `json:"interface,omitempty"`
+
+	// Metric The metric; 0 when the kernel gives none
+	Metric *int `json:"metric,omitempty"`
+
+	// Proto Where the route came from, such as kernel, dhcp or static; empty on macOS
+	Proto *string `json:"proto,omitempty"`
+
+	// Scope The scope, such as link; empty for a global route
+	Scope *string `json:"scope,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status NetworkInterfaceRouteEntryStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
+}
+
+// NetworkInterfaceRouteEntryStatus The status of the operation for this host.
+type NetworkInterfaceRouteEntryStatus string
+
+// NetworkInterfaceRouteResult defines model for NetworkInterfaceRouteResult.
+type NetworkInterfaceRouteResult struct {
+	// Changed Whether the host changed
+	Changed *bool `json:"changed,omitempty"`
+
+	// Destination The destination of the route
+	Destination *string `json:"destination,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that produced this result.
+	Hostname string `json:"hostname"`
+
+	// Status The status of the operation for this host.
+	Status NetworkInterfaceRouteResultStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
+}
+
+// NetworkInterfaceRouteResultStatus The status of the operation for this host.
+type NetworkInterfaceRouteResultStatus string
+
+// NetworkInterfaceRouteUpdateRequest defines model for NetworkInterfaceRouteUpdateRequest.
+type NetworkInterfaceRouteUpdateRequest struct {
+	// Destination Where the route goes, in CIDR notation, such as 10.0.0.0/8; not a default route
+	Destination string `json:"destination" validate:"required,cidr"`
+
+	// Metric The metric, from 0 to 4294967295; none when it is 0
+	Metric *int `json:"metric,omitempty" validate:"omitempty,min=0,max=4294967295"`
+
+	// Via The gateway, an address of the destination's family, such as 192.168.1.1
+	Via string `json:"via" validate:"required,ip"`
+}
+
+// NetworkInterfaceRouteUpdateResponse defines model for NetworkInterfaceRouteUpdateResponse.
+type NetworkInterfaceRouteUpdateResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID           `json:"job_id,omitempty" validate:"uuid"`
+	Results []NetworkInterfaceRouteResult `json:"results"`
+}
+
 // NetworkInterfaceUpdateRequest defines model for NetworkInterfaceUpdateRequest.
 type NetworkInterfaceUpdateRequest struct {
 	// Addresses The static addresses, in CIDR notation, such as 10.0.0.5/24
@@ -3313,110 +3428,6 @@ type NetworkInterfaceUpdateResponse struct {
 	// JobId The job ID used to process this request.
 	JobId   *openapi_types.UUID      `json:"job_id,omitempty" validate:"uuid"`
 	Results []NetworkInterfaceResult `json:"results"`
-}
-
-// NetworkRouteCollectionResponse defines model for NetworkRouteCollectionResponse.
-type NetworkRouteCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
-	Results []NetworkRouteEntry `json:"results"`
-}
-
-// NetworkRouteCreateRequest defines model for NetworkRouteCreateRequest.
-type NetworkRouteCreateRequest struct {
-	// Routes Each route as ip route writes it: <destination> via <gateway>, with metric <n> after it when you give one, such as 10.0.0.0/8 via 192.168.1.1 metric 100
-	Routes []string `json:"routes" validate:"required,min=1,max=64,dive,route"`
-}
-
-// NetworkRouteCreateResponse defines model for NetworkRouteCreateResponse.
-type NetworkRouteCreateResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID  `json:"job_id,omitempty" validate:"uuid"`
-	Results []NetworkRouteResult `json:"results"`
-}
-
-// NetworkRouteDeleteResponse defines model for NetworkRouteDeleteResponse.
-type NetworkRouteDeleteResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID  `json:"job_id,omitempty" validate:"uuid"`
-	Results []NetworkRouteResult `json:"results"`
-}
-
-// NetworkRouteEntry defines model for NetworkRouteEntry.
-type NetworkRouteEntry struct {
-	// Destination The destination in CIDR notation, or default
-	Destination *string `json:"destination,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Family inet or inet6
-	Family *string `json:"family,omitempty"`
-
-	// Gateway The gateway; empty for a route on the link
-	Gateway *string `json:"gateway,omitempty"`
-
-	// Hostname Hostname of the agent that produced this result.
-	Hostname string `json:"hostname"`
-
-	// Interface The interface the route goes out of
-	Interface *string `json:"interface,omitempty"`
-
-	// Metric The metric; 0 when the kernel gives none
-	Metric *int `json:"metric,omitempty"`
-
-	// Proto Where the route came from, such as kernel, dhcp or static; empty on macOS
-	Proto *string `json:"proto,omitempty"`
-
-	// Scope The scope, such as link; empty for a global route
-	Scope *string `json:"scope,omitempty"`
-
-	// Status The status of the operation for this host.
-	Status NetworkRouteEntryStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
-}
-
-// NetworkRouteEntryStatus The status of the operation for this host.
-type NetworkRouteEntryStatus string
-
-// NetworkRouteGetResponse defines model for NetworkRouteGetResponse.
-type NetworkRouteGetResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
-	Results []NetworkRouteEntry `json:"results"`
-}
-
-// NetworkRouteResult defines model for NetworkRouteResult.
-type NetworkRouteResult struct {
-	// Changed Whether the host changed
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname Hostname of the agent that produced this result.
-	Hostname string `json:"hostname"`
-
-	// InterfaceName The interface
-	InterfaceName *string `json:"interface_name,omitempty"`
-
-	// Status The status of the operation for this host.
-	Status NetworkRouteResultStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
-}
-
-// NetworkRouteResultStatus The status of the operation for this host.
-type NetworkRouteResultStatus string
-
-// NetworkRouteUpdateRequest defines model for NetworkRouteUpdateRequest.
-type NetworkRouteUpdateRequest struct {
-	// Routes Each route as ip route writes it: <destination> via <gateway>, with metric <n> after it when you give one, such as 10.0.0.0/8 via 192.168.1.1 metric 100
-	Routes []string `json:"routes" validate:"required,min=1,max=64,dive,route"`
-}
-
-// NetworkRouteUpdateResponse defines model for NetworkRouteUpdateResponse.
-type NetworkRouteUpdateResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID  `json:"job_id,omitempty" validate:"uuid"`
-	Results []NetworkRouteResult `json:"results"`
 }
 
 // NodeCondition defines model for NodeCondition.
@@ -4858,8 +4869,8 @@ type NetworkDnsInterfaceName = string
 // NetworkInterfaceName defines model for NetworkInterfaceName.
 type NetworkInterfaceName = string
 
-// NetworkRouteInterfaceName defines model for NetworkRouteInterface_name.
-type NetworkRouteInterfaceName = string
+// NetworkInterfaceRouteName defines model for NetworkInterfaceRouteName.
+type NetworkInterfaceRouteName = string
 
 // PackageName defines model for PackageName.
 type PackageName = string
@@ -5082,14 +5093,17 @@ type PostNodeNetworkInterfaceJSONRequestBody = NetworkInterfaceCreateRequest
 // PutNodeNetworkInterfaceJSONRequestBody defines body for PutNodeNetworkInterface for application/json ContentType.
 type PutNodeNetworkInterfaceJSONRequestBody = NetworkInterfaceUpdateRequest
 
+// DeleteNodeNetworkInterfaceRouteJSONRequestBody defines body for DeleteNodeNetworkInterfaceRoute for application/json ContentType.
+type DeleteNodeNetworkInterfaceRouteJSONRequestBody = NetworkInterfaceRouteDeleteRequest
+
+// PostNodeNetworkInterfaceRouteJSONRequestBody defines body for PostNodeNetworkInterfaceRoute for application/json ContentType.
+type PostNodeNetworkInterfaceRouteJSONRequestBody = NetworkInterfaceRouteCreateRequest
+
+// PutNodeNetworkInterfaceRouteJSONRequestBody defines body for PutNodeNetworkInterfaceRoute for application/json ContentType.
+type PutNodeNetworkInterfaceRouteJSONRequestBody = NetworkInterfaceRouteUpdateRequest
+
 // PostNodeNetworkPingJSONRequestBody defines body for PostNodeNetworkPing for application/json ContentType.
 type PostNodeNetworkPingJSONRequestBody PostNodeNetworkPingJSONBody
-
-// PostNodeNetworkRouteJSONRequestBody defines body for PostNodeNetworkRoute for application/json ContentType.
-type PostNodeNetworkRouteJSONRequestBody = NetworkRouteCreateRequest
-
-// PutNodeNetworkRouteJSONRequestBody defines body for PutNodeNetworkRoute for application/json ContentType.
-type PutNodeNetworkRouteJSONRequestBody = NetworkRouteUpdateRequest
 
 // PostNodeNtpJSONRequestBody defines body for PostNodeNtp for application/json ContentType.
 type PostNodeNtpJSONRequestBody = NtpCreateRequest
@@ -5460,29 +5474,28 @@ type ClientInterface interface {
 
 	PutNodeNetworkInterface(ctx context.Context, hostname Hostname, name NetworkInterfaceName, body PutNodeNetworkInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// DeleteNodeNetworkInterfaceRouteWithBody request with any body
+	DeleteNodeNetworkInterfaceRouteWithBody(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	DeleteNodeNetworkInterfaceRoute(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, body DeleteNodeNetworkInterfaceRouteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetNodeNetworkInterfaceRoute request
+	GetNodeNetworkInterfaceRoute(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostNodeNetworkInterfaceRouteWithBody request with any body
+	PostNodeNetworkInterfaceRouteWithBody(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostNodeNetworkInterfaceRoute(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, body PostNodeNetworkInterfaceRouteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutNodeNetworkInterfaceRouteWithBody request with any body
+	PutNodeNetworkInterfaceRouteWithBody(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PutNodeNetworkInterfaceRoute(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, body PutNodeNetworkInterfaceRouteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// PostNodeNetworkPingWithBody request with any body
 	PostNodeNetworkPingWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostNodeNetworkPing(ctx context.Context, hostname Hostname, body PostNodeNetworkPingJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetNodeNetworkRoute request
-	GetNodeNetworkRoute(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// DeleteNodeNetworkRoute request
-	DeleteNodeNetworkRoute(ctx context.Context, hostname Hostname, interfaceName NetworkRouteInterfaceName, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetNodeNetworkRouteByKey request
-	GetNodeNetworkRouteByKey(ctx context.Context, hostname Hostname, interfaceName NetworkRouteInterfaceName, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PostNodeNetworkRouteWithBody request with any body
-	PostNodeNetworkRouteWithBody(ctx context.Context, hostname Hostname, interfaceName NetworkRouteInterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostNodeNetworkRoute(ctx context.Context, hostname Hostname, interfaceName NetworkRouteInterfaceName, body PostNodeNetworkRouteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PutNodeNetworkRouteWithBody request with any body
-	PutNodeNetworkRouteWithBody(ctx context.Context, hostname Hostname, interfaceName NetworkRouteInterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PutNodeNetworkRoute(ctx context.Context, hostname Hostname, interfaceName NetworkRouteInterfaceName, body PutNodeNetworkRouteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteNodeNtp request
 	DeleteNodeNtp(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -6725,6 +6738,90 @@ func (c *Client) PutNodeNetworkInterface(ctx context.Context, hostname Hostname,
 	return c.Client.Do(req)
 }
 
+func (c *Client) DeleteNodeNetworkInterfaceRouteWithBody(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteNodeNetworkInterfaceRouteRequestWithBody(c.Server, hostname, name, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteNodeNetworkInterfaceRoute(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, body DeleteNodeNetworkInterfaceRouteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteNodeNetworkInterfaceRouteRequest(c.Server, hostname, name, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetNodeNetworkInterfaceRoute(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeNetworkInterfaceRouteRequest(c.Server, hostname, name)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeNetworkInterfaceRouteWithBody(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeNetworkInterfaceRouteRequestWithBody(c.Server, hostname, name, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeNetworkInterfaceRoute(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, body PostNodeNetworkInterfaceRouteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeNetworkInterfaceRouteRequest(c.Server, hostname, name, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutNodeNetworkInterfaceRouteWithBody(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNodeNetworkInterfaceRouteRequestWithBody(c.Server, hostname, name, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutNodeNetworkInterfaceRoute(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, body PutNodeNetworkInterfaceRouteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNodeNetworkInterfaceRouteRequest(c.Server, hostname, name, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) PostNodeNetworkPingWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostNodeNetworkPingRequestWithBody(c.Server, hostname, contentType, body)
 	if err != nil {
@@ -6739,90 +6836,6 @@ func (c *Client) PostNodeNetworkPingWithBody(ctx context.Context, hostname Hostn
 
 func (c *Client) PostNodeNetworkPing(ctx context.Context, hostname Hostname, body PostNodeNetworkPingJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostNodeNetworkPingRequest(c.Server, hostname, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetNodeNetworkRoute(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetNodeNetworkRouteRequest(c.Server, hostname)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) DeleteNodeNetworkRoute(ctx context.Context, hostname Hostname, interfaceName NetworkRouteInterfaceName, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteNodeNetworkRouteRequest(c.Server, hostname, interfaceName)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetNodeNetworkRouteByKey(ctx context.Context, hostname Hostname, interfaceName NetworkRouteInterfaceName, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetNodeNetworkRouteByKeyRequest(c.Server, hostname, interfaceName)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostNodeNetworkRouteWithBody(ctx context.Context, hostname Hostname, interfaceName NetworkRouteInterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeNetworkRouteRequestWithBody(c.Server, hostname, interfaceName, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostNodeNetworkRoute(ctx context.Context, hostname Hostname, interfaceName NetworkRouteInterfaceName, body PostNodeNetworkRouteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeNetworkRouteRequest(c.Server, hostname, interfaceName, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PutNodeNetworkRouteWithBody(ctx context.Context, hostname Hostname, interfaceName NetworkRouteInterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutNodeNetworkRouteRequestWithBody(c.Server, hostname, interfaceName, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PutNodeNetworkRoute(ctx context.Context, hostname Hostname, interfaceName NetworkRouteInterfaceName, body PutNodeNetworkRouteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutNodeNetworkRouteRequest(c.Server, hostname, interfaceName, body)
 	if err != nil {
 		return nil, err
 	}
@@ -10597,6 +10610,209 @@ func NewPutNodeNetworkInterfaceRequestWithBody(server string, hostname Hostname,
 	return req, nil
 }
 
+// NewDeleteNodeNetworkInterfaceRouteRequest calls the generic DeleteNodeNetworkInterfaceRoute builder with application/json body
+func NewDeleteNodeNetworkInterfaceRouteRequest(server string, hostname Hostname, name NetworkInterfaceRouteName, body DeleteNodeNetworkInterfaceRouteJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewDeleteNodeNetworkInterfaceRouteRequestWithBody(server, hostname, name, "application/json", bodyReader)
+}
+
+// NewDeleteNodeNetworkInterfaceRouteRequestWithBody generates requests for DeleteNodeNetworkInterfaceRoute with any type of body
+func NewDeleteNodeNetworkInterfaceRouteRequestWithBody(server string, hostname Hostname, name NetworkInterfaceRouteName, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "name", name, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/node/%s/network/interface/%s/route", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetNodeNetworkInterfaceRouteRequest generates requests for GetNodeNetworkInterfaceRoute
+func NewGetNodeNetworkInterfaceRouteRequest(server string, hostname Hostname, name NetworkInterfaceRouteName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "name", name, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/node/%s/network/interface/%s/route", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostNodeNetworkInterfaceRouteRequest calls the generic PostNodeNetworkInterfaceRoute builder with application/json body
+func NewPostNodeNetworkInterfaceRouteRequest(server string, hostname Hostname, name NetworkInterfaceRouteName, body PostNodeNetworkInterfaceRouteJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostNodeNetworkInterfaceRouteRequestWithBody(server, hostname, name, "application/json", bodyReader)
+}
+
+// NewPostNodeNetworkInterfaceRouteRequestWithBody generates requests for PostNodeNetworkInterfaceRoute with any type of body
+func NewPostNodeNetworkInterfaceRouteRequestWithBody(server string, hostname Hostname, name NetworkInterfaceRouteName, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "name", name, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/node/%s/network/interface/%s/route", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPutNodeNetworkInterfaceRouteRequest calls the generic PutNodeNetworkInterfaceRoute builder with application/json body
+func NewPutNodeNetworkInterfaceRouteRequest(server string, hostname Hostname, name NetworkInterfaceRouteName, body PutNodeNetworkInterfaceRouteJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutNodeNetworkInterfaceRouteRequestWithBody(server, hostname, name, "application/json", bodyReader)
+}
+
+// NewPutNodeNetworkInterfaceRouteRequestWithBody generates requests for PutNodeNetworkInterfaceRoute with any type of body
+func NewPutNodeNetworkInterfaceRouteRequestWithBody(server string, hostname Hostname, name NetworkInterfaceRouteName, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "name", name, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/node/%s/network/interface/%s/route", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewPostNodeNetworkPingRequest calls the generic PostNodeNetworkPing builder with application/json body
 func NewPostNodeNetworkPingRequest(server string, hostname Hostname, body PostNodeNetworkPingJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -10635,230 +10851,6 @@ func NewPostNodeNetworkPingRequestWithBody(server string, hostname Hostname, con
 	}
 
 	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewGetNodeNetworkRouteRequest generates requests for GetNodeNetworkRoute
-func NewGetNodeNetworkRouteRequest(server string, hostname Hostname) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/node/%s/network/route", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewDeleteNodeNetworkRouteRequest generates requests for DeleteNodeNetworkRoute
-func NewDeleteNodeNetworkRouteRequest(server string, hostname Hostname, interfaceName NetworkRouteInterfaceName) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	var pathParam1 string
-
-	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "interface_name", interfaceName, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/node/%s/network/route/%s", pathParam0, pathParam1)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetNodeNetworkRouteByKeyRequest generates requests for GetNodeNetworkRouteByKey
-func NewGetNodeNetworkRouteByKeyRequest(server string, hostname Hostname, interfaceName NetworkRouteInterfaceName) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	var pathParam1 string
-
-	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "interface_name", interfaceName, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/node/%s/network/route/%s", pathParam0, pathParam1)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewPostNodeNetworkRouteRequest calls the generic PostNodeNetworkRoute builder with application/json body
-func NewPostNodeNetworkRouteRequest(server string, hostname Hostname, interfaceName NetworkRouteInterfaceName, body PostNodeNetworkRouteJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostNodeNetworkRouteRequestWithBody(server, hostname, interfaceName, "application/json", bodyReader)
-}
-
-// NewPostNodeNetworkRouteRequestWithBody generates requests for PostNodeNetworkRoute with any type of body
-func NewPostNodeNetworkRouteRequestWithBody(server string, hostname Hostname, interfaceName NetworkRouteInterfaceName, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	var pathParam1 string
-
-	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "interface_name", interfaceName, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/node/%s/network/route/%s", pathParam0, pathParam1)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewPutNodeNetworkRouteRequest calls the generic PutNodeNetworkRoute builder with application/json body
-func NewPutNodeNetworkRouteRequest(server string, hostname Hostname, interfaceName NetworkRouteInterfaceName, body PutNodeNetworkRouteJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPutNodeNetworkRouteRequestWithBody(server, hostname, interfaceName, "application/json", bodyReader)
-}
-
-// NewPutNodeNetworkRouteRequestWithBody generates requests for PutNodeNetworkRoute with any type of body
-func NewPutNodeNetworkRouteRequestWithBody(server string, hostname Hostname, interfaceName NetworkRouteInterfaceName, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	var pathParam1 string
-
-	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "interface_name", interfaceName, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/node/%s/network/route/%s", pathParam0, pathParam1)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
@@ -13313,29 +13305,28 @@ type ClientWithResponsesInterface interface {
 
 	PutNodeNetworkInterfaceWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceName, body PutNodeNetworkInterfaceJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeNetworkInterfaceResponse, error)
 
+	// DeleteNodeNetworkInterfaceRouteWithBodyWithResponse request with any body
+	DeleteNodeNetworkInterfaceRouteWithBodyWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteNodeNetworkInterfaceRouteResponse, error)
+
+	DeleteNodeNetworkInterfaceRouteWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, body DeleteNodeNetworkInterfaceRouteJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteNodeNetworkInterfaceRouteResponse, error)
+
+	// GetNodeNetworkInterfaceRouteWithResponse request
+	GetNodeNetworkInterfaceRouteWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, reqEditors ...RequestEditorFn) (*GetNodeNetworkInterfaceRouteResponse, error)
+
+	// PostNodeNetworkInterfaceRouteWithBodyWithResponse request with any body
+	PostNodeNetworkInterfaceRouteWithBodyWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeNetworkInterfaceRouteResponse, error)
+
+	PostNodeNetworkInterfaceRouteWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, body PostNodeNetworkInterfaceRouteJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeNetworkInterfaceRouteResponse, error)
+
+	// PutNodeNetworkInterfaceRouteWithBodyWithResponse request with any body
+	PutNodeNetworkInterfaceRouteWithBodyWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeNetworkInterfaceRouteResponse, error)
+
+	PutNodeNetworkInterfaceRouteWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, body PutNodeNetworkInterfaceRouteJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeNetworkInterfaceRouteResponse, error)
+
 	// PostNodeNetworkPingWithBodyWithResponse request with any body
 	PostNodeNetworkPingWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeNetworkPingResponse, error)
 
 	PostNodeNetworkPingWithResponse(ctx context.Context, hostname Hostname, body PostNodeNetworkPingJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeNetworkPingResponse, error)
-
-	// GetNodeNetworkRouteWithResponse request
-	GetNodeNetworkRouteWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeNetworkRouteResponse, error)
-
-	// DeleteNodeNetworkRouteWithResponse request
-	DeleteNodeNetworkRouteWithResponse(ctx context.Context, hostname Hostname, interfaceName NetworkRouteInterfaceName, reqEditors ...RequestEditorFn) (*DeleteNodeNetworkRouteResponse, error)
-
-	// GetNodeNetworkRouteByKeyWithResponse request
-	GetNodeNetworkRouteByKeyWithResponse(ctx context.Context, hostname Hostname, interfaceName NetworkRouteInterfaceName, reqEditors ...RequestEditorFn) (*GetNodeNetworkRouteByKeyResponse, error)
-
-	// PostNodeNetworkRouteWithBodyWithResponse request with any body
-	PostNodeNetworkRouteWithBodyWithResponse(ctx context.Context, hostname Hostname, interfaceName NetworkRouteInterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeNetworkRouteResponse, error)
-
-	PostNodeNetworkRouteWithResponse(ctx context.Context, hostname Hostname, interfaceName NetworkRouteInterfaceName, body PostNodeNetworkRouteJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeNetworkRouteResponse, error)
-
-	// PutNodeNetworkRouteWithBodyWithResponse request with any body
-	PutNodeNetworkRouteWithBodyWithResponse(ctx context.Context, hostname Hostname, interfaceName NetworkRouteInterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeNetworkRouteResponse, error)
-
-	PutNodeNetworkRouteWithResponse(ctx context.Context, hostname Hostname, interfaceName NetworkRouteInterfaceName, body PutNodeNetworkRouteJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeNetworkRouteResponse, error)
 
 	// DeleteNodeNtpWithResponse request
 	DeleteNodeNtpWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*DeleteNodeNtpResponse, error)
@@ -15916,6 +15907,150 @@ func (r PutNodeNetworkInterfaceResponse) ContentType() string {
 	return ""
 }
 
+type DeleteNodeNetworkInterfaceRouteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NetworkInterfaceRouteDeleteResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteNodeNetworkInterfaceRouteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteNodeNetworkInterfaceRouteResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteNodeNetworkInterfaceRouteResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetNodeNetworkInterfaceRouteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NetworkInterfaceRouteCollectionResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNodeNetworkInterfaceRouteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNodeNetworkInterfaceRouteResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetNodeNetworkInterfaceRouteResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PostNodeNetworkInterfaceRouteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NetworkInterfaceRouteCreateResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostNodeNetworkInterfaceRouteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostNodeNetworkInterfaceRouteResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostNodeNetworkInterfaceRouteResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PutNodeNetworkInterfaceRouteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NetworkInterfaceRouteUpdateResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PutNodeNetworkInterfaceRouteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutNodeNetworkInterfaceRouteResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PutNodeNetworkInterfaceRouteResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type PostNodeNetworkPingResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -15944,186 +16079,6 @@ func (r PostNodeNetworkPingResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r PostNodeNetworkPingResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type GetNodeNetworkRouteResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *NetworkRouteCollectionResponse
-	JSON400      *ErrorResponse
-	JSON401      *ErrorResponse
-	JSON403      *ErrorResponse
-	JSON404      *ErrorResponse
-	JSON409      *ErrorResponse
-	JSON500      *ErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r GetNodeNetworkRouteResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetNodeNetworkRouteResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetNodeNetworkRouteResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type DeleteNodeNetworkRouteResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *NetworkRouteDeleteResponse
-	JSON400      *ErrorResponse
-	JSON401      *ErrorResponse
-	JSON403      *ErrorResponse
-	JSON404      *ErrorResponse
-	JSON409      *ErrorResponse
-	JSON500      *ErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r DeleteNodeNetworkRouteResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r DeleteNodeNetworkRouteResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r DeleteNodeNetworkRouteResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type GetNodeNetworkRouteByKeyResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *NetworkRouteGetResponse
-	JSON400      *ErrorResponse
-	JSON401      *ErrorResponse
-	JSON403      *ErrorResponse
-	JSON404      *ErrorResponse
-	JSON409      *ErrorResponse
-	JSON500      *ErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r GetNodeNetworkRouteByKeyResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetNodeNetworkRouteByKeyResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetNodeNetworkRouteByKeyResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type PostNodeNetworkRouteResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *NetworkRouteCreateResponse
-	JSON400      *ErrorResponse
-	JSON401      *ErrorResponse
-	JSON403      *ErrorResponse
-	JSON404      *ErrorResponse
-	JSON409      *ErrorResponse
-	JSON500      *ErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r PostNodeNetworkRouteResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostNodeNetworkRouteResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r PostNodeNetworkRouteResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type PutNodeNetworkRouteResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *NetworkRouteUpdateResponse
-	JSON400      *ErrorResponse
-	JSON401      *ErrorResponse
-	JSON403      *ErrorResponse
-	JSON404      *ErrorResponse
-	JSON409      *ErrorResponse
-	JSON500      *ErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r PutNodeNetworkRouteResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PutNodeNetworkRouteResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r PutNodeNetworkRouteResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -18670,6 +18625,66 @@ func (c *ClientWithResponses) PutNodeNetworkInterfaceWithResponse(ctx context.Co
 	return ParsePutNodeNetworkInterfaceResponse(rsp)
 }
 
+// DeleteNodeNetworkInterfaceRouteWithBodyWithResponse request with arbitrary body returning *DeleteNodeNetworkInterfaceRouteResponse
+func (c *ClientWithResponses) DeleteNodeNetworkInterfaceRouteWithBodyWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteNodeNetworkInterfaceRouteResponse, error) {
+	rsp, err := c.DeleteNodeNetworkInterfaceRouteWithBody(ctx, hostname, name, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteNodeNetworkInterfaceRouteResponse(rsp)
+}
+
+func (c *ClientWithResponses) DeleteNodeNetworkInterfaceRouteWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, body DeleteNodeNetworkInterfaceRouteJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteNodeNetworkInterfaceRouteResponse, error) {
+	rsp, err := c.DeleteNodeNetworkInterfaceRoute(ctx, hostname, name, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteNodeNetworkInterfaceRouteResponse(rsp)
+}
+
+// GetNodeNetworkInterfaceRouteWithResponse request returning *GetNodeNetworkInterfaceRouteResponse
+func (c *ClientWithResponses) GetNodeNetworkInterfaceRouteWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, reqEditors ...RequestEditorFn) (*GetNodeNetworkInterfaceRouteResponse, error) {
+	rsp, err := c.GetNodeNetworkInterfaceRoute(ctx, hostname, name, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNodeNetworkInterfaceRouteResponse(rsp)
+}
+
+// PostNodeNetworkInterfaceRouteWithBodyWithResponse request with arbitrary body returning *PostNodeNetworkInterfaceRouteResponse
+func (c *ClientWithResponses) PostNodeNetworkInterfaceRouteWithBodyWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeNetworkInterfaceRouteResponse, error) {
+	rsp, err := c.PostNodeNetworkInterfaceRouteWithBody(ctx, hostname, name, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeNetworkInterfaceRouteResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostNodeNetworkInterfaceRouteWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, body PostNodeNetworkInterfaceRouteJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeNetworkInterfaceRouteResponse, error) {
+	rsp, err := c.PostNodeNetworkInterfaceRoute(ctx, hostname, name, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeNetworkInterfaceRouteResponse(rsp)
+}
+
+// PutNodeNetworkInterfaceRouteWithBodyWithResponse request with arbitrary body returning *PutNodeNetworkInterfaceRouteResponse
+func (c *ClientWithResponses) PutNodeNetworkInterfaceRouteWithBodyWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeNetworkInterfaceRouteResponse, error) {
+	rsp, err := c.PutNodeNetworkInterfaceRouteWithBody(ctx, hostname, name, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutNodeNetworkInterfaceRouteResponse(rsp)
+}
+
+func (c *ClientWithResponses) PutNodeNetworkInterfaceRouteWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, body PutNodeNetworkInterfaceRouteJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeNetworkInterfaceRouteResponse, error) {
+	rsp, err := c.PutNodeNetworkInterfaceRoute(ctx, hostname, name, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutNodeNetworkInterfaceRouteResponse(rsp)
+}
+
 // PostNodeNetworkPingWithBodyWithResponse request with arbitrary body returning *PostNodeNetworkPingResponse
 func (c *ClientWithResponses) PostNodeNetworkPingWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeNetworkPingResponse, error) {
 	rsp, err := c.PostNodeNetworkPingWithBody(ctx, hostname, contentType, body, reqEditors...)
@@ -18685,67 +18700,6 @@ func (c *ClientWithResponses) PostNodeNetworkPingWithResponse(ctx context.Contex
 		return nil, err
 	}
 	return ParsePostNodeNetworkPingResponse(rsp)
-}
-
-// GetNodeNetworkRouteWithResponse request returning *GetNodeNetworkRouteResponse
-func (c *ClientWithResponses) GetNodeNetworkRouteWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeNetworkRouteResponse, error) {
-	rsp, err := c.GetNodeNetworkRoute(ctx, hostname, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetNodeNetworkRouteResponse(rsp)
-}
-
-// DeleteNodeNetworkRouteWithResponse request returning *DeleteNodeNetworkRouteResponse
-func (c *ClientWithResponses) DeleteNodeNetworkRouteWithResponse(ctx context.Context, hostname Hostname, interfaceName NetworkRouteInterfaceName, reqEditors ...RequestEditorFn) (*DeleteNodeNetworkRouteResponse, error) {
-	rsp, err := c.DeleteNodeNetworkRoute(ctx, hostname, interfaceName, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseDeleteNodeNetworkRouteResponse(rsp)
-}
-
-// GetNodeNetworkRouteByKeyWithResponse request returning *GetNodeNetworkRouteByKeyResponse
-func (c *ClientWithResponses) GetNodeNetworkRouteByKeyWithResponse(ctx context.Context, hostname Hostname, interfaceName NetworkRouteInterfaceName, reqEditors ...RequestEditorFn) (*GetNodeNetworkRouteByKeyResponse, error) {
-	rsp, err := c.GetNodeNetworkRouteByKey(ctx, hostname, interfaceName, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetNodeNetworkRouteByKeyResponse(rsp)
-}
-
-// PostNodeNetworkRouteWithBodyWithResponse request with arbitrary body returning *PostNodeNetworkRouteResponse
-func (c *ClientWithResponses) PostNodeNetworkRouteWithBodyWithResponse(ctx context.Context, hostname Hostname, interfaceName NetworkRouteInterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeNetworkRouteResponse, error) {
-	rsp, err := c.PostNodeNetworkRouteWithBody(ctx, hostname, interfaceName, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostNodeNetworkRouteResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostNodeNetworkRouteWithResponse(ctx context.Context, hostname Hostname, interfaceName NetworkRouteInterfaceName, body PostNodeNetworkRouteJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeNetworkRouteResponse, error) {
-	rsp, err := c.PostNodeNetworkRoute(ctx, hostname, interfaceName, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostNodeNetworkRouteResponse(rsp)
-}
-
-// PutNodeNetworkRouteWithBodyWithResponse request with arbitrary body returning *PutNodeNetworkRouteResponse
-func (c *ClientWithResponses) PutNodeNetworkRouteWithBodyWithResponse(ctx context.Context, hostname Hostname, interfaceName NetworkRouteInterfaceName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeNetworkRouteResponse, error) {
-	rsp, err := c.PutNodeNetworkRouteWithBody(ctx, hostname, interfaceName, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePutNodeNetworkRouteResponse(rsp)
-}
-
-func (c *ClientWithResponses) PutNodeNetworkRouteWithResponse(ctx context.Context, hostname Hostname, interfaceName NetworkRouteInterfaceName, body PutNodeNetworkRouteJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeNetworkRouteResponse, error) {
-	rsp, err := c.PutNodeNetworkRoute(ctx, hostname, interfaceName, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePutNodeNetworkRouteResponse(rsp)
 }
 
 // DeleteNodeNtpWithResponse request returning *DeleteNodeNtpResponse
@@ -23396,6 +23350,278 @@ func ParsePutNodeNetworkInterfaceResponse(rsp *http.Response) (*PutNodeNetworkIn
 	return response, nil
 }
 
+// ParseDeleteNodeNetworkInterfaceRouteResponse parses an HTTP response from a DeleteNodeNetworkInterfaceRouteWithResponse call
+func ParseDeleteNodeNetworkInterfaceRouteResponse(rsp *http.Response) (*DeleteNodeNetworkInterfaceRouteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteNodeNetworkInterfaceRouteResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NetworkInterfaceRouteDeleteResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNodeNetworkInterfaceRouteResponse parses an HTTP response from a GetNodeNetworkInterfaceRouteWithResponse call
+func ParseGetNodeNetworkInterfaceRouteResponse(rsp *http.Response) (*GetNodeNetworkInterfaceRouteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNodeNetworkInterfaceRouteResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NetworkInterfaceRouteCollectionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostNodeNetworkInterfaceRouteResponse parses an HTTP response from a PostNodeNetworkInterfaceRouteWithResponse call
+func ParsePostNodeNetworkInterfaceRouteResponse(rsp *http.Response) (*PostNodeNetworkInterfaceRouteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostNodeNetworkInterfaceRouteResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NetworkInterfaceRouteCreateResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutNodeNetworkInterfaceRouteResponse parses an HTTP response from a PutNodeNetworkInterfaceRouteWithResponse call
+func ParsePutNodeNetworkInterfaceRouteResponse(rsp *http.Response) (*PutNodeNetworkInterfaceRouteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutNodeNetworkInterfaceRouteResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NetworkInterfaceRouteUpdateResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParsePostNodeNetworkPingResponse parses an HTTP response from a PostNodeNetworkPingWithResponse call
 func ParsePostNodeNetworkPingResponse(rsp *http.Response) (*PostNodeNetworkPingResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -23437,346 +23663,6 @@ func ParsePostNodeNetworkPingResponse(rsp *http.Response) (*PostNodeNetworkPingR
 			return nil, err
 		}
 		response.JSON403 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetNodeNetworkRouteResponse parses an HTTP response from a GetNodeNetworkRouteWithResponse call
-func ParseGetNodeNetworkRouteResponse(rsp *http.Response) (*GetNodeNetworkRouteResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetNodeNetworkRouteResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest NetworkRouteCollectionResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON403 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON409 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseDeleteNodeNetworkRouteResponse parses an HTTP response from a DeleteNodeNetworkRouteWithResponse call
-func ParseDeleteNodeNetworkRouteResponse(rsp *http.Response) (*DeleteNodeNetworkRouteResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &DeleteNodeNetworkRouteResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest NetworkRouteDeleteResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON403 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON409 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetNodeNetworkRouteByKeyResponse parses an HTTP response from a GetNodeNetworkRouteByKeyWithResponse call
-func ParseGetNodeNetworkRouteByKeyResponse(rsp *http.Response) (*GetNodeNetworkRouteByKeyResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetNodeNetworkRouteByKeyResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest NetworkRouteGetResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON403 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON409 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePostNodeNetworkRouteResponse parses an HTTP response from a PostNodeNetworkRouteWithResponse call
-func ParsePostNodeNetworkRouteResponse(rsp *http.Response) (*PostNodeNetworkRouteResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostNodeNetworkRouteResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest NetworkRouteCreateResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON403 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON409 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePutNodeNetworkRouteResponse parses an HTTP response from a PutNodeNetworkRouteWithResponse call
-func ParsePutNodeNetworkRouteResponse(rsp *http.Response) (*PutNodeNetworkRouteResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PutNodeNetworkRouteResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest NetworkRouteUpdateResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON403 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

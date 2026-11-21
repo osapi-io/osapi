@@ -20,29 +20,29 @@
 
 package route
 
-// ListInput takes nothing: list reads every route.
-type ListInput struct{}
-
-// GetInput names the interface whose routes to read.
-type GetInput struct {
-	InterfaceName string `json:"interface_name" validate:"required,interface_name" doc:"The interface, such as eth0, or a fact such as @fact.interface.primary"`
+// ListInput names the interface whose routes to read.
+type ListInput struct {
+	Name string `json:"name" validate:"required,interface_name" doc:"The interface, such as eth0, or a fact such as @fact.interface.primary"`
 }
 
-// Config is the routes osapi writes for an interface.
-type Config struct {
-	InterfaceName string   `json:"interface_name" validate:"required,interface_name"          doc:"The interface, such as eth0, or a fact such as @fact.interface.primary"                                                                                   telemetry:"attr"`
-	Routes        []string `json:"routes"         validate:"required,min=1,max=64,dive,route" doc:"Each route as ip route writes it: <destination> via <gateway>, with metric <n> after it when you give one, such as 10.0.0.0/8 via 192.168.1.1 metric 100"`
+// Route is one route of an interface that osapi writes.
+type Route struct {
+	Name        string `json:"name"             validate:"required,interface_name"        doc:"The interface, such as eth0, or a fact such as @fact.interface.primary"          telemetry:"attr"`
+	Destination string `json:"destination"      validate:"required,cidr"                  doc:"Where the route goes, in CIDR notation, such as 10.0.0.0/8; not a default route" telemetry:"attr"`
+	Via         string `json:"via"              validate:"required,ip"                    doc:"The gateway, an address of the destination's family, such as 192.168.1.1"`
+	Metric      int    `json:"metric,omitempty" validate:"omitempty,min=0,max=4294967295" doc:"The metric, from 0 to 4294967295; none when it is 0"`
 }
 
-// CreateInput is the routes of an interface osapi has no routes of.
-type CreateInput Config
+// CreateInput is a route that osapi does not have yet.
+type CreateInput Route
 
-// UpdateInput is the routes to write over the ones osapi has.
-type UpdateInput Config
+// UpdateInput is a new gateway or metric of a route that osapi has.
+type UpdateInput Route
 
-// DeleteInput names the interface whose routes osapi wrote.
+// DeleteInput names a route that osapi wrote.
 type DeleteInput struct {
-	InterfaceName string `json:"interface_name" validate:"required,interface_name" doc:"The interface, such as eth0, or a fact such as @fact.interface.primary"`
+	Name        string `json:"name"        validate:"required,interface_name" doc:"The interface, such as eth0, or a fact such as @fact.interface.primary" telemetry:"attr"`
+	Destination string `json:"destination" validate:"required,cidr"           doc:"The destination of the route, in CIDR notation, such as 10.0.0.0/8"     telemetry:"attr"`
 }
 
 // Entry is a route of the host's main routing table.
@@ -56,8 +56,8 @@ type Entry struct {
 	Scope       string `json:"scope"       doc:"The scope, such as link; empty for a global route"`
 }
 
-// Result is an interface's routes after a write or a removal.
+// Result is a route after a write or a removal.
 type Result struct {
-	InterfaceName string `json:"interface_name" doc:"The interface"`
-	Changed       bool   `json:"changed"        doc:"Whether the host changed"`
+	Destination string `json:"destination" doc:"The destination of the route"`
+	Changed     bool   `json:"changed"     doc:"Whether the host changed"`
 }

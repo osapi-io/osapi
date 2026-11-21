@@ -19,11 +19,12 @@ state, MAC address, MTU and addresses. `dhcp4` is true when a route of the
 interface has proto `dhcp`. `primary` is true when the interface has the default
 route. `list` leaves out the loopback.
 
-Routes are the [route behavior](../reference/behaviors/route/route.md). `list`
-reads each route of the main table through gohai on every platform: `ip route`
-on Linux, and `netstat` on macOS. `get` reads the routes that go out of one
-interface. A route has its destination, gateway, interface, family, metric,
-`proto` (where it came from, such as `dhcp`, `kernel` or `static`) and scope.
+Routes are the [route behavior](../reference/behaviors/route/route.md), under an
+interface: `osapi client node network interface route`. `list` reads the routes
+of the main table that go out of the interface, through gohai on every platform:
+`ip route` on Linux, and `netstat` on macOS. A route has its destination,
+gateway, interface, family, metric, `proto` (where it came from, such as `dhcp`,
+`kernel` or `static`) and scope.
 
 `create`, `update` and `delete` write a Netplan file of the interface's own on
 the Debian family, through the internal
@@ -35,11 +36,12 @@ the Debian family, through the internal
   give. A gateway is a default route: Netplan deprecates `gateway4` and
   `gateway6`.
 - **Routes**: `osapi-{name}-routes.yaml` has the static routes of the named
-  interface. You give each route as `ip route` writes it:
-  `<destination> via <gateway>`, with `metric <n>` after it if you give one,
-  such as `10.0.0.0/8 via 192.168.1.1 metric 100`. The destination is in CIDR
-  notation, and the gateway is of the same family. osapi refuses a default
-  route: set the gateway of the interface with the interface behavior.
+  interface. Each call is one route, as `ip route add` and `ip route del` are:
+  `--destination` in CIDR notation, `--via` an address of the same family, and
+  an optional `--metric` from 0 to 4294967295. `create` of a route that osapi
+  has, the same, changes nothing; `update` changes the gateway or the metric of
+  one; `delete` drops one, and the last one removes the file. osapi refuses a
+  default route: set the gateway of the interface with the interface behavior.
 
 osapi writes the config only under a Netplan definition that is the interface's
 own. If a match defines the interface, such as the `all` definition of
@@ -89,11 +91,10 @@ The DNS behavior also supports delete: it removes the interface's own
 | Interface Create | Create a new Netplan interface config            |
 | Interface Update | Replace an existing Netplan interface config     |
 | Interface Delete | Remove an OSAPI-managed interface config         |
-| Route List       | List all routes in the kernel routing table      |
-| Route Get        | Get managed routes for a specific interface      |
-| Route Create     | Create new static routes for an interface        |
-| Route Update     | Replace static routes for an interface           |
-| Route Delete     | Remove OSAPI-managed routes for an interface     |
+| Route List       | List the routes of an interface                  |
+| Route Create     | Add one static route to an interface             |
+| Route Update     | Change the gateway or metric of one route        |
+| Route Delete     | Drop one route that osapi wrote                  |
 | DNS Delete       | Remove OSAPI-managed DNS config for an interface |
 
 ## CLI usage
@@ -127,22 +128,22 @@ osapi client node network interface update \
 osapi client node network interface delete \
   --target web-01 --name eth1
 
-# List all routes
-osapi client node network route list --target web-01
+# List the routes of an interface
+osapi client node network interface route list --target web-01 --name eth0
 
-# Get routes for an interface
-osapi client node network route get \
-  --target web-01 --interface-name eth0
+# Add static routes, one a call
+osapi client node network interface route create --target web-01 --name eth1 \
+  --destination 10.0.0.0/8 --via 192.168.1.1
+osapi client node network interface route create --target web-01 --name eth1 \
+  --destination 172.16.0.0/12 --via 192.168.1.1 --metric 100
 
-# Create static routes
-osapi client node network route create \
-  --target web-01 --interface-name eth1 \
-  --routes "10.0.0.0/8 via 192.168.1.1" \
-  --routes "172.16.0.0/12 via 192.168.1.1 metric 100"
+# Change the metric of a route
+osapi client node network interface route update --target web-01 --name eth1 \
+  --destination 10.0.0.0/8 --via 192.168.1.1 --metric 50
 
-# Delete routes for an interface
-osapi client node network route delete \
-  --target web-01 --interface-name eth1
+# Drop a route
+osapi client node network interface route delete --target web-01 --name eth1 \
+  --destination 10.0.0.0/8
 
 # Delete DNS config for an interface
 osapi client node network dns delete \
@@ -210,8 +211,8 @@ included in the `admin` and `write` roles.
 
 - [CLI Reference](../usage/cli/client/node/network/interface/interface.mdx):
   interface commands
-- [CLI Reference](../usage/cli/client/node/network/route/route.mdx): route
-  commands
+- [CLI Reference](../usage/cli/client/node/network/interface/route/route.mdx):
+  route commands
 - [SDK Reference](../sdk/client/networking/interface.md): Interface service
 - [SDK Reference](../sdk/client/networking/route.md): Route service
 - [Network Management](network-management.md): DNS and ping

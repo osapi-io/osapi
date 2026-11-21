@@ -28,7 +28,7 @@ make.
 | Writes      | /etc/netplan/osapi-*.yaml                                                                |
 | Keeps state | no                                                                                       |
 | Uses        | [managedfile](../managedfile/managedfile.md)                                             |
-| Used by     | [dns](../dns/dns.md), [interface](../interface/interface.md), [route](../route/route.md) |
+| Used by     | [route](../route/route.md), [dns](../dns/dns.md), [interface](../interface/interface.md) |
 
 ### Methods (3)
 

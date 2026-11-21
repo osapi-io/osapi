@@ -27,27 +27,22 @@ func (s *APIPublicTestSuite) TestRoutes() {
 	}{
 		{
 			method:     http.MethodGet,
-			path:       "/api/node/:hostname/network/route",
-			permission: "network:read",
-		},
-		{
-			method:     http.MethodGet,
-			path:       "/api/node/:hostname/network/route/:interface_name",
+			path:       "/api/node/:hostname/network/interface/:name/route",
 			permission: "network:read",
 		},
 		{
 			method:     http.MethodPost,
-			path:       "/api/node/:hostname/network/route/:interface_name",
+			path:       "/api/node/:hostname/network/interface/:name/route",
 			permission: "network:write",
 		},
 		{
 			method:     http.MethodPut,
-			path:       "/api/node/:hostname/network/route/:interface_name",
+			path:       "/api/node/:hostname/network/interface/:name/route",
 			permission: "network:write",
 		},
 		{
 			method:     http.MethodDelete,
-			path:       "/api/node/:hostname/network/route/:interface_name",
+			path:       "/api/node/:hostname/network/interface/:name/route",
 			permission: "network:write",
 		},
 	}

@@ -22,19 +22,16 @@ package route
 
 import "context"
 
-// Provider reads the routes of the host and writes osapi's routes of an
-// interface.
+// Provider reads the routes of an interface and writes osapi's routes of
+// it, one at a time.
 type Provider interface {
-	// Routes is every route of the host's main table.
-	Routes(ctx context.Context) ([]Entry, error)
-	// InterfaceRoutes is the routes of one interface of the host.
-	InterfaceRoutes(ctx context.Context, name string) ([]Entry, error)
-	// Create writes the interface's routes. It changes nothing when osapi
-	// already has routes of the interface.
-	Create(ctx context.Context, in Config) (bool, error)
-	// Update writes the interface's routes over the ones osapi has. It fails
-	// when osapi has none.
-	Update(ctx context.Context, in Config) (bool, error)
-	// Remove drops osapi's routes of the interface.
-	Remove(ctx context.Context, name string) (bool, error)
+	// Routes is the routes of one interface of the host's main table.
+	Routes(ctx context.Context, name string) ([]Entry, error)
+	// Set writes the route r of its interface. With create, a route of that
+	// destination that osapi has is unchanged when it is the same, and
+	// refused when it is not; without it, a destination osapi does not have
+	// is not found.
+	Set(ctx context.Context, r Route, create bool) (bool, error)
+	// Remove drops osapi's route to destination of the interface.
+	Remove(ctx context.Context, name string, destination string) (bool, error)
 }

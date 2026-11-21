@@ -43,7 +43,7 @@ import (
 // against the live server and agent, from its definition, so a new behavior
 // is exercised on a real host without a test written for it.
 //
-// Every read method without a key runs always. Writes change the host, so
+// Every read method with no key in its path runs always. Writes change the host, so
 // they run only with OSAPI_INTEGRATION_WRITES=1 or
 // OSAPI_INTEGRATION_WRITE_BEHAVIORS=1: each write example runs after the calls
 // its example names with behavior.After, must report the example's changed,
@@ -103,7 +103,9 @@ func (s *BehaviorSmokeSuite) TestReads() {
 			continue
 		}
 		for _, m := range b.Methods {
-			if m.Verb != behavior.VerbRead || m.KeyField != "" {
+			// A read that names an item, or the item of a parent such as an
+			// interface's routes, has no input that every host has.
+			if m.Verb != behavior.VerbRead || len(m.PathKeys()) > 0 {
 				continue
 			}
 			s.Run(b.Name+" "+m.Name, func() {
@@ -184,29 +186,43 @@ func (s *BehaviorSmokeSuite) store(
 // the item the example names absent. Each example on the fake host gets a
 // new host, but here every example shares one: an earlier example can leave
 // the item managed, and this one then changes nothing. Thus reset runs the
-// behavior's delete, when it has one, with the key the example's input
-// carries.
+// behavior's delete with the fields of its input that the example's input
+// carries: its key, the key of a parent, or a route's destination.
 func (s *BehaviorSmokeSuite) reset(
 	b *behavior.Behavior,
 	input any,
 ) {
-	for _, del := range b.Methods {
-		if del.Name != "delete" || del.KeyField == "" {
-			continue
-		}
-		data, err := json.Marshal(input)
-		s.Require().NoError(err)
-		var fields map[string]any
-		s.Require().NoError(json.Unmarshal(data, &fields))
-		if fields[del.KeyField] == nil || fields[del.KeyField] == "" {
-			continue
-		}
-		key, err := json.Marshal(map[string]any{del.KeyField: fields[del.KeyField]})
-		s.Require().NoError(err)
-		in := reflect.New(del.In)
-		s.Require().NoError(json.Unmarshal(key, in.Interface()))
-		s.results(commandLine(b, del, in.Elem().Interface()))
+	del := b.Method("delete")
+	if del == nil {
+		return
 	}
+	data, err := json.Marshal(input)
+	s.Require().NoError(err)
+	var fields map[string]any
+	s.Require().NoError(json.Unmarshal(data, &fields))
+	keep := map[string]any{}
+	for i := range del.In.NumField() {
+		name := behavior.JSONName(del.In.Field(i))
+		v, ok := fields[name]
+		if !ok || v == nil || v == "" {
+			// A delete that the example's input cannot name has nothing
+			// to reset.
+			if strings.Contains(del.In.Field(i).Tag.Get("validate"), "required") {
+				return
+			}
+
+			continue
+		}
+		keep[name] = v
+	}
+	if len(keep) == 0 {
+		return
+	}
+	key, err := json.Marshal(keep)
+	s.Require().NoError(err)
+	in := reflect.New(del.In)
+	s.Require().NoError(json.Unmarshal(key, in.Interface()))
+	s.results(commandLine(b, del, in.Elem().Interface()))
 }
 
 // restore reads the item of a behavior that has no delete, such as the

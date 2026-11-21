@@ -18,8 +18,9 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates network route management: list all routes, get
-// routes for an interface, and create static routes.
+// Package main demonstrates network route management: list the routes of
+// an interface, add a static route, change its metric, and drop it. Each
+// call is one route, as ip route add and ip route del are.
 //
 // All responses return Collection[T] with per-host results.
 // Use .Data.Results to iterate over the per-host entries.
@@ -52,9 +53,9 @@ func main() {
 	target := "_any"
 	iface := "eth0"
 
-	// List all routes in the kernel routing table.
-	fmt.Println("=== Listing all routes ===")
-	listResp, err := c.Route.List(ctx, target)
+	// List the routes of the interface: one row per route per host.
+	fmt.Printf("=== Listing the routes of %s ===\n", iface)
+	listResp, err := c.Route.List(ctx, target, iface)
 	if err != nil {
 		log.Fatalf("list failed: %v", err)
 	}
@@ -63,54 +64,35 @@ func main() {
 			fmt.Printf("  %s: ERROR %s\n", r.Hostname, r.Error)
 			continue
 		}
-		for _, rt := range r.Routes {
-			fmt.Printf("  %s: %s via %s dev %s metric %d\n",
-				r.Hostname, rt.Destination, rt.Gateway,
-				rt.Interface, rt.Metric)
-		}
+		fmt.Printf("  %s: %s via %s metric %d (%s)\n",
+			r.Hostname, r.Destination, r.Gateway, r.Metric, r.Proto)
 	}
 
-	// Get managed routes for a specific interface.
-	fmt.Printf("\n=== Getting routes for %s ===\n", iface)
-	getResp, err := c.Route.Get(ctx, target, iface)
-	if err != nil {
-		log.Fatalf("get failed: %v", err)
-	}
-	for _, r := range getResp.Data.Results {
-		if r.Error != "" {
-			fmt.Printf("  %s: ERROR %s\n", r.Hostname, r.Error)
-		} else {
-			fmt.Printf("  %s: %d route(s)\n", r.Hostname, len(r.Routes))
-		}
-	}
-
-	// Clean up any existing managed routes before creating.
-	deleteResp, err := c.Route.Delete(ctx, target, iface)
-	if err == nil {
-		for _, r := range deleteResp.Data.Results {
-			fmt.Printf("  cleanup %s: changed=%v\n",
-				r.Hostname, r.Changed)
-		}
-	}
-
-	// Create static routes for an interface.
-	fmt.Println("\n=== Creating static routes ===")
-	metric := 100
-	createResp, err := c.Route.Create(ctx, target, iface,
-		client.RouteConfigOpts{
-			Routes: []client.RouteItem{
-				{To: "10.0.0.0/8", Via: "192.168.1.1"},
-				{
-					To: "172.16.0.0/12", Via: "192.168.1.1",
-					Metric: &metric,
-				},
-			},
-		})
+	// Add a static route (idempotent).
+	route := client.RouteOpts{Destination: "10.0.0.0/8", Via: "192.168.1.1"}
+	fmt.Println("\n=== Adding 10.0.0.0/8 ===")
+	createResp, err := c.Route.Create(ctx, target, iface, route)
 	if err != nil {
 		log.Fatalf("create failed: %v", err)
 	}
 	for _, r := range createResp.Data.Results {
-		fmt.Printf("  %s: interface=%s changed=%v error=%s\n",
-			r.Hostname, r.Interface, r.Changed, r.Error)
+		fmt.Printf("  %s: changed=%v error=%s\n", r.Hostname, r.Changed, r.Error)
+	}
+
+	// Change its metric.
+	route.Metric = 100
+	fmt.Println("\n=== Changing its metric to 100 ===")
+	if _, err := c.Route.Update(ctx, target, iface, route); err != nil {
+		log.Fatalf("update failed: %v", err)
+	}
+
+	// Drop it.
+	fmt.Println("\n=== Dropping it ===")
+	deleteResp, err := c.Route.Delete(ctx, target, iface, route.Destination)
+	if err != nil {
+		log.Fatalf("delete failed: %v", err)
+	}
+	for _, r := range deleteResp.Data.Results {
+		fmt.Printf("  %s: changed=%v\n", r.Hostname, r.Changed)
 	}
 }

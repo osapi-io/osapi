@@ -11,110 +11,108 @@ import (
 )
 
 var routeListCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "network:read"},
-	Args:        cobra.NoArgs,
-	Example:     "  # A Linux host\n  osapi client node network route list --target web-01\n\n  # A Mac\n  osapi client node network route list --target web-01",
-	Long:        "Reads each route of the main table: ip route on Linux, netstat on macOS. proto says where a route came from, such as dhcp, kernel or static.",
-	Run: func(cmd *cobra.Command, _ []string) {
-		hostname, _ := cmd.Flags().GetString("target")
-
-		endpointcommand.Run(cmd, Group, "list", ListRequest{Hostname: hostname})
-	},
-	Short: "List the routes of the host",
-	Use:   "list",
-}
-
-var routeGetCmd = &cobra.Command{
 	Annotations: map[string]string{
 		reference.Permission: "network:read",
-		reference.Result:     "The command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| An interface the host does not have | `--interface-name eth9` | not found |\n| A name that is not an interface name | `--interface-name \"eth0;reboot\"` | InterfaceName |",
+		reference.Result:     "The command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| An interface the host does not have | `--name eth9` | not found |\n| A name that is not an interface name | `--name \"eth0;reboot\"` | Name |",
 	},
 	Args:    cobra.NoArgs,
-	Example: "  # An interface with routes\n  osapi client node network route get --target web-01 --interface-name eth0\n\n  # An interface with no routes\n  osapi client node network route get --target web-01 --interface-name eth1\n\n  # A Mac\n  osapi client node network route get --target web-01 --interface-name en0",
-	Long:    "Reads the routes of the main table that go out of the interface, as list does. An interface with no routes has none; one the host does not have is not found.",
+	Example: "  # An interface with routes\n  osapi client node network interface route list --target web-01 --name eth0\n\n  # An interface with no routes\n  osapi client node network interface route list --target web-01 --name eth1\n\n  # A Mac\n  osapi client node network interface route list --target web-01 --name en0",
+	Long:    "Reads the routes of the main table that go out of the interface: ip route on Linux, netstat on macOS. proto says where a route came from, such as dhcp, kernel or static. An interface with no routes has none; one the host does not have is not found.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("target")
-		interfaceName, _ := cmd.Flags().GetString("interface-name")
+		name, _ := cmd.Flags().GetString("name")
 
-		endpointcommand.Run(cmd, Group, "get", GetRequest{Hostname: hostname, InterfaceName: interfaceName})
+		endpointcommand.Run(cmd, Group, "list", ListRequest{Hostname: hostname, Name: name})
 	},
-	Short: "Get the routes of an interface",
-	Use:   "get",
+	Short: "List the routes of an interface",
+	Use:   "list",
 }
 
 var routeCreateCmd = &cobra.Command{
 	Annotations: map[string]string{
 		reference.Permission: "network:write",
-		reference.Result:     "With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Two routes | runs `netplan generate`; runs `netplan apply`; writes `/etc/netplan/osapi-osapi0-routes.yaml`: `network:\\n  version: 2\\n  ethernets:\\n    osapi0:\\n      routes:\\n        - to: 198.51.100.0/24\\n          via: 192.0.2.1\\n        - to: 2001:db8:1::/48\\n          via: 2001:db8::1\\n          metric: 200` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A default route | `--interface-name osapi0 --routes \"0.0.0.0/0 via 192.0.2.1\"` | default route |\n| A default route on an interface osapi already has routes of | `--interface-name osapi0 --routes \"::/0 via 2001:db8::1\"` | default route |\n| An interface in a match that takes other interfaces | `--interface-name enp0s1 --routes \"198.51.100.0/24 via 192.0.2.1\" --routes \"2001:db8:1::/48 via 2001:db8::1 metric 200\"` | also takes enp0s2 |\n| An interface in a match that takes it alone, for now | `--interface-name enp0s1 --routes \"198.51.100.0/24 via 192.0.2.1\" --routes \"2001:db8:1::/48 via 2001:db8::1 metric 200\"` | any interface it matches later |\n| An interface the host does not have | `--interface-name eth9 --routes \"198.51.100.0/24 via 192.0.2.1\" --routes \"2001:db8:1::/48 via 2001:db8::1 metric 200\"` | not found |\n| No route | `--interface-name osapi0` | Routes |\n| More than 64 routes | `--interface-name osapi0 --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\"` | Routes |\n| A route without via | `--interface-name osapi0 --routes \"10.0.0.0/8 192.168.1.1\"` | Routes |\n| A destination that is not CIDR | `--interface-name osapi0 --routes \"10.0.0.0 via 192.168.1.1\"` | Routes |\n| A gateway of the other family | `--interface-name osapi0 --routes \"10.0.0.0/8 via 2001:db8::1\"` | Routes |\n| A metric that is not a number | `--interface-name osapi0 --routes \"10.0.0.0/8 via 192.168.1.1 metric x\"` | Routes |\n| A name that is not an interface name | `--interface-name \"eth0;reboot\" --routes \"198.51.100.0/24 via 192.0.2.1\" --routes \"2001:db8:1::/48 via 2001:db8::1 metric 200\"` | InterfaceName |",
+		reference.Result:     "With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| A route | runs `netplan generate`; runs `netplan apply`; writes `/etc/netplan/osapi-osapi0-routes.yaml`: `network:\\n  version: 2\\n  ethernets:\\n    osapi0:\\n      routes:\\n        - to: 198.51.100.0/24\\n          via: 192.0.2.1` |\n| A second route, with a metric | runs `netplan generate`; runs `netplan apply`; writes `/etc/netplan/osapi-osapi0-routes.yaml`: `network:\\n  version: 2\\n  ethernets:\\n    osapi0:\\n      routes:\\n        - to: 198.51.100.0/24\\n          via: 192.0.2.1\\n        - to: 2001:db8:1::/48\\n          via: 2001:db8::1\\n          metric: 200` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A default route | `--name osapi0 --destination 0.0.0.0/0 --via 192.0.2.1` | default route |\n| A gateway of the other family | `--name osapi0 --destination 198.51.100.0/24 --via 2001:db8::1` | not an address of the family |\n| Another route to a destination osapi has | `--name osapi0 --destination 198.51.100.0/24 --via 192.0.2.2` | update changes it |\n| An interface in a match that takes other interfaces | `--name enp0s1 --destination 198.51.100.0/24 --via 192.0.2.1` | also takes enp0s2 |\n| An interface in a match that takes it alone, for now | `--name enp0s1 --destination 198.51.100.0/24 --via 192.0.2.1` | any interface it matches later |\n| An interface the host does not have | `--name eth9 --destination 198.51.100.0/24 --via 192.0.2.1` | not found |\n| A destination that is not CIDR | `--name osapi0 --destination 10.0.0.0 --via 192.0.2.1` | Destination |\n| A gateway that is not an address | `--name osapi0 --destination 198.51.100.0/24 --via gateway` | Via |\n| A metric below 0 | `--name osapi0 --destination 198.51.100.0/24 --via 192.0.2.1 --metric -1` | Metric |\n| A metric over 4294967295 | `--name osapi0 --destination 198.51.100.0/24 --via 192.0.2.1 --metric 4294967296` | Metric |\n| A name that is not an interface name | `--name \"eth0;reboot\" --destination 198.51.100.0/24 --via 192.0.2.1` | Name |",
 	},
 	Args:    cobra.NoArgs,
-	Example: "  # Two routes\n  osapi client node network route create --target web-01 --interface-name osapi0 --routes \"198.51.100.0/24 via 192.0.2.1\" --routes \"2001:db8:1::/48 via 2001:db8::1 metric 200\"\n\n  # An interface osapi already has routes of\n  osapi client node network route create --target web-01 --interface-name osapi0 --routes \"198.51.100.0/24 via 192.0.2.1\" --routes \"2001:db8:1::/48 via 2001:db8::1 metric 200\"",
-	Long:    "Writes a netplan file of the interface's routes, such as /etc/netplan/osapi-osapi0-routes.yaml for osapi0, under a netplan definition that is the interface's own, and applies it. A default route is refused: the interface behavior sets the gateway. An interface the host does not have is not found. An interface that a match defines, such as cloud-init's all for en*, is refused, because the routes would go on each interface the match takes, now and later. An interface osapi already has routes of does not change: update replaces them. It runs on the Debian family, and elsewhere, and in a container, reports skipped.",
+	Example: "  # A route\n  osapi client node network interface route create --target web-01 --name osapi0 --destination 198.51.100.0/24 --via 192.0.2.1\n\n  # A second route, with a metric\n  osapi client node network interface route create --target web-01 --name osapi0 --destination 2001:db8:1::/48 --via 2001:db8::1 --metric 200\n\n  # A route osapi already has\n  osapi client node network interface route create --target web-01 --name osapi0 --destination 198.51.100.0/24 --via 192.0.2.1",
+	Long:    "Adds the route to the interface's netplan file, such as /etc/netplan/osapi-osapi0-routes.yaml for osapi0, under a netplan definition that is the interface's own, and applies it. A route osapi already has, the same, does not change; one to the same destination by another gateway or metric is refused: update changes it. A default route is refused: the interface behavior sets the gateway. An interface the host does not have is not found. An interface that a match defines, such as cloud-init's all for en*, is refused, because the route would go on each interface the match takes. It runs on the Debian family, and elsewhere, and in a container, reports skipped.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("target")
-		interfaceName, _ := cmd.Flags().GetString("interface-name")
-		routes, _ := cmd.Flags().GetStringSlice("routes")
+		name, _ := cmd.Flags().GetString("name")
+		destination, _ := cmd.Flags().GetString("destination")
+		via, _ := cmd.Flags().GetString("via")
+		metric, _ := cmd.Flags().GetInt("metric")
 
-		endpointcommand.Run(cmd, Group, "create", CreateRequest{Hostname: hostname, InterfaceName: interfaceName, Body: NetworkRouteCreateRequest{Routes: routes}})
+		endpointcommand.Run(cmd, Group, "create", CreateRequest{Hostname: hostname, Name: name, Body: NetworkInterfaceRouteCreateRequest{Destination: destination, Via: via, Metric: metric}})
 	},
-	Short: "Add static routes to an interface",
+	Short: "Add a static route to an interface",
 	Use:   "create",
 }
 
 var routeUpdateCmd = &cobra.Command{
 	Annotations: map[string]string{
 		reference.Permission: "network:write",
-		reference.Result:     "With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| One route in place of two | runs `netplan generate`; runs `netplan apply`; writes `/etc/netplan/osapi-osapi0-routes.yaml`: `network:\\n  version: 2\\n  ethernets:\\n    osapi0:\\n      routes:\\n        - to: 203.0.113.0/24\\n          via: 192.0.2.1\\n          metric: 10` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| An interface osapi has no routes of | `--interface-name osapi0 --routes \"198.51.100.0/24 via 192.0.2.1\" --routes \"2001:db8:1::/48 via 2001:db8::1 metric 200\"` | not found |\n| A default route | `--interface-name osapi0 --routes \"0.0.0.0/0 via 192.0.2.1\"` | default route |\n| No route | `--interface-name osapi0` | Routes |\n| More than 64 routes | `--interface-name osapi0 --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\"` | Routes |\n| A route without via | `--interface-name osapi0 --routes \"10.0.0.0/8 192.168.1.1\"` | Routes |\n| A destination that is not CIDR | `--interface-name osapi0 --routes \"10.0.0.0 via 192.168.1.1\"` | Routes |\n| A gateway of the other family | `--interface-name osapi0 --routes \"10.0.0.0/8 via 2001:db8::1\"` | Routes |\n| A metric that is not a number | `--interface-name osapi0 --routes \"10.0.0.0/8 via 192.168.1.1 metric x\"` | Routes |\n| A name that is not an interface name | `--interface-name \"eth0;reboot\" --routes \"198.51.100.0/24 via 192.0.2.1\" --routes \"2001:db8:1::/48 via 2001:db8::1 metric 200\"` | InterfaceName |",
+		reference.Result:     "With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| A new gateway and metric | runs `netplan generate`; runs `netplan apply`; writes `/etc/netplan/osapi-osapi0-routes.yaml`: `network:\\n  version: 2\\n  ethernets:\\n    osapi0:\\n      routes:\\n        - to: 198.51.100.0/24\\n          via: 192.0.2.2\\n          metric: 10` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A destination osapi has no route to | `--name osapi0 --destination 198.51.100.0/24 --via 192.0.2.1` | not found |\n| A destination that is not CIDR | `--name osapi0 --destination 10.0.0.0 --via 192.0.2.1` | Destination |\n| A gateway that is not an address | `--name osapi0 --destination 198.51.100.0/24 --via gateway` | Via |\n| A metric below 0 | `--name osapi0 --destination 198.51.100.0/24 --via 192.0.2.1 --metric -1` | Metric |\n| A metric over 4294967295 | `--name osapi0 --destination 198.51.100.0/24 --via 192.0.2.1 --metric 4294967296` | Metric |\n| A name that is not an interface name | `--name \"eth0;reboot\" --destination 198.51.100.0/24 --via 192.0.2.1` | Name |",
 	},
 	Args:    cobra.NoArgs,
-	Example: "  # One route in place of two\n  osapi client node network route update --target web-01 --interface-name osapi0 --routes \"203.0.113.0/24 via 192.0.2.1 metric 10\"",
-	Long:    "Writes the interface's routes file over the one osapi has, as create writes it, and applies it. An interface osapi has no routes of is not found: create adds them.",
+	Example: "  # A new gateway and metric\n  osapi client node network interface route update --target web-01 --name osapi0 --destination 198.51.100.0/24 --via 192.0.2.2 --metric 10",
+	Long:    "Writes the route over the one osapi has to the same destination, and applies it. A destination osapi has no route to is not found: create adds it.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("target")
-		interfaceName, _ := cmd.Flags().GetString("interface-name")
-		routes, _ := cmd.Flags().GetStringSlice("routes")
+		name, _ := cmd.Flags().GetString("name")
+		destination, _ := cmd.Flags().GetString("destination")
+		via, _ := cmd.Flags().GetString("via")
+		metric, _ := cmd.Flags().GetInt("metric")
 
-		endpointcommand.Run(cmd, Group, "update", UpdateRequest{Hostname: hostname, InterfaceName: interfaceName, Body: NetworkRouteUpdateRequest{Routes: routes}})
+		endpointcommand.Run(cmd, Group, "update", UpdateRequest{Hostname: hostname, Name: name, Body: NetworkInterfaceRouteUpdateRequest{Destination: destination, Via: via, Metric: metric}})
 	},
-	Short: "Change the routes osapi has of an interface",
+	Short: "Change the gateway or the metric of a route",
 	Use:   "update",
 }
 
 var routeDeleteCmd = &cobra.Command{
 	Annotations: map[string]string{
 		reference.Permission: "network:write",
-		reference.Result:     "With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| An interface osapi has routes of | removes `/etc/netplan/osapi-osapi0-routes.yaml`; runs `netplan apply` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A name that is not an interface name | `--interface-name \"eth0;reboot\"` | InterfaceName |",
+		reference.Result:     "With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| One of two routes | runs `netplan generate`; runs `netplan apply`; writes `/etc/netplan/osapi-osapi0-routes.yaml`: `network:\\n  version: 2\\n  ethernets:\\n    osapi0:\\n      routes:\\n        - to: 2001:db8:1::/48\\n          via: 2001:db8::1\\n          metric: 200` |\n| The last route | removes `/etc/netplan/osapi-osapi0-routes.yaml`; runs `netplan apply` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A destination that is not CIDR | `--name osapi0 --destination 10.0.0.0` | Destination |\n| A name that is not an interface name | `--name \"eth0;reboot\" --destination 198.51.100.0/24` | Name |",
 	},
 	Args:    cobra.NoArgs,
-	Example: "  # An interface osapi has routes of\n  osapi client node network route delete --target web-01 --interface-name osapi0\n\n  # An interface osapi has no routes of\n  osapi client node network route delete --target web-01 --interface-name osapi0",
-	Long:    "Removes the interface's routes file and applies what is left. An interface osapi has no routes of does not change.",
+	Example: "  # One of two routes\n  osapi client node network interface route delete --target web-01 --name osapi0 --destination 198.51.100.0/24\n\n  # The last route\n  osapi client node network interface route delete --target web-01 --name osapi0 --destination 198.51.100.0/24\n\n  # A route osapi does not have\n  osapi client node network interface route delete --target web-01 --name osapi0 --destination 198.51.100.0/24",
+	Long:    "Drops the route from the interface's netplan file and applies what is left; the last route removes the file. A route osapi does not have does not change.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("target")
-		interfaceName, _ := cmd.Flags().GetString("interface-name")
+		name, _ := cmd.Flags().GetString("name")
+		destination, _ := cmd.Flags().GetString("destination")
 
-		endpointcommand.Run(cmd, Group, "delete", DeleteRequest{Hostname: hostname, InterfaceName: interfaceName})
+		endpointcommand.Run(cmd, Group, "delete", DeleteRequest{Hostname: hostname, Name: name, Body: NetworkInterfaceRouteDeleteRequest{Destination: destination}})
 	},
-	Short: "Drop the routes osapi has of an interface",
+	Short: "Drop a route that osapi wrote",
 	Use:   "delete",
 }
 
 func init() {
 	routeListCmd.Flags().StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
-	routeGetCmd.Flags().StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
-	routeGetCmd.Flags().String("interface-name", "", "The interface, such as eth0, or a fact such as @fact.interface.primary")
-	_ = routeGetCmd.MarkFlagRequired("interface-name")
+	routeListCmd.Flags().String("name", "", "The interface, such as eth0, or a fact such as @fact.interface.primary")
+	_ = routeListCmd.MarkFlagRequired("name")
 	routeCreateCmd.Flags().StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
-	routeCreateCmd.Flags().String("interface-name", "", "The interface, such as eth0, or a fact such as @fact.interface.primary")
-	_ = routeCreateCmd.MarkFlagRequired("interface-name")
-	routeCreateCmd.Flags().StringSlice("routes", nil, "Each route as ip route writes it: <destination> via <gateway>, with metric <n> after it when you give one, such as 10.0.0.0/8 via 192.168.1.1 metric 100")
-	_ = routeCreateCmd.MarkFlagRequired("routes")
+	routeCreateCmd.Flags().String("name", "", "The interface, such as eth0, or a fact such as @fact.interface.primary")
+	_ = routeCreateCmd.MarkFlagRequired("name")
+	routeCreateCmd.Flags().String("destination", "", "Where the route goes, in CIDR notation, such as 10.0.0.0/8; not a default route")
+	_ = routeCreateCmd.MarkFlagRequired("destination")
+	routeCreateCmd.Flags().String("via", "", "The gateway, an address of the destination's family, such as 192.168.1.1")
+	_ = routeCreateCmd.MarkFlagRequired("via")
+	routeCreateCmd.Flags().Int("metric", 0, "The metric, from 0 to 4294967295; none when it is 0")
 	routeUpdateCmd.Flags().StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
-	routeUpdateCmd.Flags().String("interface-name", "", "The interface, such as eth0, or a fact such as @fact.interface.primary")
-	_ = routeUpdateCmd.MarkFlagRequired("interface-name")
-	routeUpdateCmd.Flags().StringSlice("routes", nil, "Each route as ip route writes it: <destination> via <gateway>, with metric <n> after it when you give one, such as 10.0.0.0/8 via 192.168.1.1 metric 100")
-	_ = routeUpdateCmd.MarkFlagRequired("routes")
+	routeUpdateCmd.Flags().String("name", "", "The interface, such as eth0, or a fact such as @fact.interface.primary")
+	_ = routeUpdateCmd.MarkFlagRequired("name")
+	routeUpdateCmd.Flags().String("destination", "", "Where the route goes, in CIDR notation, such as 10.0.0.0/8; not a default route")
+	_ = routeUpdateCmd.MarkFlagRequired("destination")
+	routeUpdateCmd.Flags().String("via", "", "The gateway, an address of the destination's family, such as 192.168.1.1")
+	_ = routeUpdateCmd.MarkFlagRequired("via")
+	routeUpdateCmd.Flags().Int("metric", 0, "The metric, from 0 to 4294967295; none when it is 0")
 	routeDeleteCmd.Flags().StringP("target", "T", "_all", "Target: _all, _any, hostname, or label (group:web.dev)")
-	routeDeleteCmd.Flags().String("interface-name", "", "The interface, such as eth0, or a fact such as @fact.interface.primary")
-	_ = routeDeleteCmd.MarkFlagRequired("interface-name")
-	clicommand.AddCommands(Group, routeListCmd, routeGetCmd, routeCreateCmd, routeUpdateCmd, routeDeleteCmd)
+	routeDeleteCmd.Flags().String("name", "", "The interface, such as eth0, or a fact such as @fact.interface.primary")
+	_ = routeDeleteCmd.MarkFlagRequired("name")
+	routeDeleteCmd.Flags().String("destination", "", "The destination of the route, in CIDR notation, such as 10.0.0.0/8")
+	_ = routeDeleteCmd.MarkFlagRequired("destination")
+	clicommand.AddCommands(Group, routeListCmd, routeCreateCmd, routeUpdateCmd, routeDeleteCmd)
 }

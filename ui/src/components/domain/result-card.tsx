@@ -1680,10 +1680,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
   }
 
   // Route list — expanded with search
-  if (
-    (type === "route-list" || type === "route-get") &&
-    Array.isArray(data.results)
-  ) {
+  if (type === "route-list" && Array.isArray(data.results)) {
     return <RouteListResult data={data} label={type.replace("-", " ")} />;
   }
 

@@ -41,77 +41,47 @@ func (m *MockProvider) EXPECT() *MockProviderMockRecorder {
 	return m.recorder
 }
 
-// Create mocks base method.
-func (m *MockProvider) Create(ctx context.Context, in route.Config) (bool, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", ctx, in)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Create indicates an expected call of Create.
-func (mr *MockProviderMockRecorder) Create(ctx, in any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockProvider)(nil).Create), ctx, in)
-}
-
-// InterfaceRoutes mocks base method.
-func (m *MockProvider) InterfaceRoutes(ctx context.Context, name string) ([]route.Entry, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InterfaceRoutes", ctx, name)
-	ret0, _ := ret[0].([]route.Entry)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// InterfaceRoutes indicates an expected call of InterfaceRoutes.
-func (mr *MockProviderMockRecorder) InterfaceRoutes(ctx, name any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InterfaceRoutes", reflect.TypeOf((*MockProvider)(nil).InterfaceRoutes), ctx, name)
-}
-
 // Remove mocks base method.
-func (m *MockProvider) Remove(ctx context.Context, name string) (bool, error) {
+func (m *MockProvider) Remove(ctx context.Context, name, destination string) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Remove", ctx, name)
+	ret := m.ctrl.Call(m, "Remove", ctx, name, destination)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Remove indicates an expected call of Remove.
-func (mr *MockProviderMockRecorder) Remove(ctx, name any) *gomock.Call {
+func (mr *MockProviderMockRecorder) Remove(ctx, name, destination any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Remove", reflect.TypeOf((*MockProvider)(nil).Remove), ctx, name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Remove", reflect.TypeOf((*MockProvider)(nil).Remove), ctx, name, destination)
 }
 
 // Routes mocks base method.
-func (m *MockProvider) Routes(ctx context.Context) ([]route.Entry, error) {
+func (m *MockProvider) Routes(ctx context.Context, name string) ([]route.Entry, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Routes", ctx)
+	ret := m.ctrl.Call(m, "Routes", ctx, name)
 	ret0, _ := ret[0].([]route.Entry)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Routes indicates an expected call of Routes.
-func (mr *MockProviderMockRecorder) Routes(ctx any) *gomock.Call {
+func (mr *MockProviderMockRecorder) Routes(ctx, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Routes", reflect.TypeOf((*MockProvider)(nil).Routes), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Routes", reflect.TypeOf((*MockProvider)(nil).Routes), ctx, name)
 }
 
-// Update mocks base method.
-func (m *MockProvider) Update(ctx context.Context, in route.Config) (bool, error) {
+// Set mocks base method.
+func (m *MockProvider) Set(ctx context.Context, r route.Route, create bool) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", ctx, in)
+	ret := m.ctrl.Call(m, "Set", ctx, r, create)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Update indicates an expected call of Update.
-func (mr *MockProviderMockRecorder) Update(ctx, in any) *gomock.Call {
+// Set indicates an expected call of Set.
+func (mr *MockProviderMockRecorder) Set(ctx, r, create any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockProvider)(nil).Update), ctx, in)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockProvider)(nil).Set), ctx, r, create)
 }

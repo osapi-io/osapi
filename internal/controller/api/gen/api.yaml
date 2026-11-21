@@ -107,8 +107,8 @@ tags:
   - description: The network interfaces of the host
     name: Interface_API_network_interface_operations
     x-displayName: Node/Interface
-  - description: The routes of the host
-    name: Route_API_network_route_operations
+  - description: The routes of an interface
+    name: Route_API_route_operations
     x-displayName: Node/Route
   - description: Get the operating system of target hosts
     name: Os_API_os_operations
@@ -5436,21 +5436,92 @@ paths:
       summary: Change the config osapi has of a network interface
       tags:
         - Interface_API_network_interface_operations
-  /api/node/{hostname}/network/route:
+  /api/node/{hostname}/network/interface/{name}/route:
     servers: []
-    get:
+    delete:
       description: >-
-        Reads each route of the main table: ip route on Linux, netstat on macOS.
-        proto says where a route came from, such as dhcp, kernel or static.
-      operationId: GetNodeNetworkRoute
+        Drops the route from the interface's netplan file and applies what is
+        left; the last route removes the file. A route osapi does not have does
+        not change.
+      operationId: DeleteNodeNetworkInterfaceRoute
       parameters:
         - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/NetworkInterfaceRouteName'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NetworkInterfaceRouteDeleteRequest'
+        required: true
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NetworkRouteCollectionResponse'
+                $ref: '#/components/schemas/NetworkInterfaceRouteDeleteResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            The host does not have what the request names, such as the object of
+            a deploy.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - network:write
+      summary: Drop a route that osapi wrote
+      tags:
+        - Route_API_route_operations
+    get:
+      description: >-
+        Reads the routes of the main table that go out of the interface: ip
+        route on Linux, netstat on macOS. proto says where a route came from,
+        such as dhcp, kernel or static. An interface with no routes has none;
+        one the host does not have is not found.
+      operationId: GetNodeNetworkInterfaceRoute
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/NetworkInterfaceRouteName'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkInterfaceRouteCollectionResponse'
           description: Each target host's result.
         '400':
           content:
@@ -5495,157 +5566,37 @@ paths:
       security:
         - BearerAuth:
             - network:read
-      summary: List the routes of the host
+      summary: List the routes of an interface
       tags:
-        - Route_API_network_route_operations
-  /api/node/{hostname}/network/route/{interface_name}:
-    servers: []
-    delete:
-      description: >-
-        Removes the interface's routes file and applies what is left. An
-        interface osapi has no routes of does not change.
-      operationId: DeleteNodeNetworkRoute
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/NetworkRouteInterface_name'
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NetworkRouteDeleteResponse'
-          description: Each target host's result, with whether it changed.
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: The request is not valid.
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Unauthorized - API key required
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Forbidden - Insufficient permissions
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: The host has no route with that interface_name.
-        '409':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: >-
-            osapi did not deploy the item, so it does not change it, or the host
-            does not have a program that the method needs.
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: An error on the controller.
-      security:
-        - BearerAuth:
-            - network:write
-      summary: Drop the routes osapi has of an interface
-      tags:
-        - Route_API_network_route_operations
-    get:
-      description: >-
-        Reads the routes of the main table that go out of the interface, as list
-        does. An interface with no routes has none; one the host does not have
-        is not found.
-      operationId: GetNodeNetworkRouteByKey
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/NetworkRouteInterface_name'
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NetworkRouteGetResponse'
-          description: Each target host's result.
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: The request is not valid.
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Unauthorized - API key required
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Forbidden - Insufficient permissions
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: The host has no route with that interface_name.
-        '409':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: >-
-            osapi did not deploy the item, so it does not change it, or the host
-            does not have a program that the method needs.
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: An error on the controller.
-      security:
-        - BearerAuth:
-            - network:read
-      summary: Get the routes of an interface
-      tags:
-        - Route_API_network_route_operations
+        - Route_API_route_operations
     post:
       description: >-
-        Writes a netplan file of the interface's routes, such as
+        Adds the route to the interface's netplan file, such as
         /etc/netplan/osapi-osapi0-routes.yaml for osapi0, under a netplan
-        definition that is the interface's own, and applies it. A default route
+        definition that is the interface's own, and applies it. A route osapi
+        already has, the same, does not change; one to the same destination by
+        another gateway or metric is refused: update changes it. A default route
         is refused: the interface behavior sets the gateway. An interface the
         host does not have is not found. An interface that a match defines, such
-        as cloud-init's all for en*, is refused, because the routes would go on
-        each interface the match takes, now and later. An interface osapi
-        already has routes of does not change: update replaces them. It runs on
-        the Debian family, and elsewhere, and in a container, reports skipped.
-      operationId: PostNodeNetworkRoute
+        as cloud-init's all for en*, is refused, because the route would go on
+        each interface the match takes. It runs on the Debian family, and
+        elsewhere, and in a container, reports skipped.
+      operationId: PostNodeNetworkInterfaceRoute
       parameters:
         - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/NetworkRouteInterface_name'
+        - $ref: '#/components/parameters/NetworkInterfaceRouteName'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NetworkRouteCreateRequest'
+              $ref: '#/components/schemas/NetworkInterfaceRouteCreateRequest'
         required: true
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NetworkRouteCreateResponse'
+                $ref: '#/components/schemas/NetworkInterfaceRouteCreateResponse'
           description: Each target host's result, with whether it changed.
         '400':
           content:
@@ -5670,7 +5621,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: The host has no route with that interface_name.
+          description: >-
+            The host does not have what the request names, such as the object of
+            a deploy.
         '409':
           content:
             application/json:
@@ -5688,30 +5641,30 @@ paths:
       security:
         - BearerAuth:
             - network:write
-      summary: Add static routes to an interface
+      summary: Add a static route to an interface
       tags:
-        - Route_API_network_route_operations
+        - Route_API_route_operations
     put:
       description: >-
-        Writes the interface's routes file over the one osapi has, as create
-        writes it, and applies it. An interface osapi has no routes of is not
-        found: create adds them.
-      operationId: PutNodeNetworkRoute
+        Writes the route over the one osapi has to the same destination, and
+        applies it. A destination osapi has no route to is not found: create
+        adds it.
+      operationId: PutNodeNetworkInterfaceRoute
       parameters:
         - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/NetworkRouteInterface_name'
+        - $ref: '#/components/parameters/NetworkInterfaceRouteName'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NetworkRouteUpdateRequest'
+              $ref: '#/components/schemas/NetworkInterfaceRouteUpdateRequest'
         required: true
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NetworkRouteUpdateResponse'
+                $ref: '#/components/schemas/NetworkInterfaceRouteUpdateResponse'
           description: Each target host's result, with whether it changed.
         '400':
           content:
@@ -5736,7 +5689,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: The host has no route with that interface_name.
+          description: >-
+            The host does not have what the request names, such as the object of
+            a deploy.
         '409':
           content:
             application/json:
@@ -5754,9 +5709,9 @@ paths:
       security:
         - BearerAuth:
             - network:write
-      summary: Change the routes osapi has of an interface
+      summary: Change the gateway or the metric of a route
       tags:
-        - Route_API_network_route_operations
+        - Route_API_route_operations
   /api/node/{hostname}/os:
     servers: []
     get:
@@ -11514,7 +11469,7 @@ components:
       required:
         - results
       type: object
-    NetworkRouteCollectionResponse:
+    NetworkInterfaceRouteCollectionResponse:
       properties:
         job_id:
           description: The job ID used to process this request.
@@ -11525,30 +11480,41 @@ components:
             validate: uuid
         results:
           items:
-            $ref: '#/components/schemas/NetworkRouteEntry'
+            $ref: '#/components/schemas/NetworkInterfaceRouteEntry'
           type: array
       required:
         - results
       type: object
-    NetworkRouteCreateRequest:
+    NetworkInterfaceRouteCreateRequest:
       properties:
-        routes:
+        destination:
           description: >-
-            Each route as ip route writes it: <destination> via <gateway>, with
-            metric <n> after it when you give one, such as 10.0.0.0/8 via
-            192.168.1.1 metric 100
-          items:
-            pattern: ^\S+ via \S+( metric [0-9]+)?$
-            type: string
-          maxItems: 64
-          minItems: 1
-          type: array
+            Where the route goes, in CIDR notation, such as 10.0.0.0/8; not a
+            default route
+          format: cidr
+          type: string
           x-oapi-codegen-extra-tags:
-            validate: required,min=1,max=64,dive,route
+            validate: required,cidr
+        metric:
+          description: The metric, from 0 to 4294967295; none when it is 0
+          maximum: 4294967295
+          minimum: 0
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=0,max=4294967295
+        via:
+          description: >-
+            The gateway, an address of the destination's family, such as
+            192.168.1.1
+          format: ip
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,ip
       required:
-        - routes
+        - destination
+        - via
       type: object
-    NetworkRouteCreateResponse:
+    NetworkInterfaceRouteCreateResponse:
       properties:
         job_id:
           description: The job ID used to process this request.
@@ -11559,12 +11525,23 @@ components:
             validate: uuid
         results:
           items:
-            $ref: '#/components/schemas/NetworkRouteResult'
+            $ref: '#/components/schemas/NetworkInterfaceRouteResult'
           type: array
       required:
         - results
       type: object
-    NetworkRouteDeleteResponse:
+    NetworkInterfaceRouteDeleteRequest:
+      properties:
+        destination:
+          description: The destination of the route, in CIDR notation, such as 10.0.0.0/8
+          format: cidr
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,cidr
+      required:
+        - destination
+      type: object
+    NetworkInterfaceRouteDeleteResponse:
       properties:
         job_id:
           description: The job ID used to process this request.
@@ -11575,12 +11552,12 @@ components:
             validate: uuid
         results:
           items:
-            $ref: '#/components/schemas/NetworkRouteResult'
+            $ref: '#/components/schemas/NetworkInterfaceRouteResult'
           type: array
       required:
         - results
       type: object
-    NetworkRouteEntry:
+    NetworkInterfaceRouteEntry:
       properties:
         destination:
           description: The destination in CIDR notation, or default
@@ -11625,35 +11602,19 @@ components:
         - hostname
         - status
       type: object
-    NetworkRouteGetResponse:
-      properties:
-        job_id:
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-          format: uuid
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: uuid
-        results:
-          items:
-            $ref: '#/components/schemas/NetworkRouteEntry'
-          type: array
-      required:
-        - results
-      type: object
-    NetworkRouteResult:
+    NetworkInterfaceRouteResult:
       properties:
         changed:
           description: Whether the host changed
           type: boolean
+        destination:
+          description: The destination of the route
+          type: string
         error:
           description: Error message if the agent failed.
           type: string
         hostname:
           description: Hostname of the agent that produced this result.
-          type: string
-        interface_name:
-          description: The interface
           type: string
         status:
           description: The status of the operation for this host.
@@ -11669,25 +11630,36 @@ components:
         - hostname
         - status
       type: object
-    NetworkRouteUpdateRequest:
+    NetworkInterfaceRouteUpdateRequest:
       properties:
-        routes:
+        destination:
           description: >-
-            Each route as ip route writes it: <destination> via <gateway>, with
-            metric <n> after it when you give one, such as 10.0.0.0/8 via
-            192.168.1.1 metric 100
-          items:
-            pattern: ^\S+ via \S+( metric [0-9]+)?$
-            type: string
-          maxItems: 64
-          minItems: 1
-          type: array
+            Where the route goes, in CIDR notation, such as 10.0.0.0/8; not a
+            default route
+          format: cidr
+          type: string
           x-oapi-codegen-extra-tags:
-            validate: required,min=1,max=64,dive,route
+            validate: required,cidr
+        metric:
+          description: The metric, from 0 to 4294967295; none when it is 0
+          maximum: 4294967295
+          minimum: 0
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=0,max=4294967295
+        via:
+          description: >-
+            The gateway, an address of the destination's family, such as
+            192.168.1.1
+          format: ip
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,ip
       required:
-        - routes
+        - destination
+        - via
       type: object
-    NetworkRouteUpdateResponse:
+    NetworkInterfaceRouteUpdateResponse:
       properties:
         job_id:
           description: The job ID used to process this request.
@@ -11698,7 +11670,7 @@ components:
             validate: uuid
         results:
           items:
-            $ref: '#/components/schemas/NetworkRouteResult'
+            $ref: '#/components/schemas/NetworkInterfaceRouteResult'
           type: array
       required:
         - results
@@ -12777,10 +12749,10 @@ components:
         type: string
       x-oapi-codegen-extra-tags:
         validate: required,interface_name
-    NetworkRouteInterface_name:
+    NetworkInterfaceRouteName:
       description: The interface, such as eth0, or a fact such as @fact.interface.primary
       in: path
-      name: interface_name
+      name: name
       required: true
       schema:
         pattern: ^(@fact\.[a-z0-9_.]+|[a-zA-Z0-9][a-zA-Z0-9._-]{0,14})$
@@ -12906,7 +12878,7 @@ x-tagGroups:
       - Interface_API_network_interface_operations
   - name: Route API
     tags:
-      - Route_API_network_route_operations
+      - Route_API_route_operations
   - name: Os API
     tags:
       - Os_API_os_operations

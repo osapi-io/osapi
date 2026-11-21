@@ -14,10 +14,11 @@ import (
 // ListRequest is the request of route list: its target and its input.
 type ListRequest struct {
 	Hostname string `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
+	Name     string `doc:"The interface, such as eth0, or a fact such as @fact.interface.primary" in:"path" json:"name" param:"NetworkInterfaceRouteName" validate:"required,interface_name"`
 }
 
-// NetworkRouteEntry is the result of route on one host.
-type NetworkRouteEntry struct {
+// NetworkInterfaceRouteEntry is the result of route on one host.
+type NetworkInterfaceRouteEntry struct {
 	Hostname    string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
 	Status      string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
 	Destination *string `doc:"The destination in CIDR notation, or default" json:"destination,omitempty"`
@@ -30,10 +31,10 @@ type NetworkRouteEntry struct {
 	Error       *string `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
-// NetworkRouteCollectionResponse is each target host's result.
-type NetworkRouteCollectionResponse struct {
-	JobID   string              `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
-	Results []NetworkRouteEntry `json:"results"`
+// NetworkInterfaceRouteCollectionResponse is each target host's result.
+type NetworkInterfaceRouteCollectionResponse struct {
+	JobID   string                       `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
+	Results []NetworkInterfaceRouteEntry `json:"results"`
 }
 
 // HandleList runs route list on the target, for the endpoint server.
@@ -41,56 +42,37 @@ func HandleList(
 	ctx context.Context,
 	d dispatch.Deps,
 	in ListRequest,
-) (NetworkRouteCollectionResponse, error) {
-	return dispatch.Run[NetworkRouteCollectionResponse](ctx, d, route.Behavior, "list", in.Hostname, route.ListInput{})
-}
-
-// GetRequest is the request of route get: its target and its input.
-type GetRequest struct {
-	Hostname      string `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
-	InterfaceName string `doc:"The interface, such as eth0, or a fact such as @fact.interface.primary" in:"path" json:"interface_name" param:"NetworkRouteInterface_name" validate:"required,interface_name"`
-}
-
-// NetworkRouteGetResponse is each target host's result.
-type NetworkRouteGetResponse struct {
-	JobID   string              `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
-	Results []NetworkRouteEntry `json:"results"`
-}
-
-// HandleGet runs route get on the target, for the endpoint server.
-func HandleGet(
-	ctx context.Context,
-	d dispatch.Deps,
-	in GetRequest,
-) (NetworkRouteGetResponse, error) {
-	return dispatch.Run[NetworkRouteGetResponse](ctx, d, route.Behavior, "get", in.Hostname, route.GetInput{InterfaceName: in.InterfaceName})
+) (NetworkInterfaceRouteCollectionResponse, error) {
+	return dispatch.Run[NetworkInterfaceRouteCollectionResponse](ctx, d, route.Behavior, "list", in.Hostname, route.ListInput{Name: in.Name})
 }
 
 // CreateRequest is the request of route create: its target and its input.
 type CreateRequest struct {
-	Hostname      string                    `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
-	InterfaceName string                    `doc:"The interface, such as eth0, or a fact such as @fact.interface.primary" in:"path" json:"interface_name" param:"NetworkRouteInterface_name" validate:"required,interface_name"`
-	Body          NetworkRouteCreateRequest `in:"body" validate:"required"`
+	Hostname string                             `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
+	Name     string                             `doc:"The interface, such as eth0, or a fact such as @fact.interface.primary" in:"path" json:"name" param:"NetworkInterfaceRouteName" validate:"required,interface_name"`
+	Body     NetworkInterfaceRouteCreateRequest `in:"body" validate:"required"`
 }
 
-// NetworkRouteCreateRequest is the body of route create.
-type NetworkRouteCreateRequest struct {
-	Routes []string `doc:"Each route as ip route writes it: <destination> via <gateway>, with metric <n> after it when you give one, such as 10.0.0.0/8 via 192.168.1.1 metric 100" json:"routes" validate:"required,min=1,max=64,dive,route"`
+// NetworkInterfaceRouteCreateRequest is the body of route create.
+type NetworkInterfaceRouteCreateRequest struct {
+	Destination string `doc:"Where the route goes, in CIDR notation, such as 10.0.0.0/8; not a default route" json:"destination" validate:"required,cidr"`
+	Via         string `doc:"The gateway, an address of the destination's family, such as 192.168.1.1" json:"via" validate:"required,ip"`
+	Metric      int    `doc:"The metric, from 0 to 4294967295; none when it is 0" json:"metric,omitempty" validate:"omitempty,min=0,max=4294967295"`
 }
 
-// NetworkRouteResult is the result of route on one host.
-type NetworkRouteResult struct {
-	Hostname      string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status        string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	InterfaceName *string `doc:"The interface" json:"interface_name,omitempty"`
-	Changed       *bool   `doc:"Whether the host changed" json:"changed,omitempty"`
-	Error         *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+// NetworkInterfaceRouteResult is the result of route on one host.
+type NetworkInterfaceRouteResult struct {
+	Hostname    string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status      string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
+	Destination *string `doc:"The destination of the route" json:"destination,omitempty"`
+	Changed     *bool   `doc:"Whether the host changed" json:"changed,omitempty"`
+	Error       *string `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
-// NetworkRouteCreateResponse is each target host's result.
-type NetworkRouteCreateResponse struct {
-	JobID   string               `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
-	Results []NetworkRouteResult `json:"results"`
+// NetworkInterfaceRouteCreateResponse is each target host's result.
+type NetworkInterfaceRouteCreateResponse struct {
+	JobID   string                        `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
+	Results []NetworkInterfaceRouteResult `json:"results"`
 }
 
 // HandleCreate runs route create on the target, for the endpoint server.
@@ -98,26 +80,28 @@ func HandleCreate(
 	ctx context.Context,
 	d dispatch.Deps,
 	in CreateRequest,
-) (NetworkRouteCreateResponse, error) {
-	return dispatch.Run[NetworkRouteCreateResponse](ctx, d, route.Behavior, "create", in.Hostname, route.CreateInput{InterfaceName: in.InterfaceName, Routes: in.Body.Routes})
+) (NetworkInterfaceRouteCreateResponse, error) {
+	return dispatch.Run[NetworkInterfaceRouteCreateResponse](ctx, d, route.Behavior, "create", in.Hostname, route.CreateInput{Name: in.Name, Destination: in.Body.Destination, Via: in.Body.Via, Metric: in.Body.Metric})
 }
 
 // UpdateRequest is the request of route update: its target and its input.
 type UpdateRequest struct {
-	Hostname      string                    `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
-	InterfaceName string                    `doc:"The interface, such as eth0, or a fact such as @fact.interface.primary" in:"path" json:"interface_name" param:"NetworkRouteInterface_name" validate:"required,interface_name"`
-	Body          NetworkRouteUpdateRequest `in:"body" validate:"required"`
+	Hostname string                             `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
+	Name     string                             `doc:"The interface, such as eth0, or a fact such as @fact.interface.primary" in:"path" json:"name" param:"NetworkInterfaceRouteName" validate:"required,interface_name"`
+	Body     NetworkInterfaceRouteUpdateRequest `in:"body" validate:"required"`
 }
 
-// NetworkRouteUpdateRequest is the body of route update.
-type NetworkRouteUpdateRequest struct {
-	Routes []string `doc:"Each route as ip route writes it: <destination> via <gateway>, with metric <n> after it when you give one, such as 10.0.0.0/8 via 192.168.1.1 metric 100" json:"routes" validate:"required,min=1,max=64,dive,route"`
+// NetworkInterfaceRouteUpdateRequest is the body of route update.
+type NetworkInterfaceRouteUpdateRequest struct {
+	Destination string `doc:"Where the route goes, in CIDR notation, such as 10.0.0.0/8; not a default route" json:"destination" validate:"required,cidr"`
+	Via         string `doc:"The gateway, an address of the destination's family, such as 192.168.1.1" json:"via" validate:"required,ip"`
+	Metric      int    `doc:"The metric, from 0 to 4294967295; none when it is 0" json:"metric,omitempty" validate:"omitempty,min=0,max=4294967295"`
 }
 
-// NetworkRouteUpdateResponse is each target host's result.
-type NetworkRouteUpdateResponse struct {
-	JobID   string               `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
-	Results []NetworkRouteResult `json:"results"`
+// NetworkInterfaceRouteUpdateResponse is each target host's result.
+type NetworkInterfaceRouteUpdateResponse struct {
+	JobID   string                        `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
+	Results []NetworkInterfaceRouteResult `json:"results"`
 }
 
 // HandleUpdate runs route update on the target, for the endpoint server.
@@ -125,20 +109,26 @@ func HandleUpdate(
 	ctx context.Context,
 	d dispatch.Deps,
 	in UpdateRequest,
-) (NetworkRouteUpdateResponse, error) {
-	return dispatch.Run[NetworkRouteUpdateResponse](ctx, d, route.Behavior, "update", in.Hostname, route.UpdateInput{InterfaceName: in.InterfaceName, Routes: in.Body.Routes})
+) (NetworkInterfaceRouteUpdateResponse, error) {
+	return dispatch.Run[NetworkInterfaceRouteUpdateResponse](ctx, d, route.Behavior, "update", in.Hostname, route.UpdateInput{Name: in.Name, Destination: in.Body.Destination, Via: in.Body.Via, Metric: in.Body.Metric})
 }
 
 // DeleteRequest is the request of route delete: its target and its input.
 type DeleteRequest struct {
-	Hostname      string `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
-	InterfaceName string `doc:"The interface, such as eth0, or a fact such as @fact.interface.primary" in:"path" json:"interface_name" param:"NetworkRouteInterface_name" validate:"required,interface_name"`
+	Hostname string                             `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
+	Name     string                             `doc:"The interface, such as eth0, or a fact such as @fact.interface.primary" in:"path" json:"name" param:"NetworkInterfaceRouteName" validate:"required,interface_name"`
+	Body     NetworkInterfaceRouteDeleteRequest `in:"body" validate:"required"`
 }
 
-// NetworkRouteDeleteResponse is each target host's result.
-type NetworkRouteDeleteResponse struct {
-	JobID   string               `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
-	Results []NetworkRouteResult `json:"results"`
+// NetworkInterfaceRouteDeleteRequest is the body of route delete.
+type NetworkInterfaceRouteDeleteRequest struct {
+	Destination string `doc:"The destination of the route, in CIDR notation, such as 10.0.0.0/8" json:"destination" validate:"required,cidr"`
+}
+
+// NetworkInterfaceRouteDeleteResponse is each target host's result.
+type NetworkInterfaceRouteDeleteResponse struct {
+	JobID   string                        `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
+	Results []NetworkInterfaceRouteResult `json:"results"`
 }
 
 // HandleDelete runs route delete on the target, for the endpoint server.
@@ -146,72 +136,64 @@ func HandleDelete(
 	ctx context.Context,
 	d dispatch.Deps,
 	in DeleteRequest,
-) (NetworkRouteDeleteResponse, error) {
-	return dispatch.Run[NetworkRouteDeleteResponse](ctx, d, route.Behavior, "delete", in.Hostname, route.DeleteInput{InterfaceName: in.InterfaceName})
+) (NetworkInterfaceRouteDeleteResponse, error) {
+	return dispatch.Run[NetworkInterfaceRouteDeleteResponse](ctx, d, route.Behavior, "delete", in.Hostname, route.DeleteInput{Name: in.Name, Destination: in.Body.Destination})
 }
 
 // Group is route as an endpoint group, which its spec comes from.
 var Group = endpoint.Define(
 	"route",
-	"The routes of the host",
-	endpoint.Prefix("node/{hostname}/network"),
+	"The routes of an interface",
+	endpoint.Prefix("node/{hostname}/network/interface/{name}"),
 	endpoint.Uses[dispatch.Deps](),
-	endpoint.Tag("network_route_operations", "Node/Route", "The routes of the host"),
-	endpoint.CommandNotes("The [route behavior](../../../../../../reference/behaviors/route/route.md) page tells where the behavior runs, what it is built on and its settings."),
-	endpoint.Get[ListRequest, NetworkRouteCollectionResponse]("list").
+	endpoint.Tag("route_operations", "Node/Route", "The routes of an interface"),
+	endpoint.CommandNotes("The [route behavior](../../../../../../../reference/behaviors/route/route.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Get[ListRequest, NetworkInterfaceRouteCollectionResponse]("list").
 		Handle(HandleList).
-		ID("GetNodeNetworkRoute").
-		Describe("List the routes of the host").
+		ID("GetNodeNetworkInterfaceRoute").
+		Describe("List the routes of an interface").
 		Permission("network:read").
 		Returns("Each target host's result.").
-		Explain("Reads each route of the main table: ip route on Linux, netstat on macOS. proto says where a route came from, such as dhcp, kernel or static.").
-		Example("--target web-01", "A Linux host").
-		Example("--target web-01", "A Mac").
+		Explain("Reads the routes of the main table that go out of the interface: ip route on Linux, netstat on macOS. proto says where a route came from, such as dhcp, kernel or static. An interface with no routes has none; one the host does not have is not found.").
+		Example("--target web-01 --name eth0", "An interface with routes").
+		Example("--target web-01 --name eth1", "An interface with no routes").
+		Example("--target web-01 --name en0", "A Mac").
+		Result("The command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| An interface the host does not have | `--name eth9` | not found |\n| A name that is not an interface name | `--name \"eth0;reboot\"` | Name |").
 		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host does not have what the request names, such as the object of a deploy."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotManaged), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotInstalled)),
-	endpoint.Get[GetRequest, NetworkRouteGetResponse]("get").
-		Handle(HandleGet).
-		ID("GetNodeNetworkRouteByKey").
-		Describe("Get the routes of an interface").
-		Permission("network:read").
-		Returns("Each target host's result.").
-		Explain("Reads the routes of the main table that go out of the interface, as list does. An interface with no routes has none; one the host does not have is not found.").
-		Example("--target web-01 --interface-name eth0", "An interface with routes").
-		Example("--target web-01 --interface-name eth1", "An interface with no routes").
-		Example("--target web-01 --interface-name en0", "A Mac").
-		Result("The command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| An interface the host does not have | `--interface-name eth9` | not found |\n| A name that is not an interface name | `--interface-name \"eth0;reboot\"` | InterfaceName |").
-		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no route with that interface_name."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotManaged), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotInstalled)),
-	endpoint.Post[CreateRequest, NetworkRouteCreateResponse]("create").
+	endpoint.Post[CreateRequest, NetworkInterfaceRouteCreateResponse]("create").
 		Handle(HandleCreate).
-		ID("PostNodeNetworkRoute").
-		Describe("Add static routes to an interface").
+		ID("PostNodeNetworkInterfaceRoute").
+		Describe("Add a static route to an interface").
 		Permission("network:write").
 		Returns("Each target host's result, with whether it changed.").
-		Explain("Writes a netplan file of the interface's routes, such as /etc/netplan/osapi-osapi0-routes.yaml for osapi0, under a netplan definition that is the interface's own, and applies it. A default route is refused: the interface behavior sets the gateway. An interface the host does not have is not found. An interface that a match defines, such as cloud-init's all for en*, is refused, because the routes would go on each interface the match takes, now and later. An interface osapi already has routes of does not change: update replaces them. It runs on the Debian family, and elsewhere, and in a container, reports skipped.").
-		Example("--target web-01 --interface-name osapi0 --routes \"198.51.100.0/24 via 192.0.2.1\" --routes \"2001:db8:1::/48 via 2001:db8::1 metric 200\"", "Two routes").
-		Example("--target web-01 --interface-name osapi0 --routes \"198.51.100.0/24 via 192.0.2.1\" --routes \"2001:db8:1::/48 via 2001:db8::1 metric 200\"", "An interface osapi already has routes of").
-		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Two routes | runs `netplan generate`; runs `netplan apply`; writes `/etc/netplan/osapi-osapi0-routes.yaml`: `network:\\n  version: 2\\n  ethernets:\\n    osapi0:\\n      routes:\\n        - to: 198.51.100.0/24\\n          via: 192.0.2.1\\n        - to: 2001:db8:1::/48\\n          via: 2001:db8::1\\n          metric: 200` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A default route | `--interface-name osapi0 --routes \"0.0.0.0/0 via 192.0.2.1\"` | default route |\n| A default route on an interface osapi already has routes of | `--interface-name osapi0 --routes \"::/0 via 2001:db8::1\"` | default route |\n| An interface in a match that takes other interfaces | `--interface-name enp0s1 --routes \"198.51.100.0/24 via 192.0.2.1\" --routes \"2001:db8:1::/48 via 2001:db8::1 metric 200\"` | also takes enp0s2 |\n| An interface in a match that takes it alone, for now | `--interface-name enp0s1 --routes \"198.51.100.0/24 via 192.0.2.1\" --routes \"2001:db8:1::/48 via 2001:db8::1 metric 200\"` | any interface it matches later |\n| An interface the host does not have | `--interface-name eth9 --routes \"198.51.100.0/24 via 192.0.2.1\" --routes \"2001:db8:1::/48 via 2001:db8::1 metric 200\"` | not found |\n| No route | `--interface-name osapi0` | Routes |\n| More than 64 routes | `--interface-name osapi0 --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\"` | Routes |\n| A route without via | `--interface-name osapi0 --routes \"10.0.0.0/8 192.168.1.1\"` | Routes |\n| A destination that is not CIDR | `--interface-name osapi0 --routes \"10.0.0.0 via 192.168.1.1\"` | Routes |\n| A gateway of the other family | `--interface-name osapi0 --routes \"10.0.0.0/8 via 2001:db8::1\"` | Routes |\n| A metric that is not a number | `--interface-name osapi0 --routes \"10.0.0.0/8 via 192.168.1.1 metric x\"` | Routes |\n| A name that is not an interface name | `--interface-name \"eth0;reboot\" --routes \"198.51.100.0/24 via 192.0.2.1\" --routes \"2001:db8:1::/48 via 2001:db8::1 metric 200\"` | InterfaceName |").
-		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no route with that interface_name."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotManaged), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotInstalled)),
-	endpoint.Put[UpdateRequest, NetworkRouteUpdateResponse]("update").
+		Explain("Adds the route to the interface's netplan file, such as /etc/netplan/osapi-osapi0-routes.yaml for osapi0, under a netplan definition that is the interface's own, and applies it. A route osapi already has, the same, does not change; one to the same destination by another gateway or metric is refused: update changes it. A default route is refused: the interface behavior sets the gateway. An interface the host does not have is not found. An interface that a match defines, such as cloud-init's all for en*, is refused, because the route would go on each interface the match takes. It runs on the Debian family, and elsewhere, and in a container, reports skipped.").
+		Example("--target web-01 --name osapi0 --destination 198.51.100.0/24 --via 192.0.2.1", "A route").
+		Example("--target web-01 --name osapi0 --destination 2001:db8:1::/48 --via 2001:db8::1 --metric 200", "A second route, with a metric").
+		Example("--target web-01 --name osapi0 --destination 198.51.100.0/24 --via 192.0.2.1", "A route osapi already has").
+		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| A route | runs `netplan generate`; runs `netplan apply`; writes `/etc/netplan/osapi-osapi0-routes.yaml`: `network:\\n  version: 2\\n  ethernets:\\n    osapi0:\\n      routes:\\n        - to: 198.51.100.0/24\\n          via: 192.0.2.1` |\n| A second route, with a metric | runs `netplan generate`; runs `netplan apply`; writes `/etc/netplan/osapi-osapi0-routes.yaml`: `network:\\n  version: 2\\n  ethernets:\\n    osapi0:\\n      routes:\\n        - to: 198.51.100.0/24\\n          via: 192.0.2.1\\n        - to: 2001:db8:1::/48\\n          via: 2001:db8::1\\n          metric: 200` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A default route | `--name osapi0 --destination 0.0.0.0/0 --via 192.0.2.1` | default route |\n| A gateway of the other family | `--name osapi0 --destination 198.51.100.0/24 --via 2001:db8::1` | not an address of the family |\n| Another route to a destination osapi has | `--name osapi0 --destination 198.51.100.0/24 --via 192.0.2.2` | update changes it |\n| An interface in a match that takes other interfaces | `--name enp0s1 --destination 198.51.100.0/24 --via 192.0.2.1` | also takes enp0s2 |\n| An interface in a match that takes it alone, for now | `--name enp0s1 --destination 198.51.100.0/24 --via 192.0.2.1` | any interface it matches later |\n| An interface the host does not have | `--name eth9 --destination 198.51.100.0/24 --via 192.0.2.1` | not found |\n| A destination that is not CIDR | `--name osapi0 --destination 10.0.0.0 --via 192.0.2.1` | Destination |\n| A gateway that is not an address | `--name osapi0 --destination 198.51.100.0/24 --via gateway` | Via |\n| A metric below 0 | `--name osapi0 --destination 198.51.100.0/24 --via 192.0.2.1 --metric -1` | Metric |\n| A metric over 4294967295 | `--name osapi0 --destination 198.51.100.0/24 --via 192.0.2.1 --metric 4294967296` | Metric |\n| A name that is not an interface name | `--name \"eth0;reboot\" --destination 198.51.100.0/24 --via 192.0.2.1` | Name |").
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host does not have what the request names, such as the object of a deploy."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotManaged), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotInstalled)),
+	endpoint.Put[UpdateRequest, NetworkInterfaceRouteUpdateResponse]("update").
 		Handle(HandleUpdate).
-		ID("PutNodeNetworkRoute").
-		Describe("Change the routes osapi has of an interface").
+		ID("PutNodeNetworkInterfaceRoute").
+		Describe("Change the gateway or the metric of a route").
 		Permission("network:write").
 		Returns("Each target host's result, with whether it changed.").
-		Explain("Writes the interface's routes file over the one osapi has, as create writes it, and applies it. An interface osapi has no routes of is not found: create adds them.").
-		Example("--target web-01 --interface-name osapi0 --routes \"203.0.113.0/24 via 192.0.2.1 metric 10\"", "One route in place of two").
-		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| One route in place of two | runs `netplan generate`; runs `netplan apply`; writes `/etc/netplan/osapi-osapi0-routes.yaml`: `network:\\n  version: 2\\n  ethernets:\\n    osapi0:\\n      routes:\\n        - to: 203.0.113.0/24\\n          via: 192.0.2.1\\n          metric: 10` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| An interface osapi has no routes of | `--interface-name osapi0 --routes \"198.51.100.0/24 via 192.0.2.1\" --routes \"2001:db8:1::/48 via 2001:db8::1 metric 200\"` | not found |\n| A default route | `--interface-name osapi0 --routes \"0.0.0.0/0 via 192.0.2.1\"` | default route |\n| No route | `--interface-name osapi0` | Routes |\n| More than 64 routes | `--interface-name osapi0 --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\" --routes \"10.0.0.0/8 via 192.168.1.1\"` | Routes |\n| A route without via | `--interface-name osapi0 --routes \"10.0.0.0/8 192.168.1.1\"` | Routes |\n| A destination that is not CIDR | `--interface-name osapi0 --routes \"10.0.0.0 via 192.168.1.1\"` | Routes |\n| A gateway of the other family | `--interface-name osapi0 --routes \"10.0.0.0/8 via 2001:db8::1\"` | Routes |\n| A metric that is not a number | `--interface-name osapi0 --routes \"10.0.0.0/8 via 192.168.1.1 metric x\"` | Routes |\n| A name that is not an interface name | `--interface-name \"eth0;reboot\" --routes \"198.51.100.0/24 via 192.0.2.1\" --routes \"2001:db8:1::/48 via 2001:db8::1 metric 200\"` | InterfaceName |").
-		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no route with that interface_name."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotManaged), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotInstalled)),
-	endpoint.Delete[DeleteRequest, NetworkRouteDeleteResponse]("delete").
+		Explain("Writes the route over the one osapi has to the same destination, and applies it. A destination osapi has no route to is not found: create adds it.").
+		Example("--target web-01 --name osapi0 --destination 198.51.100.0/24 --via 192.0.2.2 --metric 10", "A new gateway and metric").
+		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| A new gateway and metric | runs `netplan generate`; runs `netplan apply`; writes `/etc/netplan/osapi-osapi0-routes.yaml`: `network:\\n  version: 2\\n  ethernets:\\n    osapi0:\\n      routes:\\n        - to: 198.51.100.0/24\\n          via: 192.0.2.2\\n          metric: 10` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A destination osapi has no route to | `--name osapi0 --destination 198.51.100.0/24 --via 192.0.2.1` | not found |\n| A destination that is not CIDR | `--name osapi0 --destination 10.0.0.0 --via 192.0.2.1` | Destination |\n| A gateway that is not an address | `--name osapi0 --destination 198.51.100.0/24 --via gateway` | Via |\n| A metric below 0 | `--name osapi0 --destination 198.51.100.0/24 --via 192.0.2.1 --metric -1` | Metric |\n| A metric over 4294967295 | `--name osapi0 --destination 198.51.100.0/24 --via 192.0.2.1 --metric 4294967296` | Metric |\n| A name that is not an interface name | `--name \"eth0;reboot\" --destination 198.51.100.0/24 --via 192.0.2.1` | Name |").
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host does not have what the request names, such as the object of a deploy."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotManaged), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotInstalled)),
+	endpoint.Delete[DeleteRequest, NetworkInterfaceRouteDeleteResponse]("delete").
 		Handle(HandleDelete).
-		ID("DeleteNodeNetworkRoute").
-		Describe("Drop the routes osapi has of an interface").
+		ID("DeleteNodeNetworkInterfaceRoute").
+		Describe("Drop a route that osapi wrote").
 		Permission("network:write").
 		Returns("Each target host's result, with whether it changed.").
-		Explain("Removes the interface's routes file and applies what is left. An interface osapi has no routes of does not change.").
-		Example("--target web-01 --interface-name osapi0", "An interface osapi has routes of").
-		Example("--target web-01 --interface-name osapi0", "An interface osapi has no routes of").
-		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| An interface osapi has routes of | removes `/etc/netplan/osapi-osapi0-routes.yaml`; runs `netplan apply` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A name that is not an interface name | `--interface-name \"eth0;reboot\"` | InterfaceName |").
-		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no route with that interface_name."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotManaged), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotInstalled)),
+		Explain("Drops the route from the interface's netplan file and applies what is left; the last route removes the file. A route osapi does not have does not change.").
+		Example("--target web-01 --name osapi0 --destination 198.51.100.0/24", "One of two routes").
+		Example("--target web-01 --name osapi0 --destination 198.51.100.0/24", "The last route").
+		Example("--target web-01 --name osapi0 --destination 198.51.100.0/24", "A route osapi does not have").
+		Result("With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| One of two routes | runs `netplan generate`; runs `netplan apply`; writes `/etc/netplan/osapi-osapi0-routes.yaml`: `network:\\n  version: 2\\n  ethernets:\\n    osapi0:\\n      routes:\\n        - to: 2001:db8:1::/48\\n          via: 2001:db8::1\\n          metric: 200` |\n| The last route | removes `/etc/netplan/osapi-osapi0-routes.yaml`; runs `netplan apply` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A destination that is not CIDR | `--name osapi0 --destination 10.0.0.0` | Destination |\n| A name that is not an interface name | `--name \"eth0;reboot\" --destination 198.51.100.0/24` | Name |").
+		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host does not have what the request names, such as the object of a deploy."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotManaged), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotInstalled)),
 )
 
 func init() {

@@ -123,7 +123,6 @@ export const BLOCK_PERMISSIONS: Record<string, Permission> = {
   "interface-update": "network:write",
   "interface-delete": "network:write",
   "route-list": "network:read",
-  "route-get": "network:read",
   "route-create": "network:write",
   "route-update": "network:write",
   "route-delete": "network:write",

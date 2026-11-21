@@ -23,169 +23,202 @@ package client
 import (
 	"context"
 	"fmt"
+	"net/http"
+
+	openapi_types "github.com/oapi-codegen/runtime/types"
 
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
-// RouteService reads the routes of a host and writes the routes osapi has
-// of an interface.
+// RouteService reads the routes of an interface of a host, and adds,
+// changes and drops the static routes that osapi writes, one at a time.
 type RouteService struct {
 	client *gen.ClientWithResponses
 }
 
-// List is the routes of each target host, one result per host.
+// RouteInfo is one route of an interface on one host.
+type RouteInfo struct {
+	Hostname    string `json:"hostname"`
+	Status      string `json:"status"`
+	Error       string `json:"error,omitempty"`
+	Destination string `json:"destination,omitempty"`
+	Gateway     string `json:"gateway,omitempty"`
+	Interface   string `json:"interface,omitempty"`
+	Family      string `json:"family,omitempty"`
+	Metric      int    `json:"metric,omitempty"`
+	Proto       string `json:"proto,omitempty"`
+	Scope       string `json:"scope,omitempty"`
+}
+
+// RouteOpts is one route: where it goes, its gateway, and its metric, none
+// when it is 0.
+type RouteOpts struct {
+	Destination string
+	Via         string
+	Metric      int
+}
+
+// RouteMutationResult is a route after a write or a removal.
+type RouteMutationResult struct {
+	Hostname    string `json:"hostname"`
+	Status      string `json:"status"`
+	Destination string `json:"destination,omitempty"`
+	Changed     bool   `json:"changed"`
+	Error       string `json:"error,omitempty"`
+}
+
+// List lists the routes of an interface on the target, one row per route
+// per host.
 func (s *RouteService) List(
 	ctx context.Context,
 	target string,
-) (*Response[Collection[RouteListResult]], error) {
-	resp, err := s.client.GetNodeNetworkRouteWithResponse(ctx, target)
+	interfaceName string,
+) (*Response[Collection[RouteInfo]], error) {
+	resp, err := s.client.GetNodeNetworkInterfaceRouteWithResponse(ctx, target, interfaceName)
 	if err != nil {
 		return nil, fmt.Errorf("route list: %w", err)
 	}
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{
-			APIError{StatusCode: resp.StatusCode(), Message: "nil response body"},
-		}
+		return nil, failed(resp.StatusCode(),
+			resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON500)
 	}
-	rows := routeRowsFromGen(resp.JSON200.Results)
-	results := make([]RouteListResult, 0, len(rows))
-	for _, r := range rows {
-		results = append(results, RouteListResult(r))
+	rows := make([]RouteInfo, 0, len(resp.JSON200.Results))
+	for _, r := range resp.JSON200.Results {
+		rows = append(rows, RouteInfo{
+			Hostname:    r.Hostname,
+			Status:      string(r.Status),
+			Error:       derefString(r.Error),
+			Destination: derefString(r.Destination),
+			Gateway:     derefString(r.Gateway),
+			Interface:   derefString(r.Interface),
+			Family:      derefString(r.Family),
+			Metric:      derefInt(r.Metric),
+			Proto:       derefString(r.Proto),
+			Scope:       derefString(r.Scope),
+		})
 	}
 
-	return newResponse(Collection[RouteListResult]{
-		Results: results, JobID: jobIDFromGen(resp.JSON200.JobId),
-	}, resp.Body, resp.HTTPResponse), nil
+	return newResponse(
+		Collection[RouteInfo]{Results: rows, JobID: jobIDFromGen(resp.JSON200.JobId)},
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
-// Get is the routes of one interface of each target host.
-func (s *RouteService) Get(
-	ctx context.Context,
-	target string,
-	interfaceName string,
-) (*Response[Collection[RouteGetResult]], error) {
-	resp, err := s.client.GetNodeNetworkRouteByKeyWithResponse(ctx, target, interfaceName)
-	if err != nil {
-		return nil, fmt.Errorf("route get: %w", err)
-	}
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
-	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{
-			APIError{StatusCode: resp.StatusCode(), Message: "nil response body"},
-		}
-	}
-
-	return newResponse(Collection[RouteGetResult]{
-		Results: routeRowsFromGen(resp.JSON200.Results), JobID: jobIDFromGen(resp.JSON200.JobId),
-	}, resp.Body, resp.HTTPResponse), nil
-}
-
-// Create writes osapi's routes of an interface on the target. An interface
-// osapi already has routes of does not change.
+// Create adds a route to an interface on the target. A route osapi already
+// has, the same, does not change.
 func (s *RouteService) Create(
 	ctx context.Context,
 	target string,
 	interfaceName string,
-	opts RouteConfigOpts,
+	opts RouteOpts,
 ) (*Response[Collection[RouteMutationResult]], error) {
-	resp, err := s.client.PostNodeNetworkRouteWithResponse(ctx, target, interfaceName,
-		gen.NetworkRouteCreateRequest{Routes: routeStrings(opts.Routes)})
+	resp, err := s.client.PostNodeNetworkInterfaceRouteWithResponse(ctx, target, interfaceName,
+		gen.NetworkInterfaceRouteCreateRequest{
+			Destination: opts.Destination, Via: opts.Via, Metric: metric(opts.Metric),
+		})
 	if err != nil {
 		return nil, fmt.Errorf("route create: %w", err)
 	}
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{
-			APIError{StatusCode: resp.StatusCode(), Message: "nil response body"},
-		}
+		return nil, failed(resp.StatusCode(),
+			resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON409, resp.JSON500)
 	}
 
-	return newResponse(routeMutationsFromGen(resp.JSON200.Results, resp.JSON200.JobId),
-		resp.Body, resp.HTTPResponse), nil
+	return routeMutation(
+		resp.JSON200.JobId,
+		resp.JSON200.Results,
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
-// Update writes osapi's routes of an interface over the ones it has on the
+// Update changes the gateway or the metric of a route that osapi has on the
 // target.
 func (s *RouteService) Update(
 	ctx context.Context,
 	target string,
 	interfaceName string,
-	opts RouteConfigOpts,
+	opts RouteOpts,
 ) (*Response[Collection[RouteMutationResult]], error) {
-	resp, err := s.client.PutNodeNetworkRouteWithResponse(ctx, target, interfaceName,
-		gen.NetworkRouteUpdateRequest{Routes: routeStrings(opts.Routes)})
+	resp, err := s.client.PutNodeNetworkInterfaceRouteWithResponse(ctx, target, interfaceName,
+		gen.NetworkInterfaceRouteUpdateRequest{
+			Destination: opts.Destination, Via: opts.Via, Metric: metric(opts.Metric),
+		})
 	if err != nil {
 		return nil, fmt.Errorf("route update: %w", err)
 	}
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{
-			APIError{StatusCode: resp.StatusCode(), Message: "nil response body"},
-		}
+		return nil, failed(resp.StatusCode(),
+			resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON409, resp.JSON500)
 	}
 
-	return newResponse(routeMutationsFromGen(resp.JSON200.Results, resp.JSON200.JobId),
-		resp.Body, resp.HTTPResponse), nil
+	return routeMutation(
+		resp.JSON200.JobId,
+		resp.JSON200.Results,
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
-// Delete drops osapi's routes of an interface on the target.
+// Delete drops the route to destination that osapi wrote on an interface of
+// the target.
 func (s *RouteService) Delete(
 	ctx context.Context,
 	target string,
 	interfaceName string,
+	destination string,
 ) (*Response[Collection[RouteMutationResult]], error) {
-	resp, err := s.client.DeleteNodeNetworkRouteWithResponse(ctx, target, interfaceName)
+	resp, err := s.client.DeleteNodeNetworkInterfaceRouteWithResponse(ctx, target, interfaceName,
+		gen.NetworkInterfaceRouteDeleteRequest{Destination: destination})
 	if err != nil {
 		return nil, fmt.Errorf("route delete: %w", err)
 	}
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{
-			APIError{StatusCode: resp.StatusCode(), Message: "nil response body"},
-		}
+		return nil, failed(resp.StatusCode(),
+			resp.JSON400, resp.JSON401, resp.JSON403, resp.JSON404, resp.JSON409, resp.JSON500)
 	}
 
-	return newResponse(routeMutationsFromGen(resp.JSON200.Results, resp.JSON200.JobId),
-		resp.Body, resp.HTTPResponse), nil
+	return routeMutation(
+		resp.JSON200.JobId,
+		resp.JSON200.Results,
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
+}
+
+// metric is the metric of a request: none when it is 0.
+func metric(
+	m int,
+) *int {
+	if m == 0 {
+		return nil
+	}
+
+	return &m
+}
+
+// routeMutation is the response of a route write.
+func routeMutation(
+	jobID *openapi_types.UUID,
+	rows []gen.NetworkInterfaceRouteResult,
+	body []byte,
+	httpResp *http.Response,
+) *Response[Collection[RouteMutationResult]] {
+	results := make([]RouteMutationResult, 0, len(rows))
+	for _, r := range rows {
+		results = append(results, RouteMutationResult{
+			Hostname:    r.Hostname,
+			Status:      string(r.Status),
+			Destination: derefString(r.Destination),
+			Changed:     derefBool(r.Changed),
+			Error:       derefString(r.Error),
+		})
+	}
+
+	return newResponse(
+		Collection[RouteMutationResult]{Results: results, JobID: jobIDFromGen(jobID)},
+		body,
+		httpResp,
+	)
 }

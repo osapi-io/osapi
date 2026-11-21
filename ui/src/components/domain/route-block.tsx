@@ -7,12 +7,15 @@ interface RouteBlockProps {
   data: Record<string, unknown>;
   onChange: (data: Record<string, unknown>) => void;
   onStatusChange: (status: BlockStatus) => void;
+  /** Only the destination names the route, as a delete does. */
+  destinationOnly?: boolean;
 }
 
 export function RouteBlock({
   data,
   onChange,
   onStatusChange,
+  destinationOnly = false,
 }: RouteBlockProps) {
   const interfaceName = (data.interface_name as string) || "";
   const to = (data.to as string) || "";
@@ -21,12 +24,16 @@ export function RouteBlock({
   const prevStatus = useRef<BlockStatus | null>(null);
 
   useEffect(() => {
-    const next: BlockStatus = interfaceName.trim() !== "" ? "ready" : "pending";
+    const named =
+      interfaceName.trim() !== "" &&
+      to.trim() !== "" &&
+      (destinationOnly || via.trim() !== "");
+    const next: BlockStatus = named ? "ready" : "pending";
     if (next !== prevStatus.current) {
       prevStatus.current = next;
       onStatusChange(next);
     }
-  }, [interfaceName, onStatusChange]);
+  }, [interfaceName, to, via, destinationOnly, onStatusChange]);
 
   const update = (field: string, value: string) => {
     onChange({ ...data, [field]: value });
@@ -41,7 +48,9 @@ export function RouteBlock({
         value={interfaceName}
         onChange={(v) => update("interface_name", v)}
       />
-      <div className="grid grid-cols-3 gap-3">
+      <div
+        className={destinationOnly ? "grid gap-3" : "grid grid-cols-3 gap-3"}
+      >
         <Input
           id="route-to"
           label="Destination (to)"
@@ -49,20 +58,24 @@ export function RouteBlock({
           value={to}
           onChange={(e) => update("to", e.target.value)}
         />
-        <Input
-          id="route-via"
-          label="Gateway (via)"
-          placeholder="192.168.1.1"
-          value={via}
-          onChange={(e) => update("via", e.target.value)}
-        />
-        <Input
-          id="route-metric"
-          label="Metric (optional)"
-          placeholder="100"
-          value={metric}
-          onChange={(e) => update("metric", e.target.value)}
-        />
+        {!destinationOnly && (
+          <>
+            <Input
+              id="route-via"
+              label="Gateway (via)"
+              placeholder="192.168.1.1"
+              value={via}
+              onChange={(e) => update("via", e.target.value)}
+            />
+            <Input
+              id="route-metric"
+              label="Metric (optional)"
+              placeholder="100"
+              value={metric}
+              onChange={(e) => update("metric", e.target.value)}
+            />
+          </>
+        )}
       </div>
     </div>
   );
