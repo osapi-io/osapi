@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Behaviors | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/architecture/behaviors"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Behaviors | OSAPI"><meta data-rh="true" name="description" content="A behavior is one thing that osapi manages on a host, for example kernel"><meta data-rh="true" property="og:description" content="A behavior is one thing that osapi manages on a host, for example kernel"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/architecture/behaviors"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/behaviors" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/behaviors" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Architecture","item":"https://osapi-io.github.io/osapi/sidebar/architecture/"},{"@type":"ListItem","position":2,"name":"Behaviors","item":"https://osapi-io.github.io/osapi/sidebar/architecture/behaviors"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.c840f078.css">
-<script src="/osapi/assets/js/runtime~main.4d510917.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.19bc071e.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.cb08b381.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.1c0597e6.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -77,6 +77,23 @@ that requires it unsupported there too. Its methods report <code>skipped</code>.
 requirements make a cycle.</li>
 <li class=""><strong><code>behavior get</code> and the Behaviors pages</strong> show what each behavior uses, and
 what uses it.</li>
+</ul>
+<p>The behaviors that a behavior calls, and the ones that they call, are a
+<strong>chain</strong>: <code>dns → netplan → managedfile</code>. The chain has the name of the behavior
+at its top. It is not declared on its own: <code>Requires</code> on each behavior makes it.
+<code>osapi behavior chain</code> shows and checks the chains:</p>
+<ul>
+<li class=""><code>osapi behavior chain list</code> shows each chain as a tree, and what calls each
+building block.</li>
+<li class=""><code>osapi behavior chain get --name dns</code> runs each example of dns on the fake
+host that <code>go test</code> uses, and shows each call that it makes: what each call
+sends and gets. Thus it shows what the code does now.</li>
+<li class=""><code>osapi behavior chain validate</code> checks the chain rules. A required behavior is
+registered, and no requirement makes a cycle. An internal behavior has a
+behavior that requires it. A provider calls only the behaviors that its
+behavior requires. An example calls each behavior that a behavior requires.</li>
+<li class=""><code>osapi behavior chain spec get</code> tells how to build a chain, what happens when
+a step fails, and the building blocks of the binary.</li>
 </ul>
 <p>A behavior that only other behaviors use is <strong>internal</strong>. <code>managedfile</code> has no
 route, no command and no permissions, because only other behaviors call it.
