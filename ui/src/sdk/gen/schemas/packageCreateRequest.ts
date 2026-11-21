@@ -17,5 +17,5 @@ export interface PackageCreateRequest {
      * @maxLength 255
      * @pattern ^[0-9][A-Za-z0-9.+~:-]*$
      */
-  version: string;
+  version?: string;
 }

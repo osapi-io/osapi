@@ -45,6 +45,10 @@ The rules:
   answers 400 to a value that breaks it. Fix: Add validate:"..." to the field,
   such as validate:"required,min=1,max=255", or validate:"omitempty" for an
   optional field with no other rule.
+- `optional`: An optional field of a write's request body, its validate tag
+  starting with omitempty, has omitempty in its json tag too, so the client
+  leaves it out when it is empty. Fix: Add ,omitempty to the field's json tag,
+  such as json:"version,omitempty".
 - `fails`: Each rule of an input field has a .Fails input that breaks it, which
   the API refuses with 400. An endpoint's required needs one, with the field
   empty; a behavior's needs none, as its generated tests leave the field out. A

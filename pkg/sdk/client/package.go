@@ -110,7 +110,10 @@ func (s *PackageService) Install(
 	name string,
 	version string,
 ) (*Response[Collection[PackageMutationResult]], error) {
-	body := gen.PackageCreateRequest{Name: name, Version: version}
+	body := gen.PackageCreateRequest{Name: name}
+	if version != "" {
+		body.Version = &version
+	}
 	resp, err := s.client.PostNodePackageWithResponse(
 		ctx,
 		hostname,
