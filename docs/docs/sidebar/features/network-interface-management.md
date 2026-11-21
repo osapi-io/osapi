@@ -82,20 +82,15 @@ The DNS behavior also supports delete: it removes the interface's own
   to the target, and renames it over the target. Thus `netplan generate` never
   reads a file that is only partly written.
 
-## Operations
+## Permissions and platforms
 
-| Operation        | Description                                      |
-| ---------------- | ------------------------------------------------ |
-| Interface List   | List all interfaces on the host                  |
-| Interface Get    | Get configuration for a specific interface       |
-| Interface Create | Create a new Netplan interface config            |
-| Interface Update | Replace an existing Netplan interface config     |
-| Interface Delete | Remove an OSAPI-managed interface config         |
-| Route List       | List the routes of an interface                  |
-| Route Create     | Add one static route to an interface             |
-| Route Update     | Change the gateway or metric of one route        |
-| Route Delete     | Drop one route that osapi wrote                  |
-| DNS Delete       | Remove OSAPI-managed DNS config for an interface |
+The generated page of each behavior gives the permission, the platforms and the
+route of each method: [dns](../reference/behaviors/dns/dns.md),
+[interface](../reference/behaviors/interface/interface.md),
+[route](../reference/behaviors/route/route.md). The pages come from the
+definitions, so they stay true when a method changes, and this page does not
+copy them. [Authentication](authentication.md) tells which permissions each role
+has.
 
 ## CLI usage
 
@@ -174,38 +169,11 @@ Responses always include per-host results:
 
 Skipped and failed hosts appear with their error in the output.
 
-## Supported platforms
-
-| OS Family | Interface and route list, get | Interface and route writes |
-| --------- | ----------------------------- | -------------------------- |
-| Debian    | Yes                           | Yes                        |
-| Linux     | Yes                           | Skipped                    |
-| Darwin    | Yes                           | Skipped                    |
-
-On a platform that is not supported, an operation returns `status: skipped`. It
-does not fail. Refer to [Platform Detection](../sdk/platform/detection.md) for
-how osapi finds the OS family.
-
 ## Container behavior
 
 Interface and route writes return `status: skipped` inside containers. List and
 get read the container's own interfaces and routes. Netplan requires direct host
 access and is not available in standard container environments.
-
-## Permissions
-
-| Operation                        | Permission      |
-| -------------------------------- | --------------- |
-| Interface List, Get              | `network:read`  |
-| Interface Create, Update, Delete | `network:write` |
-| Route List, Get                  | `network:read`  |
-| Route Create, Update, Delete     | `network:write` |
-| DNS Get                          | `network:read`  |
-| DNS Update, Delete               | `network:write` |
-
-Network read operations require `network:read`, included in all built-in roles
-(`admin`, `write`, `read`). Mutation operations require `network:write`,
-included in the `admin` and `write` roles.
 
 ## Related
 

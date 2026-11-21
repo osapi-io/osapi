@@ -15,7 +15,7 @@ privileges, and the agents make the changes.
 | DNS       | Read, Update, Delete | Nameservers and search domains per interface  |
 | Ping      | Read                 | ICMP connectivity check to a target host      |
 | Interface | Full CRUD            | Each interface, and osapi's Netplan config    |
-| Route     | Full CRUD            | Each route, and osapi's Netplan static routes |
+| Route     | Full CRUD            | The static routes of an interface, one a call |
 
 For interface and route management details, see
 [Network Interface Management](network-interface-management.md).
@@ -83,27 +83,17 @@ Network management uses the general job system. It needs no configuration of its
 own. Refer to [Configuration](../usage/configuration.md) for NATS, agent, and
 authentication settings.
 
-## Permissions
+## Permissions and platforms
 
-| Operation        | Permission      |
-| ---------------- | --------------- |
-| DNS get          | `network:read`  |
-| DNS update       | `network:write` |
-| DNS delete       | `network:write` |
-| Interface list   | `network:read`  |
-| Interface get    | `network:read`  |
-| Interface create | `network:write` |
-| Interface update | `network:write` |
-| Interface delete | `network:write` |
-| Route list       | `network:read`  |
-| Route get        | `network:read`  |
-| Route create     | `network:write` |
-| Route update     | `network:write` |
-| Route delete     | `network:write` |
-| Ping             | `network:read`  |
+The generated page of each behavior gives the permission, the platforms and the
+route of each method: [dns](../reference/behaviors/dns/dns.md),
+[interface](../reference/behaviors/interface/interface.md),
+[route](../reference/behaviors/route/route.md). The pages come from the
+definitions, so they stay true when a method changes, and this page does not
+copy them. [Authentication](authentication.md) tells which permissions each role
+has.
 
-The `admin` and `write` roles include both `network:read` and `network:write`.
-The `read` role includes only `network:read`.
+Ping is not a behavior: it needs `network:read`.
 
 ## Related
 

@@ -61,15 +61,13 @@ sysctl is a [behavior](../reference/behaviors/sysctl/sysctl.md). Each entry also
 says whether osapi manages it, and list takes a `--prefix`, such as `net.ipv4`,
 to return one part of the tree.
 
-## Operations
+## Permissions and platforms
 
-| Operation | Description                                                 |
-| --------- | ----------------------------------------------------------- |
-| List      | List every parameter and its current value                  |
-| Get       | Get any parameter's current value                           |
-| Create    | Write a drop-in and apply it (idempotent)                   |
-| Update    | The same as create, addressed by key; manages it if not yet |
-| Delete    | Remove the drop-in; the value stays until reboot            |
+The generated page of each behavior gives the permission, the platforms and the
+route of each method: [sysctl](../reference/behaviors/sysctl/sysctl.md). The
+pages come from the definitions, so they stay true when a method changes, and
+this page does not copy them. [Authentication](authentication.md) tells which
+permissions each role has.
 
 ## CLI usage
 
@@ -133,28 +131,6 @@ with letters, digits, dots, underscores and hyphens. A key must start with a
 letter or a digit (`^[a-zA-Z0-9][a-zA-Z0-9._-]*$`). This includes each key that
 sysctl knows. The API and the provider of the agent both validate the shape of
 the key and the value before they apply a change.
-
-## Supported platforms
-
-| OS Family | Support |
-| --------- | ------- |
-| Debian    | Full    |
-| Darwin    | Skipped |
-| Linux     | Skipped |
-
-On a platform that is not supported, sysctl operations return `status: skipped`.
-They do not fail. Refer to [Platform Detection](../sdk/platform/detection.md)
-for how osapi finds the OS family.
-
-## Permissions
-
-| Operation              | Permission     |
-| ---------------------- | -------------- |
-| List, Get              | `sysctl:read`  |
-| Create, Update, Delete | `sysctl:write` |
-
-All built-in roles (`admin`, `write`, `read`) include `sysctl:read`. The `admin`
-and `write` roles also include `sysctl:write`.
 
 ## Related
 
