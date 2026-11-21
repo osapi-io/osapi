@@ -46,9 +46,10 @@ type provider struct{}
 type input struct {
 	Key     string   `json:"key"   validate:"required" doc:"The key"`
 	Force   bool     `json:"force"                     doc:"Force it"`
-	Count   int64    `json:"count"`
+	Count   int      `json:"count"`
 	Ratio   float32  `json:"ratio"`
 	Tags    []string `json:"tags"`
+	Big     int64    `json:"big"`
 	NoJSON  string
 	Skipped string `json:"-"`
 }
@@ -96,7 +97,7 @@ func (s *BehaviorcmdPublicTestSuite) TestFlags() {
 				},
 				{Name: "force", JSON: "force", Kind: reflect.Bool, Usage: "Force it", Index: 1},
 				{Name: "count", JSON: "count", Kind: reflect.Int, Index: 2},
-				{Name: "ratio", JSON: "ratio", Kind: reflect.Float64, Index: 3},
+				{Name: "tags", JSON: "tags", Kind: reflect.Slice, Index: 4},
 			},
 		},
 		{
@@ -134,9 +135,9 @@ func (s *BehaviorcmdPublicTestSuite) TestFlags() {
 func (s *BehaviorcmdPublicTestSuite) TestArgs() {
 	s.Nil(command.Args(nil))
 	s.Equal(
-		[]string{"--key", "k", "--count", "2"},
-		command.Args(input{Key: "k", Count: 2, Tags: []string{"a"}}),
-		"zero fields and fields no flag holds are left out",
+		[]string{"--key", "k", "--count", "2", "--tags", "a", "--tags", "b"},
+		command.Args(input{Key: "k", Count: 2, Tags: []string{"a", "b"}, Ratio: 0.5, Big: 9}),
+		"zero fields and fields no flag holds are left out; a list is the flag once each",
 	)
 	s.Equal(
 		[]string{"--vars", "a=1", "--vars", "b=2"},
@@ -343,7 +344,7 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 	)
 
 	s.Equal(
-		"  # Every key\n  osapi client node store kv list --target web-01 --key k --force true --count 2\n\n"+
+		"  # Every key\n  osapi client node store kv list --target web-01 --key k --force --count 2\n\n"+
 			"  # No keys\n  osapi client node store kv list --target web-01 --key none",
 		command.Example(b, b.Method("list")),
 	)

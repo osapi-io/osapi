@@ -43,8 +43,8 @@ var Checks = guide.Checks{
 	},
 	{
 		Rule:     RuleDoc,
-		Requires: "The behavior and each method have a description.",
-		Fix:      "Give Define a one-line description, and each method .Describe(\"...\").",
+		Requires: "The behavior and each method have a description. No description or .Explain text has < > { or }: the docs site reads them as markup, and the page fails to build.",
+		Fix:      "Give Define a one-line description, and each method .Describe(\"...\"). Name a placeholder with an example, such as osapi-dns-eth0.yaml for eth0, not osapi-dns-<interface>.yaml.",
 	},
 	{
 		Rule:     RuleMethods,

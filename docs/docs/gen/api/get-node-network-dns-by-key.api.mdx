@@ -1,0 +1,69 @@
+---
+id: get-node-network-dns-by-key
+title: "Get the DNS resolvers of an interface"
+description: "Reads the servers and the search domains of the interface: resolvectl on Linux, with resolv.conf on a host that has no resolvers per interface, such as a container, and scutil on macOS."
+sidebar_label: "Get the DNS resolvers of an interface"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "get api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Get the DNS resolvers of an interface"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/api/node/{hostname}/network/dns/{interface_name}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Reads the servers and the search domains of the interface: resolvectl on Linux, with resolv.conf on a host that has no resolvers per interface, such as a container, and scutil on macOS.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./get-node-network-dns-by-key.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./get-node-network-dns-by-key.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./get-node-network-dns-by-key.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

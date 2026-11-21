@@ -35,7 +35,6 @@ import (
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job/mocks"
 	commandMocks "github.com/osapi-io/osapi/internal/provider/command/mocks"
-	dnsMocks "github.com/osapi-io/osapi/internal/provider/network/netplan/dns/mocks"
 	pingMocks "github.com/osapi-io/osapi/internal/provider/network/ping/mocks"
 	diskMocks "github.com/osapi-io/osapi/internal/provider/node/disk/mocks"
 	hostMocks "github.com/osapi-io/osapi/internal/provider/node/host/mocks"
@@ -84,7 +83,6 @@ func (s *ConsumerPublicTestSuite) SetupTest() {
 		diskProvider:    diskMocks.NewDefaultMockProvider(s.mockCtrl),
 		memoryProvider:  memoryMocks.NewDefaultMockProvider(s.mockCtrl),
 		loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
-		dnsProvider:     dnsMocks.NewDefaultMockProvider(s.mockCtrl),
 		pingProvider:    pingMocks.NewDefaultMockProvider(s.mockCtrl),
 		commandProvider: commandMocks.NewDefaultMockProvider(s.mockCtrl),
 		processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
@@ -635,8 +633,8 @@ func (s *ConsumerPublicTestSuite) TestHandleJobMessageJS() {
 					Return([]byte(`{
 						"id": "test-job-123",
 						"operation": {
-							"type": "network.dns.get",
-							"data": {"interface": "wlp0s20f3"}
+							"type": "network.ping.do",
+							"data": {"address": "1.1.1.1"}
 						}
 					}`), nil)
 

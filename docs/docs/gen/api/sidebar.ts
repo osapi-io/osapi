@@ -506,34 +506,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Network/DNS",
-      link: {
-        type: "doc",
-        id: "gen/api/network-management-api-dns-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/get-node-network-dns-by-interface",
-          label: "List DNS servers",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/put-node-network-dns",
-          label: "Update DNS servers",
-          className: "api-method put",
-        },
-        {
-          type: "doc",
-          id: "gen/api/delete-node-network-dns",
-          label: "Delete DNS configuration",
-          className: "api-method delete",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Node/Network/Interface",
       link: {
         type: "doc",
@@ -977,6 +949,34 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/get-node-memory",
           label: "Get the memory usage of the host",
           className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Dns",
+      link: {
+        type: "doc",
+        id: "gen/api/dns-api-network-dns-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/delete-node-network-dns",
+          label: "Drop the DNS resolvers osapi set on an interface",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-network-dns-by-key",
+          label: "Get the DNS resolvers of an interface",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-network-dns",
+          label: "Set the DNS resolvers of an interface",
+          className: "api-method put",
         },
       ],
     },

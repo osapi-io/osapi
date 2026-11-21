@@ -41,10 +41,7 @@ const ()
 
 // Network operations.
 const (
-	OpNetworkDNSGet    JobOperation = "network.dns.get"
-	OpNetworkDNSUpdate JobOperation = "network.dns.update"
-	OpNetworkDNSDelete JobOperation = "network.dns.delete"
-	OpNetworkPingDo    JobOperation = "network.ping.do"
+	OpNetworkPingDo JobOperation = "network.ping.do"
 )
 
 // Command operations — execute arbitrary commands on agents.

@@ -121,6 +121,22 @@ func Args(
 
 			continue
 		}
+		// A bool flag is set by its name: cobra reads a word after it as
+		// an argument, so --force true is a command with an extra word.
+		if f.Kind == reflect.Bool {
+			args = append(args, "--"+f.Name)
+
+			continue
+		}
+		// A list is the flag given once for each value.
+		if f.Kind == reflect.Slice {
+			values, _ := fv.Interface().([]string)
+			for _, value := range values {
+				args = append(args, "--"+f.Name, value)
+			}
+
+			continue
+		}
 		args = append(args, "--"+f.Name, fmt.Sprint(fv.Interface()))
 	}
 
@@ -200,21 +216,19 @@ func jsonName(
 func flagKind(
 	t reflect.Type,
 ) reflect.Kind {
-	if t == reflect.TypeFor[map[string]string]() {
-		return reflect.Map
+	// The CLI owns which types a flag holds: a field it does not flag is
+	// not a flag here either, so the docs, the examples and the tests
+	// show the command that the generator builds.
+	if !clicommand.Flaggable(t) || t == reflect.TypeFor[[]byte]() {
+		return reflect.Invalid
 	}
 	switch t.Kind() {
-	case reflect.String:
-		return reflect.String
-	case reflect.Bool:
-		return reflect.Bool
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return reflect.Int
-	case reflect.Float32, reflect.Float64:
-		return reflect.Float64
+	case reflect.Map:
+		return reflect.Map
+	case reflect.Slice:
+		return reflect.Slice
 	default:
-		return reflect.Invalid
+		return t.Kind()
 	}
 }
 

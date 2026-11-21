@@ -244,6 +244,13 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 			},
 		},
 		{
+			name: "when a description or explanation has markup",
+			b: behavior.Define("sysctl", "a <key>", behavior.Node, onDebian,
+				behavior.Read("get", get).Describe("Get {key}").Explain("Writes osapi-<key>.conf"),
+			),
+			wantRules: []string{behavior.RuleDoc, behavior.RuleDoc, behavior.RuleDoc},
+		},
+		{
 			name: "when a method is declared twice without a description",
 			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
 				behavior.Read("get", get),

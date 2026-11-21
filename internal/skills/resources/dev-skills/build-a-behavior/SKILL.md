@@ -136,6 +136,20 @@ sends each one through the routes. `validate` names a rule that has none.
 In an endpoint, a required field needs one too, with the field empty. In a behavior it needs none, because the generated tests leave the field out. You
 write the bad value, because a generator cannot know one for a custom rule.
 
+The behavior's tests run each refusal as the agent does: the `validate` rules
+first, then the method. A refusal that a rule refuses holds with the rule's
+text, such as `"'max' tag"`, and the provider need not check it again. A
+refusal that no tag can say, such as "not found", or a check the provider makes
+as well, such as of a program's argument, holds with the provider's error.
+
+Work that two behaviors share is a building block, not a copy. The `netplan`
+behavior writes a file under `/etc/netplan`, validates it with `netplan
+generate`, removes it again when that fails, and applies it. dns requires it,
+and so will interfaces and routes. Its `get` gives the netplan ID of the
+definition that matches an interface, such as cloud-init's `all` for `en*`. A
+write goes under that ID, because netplan ignores a second definition of the
+same interface.
+
 ## Build a new one
 
 1. Write it: `go run . behavior create --name <name> --description "<one line>"`,

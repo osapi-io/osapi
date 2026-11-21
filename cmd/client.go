@@ -126,7 +126,9 @@ func init() {
 		Error:     func(err error) { cli.HandleError(err, logger) },
 		PrintJSON: cli.PrintJSON,
 		Print:     cli.Printer{},
-	}); err != nil {
+		// These are written by hand, and their inits run after this one: a
+		// behavior goes Under them, as network dns does.
+	}, clientNodeNetworkCmd); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}

@@ -24,7 +24,7 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
-// DNSConfig represents DNS configuration from a single agent.
+// DNSConfig is the DNS resolvers of an interface on one host.
 type DNSConfig struct {
 	Hostname      string   `json:"hostname"`
 	Status        string   `json:"status"`
@@ -34,7 +34,7 @@ type DNSConfig struct {
 	SearchDomains []string `json:"search_domains,omitempty"`
 }
 
-// DNSUpdateResult represents DNS update result from a single agent.
+// DNSUpdateResult is an interface's resolvers after an update on one host.
 type DNSUpdateResult struct {
 	Hostname string `json:"hostname"`
 	Status   string `json:"status"`
@@ -42,7 +42,7 @@ type DNSUpdateResult struct {
 	Changed  bool   `json:"changed"`
 }
 
-// DNSDeleteResult represents DNS delete result from a single agent.
+// DNSDeleteResult is an interface's resolvers after a removal on one host.
 type DNSDeleteResult struct {
 	Hostname string `json:"hostname"`
 	Status   string `json:"status"`
@@ -50,42 +50,29 @@ type DNSDeleteResult struct {
 	Changed  bool   `json:"changed"`
 }
 
-// dnsConfigCollectionFromGen converts a gen.DNSConfigCollectionResponse to a Collection[DNSConfig].
-func dnsConfigCollectionFromGen(
-	g *gen.DNSConfigCollectionResponse,
+func dnsConfigsFromGen(
+	g *gen.NetworkDnsGetResponse,
 ) Collection[DNSConfig] {
 	results := make([]DNSConfig, 0, len(g.Results))
 	for _, r := range g.Results {
-		dc := DNSConfig{
-			Hostname: r.Hostname,
-			Status:   string(r.Status),
-			Error:    derefString(r.Error),
-			Changed:  derefBool(r.Changed),
-		}
-
-		if r.Servers != nil {
-			dc.Servers = *r.Servers
-		}
-
-		if r.SearchDomains != nil {
-			dc.SearchDomains = *r.SearchDomains
-		}
-
-		results = append(results, dc)
+		results = append(results, DNSConfig{
+			Hostname:      r.Hostname,
+			Status:        string(r.Status),
+			Error:         derefString(r.Error),
+			Servers:       derefStrings(r.Servers),
+			SearchDomains: derefStrings(r.SearchDomains),
+		})
 	}
 
-	return Collection[DNSConfig]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
-	}
+	return Collection[DNSConfig]{Results: results, JobID: jobIDFromGen(g.JobId)}
 }
 
-// dnsUpdateCollectionFromGen converts a gen.DNSUpdateCollectionResponse to a Collection[DNSUpdateResult].
-func dnsUpdateCollectionFromGen(
-	g *gen.DNSUpdateCollectionResponse,
-) Collection[DNSUpdateResult] {
-	results := make([]DNSUpdateResult, 0, len(g.Results))
-	for _, r := range g.Results {
+// dnsResults is the per-host rows of an update or a delete.
+func dnsResults(
+	rows []gen.NetworkDnsResult,
+) []DNSUpdateResult {
+	results := make([]DNSUpdateResult, 0, len(rows))
+	for _, r := range rows {
 		results = append(results, DNSUpdateResult{
 			Hostname: r.Hostname,
 			Status:   string(r.Status),
@@ -94,29 +81,16 @@ func dnsUpdateCollectionFromGen(
 		})
 	}
 
-	return Collection[DNSUpdateResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
-	}
+	return results
 }
 
-// dnsDeleteCollectionFromGen converts a gen.DNSDeleteCollectionResponse
-// to a Collection[DNSDeleteResult].
-func dnsDeleteCollectionFromGen(
-	g *gen.DNSDeleteCollectionResponse,
-) Collection[DNSDeleteResult] {
-	results := make([]DNSDeleteResult, 0, len(g.Results))
-	for _, r := range g.Results {
-		results = append(results, DNSDeleteResult{
-			Hostname: r.Hostname,
-			Status:   string(r.Status),
-			Error:    derefString(r.Error),
-			Changed:  derefBool(r.Changed),
-		})
+// derefStrings is the list a pointer holds, or nil.
+func derefStrings(
+	p *[]string,
+) []string {
+	if p == nil {
+		return nil
 	}
 
-	return Collection[DNSDeleteResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
-	}
+	return *p
 }

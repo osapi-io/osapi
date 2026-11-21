@@ -27,23 +27,21 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
-// DNSService provides DNS configuration query and update operations.
+// DNSService reads and sets the DNS resolvers of a host's interfaces.
 type DNSService struct {
 	client *gen.ClientWithResponses
 }
 
-// Get retrieves DNS configuration for a network interface on the
-// target host.
+// Get is the DNS resolvers of an interface on the target.
 func (s *DNSService) Get(
 	ctx context.Context,
 	target string,
 	interfaceName string,
 ) (*Response[Collection[DNSConfig]], error) {
-	resp, err := s.client.GetNodeNetworkDNSByInterfaceWithResponse(ctx, target, interfaceName)
+	resp, err := s.client.GetNodeNetworkDnsByKeyWithResponse(ctx, target, interfaceName)
 	if err != nil {
 		return nil, fmt.Errorf("get dns: %w", err)
 	}
-
 	if err := checkError(
 		resp.StatusCode(),
 		resp.JSON400,
@@ -53,19 +51,17 @@ func (s *DNSService) Get(
 	); err != nil {
 		return nil, err
 	}
-
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
+		return nil, &UnexpectedStatusError{
+			APIError{StatusCode: resp.StatusCode(), Message: "nil response body"},
+		}
 	}
 
-	return newResponse(dnsConfigCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
+	return newResponse(dnsConfigsFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
-// Update updates DNS configuration for a network interface on the
-// target host.
+// Update sets the DNS resolvers of an interface on the target. An empty
+// list keeps the interface's own servers or domains.
 func (s *DNSService) Update(
 	ctx context.Context,
 	target string,
@@ -74,27 +70,20 @@ func (s *DNSService) Update(
 	searchDomains []string,
 	overrideDHCP bool,
 ) (*Response[Collection[DNSUpdateResult]], error) {
-	body := gen.DNSConfigUpdateRequest{
-		InterfaceName: interfaceName,
-	}
-
+	body := gen.NetworkDnsUpdateRequest{}
 	if len(servers) > 0 {
 		body.Servers = &servers
 	}
-
 	if len(searchDomains) > 0 {
 		body.SearchDomains = &searchDomains
 	}
-
 	if overrideDHCP {
 		body.OverrideDhcp = &overrideDHCP
 	}
-
-	resp, err := s.client.PutNodeNetworkDNSWithResponse(ctx, target, body)
+	resp, err := s.client.PutNodeNetworkDnsWithResponse(ctx, target, interfaceName, body)
 	if err != nil {
 		return nil, fmt.Errorf("update dns: %w", err)
 	}
-
 	if err := checkError(
 		resp.StatusCode(),
 		resp.JSON400,
@@ -104,33 +93,27 @@ func (s *DNSService) Update(
 	); err != nil {
 		return nil, err
 	}
-
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
+		return nil, &UnexpectedStatusError{
+			APIError{StatusCode: resp.StatusCode(), Message: "nil response body"},
+		}
 	}
 
-	return newResponse(dnsUpdateCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
+	return newResponse(Collection[DNSUpdateResult]{
+		Results: dnsResults(resp.JSON200.Results), JobID: jobIDFromGen(resp.JSON200.JobId),
+	}, resp.Body, resp.HTTPResponse), nil
 }
 
-// Delete removes DNS configuration for a network interface on the
-// target host.
+// Delete drops the DNS resolvers osapi set on an interface on the target.
 func (s *DNSService) Delete(
 	ctx context.Context,
 	target string,
 	interfaceName string,
 ) (*Response[Collection[DNSDeleteResult]], error) {
-	body := gen.DNSDeleteRequest{
-		InterfaceName: interfaceName,
-	}
-
-	resp, err := s.client.DeleteNodeNetworkDNSWithResponse(ctx, target, body)
+	resp, err := s.client.DeleteNodeNetworkDnsWithResponse(ctx, target, interfaceName)
 	if err != nil {
 		return nil, fmt.Errorf("delete dns: %w", err)
 	}
-
 	if err := checkError(
 		resp.StatusCode(),
 		resp.JSON400,
@@ -140,13 +123,18 @@ func (s *DNSService) Delete(
 	); err != nil {
 		return nil, err
 	}
-
 	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
+		return nil, &UnexpectedStatusError{
+			APIError{StatusCode: resp.StatusCode(), Message: "nil response body"},
+		}
+	}
+	rows := dnsResults(resp.JSON200.Results)
+	results := make([]DNSDeleteResult, 0, len(rows))
+	for _, r := range rows {
+		results = append(results, DNSDeleteResult(r))
 	}
 
-	return newResponse(dnsDeleteCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
+	return newResponse(Collection[DNSDeleteResult]{
+		Results: results, JobID: jobIDFromGen(resp.JSON200.JobId),
+	}, resp.Body, resp.HTTPResponse), nil
 }

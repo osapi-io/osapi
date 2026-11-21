@@ -99,7 +99,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A key holding a value", GetInput{Key: "vm.swappiness=1"}, "invalid sysctl key"),
 	behavior.Write("create", Create).
 		Describe("Manage a kernel parameter and apply it").
-		Explain("Writes osapi-<key>.conf to behaviors.sysctl.dir, /etc/sysctl.d by default, "+
+		Explain("Writes osapi-net.ipv4.ip_forward.conf for net.ipv4.ip_forward to behaviors.sysctl.dir, /etc/sysctl.d by default, "+
 			"and applies it with sysctl -p. "+
 			"It fails when sysctl -p fails, because the value is not set. "+
 			"A second run with the same value changes nothing and reports changed: false. "+
