@@ -239,7 +239,7 @@ func (s *BehaviorPublicTestSuite) TestPermission() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			assert.Equal(s.T(), tc.want, tc.b.Permission(tc.verb))
+			assert.Equal(s.T(), tc.want, string(tc.b.Permission(tc.verb)))
 		})
 	}
 }
@@ -437,6 +437,11 @@ func (s *BehaviorPublicTestSuite) TestKey() {
 func (s *BehaviorPublicTestSuite) TestDescribe() {
 	m := behavior.Read("get", get).Describe("Get one")
 	assert.Equal(s.T(), "Get one", m.Doc)
+}
+
+func (s *BehaviorPublicTestSuite) TestAdminOnly() {
+	assert.False(s.T(), behavior.Write("update", set).Admin)
+	assert.True(s.T(), behavior.Write("update", set).AdminOnly().Admin)
 }
 
 func (s *BehaviorPublicTestSuite) TestProviderType() {

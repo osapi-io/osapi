@@ -77,7 +77,7 @@ func (s *AllPublicTestSuite) TestRefusals() {
 	for _, g := range endpoint.All() {
 		for _, m := range g.Methods {
 			if p := g.Permission(m); p != "" {
-				perms = append(perms, p)
+				perms = append(perms, string(p))
 			}
 		}
 	}

@@ -52,6 +52,7 @@ var notDSL = map[string]bool{
 	"All":                     true,
 	"Path:Group":              true,
 	"Permission:Group":        true,
+	"Declared:Group":          true,
 	"Key":                     true,
 	"OperationID":             true,
 	"Handler":                 true,

@@ -23,8 +23,6 @@ package authtoken
 import (
 	"fmt"
 	"strings"
-
-	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // TypeScriptFile is where the UI keeps the permissions TypeScript writes,
@@ -59,7 +57,7 @@ func TypeScript() string {
 
 	sb.WriteString("\n/** The permissions of each built-in role, by its JWT role. */\n")
 	sb.WriteString("export const ROLE_PERMISSIONS: Record<string, Permission[]> = {\n")
-	for _, role := range []string{client.RoleAdmin, client.RoleWrite, client.RoleRead} {
+	for _, role := range Roles() {
 		perms, _ := RolePermissions(role)
 		fmt.Fprintf(&sb, "  %s: [\n", role)
 		for _, p := range perms {

@@ -145,6 +145,13 @@ func (s *LoadPublicTestSuite) TestLoad() {
 			wantRule: config.RuleValue,
 		},
 		{
+			name: "when a custom role grants a permission that osapi does not know",
+			body: strings.Replace(validConfig(), testSigningKey, testSigningKey+
+				"\n      roles:\n        auditor:\n          permissions: [helth:read]", 1),
+			wantErr:  `roles[auditor].permissions[0] breaks its rule "permission": "helth:read" is not a permission`,
+			wantRule: config.RuleValue,
+		},
+		{
 			name:     "when a behavior's setting breaks its rule",
 			body:     validConfig("behaviors:", "  kv:", "    level: 9"),
 			wantErr:  `behaviors.kv.level breaks its rule "max=`,

@@ -282,9 +282,10 @@ Written once in the platform, so a behavior writes none of it:
   agent, and `osapi_behavior_calls_total`, `osapi_behavior_duration_seconds` and
   `osapi_behavior_changes_total`, through the OpenTelemetry provider of the
   agent.
-- **Permissions** `<name>:read` and `<name>:write`. The built-in roles give
-  them: `admin` and `write` give both, and `read` gives the read permission.
-  `osapi token roles get --name <role>` shows them.
+- **Permissions** `<name>:read` and `<name>:write`. The built-in roles get them
+  by a rule: `admin` and `write` get both, and `read` gets the read permission.
+  A method marked `AdminOnly` gives its permission only to `admin`. Do not add
+  the permission to a role. `osapi token roles get --name <role>` shows them.
 - **Audit entries**, through the same middleware as every route.
 
 ## Testing

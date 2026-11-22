@@ -33,6 +33,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoints/health"
 
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 var (
@@ -66,7 +67,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Describe("Show the health of each agent").
 		Explain("Each agent, with each of its sub-components, from the health status of the controller.").
 		Returns("Each agent component, with its sub-components.").
-		Permission("health:read").
+		Permission(client.PermHealthRead).
 		Command("Show the health of each agent",
 			"Each agent, with its process CPU and memory and each of its sub-components, from the\nhealth status of the controller. agent list shows the host of each agent.").
 		Example("").
@@ -95,6 +96,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Returns("Agent details.").
 		Errors(endpoint.NotFound(ErrNotFound, "Agent not found")),
 	endpoint.Post[DrainInput, struct{}]("drain").
+		AdminOnly().
 		Fails("a hostname over 255 characters", DrainInput{Hostname: long}).
 		Status(http.StatusNoContent).
 		Command("Drain an agent",
@@ -113,6 +115,7 @@ var Group = endpoint.Register(endpoint.Define(
 			endpoint.Conflict(ErrState, "Agent already in requested state."),
 		),
 	endpoint.Post[UndrainInput, struct{}]("undrain").
+		AdminOnly().
 		Fails("a hostname over 255 characters", UndrainInput{Hostname: long}).
 		Status(http.StatusNoContent).
 		Command("Undrain an agent",

@@ -61,7 +61,7 @@ var tokenValidateCmd = &cobra.Command{
 }
 
 func init() {
-	tokenGenerateCmd.Flags().StringSliceP("roles", "r", nil, "Roles for the token (admin, read, write)")
+	tokenGenerateCmd.Flags().StringSliceP("roles", "r", nil, "Roles for the token: built-in, or a custom role of the config")
 	_ = tokenGenerateCmd.MarkFlagRequired("roles")
 	tokenGenerateCmd.Flags().StringP("subject", "u", "", "Subject for the token (e.g., user ID or unique identifier)")
 	_ = tokenGenerateCmd.MarkFlagRequired("subject")

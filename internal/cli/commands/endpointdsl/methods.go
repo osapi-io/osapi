@@ -84,7 +84,7 @@ func Get(
 	for _, m := range g.Methods {
 		out.Methods = append(out.Methods, Method{
 			Name: m.Name, Verb: m.Verb, Path: g.Path(m),
-			Permission: g.Permission(m), OperationID: m.OperationID(g),
+			Permission: string(g.Permission(m)), OperationID: m.OperationID(g),
 		})
 		out.Types = append(out.Types, Type{
 			Name:   m.Name,

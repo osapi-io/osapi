@@ -24,6 +24,7 @@ package nats
 import (
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/health"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // Group is the nats group's definition. The routes, the spec, the CLI
@@ -41,7 +42,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Describe("Show the health of the NATS server").
 		Explain("The NATS server, with each of its sub-components, from the health status of the controller.").
 		Returns("Each nats component, with its sub-components.").
-		Permission("health:read").
+		Permission(client.PermHealthRead).
 		Command("Show the health of the NATS server", "The NATS server, with each of its sub-components, from the health status of the controller.").
 		Example("").
 		Example("--json"),

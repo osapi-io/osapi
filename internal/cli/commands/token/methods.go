@@ -24,10 +24,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"sort"
 
 	"github.com/osapi-io/osapi/internal/authtoken"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // Generate signs a new token with the config's signing key.
@@ -36,6 +36,17 @@ func Generate(
 	d Deps,
 	in GenerateInput,
 ) (GenerateOutput, error) {
+	// A role is built in, or a custom role of the config.
+	custom, err := d.Config.CustomRoles()
+	if err != nil {
+		return GenerateOutput{}, err
+	}
+	for _, r := range in.Roles {
+		if _, ok := custom[r]; !ok && !slices.Contains(authtoken.Roles(), r) {
+			return GenerateOutput{}, fmt.Errorf("role %q: %w", r, ErrNoRole)
+		}
+	}
+
 	token, err := d.Tokens.Generate(d.Config.SigningKey(), in.Roles, in.Subject, in.Permissions)
 	if err != nil {
 		return GenerateOutput{}, fmt.Errorf("failed to generate token: %w", err)
@@ -62,9 +73,12 @@ func Roles(
 	}
 
 	roles := make([]Role, 0, 3+len(custom))
-	for _, name := range []string{client.RoleAdmin, client.RoleWrite, client.RoleRead} {
+	for _, name := range authtoken.Roles() {
 		perms, _ := authtoken.RolePermissions(name)
-		roles = append(roles, Role{Name: name, Source: "built-in", Permissions: perms})
+		roles = append(
+			roles,
+			Role{Name: name, Source: "built-in", Permissions: authtoken.Strings(perms)},
+		)
 	}
 	names := make([]string, 0, len(custom))
 	for name := range custom {

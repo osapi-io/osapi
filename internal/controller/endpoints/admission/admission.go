@@ -81,6 +81,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("--machine-id d530664edc1c431eb5ef1e9dfd6617a5").
 		Errors(endpoint.NotFound(ErrNotFound, "No admission record for the machine."), notConfigured503),
 	endpoint.Post[AdmitInput, struct{}]("admit").
+		AdminOnly().
 		Fails("a machine ID over 255 characters", AdmitInput{MachineID: long, Body: AdmitRequest{Fingerprint: "SHA256:x"}}).
 		Fails("no fingerprint", AdmitInput{MachineID: "m1", Body: AdmitRequest{}}).
 		Fails("a fingerprint over 255 characters", AdmitInput{MachineID: "m1", Body: AdmitRequest{Fingerprint: long}}).
@@ -104,6 +105,7 @@ var Group = endpoint.Register(endpoint.Define(
 			notConfigured503,
 		),
 	endpoint.Post[RejectInput, struct{}]("reject").
+		AdminOnly().
 		Fails("a machine ID over 255 characters", RejectInput{MachineID: long}).
 		Fails("a reason over 1024 characters", RejectInput{MachineID: "m1", Body: RejectRequest{Reason: strings.Repeat("a", 1025)}}).
 		Status(http.StatusNoContent).
@@ -118,6 +120,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("--machine-id d530664edc1c431eb5ef1e9dfd6617a5 --reason \"unknown host\"").
 		Errors(endpoint.NotFound(ErrNotFound, "No pending request from the machine."), notConfigured503),
 	endpoint.Post[MachineInput, struct{}]("revoke").
+		AdminOnly().
 		Fails("a machine ID over 255 characters", MachineInput{MachineID: long}).
 		Status(http.StatusNoContent).
 		Handle(Revoke).
@@ -133,6 +136,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("--machine-id d530664edc1c431eb5ef1e9dfd6617a5").
 		Errors(endpoint.NotFound(ErrNotFound, "No admitted machine with the ID."), notConfigured503),
 	endpoint.Delete[MachineInput, struct{}]("delete").
+		AdminOnly().
 		Fails("a machine ID over 255 characters", MachineInput{MachineID: long}).
 		Status(http.StatusNoContent).
 		Handle(Delete).

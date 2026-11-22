@@ -23,16 +23,15 @@ import (
 	"fmt"
 	"go/format"
 	"strings"
-
-	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // GoFile is where the SDK keeps the permission constants that Go writes,
 // from the root of the repository.
 const GoFile = "pkg/sdk/client/permissions.gen.go"
 
-// Go is the SDK's constant for each permission, from AllPermissions: a
-// behavior's permission has one, as a hand-written domain's does. go
+// Go is the SDK's constant for each permission, from AllPermissions, and for
+// each built-in role, from Roles: a behavior's permission has one, as a
+// hand-written domain's and an endpoint group's do. go
 // generate ./internal/behaviors/all writes it to GoFile, and a test fails
 // when the file is stale.
 func Go() string {
@@ -44,6 +43,10 @@ func Go() string {
 	)
 	for _, p := range AllPermissions() {
 		fmt.Fprintf(&sb, "\t%s Permission = %q\n", ConstName(p), p)
+	}
+	sb.WriteString(")\n\n// Built-in role constants, one for each built-in role.\nconst (\n")
+	for _, r := range Roles() {
+		fmt.Fprintf(&sb, "\tRole%s Role = %q\n", capital(r), r)
 	}
 	sb.WriteString(")\n")
 	// The source is a const block of names and strings, which formats.
@@ -58,7 +61,7 @@ func Go() string {
 func ConstName(
 	p Permission,
 ) string {
-	resource, verb, _ := strings.Cut(p, ":")
+	resource, verb, _ := strings.Cut(string(p), ":")
 
 	return "Perm" + capital(resource) + capital(verb)
 }
@@ -79,11 +82,11 @@ func capital(
 func RoleTable() string {
 	var sb strings.Builder
 	sb.WriteString("| Role | Permissions |\n| --- | --- |\n")
-	for _, role := range []string{client.RoleAdmin, client.RoleWrite, client.RoleRead} {
+	for _, role := range Roles() {
 		perms, _ := RolePermissions(role)
 		names := make([]string, 0, len(perms))
 		for _, p := range perms {
-			names = append(names, "`"+p+"`")
+			names = append(names, "`"+string(p)+"`")
 		}
 		fmt.Fprintf(&sb, "| `%s` | %s |\n", role, strings.Join(names, ", "))
 	}

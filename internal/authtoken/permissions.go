@@ -21,196 +21,184 @@
 package authtoken
 
 import (
+	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	"github.com/osapi-io/osapi/internal/validation/rule"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // Permission is a type alias for client.Permission.
 type Permission = client.Permission
 
-// builtinPermissions are the hand-written domains' permissions. They are the
-// source of the SDK's constants, which go generate ./internal/behaviors/all
-// writes from AllPermissions. A behavior's
-// are not listed here: AllPermissions adds them from its definition.
+// builtinPermissions are the permissions of the hand-written domains under
+// internal/controller/api, which go as each becomes a behavior, and
+// health:read and trace:read, which several endpoint groups name with
+// Permission. A hand-written domain lists each permission it needs, also one
+// that a group or a behavior declares too, so it keeps it when they change. An endpoint group's own permissions and a behavior's
+// come from their definitions.
 var builtinPermissions = []Permission{
-	"admission:read",
-	"admission:write",
-	"agent:read",
-	"agent:write",
 	"node:read",
 	"network:read",
 	"network:write",
-	"job:read",
-	"job:write",
+	"file:read",
+	"file:write",
 	"health:read",
-	"audit:read",
 	"trace:read",
 	"command:execute",
 	"command:shell",
-	"file:read",
-	"file:write",
 	"docker:read",
 	"docker:write",
 	"docker:execute",
 	"schedule:read",
 	"schedule:write",
-	"sysctl:read",
-	"sysctl:write",
 	"ntp:read",
 	"ntp:write",
-	"timezone:read",
-	"timezone:write",
 	"power:execute",
 	"process:read",
 	"process:execute",
 	"user:read",
 	"user:write",
-	"package:read",
-	"package:write",
 	"log:read",
 	"certificate:read",
 	"certificate:write",
-	"service:read",
-	"service:write",
 }
 
-// builtinRolePermissions maps built-in role names to the hand-written domains'
-// permissions each grants. RolePermissions adds each behavior's.
-var builtinRolePermissions = map[string][]Permission{
-	client.RoleAdmin: {
-		// Admitting a node is a trust decision: only admin may make it.
-		"admission:read",
-		"admission:write",
-		"agent:read",
-		"agent:write",
-		"node:read",
-		"network:read",
-		"network:write",
-		"job:read",
-		"job:write",
-		"health:read",
-		"trace:read",
-		"audit:read",
-		"command:execute",
-		"command:shell",
-		"file:read",
-		"file:write",
-		"docker:read",
-		"docker:write",
-		"docker:execute",
-		"schedule:read",
-		"schedule:write",
-		"sysctl:read",
-		"sysctl:write",
-		"ntp:read",
-		"ntp:write",
-		"timezone:read",
-		"timezone:write",
-		"power:execute",
-		"process:read",
-		"process:execute",
-		"user:read",
-		"user:write",
-		"package:read",
-		"package:write",
-		"log:read",
-		"certificate:read",
-		"certificate:write",
-		"service:read",
-		"service:write",
-	},
-	client.RoleWrite: {
-		"admission:read",
-		"agent:read",
-		"node:read",
-		"network:read",
-		"network:write",
-		"job:read",
-		"job:write",
-		"health:read",
-		"trace:read",
-		"file:read",
-		"file:write",
-		"docker:read",
-		"docker:write",
-		"schedule:read",
-		"schedule:write",
-		"sysctl:read",
-		"sysctl:write",
-		"ntp:read",
-		"ntp:write",
-		"timezone:read",
-		"timezone:write",
-		"process:read",
-		"user:read",
-		"user:write",
-		"package:read",
-		"package:write",
-		"log:read",
-		"certificate:read",
-		"certificate:write",
-		"service:read",
-		"service:write",
-	},
-	client.RoleRead: {
-		"admission:read",
-		"agent:read",
-		"node:read",
-		"network:read",
-		"job:read",
-		"health:read",
-		"trace:read",
-		"file:read",
-		"docker:read",
-		"schedule:read",
-		"sysctl:read",
-		"ntp:read",
-		"timezone:read",
-		"process:read",
-		"user:read",
-		"package:read",
-		"log:read",
-		"certificate:read",
-		"service:read",
-	},
+// adminVerbs are the verbs of a permission that only the admin role gets:
+// to run a command, to open a shell, to signal a process or reboot.
+var adminVerbs = []string{"execute", "shell"}
+
+// declared is a permission that something needs: a hand-written domain, a
+// method of an endpoint group, or a method of a behavior.
+type declared struct {
+	permission Permission
+	// adminOnly is true when the method is marked AdminOnly.
+	adminOnly bool
+	// named is true for an endpoint method that names its permission, which
+	// must be one that something else declares.
+	named bool
+	where string
 }
 
-// AllPermissions is every permission osapi knows: the hand-written domains',
-// then each registered behavior's, one per verb its methods use. It is built
-// on each call rather than once, because behaviors register in their own
-// packages' init, which may run after this package's.
+// declarations are the permissions of the hand-written domains, then each
+// registered endpoint group's, then each registered behavior's. They are
+// made on each call, not once, because a group or a behavior registers in
+// the init of its own package, which can run after this package's.
+func declarations() []declared {
+	out := make([]declared, 0, len(builtinPermissions))
+	for _, p := range builtinPermissions {
+		out = append(out, declared{permission: p, where: "authtoken"})
+	}
+	for _, g := range endpoint.All() {
+		for _, d := range g.Declared() {
+			out = append(out, declared{
+				permission: d.Permission,
+				adminOnly:  d.AdminOnly,
+				named:      d.Named,
+				where:      "endpoint " + d.Where,
+			})
+		}
+	}
+	for _, b := range behavior.All() {
+		// Only a behavior served over the API has methods a token can call.
+		if !b.API {
+			continue
+		}
+		for _, m := range b.Methods {
+			out = append(out, declared{
+				permission: b.Permission(m.Verb),
+				adminOnly:  m.Admin,
+				where:      "behavior " + b.Name + " " + m.Name,
+			})
+		}
+	}
+
+	return out
+}
+
+// AllPermissions is every permission osapi knows: each one that the
+// hand-written domains, an endpoint group or a behavior declares, once. A
+// permission that an endpoint method only names is not one.
 func AllPermissions() []Permission {
-	all := slices.Clone(builtinPermissions)
-	for _, p := range behaviorPermissions(func(behavior.Verb) bool { return true }) {
-		if !slices.Contains(all, p) {
-			all = append(all, p)
+	var all []Permission
+	for _, d := range declarations() {
+		if !d.named && !slices.Contains(all, d.permission) {
+			all = append(all, d.permission)
 		}
 	}
 
 	return all
 }
 
+// PermissionRule is the validate rule of a permission: one that osapi
+// knows, such as the permissions of a token or of a custom role.
+const PermissionRule = "permission"
+
+func init() {
+	rule.Declare(rule.Custom{
+		Tag:     PermissionRule,
+		Check:   func(p string) bool { return slices.Contains(AllPermissions(), Permission(p)) },
+		Schema:  rule.None,
+		Message: "is not a permission: osapi token roles get --name admin lists each one",
+	})
+}
+
+// The built-in roles. The SDK's Role constants are written from Roles.
+const (
+	RoleAdmin = "admin"
+	RoleWrite = "write"
+	RoleRead  = "read"
+)
+
+// Roles are the built-in roles, from the most to the least that each grants.
+func Roles() []string {
+	return []string{RoleAdmin, RoleWrite, RoleRead}
+}
+
+// AdminOnly reports whether only the admin role grants p: its verb is
+// execute or shell, or a method that needs it is marked AdminOnly.
+func AdminOnly(
+	p Permission,
+) bool {
+	_, verb, _ := strings.Cut(string(p), ":")
+	if slices.Contains(adminVerbs, verb) {
+		return true
+	}
+	for _, d := range declarations() {
+		if d.permission == p && d.adminOnly {
+			return true
+		}
+	}
+
+	return false
+}
+
 // RolePermissions is what a built-in role grants, and whether role is one.
-// admin and write get every behavior permission; read gets each behavior's
-// read permission.
+// admin grants each permission. write grants each read and write permission
+// that is not admin only. read grants each read permission that is not admin
+// only.
 func RolePermissions(
 	role string,
 ) ([]Permission, bool) {
-	perms, ok := builtinRolePermissions[role]
-	if !ok {
+	var grants func(verb string) bool
+	switch role {
+	case RoleAdmin:
+		return AllPermissions(), true
+	case RoleWrite:
+		grants = func(verb string) bool { return verb == "read" || verb == "write" }
+	case RoleRead:
+		grants = func(verb string) bool { return verb == "read" }
+	default:
 		return nil, false
 	}
 
-	grants := func(behavior.Verb) bool { return true }
-	if role == client.RoleRead {
-		grants = func(v behavior.Verb) bool { return v == behavior.VerbRead }
-	}
-
-	out := slices.Clone(perms)
-	for _, p := range behaviorPermissions(grants) {
-		if !slices.Contains(out, p) {
+	var out []Permission
+	for _, p := range AllPermissions() {
+		_, verb, _ := strings.Cut(string(p), ":")
+		if grants(verb) && !AdminOnly(p) {
 			out = append(out, p)
 		}
 	}
@@ -218,26 +206,39 @@ func RolePermissions(
 	return out, true
 }
 
-// behaviorPermissions is the permission of every registered behavior's
-// methods whose verb keep accepts, without repeats.
-func behaviorPermissions(
-	keep func(behavior.Verb) bool,
-) []Permission {
-	var out []Permission
-	for _, b := range behavior.All() {
-		// Only a behavior served over the API has methods a token can call.
-		if !b.API {
-			continue
+// Check is each problem with the declared permissions: a method that names a
+// permission nothing declares, which no role grants, so each call gets 403;
+// and a permission that one method marks AdminOnly and another does not.
+func Check() []error {
+	all := AllPermissions()
+	decls := declarations()
+	var errs []error
+	for _, d := range decls {
+		if d.named && !slices.Contains(all, d.permission) {
+			errs = append(errs, fmt.Errorf(
+				"%s names %s, which nothing declares: no role grants it", d.where, d.permission))
 		}
-		for _, m := range b.Methods {
-			p := b.Permission(m.Verb)
-			if keep(m.Verb) && !slices.Contains(out, p) {
-				out = append(out, p)
+	}
+	for _, p := range all {
+		var marked, unmarked []string
+		for _, d := range decls {
+			if d.permission != p || d.where == "authtoken" {
+				continue
 			}
+			if d.adminOnly {
+				marked = append(marked, d.where)
+			} else {
+				unmarked = append(unmarked, d.where)
+			}
+		}
+		if len(marked) > 0 && len(unmarked) > 0 {
+			errs = append(errs, fmt.Errorf(
+				"%s is AdminOnly on %s but not on %s",
+				p, strings.Join(marked, ", "), strings.Join(unmarked, ", ")))
 		}
 	}
 
-	return out
+	return errs
 }
 
 // ResolvePermissions computes the effective permission set for a token.
@@ -270,7 +271,7 @@ func ResolvePermissions(
 		// Fall back to default role permissions
 		if perms, ok := RolePermissions(role); ok {
 			for _, p := range perms {
-				set[p] = true
+				set[string(p)] = true
 			}
 		}
 	}
@@ -283,4 +284,17 @@ func HasPermission(
 	required string,
 ) bool {
 	return resolved[required]
+}
+
+// Strings is perms as strings, for a token's claims and the output of a
+// command, which hold a permission as text.
+func Strings(
+	perms []Permission,
+) []string {
+	out := make([]string, 0, len(perms))
+	for _, p := range perms {
+		out = append(out, string(p))
+	}
+
+	return out
 }

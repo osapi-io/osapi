@@ -23,14 +23,7 @@ package client
 // Permission represents a fine-grained resource:verb permission.
 // Permissions use the format "resource:verb" (e.g., "node:read",
 // "docker:execute").
-type Permission = string
+type Permission string
 
 // Role represents a built-in RBAC role name.
 type Role = string
-
-// Built-in role constants.
-const (
-	RoleAdmin Role = "admin"
-	RoleWrite Role = "write"
-	RoleRead  Role = "read"
-)

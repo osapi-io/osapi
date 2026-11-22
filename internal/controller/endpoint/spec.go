@@ -234,9 +234,25 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindRefine,
-			Name: `.Permission("group:verb")`,
-			Does: "Names the permission the method needs, in place of <group>:read or <group>:write.",
+			Name: `.Permission(client.PermGroupVerb)`,
+			Does: "Names the permission the method needs, in place of <group>:read or <group>:write. " +
+				"It takes a client.Permission: use a Perm constant of pkg/sdk/client, not a string. " +
+				"The constant is Perm, then the resource and the verb, such as PermAgentRead; " +
+				"osapi token roles get --name admin lists each permission. " +
+				"It must be one that a group, a behavior or the hand-written domains declare: " +
+				"a test fails on a name that nothing declares, because no role grants it.",
 			When: "When a different permission covers it, such as agent:read for facts, or trace:read for telemetry.",
+		},
+		{
+			Kind: KindRefine,
+			Name: ".AdminOnly()",
+			Does: "Makes the method's permission one that only the admin role grants. By the rule, " +
+				"admin gets each permission, write each read and write permission, and read each read " +
+				"permission; an execute or shell permission is admin only with no mark. " +
+				"Each method with the same permission must agree. osapi token roles get --name write " +
+				"shows what a role gets.",
+			When: "For a trust decision or a record of who did what, such as admission:write, " +
+				"agent:write or audit:read.",
 		},
 		{
 			Kind: KindRefine,

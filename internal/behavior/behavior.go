@@ -29,6 +29,7 @@ import (
 	"slices"
 
 	"github.com/osapi-io/osapi/internal/validation"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // Placement says where a behavior's work happens.
@@ -235,7 +236,7 @@ func Define(
 // dns under network needs network:read.
 func (b *Behavior) Permission(
 	v Verb,
-) string {
+) client.Permission {
 	if b.Parent != nil {
 		return b.Parent.Permission(v)
 	}
@@ -244,7 +245,7 @@ func (b *Behavior) Permission(
 		prefix = b.Group
 	}
 
-	return prefix + ":" + string(v)
+	return client.Permission(prefix + ":" + string(v))
 }
 
 // Method returns the method with the given name, or nil.
@@ -281,6 +282,9 @@ type Method struct {
 	Long string
 	// Verb is read or write. An action is a write.
 	Verb Verb
+	// Admin is true for a method declared with .AdminOnly: only the admin
+	// role gets its permission, not write or read.
+	Admin bool
 	// Action is true for a write declared with Action: it is named for what
 	// it does, such as restart, and its route ends in its name.
 	Action bool
@@ -449,6 +453,14 @@ func (m *Method) Explain(
 	long string,
 ) *Method {
 	m.Long = long
+
+	return m
+}
+
+// AdminOnly makes the method's permission one that only the admin role
+// grants. Each method of the behavior with that verb must agree.
+func (m *Method) AdminOnly() *Method {
+	m.Admin = true
 
 	return m
 }

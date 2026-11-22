@@ -2,103 +2,103 @@
 // From AllPermissions and RolePermissions in internal/authtoken.
 
 export type Permission =
-  | "admission:read"
-  | "admission:write"
-  | "agent:read"
-  | "agent:write"
   | "node:read"
   | "network:read"
   | "network:write"
-  | "job:read"
-  | "job:write"
+  | "file:read"
+  | "file:write"
   | "health:read"
-  | "audit:read"
   | "trace:read"
   | "command:execute"
   | "command:shell"
-  | "file:read"
-  | "file:write"
   | "docker:read"
   | "docker:write"
   | "docker:execute"
   | "schedule:read"
   | "schedule:write"
-  | "sysctl:read"
-  | "sysctl:write"
   | "ntp:read"
   | "ntp:write"
-  | "timezone:read"
-  | "timezone:write"
   | "power:execute"
   | "process:read"
   | "process:execute"
   | "user:read"
   | "user:write"
-  | "package:read"
-  | "package:write"
   | "log:read"
   | "certificate:read"
   | "certificate:write"
-  | "service:read"
-  | "service:write"
+  | "admission:read"
+  | "admission:write"
+  | "agent:read"
+  | "agent:write"
+  | "audit:read"
+  | "job:read"
+  | "job:write"
   | "disk:read"
   | "hostname:read"
   | "hostname:write"
   | "load:read"
   | "memory:read"
   | "os:read"
+  | "package:read"
+  | "package:write"
+  | "service:read"
+  | "service:write"
   | "status:read"
+  | "sysctl:read"
+  | "sysctl:write"
+  | "timezone:read"
+  | "timezone:write"
   | "updatepackages:read"
   | "updatepackages:write"
   | "uptime:read";
 
 export const ALL_PERMISSIONS: Permission[] = [
-  "admission:read",
-  "admission:write",
-  "agent:read",
-  "agent:write",
   "node:read",
   "network:read",
   "network:write",
-  "job:read",
-  "job:write",
+  "file:read",
+  "file:write",
   "health:read",
-  "audit:read",
   "trace:read",
   "command:execute",
   "command:shell",
-  "file:read",
-  "file:write",
   "docker:read",
   "docker:write",
   "docker:execute",
   "schedule:read",
   "schedule:write",
-  "sysctl:read",
-  "sysctl:write",
   "ntp:read",
   "ntp:write",
-  "timezone:read",
-  "timezone:write",
   "power:execute",
   "process:read",
   "process:execute",
   "user:read",
   "user:write",
-  "package:read",
-  "package:write",
   "log:read",
   "certificate:read",
   "certificate:write",
-  "service:read",
-  "service:write",
+  "admission:read",
+  "admission:write",
+  "agent:read",
+  "agent:write",
+  "audit:read",
+  "job:read",
+  "job:write",
   "disk:read",
   "hostname:read",
   "hostname:write",
   "load:read",
   "memory:read",
   "os:read",
+  "package:read",
+  "package:write",
+  "service:read",
+  "service:write",
   "status:read",
+  "sysctl:read",
+  "sysctl:write",
+  "timezone:read",
+  "timezone:write",
   "updatepackages:read",
   "updatepackages:write",
   "uptime:read",
@@ -107,125 +107,125 @@ export const ALL_PERMISSIONS: Permission[] = [
 /** The permissions of each built-in role, by its JWT role. */
 export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
   admin: [
-    "admission:read",
-    "admission:write",
-    "agent:read",
-    "agent:write",
     "node:read",
     "network:read",
     "network:write",
-    "job:read",
-    "job:write",
-    "health:read",
-    "trace:read",
-    "audit:read",
-    "command:execute",
-    "command:shell",
     "file:read",
     "file:write",
+    "health:read",
+    "trace:read",
+    "command:execute",
+    "command:shell",
     "docker:read",
     "docker:write",
     "docker:execute",
     "schedule:read",
     "schedule:write",
-    "sysctl:read",
-    "sysctl:write",
     "ntp:read",
     "ntp:write",
-    "timezone:read",
-    "timezone:write",
     "power:execute",
     "process:read",
     "process:execute",
     "user:read",
     "user:write",
-    "package:read",
-    "package:write",
     "log:read",
     "certificate:read",
     "certificate:write",
-    "service:read",
-    "service:write",
+    "admission:read",
+    "admission:write",
+    "agent:read",
+    "agent:write",
+    "audit:read",
+    "job:read",
+    "job:write",
     "disk:read",
     "hostname:read",
     "hostname:write",
     "load:read",
     "memory:read",
     "os:read",
+    "package:read",
+    "package:write",
+    "service:read",
+    "service:write",
     "status:read",
+    "sysctl:read",
+    "sysctl:write",
+    "timezone:read",
+    "timezone:write",
     "updatepackages:read",
     "updatepackages:write",
     "uptime:read",
   ],
   write: [
-    "admission:read",
-    "agent:read",
     "node:read",
     "network:read",
     "network:write",
-    "job:read",
-    "job:write",
-    "health:read",
-    "trace:read",
     "file:read",
     "file:write",
+    "health:read",
+    "trace:read",
     "docker:read",
     "docker:write",
     "schedule:read",
     "schedule:write",
-    "sysctl:read",
-    "sysctl:write",
     "ntp:read",
     "ntp:write",
-    "timezone:read",
-    "timezone:write",
     "process:read",
     "user:read",
     "user:write",
-    "package:read",
-    "package:write",
     "log:read",
     "certificate:read",
     "certificate:write",
-    "service:read",
-    "service:write",
+    "admission:read",
+    "agent:read",
+    "job:read",
+    "job:write",
     "disk:read",
     "hostname:read",
     "hostname:write",
     "load:read",
     "memory:read",
     "os:read",
+    "package:read",
+    "package:write",
+    "service:read",
+    "service:write",
     "status:read",
+    "sysctl:read",
+    "sysctl:write",
+    "timezone:read",
+    "timezone:write",
     "updatepackages:read",
     "updatepackages:write",
     "uptime:read",
   ],
   read: [
-    "admission:read",
-    "agent:read",
     "node:read",
     "network:read",
-    "job:read",
+    "file:read",
     "health:read",
     "trace:read",
-    "file:read",
     "docker:read",
     "schedule:read",
-    "sysctl:read",
     "ntp:read",
-    "timezone:read",
     "process:read",
     "user:read",
-    "package:read",
     "log:read",
     "certificate:read",
-    "service:read",
+    "admission:read",
+    "agent:read",
+    "job:read",
     "disk:read",
     "hostname:read",
     "load:read",
     "memory:read",
     "os:read",
+    "package:read",
+    "service:read",
     "status:read",
+    "sysctl:read",
+    "timezone:read",
     "updatepackages:read",
     "uptime:read",
   ],

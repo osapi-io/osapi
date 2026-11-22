@@ -30,6 +30,8 @@ import (
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 
+	// The permission rule of a custom role's permissions.
+	_ "github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/validation"
 )

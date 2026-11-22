@@ -230,6 +230,16 @@ for them there only.
 Use: With On, for a program the other platforms do not have, such as hostnamectl
 for a hostname update.
 
+### `.AdminOnly() on a method`
+
+Makes the permission of the method's verb, such as &lt;name&gt;:write, one that
+only the admin role grants. With no mark, admin and write get &lt;name&gt;:read
+and &lt;name&gt;:write, and read gets &lt;name&gt;:read. Each method with the
+same verb must agree. osapi token roles get --name write shows what a role gets.
+
+Use: For a write that is a trust decision, which an operator with the write role
+must not make.
+
 ### `.Explain("text")`
 
 The longer description: what the method touches, and what a second call does.

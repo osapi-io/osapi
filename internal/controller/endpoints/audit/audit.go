@@ -50,6 +50,7 @@ var Group = endpoint.Register(endpoint.Define(
 		`{"command":"systemctl","args":["restart","nginx"]}`,
 	),
 	endpoint.Get[ListInput, ListAuditResponse]("list").
+		AdminOnly().
 		Fails("a limit below 1", ListInput{Limit: -1}).
 		Fails("a limit over 100", ListInput{Limit: 101}).
 		Fails("a negative offset", ListInput{Offset: -1}).
@@ -66,6 +67,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("--json").
 		Errors(notConfigured503),
 	endpoint.Get[ExportInput, ListAuditResponse]("export").
+		AdminOnly().
 		Handle(Export).
 		Sub("export").
 		ID("GetAuditExport").
@@ -79,6 +81,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("--json").
 		Errors(notConfigured503),
 	endpoint.Get[GetInput, AuditEntryResponse]("get").
+		AdminOnly().
 		Fails("an ID that is not a UUID", GetInput{ID: "not-a-uuid"}).
 		Handle(Get).
 		ID("GetAuditLogByID").
