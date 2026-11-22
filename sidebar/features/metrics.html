@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Metrics | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/metrics"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Metrics | OSAPI"><meta data-rh="true" name="description" content="Each osapi component has a /metrics endpoint for Prometheus, on its own port."><meta data-rh="true" property="og:description" content="Each osapi component has a /metrics endpoint for Prometheus, on its own port."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/metrics"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/metrics" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/metrics" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Metrics","item":"https://osapi-io.github.io/osapi/sidebar/features/metrics"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.5cfa669d.css">
-<script src="/osapi/assets/js/runtime~main.4a57fde7.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.defaa7c3.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.ef2fa2fa.js" defer="defer"></script>
 </head>
 <body>
@@ -150,7 +150,21 @@ process metrics (CPU, memory, file descriptors).</p>
 
 
 
-<table><thead><tr><th>Metric</th><th>Type</th><th>Labels</th><th>Component</th><th>Description</th></tr></thead><tbody><tr><td><code>osapi_component_up</code></td><td>gauge</td><td></td><td>all</td><td>1 when ready, 0 when not</td></tr><tr><td><code>osapi_subsystem_up</code></td><td>gauge</td><td>subsystem</td><td>all</td><td>1 when subsystem is ok, 0 when not</td></tr><tr><td><code>osapi_jobs_created_total</code></td><td>counter</td><td></td><td>controller</td><td>Jobs submitted via API</td></tr><tr><td><code>osapi_jobs_processed_total</code></td><td>counter</td><td>status</td><td>agent</td><td>Jobs completed or failed</td></tr><tr><td><code>osapi_jobs_active</code></td><td>gauge</td><td></td><td>agent</td><td>Currently executing jobs</td></tr><tr><td><code>osapi_job_duration_seconds</code></td><td>histogram</td><td></td><td>agent</td><td>Job execution duration</td></tr><tr><td><code>osapi_heartbeat_age_seconds</code></td><td>gauge</td><td></td><td>agent</td><td>Seconds since last heartbeat write</td></tr><tr><td><code>osapi_nats_client_operation_duration_seconds</code></td><td>histogram</td><td>db_operation_name, db_namespace, error_type</td><td>all</td><td>The duration of each call to NATS</td></tr></tbody></table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Metric</th><th>Type</th><th>Labels</th><th>Component</th><th>Description</th></tr></thead><tbody><tr><td><code>osapi_component_up</code></td><td>gauge</td><td></td><td>all</td><td>Whether the component is ready (1) or not (0).</td></tr><tr><td><code>osapi_subsystem_up</code></td><td>gauge</td><td>subsystem</td><td>all</td><td>Whether a subsystem is healthy (1) or not (0).</td></tr><tr><td><code>osapi_heartbeat_age_seconds</code></td><td>gauge</td><td></td><td>agent</td><td>Seconds since last successful heartbeat write.</td></tr><tr><td><code>osapi_jobs_created_total</code></td><td>counter</td><td></td><td>controller</td><td>Total jobs submitted via API.</td></tr><tr><td><code>osapi_jobs_processed_total</code></td><td>counter</td><td>status</td><td>agent</td><td>Total jobs processed.</td></tr><tr><td><code>osapi_jobs_active</code></td><td>gauge</td><td></td><td>agent</td><td>Currently executing jobs.</td></tr><tr><td><code>osapi_job_duration_seconds</code></td><td>histogram</td><td></td><td>agent</td><td>Job execution duration in seconds.</td></tr><tr><td><code>osapi_behavior_calls_total</code></td><td>counter</td><td>osapi_behavior_name, osapi_behavior_method, osapi_behavior_verb, osapi_behavior_outcome</td><td>agent</td><td>Behavior method calls, by behavior, method and outcome.</td></tr><tr><td><code>osapi_behavior_duration_seconds</code></td><td>histogram</td><td>osapi_behavior_name, osapi_behavior_method, osapi_behavior_verb</td><td>agent</td><td>Behavior method duration in seconds.</td></tr><tr><td><code>osapi_behavior_changes_total</code></td><td>counter</td><td>osapi_behavior_name, osapi_behavior_method, osapi_behavior_verb</td><td>agent</td><td>Behavior writes that changed the host.</td></tr></tbody></table>
 <p>The <code>osapi_subsystem_up</code> gauge has a <code>subsystem</code> label that names its internal
 service, for example <code>api</code>, <code>heartbeat</code>, <code>metrics</code>, <code>notifier</code>, <code>tracing</code> or
 <code>facts</code>. A value of 1 means that the status of the subsystem is <code>ok</code>. A value of
