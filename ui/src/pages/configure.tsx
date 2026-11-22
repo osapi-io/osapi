@@ -17,7 +17,6 @@ import { FileDeleteBlock } from "@/components/domain/file-delete-block";
 import { ScheduleDeleteBlock } from "@/components/domain/schedule-delete-block";
 import { ContainerActionBlock } from "@/components/domain/container-action-block";
 import { DockerExecBlock } from "@/components/domain/docker-exec-block";
-import { NtpBlock } from "@/components/domain/ntp-block";
 import { ProcessSignalBlock } from "@/components/domain/process-signal-block";
 import { UserBlock } from "@/components/domain/user-block";
 import { UserPasswordBlock } from "@/components/domain/user-password-block";
@@ -53,11 +52,6 @@ import {
   deleteNodeContainerDockerImage,
 } from "@/sdk/gen/docker-management-api-docker-image/docker-management-api-docker-image";
 import {
-  getNodeNtp,
-  postNodeNtp,
-  putNodeNtp,
-  deleteNodeNtp,
-} from "@/sdk/gen/ntp-management-api-ntp-operations/ntp-management-api-ntp-operations";
 import {
   getNodeProcess,
   getNodeProcessByPid,
@@ -469,28 +463,6 @@ export function Configure() {
               command: block.data.command as string,
             });
             break;
-          case "ntp-get":
-            result = await getNodeNtp(t);
-            break;
-          case "ntp-set":
-            result = await postNodeNtp(t, {
-              servers: (block.data.servers as string)
-                .split(",")
-                .map((s) => s.trim())
-                .filter(Boolean),
-            });
-            break;
-          case "ntp-update":
-            result = await putNodeNtp(t, {
-              servers: (block.data.servers as string)
-                .split(",")
-                .map((s) => s.trim())
-                .filter(Boolean),
-            });
-            break;
-          case "ntp-delete":
-            result = await deleteNodeNtp(t);
-            break;
           case "process-list":
             result = await getNodeProcess(t);
             break;
@@ -860,18 +832,6 @@ export function Configure() {
             placeholder="echo hello | tee /tmp/out.txt"
           />
         );
-      case "ntp-set":
-      case "ntp-update":
-        return (
-          <NtpBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-          />
-        );
-      case "ntp-get":
-      case "ntp-delete":
-        return null;
       case "process-list":
         return null;
       case "process-get":
