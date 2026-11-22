@@ -120,7 +120,6 @@ func Setup(
 
 	kvs := []jetstream.KeyValueConfig{
 		JobKV(namespace, cfg.KV),
-		ResponseKV(namespace, cfg.KV),
 	}
 	if cfg.Registry.Bucket != "" {
 		kvs = append(kvs, RegistryKV(namespace, cfg.Registry))

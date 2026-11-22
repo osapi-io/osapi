@@ -190,25 +190,6 @@ func JobKV(
 	}
 }
 
-// ResponseKV builds a jetstream.KeyValueConfig for the job response
-// KV bucket. It shares TTL, MaxBytes, Storage, and Replicas settings from the
-// parent NATSKV configuration.
-func ResponseKV(
-	namespace string,
-	kvCfg config.NATSKV,
-) jetstream.KeyValueConfig {
-	bucket := job.ApplyNamespaceToInfraName(namespace, kvCfg.ResponseBucket)
-	ttl, _ := time.ParseDuration(kvCfg.TTL)
-
-	return jetstream.KeyValueConfig{
-		Bucket:   bucket,
-		TTL:      ttl,
-		MaxBytes: kvCfg.MaxBytes,
-		Storage:  StorageType(kvCfg.Storage),
-		Replicas: kvCfg.Replicas,
-	}
-}
-
 // RegistryKV builds a jetstream.KeyValueConfig from registry config values.
 func RegistryKV(
 	namespace string,

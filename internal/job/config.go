@@ -92,28 +92,3 @@ func GetJobsConsumerConfig(
 		ReplayPolicy:  replayPolicy,
 	}
 }
-
-// GetKVBucketConfig returns the KeyValue bucket configuration for storing job responses.
-func GetKVBucketConfig(
-	kvConfig *config.NATSKV,
-) jetstream.KeyValueConfig {
-	// Parse duration string to time.Duration
-	ttl, _ := time.ParseDuration(kvConfig.TTL)
-
-	// Parse storage type
-	var storage jetstream.StorageType
-	if kvConfig.Storage == "memory" {
-		storage = jetstream.MemoryStorage
-	} else {
-		storage = jetstream.FileStorage
-	}
-
-	return jetstream.KeyValueConfig{
-		Bucket:      kvConfig.ResponseBucket,
-		Description: "Storage for job responses indexed by request ID",
-		TTL:         ttl,
-		MaxBytes:    kvConfig.MaxBytes,
-		Storage:     storage,
-		Replicas:    kvConfig.Replicas,
-	}
-}

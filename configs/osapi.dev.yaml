@@ -74,7 +74,6 @@ nats:
     name: JOBS
   kv:
     bucket: job-queue
-    response_bucket: job-responses
   registry:
     bucket: agent-registry
     ttl: 30s

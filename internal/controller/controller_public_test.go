@@ -73,7 +73,7 @@ func natsConfig() config.NATS {
 			Storage:  "memory",
 			Replicas: 1,
 		},
-		KV:  config.NATSKV{Bucket: "job-queue", ResponseBucket: "job-responses"},
+		KV:  config.NATSKV{Bucket: "job-queue"},
 		DLQ: config.NATSDLQ{Storage: "memory", Replicas: 1},
 		Audit: config.NATSAudit{
 			Stream:   "AUDIT",

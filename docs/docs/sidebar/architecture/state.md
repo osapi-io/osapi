@@ -14,19 +14,18 @@ The `nats` section of the configuration sets the name of each store. The table
 gives the names in the default configuration. The same section also sets the
 retention of each store, and its storage, memory or file.
 
-| Store              | Kind         | Holds                                                         | Kept for                 | If you lose it                                             |
-| ------------------ | ------------ | ------------------------------------------------------------- | ------------------------ | ---------------------------------------------------------- |
-| `JOBS`             | Stream       | A notification per job, on `jobs.query.*` and `jobs.modify.*` | `nats.stream.max_age`    | Jobs that no agent received do not run                     |
-| `JOBS-DLQ`         | Stream       | Delivery advisories of jobs that ran out of retries           | `nats.dlq.max_age`       | The record of which jobs gave up                           |
-| `job-queue`        | KV           | Each job's definition and its status events                   | `nats.kv.ttl`            | The job history. `job get` and `job retry` stop for them   |
-| `job-responses`    | KV           | Each agent's result for each job                              | `nats.kv.ttl`            | The results of jobs that a client still reads              |
-| `agent-registry`   | KV           | Heartbeats from every agent, controller and NATS server       | `nats.registry.ttl`, 30s | Nothing. Components write it again every 10 seconds        |
-| `agent-facts`      | KV           | Each agent's facts: interfaces, routes and the like           | `nats.facts.ttl`         | Nothing. Agents collect the facts again                    |
-| `agent-state`      | KV           | Operator actions: drain flags and timeline events             | No expiry                | The drains stop, and the timeline is gone                  |
-| `file-objects`     | Object store | Files uploaded with `osapi client file upload`                | Until deleted            | The uploaded files. A deploy of them fails                 |
-| `file-state`       | KV           | What osapi deployed to each host, with each file's checksum   | No expiry                | osapi does not know which files on a host it manages       |
-| `AUDIT`            | Stream       | One entry per authenticated API request                       | `nats.audit.max_age`     | The audit trail                                            |
-| `agent-enrollment` | KV           | Agents waiting to be accepted, and accepted agents' keys      | No expiry                | Each agent must enroll again, and you must accept it again |
+| Store              | Kind         | Holds                                                            | Kept for                 | If you lose it                                             |
+| ------------------ | ------------ | ---------------------------------------------------------------- | ------------------------ | ---------------------------------------------------------- |
+| `JOBS`             | Stream       | A notification per job, on `jobs.query.*` and `jobs.modify.*`    | `nats.stream.max_age`    | Jobs that no agent received do not run                     |
+| `JOBS-DLQ`         | Stream       | Delivery advisories of jobs that ran out of retries              | `nats.dlq.max_age`       | The record of which jobs gave up                           |
+| `job-queue`        | KV           | Each job's definition, its status events and each agent's result | `nats.kv.ttl`            | The job history. `job get` and `job retry` stop for them   |
+| `agent-registry`   | KV           | Heartbeats from every agent, controller and NATS server          | `nats.registry.ttl`, 30s | Nothing. Components write it again every 10 seconds        |
+| `agent-facts`      | KV           | Each agent's facts: interfaces, routes and the like              | `nats.facts.ttl`         | Nothing. Agents collect the facts again                    |
+| `agent-state`      | KV           | Operator actions: drain flags and timeline events                | No expiry                | The drains stop, and the timeline is gone                  |
+| `file-objects`     | Object store | Files uploaded with `osapi client file upload`                   | Until deleted            | The uploaded files. A deploy of them fails                 |
+| `file-state`       | KV           | What osapi deployed to each host, with each file's checksum      | No expiry                | osapi does not know which files on a host it manages       |
+| `AUDIT`            | Stream       | One entry per authenticated API request                          | `nats.audit.max_age`     | The audit trail                                            |
+| `agent-enrollment` | KV           | Agents waiting to be accepted, and accepted agents' keys         | No expiry                | Each agent must enroll again, and you must accept it again |
 
 If the configuration does not name a store that an operation needs, osapi does
 not make the store. It also disables the operations that use the store. For

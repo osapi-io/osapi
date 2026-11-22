@@ -29,7 +29,6 @@ import "fmt"
 func (n NATS) AllKVBuckets() []KVBucketInfo {
 	return []KVBucketInfo{
 		{Name: "job-queue", Key: "nats.kv.bucket", Bucket: n.KV.Bucket},
-		{Name: "job-responses", Key: "nats.kv.response_bucket", Bucket: n.KV.ResponseBucket},
 		{Name: "registry", Key: "nats.registry.bucket", Bucket: n.Registry.Bucket},
 		{Name: "facts", Key: "nats.facts.bucket", Bucket: n.Facts.Bucket},
 		{Name: "state", Key: "nats.state.bucket", Bucket: n.State.Bucket},

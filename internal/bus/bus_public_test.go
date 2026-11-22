@@ -353,12 +353,11 @@ func (suite *BusPublicTestSuite) TestBuildJobKVConfig() {
 			name:      "when namespace is set",
 			namespace: "osapi",
 			kvCfg: config.NATSKV{
-				Bucket:         "job-queue",
-				ResponseBucket: "job-responses",
-				TTL:            "1h",
-				MaxBytes:       104857600,
-				Storage:        "file",
-				Replicas:       1,
+				Bucket:   "job-queue",
+				TTL:      "1h",
+				MaxBytes: 104857600,
+				Storage:  "file",
+				Replicas: 1,
 			},
 			validateFunc: func(cfg jetstream.KeyValueConfig) {
 				assert.Equal(suite.T(), "osapi-job-queue", cfg.Bucket)
@@ -405,62 +404,6 @@ func (suite *BusPublicTestSuite) TestBuildJobKVConfig() {
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			got := bus.JobKV(tc.namespace, tc.kvCfg)
-
-			tc.validateFunc(got)
-		})
-	}
-}
-
-func (suite *BusPublicTestSuite) TestBuildResponseKVConfig() {
-	tests := []struct {
-		name         string
-		namespace    string
-		kvCfg        config.NATSKV
-		validateFunc func(jetstream.KeyValueConfig)
-	}{
-		{
-			name:      "when namespace is set",
-			namespace: "osapi",
-			kvCfg: config.NATSKV{
-				Bucket:         "job-queue",
-				ResponseBucket: "job-responses",
-				TTL:            "1h",
-				MaxBytes:       104857600,
-				Storage:        "file",
-				Replicas:       1,
-			},
-			validateFunc: func(cfg jetstream.KeyValueConfig) {
-				assert.Equal(suite.T(), "osapi-job-responses", cfg.Bucket)
-				assert.Equal(suite.T(), 1*time.Hour, cfg.TTL)
-				assert.Equal(suite.T(), int64(104857600), cfg.MaxBytes)
-				assert.Equal(suite.T(), jetstream.FileStorage, cfg.Storage)
-				assert.Equal(suite.T(), 1, cfg.Replicas)
-			},
-		},
-		{
-			name:      "when namespace is empty",
-			namespace: "",
-			kvCfg: config.NATSKV{
-				Bucket:         "job-queue",
-				ResponseBucket: "job-responses",
-				TTL:            "30m",
-				MaxBytes:       52428800,
-				Storage:        "memory",
-				Replicas:       3,
-			},
-			validateFunc: func(cfg jetstream.KeyValueConfig) {
-				assert.Equal(suite.T(), "job-responses", cfg.Bucket)
-				assert.Equal(suite.T(), 30*time.Minute, cfg.TTL)
-				assert.Equal(suite.T(), int64(52428800), cfg.MaxBytes)
-				assert.Equal(suite.T(), jetstream.MemoryStorage, cfg.Storage)
-				assert.Equal(suite.T(), 3, cfg.Replicas)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			got := bus.ResponseKV(tc.namespace, tc.kvCfg)
 
 			tc.validateFunc(got)
 		})

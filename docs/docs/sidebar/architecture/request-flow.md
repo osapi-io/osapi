@@ -23,7 +23,7 @@ sequenceDiagram
     N->>A: deliver the notification
     A->>N: read the job, record status events
     A->>A: run the method with the provider
-    A->>N: write the result to the job-responses bucket
+    A->>N: write the result to the job-queue bucket, under responses
     C->>N: read the result
     C-->>CLI: 200 {job_id, results}
 ```

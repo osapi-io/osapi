@@ -101,7 +101,6 @@ nats:
 
   kv:
     bucket: job-queue
-    response_bucket: job-responses
     ttl: 1h
     max_bytes: 104857600
     storage: file

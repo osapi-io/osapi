@@ -100,7 +100,7 @@ func agentConfig(
 			Storage:  "memory",
 			Replicas: 1,
 		},
-		KV:        config.NATSKV{Bucket: "job-queue", ResponseBucket: "job-responses"},
+		KV:        config.NATSKV{Bucket: "job-queue"},
 		DLQ:       config.NATSDLQ{Storage: "memory", Replicas: 1},
 		Registry:  config.NATSRegistry{Bucket: "agent-registry"},
 		Facts:     config.NATSFacts{Bucket: "agent-facts"},

@@ -42,8 +42,7 @@ func (s *NATSPublicTestSuite) TestAllKVBuckets() {
 			name: "all buckets populated",
 			nats: config.NATS{
 				KV: config.NATSKV{
-					Bucket:         "job-queue",
-					ResponseBucket: "job-responses",
+					Bucket: "job-queue",
 				},
 				Registry:   config.NATSRegistry{Bucket: "agent-registry"},
 				Facts:      config.NATSFacts{Bucket: "agent-facts"},
@@ -54,7 +53,6 @@ func (s *NATSPublicTestSuite) TestAllKVBuckets() {
 			validateFunc: func(got []config.KVBucketInfo) {
 				s.Len(got, len([]string{
 					"job-queue",
-					"job-responses",
 					"registry",
 					"facts",
 					"state",
@@ -64,7 +62,6 @@ func (s *NATSPublicTestSuite) TestAllKVBuckets() {
 				for i, info := range got {
 					s.Equal([]string{
 						"job-queue",
-						"job-responses",
 						"registry",
 						"facts",
 						"state",
@@ -73,7 +70,6 @@ func (s *NATSPublicTestSuite) TestAllKVBuckets() {
 					}[i], info.Name)
 					s.Equal([]string{
 						"job-queue",
-						"job-responses",
 						"agent-registry",
 						"agent-facts",
 						"agent-state",
@@ -89,7 +85,6 @@ func (s *NATSPublicTestSuite) TestAllKVBuckets() {
 			validateFunc: func(got []config.KVBucketInfo) {
 				s.Len(got, len([]string{
 					"job-queue",
-					"job-responses",
 					"registry",
 					"facts",
 					"state",
@@ -99,14 +94,13 @@ func (s *NATSPublicTestSuite) TestAllKVBuckets() {
 				for i, info := range got {
 					s.Equal([]string{
 						"job-queue",
-						"job-responses",
 						"registry",
 						"facts",
 						"state",
 						"file-state",
 						"enrollment",
 					}[i], info.Name)
-					s.Equal([]string{"", "", "", "", "", "", ""}[i], info.Bucket)
+					s.Equal([]string{"", "", "", "", "", ""}[i], info.Bucket)
 				}
 			},
 		},
@@ -114,14 +108,12 @@ func (s *NATSPublicTestSuite) TestAllKVBuckets() {
 			name: "partial config — only KV buckets set",
 			nats: config.NATS{
 				KV: config.NATSKV{
-					Bucket:         "job-queue",
-					ResponseBucket: "job-responses",
+					Bucket: "job-queue",
 				},
 			},
 			validateFunc: func(got []config.KVBucketInfo) {
 				s.Len(got, len([]string{
 					"job-queue",
-					"job-responses",
 					"registry",
 					"facts",
 					"state",
@@ -131,7 +123,6 @@ func (s *NATSPublicTestSuite) TestAllKVBuckets() {
 				for i, info := range got {
 					s.Equal([]string{
 						"job-queue",
-						"job-responses",
 						"registry",
 						"facts",
 						"state",
@@ -140,7 +131,6 @@ func (s *NATSPublicTestSuite) TestAllKVBuckets() {
 					}[i], info.Name)
 					s.Equal([]string{
 						"job-queue",
-						"job-responses",
 						"",
 						"",
 						"",

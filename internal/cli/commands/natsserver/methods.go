@@ -49,7 +49,6 @@ func Start(
 		slog.String("nats.stream.name", n.Stream.Name),
 		slog.String("nats.stream.subjects", n.Stream.Subjects),
 		slog.String("nats.kv.bucket", n.KV.Bucket),
-		slog.String("nats.kv.response_bucket", n.KV.ResponseBucket),
 	)
 
 	job.Init(n.Server.Namespace)
