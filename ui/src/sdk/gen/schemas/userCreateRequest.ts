@@ -6,20 +6,43 @@
  */
 
 export interface UserCreateRequest {
-  /** Username for the new account. Must start with a lowercase letter or underscore, followed by lowercase letters, digits, underscores, or hyphens, with an optional trailing `$`; 32 characters or fewer. */
-  name: string;
-  /** Numeric user ID. If omitted, the system assigns one. */
-  uid?: number;
-  /** Primary group ID. If omitted, a group matching the username is created. */
+  /**
+     * Its primary group ID; a group of its own when it is 0
+     * @minimum 0
+     */
   gid?: number;
-  /** Home directory path. */
-  home?: string;
-  /** Login shell path. */
-  shell?: string;
-  /** Supplementary group names. */
+  /**
+     * The groups it is a member of, besides its primary group
+     * @items.maxLength 32
+     * @items.pattern ^[a-z_][a-z0-9_-]*\$?$
+     */
   groups?: string[];
-  /** Initial password. Sent in plaintext over TLS, hashed by the controller before the job is stored, and never written to disk or logs in plaintext. */
+  /**
+     * Its home directory; /home/<name> when empty
+     * @pattern ^[^\r\n]*$
+     */
+  home?: string;
+  /**
+     * The user to add, such as alice
+     * @maxLength 32
+     * @pattern ^[a-z_][a-z0-9_-]*\$?$
+     */
+  name: string;
+  /**
+     * Its password, which osapi hashes on the controller; none when empty
+     * @pattern ^[^\r\n]*$
+     */
   password?: string;
-  /** Create a system account. */
+  /**
+     * Its login shell, such as /bin/bash; the system's default when empty
+     * @pattern ^[^\r\n]*$
+     */
+  shell?: string;
+  /** Add it as a system user, with an ID from the system range */
   system?: boolean;
+  /**
+     * Its numeric user ID; the system assigns one when it is 0
+     * @minimum 0
+     */
+  uid?: number;
 }

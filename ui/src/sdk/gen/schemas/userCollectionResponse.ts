@@ -4,10 +4,10 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { UserEntry } from './userEntry';
+import type { UserAccount } from './userAccount';
 
 export interface UserCollectionResponse {
   /** The job ID used to process this request. */
   job_id?: string;
-  results: UserEntry[];
+  results: UserAccount[];
 }

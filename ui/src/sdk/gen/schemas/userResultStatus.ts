@@ -8,10 +8,10 @@
 /**
  * The status of the operation for this host.
  */
-export type UserMutationResultStatus = typeof UserMutationResultStatus[keyof typeof UserMutationResultStatus];
+export type UserResultStatus = typeof UserResultStatus[keyof typeof UserResultStatus];
 
 
-export const UserMutationResultStatus = {
+export const UserResultStatus = {
   ok: 'ok',
   failed: 'failed',
   skipped: 'skipped',

@@ -45,42 +45,6 @@ const HAND_BLOCK_TYPES: BlockType[] = [
 
   // ── Networking ─────────────────────────────────────────────────────────────
   {
-    type: "user-list",
-    label: "List",
-    description: "List user accounts",
-    category: "user",
-    group: "security",
-    readyOnAdd: true,
-  },
-  {
-    type: "user-get",
-    label: "Get",
-    description: "Get user details",
-    category: "user",
-    group: "security",
-  },
-  {
-    type: "user-create",
-    label: "Create",
-    description: "Create a user account",
-    category: "user",
-    group: "security",
-  },
-  {
-    type: "user-update",
-    label: "Update",
-    description: "Update a user account",
-    category: "user",
-    group: "security",
-  },
-  {
-    type: "user-delete",
-    label: "Delete",
-    description: "Delete a user account",
-    category: "user",
-    group: "security",
-  },
-  {
     type: "user-list-keys",
     label: "List Keys",
     description: "List SSH keys for a user",
@@ -98,13 +62,6 @@ const HAND_BLOCK_TYPES: BlockType[] = [
     type: "user-remove-key",
     label: "Remove Key",
     description: "Remove an SSH key from a user",
-    category: "user",
-    group: "security",
-  },
-  {
-    type: "user-change-password",
-    label: "Password",
-    description: "Change a user password",
     category: "user",
     group: "security",
   },

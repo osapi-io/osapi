@@ -4,10 +4,10 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { UserMutationResult } from './userMutationResult';
+import type { UserAccount } from './userAccount';
 
-export interface UserMutationResponse {
+export interface UserGetResponse {
   /** The job ID used to process this request. */
   job_id?: string;
-  results: UserMutationResult[];
+  results: UserAccount[];
 }

@@ -8,10 +8,10 @@
 /**
  * The status of the operation for this host.
  */
-export type UserEntryStatus = typeof UserEntryStatus[keyof typeof UserEntryStatus];
+export type UserAccountStatus = typeof UserAccountStatus[keyof typeof UserAccountStatus];
 
 
-export const UserEntryStatus = {
+export const UserAccountStatus = {
   ok: 'ok',
   failed: 'failed',
   skipped: 'skipped',
