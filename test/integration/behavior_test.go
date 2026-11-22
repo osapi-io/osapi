@@ -87,7 +87,7 @@ func (s *BehaviorSmokeSuite) results(
 // what is missing.
 func (s *BehaviorSmokeSuite) TestPrograms() {
 	for _, b := range behavior.All() {
-		sudo, runs := b.Programs(family.Detect())
+		sudo, runs := b.Programs(behavior.PlatformName(family.Detect()))
 		for _, p := range append(sudo, runs...) {
 			_, err := exec.LookPath(p)
 			s.NoError(err,
