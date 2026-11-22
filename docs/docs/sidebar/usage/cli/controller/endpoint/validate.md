@@ -8,6 +8,9 @@ describes each part of a group.
 
 The rules:
 
+- `in`: Each in tag of an input field is path, query, form or body. Fix: Correct
+  the value. A field with another value is read from the request body, not from
+  where the tag says.
 - `name`: The group and each method have a name of lowercase letters and digits,
   starting with a letter. Fix: Name the group as its path segment, such as
   agent, and each method for what it does, such as list or drain.

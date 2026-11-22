@@ -102,7 +102,98 @@ const (
 	// RuleTemplate: a field tagged template:"<vars>" is a string, and <vars>
 	// names an input field of type map[string]string.
 	RuleTemplate = "template"
+	// RuleTag: each struct tag of an input or output field has a known key,
+	// secret is "true" and telemetry is "attr". A typo of either drops what
+	// the tag does with no error: a secret reaches the audit log.
+	RuleTag = "tag"
 )
+
+// KnownTags are the struct tag keys that a field of a behavior's input or
+// output can carry. The DSL, the validator, the CLI's renderer and the
+// settings loader read them. A key outside the list is a typo: Go reads a
+// tag only by its exact key, so the field gets nothing from it.
+var KnownTags = []string{
+	"default", "doc", "empty", "example", "flag", "in", "json", "label",
+	"mapstructure", "none", "param", "pattern", "prefix", "render", "secret",
+	"short", "table", "telemetry", "template", "title", "validate", "yaml",
+}
+
+// tagProblems are the RuleTag problems of t's fields, and of the fields of
+// each struct that a field holds, named from prefix.
+func tagProblems(
+	t reflect.Type,
+	prefix string,
+	seen map[reflect.Type]bool,
+) []string {
+	for t != nil && (t.Kind() == reflect.Pointer || t.Kind() == reflect.Slice ||
+		t.Kind() == reflect.Array || t.Kind() == reflect.Map) {
+		t = t.Elem()
+	}
+	if t == nil || t.Kind() != reflect.Struct || seen[t] {
+		return nil
+	}
+	seen[t] = true
+	var out []string
+	for i := range t.NumField() {
+		f := t.Field(i)
+		name := prefix + f.Name
+		for _, key := range tagKeys(f.Tag) {
+			if !slices.Contains(KnownTags, key) {
+				out = append(
+					out,
+					fmt.Sprintf("field %s has the tag key %q, which nothing reads", name, key),
+				)
+			}
+		}
+		if v, ok := f.Tag.Lookup("secret"); ok && v != "true" {
+			out = append(
+				out,
+				fmt.Sprintf("field %s is tagged secret:%q; the only value is \"true\"", name, v),
+			)
+		}
+		if v, ok := f.Tag.Lookup("telemetry"); ok && v != "attr" {
+			out = append(
+				out,
+				fmt.Sprintf("field %s is tagged telemetry:%q; the only value is \"attr\"", name, v),
+			)
+		}
+		out = append(out, tagProblems(f.Type, name+".", seen)...)
+	}
+
+	return out
+}
+
+// tagKeys are the keys of tag, in order, by the convention that
+// reflect.StructTag.Get reads: key:"value" pairs separated by spaces.
+func tagKeys(
+	tag reflect.StructTag,
+) []string {
+	var keys []string
+	s := string(tag)
+	for s != "" {
+		s = strings.TrimLeft(s, " ")
+		i := strings.Index(s, ":\"")
+		if i <= 0 {
+			break
+		}
+		keys = append(keys, s[:i])
+		s = s[i+2:]
+		for j := 0; j < len(s); j++ {
+			if s[j] == '\\' {
+				j++
+
+				continue
+			}
+			if s[j] == '"' {
+				s = s[j+1:]
+
+				break
+			}
+		}
+	}
+
+	return keys
+}
 
 // synonyms are method names that mean a standard verb, and the verb to use.
 // A behavior's method names become its commands, so they follow the CLI's
@@ -468,6 +559,12 @@ func ValidateBehavior(
 					add(m.Name, RuleOptional,
 						"optional field %s is sent as its zero value when it is empty", f)
 				}
+			}
+			for _, msg := range tagProblems(m.In, "", map[reflect.Type]bool{}) {
+				add(m.Name, RuleTag, "input %s", msg)
+			}
+			for _, msg := range tagProblems(m.Out, "", map[reflect.Type]bool{}) {
+				add(m.Name, RuleTag, "output %s", msg)
 			}
 			recordable := false
 			for i := range m.In.NumField() {

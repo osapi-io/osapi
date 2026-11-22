@@ -816,6 +816,15 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 			},
 		},
 		{
+			name: "when an input field's in tag is not path, query, form or body",
+			group: endpoint.Define("node", "The nodes",
+				endpoint.Get[badInIn, Node]("list"),
+			),
+			want: []string{
+				`input field q is tagged in:"qeury"; the values are path, query, form and body.`,
+			},
+		},
+		{
 			name: "when a method has a handler and the group Uses no type",
 			group: endpoint.Define("node", "The nodes",
 				endpoint.Get[noInput, Node]("list").Handle(handleNode),
@@ -924,4 +933,8 @@ func TestEndpointPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(EndpointPublicTestSuite))
+}
+
+type badInIn struct {
+	Q string `json:"q,omitempty" in:"qeury" validate:"omitempty" doc:"A filter"`
 }

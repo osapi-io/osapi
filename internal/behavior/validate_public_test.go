@@ -641,6 +641,43 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 			wantRules: []string{behavior.RulePlatform},
 		},
 		{
+			name: "when an input field's secret tag is not true",
+			b: behavior.Define(
+				"sysctl",
+				"x",
+				behavior.Node,
+				onDebian,
+				behavior.Read("get", func(context.Context, fakeProvider, badSecretIn) (entry, error) {
+					return entry{}, nil
+				}).
+					Describe("Get"),
+			),
+			wantRules: []string{behavior.RuleTag},
+		},
+		{
+			name: "when an input field's telemetry tag is not attr",
+			b: behavior.Define(
+				"sysctl",
+				"x",
+				behavior.Node,
+				onDebian,
+				behavior.Read("get", func(context.Context, fakeProvider, badTelemetryIn) (entry, error) {
+					return entry{}, nil
+				}).
+					Describe("Get"),
+			),
+			wantRules: []string{behavior.RuleTag},
+		},
+		{
+			name: "when a field of the output, in a slice, has a tag key that nothing reads",
+			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
+				behavior.Read("get", func(context.Context, fakeProvider, getIn) (badKeyOut, error) {
+					return badKeyOut{}, nil
+				}).Describe("Get"),
+			),
+			wantRules: []string{behavior.RuleTag},
+		},
+		{
 			name: "when Platform names a platform that is not known",
 			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
 				behavior.Platform("debain", func(host.Host) (fakeProvider, error) {
@@ -827,4 +864,18 @@ func TestValidatePublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(ValidatePublicTestSuite))
+}
+
+type badSecretIn struct {
+	Key string `json:"key" validate:"required" doc:"The key" secret:"True"`
+}
+
+type badTelemetryIn struct {
+	Key string `json:"key" validate:"required" doc:"The key" telemetry:"atr"`
+}
+
+type badKeyOut struct {
+	Entries []struct {
+		Key string `json:"key" doc:"The \"key\"" secrte:"true" `
+	} `json:"entries" doc:"The entries"`
 }
