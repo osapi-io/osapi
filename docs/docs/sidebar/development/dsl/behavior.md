@@ -90,10 +90,13 @@ host.Require.
 
 Use: When the behavior uses the methods of another behavior.
 
-### `Platform("debian", build)`
+### `Platform(PlatformDebian, build)`
 
 Builds the provider on that platform: a distribution, darwin, or linux for each
-Linux host without its own. On another platform, the methods report skipped.
+Linux host without its own. On another platform, the methods report skipped. Use
+a constant: PlatformDebian, PlatformDarwin or PlatformLinux. behavior validate
+refuses a name outside KnownPlatforms, here and in On, RunsOnPlatform and
+OnPlatform.
 
 Use: One time for each platform that the behavior supports.
 

@@ -125,8 +125,8 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindOption,
-			Name: `Platform("debian", build)`,
-			Does: "Builds the provider on that platform: a distribution, darwin, or linux for each Linux host without its own. On another platform, the methods report skipped.",
+			Name: `Platform(PlatformDebian, build)`,
+			Does: "Builds the provider on that platform: a distribution, darwin, or linux for each Linux host without its own. On another platform, the methods report skipped. Use a constant: PlatformDebian, PlatformDarwin or PlatformLinux. behavior validate refuses a name outside KnownPlatforms, here and in On, RunsOnPlatform and OnPlatform.",
 			When: "One time for each platform that the behavior supports.",
 		},
 		{
