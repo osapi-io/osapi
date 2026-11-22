@@ -24,6 +24,7 @@ import (
 	"context"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
@@ -72,6 +73,7 @@ func read(_ context.Context, _ provider, _ input) ([]entry, error)     { return 
 func readOne(_ context.Context, _ provider, _ input) (*entry, error)   { return nil, nil }
 func write(_ context.Context, _ provider, _ input) (result, error)     { return result{}, nil }
 func writeEntry(_ context.Context, _ provider, _ input) (entry, error) { return entry{}, nil }
+func readText(_ context.Context, _ provider, _ input) (string, error)  { return "", nil }
 
 type BehaviorcmdPublicTestSuite struct {
 	suite.Suite
@@ -270,11 +272,16 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 			"  # No keys\n  osapi client node store kv list --target web-01 --key none",
 		command.Example(b, b.Method("list")),
 	)
-	s.Equal(
-		map[string]string{reference.Permission: "store:read"},
-		command.Annotations(b, b.Method("list")),
-		"a method with no effects and no refusals has no result",
-	)
+	list := command.Annotations(b, b.Method("list"))
+	s.Equal("store:read", list[reference.Permission])
+	out := list[reference.Result]
+	s.True(strings.HasPrefix(out, "Each example prints this:\n\nEvery key:\n\n```ansi\n"),
+		"each example's output, in a block that the site shows in color")
+	s.Contains(out, "\x1b[", "the CLI's colors")
+	s.Contains(out, "web-01", "one host answers")
+	s.Contains(out, "job 550e8400-e29b-41d4-a716-446655440000")
+	s.Contains(out, "trace 26e448c9dbe1c4a8d216a98c675079c9")
+	s.Contains(out, "No keys:\n\n```ansi\n", "an empty list still shows its output")
 
 	create := command.Annotations(b, b.Method("create"))
 	s.Equal("store:write", create[reference.Permission])
@@ -296,7 +303,13 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 	bare := behavior.Write("apply", writeEntry).
 		Describe("Apply").
 		Example("Apply all", nil, entry{Key: "k"})
-	s.Empty(command.Annotations(b, bare))
+	s.NotContains(command.Annotations(b, bare), reference.Permission)
+	s.Contains(command.Annotations(b, bare)[reference.Result], "changed",
+		"a write's row has changed")
+
+	// An output that is not an object, such as text, has no table to show.
+	text := behavior.Read("text", readText).Example("Some text", nil, "hello")
+	s.Empty(command.Output(text))
 	b.API = true
 	s.Equal(
 		"  # Apply all\n  osapi client node store kv apply --target web-01",

@@ -29,6 +29,48 @@ osapi client node service get --target web-01 --name osapi-app
 
 ## Result
 
+Each example prints this:
+
+A running service:
+
+```ansi
+[1;38;2;0;213;255mResults:[0m
+  [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mNAME  [0m[38;2;10;143;176mSTATE    [0m[38;2;10;143;176mENABLED  [0m[38;2;10;143;176mDESCRIPTION                  [0m[38;2;10;143;176mMANAGED[0m
+  [1mweb-01[0m    [38;2;103;234;147mok[0m      [1mssh[0m   running  yes      OpenBSD Secure Shell server  no
+
+  1 host: [38;2;103;234;147m1 ok[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+```
+
+A name with .service:
+
+```ansi
+[1;38;2;0;213;255mResults:[0m
+  [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mNAME  [0m[38;2;10;143;176mSTATE    [0m[38;2;10;143;176mENABLED  [0m[38;2;10;143;176mDESCRIPTION                  [0m[38;2;10;143;176mMANAGED[0m
+  [1mweb-01[0m    [38;2;103;234;147mok[0m      [1mssh[0m   running  yes      OpenBSD Secure Shell server  no
+
+  1 host: [38;2;103;234;147m1 ok[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+```
+
+A service that osapi deployed, by the name it was deployed with:
+
+```ansi
+[1;38;2;0;213;255mResults:[0m
+  [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mNAME  [0m[38;2;10;143;176mSTATE  [0m[38;2;10;143;176mENABLED  [0m[38;2;10;143;176mDESCRIPTION  [0m[38;2;10;143;176mMANAGED[0m
+  [1mweb-01[0m    [38;2;103;234;147mok[0m      [1mapp[0m   dead   no       Example app  yes
+
+  1 host: [38;2;103;234;147m1 ok[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+```
+
+A service that osapi deployed, by its unit's name:
+
+```ansi
+[1;38;2;0;213;255mResults:[0m
+  [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mNAME  [0m[38;2;10;143;176mSTATE  [0m[38;2;10;143;176mENABLED  [0m[38;2;10;143;176mDESCRIPTION  [0m[38;2;10;143;176mMANAGED[0m
+  [1mweb-01[0m    [38;2;103;234;147mok[0m      [1mapp[0m   dead   no       Example app  yes
+
+  1 host: [38;2;103;234;147m1 ok[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+```
+
 The command fails in these cases:
 
 | Call                                  | Flags           | Fails with |

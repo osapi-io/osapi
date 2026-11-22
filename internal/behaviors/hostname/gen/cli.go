@@ -11,10 +11,13 @@ import (
 )
 
 var hostnameGetCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "hostname:read"},
-	Args:        cobra.NoArgs,
-	Example:     "  # A host named web-01\n  osapi client node hostname get --target web-01",
-	Long:        "Reads the host's name as the hostname command prints it, on Linux and on macOS. It makes no DNS lookup.",
+	Annotations: map[string]string{
+		reference.Permission: "hostname:read",
+		reference.Result:     "Each example prints this:\n\nA host named web-01:\n\n```ansi\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mNAME\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[1mweb-01\x1b[0m\n\n  1 host: \x1b[38;2;103;234;147m1 ok\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  # A host named web-01\n  osapi client node hostname get --target web-01",
+	Long:    "Reads the host's name as the hostname command prints it, on Linux and on macOS. It makes no DNS lookup.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostnameFlag, _ := cmd.Flags().GetString("target")
 
@@ -27,7 +30,7 @@ var hostnameGetCmd = &cobra.Command{
 var hostnameUpdateCmd = &cobra.Command{
 	Annotations: map[string]string{
 		reference.Permission: "hostname:write",
-		reference.Result:     "With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Rename a host | runs `hostnamectl set-hostname web-02` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A name that is not a hostname | `--name \"web 01;reboot\"` | invalid hostname |\n| A name longer than 253 characters | `--name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | invalid hostname |\n| No name |  | invalid hostname |",
+		reference.Result:     "Each example prints this:\n\nRename a host:\n\n```ansi\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS   \x1b[0m\x1b[38;2;10;143;176mNAME\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mchanged\x1b[0m  \x1b[1mweb-02\x1b[0m\n\n  1 host: \x1b[38;2;103;234;147m1 changed\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nA host that already has the name:\n\n```ansi\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mNAME\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[1mweb-01\x1b[0m\n\n  1 host: \x1b[38;2;103;234;147m1 ok\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Rename a host | runs `hostnamectl set-hostname web-02` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A name that is not a hostname | `--name \"web 01;reboot\"` | invalid hostname |\n| A name longer than 253 characters | `--name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | invalid hostname |\n| No name |  | invalid hostname |",
 	},
 	Args:    cobra.NoArgs,
 	Example: "  # Rename a host\n  osapi client node hostname update --target web-01 --name web-02\n\n  # A host that already has the name\n  osapi client node hostname update --target web-01 --name web-01",

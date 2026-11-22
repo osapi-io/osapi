@@ -25,6 +25,38 @@ osapi client node network dns get --target web-01 --interface-name en0
 
 ## Result
 
+Each example prints this:
+
+An interface with servers and a domain:
+
+```ansi
+[1;38;2;0;213;255mResults:[0m
+  [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mSERVERS           [0m[38;2;10;143;176mSEARCH DOMAINS[0m
+  [1mweb-01[0m    [38;2;103;234;147mok[0m      1.1.1.1, 8.8.8.8  example.com
+
+  1 host: [38;2;103;234;147m1 ok[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+```
+
+A container with no resolvers per interface:
+
+```ansi
+[1;38;2;0;213;255mResults:[0m
+  [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mSERVERS   [0m[38;2;10;143;176mSEARCH DOMAINS[0m
+  [1mweb-01[0m    [38;2;103;234;147mok[0m      10.0.0.2  svc.local
+
+  1 host: [38;2;103;234;147m1 ok[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+```
+
+A Mac:
+
+```ansi
+[1;38;2;0;213;255mResults:[0m
+  [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mSERVERS  [0m[38;2;10;143;176mSEARCH DOMAINS[0m
+  [1mweb-01[0m    [38;2;103;234;147mok[0m      1.1.1.1
+
+  1 host: [38;2;103;234;147m1 ok[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+```
+
 The command fails in these cases:
 
 | Call                                       | Flags                              | Fails with    |

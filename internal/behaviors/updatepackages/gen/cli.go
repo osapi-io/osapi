@@ -11,10 +11,13 @@ import (
 )
 
 var updatepackagesListCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "updatepackages:read"},
-	Args:        cobra.NoArgs,
-	Example:     "  # Two updates\n  osapi client node updatepackages list --target web-01",
-	Long:        "Runs apt list --upgradable: each package with its installed version and the version the index has. Refresh the index first for what the repositories have now.",
+	Annotations: map[string]string{
+		reference.Permission: "updatepackages:read",
+		reference.Result:     "Each example prints this:\n\nTwo updates:\n\n```ansi\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mNAME     \x1b[0m\x1b[38;2;10;143;176mCURRENT VERSION  \x1b[0m\x1b[38;2;10;143;176mNEW VERSION\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[1mcurl\x1b[0m     8.5.0-2ubuntu10  8.5.0-2ubuntu10.1\n  \x1b[38;2;138;138;138mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[1mopenssl\x1b[0m  3.0.13-0ubuntu3  3.0.13-0ubuntu3.1\n\n  1 host: \x1b[38;2;103;234;147m1 ok\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  # Two updates\n  osapi client node updatepackages list --target web-01",
+	Long:    "Runs apt list --upgradable: each package with its installed version and the version the index has. Refresh the index first for what the repositories have now.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("target")
 
@@ -25,10 +28,13 @@ var updatepackagesListCmd = &cobra.Command{
 }
 
 var updatepackagesUpdateCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "updatepackages:write"},
-	Args:        cobra.NoArgs,
-	Example:     "  # The repositories are unchanged since the last refresh\n  osapi client node updatepackages update --target web-01",
-	Long:        "Runs apt-get update. It reports changed: true when the Release file of a repository under /var/lib/apt/lists changed, and changed: false when each repository was unchanged.",
+	Annotations: map[string]string{
+		reference.Permission: "updatepackages:write",
+		reference.Result:     "Each example prints this:\n\nThe repositories are unchanged since the last refresh:\n\n```ansi\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m\n\n  1 host: \x1b[38;2;103;234;147m1 ok\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  # The repositories are unchanged since the last refresh\n  osapi client node updatepackages update --target web-01",
+	Long:    "Runs apt-get update. It reports changed: true when the Release file of a repository under /var/lib/apt/lists changed, and changed: false when each repository was unchanged.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("target")
 

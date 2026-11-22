@@ -1,0 +1,67 @@
+import type { CSSProperties, ReactElement } from 'react';
+
+// Ansi is the output of the CLI, as osapi cli-docs captures it with the
+// CLI's colors, shown in those colors: each run of text after an SGR code
+// becomes a span with its color and weight. It reads what the CLI's theme
+// writes: reset, bold, and 24-bit or 256-color foregrounds.
+
+// ansi256 holds the 256-color codes that the theme uses, as hex. Each other
+// color of the theme is 24-bit and carries its own RGB.
+const ansi256: Record<number, string> = { 222: '#ffd787' };
+
+type Run = { text: string; color?: string; bold?: boolean };
+
+// runs splits s at each SGR code into runs of text with their style.
+export function runs(s: string): Run[] {
+  const out: Run[] = [];
+  let color: string | undefined;
+  let bold = false;
+  const re = /\x1b\[([0-9;]*)m/g;
+  let last = 0;
+  for (let m = re.exec(s); m; m = re.exec(s)) {
+    if (m.index > last) out.push({ text: s.slice(last, m.index), color, bold });
+    last = re.lastIndex;
+    const codes = m[1].split(';');
+    for (let i = 0; i < codes.length; i++) {
+      const c = codes[i];
+      if (c === '' || c === '0') {
+        color = undefined;
+        bold = false;
+      } else if (c === '1') {
+        bold = true;
+      } else if (c === '22') {
+        bold = false;
+      } else if (c === '39') {
+        color = undefined;
+      } else if (c === '38' && codes[i + 1] === '2') {
+        const [r, g, b] = codes.slice(i + 2, i + 5).map(Number);
+        color = `rgb(${r}, ${g}, ${b})`;
+        i += 4;
+      } else if (c === '38' && codes[i + 1] === '5') {
+        color = ansi256[Number(codes[i + 2])];
+        i += 2;
+      }
+    }
+  }
+  if (last < s.length) out.push({ text: s.slice(last), color, bold });
+  return out;
+}
+
+export default function Ansi({ text }: { text: string }): ReactElement {
+  return (
+    <pre className="osapi-terminal">
+      {runs(text.replace(/\n$/, '')).map((r, i) => {
+        const style: CSSProperties = {};
+        if (r.color) style.color = r.color;
+        if (r.bold) style.fontWeight = 'bold';
+        return r.color || r.bold ? (
+          <span key={i} style={style}>
+            {r.text}
+          </span>
+        ) : (
+          r.text
+        );
+      })}
+    </pre>
+  );
+}

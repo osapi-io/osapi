@@ -11,10 +11,13 @@ import (
 )
 
 var uptimeGetCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "uptime:read"},
-	Args:        cobra.NoArgs,
-	Example:     "  # A host up for a day, two hours and five minutes\n  osapi client node uptime get --target web-01",
-	Long:        "Reads how long the host has run since it booted: /proc/uptime on Linux, and the boot time that sysctl gives on macOS. The uptime is in days, hours and minutes, and in seconds.",
+	Annotations: map[string]string{
+		reference.Permission: "uptime:read",
+		reference.Result:     "Each example prints this:\n\nA host up for a day, two hours and five minutes:\n\n```ansi\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mUPTIME                     \x1b[0m\x1b[38;2;10;143;176mSECONDS\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      1 day, 2 hours, 5 minutes  93900\n\n  1 host: \x1b[38;2;103;234;147m1 ok\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  # A host up for a day, two hours and five minutes\n  osapi client node uptime get --target web-01",
+	Long:    "Reads how long the host has run since it booted: /proc/uptime on Linux, and the boot time that sysctl gives on macOS. The uptime is in days, hours and minutes, and in seconds.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("target")
 
