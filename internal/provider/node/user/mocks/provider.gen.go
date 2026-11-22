@@ -71,21 +71,6 @@ func (mr *MockProviderMockRecorder) ChangePassword(ctx, name, passwordHash any) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangePassword", reflect.TypeOf((*MockProvider)(nil).ChangePassword), ctx, name, passwordHash)
 }
 
-// CreateGroup mocks base method.
-func (m *MockProvider) CreateGroup(ctx context.Context, opts user.CreateGroupOpts) (*user.GroupResult, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateGroup", ctx, opts)
-	ret0, _ := ret[0].(*user.GroupResult)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateGroup indicates an expected call of CreateGroup.
-func (mr *MockProviderMockRecorder) CreateGroup(ctx, opts any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateGroup", reflect.TypeOf((*MockProvider)(nil).CreateGroup), ctx, opts)
-}
-
 // CreateUser mocks base method.
 func (m *MockProvider) CreateUser(ctx context.Context, opts user.CreateUserOpts) (*user.Result, error) {
 	m.ctrl.T.Helper()
@@ -99,21 +84,6 @@ func (m *MockProvider) CreateUser(ctx context.Context, opts user.CreateUserOpts)
 func (mr *MockProviderMockRecorder) CreateUser(ctx, opts any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockProvider)(nil).CreateUser), ctx, opts)
-}
-
-// DeleteGroup mocks base method.
-func (m *MockProvider) DeleteGroup(ctx context.Context, name string) (*user.GroupResult, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteGroup", ctx, name)
-	ret0, _ := ret[0].(*user.GroupResult)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// DeleteGroup indicates an expected call of DeleteGroup.
-func (mr *MockProviderMockRecorder) DeleteGroup(ctx, name any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteGroup", reflect.TypeOf((*MockProvider)(nil).DeleteGroup), ctx, name)
 }
 
 // DeleteUser mocks base method.
@@ -131,21 +101,6 @@ func (mr *MockProviderMockRecorder) DeleteUser(ctx, name any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockProvider)(nil).DeleteUser), ctx, name)
 }
 
-// GetGroup mocks base method.
-func (m *MockProvider) GetGroup(ctx context.Context, name string) (*user.Group, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetGroup", ctx, name)
-	ret0, _ := ret[0].(*user.Group)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetGroup indicates an expected call of GetGroup.
-func (mr *MockProviderMockRecorder) GetGroup(ctx, name any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGroup", reflect.TypeOf((*MockProvider)(nil).GetGroup), ctx, name)
-}
-
 // GetUser mocks base method.
 func (m *MockProvider) GetUser(ctx context.Context, name string) (*user.User, error) {
 	m.ctrl.T.Helper()
@@ -159,21 +114,6 @@ func (m *MockProvider) GetUser(ctx context.Context, name string) (*user.User, er
 func (mr *MockProviderMockRecorder) GetUser(ctx, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockProvider)(nil).GetUser), ctx, name)
-}
-
-// ListGroups mocks base method.
-func (m *MockProvider) ListGroups(ctx context.Context) ([]user.Group, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListGroups", ctx)
-	ret0, _ := ret[0].([]user.Group)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListGroups indicates an expected call of ListGroups.
-func (mr *MockProviderMockRecorder) ListGroups(ctx any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGroups", reflect.TypeOf((*MockProvider)(nil).ListGroups), ctx)
 }
 
 // ListKeys mocks base method.
@@ -219,21 +159,6 @@ func (m *MockProvider) RemoveKey(ctx context.Context, username, fingerprint stri
 func (mr *MockProviderMockRecorder) RemoveKey(ctx, username, fingerprint any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveKey", reflect.TypeOf((*MockProvider)(nil).RemoveKey), ctx, username, fingerprint)
-}
-
-// UpdateGroup mocks base method.
-func (m *MockProvider) UpdateGroup(ctx context.Context, name string, opts user.UpdateGroupOpts) (*user.GroupResult, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateGroup", ctx, name, opts)
-	ret0, _ := ret[0].(*user.GroupResult)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UpdateGroup indicates an expected call of UpdateGroup.
-func (mr *MockProviderMockRecorder) UpdateGroup(ctx, name, opts any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateGroup", reflect.TypeOf((*MockProvider)(nil).UpdateGroup), ctx, name, opts)
 }
 
 // UpdateUser mocks base method.

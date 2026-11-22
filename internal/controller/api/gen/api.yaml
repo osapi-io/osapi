@@ -83,15 +83,15 @@ tags:
   - name: Schedule_Management_API_schedule_operations
     x-displayName: Node/Schedule
     description: Scheduled task management on a target node.
-  - name: User_and_Group_Management_API_user_operations
+  - name: User_Management_API_user_operations
     x-displayName: Node/User
     description: User account management on a target node.
-  - name: User_and_Group_Management_API_group_operations
-    x-displayName: Node/Group
-    description: Group management on a target node.
   - description: Get the disk usage of target hosts
     name: Disk_API_disk_operations
     x-displayName: Node/Disk
+  - description: The groups of the host
+    name: Group_API_group_operations
+    x-displayName: Node/Group
   - description: Get or set the hostname of target hosts
     name: Hostname_API_hostname_operations
     x-displayName: Node/Hostname
@@ -3933,7 +3933,7 @@ paths:
       description: |
         List all user accounts on the target node.
       tags:
-        - User_and_Group_Management_API_user_operations
+        - User_Management_API_user_operations
       operationId: GetNodeUser
       security:
         - BearerAuth:
@@ -3976,7 +3976,7 @@ paths:
       description: |
         Create a new user account on the target node.
       tags:
-        - User_and_Group_Management_API_user_operations
+        - User_Management_API_user_operations
       operationId: PostNodeUser
       security:
         - BearerAuth:
@@ -4028,7 +4028,7 @@ paths:
       description: |
         Get a specific user account by name on the target node.
       tags:
-        - User_and_Group_Management_API_user_operations
+        - User_Management_API_user_operations
       operationId: GetNodeUserByName
       security:
         - BearerAuth:
@@ -4078,7 +4078,7 @@ paths:
       description: |
         Update an existing user account on the target node.
       tags:
-        - User_and_Group_Management_API_user_operations
+        - User_Management_API_user_operations
       operationId: PutNodeUser
       security:
         - BearerAuth:
@@ -4135,7 +4135,7 @@ paths:
       description: |
         Delete a user account from the target node.
       tags:
-        - User_and_Group_Management_API_user_operations
+        - User_Management_API_user_operations
       operationId: DeleteNodeUser
       security:
         - BearerAuth:
@@ -4187,7 +4187,7 @@ paths:
       description: |
         Change the password for a user account on the target node.
       tags:
-        - User_and_Group_Management_API_user_operations
+        - User_Management_API_user_operations
       operationId: PostNodeUserPassword
       security:
         - BearerAuth:
@@ -4246,7 +4246,7 @@ paths:
       description: |
         List SSH authorized keys for a user on the target node.
       tags:
-        - User_and_Group_Management_API_user_operations
+        - User_Management_API_user_operations
       operationId: GetNodeUserSSHKey
       security:
         - BearerAuth:
@@ -4290,7 +4290,7 @@ paths:
       description: |
         Add an SSH authorized key for a user on the target node.
       tags:
-        - User_and_Group_Management_API_user_operations
+        - User_Management_API_user_operations
       operationId: PostNodeUserSSHKey
       security:
         - BearerAuth:
@@ -4344,7 +4344,7 @@ paths:
         Remove an SSH authorized key by fingerprint for a user on the target
         node.
       tags:
-        - User_and_Group_Management_API_user_operations
+        - User_Management_API_user_operations
       operationId: DeleteNodeUserSSHKey
       security:
         - BearerAuth:
@@ -4380,260 +4380,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Error removing SSH key.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/group:
-    servers: []
-    get:
-      summary: List all groups
-      description: |
-        List all groups on the target node.
-      tags:
-        - User_and_Group_Management_API_group_operations
-      operationId: GetNodeGroup
-      security:
-        - BearerAuth:
-            - user:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      responses:
-        '200':
-          description: List of groups.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GroupCollectionResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error listing groups.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    post:
-      summary: Create a group
-      description: |
-        Create a new group on the target node.
-      tags:
-        - User_and_Group_Management_API_group_operations
-      operationId: PostNodeGroup
-      security:
-        - BearerAuth:
-            - user:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      requestBody:
-        description: Group creation parameters.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GroupCreateRequest'
-      responses:
-        '200':
-          description: Group created.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GroupMutationResponse'
-        '400':
-          description: Invalid request payload.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error creating group.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/group/{name}:
-    servers: []
-    get:
-      summary: Get a group
-      description: |
-        Get a specific group by name on the target node.
-      tags:
-        - User_and_Group_Management_API_group_operations
-      operationId: GetNodeGroupByName
-      security:
-        - BearerAuth:
-            - user:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/GroupName'
-      responses:
-        '200':
-          description: Group detail.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GroupCollectionResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Group not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error retrieving group.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    put:
-      summary: Update a group
-      description: |
-        Update an existing group on the target node.
-      tags:
-        - User_and_Group_Management_API_group_operations
-      operationId: PutNodeGroup
-      security:
-        - BearerAuth:
-            - user:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/GroupName'
-      requestBody:
-        description: Group update parameters.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GroupUpdateRequest'
-      responses:
-        '200':
-          description: Group updated.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GroupMutationResponse'
-        '400':
-          description: Invalid request payload.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Group not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error updating group.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    delete:
-      summary: Delete a group
-      description: |
-        Delete a group from the target node.
-      tags:
-        - User_and_Group_Management_API_group_operations
-      operationId: DeleteNodeGroup
-      security:
-        - BearerAuth:
-            - user:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/GroupName'
-      responses:
-        '200':
-          description: Group deleted.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GroupMutationResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Group not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error deleting group.
           content:
             application/json:
               schema:
@@ -4703,6 +4449,325 @@ paths:
       summary: Get the disk usage of the host
       tags:
         - Disk_API_disk_operations
+  /api/node/{hostname}/group:
+    servers: []
+    get:
+      description: >-
+        Lists each group with its ID and its members, by name, from /etc/group
+        through gohai, on every platform. The members are the users that
+        /etc/group names; a user whose primary group it is is not listed again.
+      operationId: GetNodeGroup
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupCollectionResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            The host does not have what the request names, such as the object of
+            a deploy.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - group:read
+      summary: List the groups of the host
+      tags:
+        - Group_API_group_operations
+    post:
+      description: >-
+        Adds the group with groupadd, with the ID when one is given. A group
+        that the host has already does not change and reports changed: false,
+        whatever its ID. It runs on the Debian family only, and elsewhere
+        reports skipped.
+      operationId: PostNodeGroup
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupCreateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupCreateResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            The host does not have what the request names, such as the object of
+            a deploy.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - group:write
+      summary: Add a group
+      tags:
+        - Group_API_group_operations
+  /api/node/{hostname}/group/{name}:
+    servers: []
+    delete:
+      description: >-
+        Removes the group with groupdel. A group that the host does not have
+        does not change and reports changed: false. It runs on the Debian family
+        only, and elsewhere reports skipped.
+      operationId: DeleteNodeGroup
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/GroupName'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupDeleteResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host has no group with that name.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - group:write
+      summary: Remove a group
+      tags:
+        - Group_API_group_operations
+    get:
+      description: >-
+        Reads one group from the same list. A group that the host does not have
+        is not found.
+      operationId: GetNodeGroupByKey
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/GroupName'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupGetResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host has no group with that name.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - group:read
+      summary: Get one group
+      tags:
+        - Group_API_group_operations
+    put:
+      description: >-
+        Sets the members with gpasswd -M, in place of the members that the group
+        has. The same members, in any order, do not change it and report
+        changed: false. A group that the host does not have is not found. It
+        runs on the Debian family only, and elsewhere reports skipped.
+      operationId: PutNodeGroup
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/GroupName'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupUpdateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupUpdateResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host has no group with that name.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - group:write
+      summary: Set the members of a group
+      tags:
+        - Group_API_group_operations
   /api/node/{hostname}/hostname:
     servers: []
     get:
@@ -10533,39 +10598,6 @@ components:
             plaintext.
           x-oapi-codegen-extra-tags:
             validate: required,min=1
-    GroupCreateRequest:
-      type: object
-      required:
-        - name
-      properties:
-        name:
-          type: string
-          description: >
-            Group name. Must start with a lowercase letter or underscore,
-            followed by lowercase letters, digits, underscores, or hyphens, with
-            an optional trailing `$`; 32 characters or fewer.
-          x-oapi-codegen-extra-tags:
-            validate: required,account_name
-        gid:
-          type: integer
-          description: Numeric group ID. If omitted, the system assigns one.
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=0
-        system:
-          type: boolean
-          description: Create a system group.
-          x-oapi-codegen-extra-tags:
-            validate: omitempty
-    GroupUpdateRequest:
-      type: object
-      properties:
-        members:
-          type: array
-          items:
-            type: string
-          description: Group member usernames (replaces existing).
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,dive,account_name
     UserInfo:
       type: object
       description: A user account on the target node.
@@ -10781,102 +10813,6 @@ components:
             $ref: '#/components/schemas/SSHKeyMutationEntry'
       required:
         - results
-    GroupInfo:
-      type: object
-      description: A group on the target node.
-      properties:
-        name:
-          type: string
-          description: Group name.
-        gid:
-          type: integer
-          description: Numeric group ID.
-        members:
-          type: array
-          items:
-            type: string
-          description: Group member usernames.
-    GroupEntry:
-      type: object
-      description: Group listing result for one host.
-      properties:
-        hostname:
-          type: string
-          description: Hostname of the agent that reported this entry.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        groups:
-          type: array
-          items:
-            $ref: '#/components/schemas/GroupInfo'
-          description: Groups on this host.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    GroupCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/GroupEntry'
-      required:
-        - results
-    GroupMutationResult:
-      type: object
-      description: Result of a group create, update, or delete operation for one host.
-      properties:
-        hostname:
-          type: string
-          description: Hostname of the agent that processed this operation.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        name:
-          type: string
-          description: Group name.
-        changed:
-          type: boolean
-          description: Whether the operation modified system state.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    GroupMutationResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/GroupMutationResult'
-      required:
-        - results
     Disk:
       properties:
         free:
@@ -10936,6 +10872,182 @@ components:
         results:
           items:
             $ref: '#/components/schemas/DiskEntry'
+          type: array
+      required:
+        - results
+      type: object
+    GroupAccount:
+      properties:
+        error:
+          description: Error message if the agent failed.
+          type: string
+        gid:
+          description: Its numeric group ID
+          type: integer
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        members:
+          description: The users it has as members, besides those whose primary group it is
+          items:
+            type: string
+          type: array
+        name:
+          description: The group
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
+      type: object
+    GroupCollectionResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/GroupAccount'
+          type: array
+      required:
+        - results
+      type: object
+    GroupCreateRequest:
+      properties:
+        gid:
+          description: Its numeric group ID; the system assigns one when it is 0
+          minimum: 0
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=0
+        name:
+          description: The group to add, such as developers
+          maxLength: 32
+          pattern: ^[a-z_][a-z0-9_-]*\$?$
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,max=32,account_name
+        system:
+          description: Add it as a system group, with an ID from the system range
+          type: boolean
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
+      required:
+        - name
+      type: object
+    GroupCreateResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/GroupResult'
+          type: array
+      required:
+        - results
+      type: object
+    GroupDeleteResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/GroupResult'
+          type: array
+      required:
+        - results
+      type: object
+    GroupGetResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/GroupAccount'
+          type: array
+      required:
+        - results
+      type: object
+    GroupResult:
+      properties:
+        changed:
+          description: Whether the host changed
+          type: boolean
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        name:
+          description: The group
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
+      type: object
+    GroupUpdateRequest:
+      properties:
+        members:
+          description: Its members, which replace the members it has; none when empty
+          items:
+            maxLength: 32
+            pattern: ^[a-z_][a-z0-9_-]*\$?$
+            type: string
+          type: array
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,dive,max=32,account_name
+      type: object
+    GroupUpdateResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/GroupResult'
           type: array
       required:
         - results
@@ -12785,21 +12897,6 @@ components:
         minLength: 1
         maxLength: 32
         pattern: ^[a-z_][a-z0-9_-]*\$?$
-    GroupName:
-      name: name
-      in: path
-      required: true
-      description: >
-        Group name. Must start with a lowercase letter or underscore, followed
-        by lowercase letters, digits, underscores, or hyphens, with an optional
-        trailing `$`; 32 characters or fewer.
-      x-oapi-codegen-extra-tags:
-        validate: required,account_name
-      schema:
-        type: string
-        minLength: 1
-        maxLength: 32
-        pattern: ^[a-z_][a-z0-9_-]*\$?$
     SSHKeyFingerprint:
       name: fingerprint
       in: path
@@ -12812,6 +12909,17 @@ components:
         type: string
         minLength: 1
         pattern: ^SHA256:[A-Za-z0-9+/]+=*$
+    GroupName:
+      description: The group to remove, such as developers
+      in: path
+      name: name
+      required: true
+      schema:
+        maxLength: 32
+        pattern: ^[a-z_][a-z0-9_-]*\$?$
+        type: string
+      x-oapi-codegen-extra-tags:
+        validate: required,max=32,account_name
     NetworkDnsInterface_name:
       description: The interface, such as eth0, or a fact such as @fact.interface.primary
       in: path
@@ -12937,13 +13045,15 @@ x-tagGroups:
   - name: Schedule Management API
     tags:
       - Schedule_Management_API_schedule_operations
-  - name: User and Group Management API
+  - name: User Management API
     tags:
-      - User_and_Group_Management_API_user_operations
-      - User_and_Group_Management_API_group_operations
+      - User_Management_API_user_operations
   - name: Disk API
     tags:
       - Disk_API_disk_operations
+  - name: Group API
+    tags:
+      - Group_API_group_operations
   - name: Hostname API
     tags:
       - Hostname_API_hostname_operations

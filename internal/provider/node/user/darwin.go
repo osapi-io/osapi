@@ -85,46 +85,6 @@ func (d *Darwin) ChangePassword(
 	return nil, provider.ErrUnsupported
 }
 
-// ListGroups returns ErrUnsupported on Darwin.
-func (d *Darwin) ListGroups(
-	_ context.Context,
-) ([]Group, error) {
-	return nil, provider.ErrUnsupported
-}
-
-// GetGroup returns ErrUnsupported on Darwin.
-func (d *Darwin) GetGroup(
-	_ context.Context,
-	_ string,
-) (*Group, error) {
-	return nil, provider.ErrUnsupported
-}
-
-// CreateGroup returns ErrUnsupported on Darwin.
-func (d *Darwin) CreateGroup(
-	_ context.Context,
-	_ CreateGroupOpts,
-) (*GroupResult, error) {
-	return nil, provider.ErrUnsupported
-}
-
-// UpdateGroup returns ErrUnsupported on Darwin.
-func (d *Darwin) UpdateGroup(
-	_ context.Context,
-	_ string,
-	_ UpdateGroupOpts,
-) (*GroupResult, error) {
-	return nil, provider.ErrUnsupported
-}
-
-// DeleteGroup returns ErrUnsupported on Darwin.
-func (d *Darwin) DeleteGroup(
-	_ context.Context,
-	_ string,
-) (*GroupResult, error) {
-	return nil, provider.ErrUnsupported
-}
-
 // ListKeys returns ErrUnsupported on Darwin.
 func (d *Darwin) ListKeys(
 	_ context.Context,

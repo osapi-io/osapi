@@ -85,46 +85,6 @@ func (l *Linux) ChangePassword(
 	return nil, provider.ErrUnsupported
 }
 
-// ListGroups returns ErrUnsupported on generic Linux.
-func (l *Linux) ListGroups(
-	_ context.Context,
-) ([]Group, error) {
-	return nil, provider.ErrUnsupported
-}
-
-// GetGroup returns ErrUnsupported on generic Linux.
-func (l *Linux) GetGroup(
-	_ context.Context,
-	_ string,
-) (*Group, error) {
-	return nil, provider.ErrUnsupported
-}
-
-// CreateGroup returns ErrUnsupported on generic Linux.
-func (l *Linux) CreateGroup(
-	_ context.Context,
-	_ CreateGroupOpts,
-) (*GroupResult, error) {
-	return nil, provider.ErrUnsupported
-}
-
-// UpdateGroup returns ErrUnsupported on generic Linux.
-func (l *Linux) UpdateGroup(
-	_ context.Context,
-	_ string,
-	_ UpdateGroupOpts,
-) (*GroupResult, error) {
-	return nil, provider.ErrUnsupported
-}
-
-// DeleteGroup returns ErrUnsupported on generic Linux.
-func (l *Linux) DeleteGroup(
-	_ context.Context,
-	_ string,
-) (*GroupResult, error) {
-	return nil, provider.ErrUnsupported
-}
-
 // ListKeys returns ErrUnsupported on generic Linux.
 func (l *Linux) ListKeys(
 	_ context.Context,

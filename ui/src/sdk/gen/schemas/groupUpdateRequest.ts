@@ -6,6 +6,10 @@
  */
 
 export interface GroupUpdateRequest {
-  /** Group member usernames (replaces existing). */
+  /**
+     * Its members, which replace the members it has; none when empty
+     * @items.maxLength 32
+     * @items.pattern ^[a-z_][a-z0-9_-]*\$?$
+     */
   members?: string[];
 }

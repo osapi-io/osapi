@@ -47,6 +47,8 @@ func (s *GroupService) List(
 		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
+		resp.JSON404,
+		resp.JSON409,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
@@ -59,7 +61,11 @@ func (s *GroupService) List(
 		}}
 	}
 
-	return newResponse(groupInfoCollectionFromList(resp.JSON200), resp.Body, resp.HTTPResponse), nil
+	return newResponse(
+		groupInfoCollectionFromGen(resp.JSON200.Results, resp.JSON200.JobId),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Get retrieves a single group by name on the target host.
@@ -68,7 +74,7 @@ func (s *GroupService) Get(
 	hostname string,
 	name string,
 ) (*Response[Collection[GroupInfoResult]], error) {
-	resp, err := s.client.GetNodeGroupByNameWithResponse(ctx, hostname, name)
+	resp, err := s.client.GetNodeGroupByKeyWithResponse(ctx, hostname, name)
 	if err != nil {
 		return nil, fmt.Errorf("group get: %w", err)
 	}
@@ -79,6 +85,7 @@ func (s *GroupService) Get(
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON404,
+		resp.JSON409,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
@@ -91,7 +98,11 @@ func (s *GroupService) Get(
 		}}
 	}
 
-	return newResponse(groupInfoCollectionFromGet(resp.JSON200), resp.Body, resp.HTTPResponse), nil
+	return newResponse(
+		groupInfoCollectionFromGen(resp.JSON200.Results, resp.JSON200.JobId),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Create creates a group on the target host.
@@ -122,6 +133,8 @@ func (s *GroupService) Create(
 		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
+		resp.JSON404,
+		resp.JSON409,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
@@ -135,7 +148,7 @@ func (s *GroupService) Create(
 	}
 
 	return newResponse(
-		groupMutationCollectionFromCreate(resp.JSON200),
+		groupMutationCollectionFromGen(resp.JSON200.Results, resp.JSON200.JobId),
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
@@ -165,6 +178,7 @@ func (s *GroupService) Update(
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON404,
+		resp.JSON409,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
@@ -178,7 +192,7 @@ func (s *GroupService) Update(
 	}
 
 	return newResponse(
-		groupMutationCollectionFromUpdate(resp.JSON200),
+		groupMutationCollectionFromGen(resp.JSON200.Results, resp.JSON200.JobId),
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
@@ -201,6 +215,7 @@ func (s *GroupService) Delete(
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON404,
+		resp.JSON409,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
@@ -214,7 +229,7 @@ func (s *GroupService) Delete(
 	}
 
 	return newResponse(
-		groupMutationCollectionFromDelete(resp.JSON200),
+		groupMutationCollectionFromGen(resp.JSON200.Results, resp.JSON200.JobId),
 		resp.Body,
 		resp.HTTPResponse,
 	), nil

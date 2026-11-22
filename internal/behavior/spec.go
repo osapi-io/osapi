@@ -370,6 +370,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindExample,
+			Name: `ExistsAfter("after", "path", "content")`,
+			Does: "Says what a file holds on the fake host after a command has run.",
+			When: "For a file that a program changes, such as /etc/group after groupadd. Declare its content before with Exists.",
+		},
+		{
+			Kind: KindExample,
 			Name: `Links("path", "target")`,
 			Does: "Puts a symbolic link to target on the fake host before the call.",
 			When: "When the call reads a link, such as /etc/localtime for the timezone.",

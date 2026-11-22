@@ -112,6 +112,18 @@ func (s *ExamplePublicTestSuite) TestHostOptions() {
 			}},
 		},
 		{
+			name:   "when ExistsAfter gives a file's content once a command has run",
+			option: behavior.ExistsAfter("groupadd -- dev", "/etc/group", "dev:x:1:\n"),
+			want: behavior.Example{Given: []behavior.Given{
+				{
+					Kind:    behavior.GivenFile,
+					Path:    "/etc/group",
+					Content: "dev:x:1:\n",
+					After:   "groupadd -- dev",
+				},
+			}},
+		},
+		{
 			name:   "when PrintsAfter gives a command's output once another has run",
 			option: behavior.PrintsAfter("apt-get install tree", "dpkg-query -W tree", "installed"),
 			want: behavior.Example{Given: []behavior.Given{

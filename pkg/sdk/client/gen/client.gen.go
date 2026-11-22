@@ -409,48 +409,48 @@ func (e FileUndeployResultStatus) Valid() bool {
 	}
 }
 
-// Defines values for GroupEntryStatus.
+// Defines values for GroupAccountStatus.
 const (
-	GroupEntryStatusFailed  GroupEntryStatus = "failed"
-	GroupEntryStatusOk      GroupEntryStatus = "ok"
-	GroupEntryStatusSkipped GroupEntryStatus = "skipped"
-	GroupEntryStatusTimeout GroupEntryStatus = "timeout"
+	GroupAccountStatusFailed  GroupAccountStatus = "failed"
+	GroupAccountStatusOk      GroupAccountStatus = "ok"
+	GroupAccountStatusSkipped GroupAccountStatus = "skipped"
+	GroupAccountStatusTimeout GroupAccountStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the GroupEntryStatus enum.
-func (e GroupEntryStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the GroupAccountStatus enum.
+func (e GroupAccountStatus) Valid() bool {
 	switch e {
-	case GroupEntryStatusFailed:
+	case GroupAccountStatusFailed:
 		return true
-	case GroupEntryStatusOk:
+	case GroupAccountStatusOk:
 		return true
-	case GroupEntryStatusSkipped:
+	case GroupAccountStatusSkipped:
 		return true
-	case GroupEntryStatusTimeout:
+	case GroupAccountStatusTimeout:
 		return true
 	default:
 		return false
 	}
 }
 
-// Defines values for GroupMutationResultStatus.
+// Defines values for GroupResultStatus.
 const (
-	GroupMutationResultStatusFailed  GroupMutationResultStatus = "failed"
-	GroupMutationResultStatusOk      GroupMutationResultStatus = "ok"
-	GroupMutationResultStatusSkipped GroupMutationResultStatus = "skipped"
-	GroupMutationResultStatusTimeout GroupMutationResultStatus = "timeout"
+	GroupResultStatusFailed  GroupResultStatus = "failed"
+	GroupResultStatusOk      GroupResultStatus = "ok"
+	GroupResultStatusSkipped GroupResultStatus = "skipped"
+	GroupResultStatusTimeout GroupResultStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the GroupMutationResultStatus enum.
-func (e GroupMutationResultStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the GroupResultStatus enum.
+func (e GroupResultStatus) Valid() bool {
 	switch e {
-	case GroupMutationResultStatusFailed:
+	case GroupResultStatusFailed:
 		return true
-	case GroupMutationResultStatusOk:
+	case GroupResultStatusOk:
 		return true
-	case GroupMutationResultStatusSkipped:
+	case GroupResultStatusSkipped:
 		return true
-	case GroupMutationResultStatusTimeout:
+	case GroupResultStatusTimeout:
 		return true
 	default:
 		return false
@@ -2630,87 +2630,102 @@ type FileUploadResponse struct {
 	Size int `json:"size"`
 }
 
+// GroupAccount defines model for GroupAccount.
+type GroupAccount struct {
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Gid Its numeric group ID
+	Gid *int `json:"gid,omitempty"`
+
+	// Hostname Hostname of the agent that produced this result.
+	Hostname string `json:"hostname"`
+
+	// Members The users it has as members, besides those whose primary group it is
+	Members *[]string `json:"members,omitempty"`
+
+	// Name The group
+	Name *string `json:"name,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status GroupAccountStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
+}
+
+// GroupAccountStatus The status of the operation for this host.
+type GroupAccountStatus string
+
 // GroupCollectionResponse defines model for GroupCollectionResponse.
 type GroupCollectionResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []GroupEntry        `json:"results"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []GroupAccount      `json:"results"`
 }
 
 // GroupCreateRequest defines model for GroupCreateRequest.
 type GroupCreateRequest struct {
-	// Gid Numeric group ID. If omitted, the system assigns one.
+	// Gid Its numeric group ID; the system assigns one when it is 0
 	Gid *int `json:"gid,omitempty" validate:"omitempty,min=0"`
 
-	// Name Group name. Must start with a lowercase letter or underscore, followed by lowercase letters, digits, underscores, or hyphens, with an optional trailing `$`; 32 characters or fewer.
-	Name string `json:"name" validate:"required,account_name"`
+	// Name The group to add, such as developers
+	Name string `json:"name" validate:"required,max=32,account_name"`
 
-	// System Create a system group.
+	// System Add it as a system group, with an ID from the system range
 	System *bool `json:"system,omitempty" validate:"omitempty"`
 }
 
-// GroupEntry Group listing result for one host.
-type GroupEntry struct {
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Groups Groups on this host.
-	Groups *[]GroupInfo `json:"groups,omitempty"`
-
-	// Hostname Hostname of the agent that reported this entry.
-	Hostname string `json:"hostname"`
-
-	// Status The status of the operation for this host.
-	Status GroupEntryStatus `json:"status"`
-}
-
-// GroupEntryStatus The status of the operation for this host.
-type GroupEntryStatus string
-
-// GroupInfo A group on the target node.
-type GroupInfo struct {
-	// Gid Numeric group ID.
-	Gid *int `json:"gid,omitempty"`
-
-	// Members Group member usernames.
-	Members *[]string `json:"members,omitempty"`
-
-	// Name Group name.
-	Name *string `json:"name,omitempty"`
-}
-
-// GroupMutationResponse defines model for GroupMutationResponse.
-type GroupMutationResponse struct {
+// GroupCreateResponse defines model for GroupCreateResponse.
+type GroupCreateResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID   `json:"job_id,omitempty"`
-	Results []GroupMutationResult `json:"results"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []GroupResult       `json:"results"`
 }
 
-// GroupMutationResult Result of a group create, update, or delete operation for one host.
-type GroupMutationResult struct {
-	// Changed Whether the operation modified system state.
+// GroupDeleteResponse defines model for GroupDeleteResponse.
+type GroupDeleteResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []GroupResult       `json:"results"`
+}
+
+// GroupGetResponse defines model for GroupGetResponse.
+type GroupGetResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []GroupAccount      `json:"results"`
+}
+
+// GroupResult defines model for GroupResult.
+type GroupResult struct {
+	// Changed Whether the host changed
 	Changed *bool `json:"changed,omitempty"`
 
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
-	// Hostname Hostname of the agent that processed this operation.
+	// Hostname Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
-	// Name Group name.
+	// Name The group
 	Name *string `json:"name,omitempty"`
 
 	// Status The status of the operation for this host.
-	Status GroupMutationResultStatus `json:"status"`
+	Status GroupResultStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
 }
 
-// GroupMutationResultStatus The status of the operation for this host.
-type GroupMutationResultStatus string
+// GroupResultStatus The status of the operation for this host.
+type GroupResultStatus string
 
 // GroupUpdateRequest defines model for GroupUpdateRequest.
 type GroupUpdateRequest struct {
-	// Members Group member usernames (replaces existing).
-	Members *[]string `json:"members,omitempty" validate:"omitempty,dive,account_name"`
+	// Members Its members, which replace the members it has; none when empty
+	Members *[]string `json:"members,omitempty" validate:"omitempty,dive,max=32,account_name"`
+}
+
+// GroupUpdateResponse defines model for GroupUpdateResponse.
+type GroupUpdateResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []GroupResult       `json:"results"`
 }
 
 // HealthResponse defines model for HealthResponse.
@@ -5447,8 +5462,8 @@ type ClientInterface interface {
 	// DeleteNodeGroup request
 	DeleteNodeGroup(ctx context.Context, hostname Hostname, name GroupName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetNodeGroupByName request
-	GetNodeGroupByName(ctx context.Context, hostname Hostname, name GroupName, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetNodeGroupByKey request
+	GetNodeGroupByKey(ctx context.Context, hostname Hostname, name GroupName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PutNodeGroupWithBody request with any body
 	PutNodeGroupWithBody(ctx context.Context, hostname Hostname, name GroupName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -6508,8 +6523,8 @@ func (c *Client) DeleteNodeGroup(ctx context.Context, hostname Hostname, name Gr
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetNodeGroupByName(ctx context.Context, hostname Hostname, name GroupName, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetNodeGroupByNameRequest(c.Server, hostname, name)
+func (c *Client) GetNodeGroupByKey(ctx context.Context, hostname Hostname, name GroupName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeGroupByKeyRequest(c.Server, hostname, name)
 	if err != nil {
 		return nil, err
 	}
@@ -9877,8 +9892,8 @@ func NewDeleteNodeGroupRequest(server string, hostname Hostname, name GroupName)
 	return req, nil
 }
 
-// NewGetNodeGroupByNameRequest generates requests for GetNodeGroupByName
-func NewGetNodeGroupByNameRequest(server string, hostname Hostname, name GroupName) (*http.Request, error) {
+// NewGetNodeGroupByKeyRequest generates requests for GetNodeGroupByKey
+func NewGetNodeGroupByKeyRequest(server string, hostname Hostname, name GroupName) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -13326,8 +13341,8 @@ type ClientWithResponsesInterface interface {
 	// DeleteNodeGroupWithResponse request
 	DeleteNodeGroupWithResponse(ctx context.Context, hostname Hostname, name GroupName, reqEditors ...RequestEditorFn) (*DeleteNodeGroupResponse, error)
 
-	// GetNodeGroupByNameWithResponse request
-	GetNodeGroupByNameWithResponse(ctx context.Context, hostname Hostname, name GroupName, reqEditors ...RequestEditorFn) (*GetNodeGroupByNameResponse, error)
+	// GetNodeGroupByKeyWithResponse request
+	GetNodeGroupByKeyWithResponse(ctx context.Context, hostname Hostname, name GroupName, reqEditors ...RequestEditorFn) (*GetNodeGroupByKeyResponse, error)
 
 	// PutNodeGroupWithBodyWithResponse request with any body
 	PutNodeGroupWithBodyWithResponse(ctx context.Context, hostname Hostname, name GroupName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeGroupResponse, error)
@@ -15289,6 +15304,8 @@ type GetNodeGroupResponse struct {
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -15319,10 +15336,12 @@ func (r GetNodeGroupResponse) ContentType() string {
 type PostNodeGroupResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *GroupMutationResponse
+	JSON200      *GroupCreateResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -15353,11 +15372,12 @@ func (r PostNodeGroupResponse) ContentType() string {
 type DeleteNodeGroupResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *GroupMutationResponse
+	JSON200      *GroupDeleteResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -15385,19 +15405,20 @@ func (r DeleteNodeGroupResponse) ContentType() string {
 	return ""
 }
 
-type GetNodeGroupByNameResponse struct {
+type GetNodeGroupByKeyResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *GroupCollectionResponse
+	JSON200      *GroupGetResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r GetNodeGroupByNameResponse) Status() string {
+func (r GetNodeGroupByKeyResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -15405,7 +15426,7 @@ func (r GetNodeGroupByNameResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetNodeGroupByNameResponse) StatusCode() int {
+func (r GetNodeGroupByKeyResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -15413,7 +15434,7 @@ func (r GetNodeGroupByNameResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetNodeGroupByNameResponse) ContentType() string {
+func (r GetNodeGroupByKeyResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -15423,11 +15444,12 @@ func (r GetNodeGroupByNameResponse) ContentType() string {
 type PutNodeGroupResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *GroupMutationResponse
+	JSON200      *GroupUpdateResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -18514,13 +18536,13 @@ func (c *ClientWithResponses) DeleteNodeGroupWithResponse(ctx context.Context, h
 	return ParseDeleteNodeGroupResponse(rsp)
 }
 
-// GetNodeGroupByNameWithResponse request returning *GetNodeGroupByNameResponse
-func (c *ClientWithResponses) GetNodeGroupByNameWithResponse(ctx context.Context, hostname Hostname, name GroupName, reqEditors ...RequestEditorFn) (*GetNodeGroupByNameResponse, error) {
-	rsp, err := c.GetNodeGroupByName(ctx, hostname, name, reqEditors...)
+// GetNodeGroupByKeyWithResponse request returning *GetNodeGroupByKeyResponse
+func (c *ClientWithResponses) GetNodeGroupByKeyWithResponse(ctx context.Context, hostname Hostname, name GroupName, reqEditors ...RequestEditorFn) (*GetNodeGroupByKeyResponse, error) {
+	rsp, err := c.GetNodeGroupByKey(ctx, hostname, name, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetNodeGroupByNameResponse(rsp)
+	return ParseGetNodeGroupByKeyResponse(rsp)
 }
 
 // PutNodeGroupWithBodyWithResponse request with arbitrary body returning *PutNodeGroupResponse
@@ -22205,6 +22227,20 @@ func ParseGetNodeGroupResponse(rsp *http.Response) (*GetNodeGroupResponse, error
 		}
 		response.JSON403 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -22232,7 +22268,7 @@ func ParsePostNodeGroupResponse(rsp *http.Response) (*PostNodeGroupResponse, err
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest GroupMutationResponse
+		var dest GroupCreateResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -22258,6 +22294,20 @@ func ParsePostNodeGroupResponse(rsp *http.Response) (*PostNodeGroupResponse, err
 			return nil, err
 		}
 		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
@@ -22286,7 +22336,7 @@ func ParseDeleteNodeGroupResponse(rsp *http.Response) (*DeleteNodeGroupResponse,
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest GroupMutationResponse
+		var dest GroupDeleteResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -22319,6 +22369,13 @@ func ParseDeleteNodeGroupResponse(rsp *http.Response) (*DeleteNodeGroupResponse,
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
@@ -22332,22 +22389,22 @@ func ParseDeleteNodeGroupResponse(rsp *http.Response) (*DeleteNodeGroupResponse,
 	return response, nil
 }
 
-// ParseGetNodeGroupByNameResponse parses an HTTP response from a GetNodeGroupByNameWithResponse call
-func ParseGetNodeGroupByNameResponse(rsp *http.Response) (*GetNodeGroupByNameResponse, error) {
+// ParseGetNodeGroupByKeyResponse parses an HTTP response from a GetNodeGroupByKeyWithResponse call
+func ParseGetNodeGroupByKeyResponse(rsp *http.Response) (*GetNodeGroupByKeyResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetNodeGroupByNameResponse{
+	response := &GetNodeGroupByKeyResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest GroupCollectionResponse
+		var dest GroupGetResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -22380,6 +22437,13 @@ func ParseGetNodeGroupByNameResponse(rsp *http.Response) (*GetNodeGroupByNameRes
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
@@ -22408,7 +22472,7 @@ func ParsePutNodeGroupResponse(rsp *http.Response) (*PutNodeGroupResponse, error
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest GroupMutationResponse
+		var dest GroupUpdateResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -22441,6 +22505,13 @@ func ParsePutNodeGroupResponse(rsp *http.Response) (*PutNodeGroupResponse, error
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

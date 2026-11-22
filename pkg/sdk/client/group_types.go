@@ -21,22 +21,20 @@
 package client
 
 import (
+	openapi_types "github.com/oapi-codegen/runtime/types"
+
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
-// GroupInfoResult represents a group listing result from a query operation.
+// GroupInfoResult is one group on one host, from a list or a get. A host
+// that failed or skipped has a row with its status and no group.
 type GroupInfoResult struct {
-	Hostname string      `json:"hostname"`
-	Status   string      `json:"status"`
-	Groups   []GroupInfo `json:"groups,omitempty"`
-	Error    string      `json:"error,omitempty"`
-}
-
-// GroupInfo represents a group on the target node.
-type GroupInfo struct {
-	Name    string   `json:"name,omitempty"`
-	GID     int      `json:"gid,omitempty"`
-	Members []string `json:"members,omitempty"`
+	Hostname string   `json:"hostname"`
+	Status   string   `json:"status"`
+	Name     string   `json:"name,omitempty"`
+	GID      int      `json:"gid,omitempty"`
+	Members  []string `json:"members,omitempty"`
+	Error    string   `json:"error,omitempty"`
 }
 
 // GroupMutationResult represents the result of a group create, update, or
@@ -65,76 +63,37 @@ type GroupUpdateOpts struct {
 	Members []string
 }
 
-// groupInfoCollectionFromList converts a gen.GroupCollectionResponse
-// to a Collection[GroupInfoResult].
-func groupInfoCollectionFromList(
-	g *gen.GroupCollectionResponse,
+// groupInfoCollectionFromGen converts the rows of a list or a get.
+func groupInfoCollectionFromGen(
+	rows []gen.GroupAccount,
+	jobID *openapi_types.UUID,
 ) Collection[GroupInfoResult] {
-	results := make([]GroupInfoResult, 0, len(g.Results))
-	for _, r := range g.Results {
-		result := GroupInfoResult{
+	results := make([]GroupInfoResult, 0, len(rows))
+	for _, r := range rows {
+		results = append(results, GroupInfoResult{
 			Hostname: r.Hostname,
 			Status:   string(r.Status),
+			Name:     derefString(r.Name),
+			GID:      derefInt(r.Gid),
+			Members:  derefStringSlice(r.Members),
 			Error:    derefString(r.Error),
-		}
-
-		if r.Groups != nil {
-			groups := make([]GroupInfo, 0, len(*r.Groups))
-			for _, g := range *r.Groups {
-				groups = append(groups, groupInfoFromGen(g))
-			}
-
-			result.Groups = groups
-		}
-
-		results = append(results, result)
+		})
 	}
 
 	return Collection[GroupInfoResult]{
 		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
+		JobID:   jobIDFromGen(jobID),
 	}
 }
 
-// groupInfoCollectionFromGet converts a gen.GroupCollectionResponse (from
-// get-by-name) to a Collection[GroupInfoResult].
-func groupInfoCollectionFromGet(
-	g *gen.GroupCollectionResponse,
-) Collection[GroupInfoResult] {
-	return groupInfoCollectionFromList(g)
-}
-
-// groupMutationCollectionFromCreate converts a gen.GroupMutationResponse
-// to a Collection[GroupMutationResult].
-func groupMutationCollectionFromCreate(
-	g *gen.GroupMutationResponse,
-) Collection[GroupMutationResult] {
-	return groupMutationCollectionFromGen(g)
-}
-
-// groupMutationCollectionFromUpdate converts a gen.GroupMutationResponse
-// to a Collection[GroupMutationResult].
-func groupMutationCollectionFromUpdate(
-	g *gen.GroupMutationResponse,
-) Collection[GroupMutationResult] {
-	return groupMutationCollectionFromGen(g)
-}
-
-// groupMutationCollectionFromDelete converts a gen.GroupMutationResponse
-// to a Collection[GroupMutationResult].
-func groupMutationCollectionFromDelete(
-	g *gen.GroupMutationResponse,
-) Collection[GroupMutationResult] {
-	return groupMutationCollectionFromGen(g)
-}
-
-// groupMutationCollectionFromGen is the shared converter for all group
-// mutation response types.
+// groupMutationCollectionFromGen converts the rows of a create, an update or
+// a delete.
 func groupMutationCollectionFromGen(
-	g *gen.GroupMutationResponse,
+	rows []gen.GroupResult,
+	jobID *openapi_types.UUID,
 ) Collection[GroupMutationResult] {
-	results := make([]GroupMutationResult, 0, len(g.Results))
-	for _, r := range g.Results {
+	results := make([]GroupMutationResult, 0, len(rows))
+	for _, r := range rows {
 		results = append(results, GroupMutationResult{
 			Hostname: r.Hostname,
 			Status:   string(r.Status),
@@ -146,17 +105,6 @@ func groupMutationCollectionFromGen(
 
 	return Collection[GroupMutationResult]{
 		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
-	}
-}
-
-// groupInfoFromGen converts a gen.GroupInfo to a GroupInfo.
-func groupInfoFromGen(
-	g gen.GroupInfo,
-) GroupInfo {
-	return GroupInfo{
-		Name:    derefString(g.Name),
-		GID:     derefInt(g.Gid),
-		Members: derefStringSlice(g.Members),
+		JobID:   jobIDFromGen(jobID),
 	}
 }

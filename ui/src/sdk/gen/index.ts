@@ -11,6 +11,7 @@ export * from './docker-management-api-docker-image/docker-management-api-docker
 export * from './docker-management-api-docker-operations/docker-management-api-docker-operations';
 export * from './facts-api-facts/facts-api-facts';
 export * from './file-management-api-file-operations/file-management-api-file-operations';
+export * from './group-api-group-operations/group-api-group-operations';
 export * from './health-check-api-health/health-check-api-health';
 export * from './hostname-api-hostname-operations/hostname-api-hostname-operations';
 export * from './interface-api-network-interface-operations/interface-api-network-interface-operations';
@@ -35,5 +36,4 @@ export * from './telemetry-api-telemetry/telemetry-api-telemetry';
 export * from './timezone-api-timezone-operations/timezone-api-timezone-operations';
 export * from './updatepackages-api-updatepackages-operations/updatepackages-api-updatepackages-operations';
 export * from './uptime-api-uptime-operations/uptime-api-uptime-operations';
-export * from './user-and-group-management-api-group-operations/user-and-group-management-api-group-operations';
-export * from './user-and-group-management-api-user-operations/user-and-group-management-api-user-operations';
+export * from './user-management-api-user-operations/user-management-api-user-operations';

@@ -30,6 +30,8 @@ const (
 	PermCertificateRead     Permission = "certificate:read"
 	PermCertificateWrite    Permission = "certificate:write"
 	PermDiskRead            Permission = "disk:read"
+	PermGroupRead           Permission = "group:read"
+	PermGroupWrite          Permission = "group:write"
 	PermHostnameRead        Permission = "hostname:read"
 	PermHostnameWrite       Permission = "hostname:write"
 	PermLoadRead            Permission = "load:read"

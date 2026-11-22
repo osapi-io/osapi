@@ -66,40 +66,6 @@ func (s *UserSmokeSuite) TestUserList() {
 	}
 }
 
-func (s *UserSmokeSuite) TestGroupList() {
-	tests := []struct {
-		name         string
-		args         []string
-		validateFunc func(stdout string, exitCode int)
-	}{
-		{
-			name: "returns group results",
-			args: []string{"client", "node", "group", "list", "--json"},
-			validateFunc: func(
-				stdout string,
-				exitCode int,
-			) {
-				s.Require().Equal(0, exitCode)
-
-				var result map[string]any
-				err := parseJSON(stdout, &result)
-				s.Require().NoError(err)
-
-				results, ok := result["results"].([]any)
-				s.Require().True(ok)
-				s.NotNil(results)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			stdout, _, exitCode := runCLI(tt.args...)
-			tt.validateFunc(stdout, exitCode)
-		})
-	}
-}
-
 func TestUserSmokeSuite(
 	t *testing.T,
 ) {
