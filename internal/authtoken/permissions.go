@@ -34,6 +34,38 @@ import (
 // Permission is a type alias for client.Permission.
 type Permission = client.Permission
 
+// Role is a type alias for client.Role: a built-in role or a custom role of
+// the config.
+type Role = client.Role
+
+// CustomRoles are the custom roles of the config, each with its
+// permissions.
+type CustomRoles map[Role][]Permission
+
+// RolesOf is roles, as a token's claims hold them, as Roles.
+func RolesOf(
+	roles []string,
+) []Role {
+	out := make([]Role, 0, len(roles))
+	for _, r := range roles {
+		out = append(out, Role(r))
+	}
+
+	return out
+}
+
+// PermissionsOf is perms, as a token's claims hold them, as Permissions.
+func PermissionsOf(
+	perms []string,
+) []Permission {
+	out := make([]Permission, 0, len(perms))
+	for _, p := range perms {
+		out = append(out, Permission(p))
+	}
+
+	return out
+}
+
 // builtinPermissions are the permissions of the hand-written domains under
 // internal/controller/api, which go as each becomes a behavior, and
 // health:read and trace:read, which several endpoint groups name with
@@ -148,14 +180,14 @@ func init() {
 
 // The built-in roles. The SDK's Role constants are written from Roles.
 const (
-	RoleAdmin = "admin"
-	RoleWrite = "write"
-	RoleRead  = "read"
+	RoleAdmin Role = "admin"
+	RoleWrite Role = "write"
+	RoleRead  Role = "read"
 )
 
 // Roles are the built-in roles, from the most to the least that each grants.
-func Roles() []string {
-	return []string{RoleAdmin, RoleWrite, RoleRead}
+func Roles() []Role {
+	return []Role{RoleAdmin, RoleWrite, RoleRead}
 }
 
 // AdminOnly reports whether only the admin role grants p: its verb is
@@ -181,7 +213,7 @@ func AdminOnly(
 // that is not admin only. read grants each read permission that is not admin
 // only.
 func RolePermissions(
-	role string,
+	role Role,
 ) ([]Permission, bool) {
 	var grants func(verb string) bool
 	switch role {
@@ -245,19 +277,19 @@ func Check() []error {
 // If directPermissions is non-empty, it is returned directly (IdP override).
 // Otherwise roles are expanded through customRoles first, then RolePermissions.
 func ResolvePermissions(
-	roles []string,
-	directPermissions []string,
-	customRoles map[string][]string,
-) map[string]bool {
+	roles []Role,
+	directPermissions []Permission,
+	customRoles CustomRoles,
+) map[Permission]bool {
 	if len(directPermissions) > 0 {
-		set := make(map[string]bool, len(directPermissions))
+		set := make(map[Permission]bool, len(directPermissions))
 		for _, p := range directPermissions {
 			set[p] = true
 		}
 		return set
 	}
 
-	set := make(map[string]bool)
+	set := make(map[Permission]bool)
 	for _, role := range roles {
 		// Try custom roles first
 		if customRoles != nil {
@@ -271,7 +303,7 @@ func ResolvePermissions(
 		// Fall back to default role permissions
 		if perms, ok := RolePermissions(role); ok {
 			for _, p := range perms {
-				set[string(p)] = true
+				set[p] = true
 			}
 		}
 	}
@@ -280,8 +312,8 @@ func ResolvePermissions(
 
 // HasPermission checks whether the resolved set contains the required permission.
 func HasPermission(
-	resolved map[string]bool,
-	required string,
+	resolved map[Permission]bool,
+	required Permission,
 ) bool {
 	return resolved[required]
 }

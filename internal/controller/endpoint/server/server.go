@@ -68,7 +68,7 @@ type Server struct {
 	logger      *slog.Logger
 	tokens      api.TokenValidator
 	signingKey  string
-	customRoles map[string][]string
+	customRoles authtoken.CustomRoles
 	deps        map[reflect.Type]any
 }
 
@@ -77,7 +77,7 @@ type Server struct {
 func New(
 	logger *slog.Logger,
 	signingKey string,
-	customRoles map[string][]string,
+	customRoles authtoken.CustomRoles,
 	deps ...any,
 ) *Server {
 	s := &Server{
@@ -129,7 +129,7 @@ func Register(
 func Handler(
 	logger *slog.Logger,
 	signingKey string,
-	customRoles map[string][]string,
+	customRoles authtoken.CustomRoles,
 	deps ...any,
 ) []func(e *echo.Echo) {
 	s := New(logger, signingKey, customRoles, deps...)

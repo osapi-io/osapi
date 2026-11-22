@@ -46,7 +46,7 @@ func Go() string {
 	}
 	sb.WriteString(")\n\n// Built-in role constants, one for each built-in role.\nconst (\n")
 	for _, r := range Roles() {
-		fmt.Fprintf(&sb, "\tRole%s Role = %q\n", capital(r), r)
+		fmt.Fprintf(&sb, "\tRole%s Role = %q\n", capital(string(r)), r)
 	}
 	sb.WriteString(")\n")
 	// The source is a const block of names and strings, which formats.

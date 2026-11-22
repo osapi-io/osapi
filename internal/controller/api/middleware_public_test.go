@@ -190,7 +190,7 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddleware() {
 				s.tokenManager,
 				testSigningKey,
 				contextKey,
-				tt.customRoles,
+				customOf(tt.customRoles),
 			)
 			_, _ = wrapped(ctx, nil)
 
@@ -256,8 +256,8 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddlewareCustomRoles() {
 			s.Require().NoError(err)
 
 			// Override custom roles to shadow "admin".
-			customRoles := map[string][]string{
-				"admin": tt.customRoles[tt.tokenRoles[0]],
+			customRoles := authtoken.CustomRoles{
+				"admin": authtoken.PermissionsOf(tt.customRoles[tt.tokenRoles[0]]),
 			}
 
 			e := echo.New()
@@ -437,4 +437,19 @@ func TestMiddlewarePublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(MiddlewarePublicTestSuite))
+}
+
+// customOf is m as the custom roles of the config.
+func customOf(
+	m map[string][]string,
+) authtoken.CustomRoles {
+	if m == nil {
+		return nil
+	}
+	out := make(authtoken.CustomRoles, len(m))
+	for role, perms := range m {
+		out[authtoken.Role(role)] = authtoken.PermissionsOf(perms)
+	}
+
+	return out
 }

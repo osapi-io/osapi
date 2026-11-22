@@ -36,7 +36,7 @@ func Handler(
 	logger *slog.Logger,
 	jobClient client.JobClient,
 	signingKey string,
-	customRoles map[string][]string,
+	customRoles authtoken.CustomRoles,
 ) []func(e *echo.Echo) {
 	var tokenManager api.TokenValidator = authtoken.New(logger)
 

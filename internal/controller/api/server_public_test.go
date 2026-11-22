@@ -39,6 +39,7 @@ import (
 	auditmocks "github.com/osapi-io/osapi/internal/audit/mocks"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/api"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 type ServerPublicTestSuite struct {
@@ -85,9 +86,9 @@ func (s *ServerPublicTestSuite) TestNew() {
 					API: config.APIServer{
 						Security: config.ServerSecurity{
 							SigningKey: "test-key",
-							Roles: map[string]config.CustomRole{
+							Roles: map[client.Role]config.CustomRole{
 								"ops": {
-									Permissions: []string{"node:read", "health:read"},
+									Permissions: []client.Permission{"node:read", "health:read"},
 								},
 							},
 						},
