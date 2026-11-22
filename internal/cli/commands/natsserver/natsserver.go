@@ -27,7 +27,7 @@ import "github.com/osapi-io/osapi/internal/cli/command"
 // Group is the server group's definition.
 var Group = command.Register(command.Define(
 	"server", "Run the embedded NATS server",
-	command.Under("nats"),
+	command.Under(command.ParentNATS),
 	command.Uses[Deps](),
 	command.Process("start").
 		Short("Start the embedded NATS server").

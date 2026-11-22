@@ -28,7 +28,7 @@ import "github.com/osapi-io/osapi/internal/cli/command"
 // Group is the key group's definition.
 var Group = command.Register(command.Define(
 	"key", "Read the key pair of the controller on this host",
-	command.Under("controller"),
+	command.Under(command.ParentController),
 	command.Uses[Deps](),
 	command.Method[FingerprintInput, FingerprintOutput]("fingerprint").
 		Short("Show the fingerprint of the controller's key").

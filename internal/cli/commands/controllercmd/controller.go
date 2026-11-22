@@ -30,7 +30,7 @@ import "github.com/osapi-io/osapi/internal/cli/command"
 var Group = command.Register(command.Define(
 	"controller", "Run the controller",
 	command.Flat(),
-	command.Under("controller"),
+	command.Under(command.ParentController),
 	command.Uses[Deps](),
 	command.Process("start").
 		Short("Start the controller").

@@ -63,6 +63,7 @@ type badTags struct {
 	Name string   `title:"Name" json:"name" render:"short=0" empty:"None."`
 	Kind string   `             json:"kind"                                table:"rows"`
 	Text string   `             json:"text"                                table:"blocks"`
+	Note string   `             json:"note"                                               lable:"The \"note\""`
 }
 
 type ValidatePublicTestSuite struct {
@@ -88,8 +89,23 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 			),
 		},
 		{
+			name: "when the group is Under a word that is not one of KnownParents",
+			group: command.Define("zzunder", "Under", command.Under("contoller"),
+				command.Uses[localDeps](),
+				command.Method[roleIn, roleOut]("list").
+					Short("List roles").
+					Example("--roles a").
+					Fails("no roles", roleIn{}).
+					Fails("an unknown role", roleIn{Roles: []string{"c"}}).
+					Handle(handleRoles),
+			),
+			want: []string{
+				`the group is Under "contoller", which is not one of KnownParents; use a command.Parent constant.`,
+			},
+		},
+		{
 			name:  "when the group has a bad word, no methods and no Uses",
-			group: command.Define("Bad", "Bad", command.Under("ok", "Up")),
+			group: command.Define("Bad", "Bad", command.Under(command.ParentCLI, "Up")),
 			want: []string{
 				`the word "Up" is not lowercase letters and digits.`,
 				`the word "Bad" is not lowercase letters and digits.`,
@@ -147,7 +163,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 			group: command.Define("zzflatu", "Flat",
 				command.Uses[localDeps](),
 				command.Flat(),
-				command.Under("zzpar"),
+				command.Under(command.ParentCLI),
 				command.Method[struct{}, greetOut]("version").Short("X").
 					Handle(func(context.Context, localDeps, struct{}) (greetOut, error) {
 						return greetOut{}, nil
@@ -294,6 +310,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 		"badTags.Name has a title tag: it goes on the field _ struct{}.",
 		`badTags.Kind has table:"rows", which the output does not know.`,
 		`badTags.Text has table:"blocks" and is not a list of objects.`,
+		`badTags.Note has the tag key "lable", which nothing reads.`,
 		`"frob" has no past tense.`,
 	}, got)
 

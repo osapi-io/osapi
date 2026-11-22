@@ -663,6 +663,29 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 			wantRules: []string{behavior.RuleTag},
 		},
 		{
+			name: "when an input field has a tag key that nothing reads",
+			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
+				behavior.Read("get", func(context.Context, fakeProvider, badKeyIn) (entry, error) {
+					return entry{}, nil
+				}).Describe("Get"),
+			),
+			wantRules: []string{behavior.RuleTag},
+		},
+		{
+			name: "when an output field's secret tag is not true",
+			b: behavior.Define(
+				"sysctl",
+				"x",
+				behavior.Node,
+				onDebian,
+				behavior.Read("get", func(context.Context, fakeProvider, getIn) (badSecretOut, error) {
+					return badSecretOut{}, nil
+				}).
+					Describe("Get"),
+			),
+			wantRules: []string{behavior.RuleTag},
+		},
+		{
 			name: "when an input field's telemetry tag is not attr",
 			b: behavior.Define(
 				"sysctl",
@@ -683,7 +706,7 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 					return badKeyOut{}, nil
 				}).Describe("Get"),
 			),
-			wantRules: []string{behavior.RuleTag},
+			wantRules: []string{behavior.RuleOutputShape},
 		},
 		{
 			name: "when Platform names a platform that is not known",
@@ -886,4 +909,12 @@ type badKeyOut struct {
 	Entries []struct {
 		Key string `json:"key" doc:"The \"key\"" secrte:"true" `
 	} `json:"entries" doc:"The entries"`
+}
+
+type badKeyIn struct {
+	Key string `json:"key" validate:"required" doc:"The key" secrte:"true"`
+}
+
+type badSecretOut struct {
+	Key string `json:"key" doc:"The key" secret:"yes"`
 }

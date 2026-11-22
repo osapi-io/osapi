@@ -30,7 +30,7 @@ import "github.com/osapi-io/osapi/internal/cli/command"
 var Group = command.Register(command.Define(
 	"command",
 	"List, describe and validate the local commands, and print their DSL",
-	command.Under("cli"),
+	command.Under(command.ParentCLI),
 	command.Long("A local command runs in the CLI process and calls no API, such as\n"+
 		"`osapi token generate`. Its group is a definition in\n"+
 		"`internal/cli/commands/<group>`, and its commands, flags, help and pages\n"+

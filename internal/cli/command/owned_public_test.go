@@ -62,6 +62,31 @@ func (s *OwnedPublicTestSuite) TestTagProblems() {
 	s.Contains(got[0], `render:"furlongs"`)
 }
 
+func (s *OwnedPublicTestSuite) TestTagKeys() {
+	tests := []struct {
+		name string
+		tag  reflect.StructTag
+		want []string
+	}{
+		{
+			name: "when the tag has keys, each in order",
+			tag:  `json:"a" doc:"The \"a\""`,
+			want: []string{"json", "doc"},
+		},
+		{
+			name: "when the tag ends in a space, it stops there",
+			tag:  `json:"a" `,
+			want: []string{"json"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, command.TagKeys(tc.tag))
+		})
+	}
+}
+
 func TestOwnedPublicTestSuite(
 	t *testing.T,
 ) {

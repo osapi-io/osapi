@@ -30,7 +30,7 @@ import "github.com/osapi-io/osapi/internal/cli/command"
 var Group = command.Register(command.Define(
 	"setup", "Create osapi's streams and buckets on a NATS server",
 	command.Flat(),
-	command.Under("nats"),
+	command.Under(command.ParentNATS),
 	command.Uses[Deps](),
 	command.Method[Input, Output]("setup").
 		Short("Create osapi's streams and buckets on a NATS server").

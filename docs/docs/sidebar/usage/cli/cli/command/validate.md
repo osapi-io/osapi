@@ -52,11 +52,12 @@ The rules:
   func(context.Context, D, In) (Out, error), with D that type and In and Out the
   method's types. Fix: Add command.Uses\[Deps]() to Define, and .Handle(fn) to
   each method, with the signature that the message names.
-- `tag`: Each render tag of an output field is one the output knows: -, bytes,
-  age, time, duration, duration=ms, status or short=N with N above 0. An empty
-  tag is on a list, and a title tag is on the blank field _ of the output type.
-  Fix: Use a render value that osapi cli command spec get lists, put empty on a
-  list field, and put title on a field _ struct&#123;&#125; of the output type.
+- `tag`: Each tag key of an output field is one of command.KnownTags. Each
+  render tag is one the output knows: -, bytes, age, time, duration,
+  duration=ms, status or short=N with N above 0. An empty tag is on a list, and
+  a title tag is on the blank field _ of the output type. Fix: Use a render
+  value that osapi cli command spec get lists, put empty on a list field, and
+  put title on a field _ struct&#123;&#125; of the output type.
 - `says`: A method that answers with no body says what occurred: its name has a
   past tense, such as admitted for admit, or .Says gives the text. Fix: Add
   .Says("&lt;state&gt;") to the method, such as .Says("draining") for drain.

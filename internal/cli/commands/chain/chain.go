@@ -31,7 +31,7 @@ import (
 var Group = command.Register(command.Define(
 	"chain",
 	"Show and check the chains of behaviors that a behavior calls",
-	command.Under("behavior"),
+	command.Under(command.ParentBehavior),
 	command.Long("A behavior that requires others calls them on the same host, in the same\n"+
 		"job: dns calls netplan, and netplan calls managedfile. That is a chain, named\n"+
 		"by the behavior at its top. `behavior.Requires` on each behavior makes it;\n"+

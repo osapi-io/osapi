@@ -26,6 +26,8 @@ import (
 	"sort"
 	"strings"
 	"sync"
+
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // LocalGroup is a group of local commands: commands that run in the CLI
@@ -122,13 +124,38 @@ func Flat() Option {
 	return optionFunc(func(g *LocalGroup) { g.Flat = true })
 }
 
+// Parent is a command that local groups go under, such as controller for
+// osapi controller endpoint. A misspelled parent made a new command at the
+// root with no error, so validate refuses a word outside KnownParents.
+type Parent string
+
+// The commands that local groups go under.
+const (
+	ParentAgent      Parent = "agent"
+	ParentBehavior   Parent = "behavior"
+	ParentCLI        Parent = "cli"
+	ParentController Parent = "controller"
+	ParentNATS       Parent = "nats"
+)
+
+// KnownParents are the commands that a group can be Under. Add a constant
+// here to make a new one.
+func KnownParents() []Parent {
+	return []Parent{ParentAgent, ParentBehavior, ParentCLI, ParentController, ParentNATS}
+}
+
 // Under puts the group's command under the command of words, such as
-// controller for osapi controller endpoint. Without it, the group is under
-// the root.
+// ParentController for osapi controller endpoint. Without it, the group is
+// under the root.
 func Under(
-	words ...string,
+	words ...Parent,
 ) Option {
-	return optionFunc(func(g *LocalGroup) { g.Parents = words })
+	return optionFunc(func(g *LocalGroup) {
+		g.Parents = make([]string, 0, len(words))
+		for _, w := range words {
+			g.Parents = append(g.Parents, string(w))
+		}
+	})
 }
 
 var (
@@ -271,7 +298,7 @@ func (g *LocalGroup) Commands() []Command {
 // permission.
 func (g *LocalGroup) CommandPermission(
 	_ Command,
-) string {
+) client.Permission {
 	return ""
 }
 

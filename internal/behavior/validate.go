@@ -102,27 +102,21 @@ const (
 	// RuleTemplate: a field tagged template:"<vars>" is a string, and <vars>
 	// names an input field of type map[string]string.
 	RuleTemplate = "template"
-	// RuleTag: each struct tag of an input or output field has a known key,
-	// secret is "true" and telemetry is "attr". A typo of either drops what
+	// RuleTag: each struct tag of an input field has a known key
+	// (command.KnownTags), and secret is "true" and telemetry is "attr" on an
+	// input or an output field. A typo of either drops what
 	// the tag does with no error: a secret reaches the audit log.
 	RuleTag = "tag"
 )
 
-// KnownTags are the struct tag keys that a field of a behavior's input or
-// output can carry. The DSL, the validator, the CLI's renderer and the
-// settings loader read them. A key outside the list is a typo: Go reads a
-// tag only by its exact key, so the field gets nothing from it.
-var KnownTags = []string{
-	"default", "doc", "empty", "example", "flag", "in", "json", "label",
-	"mapstructure", "none", "param", "pattern", "prefix", "render", "secret",
-	"short", "table", "telemetry", "template", "title", "validate", "yaml",
-}
-
 // tagProblems are the RuleTag problems of t's fields, and of the fields of
-// each struct that a field holds, named from prefix.
+// each struct that a field holds, named from prefix. keys checks each tag
+// key against command.KnownTags too; an output's keys are checked by
+// command.TagProblems, under the output's rule.
 func tagProblems(
 	t reflect.Type,
 	prefix string,
+	keys bool,
 	seen map[reflect.Type]bool,
 ) []string {
 	for t != nil && (t.Kind() == reflect.Pointer || t.Kind() == reflect.Slice ||
@@ -137,8 +131,8 @@ func tagProblems(
 	for i := range t.NumField() {
 		f := t.Field(i)
 		name := prefix + f.Name
-		for _, key := range tagKeys(f.Tag) {
-			if !slices.Contains(KnownTags, key) {
+		for _, key := range command.TagKeys(f.Tag) {
+			if keys && !slices.Contains(command.KnownTags, key) {
 				out = append(
 					out,
 					fmt.Sprintf("field %s has the tag key %q, which nothing reads", name, key),
@@ -157,42 +151,10 @@ func tagProblems(
 				fmt.Sprintf("field %s is tagged telemetry:%q; the only value is \"attr\"", name, v),
 			)
 		}
-		out = append(out, tagProblems(f.Type, name+".", seen)...)
+		out = append(out, tagProblems(f.Type, name+".", keys, seen)...)
 	}
 
 	return out
-}
-
-// tagKeys are the keys of tag, in order, by the convention that
-// reflect.StructTag.Get reads: key:"value" pairs separated by spaces.
-func tagKeys(
-	tag reflect.StructTag,
-) []string {
-	var keys []string
-	s := string(tag)
-	for s != "" {
-		s = strings.TrimLeft(s, " ")
-		i := strings.Index(s, ":\"")
-		if i <= 0 {
-			break
-		}
-		keys = append(keys, s[:i])
-		s = s[i+2:]
-		for j := 0; j < len(s); j++ {
-			if s[j] == '\\' {
-				j++
-
-				continue
-			}
-			if s[j] == '"' {
-				s = s[j+1:]
-
-				break
-			}
-		}
-	}
-
-	return keys
 }
 
 // synonyms are method names that mean a standard verb, and the verb to use.
@@ -569,10 +531,10 @@ func ValidateBehavior(
 						"optional field %s is sent as its zero value when it is empty", f)
 				}
 			}
-			for _, msg := range tagProblems(m.In, "", map[reflect.Type]bool{}) {
+			for _, msg := range tagProblems(m.In, "", true, map[reflect.Type]bool{}) {
 				add(m.Name, RuleTag, "input %s", msg)
 			}
-			for _, msg := range tagProblems(m.Out, "", map[reflect.Type]bool{}) {
+			for _, msg := range tagProblems(m.Out, "", false, map[reflect.Type]bool{}) {
 				add(m.Name, RuleTag, "output %s", msg)
 			}
 			recordable := false
