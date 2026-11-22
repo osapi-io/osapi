@@ -8,6 +8,11 @@ describes each part of a group.
 
 The rules:
 
+- `example`: Each flag that an Example names is a flag of the method's command:
+  a field of its input, a field of the struct that in:"body" names, or --json,
+  --debug or --osapi-file. Fix: Spell each flag of the example as the command
+  has it: osapi controller endpoint get --name &lt;group&gt; lists the methods,
+  and the command's --help lists its flags.
 - `prints`: The output that Prints gives an example is a value of the method's
   output type, and Prints follows an Example. Fix: Give Prints a value of the
   method's output type, after the Example that it shows.

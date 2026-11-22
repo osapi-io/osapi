@@ -827,6 +827,22 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 			},
 		},
 		{
+			name: "when an example names a flag that the command does not have",
+			group: endpoint.Define("node", "The nodes",
+				endpoint.SubDoc("one", "One node"),
+				endpoint.Get[exampleIn, Node]("list").
+					Example("--hostname web-01 --limit=5 -T _all --json").
+					Example("--hostnme web-01"),
+				endpoint.Post[exampleBodyIn, Node]("create").Sub("one").
+					Example("--id a --reason why").
+					Example("--resaon why"),
+			),
+			want: []string{
+				`the example "--hostnme web-01" names --hostnme, which the command does not have.`,
+				`the example "--resaon why" names --resaon, which the command does not have.`,
+			},
+		},
+		{
 			name: "when an error has a reason that is not one of Reasons",
 			group: endpoint.Define("node", "The nodes",
 				endpoint.Get[noInput, Node]("list").Errors(
@@ -983,4 +999,19 @@ func TestEndpointPublicTestSuite(
 
 type badInIn struct {
 	Q string `json:"q,omitempty" in:"qeury" validate:"omitempty" doc:"A filter"`
+}
+
+type exampleIn struct {
+	Hostname string `json:"hostname"                  in:"path"  validate:"required"  flag:"target"   short:"T" doc:"The host"`
+	Name     string `json:"hostname_filter,omitempty" in:"query" validate:"omitempty" flag:"hostname"           doc:"A filter"`
+	Limit    int    `json:"limit,omitempty"           in:"query" validate:"omitempty"                           doc:"The page size"`
+}
+
+type exampleBodyIn struct {
+	ID   string      `json:"id" in:"path" validate:"required"`
+	Body exampleBody `          in:"body" validate:"required"`
+}
+
+type exampleBody struct {
+	Reason string `json:"reason,omitempty" validate:"omitempty" doc:"Why"`
 }
