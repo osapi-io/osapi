@@ -296,7 +296,7 @@ func requiredSudo(
 ) []string {
 	all := slices.Clone(sudoCommands)
 	for _, b := range behavior.All() {
-		sudo, _ := b.Programs(platform)
+		sudo, _ := b.Programs(behavior.PlatformName(platform))
 		for _, p := range sudo {
 			if !slices.Contains(all, p) {
 				all = append(all, p)
@@ -320,7 +320,7 @@ func MissingPrograms(
 ) []string {
 	var missing []string
 	for _, b := range behavior.All() {
-		_, runs := b.Programs(platform)
+		_, runs := b.Programs(behavior.PlatformName(platform))
 		for _, p := range runs {
 			if slices.Contains(missing, p) {
 				continue

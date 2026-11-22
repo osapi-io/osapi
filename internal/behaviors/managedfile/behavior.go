@@ -38,7 +38,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"managedfile", "Files osapi writes on a host and keeps a record of",
 	behavior.Node,
 	behavior.Internal,
-	behavior.Platform("debian", newDebian),
+	behavior.Platform(behavior.PlatformDebian, newDebian),
 	behavior.Sudo("chown"),
 	behavior.Runs("stat"),
 	// It writes the path its caller names. Each behavior that requires it

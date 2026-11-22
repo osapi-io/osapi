@@ -116,7 +116,7 @@ func (s *ChainPublicTestSuite) TestChains() {
 	s.Require().Len(runs, 1, "only the example that runs on a platform it serves, and that sets up")
 	s.Equal("get", runs[0].Method)
 	s.Equal("A text", runs[0].Example)
-	s.Equal("debian", runs[0].Platform)
+	s.Equal(behavior.PlatformDebian, runs[0].Platform)
 	root := runs[0].Root
 	s.Equal("user", root.Behavior)
 	s.Equal(echoIn{Text: "hi"}, root.Input)

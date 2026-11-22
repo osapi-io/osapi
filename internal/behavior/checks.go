@@ -127,6 +127,11 @@ var Checks = guide.Checks{
 		Fix:      "Remove telemetry:\"attr\" from the secret field. A secret is never recorded on a span.",
 	},
 	{
+		Rule:     RuleTag,
+		Requires: "Each struct tag of an input field has a known key (behavior.KnownTags), secret is \"true\" and telemetry is \"attr\".",
+		Fix:      "Correct the key or the value. A misspelled secret tag puts the field in the audit log, and a misspelled telemetry tag leaves it off the span.",
+	},
+	{
 		Rule:     RuleSurface,
 		Requires: "A behavior with CLI also has API, and a behavior with API has an Area of the UI. An internal behavior has no API or CLI. Each input field of a CLI behavior has a type a flag holds: string, bool, int, []string, map[string]string or []byte (a file). The CLI owns the list; its generator builds each.",
 		Fix:      "Add behavior.API, add behavior.Area(...) to a served behavior, remove API and CLI from the internal behavior, or give the field a type that a flag can hold.",

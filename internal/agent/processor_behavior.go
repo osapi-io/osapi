@@ -37,7 +37,7 @@ import (
 // BehaviorProviders are the providers the agent built for every registered
 // behavior on its platform, as each declares them with behavior.Platform.
 type BehaviorProviders struct {
-	platform string
+	platform behavior.PlatformName
 	built    map[string]any
 	failed   map[string]error
 }
@@ -65,7 +65,7 @@ func BuildBehaviorProviders(
 		switch {
 		case errors.Is(err, provider.ErrUnsupported) || (err == nil && p == nil):
 			logger.Info("behavior unsupported on this platform; its methods are skipped",
-				slog.String("behavior", b.Name), slog.String("platform", h.Platform))
+				slog.String("behavior", b.Name), slog.String("platform", string(h.Platform)))
 		case err != nil:
 			bp.failed[b.Name] = err
 			logger.Error("behavior provider failed to build",
@@ -73,7 +73,7 @@ func BuildBehaviorProviders(
 		default:
 			bp.built[b.Name] = p
 			logger.Debug("behavior provider built",
-				slog.String("behavior", b.Name), slog.String("platform", h.Platform))
+				slog.String("behavior", b.Name), slog.String("platform", string(h.Platform)))
 		}
 	}
 

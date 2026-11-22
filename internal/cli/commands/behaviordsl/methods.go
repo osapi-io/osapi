@@ -409,7 +409,7 @@ func platformNames(
 ) []string {
 	out := make([]string, 0, len(b.Platforms))
 	for _, p := range b.Platforms {
-		out = append(out, p.Name)
+		out = append(out, string(p.Name))
 	}
 
 	return out

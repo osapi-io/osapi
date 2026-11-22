@@ -44,7 +44,7 @@ import (
 type Host struct {
 	// Platform is the agent's platform as gohai's family.Detect names it, such as
 	// debian or darwin.
-	Platform string
+	Platform behavior.PlatformName
 	// Container is true when the agent runs in a container.
 	Container bool
 	// Hostname is the agent's hostname.
@@ -83,7 +83,7 @@ type Host struct {
 // filesystem, its commands, its clock, its platform as the family, and its
 // resolver. A nil field is the real host's.
 func (h Host) Sources() source.Sources {
-	src := source.Sources{FS: h.FS, Now: h.Now, Family: h.Platform, Resolver: h.Resolver}
+	src := source.Sources{FS: h.FS, Now: h.Now, Family: string(h.Platform), Resolver: h.Resolver}
 	if h.Exec != nil {
 		src.Exec = runner{exec: h.Exec}
 	}

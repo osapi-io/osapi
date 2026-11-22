@@ -373,7 +373,7 @@ func buildRegistry(
 	// Behaviors run beside the categories above.
 	// Each builds its own provider for this platform from what it declares.
 	behaviorProviders := BuildBehaviorProviders(host.Host{
-		Platform:        e.platform,
+		Platform:        behavior.PlatformName(e.platform),
 		Container:       e.container,
 		Hostname:        e.hostname,
 		Logger:          e.log,

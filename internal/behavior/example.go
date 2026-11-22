@@ -42,7 +42,7 @@ type Example struct {
 	// Platforms limits the example to these platforms, as Platform names
 	// them; OnPlatform sets it. An example with none runs on each platform
 	// the method serves.
-	Platforms []string `json:"platforms,omitempty"`
+	Platforms []PlatformName `json:"platforms,omitempty"`
 }
 
 // OnPlatform limits an example to platforms, for a read whose answer is
@@ -51,13 +51,13 @@ type Example struct {
 // example only with these platforms' providers, and each platform the
 // method serves must still have an example.
 func OnPlatform(
-	platforms ...string,
+	platforms ...PlatformName,
 ) HostOption {
 	return examplePlatforms(platforms)
 }
 
 // examplePlatforms is the HostOption of OnPlatform.
-type examplePlatforms []string
+type examplePlatforms []PlatformName
 
 func (p examplePlatforms) applyExample(
 	e *Example,
@@ -67,7 +67,7 @@ func (p examplePlatforms) applyExample(
 
 // RunsOn reports whether the example runs on platform.
 func (e Example) RunsOn(
-	platform string,
+	platform PlatformName,
 ) bool {
 	return len(e.Platforms) == 0 || slices.Contains(e.Platforms, platform)
 }

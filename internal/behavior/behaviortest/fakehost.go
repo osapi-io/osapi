@@ -119,7 +119,7 @@ type fakeHost struct {
 
 func newHost(
 	b *behavior.Behavior,
-	platform string,
+	platform behavior.PlatformName,
 ) *fakeHost {
 	h := &fakeHost{
 		outputs: map[string]string{},
@@ -149,7 +149,7 @@ func newHost(
 // is every method.
 func (h *fakeHost) declare(
 	b *behavior.Behavior,
-	platform string,
+	platform behavior.PlatformName,
 ) {
 	h.sudo = append(h.sudo, b.Sudo...)
 	_, runs := b.Programs(platform)

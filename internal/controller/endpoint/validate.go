@@ -61,13 +61,25 @@ const (
 	// RuleOptional: an optional field of a request body is left out of the
 	// JSON when it is empty, so a client does not send "" for it.
 	RuleOptional = "optional"
+	// RuleIn: each in tag of an input field is path, query, form or body.
+	// Any other value falls into the request body with no error.
+	RuleIn = "in"
 )
+
+// inValues are the values of the in tag: where a field of a request comes
+// from.
+var inValues = []string{"path", "query", "form", "body"}
 
 // Checks are the rules Validate applies. osapi controller endpoint
 // validate --help prints each one, and each problem carries the fix of its
 // rule, so an author or an agent can read the rules before breaking one.
 // The tests trigger each rule, and fail on a rule without a check.
 var Checks = guide.Checks{
+	{
+		Rule:     RuleIn,
+		Requires: "Each in tag of an input field is path, query, form or body.",
+		Fix:      "Correct the value. A field with another value is read from the request body, not from where the tag says.",
+	},
 	{
 		Rule:     RuleName,
 		Requires: "The group and each method have a name of lowercase letters and digits, starting with a letter.",
@@ -201,6 +213,14 @@ func Validate(
 		}
 		if seg := m.sub; seg != "" && seg != m.CommandName() && g.SubDocs[seg] == "" {
 			add(m.Name, RuleSubDoc, fmt.Sprintf("the Sub segment %q has no SubDoc.", seg))
+		}
+
+		for _, f := range fields(m.In) {
+			if v, ok := f.Tag.Lookup("in"); ok && !slices.Contains(inValues, v) {
+				add(m.Name, RuleIn, fmt.Sprintf(
+					"input field %s is tagged in:%q; the values are path, query, form and body.",
+					jsonName(f), v))
+			}
 		}
 
 		keys := 0

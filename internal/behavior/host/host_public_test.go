@@ -143,7 +143,7 @@ func (s *HostPublicTestSuite) TestBuild() {
 	tests := []struct {
 		name     string
 		b        *behavior.Behavior
-		platform string
+		platform behavior.PlatformName
 		want     any
 		wantErr  string
 	}{

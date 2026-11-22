@@ -33,7 +33,7 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Area("config"),
 	behavior.CLI,
 	behavior.Config(defaults),
-	behavior.Platform("debian", newDebian),
+	behavior.Platform(behavior.PlatformDebian, newDebian),
 	behavior.Writes(defaultPath),
 	behavior.Read("get", Get).
 		Describe("Get the motd value").

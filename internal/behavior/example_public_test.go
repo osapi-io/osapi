@@ -68,7 +68,7 @@ func (s *ExamplePublicTestSuite) TestFails() {
 
 func (s *ExamplePublicTestSuite) TestRunsOn() {
 	s.True(behavior.Example{}.RunsOn("debian"), "an example with no platforms runs on each")
-	limited := behavior.Example{Platforms: []string{behavior.PlatformDarwin}}
+	limited := behavior.Example{Platforms: []behavior.PlatformName{behavior.PlatformDarwin}}
 	s.True(limited.RunsOn(behavior.PlatformDarwin))
 	s.False(limited.RunsOn("debian"))
 }
@@ -89,7 +89,9 @@ func (s *ExamplePublicTestSuite) TestHostOptions() {
 		{
 			name:   "when OnPlatform limits the example to platforms",
 			option: behavior.OnPlatform(behavior.PlatformDarwin, "debian"),
-			want:   behavior.Example{Platforms: []string{behavior.PlatformDarwin, "debian"}},
+			want: behavior.Example{
+				Platforms: []behavior.PlatformName{behavior.PlatformDarwin, "debian"},
+			},
 		},
 		{
 			name:   "when Links gives a symbolic link",
