@@ -691,3 +691,715 @@ Use: Stop, and tell the person what is missing. Do not build around it.
 Work before osapi queues the job, such as a password hash.
 
 Use: Stop, and tell the person what is missing. Do not build around it.
+
+## gohai collectors
+
+### `platform`
+
+Returns os, name, version, version_extra, family, cpu_architecture, build. Build
+it with platform.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /etc/SuSE-release,
+/etc/arch-release, /etc/debian_version, /etc/enterprise-release,
+/etc/exherbo-release, /etc/f5-release, /etc/gentoo-release, /etc/os-release,
+/etc/redhat-release, /etc/slackware-version, /etc/system-release. On rhel:
+Exists for /etc/SuSE-release, /etc/arch-release, /etc/debian_version,
+/etc/enterprise-release, /etc/exherbo-release, /etc/f5-release,
+/etc/gentoo-release, /etc/os-release, /etc/redhat-release,
+/etc/slackware-version, /etc/system-release. On darwin: Prints for sw_vers. With
+content, it reads more under those paths. gohai collector get --name platform
+shows it in full; platform is its package.
+
+### `hostname`
+
+Returns name, machine_name, fqdn, domain. Build it with
+hostname.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for
+/proc/sys/kernel/hostname, Prints for hostname; hostname -s. On rhel: Exists for
+/proc/sys/kernel/hostname, Prints for hostname; hostname -s. On darwin: Exists
+for /proc/sys/kernel/hostname, Prints for hostname; hostname -s. With content,
+it reads more under those paths. gohai collector get --name hostname shows it in
+full; hostname is its package.
+
+### `kernel`
+
+Returns name, release, version, machine, processor, os, rosetta_translated.
+Build it with kernel.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for
+/proc/sys/kernel/ostype. On rhel: Exists for /proc/sys/kernel/ostype. On darwin:
+Prints for sysctl -n kern.ostype kern.osrelease kern.version hw.machine. With
+content, it reads more under those paths. gohai collector get --name kernel
+shows it in full; kernel is its package.
+
+### `kernel_modules`
+
+Returns modules. Build it with kernelmodules.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /proc/modules. On rhel:
+Exists for /proc/modules. On darwin: Prints for kextstat -k -l. With content, it
+reads more under those paths. gohai collector get --name kernel_modules shows it
+in full; kernelmodules is its package.
+
+### `uptime`
+
+Returns seconds, boot_time, human, idle_seconds, idle_human. Build it with
+uptime.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /proc/uptime. On rhel:
+Exists for /proc/uptime. On darwin: Prints for sysctl -n kern.boottime. With
+content, it reads more under those paths. gohai collector get --name uptime
+shows it in full; uptime is its package.
+
+### `virtualization`
+
+Returns system, role, systems, hypervisor_host. Build it with
+virtualization.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /.dockerenv,
+/.dockerinit, /dev/lxd/sock, /proc/1/environ, /proc/bc/0, /proc/cpuinfo,
+/proc/modules, /proc/self/cgroup, /proc/self/status, /proc/vz, /proc/xen,
+/sys/class/dmi/id/product_name, /sys/class/dmi/id/sys_vendor,
+/var/lib/hyperv/.kvp_pool_3, /var/lib/lxd/devlxd,
+/var/snap/lxd/common/lxd/devlxd, Prints for command -v docker; command -v nova;
+command -v podman; systemd-detect-virt --container; systemd-detect-virt --vm. On
+rhel: Exists for /.dockerenv, /.dockerinit, /dev/lxd/sock, /proc/1/environ,
+/proc/bc/0, /proc/cpuinfo, /proc/modules, /proc/self/cgroup, /proc/self/status,
+/proc/vz, /proc/xen, /sys/class/dmi/id/product_name,
+/sys/class/dmi/id/sys_vendor, /var/lib/hyperv/.kvp_pool_3, /var/lib/lxd/devlxd,
+/var/snap/lxd/common/lxd/devlxd, Prints for command -v docker; command -v nova;
+command -v podman; systemd-detect-virt --container; systemd-detect-virt --vm. On
+darwin: Exists for /Applications/VMware Fusion.app, Prints for command -v
+VBoxManage; command -v docker; command -v prlctl; ioreg -n pci1ab8,4000; sysctl
+-n kern.hv_vmm_present; system_profiler SPHardwareDataType. With content, it
+reads more under those paths. gohai collector get --name virtualization shows it
+in full; virtualization is its package.
+
+### `machine_id`
+
+Returns id. Build it with machineid.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /etc/machine-id,
+/sys/class/dmi/id/product_uuid, /var/lib/dbus/machine-id. On rhel: Exists for
+/etc/machine-id, /sys/class/dmi/id/product_uuid, /var/lib/dbus/machine-id. On
+darwin: Prints for ioreg -rd1 -c IOPlatformExpertDevice. With content, it reads
+more under those paths. gohai collector get --name machine_id shows it in full;
+machineid is its package.
+
+### `cpu`
+
+Returns count, sockets, cores, model_name, vendor_id, family, model_id,
+stepping, speed, cache_size, flags, caches, numa_nodes, numa_nodes_count,
+vulnerabilities, online, offline, bios_vendor_id, bios_model_name, machine_type,
+mhz_max, mhz_min, mhz_dynamic, bogomips, opmodes, byte_order, address_sizes,
+virtualization, virtualization_type, hypervisor_vendor, dispatching_mode, cpus.
+Build it with cpu.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /proc/cpuinfo. On rhel:
+Exists for /proc/cpuinfo. On darwin: Prints for sysctl -n hw.logicalcpu. With
+content, it reads more under those paths. gohai collector get --name cpu shows
+it in full; cpu is its package.
+
+### `load`
+
+Returns one, five, fifteen. Build it with load.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /proc/loadavg. On rhel:
+Exists for /proc/loadavg. On darwin: Prints for sysctl -n vm.loadavg. With
+content, it reads more under those paths. gohai collector get --name load shows
+it in full; load is its package.
+
+### `memory`
+
+Returns total, available, used, used_percent, free, active, inactive,
+active_anon, inactive_anon, active_file, inactive_file, unevictable, wired,
+speculative, compressed, buffers, cached, dirty, writeback, writeback_tmp,
+shared, mapped, slab, s_reclaimable, s_unreclaim, k_reclaimable, page_tables,
+kernel_stack, percpu, high_total, high_free, low_total, low_free, nfs_unstable,
+bounce, anon_pages, shmem, direct_map, commit_limit, committed_as,
+vmalloc_total, vmalloc_used, vmalloc_chunk, hugepages, swap. Build it with
+memory.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /proc/meminfo. On rhel:
+Exists for /proc/meminfo. On darwin: Prints for sysctl -n hw.memsize. With
+content, it reads more under those paths. gohai collector get --name memory
+shows it in full; memory is its package.
+
+### `filesystem`
+
+Returns mounts, unmounted, zfs_datasets. Build it with
+filesystem.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /proc/mounts. On rhel:
+Exists for /proc/mounts. On darwin: Prints for df -ki; mount. With content, it
+reads more under those paths. gohai collector get --name filesystem shows it in
+full; filesystem is its package.
+
+### `disk`
+
+Returns devices. Build it with disk.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /proc/diskstats. On
+rhel: Exists for /proc/diskstats. On darwin: Prints for ioreg -r -c
+IOBlockStorageDriver -d 2 -l -w0. With content, it reads more under those paths.
+gohai collector get --name disk shows it in full; disk is its package.
+
+### `network`
+
+Returns interfaces, routes, neighbours, default_interface, default_gateway,
+default_inet6_interface, default_inet6_gateway. Build it with
+network.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /sys/class/net. On
+rhel: Exists for /sys/class/net. On darwin: Prints for ifconfig -a -v; netstat
+-ibdnW; netstat -rn. With content, it reads more under those paths. gohai
+collector get --name network shows it in full; network is its package.
+
+### `process`
+
+Returns count, processes. Build it with process.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /proc. On rhel: Exists
+for /proc. On darwin: Prints for ps -ax -o
+pid=,ppid=,user=,state=,pcpu=,pmem=,rss=,time=,lstart=; ps -ax -o pid=,ucomm=;
+ps -ax -ww -o pid=,args=. With content, it reads more under those paths. gohai
+collector get --name process shows it in full; process is its package.
+
+### `users`
+
+Returns passwd, group, current_user. Build it with users.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /etc/group,
+/etc/passwd, /etc/shadow, Prints for id -u. On rhel: Exists for /etc/group,
+/etc/passwd, /etc/shadow, Prints for id -u. On darwin: Exists for /etc/group,
+/etc/passwd, /etc/shadow, Prints for dscl . -list /Users
+AuthenticationAuthority; id -u. With content, it reads more under those paths.
+gohai collector get --name users shows it in full; users is its package.
+
+### `sessions`
+
+Returns logged_in. Build it with sessions.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Prints for loginctl --no-pager
+--no-legend --no-ask-password list-sessions. On rhel: Prints for loginctl
+--no-pager --no-legend --no-ask-password list-sessions. On darwin: Exists for
+/var/run/utmpx. With content, it reads more under those paths. gohai collector
+get --name sessions shows it in full; sessions is its package.
+
+### `timezone`
+
+Returns name, abbrev, offset. Build it with timezone.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /etc/localtime,
+/etc/timezone. On rhel: Exists for /etc/localtime, /etc/timezone. On darwin:
+Exists for /etc/localtime. With content, it reads more under those paths. gohai
+collector get --name timezone shows it in full; timezone is its package.
+
+### `dns`
+
+Returns nameservers, search, options, interfaces. Build it with
+dns.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /etc/resolv.conf,
+Prints for resolvectl dns; resolvectl domain. On rhel: Exists for
+/etc/resolv.conf, Prints for resolvectl dns; resolvectl domain. On darwin:
+Exists for /etc/resolv.conf, Prints for scutil --dns. With content, it reads
+more under those paths. gohai collector get --name dns shows it in full; dns is
+its package.
+
+### `root_group`
+
+Returns name. Build it with rootgroup.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /etc/passwd. On rhel:
+Exists for /etc/passwd. On darwin: Exists for /etc/passwd. With content, it
+reads more under those paths. gohai collector get --name root_group shows it in
+full; rootgroup is its package.
+
+### `shells`
+
+Returns paths. Build it with shells.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /etc/shells. On rhel:
+Exists for /etc/shells. On darwin: Exists for /etc/shells. With content, it
+reads more under those paths. gohai collector get --name shells shows it in
+full; shells is its package.
+
+### `fips`
+
+Returns kernel, policy. Build it with fips.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for
+/etc/crypto-policies/config, /proc/sys/crypto/fips_enabled. On rhel: Exists for
+/etc/crypto-policies/config, /proc/sys/crypto/fips_enabled. On darwin: nothing.
+With content, it reads more under those paths. gohai collector get --name fips
+shows it in full; fips is its package.
+
+### `os_release`
+
+Returns id, id_like, name, pretty_name, version, version_id, version_codename,
+build_id, variant, variant_id, home_url, support_url, bug_report_url, extra.
+Build it with osrelease.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /etc/os-release. On
+rhel: Exists for /etc/os-release. On darwin: nothing. With content, it reads
+more under those paths. gohai collector get --name os_release shows it in full;
+osrelease is its package.
+
+### `lsb`
+
+Returns id, release, codename, description. Build it with
+lsb.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Prints for lsb_release -a. On
+rhel: Prints for lsb_release -a. On darwin: nothing. With content, it reads more
+under those paths. gohai collector get --name lsb shows it in full; lsb is its
+package.
+
+### `init`
+
+Returns name. Build it with initd.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /proc/1/comm. On rhel:
+Exists for /proc/1/comm. On darwin: nothing. With content, it reads more under
+those paths. gohai collector get --name init shows it in full; initd is its
+package.
+
+### `shard`
+
+Returns seed. Build it with shard.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: nothing. On rhel: nothing. On
+darwin: Prints for ioreg -rd1 -c IOPlatformExpertDevice; system_profiler
+SPHardwareDataType -json. With content, it reads more under those paths. gohai
+collector get --name shard shows it in full; shard is its package.
+
+### `package_mgr`
+
+Returns name, path. Build it with packagemgr.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Prints for sh -c command -v apt;
+sh -c command -v apt-get. On rhel: Prints for sh -c command -v dnf; sh -c
+command -v yum. On darwin: Prints for sh -c command -v brew; sh -c command -v
+port. With content, it reads more under those paths. gohai collector get --name
+package_mgr shows it in full; packagemgr is its package.
+
+### `gce`
+
+Returns id, name, hostname, cpu_platform, type, image_id, description, tags,
+preemptible, automatic_restart, on_host_maintenance, maintenance_event, zone,
+region, project_uid, numeric_project_id, project_attributes, licenses,
+attributes, network_interfaces, disks, service_accounts,
+virtual_clock_drift_token, remaining_cpu_time, partner_attributes. Build it with
+gce.New(); it reads the metadata service of gce, over HTTP, not the host.
+
+Use: Not on a host: an example cannot give it.
+
+### `ec2`
+
+Returns id, type, instance_life_cycle, image_id, ami_launch_index,
+ami_manifest_path, hostname, local_hostname, public_hostname, local_ipv4,
+local_ipv4s, public_ipv4, mac, security_groups, network_interfaces, region,
+zone, account_uid, availability_zone_id, group_name, host_id, partition_number,
+kernel_id, ramdisk_id, instance_action, spot_instance_action,
+spot_termination_time, services_domain, cloud_partition, product_codes,
+public_keys, block_device_mapping, reservation_id, profile, iam_info,
+api_version, user_data. Build it with ec2.New(); it reads the metadata service
+of ec2, over HTTP, not the host.
+
+Use: Not on a host: an example cannot give it.
+
+### `azure`
+
+Returns id, name, type, resource_id, resource_group_name, vm_scale_set_name,
+priority, eviction_policy, region, zone, placement_group_id,
+platform_fault_domain, platform_update_domain, account_uid, cloud_partition,
+offer, publisher, sku, version, license_type, os_type, provider, plan,
+storage_profile, tags, tags_list, user_data, custom_data,
+is_host_compatibility_layer_vm, security_profile, public_keys, host, host_group,
+os_profile, additional_capabilities, extended_location, interfaces, public_ipv4,
+local_ipv4, public_ipv6, local_ipv6. Build it with azure.New(); it reads the
+metadata service of azure, over HTTP, not the host.
+
+Use: Not on a host: an example cannot give it.
+
+### `digital_ocean`
+
+Returns id, hostname, region, public_keys, tags, features, floating_ip,
+reserved_ip, auth_key, user_data, ipv4_nameservers, interfaces. Build it with
+digitalocean.New(); it reads the metadata service of digital_ocean, over HTTP,
+not the host.
+
+Use: Not on a host: an example cannot give it.
+
+### `oci`
+
+Returns id, name, hostname, type, shape_config, image_id, region,
+canonical_region_name, zone, fault_domain, compartment_id, account_uid, state,
+time_created, metadata, defined_tags, freeform_tags, region_info, agent_config,
+availability_config, instance_pool_id, dedicated_vm_host_id, launch_options,
+source_details, platform_config, vnics, volume_attachments. Build it with
+oci.New(); it reads the metadata service of oci, over HTTP, not the host.
+
+Use: Not on a host: an example cannot give it.
+
+### `alibaba`
+
+Returns id, name, type, hostname, image_id, serial_number, network_type,
+account_uid, source_address, region, zone, virtualization_solution,
+virtualization_solution_version, spot_termination_time, mac, private_ipv4,
+public_ipv4, vpc_id, vpc_cidr_block, vswitch_id, vswitch_cidr_block,
+dns_nameservers, ntp_servers, network_interfaces, max_bandwidth_ingress,
+max_bandwidth_egress, ram_role_name, disks, marketplace, tags. Build it with
+alibaba.New(); it reads the metadata service of alibaba, over HTTP, not the
+host.
+
+Use: Not on a host: an example cannot give it.
+
+### `linode`
+
+Returns public_ip, private_ip. Build it with linode.New(); it reads the metadata
+service of linode, over HTTP, not the host.
+
+Use: Not on a host: an example cannot give it.
+
+### `openstack`
+
+Returns id, type, hostname, local_hostname, public_hostname, zone, local_ipv4,
+public_ipv4, security_groups, image_id, kernel_id, ramdisk_id, reservation_id,
+name, project_uid, uuid, launch_index, meta_data, public_keys, devices,
+provider. Build it with openstack.New(); it reads the metadata service of
+openstack, over HTTP, not the host.
+
+Use: Not on a host: an example cannot give it.
+
+### `scaleway`
+
+Returns id, name, hostname, account_uid, project_uid, type, tags, state_detail,
+public_ip, public_ip_id, public_ip_dynamic, private_ip, ipv6_address,
+ipv6_netmask, ipv6_gateway, zone, platform_id, ssh_public_keys, volumes,
+timezone, bootscript. Build it with scaleway.New(); it reads the metadata
+service of scaleway, over HTTP, not the host.
+
+Use: Not on a host: an example cannot give it.
+
+### `dmi`
+
+Returns bios, baseboard, chassis, product. Build it with
+dmi.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /sys/class/dmi/id,
+/sys/class/dmi/id/bios_date, /sys/class/dmi/id/bios_vendor,
+/sys/class/dmi/id/bios_version, /sys/class/dmi/id/board_asset_tag,
+/sys/class/dmi/id/board_name, /sys/class/dmi/id/board_serial,
+/sys/class/dmi/id/board_vendor, /sys/class/dmi/id/board_version,
+/sys/class/dmi/id/chassis_asset_tag, /sys/class/dmi/id/chassis_serial,
+/sys/class/dmi/id/chassis_type, /sys/class/dmi/id/chassis_vendor,
+/sys/class/dmi/id/chassis_version, /sys/class/dmi/id/product_family,
+/sys/class/dmi/id/product_name, /sys/class/dmi/id/product_serial,
+/sys/class/dmi/id/product_sku, /sys/class/dmi/id/product_uuid,
+/sys/class/dmi/id/product_version, /sys/class/dmi/id/sys_vendor,
+/sys/firmware/devicetree/base. On rhel: Exists for /sys/class/dmi/id,
+/sys/class/dmi/id/bios_date, /sys/class/dmi/id/bios_vendor,
+/sys/class/dmi/id/bios_version, /sys/class/dmi/id/board_asset_tag,
+/sys/class/dmi/id/board_name, /sys/class/dmi/id/board_serial,
+/sys/class/dmi/id/board_vendor, /sys/class/dmi/id/board_version,
+/sys/class/dmi/id/chassis_asset_tag, /sys/class/dmi/id/chassis_serial,
+/sys/class/dmi/id/chassis_type, /sys/class/dmi/id/chassis_vendor,
+/sys/class/dmi/id/chassis_version, /sys/class/dmi/id/product_family,
+/sys/class/dmi/id/product_name, /sys/class/dmi/id/product_serial,
+/sys/class/dmi/id/product_sku, /sys/class/dmi/id/product_uuid,
+/sys/class/dmi/id/product_version, /sys/class/dmi/id/sys_vendor,
+/sys/firmware/devicetree/base. On darwin: nothing. With content, it reads more
+under those paths. gohai collector get --name dmi shows it in full; dmi is its
+package.
+
+### `gpu`
+
+Returns cards. Build it with gpu.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /sys/class/drm. On
+rhel: Exists for /sys/class/drm. On darwin: Prints for system_profiler
+SPDisplaysDataType -json. With content, it reads more under those paths. gohai
+collector get --name gpu shows it in full; gpu is its package.
+
+### `pci`
+
+Returns devices. Build it with pci.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /sys/bus/pci/devices,
+/usr/share/hwdata/pci.ids, /usr/share/hwdata/pci.ids.gz,
+/usr/share/misc/pci.ids, /usr/share/misc/pci.ids.gz. On rhel: Exists for
+/sys/bus/pci/devices, /usr/share/hwdata/pci.ids, /usr/share/hwdata/pci.ids.gz,
+/usr/share/misc/pci.ids, /usr/share/misc/pci.ids.gz. On darwin: nothing. With
+content, it reads more under those paths. gohai collector get --name pci shows
+it in full; pci is its package.
+
+### `scsi`
+
+Returns devices. Build it with scsi.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Prints for lsscsi. On rhel: Prints
+for lsscsi. On darwin: nothing. With content, it reads more under those paths.
+gohai collector get --name scsi shows it in full; scsi is its package.
+
+### `hardware`
+
+Returns machine_model, machine_name, serial_number, platform_uuid,
+provisioning_udid, cpu_type, chip_type, current_processor_speed,
+number_processors, packages, l2_cache_core, l3_cache, physical_memory,
+boot_rom_version, os_loader_version, smc_version_system, storage, battery,
+charger. Build it with hardware.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: nothing. On rhel: nothing. On
+darwin: Prints for system_profiler SPHardwareDataType -json; system_profiler
+SPPowerDataType -json; system_profiler SPStorageDataType -json. With content, it
+reads more under those paths. gohai collector get --name hardware shows it in
+full; hardware is its package.
+
+### `block_device`
+
+Returns devices. Build it with blockdevice.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /sys/block. On rhel:
+Exists for /sys/block. On darwin: nothing. With content, it reads more under
+those paths. gohai collector get --name block_device shows it in full;
+blockdevice is its package.
+
+### `command`
+
+Returns ps. Build it with command.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Prints for ps -ef. On rhel: Prints
+for ps -ef. On darwin: Prints for ps -ef. With content, it reads more under
+those paths. gohai collector get --name command shows it in full; command is its
+package.
+
+### `docker`
+
+Returns version, containers, images. Build it with docker.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Prints for docker images --format
+&#123;&#123;json .&#125;&#125;; docker ps -a --no-trunc --format
+&#123;&#123;json .&#125;&#125;; docker version --format
+&#123;&#123;.Server.Version&#125;&#125;. On rhel: Prints for docker images
+--format &#123;&#123;json .&#125;&#125;; docker ps -a --no-trunc --format
+&#123;&#123;json .&#125;&#125;; docker version --format
+&#123;&#123;.Server.Version&#125;&#125;. On darwin: Prints for docker images
+--format &#123;&#123;json .&#125;&#125;; docker ps -a --no-trunc --format
+&#123;&#123;json .&#125;&#125;; docker version --format
+&#123;&#123;.Server.Version&#125;&#125;. With content, it reads more under those
+paths. gohai collector get --name docker shows it in full; docker is its
+package.
+
+### `grub2`
+
+Returns environment. Build it with grub2.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /boot/grub/grubenv,
+/boot/grub2/grubenv. On rhel: Exists for /boot/grub/grubenv,
+/boot/grub2/grubenv. On darwin: nothing. With content, it reads more under those
+paths. gohai collector get --name grub2 shows it in full; grub2 is its package.
+
+### `hostnamectl`
+
+Returns static_hostname, icon_name, chassis, deployment, location, kernel_name,
+kernel_release, operating_system_pretty_name, operating_system_cpe_name,
+virtualization, hardware_vendor, hardware_model, firmware_version. Build it with
+hostnamectl.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Prints for hostnamectl. On rhel:
+Prints for hostnamectl. On darwin: nothing. With content, it reads more under
+those paths. gohai collector get --name hostnamectl shows it in full;
+hostnamectl is its package.
+
+### `interrupts`
+
+Returns irqs. Build it with interrupts.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /proc/interrupts. On
+rhel: Exists for /proc/interrupts. On darwin: nothing. With content, it reads
+more under those paths. gohai collector get --name interrupts shows it in full;
+interrupts is its package.
+
+### `ipc`
+
+Returns sem, msg, shm. Build it with ipc.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for
+/proc/sys/kernel/msgmax, /proc/sys/kernel/msgmnb, /proc/sys/kernel/msgmni,
+/proc/sys/kernel/sem, /proc/sys/kernel/shmall, /proc/sys/kernel/shmmax,
+/proc/sys/kernel/shmmni. On rhel: Exists for /proc/sys/kernel/msgmax,
+/proc/sys/kernel/msgmnb, /proc/sys/kernel/msgmni, /proc/sys/kernel/sem,
+/proc/sys/kernel/shmall, /proc/sys/kernel/shmmax, /proc/sys/kernel/shmmni. On
+darwin: nothing. With content, it reads more under those paths. gohai collector
+get --name ipc shows it in full; ipc is its package.
+
+### `languages`
+
+Returns go, python, ruby, node, java, perl. Build it with
+languages.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Prints for go version; java
+-version; node --version; perl --version; python3 --version; ruby --version. On
+rhel: Prints for go version; java -version; node --version; perl --version;
+python3 --version; ruby --version. On darwin: Prints for go version; java
+-version; node --version; perl --version; python3 --version; ruby --version.
+With content, it reads more under those paths. gohai collector get --name
+languages shows it in full; languages is its package.
+
+### `libvirt`
+
+Returns uri, version, domains. Build it with libvirt.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Prints for virsh list --all; virsh
+uri; virsh version. On rhel: Prints for virsh list --all; virsh uri; virsh
+version. On darwin: nothing. With content, it reads more under those paths.
+gohai collector get --name libvirt shows it in full; libvirt is its package.
+
+### `livepatch`
+
+Returns patches. Build it with livepatch.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /sys/kernel/livepatch.
+On rhel: Exists for /sys/kernel/livepatch. On darwin: nothing. With content, it
+reads more under those paths. gohai collector get --name livepatch shows it in
+full; livepatch is its package.
+
+### `mdadm`
+
+Returns arrays. Build it with mdadm.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /proc/mdstat. On rhel:
+Exists for /proc/mdstat. On darwin: nothing. With content, it reads more under
+those paths. gohai collector get --name mdadm shows it in full; mdadm is its
+package.
+
+### `packages`
+
+Returns packages. Build it with packages.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Prints for dpkg-query -W
+-f=$&#123;Package&#125;\t$&#123;Version&#125;\t$&#123;Architecture&#125;\t$&#123;db:Status-Status&#125;\t$&#123;binary:Summary&#125;\t$&#123;Installed-Size&#125;\n.
+On rhel: Prints for rpm -qa --qf
+%&#123;NAME&#125;\t%&#123;VERSION&#125;-%&#123;RELEASE&#125;\t%&#123;ARCH&#125;\t%&#123;SUMMARY&#125;\t%&#123;SIZE&#125;\n.
+On darwin: Prints for brew list --versions. With content, it reads more under
+those paths. gohai collector get --name packages shows it in full; packages is
+its package.
+
+### `rpm`
+
+Returns macros. Build it with rpm.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Prints for rpm --showrc. On rhel:
+Prints for rpm --showrc. On darwin: nothing. With content, it reads more under
+those paths. gohai collector get --name rpm shows it in full; rpm is its
+package.
+
+### `selinux`
+
+Returns status, current_mode, config_mode, policy_version,
+max_kernel_policy_version, loaded_policy_name. Build it with
+selinux.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /etc/selinux/config. On
+rhel: Exists for /etc/selinux/config. On darwin: nothing. With content, it reads
+more under those paths. gohai collector get --name selinux shows it in full;
+selinux is its package.
+
+### `services`
+
+Returns services. Build it with services.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Prints for systemctl
+list-unit-files --type=service --no-legend --no-pager; systemctl list-units
+--type=service --all --no-pager --plain. On rhel: Prints for systemctl
+list-unit-files --type=service --no-legend --no-pager; systemctl list-units
+--type=service --all --no-pager --plain. On darwin: nothing. With content, it
+reads more under those paths. gohai collector get --name services shows it in
+full; services is its package.
+
+### `ssh`
+
+Returns keys, authorized_keys. Build it with ssh.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /etc/passwd,
+/etc/ssh/ssh_host_ecdsa_key.pub, /etc/ssh/ssh_host_ed25519_key.pub,
+/etc/ssh/ssh_host_rsa_key.pub. On rhel: Exists for /etc/passwd,
+/etc/ssh/ssh_host_ecdsa_key.pub, /etc/ssh/ssh_host_ed25519_key.pub,
+/etc/ssh/ssh_host_rsa_key.pub. On darwin: Exists for /etc/passwd,
+/etc/ssh/ssh_host_ecdsa_key.pub, /etc/ssh/ssh_host_ed25519_key.pub,
+/etc/ssh/ssh_host_rsa_key.pub. With content, it reads more under those paths.
+gohai collector get --name ssh shows it in full; ssh is its package.
+
+### `sysconf`
+
+Returns clk_tck, pagesize, nprocessors_conf, nprocessors_onln. Build it with
+sysconf.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Prints for getconf CLK_TCK. On
+rhel: Prints for getconf CLK_TCK. On darwin: Prints for getconf CLK_TCK. With
+content, it reads more under those paths. gohai collector get --name sysconf
+shows it in full; sysconf is its package.
+
+### `sysctl`
+
+Returns params. Build it with sysctl.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Prints for sysctl -a. On rhel:
+Prints for sysctl -a. On darwin: Prints for sysctl -a. With content, it reads
+more under those paths. gohai collector get --name sysctl shows it in full;
+sysctl is its package.
+
+### `systemd_paths`
+
+Returns paths. Build it with systemdpaths.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Prints for systemd-path. On rhel:
+Prints for systemd-path. On darwin: nothing. With content, it reads more under
+those paths. gohai collector get --name systemd_paths shows it in full;
+systemdpaths is its package.
+
+### `tc`
+
+Returns interfaces. Build it with tc.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Prints for tc -s qdisc show. On
+rhel: Prints for tc -s qdisc show. On darwin: nothing. With content, it reads
+more under those paths. gohai collector get --name tc shows it in full; tc is
+its package.
+
+### `virtualbox`
+
+Returns version, revision, guest_additions_version, guest_additions_revision,
+language_id. Build it with virtualbox.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Prints for VBoxControl
+guestproperty enumerate. On rhel: Prints for VBoxControl guestproperty
+enumerate. On darwin: Prints for VBoxControl guestproperty enumerate. With
+content, it reads more under those paths. gohai collector get --name virtualbox
+shows it in full; virtualbox is its package.
+
+### `vmware`
+
+Returns version, hosttime, speed, session_id, balloon, swap, mem_limit, mem_res,
+cpu_res, cpu_limit, upgrade_status, timesync_status, host_type, host_version.
+Build it with vmware.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for /proc/scsi/scsi, Prints
+for /usr/bin/vmware-toolbox-cmd -v. On rhel: Exists for /proc/scsi/scsi, Prints
+for /usr/bin/vmware-toolbox-cmd -v. On darwin: Prints for
+/usr/bin/vmware-toolbox-cmd -v. With content, it reads more under those paths.
+gohai collector get --name vmware shows it in full; vmware is its package.
+
+### `zpools`
+
+Returns pools. Build it with zpools.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Prints for zpool list -H -o
+name,size,alloc,free,health,altroot. On rhel: Prints for zpool list -H -o
+name,size,alloc,free,health,altroot. On darwin: Prints for zpool list -H -o
+name,size,alloc,free,health,altroot. With content, it reads more under those
+paths. gohai collector get --name zpools shows it in full; zpools is its
+package.

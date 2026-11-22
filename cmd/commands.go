@@ -34,6 +34,7 @@ import (
 	"github.com/osapi-io/osapi/internal/agent/identity"
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/collectors"
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/cli/command"
@@ -165,7 +166,7 @@ func dslPages() []clidocs.DSL {
 			Intro: "Each part of a behavior definition: what it makes osapi do, and when to use it. " +
 				"`osapi behavior spec get` prints the same list from this build. " +
 				"[Building a behavior](../behaviors.md) tells how to write one.",
-			Spec: behavior.CurrentSpec(job.FactKeys()...),
+			Spec: collectors.Append(behavior.CurrentSpec(job.FactKeys()...)),
 		},
 		{
 			Slug: "chain", Title: "Chains", Position: 3,
@@ -217,7 +218,7 @@ func behaviorDSLDeps() behaviordsl.Deps {
 		Behaviors: behavior.All,
 		Validate:  behavior.Validate,
 		Keys:      config.Keys,
-		Spec:      func() guide.Spec { return behavior.CurrentSpec(job.FactKeys()...) },
+		Spec:      func() guide.Spec { return collectors.Append(behavior.CurrentSpec(job.FactKeys()...)) },
 		OpenAPI: func(b *behavior.Behavior) (any, error) {
 			g := behavior.GroupOf(b)
 			if g == nil {

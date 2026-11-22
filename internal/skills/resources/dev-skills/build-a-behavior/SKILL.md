@@ -36,6 +36,7 @@ Ask the code and the binary before you read prose. Each one answers one question
 | What options, methods, example parts and tags exist, and when to use each | `go run . behavior spec get`                                  |
 | What rules and test checks a behavior must pass, and the fix of each | `go run . behavior validate --help`                       |
 | What a provider builder gets from the agent      | `go doc ./internal/behavior/host Host`                         |
+| Which facts of the host gohai reads, how a provider builds each collector, and what an example must give it | `go run . behavior spec get`, under "gohai collectors" |
 | What behaviors exist already                     | `go run . behavior list`                                  |
 | Which building blocks do generic work, such as a managed file, and when to make a new one | `go run . behavior chain spec get`, under "Building on other behaviors" and "Building blocks" |
 | What a behavior that requires others sends to them, and gets back | `go run . behavior chain get --name <name>`: each example's calls, with their inputs and outputs; `--json` has them in full |
@@ -153,6 +154,16 @@ interface that the definition matches. netplan ignores a second definition of
 the same interface: dns writes under that ID, and interface refuses an
 interface that a match defines. `netplan status` lists only the interfaces that
 netplan manages, so a behavior asks gohai whether the host has an interface.
+
+A provider reads the host through gohai, never directly. Find the fact under
+"gohai collectors" in `go run . behavior spec get`. Build that collector in the
+builder with the constructor that the spec gives, such as
+`dns.NewWith(h.Sources())`, so the provider reads the host that the agent or
+the test gives. Each example's fake host gives what the collector reads: an
+`Exists` for each file and a `Prints` for each command that the spec lists for
+the platform. A fact that no collector has is a change to gohai first, by its
+`docs/adding-a-collector.md`. Do not read the file or run the command in
+osapi to work around a missing fact.
 
 The behaviors that a behavior calls, and the ones that they call, are its
 chain. `go run . behavior chain list` shows each chain, and `go run . behavior
