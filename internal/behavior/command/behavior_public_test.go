@@ -275,13 +275,25 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 	list := command.Annotations(b, b.Method("list"))
 	s.Equal("store:read", list[reference.Permission])
 	out := list[reference.Result]
-	s.True(strings.HasPrefix(out, "Each example prints this:\n\nEvery key:\n\n```ansi\n"),
-		"each example's output, in a block that the site shows in color")
+	s.True(strings.HasPrefix(
+		out,
+		"Every key, on one host:\n\n```ansi\n$ osapi client node store kv list --target web-01 --key k --force --count 2\n",
+	),
+		"each example's command and output, in a block that the site shows in color")
+	s.Contains(out, "On each host, where one cannot run it:\n\n```ansi\n"+
+		"$ osapi client node store kv list --target _all --key k --force --count 2\n",
+		"the fleet's output")
+	s.Contains(out, "web-02", "the fleet's second host answers")
+	s.Contains(out, "mac-01", "the fleet's Mac")
+	s.Contains(out, "skipped")
+	s.Contains(out, "operation not supported on this OS family")
+	s.Contains(out, "With `--json`, the API's response:\n\n```json\n{\n  \"job_id\"",
+		"the response as JSON")
 	s.Contains(out, "\x1b[", "the CLI's colors")
 	s.Contains(out, "web-01", "one host answers")
 	s.Contains(out, "job 550e8400-e29b-41d4-a716-446655440000")
 	s.Contains(out, "trace 26e448c9dbe1c4a8d216a98c675079c9")
-	s.Contains(out, "No keys:\n\n```ansi\n", "an empty list still shows its output")
+	s.Contains(out, "No keys, on one host:\n\n```ansi\n", "an empty list still shows its output")
 
 	create := command.Annotations(b, b.Method("create"))
 	s.Equal("store:write", create[reference.Permission])
@@ -309,7 +321,7 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 
 	// An output that is not an object, such as text, has no table to show.
 	text := behavior.Read("text", readText).Example("Some text", nil, "hello")
-	s.Empty(command.Output(text))
+	s.Empty(command.Output(b, text))
 	b.API = true
 	s.Equal(
 		"  # Apply all\n  osapi client node store kv apply --target web-01",

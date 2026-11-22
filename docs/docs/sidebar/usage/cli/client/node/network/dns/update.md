@@ -29,11 +29,10 @@ osapi client node network dns update --target web-01 --interface-name osapi0 --s
 
 ## Result
 
-Each example prints this:
-
-Set the servers of an interface:
+Set the servers of an interface, on one host:
 
 ```ansi
+$ osapi client node network dns update --target web-01 --interface-name osapi0 --servers 9.9.9.9
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mINTERFACE NAME[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  osapi0
@@ -41,9 +40,41 @@ Set the servers of an interface:
   1 host: [38;2;103;234;147m1 changed[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
 ```
 
-Set the search domains, and keep the servers:
+On each host, where one cannot run it:
 
 ```ansi
+$ osapi client node network dns update --target _all --interface-name osapi0 --servers 9.9.9.9
+[1;38;2;0;213;255mResults:[0m
+  [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mINTERFACE NAME[0m
+  [1mweb-01[0m    [38;2;103;234;147mchanged[0m  osapi0
+  [1mweb-02[0m    [38;2;103;234;147mchanged[0m  osapi0
+
+  3 hosts: [38;2;103;234;147m2 changed[0m, [38;5;222m1 skipped[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+
+[1;38;2;255;0;255mDetails:[0m
+  [1mmac-01[0m  [38;5;222mskipped[0m  operation not supported on this OS family
+```
+
+With `--json`, the API's response:
+
+```json
+{
+  "job_id": "550e8400-e29b-41d4-a716-446655440000",
+  "results": [
+    {
+      "changed": true,
+      "hostname": "web-01",
+      "interface_name": "osapi0",
+      "status": "ok"
+    }
+  ]
+}
+```
+
+Set the search domains, and keep the servers, on one host:
+
+```ansi
+$ osapi client node network dns update --target web-01 --interface-name osapi0 --search-domains corp.example --override-dhcp
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mINTERFACE NAME[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  osapi0
@@ -51,14 +82,77 @@ Set the search domains, and keep the servers:
   1 host: [38;2;103;234;147m1 changed[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
 ```
 
-An interface with no resolvers yet:
+On each host, where one cannot run it:
 
 ```ansi
+$ osapi client node network dns update --target _all --interface-name osapi0 --search-domains corp.example --override-dhcp
+[1;38;2;0;213;255mResults:[0m
+  [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mINTERFACE NAME[0m
+  [1mweb-01[0m    [38;2;103;234;147mchanged[0m  osapi0
+  [1mweb-02[0m    [38;2;103;234;147mchanged[0m  osapi0
+
+  3 hosts: [38;2;103;234;147m2 changed[0m, [38;5;222m1 skipped[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+
+[1;38;2;255;0;255mDetails:[0m
+  [1mmac-01[0m  [38;5;222mskipped[0m  operation not supported on this OS family
+```
+
+With `--json`, the API's response:
+
+```json
+{
+  "job_id": "550e8400-e29b-41d4-a716-446655440000",
+  "results": [
+    {
+      "changed": true,
+      "hostname": "web-01",
+      "interface_name": "osapi0",
+      "status": "ok"
+    }
+  ]
+}
+```
+
+An interface with no resolvers yet, on one host:
+
+```ansi
+$ osapi client node network dns update --target web-01 --interface-name osapi0 --servers 9.9.9.9
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mINTERFACE NAME[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  osapi0
 
   1 host: [38;2;103;234;147m1 changed[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+```
+
+On each host, where one cannot run it:
+
+```ansi
+$ osapi client node network dns update --target _all --interface-name osapi0 --servers 9.9.9.9
+[1;38;2;0;213;255mResults:[0m
+  [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mINTERFACE NAME[0m
+  [1mweb-01[0m    [38;2;103;234;147mchanged[0m  osapi0
+  [1mweb-02[0m    [38;2;103;234;147mchanged[0m  osapi0
+
+  3 hosts: [38;2;103;234;147m2 changed[0m, [38;5;222m1 skipped[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+
+[1;38;2;255;0;255mDetails:[0m
+  [1mmac-01[0m  [38;5;222mskipped[0m  operation not supported on this OS family
+```
+
+With `--json`, the API's response:
+
+```json
+{
+  "job_id": "550e8400-e29b-41d4-a716-446655440000",
+  "results": [
+    {
+      "changed": true,
+      "hostname": "web-01",
+      "interface_name": "osapi0",
+      "status": "ok"
+    }
+  ]
+}
 ```
 
 With the default settings, each example does this on the host:
