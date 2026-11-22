@@ -292,11 +292,16 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			tt.validateFunc(authtoken.ResolvePermissions(
-				tt.roles,
-				tt.directPermissions,
-				tt.customRoles,
-			))
+			resolved := authtoken.ResolvePermissions(
+				authtoken.RolesOf(tt.roles),
+				authtoken.PermissionsOf(tt.directPermissions),
+				customOf(tt.customRoles),
+			)
+			set := make(map[string]bool, len(resolved))
+			for p, ok := range resolved {
+				set[string(p)] = ok
+			}
+			tt.validateFunc(set)
 		})
 	}
 }
@@ -329,7 +334,7 @@ func (s *PermissionsPublicTestSuite) TestAllPermissions() {
 func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 	tests := []struct {
 		name         string
-		role         string
+		role         authtoken.Role
 		validateFunc func(perms []authtoken.Permission, ok bool)
 	}{
 		{
@@ -413,7 +418,7 @@ func (s *PermissionsPublicTestSuite) TestPermissionRule() {
 }
 
 func (s *PermissionsPublicTestSuite) TestRoles() {
-	s.Equal([]string{"admin", "write", "read"}, authtoken.Roles())
+	s.Equal([]authtoken.Role{"admin", "write", "read"}, authtoken.Roles())
 }
 
 func (s *PermissionsPublicTestSuite) TestAdminOnly() {
@@ -458,13 +463,13 @@ func (s *PermissionsPublicTestSuite) TestRoleTable() {
 	table := authtoken.RoleTable()
 
 	s.True(strings.HasPrefix(table, "| Role | Permissions |\n| --- | --- |\n"))
-	for _, role := range []string{"admin", "write", "read"} {
+	for _, role := range []authtoken.Role{"admin", "write", "read"} {
 		perms, _ := authtoken.RolePermissions(role)
 		names := make([]string, 0, len(perms))
 		for _, p := range perms {
 			names = append(names, "`"+string(p)+"`")
 		}
-		s.Contains(table, "| `"+role+"` | "+strings.Join(names, ", ")+" |",
+		s.Contains(table, "| `"+string(role)+"` | "+strings.Join(names, ", ")+" |",
 			"a row with each permission of %s", role)
 	}
 	s.False(strings.HasSuffix(table, "\n"), "the caller adds the lines around it")
@@ -481,10 +486,10 @@ func (s *PermissionsPublicTestSuite) TestTypeScript() {
 		s.Contains(ts, "  \""+string(p)+"\",\n", "ALL_PERMISSIONS has %s", p)
 	}
 
-	for _, role := range []string{"admin", "write", "read"} {
+	for _, role := range []authtoken.Role{"admin", "write", "read"} {
 		perms, ok := authtoken.RolePermissions(role)
 		s.Require().True(ok)
-		start := strings.Index(ts, "  "+role+": [\n")
+		start := strings.Index(ts, "  "+string(role)+": [\n")
 		s.Require().GreaterOrEqual(start, 0, "ROLE_PERMISSIONS has %s", role)
 		block := ts[start : start+strings.Index(ts[start:], "  ],\n")]
 		s.Equal(
@@ -499,30 +504,30 @@ func (s *PermissionsPublicTestSuite) TestTypeScript() {
 func (s *PermissionsPublicTestSuite) TestHasPermission() {
 	tests := []struct {
 		name         string
-		resolved     map[string]bool
-		required     string
+		resolved     map[authtoken.Permission]bool
+		required     authtoken.Permission
 		validateFunc func(bool)
 	}{
 		{
 			name:     "present permission returns true",
-			resolved: map[string]bool{string(client.PermNodeRead): true},
-			required: string(client.PermNodeRead),
+			resolved: map[authtoken.Permission]bool{client.PermNodeRead: true},
+			required: client.PermNodeRead,
 			validateFunc: func(got bool) {
 				s.Equal(true, got)
 			},
 		},
 		{
 			name:     "absent permission returns false",
-			resolved: map[string]bool{string(client.PermNodeRead): true},
-			required: string(client.PermJobWrite),
+			resolved: map[authtoken.Permission]bool{client.PermNodeRead: true},
+			required: client.PermJobWrite,
 			validateFunc: func(got bool) {
 				s.Equal(false, got)
 			},
 		},
 		{
 			name:     "empty resolved set returns false",
-			resolved: map[string]bool{},
-			required: string(client.PermNodeRead),
+			resolved: map[authtoken.Permission]bool{},
+			required: client.PermNodeRead,
 			validateFunc: func(got bool) {
 				s.Equal(false, got)
 			},
@@ -530,7 +535,7 @@ func (s *PermissionsPublicTestSuite) TestHasPermission() {
 		{
 			name:     "nil resolved set returns false",
 			resolved: nil,
-			required: string(client.PermNodeRead),
+			required: client.PermNodeRead,
 			validateFunc: func(got bool) {
 				s.Equal(false, got)
 			},
@@ -574,4 +579,19 @@ func (s *PermissionsPublicTestSuite) TestStrings() {
 			s.Equal(tc.want, authtoken.Strings(tc.perms))
 		})
 	}
+}
+
+// customOf is m as the custom roles of the config.
+func customOf(
+	m map[string][]string,
+) authtoken.CustomRoles {
+	if m == nil {
+		return nil
+	}
+	out := make(authtoken.CustomRoles, len(m))
+	for role, perms := range m {
+		out[authtoken.Role(role)] = authtoken.PermissionsOf(perms)
+	}
+
+	return out
 }

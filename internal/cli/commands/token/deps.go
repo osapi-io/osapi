@@ -51,5 +51,5 @@ type Config interface {
 	SigningKey() string
 	// CustomRoles are the roles of controller.api.security.roles, each with
 	// its permissions. Without a config file there are none.
-	CustomRoles() (map[string][]string, error)
+	CustomRoles() (authtoken.CustomRoles, error)
 }

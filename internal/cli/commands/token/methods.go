@@ -42,7 +42,8 @@ func Generate(
 		return GenerateOutput{}, err
 	}
 	for _, r := range in.Roles {
-		if _, ok := custom[r]; !ok && !slices.Contains(authtoken.Roles(), r) {
+		if _, ok := custom[authtoken.Role(r)]; !ok &&
+			!slices.Contains(authtoken.Roles(), authtoken.Role(r)) {
 			return GenerateOutput{}, fmt.Errorf("role %q: %w", r, ErrNoRole)
 		}
 	}
@@ -77,16 +78,20 @@ func Roles(
 		perms, _ := authtoken.RolePermissions(name)
 		roles = append(
 			roles,
-			Role{Name: name, Source: "built-in", Permissions: authtoken.Strings(perms)},
+			Role{Name: string(name), Source: "built-in", Permissions: authtoken.Strings(perms)},
 		)
 	}
 	names := make([]string, 0, len(custom))
 	for name := range custom {
-		names = append(names, name)
+		names = append(names, string(name))
 	}
 	sort.Strings(names)
 	for _, name := range names {
-		roles = append(roles, Role{Name: name, Source: "config", Permissions: custom[name]})
+		roles = append(roles, Role{
+			Name:        name,
+			Source:      "config",
+			Permissions: authtoken.Strings(custom[authtoken.Role(name)]),
+		})
 	}
 
 	return RolesOutput{Roles: roles}, nil
@@ -126,10 +131,14 @@ func Validate(
 		return Claims{}, fmt.Errorf("failed to validate token: %w", err)
 	}
 
-	resolved := authtoken.ResolvePermissions(claims.Roles, claims.Permissions, nil)
+	resolved := authtoken.ResolvePermissions(
+		authtoken.RolesOf(claims.Roles),
+		authtoken.PermissionsOf(claims.Permissions),
+		nil,
+	)
 	effective := make([]string, 0, len(resolved))
 	for p := range resolved {
-		effective = append(effective, p)
+		effective = append(effective, string(p))
 	}
 	sort.Strings(effective)
 

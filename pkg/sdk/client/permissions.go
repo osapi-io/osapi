@@ -26,4 +26,4 @@ package client
 type Permission string
 
 // Role represents a built-in RBAC role name.
-type Role = string
+type Role string

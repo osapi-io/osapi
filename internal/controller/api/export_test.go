@@ -43,7 +43,7 @@ func ExportScopeMiddleware(
 	tokenManager *authtoken.Token,
 	signingKey string,
 	contextKey string,
-	customRoles map[string][]string,
+	customRoles authtoken.CustomRoles,
 ) StrictHandlerFunc {
 	return ScopeMiddleware(next, tokenManager, signingKey, contextKey, customRoles)
 }

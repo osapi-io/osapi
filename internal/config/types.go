@@ -20,6 +20,8 @@
 
 package config
 
+import "github.com/osapi-io/osapi/pkg/sdk/client"
+
 // Config represents the root structure of the YAML configuration file.
 // This struct is used to unmarshal configuration data from Viper.
 type Config struct {
@@ -340,7 +342,7 @@ type Client struct {
 // CustomRole defines a named set of permissions that can be assigned to tokens.
 type CustomRole struct {
 	// Permissions granted to this role.
-	Permissions []string `mapstructure:"permissions" validate:"dive,permission"`
+	Permissions []client.Permission `mapstructure:"permissions" validate:"dive,permission"`
 }
 
 // ServerSecurity represents security-related settings for the server.
@@ -351,7 +353,7 @@ type ServerSecurity struct {
 	// least validation.MinSigningKeyLen characters (see openssl rand -hex 32).
 	SigningKey string `mapstructure:"signing_key" validate:"required,signing_key" mask:"password" doc:"HS256 signing key for JWT validation (required). Generate with openssl rand -hex 32."`
 	// Roles defines custom roles with fine-grained permissions.
-	Roles map[string]CustomRole `mapstructure:"roles" validate:"dive" doc:"Custom roles with fine-grained permissions."`
+	Roles map[client.Role]CustomRole `mapstructure:"roles" validate:"dive" doc:"Custom roles with fine-grained permissions."`
 }
 
 // ClientSecurity represents security-related settings for the client.

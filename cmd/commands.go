@@ -140,12 +140,12 @@ func (tokenConfig) SigningKey() string {
 
 // CustomRoles are the roles of the config file, read here: roles list
 // needs no config file, so osapi does not read one at startup for it.
-func (tokenConfig) CustomRoles() (map[string][]string, error) {
+func (tokenConfig) CustomRoles() (authtoken.CustomRoles, error) {
 	var c config.Config
 	if _, err := config.Read(viper.New(), viper.GetString("osapiFile"), &c); err != nil {
 		return nil, err
 	}
-	out := make(map[string][]string, len(c.Controller.API.Security.Roles))
+	out := make(authtoken.CustomRoles, len(c.Controller.API.Security.Roles))
 	for name, r := range c.Controller.API.Security.Roles {
 		out[name] = r.Permissions
 	}

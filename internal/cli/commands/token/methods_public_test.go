@@ -102,7 +102,7 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 			in:   token.GenerateInput{Roles: []string{"auditor"}, Subject: "ops"},
 			setup: func() {
 				s.config.EXPECT().CustomRoles().
-					Return(map[string][]string{"auditor": {"audit:read"}}, nil)
+					Return(authtoken.CustomRoles{"auditor": {"audit:read"}}, nil)
 				s.config.EXPECT().SigningKey().Return(key)
 				s.tokens.EXPECT().Generate(key, []string{"auditor"}, "ops", nil).
 					Return("signed", nil)
@@ -155,7 +155,7 @@ func (s *MethodsPublicTestSuite) TestRoles() {
 		{
 			name: "when the config has custom roles, they follow the built-in ones by name",
 			setup: func() {
-				s.config.EXPECT().CustomRoles().Return(map[string][]string{
+				s.config.EXPECT().CustomRoles().Return(authtoken.CustomRoles{
 					"ops":     {"node:read"},
 					"auditor": {"audit:read"},
 				}, nil)
@@ -220,7 +220,7 @@ func (s *MethodsPublicTestSuite) TestRoleGet() {
 			setup: func() {
 				s.config.EXPECT().
 					CustomRoles().
-					Return(map[string][]string{"ops": {"node:read"}}, nil)
+					Return(authtoken.CustomRoles{"ops": {"node:read"}}, nil)
 			},
 			validateFunc: func(got token.Role, err error) {
 				s.Require().NoError(err)

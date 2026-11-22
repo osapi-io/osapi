@@ -29,6 +29,7 @@ import (
 	"github.com/labstack/echo/v5"
 
 	"github.com/osapi-io/osapi/internal/audit"
+	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/admission"
@@ -88,9 +89,9 @@ func handlers(
 	signingKey := d.cfg.Controller.API.Security.SigningKey
 
 	// Build custom roles map from config.
-	var customRoles map[string][]string
+	var customRoles authtoken.CustomRoles
 	if cfgRoles := d.cfg.Controller.API.Security.Roles; len(cfgRoles) > 0 {
-		customRoles = make(map[string][]string, len(cfgRoles))
+		customRoles = make(authtoken.CustomRoles, len(cfgRoles))
 		for name, role := range cfgRoles {
 			customRoles[name] = role.Permissions
 		}

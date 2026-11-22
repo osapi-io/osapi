@@ -54,7 +54,7 @@ func ScopeMiddleware(
 	tokenManager TokenValidator,
 	signingKey string,
 	contextKey string,
-	customRoles map[string][]string,
+	customRoles authtoken.CustomRoles,
 ) StrictHandlerFunc {
 	return StrictHandlerFunc(
 		func(ctx *echo.Context, request interface{}) (response interface{}, err error) {
@@ -96,13 +96,13 @@ func ScopeMiddleware(
 			}
 
 			resolved := authtoken.ResolvePermissions(
-				claims.Roles,
-				claims.Permissions,
+				authtoken.RolesOf(claims.Roles),
+				authtoken.PermissionsOf(claims.Permissions),
 				customRoles,
 			)
 
 			for _, required := range requiredScopes {
-				if authtoken.HasPermission(resolved, required) {
+				if authtoken.HasPermission(resolved, authtoken.Permission(required)) {
 					return handle()
 				}
 			}
