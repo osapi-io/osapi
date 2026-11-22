@@ -199,6 +199,14 @@ export function Traces() {
                   <span className="whitespace-pre font-mono">
                     <span className="text-text-muted">{r.lines}</span>
                     <span className="text-text">{r.node.name}</span>
+                    {r.node.clock_skew && (
+                      <span
+                        className="ml-2 text-status-pending"
+                        title={`This span started ${r.node.clock_skew} before its parent, so the clock of its host is behind. It and the spans under it are moved to the parent's start.`}
+                      >
+                        clock −{r.node.clock_skew}
+                      </span>
+                    )}
                   </span>
                 ),
               },

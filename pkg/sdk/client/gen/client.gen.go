@@ -4550,6 +4550,9 @@ type TraceNode struct {
 	// Children The spans under this one, in start order.
 	Children *[]TraceNode `json:"children,omitempty"`
 
+	// ClockSkew How far the span and the spans under it were moved forward, as a Go duration, because the span started before its parent: the clock of its host is behind. Empty when the span was not moved.
+	ClockSkew *string `json:"clock_skew,omitempty"`
+
 	// Detail What the span acted on, as key=value pairs, led by error= on a failed span.
 	Detail *string `json:"detail,omitempty"`
 

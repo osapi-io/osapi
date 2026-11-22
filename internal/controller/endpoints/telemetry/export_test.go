@@ -53,6 +53,9 @@ func ExportRows(
 	return rows
 }
 
+// ExportTree exposes tree for testing.
+var ExportTree = tree
+
 // ExportIsNATSSpan exposes isNATSSpan for testing.
 var ExportIsNATSSpan = isNATSSpan
 

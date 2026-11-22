@@ -438,6 +438,102 @@ func (s *TracePublicTestSuite) TestTraceServices() {
 	)
 }
 
+// TestClockSkew: a span that starts before its parent came from a host whose
+// clock is behind. It moves forward to its parent's start, the spans under it
+// move with it, and the move shows against the parent that the tree shows.
+func (s *TracePublicTestSuite) TestClockSkew() {
+	t0 := time.Date(2026, 11, 22, 0, 59, 57, 0, time.UTC)
+	ms := func(n float64) time.Time {
+		return t0.Add(time.Duration(n * float64(time.Millisecond)))
+	}
+	spans := []telemetry.TraceSpan{
+		{SpanID: "req", Name: "GET", Service: "osapi-controller", StartTime: ms(0), DurationMs: 60},
+		{
+			SpanID:       "pub",
+			ParentSpanID: "req",
+			Name:         "job.publish",
+			Service:      "osapi-controller",
+			StartTime:    ms(6),
+			DurationMs:   9,
+		},
+		// The NATS call that carried the job, which the tree leaves out.
+		{
+			SpanID:       "nats",
+			ParentSpanID: "pub",
+			Name:         "stream.publish",
+			Service:      "osapi-controller",
+			StartTime:    ms(7),
+			DurationMs:   1,
+		},
+		// The agent's clock is 18ms behind: it ran after the publish.
+		{
+			SpanID:       "proc",
+			ParentSpanID: "nats",
+			Name:         "job.process",
+			Service:      "osapi-agent",
+			StartTime:    ms(-11),
+			DurationMs:   40,
+		},
+		{
+			SpanID:       "beh",
+			ParentSpanID: "proc",
+			Name:         "behavior.hostname.get",
+			Service:      "osapi-agent",
+			StartTime:    ms(-2),
+			DurationMs:   30,
+		},
+		// Before its parent, but in the same service, so on the same clock.
+		{
+			SpanID:       "enc",
+			ParentSpanID: "req",
+			Name:         "response.encode",
+			Service:      "osapi-controller",
+			StartTime:    ms(-0.5),
+			DurationMs:   0.1,
+		},
+		// In step with its parent: it stays.
+		{
+			SpanID:       "col",
+			ParentSpanID: "req",
+			Name:         "job.collect",
+			Service:      "osapi-controller",
+			StartTime:    ms(16),
+			DurationMs:   40,
+		},
+		// A parent that is not in the trace: a root, as it is.
+		{
+			SpanID:       "orphan",
+			ParentSpanID: "gone",
+			Name:         "job.get",
+			Service:      "osapi-agent",
+			StartTime:    ms(-30),
+			DurationMs:   1,
+		},
+	}
+
+	got := telemetry.ExportTree("t", spans, false)
+
+	s.Equal(ms(-30), got.Started, "the trace starts at its first span, after the moves")
+	s.Require().Len(got.Spans, 2)
+	req := got.Spans[1]
+	s.Require().Len(req.Children, 3)
+	enc, pub, col := req.Children[0], req.Children[1], req.Children[2]
+
+	s.Equal(ms(-0.5), enc.Span.StartTime, "same service: not moved")
+	s.Empty(enc.ClockSkew)
+	s.Empty(pub.ClockSkew)
+	s.Equal(ms(16), col.Span.StartTime)
+	s.Empty(col.ClockSkew)
+
+	s.Require().Len(pub.Children, 1)
+	proc := pub.Children[0]
+	s.Equal(ms(7), proc.Span.StartTime, "moved to its parent's start")
+	s.Equal("18ms", proc.ClockSkew, "against the shown parent, past the hidden NATS call")
+	beh := proc.Children[0]
+	s.Equal(ms(16), beh.Span.StartTime, "moved with its parent")
+	s.Empty(beh.ClockSkew, "its own clock agrees with its parent's")
+}
+
 func TestTracePublicTestSuite(t *testing.T) {
 	suite.Run(t, new(TracePublicTestSuite))
 }

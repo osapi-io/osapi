@@ -44,11 +44,14 @@ func tree(
 		return out
 	}
 
+	spans, shift := deskew(spans)
 	byID := make(map[string]TraceSpan, len(spans))
+	for _, s := range spans {
+		byID[s.SpanID] = s
+	}
 	start, end := spans[0].StartTime, spans[0].StartTime
 	var hidden time.Duration
 	for _, s := range spans {
-		byID[s.SpanID] = s
 		if s.StartTime.Before(start) {
 			start = s.StartTime
 		}
@@ -113,6 +116,11 @@ func tree(
 			Detail:   spanDetail(s),
 			Span:     s,
 		}
+		// The move against the parent that the tree shows: the span's own
+		// parent can be a NATS call that the tree leaves out.
+		if d := shift[s.SpanID] - shift[parentOf(s)]; d > 0 {
+			n.ClockSkew = d.Round(time.Microsecond).String()
+		}
 		kids := children[s.SpanID]
 		byStart(kids)
 		for _, k := range kids {
@@ -127,6 +135,54 @@ func tree(
 	}
 
 	return out
+}
+
+// deskew moves forward each span that starts before its parent, and the
+// spans under it, to the start of the parent. A span cannot start before the
+// span that caused it, so such a span comes from a host whose clock is behind
+// the parent's host: an agent's job.process that starts before the
+// controller's job.publish. Hosts kept in step by NTP still differ by some
+// milliseconds, which is more than many spans last. Without the move, the
+// span's bar sits to the left of its cause and the trace is longer than it
+// was. shift is how far each span moved in all, with the moves of the spans
+// above it. Jaeger's clock skew adjuster does the same for a
+// child that outlasts its parent, as a job outlasts its publish.
+func deskew(
+	spans []TraceSpan,
+) ([]TraceSpan, map[string]time.Duration) {
+	byID := make(map[string]TraceSpan, len(spans))
+	for _, s := range spans {
+		byID[s.SpanID] = s
+	}
+	shift := map[string]time.Duration{}
+	var shiftOf func(s TraceSpan, depth int) time.Duration
+	shiftOf = func(s TraceSpan, depth int) time.Duration {
+		if d, ok := shift[s.SpanID]; ok {
+			return d
+		}
+		p, ok := byID[s.ParentSpanID]
+		// A span with no parent here, or a loop in bad data, stays.
+		if !ok || depth > len(spans) {
+			return 0
+		}
+		d := shiftOf(p, depth+1)
+		// Only a span from another service: spans of one process share a
+		// clock, as Jaeger's adjuster assumes for spans of one host.
+		if gap := p.StartTime.Sub(s.StartTime); gap > 0 && s.Service != p.Service {
+			d += gap
+		}
+		shift[s.SpanID] = d
+
+		return d
+	}
+
+	out := make([]TraceSpan, len(spans))
+	for i, s := range spans {
+		out[i] = s
+		out[i].StartTime = s.StartTime.Add(shiftOf(s, 0))
+	}
+
+	return out, shift
 }
 
 // duration is how long a span took.
