@@ -23,6 +23,7 @@ internal/skills/resources/
       references/          files that the procedure sends the agent to
       evals/               the requests that measure the skill, and run.sh
     build-a-command/
+    build-a-dsl/           what the three DSLs share, and how to add a DSL
     build-an-endpoint/
 ```
 
