@@ -51,7 +51,7 @@ export function DataTable<T>({
       <CardContent className="p-0">
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-border/40 text-left text-tint">
+            <tr className="border-b border-border/40 text-left text-text-muted">
               {columns.map((col, i) => (
                 <th
                   key={i}

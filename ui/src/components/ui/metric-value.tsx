@@ -19,7 +19,7 @@ export function MetricValue({
         className,
       )}
     >
-      <Icon className="h-3 w-3 shrink-0 text-tint" />
+      <Icon className="h-3 w-3 shrink-0 text-text-muted" />
       {children}
     </div>
   );

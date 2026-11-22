@@ -37,9 +37,13 @@ export function ComponentRow({
         <HealthDot status={statusDot(status)} />
         <Text className="font-medium">{name}</Text>
         {address && <Text variant="muted">{address}</Text>}
-        <Text variant={statusText(status)} className="ml-auto">
-          {status}
-        </Text>
+        {/* The dot says ok. The word shows only when it is not ok, so a
+            card of healthy rows has one mark per row, not two. */}
+        {statusDot(status) !== "ok" && (
+          <Text variant={statusText(status)} className="ml-auto">
+            {status}
+          </Text>
+        )}
       </div>
       {url && (
         <div className="mt-0.5 flex min-w-0 items-center gap-1 pl-4">

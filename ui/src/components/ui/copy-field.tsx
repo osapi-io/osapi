@@ -23,7 +23,7 @@ export function CopyField({ label, value, display }: CopyFieldProps) {
       <Text
         variant="label"
         as="span"
-        className="shrink-0 text-[10px] text-tint"
+        className="shrink-0 text-[10px] text-text-muted"
       >
         {label}
       </Text>
