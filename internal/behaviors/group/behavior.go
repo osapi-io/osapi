@@ -49,7 +49,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"group", "The groups of the host",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaConfig),
+	behavior.Area(behavior.AreaSecurity),
 	behavior.CLI,
 	behavior.Platform(behavior.PlatformDebian, newDebian),
 	behavior.Platform(behavior.PlatformLinux, newReader),

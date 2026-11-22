@@ -639,86 +639,6 @@ function UserListResult({ data }: { data: Record<string, unknown> }) {
   );
 }
 
-// Group list
-function GroupListResult({ data }: { data: Record<string, unknown> }) {
-  const { search, setSearch } = useListSearch();
-  type GroupHost = {
-    hostname: string;
-    status?: string;
-    groups?: { name?: string; gid?: number; members?: string[] }[];
-    error?: string;
-  };
-  const hosts = data.results as GroupHost[];
-  const totalGroups = hosts.reduce((n, h) => n + (h.groups?.length ?? 0), 0);
-  return (
-    <ResultShell
-      jobId={data.job_id as string | undefined}
-      label="group list"
-      data={data}
-    >
-      <ListSearchBar
-        search={search}
-        setSearch={setSearch}
-        hasItems={totalGroups > 0}
-      />
-      {hosts.map((host) => {
-        const allGroups = host.groups ?? [];
-        const groups = allGroups.filter((g) =>
-          matches(search, g.name, g.gid, g.members?.join(" ")),
-        );
-        if (
-          search &&
-          groups.length === 0 &&
-          !host.error &&
-          host.status !== "skipped"
-        )
-          return null;
-        return (
-          <div
-            key={host.hostname}
-            className="border-b border-border/50 last:border-0"
-          >
-            <HostGroupHeader
-              hostname={host.hostname}
-              status={
-                host.status === "skipped"
-                  ? "skipped"
-                  : host.error
-                    ? "failed"
-                    : "ok"
-              }
-              detail={
-                host.status === "skipped"
-                  ? "skipped"
-                  : `${allGroups.length} group${allGroups.length !== 1 ? "s" : ""}`
-              }
-            />
-            {host.error && host.status !== "skipped" && (
-              <HostError>{host.error}</HostError>
-            )}
-            {host.status !== "skipped" &&
-              groups.map((g, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-4 border-b border-border/30 px-4 py-2 pl-9 last:border-0"
-                >
-                  <KeyValue label="name" value={g.name} variant="strong" />
-                  {g.gid != null && (
-                    <KeyValue label="gid" value={String(g.gid)} />
-                  )}
-                  <KeyValue
-                    label="members"
-                    value={String(g.members?.length ?? 0)}
-                  />
-                </div>
-              ))}
-          </div>
-        );
-      })}
-    </ResultShell>
-  );
-}
-
 // Certificate list
 function CertificateListResult({ data }: { data: Record<string, unknown> }) {
   const { search, setSearch } = useListSearch();
@@ -1573,11 +1493,6 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
     return <UserListResult data={data} />;
   }
 
-  // Group list — expanded with search
-  if (type === "group-list" && Array.isArray(data.results)) {
-    return <GroupListResult data={data} />;
-  }
-
   // Certificate list — expanded with search
   if (type === "certificate-list" && Array.isArray(data.results)) {
     return <CertificateListResult data={data} />;
@@ -1594,10 +1509,6 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
       "user-add-key",
       "user-remove-key",
       "user-change-password",
-      "group-get",
-      "group-create",
-      "group-update",
-      "group-delete",
       "certificate-create",
       "certificate-update",
       "certificate-delete",

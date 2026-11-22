@@ -25,7 +25,6 @@ import { UserBlock } from "@/components/domain/user-block";
 import { UserPasswordBlock } from "@/components/domain/user-password-block";
 import { UserSSHKeyBlock } from "@/components/domain/user-ssh-key-block";
 import { UserRemoveKeyBlock } from "@/components/domain/user-remove-key-block";
-import { GroupBlock } from "@/components/domain/group-block";
 import { CertificateBlock } from "@/components/domain/certificate-block";
 import { ApplyButton } from "@/components/domain/apply-button";
 import { StackBar } from "@/components/domain/stack-bar";
@@ -100,14 +99,7 @@ import {
   postNodeUserSSHKey,
   deleteNodeUserSSHKey,
   postNodeUserPassword,
-} from "@/sdk/gen/user-and-group-management-api-user-operations/user-and-group-management-api-user-operations";
-import {
-  getNodeGroup,
-  getNodeGroupByName,
-  postNodeGroup,
-  putNodeGroup,
-  deleteNodeGroup,
-} from "@/sdk/gen/user-and-group-management-api-group-operations/user-and-group-management-api-group-operations";
+} from "@/sdk/gen/user-management-api-user-operations/user-management-api-user-operations";
 import {
   getNodeCertificateCa,
   postNodeCertificateCa,
@@ -617,33 +609,6 @@ export function Configure() {
               password: block.data.password as string,
             });
             break;
-          case "group-list":
-            result = await getNodeGroup(t);
-            break;
-          case "group-get":
-            result = await getNodeGroupByName(t, block.data.name as string);
-            break;
-          case "group-create":
-            result = await postNodeGroup(t, {
-              name: block.data.name as string,
-              gid: block.data.gid ? Number(block.data.gid) : undefined,
-            });
-            break;
-          case "group-update": {
-            const membersStr = (block.data.members as string) || "";
-            result = await putNodeGroup(t, block.data.name as string, {
-              members: membersStr
-                ? membersStr
-                    .split(",")
-                    .map((s) => s.trim())
-                    .filter(Boolean)
-                : undefined,
-            });
-            break;
-          }
-          case "group-delete":
-            result = await deleteNodeGroup(t, block.data.name as string);
-            break;
           case "certificate-list":
             result = await getNodeCertificateCa(t);
             break;
@@ -1080,38 +1045,6 @@ export function Configure() {
             data={block.data}
             onChange={(data) => updateBlockData(block.id, data)}
             onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-          />
-        );
-      case "group-list":
-        return null;
-      case "group-create":
-        return (
-          <GroupBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            mode="create"
-          />
-        );
-      case "group-update":
-        return (
-          <GroupBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            mode="update"
-          />
-        );
-      case "group-get":
-      case "group-delete":
-        return (
-          <SingleInputBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            field="name"
-            label="Group Name"
-            placeholder="docker"
           />
         );
       case "certificate-list":
