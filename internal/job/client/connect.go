@@ -22,6 +22,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
@@ -104,10 +105,10 @@ func Connect(
 		buckets = append(buckets, state)
 	}
 	for _, b := range buckets {
-		if err := nc.KVCreateOrUpdate(ctx, b); err != nil {
+		if err := ensureBucket(ctx, nc, b); err != nil {
 			bus.Close(nc)
 
-			return nil, fmt.Errorf("create KV bucket %s: %w", b.Bucket, err)
+			return nil, err
 		}
 	}
 
@@ -127,4 +128,29 @@ func Connect(
 	}
 
 	return c, nil
+}
+
+// ensureBucket binds to the bucket b names, and creates it with b only when
+// it is missing. It never changes a bucket that exists: the agent and the
+// controller each connect with their own config, and an update from each
+// flipped the job queue's age between theirs, which removed every job older
+// than the shorter one at once. osapi nats setup creates and updates the
+// buckets from the config of the server.
+func ensureBucket(
+	ctx context.Context,
+	nc *natsclient.Client,
+	b jetstream.KeyValueConfig,
+) error {
+	_, err := nc.KVStatus(ctx, b.Bucket)
+	switch {
+	case err == nil:
+		return nil
+	case !errors.Is(err, jetstream.ErrBucketNotFound):
+		return fmt.Errorf("open KV bucket %s: %w", b.Bucket, err)
+	}
+	if err := nc.KVCreateOrUpdate(ctx, b); err != nil {
+		return fmt.Errorf("create KV bucket %s: %w", b.Bucket, err)
+	}
+
+	return nil
 }
