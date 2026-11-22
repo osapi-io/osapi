@@ -8,6 +8,9 @@ describes each part of a group.
 
 The rules:
 
+- `in`: Each in tag of an input field is path, query, form or body. Fix: Correct
+  the value. A field with another value is read from the request body, not from
+  where the tag says.
 - `reason`: Each error that a method maps has a reason of endpoint.Reasons. Fix:
   Use a Reason constant, such as endpoint.ReasonNotManaged, in Because.
 - `field`: The field that Location names is a json field of the method's output,
