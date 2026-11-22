@@ -91,9 +91,13 @@ export function AdmissionCard({
           {record.hostname}
         </CardTitle>
         <div className="ml-auto flex items-center gap-2">
-          <span title={record.online ? "Online" : "Offline"}>
-            <HealthDot status={record.online} />
-          </span>
+          {/* Online is said by "Last seen"; the dot shows only a machine
+              that is not, so the card has one mark for each state. */}
+          {!record.online && (
+            <span title="Offline">
+              <HealthDot status={record.online} />
+            </span>
+          )}
           <Badge variant={statusVariant(record.state)}>{record.state}</Badge>
         </div>
       </CardHeader>

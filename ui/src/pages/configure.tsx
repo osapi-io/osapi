@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useVimNav } from "@/hooks/use-vim-nav";
 import { useBlockFocus } from "@/hooks/use-block-focus";
 import { ContentArea } from "@/components/layout/content-area";
@@ -231,6 +231,13 @@ export function Configure() {
   const { stacks, activeStack, activeStackId, loadStack, clearActiveStack } =
     useStacks();
   const [applying, setApplying] = useState(false);
+
+  // After Apply, what the run did, counted from the blocks' states.
+  const applied = blocks.filter((b) => b.status === "applied").length;
+  const failed = blocks.filter((b) => b.status === "error").length;
+  const applySummary = hasApplied
+    ? `${applied + failed} applied: ${applied} ok${failed ? `, ${failed} failed` : ""}`
+    : `${blocks.length} block${blocks.length === 1 ? "" : "s"}`;
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [activeGroup, setActiveGroup] = useState("services");
 
@@ -251,18 +258,7 @@ export function Configure() {
   }, [clearActiveStack, clearBlocks]);
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const blockRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const blockIds = useMemo(() => blocks.map((b) => b.id), [blocks]);
-  const focusFirstBlock = useBlockFocus(blockRefs, blockIds);
-
-  const addBlockAndFocus = useCallback(
-    (bt: Parameters<typeof addBlock>[0]) => {
-      const newId = addBlock(bt);
-      // Set vim focus so dd works immediately — first block if exists, else the new one
-      setFocusedId(blocks.length > 0 ? blocks[0].id : newId);
-      focusFirstBlock();
-    },
-    [addBlock, blocks, focusFirstBlock],
-  );
+  const focusBlock = useBlockFocus(blockRefs);
 
   const resultRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
@@ -272,6 +268,16 @@ export function Configure() {
     if (!el) return;
     el.scrollIntoView({ behavior: "smooth", block: "center" });
   }, []);
+
+  const addBlockAndFocus = useCallback(
+    (bt: Parameters<typeof addBlock>[0]) => {
+      const newId = addBlock(bt);
+      // Focus the new block, which brings it into view.
+      setFocusedId(newId);
+      focusBlock(newId);
+    },
+    [addBlock, focusBlock],
+  );
 
   const scrollToResult = useCallback(async (id: string) => {
     await new Promise((r) => setTimeout(r, 150));
@@ -1226,7 +1232,9 @@ export function Configure() {
 
       <div className="grid grid-cols-12 gap-6">
         {/* Sidebar */}
-        <aside className="col-span-3 space-y-3 self-start sticky top-20">
+        {/* The panel stays in view as the stack grows, and scrolls on its
+            own when it is taller than the window, so each chip is reachable. */}
+        <aside className="col-span-3 space-y-3 self-start sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto pr-1">
           <div className="flex items-center justify-between">
             <SectionLabel>Add Block</SectionLabel>
             {blocks.length > 0 && (
@@ -1302,6 +1310,8 @@ export function Configure() {
             <>
               <BlockStack>{stackItems}</BlockStack>
               <ApplyButton
+                summary={applySummary}
+                onClear={clearBlocks}
                 ready={canApply}
                 applying={applying}
                 hasApplied={hasApplied}
@@ -1311,7 +1321,7 @@ export function Configure() {
                 onReset={resetBlocks}
                 onSave={() => setShowSaveDialog(true)}
               />
-              <div className="h-[50vh]" />
+              <div className="h-24" />
             </>
           )}
         </main>

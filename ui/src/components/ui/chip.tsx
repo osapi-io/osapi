@@ -29,8 +29,11 @@ export function Chip({
         disabled
           ? "cursor-not-allowed border-border/30 bg-card/50 text-text-muted/40"
           : active
-            ? "border-primary/40 bg-primary/10 text-primary"
-            : "border-border bg-card text-text hover:border-primary/30 hover:text-primary",
+            ? // The one picked: the text color, a raised fill and the logo's
+              // dark-blue line under it, as the docs mark the open page.
+              // Green is a status, not a selection.
+              "border-white/20 bg-white/[0.06] text-white shadow-[inset_0_-2px_0_var(--color-accent)]"
+            : "border-border bg-card text-text hover:border-white/20 hover:bg-white/[0.03]",
         className,
       )}
       {...props}

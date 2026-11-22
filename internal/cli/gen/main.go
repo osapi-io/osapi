@@ -19,7 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 // Command gen writes the UI's status tones, ui/src/lib/status.gen.ts, from
-// the CLI's StatusTones. go generate ./internal/behaviors/all runs it.
+// the CLI's StatusTones, and the docs site's palette from the CLI's colors. go generate ./internal/behaviors/all runs it.
 package main
 
 import (
@@ -35,9 +35,14 @@ func main() {
 	root := flag.String("root", ".", "The root of the osapi repository")
 	flag.Parse()
 
-	path := filepath.Join(*root, cli.StatusTypeScriptFile)
-	if err := os.WriteFile(path, []byte(cli.StatusTypeScript()), 0o644); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+	for file, content := range map[string]string{
+		cli.StatusTypeScriptFile: cli.StatusTypeScript(),
+		cli.DocsPaletteCSSFile:   cli.DocsPaletteCSS(),
+		cli.DocsPaletteTSFile:    cli.DocsPaletteTS(),
+	} {
+		if err := os.WriteFile(filepath.Join(*root, file), []byte(content), 0o644); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
 	}
 }
