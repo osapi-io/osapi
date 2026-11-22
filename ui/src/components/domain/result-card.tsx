@@ -28,6 +28,8 @@ import { HostGroupHeader } from "@/components/domain/host-group-header";
 import { ResultSummary } from "@/components/domain/result-summary";
 import { hostOutcome, hostOutcomes } from "@/lib/outcome";
 import { formatDurationMs, formatTime } from "@/lib/format";
+import { BEHAVIOR_BLOCKS, type BehaviorBlockType } from "@/lib/blocks.gen";
+import { hasValue, type BehaviorBlockDef } from "@/lib/behavior-block";
 
 interface ResultCardProps {
   type: string;
@@ -547,578 +549,6 @@ function DockerListResult({ data }: { data: Record<string, unknown> }) {
   );
 }
 
-// Service list
-function ServiceListResult({ data }: { data: Record<string, unknown> }) {
-  const { search, setSearch } = useListSearch();
-  type ServiceListEntry = {
-    hostname: string;
-    status?: string;
-    services?: {
-      name?: string;
-      status?: string;
-      enabled?: boolean;
-      description?: string;
-      pid?: number;
-    }[];
-    error?: string;
-  };
-  // The API answers one row per service, with its systemd state: group them
-  // by host, keeping a host that failed or was skipped as a row without one.
-  type ServiceRow = {
-    hostname: string;
-    status?: string;
-    error?: string;
-    name?: string;
-    state?: string;
-    enabled?: boolean;
-    description?: string;
-  };
-  const hosts: ServiceListEntry[] = [];
-  for (const row of data.results as ServiceRow[]) {
-    let host = hosts.find((h) => h.hostname === row.hostname);
-    if (!host) {
-      host = {
-        hostname: row.hostname,
-        status: row.status,
-        error: row.error,
-        services: [],
-      };
-      hosts.push(host);
-    }
-    if (row.name) {
-      host.services?.push({
-        name: row.name,
-        status: row.state,
-        enabled: row.enabled,
-        description: row.description,
-      });
-    }
-  }
-  const totalServices = hosts.reduce(
-    (n, h) => n + (h.services?.length ?? 0),
-    0,
-  );
-  return (
-    <ResultShell
-      jobId={data.job_id as string | undefined}
-      label={`${totalServices} service${totalServices !== 1 ? "s" : ""}`}
-      data={data}
-    >
-      <ListSearchBar
-        search={search}
-        setSearch={setSearch}
-        hasItems={totalServices > 0}
-      />
-      {hosts.map((host) => {
-        const allServices = host.services ?? [];
-        const services = allServices.filter((s) =>
-          matches(search, s.name, s.status, s.description),
-        );
-        if (
-          search &&
-          services.length === 0 &&
-          !host.error &&
-          host.status !== "skipped"
-        )
-          return null;
-        return (
-          <div
-            key={host.hostname}
-            className="border-b border-border/50 last:border-0"
-          >
-            <HostGroupHeader
-              hostname={host.hostname}
-              status={
-                host.status === "skipped"
-                  ? "skipped"
-                  : host.error
-                    ? "failed"
-                    : "ok"
-              }
-              detail={
-                host.status === "skipped"
-                  ? "skipped"
-                  : `${allServices.length} service${allServices.length !== 1 ? "s" : ""}`
-              }
-            />
-            {host.error && host.status !== "skipped" && (
-              <HostError>{host.error}</HostError>
-            )}
-            {host.status !== "skipped" &&
-              services.map((s, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-4 border-b border-border/30 px-4 py-2 pl-9 last:border-0"
-                >
-                  <KeyValue label="name" value={s.name} variant="strong" />
-                  {s.status && (
-                    <KeyValue
-                      label="state"
-                      value={s.status}
-                      variant={s.status === "running" ? "accent" : "default"}
-                    />
-                  )}
-                  {s.enabled !== undefined && (
-                    <KeyValue
-                      label="enabled"
-                      value={s.enabled ? "yes" : "no"}
-                    />
-                  )}
-                  {s.description && (
-                    <Text variant="muted" className="truncate max-w-[200px]">
-                      {s.description}
-                    </Text>
-                  )}
-                </div>
-              ))}
-          </div>
-        );
-      })}
-    </ResultShell>
-  );
-}
-
-// Package list / get / check-updates
-function PackageListResult({
-  data,
-  label,
-}: {
-  data: Record<string, unknown>;
-  label: string;
-}) {
-  const { search, setSearch } = useListSearch();
-  type PkgHost = {
-    hostname: string;
-    status?: string;
-    packages?: {
-      name?: string;
-      version?: string;
-      description?: string;
-      size?: number;
-    }[];
-    error?: string;
-  };
-  // The API answers one row per package, or per update with its current and
-  // new version: group them by host, keeping a host that failed or was
-  // skipped as a row without a package.
-  type PkgRow = {
-    hostname: string;
-    status?: string;
-    error?: string;
-    name?: string;
-    version?: string;
-    current_version?: string;
-    new_version?: string;
-    description?: string;
-    size?: number;
-  };
-  const hosts: PkgHost[] = [];
-  for (const row of data.results as PkgRow[]) {
-    let host = hosts.find((h) => h.hostname === row.hostname);
-    if (!host) {
-      host = {
-        hostname: row.hostname,
-        status: row.status,
-        error: row.error,
-        packages: [],
-      };
-      hosts.push(host);
-    }
-    if (row.name) {
-      host.packages?.push({
-        name: row.name,
-        version: row.new_version
-          ? `${row.current_version ?? "?"} → ${row.new_version}`
-          : row.version,
-        description: row.description,
-        size: row.size,
-      });
-    }
-  }
-  const totalPackages = hosts.reduce(
-    (n, h) => n + (h.packages?.length ?? 0),
-    0,
-  );
-  return (
-    <ResultShell
-      jobId={data.job_id as string | undefined}
-      label={`${label}`}
-      data={data}
-    >
-      <ListSearchBar
-        search={search}
-        setSearch={setSearch}
-        hasItems={totalPackages > 0}
-      />
-      {hosts.map((host) => {
-        const allPackages = host.packages ?? [];
-        const packages = allPackages.filter((p) =>
-          matches(search, p.name, p.version, p.description),
-        );
-        if (
-          search &&
-          packages.length === 0 &&
-          !host.error &&
-          host.status !== "skipped"
-        )
-          return null;
-        return (
-          <div
-            key={host.hostname}
-            className="border-b border-border/50 last:border-0"
-          >
-            <HostGroupHeader
-              hostname={host.hostname}
-              status={
-                host.status === "skipped"
-                  ? "skipped"
-                  : host.error
-                    ? "failed"
-                    : "ok"
-              }
-              detail={
-                host.status === "skipped"
-                  ? "skipped"
-                  : `${allPackages.length} package${allPackages.length !== 1 ? "s" : ""}`
-              }
-            />
-            {host.error && host.status !== "skipped" && (
-              <HostError>{host.error}</HostError>
-            )}
-            {host.status !== "skipped" &&
-              packages.map((p, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-4 border-b border-border/30 px-4 py-2 pl-9 last:border-0"
-                >
-                  <KeyValue label="name" value={p.name} variant="strong" />
-                  {p.version && <KeyValue label="version" value={p.version} />}
-                  {p.description && (
-                    <Text
-                      variant="muted"
-                      className="ml-auto truncate max-w-[200px]"
-                    >
-                      {p.description}
-                    </Text>
-                  )}
-                </div>
-              ))}
-          </div>
-        );
-      })}
-    </ResultShell>
-  );
-}
-
-// Sysctl list — flat results grouped by hostname
-function SysctlListResult({ data }: { data: Record<string, unknown> }) {
-  const { search, setSearch } = useListSearch();
-  type SysctlEntry = {
-    hostname: string;
-    status?: string;
-    key?: string;
-    value?: string;
-    error?: string;
-  };
-  const entries = data.results as SysctlEntry[];
-  const byHost = new Map<string, SysctlEntry[]>();
-  for (const e of entries) {
-    const h = e.hostname ?? "unknown";
-    if (!byHost.has(h)) byHost.set(h, []);
-    byHost.get(h)!.push(e);
-  }
-  const totalEntries = entries.filter((e) => e.key).length;
-  return (
-    <ResultShell
-      jobId={data.job_id as string | undefined}
-      label="sysctl list"
-      data={data}
-    >
-      <ListSearchBar
-        search={search}
-        setSearch={setSearch}
-        hasItems={totalEntries > 0}
-      />
-      {[...byHost.entries()].map(([hostname, items]) => {
-        const hostEntry = items[0];
-        const isSkipped = hostEntry?.status === "skipped";
-        const hostError = !isSkipped && items.find((e) => e.error && !e.key);
-        const allKvEntries = isSkipped ? [] : items.filter((e) => e.key);
-        const kvEntries = allKvEntries.filter((e) =>
-          matches(search, e.key, e.value),
-        );
-        if (search && kvEntries.length === 0 && !isSkipped && !hostError)
-          return null;
-        return (
-          <div
-            key={hostname}
-            className="border-b border-border/50 last:border-0"
-          >
-            <HostGroupHeader
-              hostname={hostname}
-              status={isSkipped ? "skipped" : hostError ? "failed" : "ok"}
-              detail={
-                isSkipped
-                  ? "skipped"
-                  : `${allKvEntries.length} entr${allKvEntries.length !== 1 ? "ies" : "y"}`
-              }
-            />
-            {hostError && (
-              <HostError>{(hostError as SysctlEntry).error}</HostError>
-            )}
-            {kvEntries.map((e, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-4 border-b border-border/30 px-4 py-2 pl-9 last:border-0"
-              >
-                <KeyValue label="key" value={e.key} variant="strong" />
-                <KeyValue label="value" value={e.value} />
-              </div>
-            ))}
-          </div>
-        );
-      })}
-    </ResultShell>
-  );
-}
-
-// Interface list
-function InterfaceListResult({ data }: { data: Record<string, unknown> }) {
-  const { search, setSearch } = useListSearch();
-  type InterfaceHost = {
-    hostname: string;
-    status?: string;
-    interfaces?: {
-      name?: string;
-      ipv4?: string;
-      ipv6?: string;
-      mac?: string;
-      state?: string;
-      dhcp4?: boolean;
-      mtu?: number;
-      primary?: boolean;
-    }[];
-    error?: string;
-  };
-  // The API answers one row per interface: group them by host, keeping a
-  // host that failed or was skipped as a row without an interface.
-  type InterfaceRow = NonNullable<InterfaceHost["interfaces"]>[number] & {
-    hostname: string;
-    status?: string;
-    error?: string;
-  };
-  const hosts: InterfaceHost[] = [];
-  for (const row of data.results as InterfaceRow[]) {
-    let host = hosts.find((h) => h.hostname === row.hostname);
-    if (!host) {
-      host = {
-        hostname: row.hostname,
-        status: row.status,
-        error: row.error,
-        interfaces: [],
-      };
-      hosts.push(host);
-    }
-    if (row.name) host.interfaces?.push(row);
-  }
-  const totalInterfaces = hosts.reduce(
-    (n, h) => n + (h.interfaces?.length ?? 0),
-    0,
-  );
-  return (
-    <ResultShell
-      jobId={data.job_id as string | undefined}
-      label="interface list"
-      data={data}
-    >
-      <ListSearchBar
-        search={search}
-        setSearch={setSearch}
-        hasItems={totalInterfaces > 0}
-      />
-      {hosts.map((host) => {
-        const allInterfaces = host.interfaces ?? [];
-        const interfaces = allInterfaces.filter((iface) =>
-          matches(
-            search,
-            iface.name,
-            iface.ipv4,
-            iface.ipv6,
-            iface.mac,
-            iface.state,
-          ),
-        );
-        if (
-          search &&
-          interfaces.length === 0 &&
-          !host.error &&
-          host.status !== "skipped"
-        )
-          return null;
-        return (
-          <div
-            key={host.hostname}
-            className="border-b border-border/50 last:border-0"
-          >
-            <HostGroupHeader
-              hostname={host.hostname}
-              status={
-                host.status === "skipped"
-                  ? "skipped"
-                  : host.error
-                    ? "failed"
-                    : "ok"
-              }
-              detail={
-                host.status === "skipped"
-                  ? "skipped"
-                  : `${allInterfaces.length} interface${allInterfaces.length !== 1 ? "s" : ""}`
-              }
-            />
-            {host.error && host.status !== "skipped" && (
-              <HostError>{host.error}</HostError>
-            )}
-            {host.status !== "skipped" &&
-              interfaces.map((iface, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-4 border-b border-border/30 px-4 py-2 pl-9 last:border-0"
-                >
-                  <KeyValue label="name" value={iface.name} variant="strong" />
-                  {iface.ipv4 && <KeyValue label="ipv4" value={iface.ipv4} />}
-                  {iface.state && (
-                    <KeyValue
-                      label="state"
-                      value={iface.state}
-                      variant={iface.state === "up" ? "accent" : "default"}
-                    />
-                  )}
-                  {iface.mac && (
-                    <KeyValue label="mac" value={iface.mac} variant="mono" />
-                  )}
-                </div>
-              ))}
-          </div>
-        );
-      })}
-    </ResultShell>
-  );
-}
-
-// Route list
-function RouteListResult({
-  data,
-  label,
-}: {
-  data: Record<string, unknown>;
-  label: string;
-}) {
-  const { search, setSearch } = useListSearch();
-  type RouteHost = {
-    hostname: string;
-    status?: string;
-    routes?: {
-      destination?: string;
-      gateway?: string;
-      interface?: string;
-      metric?: number;
-      scope?: string;
-    }[];
-    error?: string;
-  };
-  // The API answers one row per route: group them by host, keeping a host
-  // that failed or was skipped as a row without a route.
-  type RouteRow = NonNullable<RouteHost["routes"]>[number] & {
-    hostname: string;
-    status?: string;
-    error?: string;
-  };
-  const hosts: RouteHost[] = [];
-  for (const row of data.results as RouteRow[]) {
-    let host = hosts.find((h) => h.hostname === row.hostname);
-    if (!host) {
-      host = {
-        hostname: row.hostname,
-        status: row.status,
-        error: row.error,
-        routes: [],
-      };
-      hosts.push(host);
-    }
-    if (row.destination) host.routes?.push(row);
-  }
-  const totalRoutes = hosts.reduce((n, h) => n + (h.routes?.length ?? 0), 0);
-  return (
-    <ResultShell
-      jobId={data.job_id as string | undefined}
-      label={label}
-      data={data}
-    >
-      <ListSearchBar
-        search={search}
-        setSearch={setSearch}
-        hasItems={totalRoutes > 0}
-      />
-      {hosts.map((host) => {
-        const allRoutes = host.routes ?? [];
-        const routes = allRoutes.filter((r) =>
-          matches(search, r.destination, r.gateway, r.interface, r.scope),
-        );
-        if (
-          search &&
-          routes.length === 0 &&
-          !host.error &&
-          host.status !== "skipped"
-        )
-          return null;
-        return (
-          <div
-            key={host.hostname}
-            className="border-b border-border/50 last:border-0"
-          >
-            <HostGroupHeader
-              hostname={host.hostname}
-              status={
-                host.status === "skipped"
-                  ? "skipped"
-                  : host.error
-                    ? "failed"
-                    : "ok"
-              }
-              detail={
-                host.status === "skipped"
-                  ? "skipped"
-                  : `${allRoutes.length} route${allRoutes.length !== 1 ? "s" : ""}`
-              }
-            />
-            {host.error && host.status !== "skipped" && (
-              <HostError>{host.error}</HostError>
-            )}
-            {host.status !== "skipped" &&
-              routes.map((r, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-4 border-b border-border/30 px-4 py-2 pl-9 last:border-0"
-                >
-                  <KeyValue
-                    label="dest"
-                    value={r.destination}
-                    variant="strong"
-                  />
-                  {r.gateway && <KeyValue label="via" value={r.gateway} />}
-                  {r.interface && <KeyValue label="dev" value={r.interface} />}
-                  {r.metric != null && (
-                    <KeyValue label="metric" value={String(r.metric)} />
-                  )}
-                </div>
-              ))}
-          </div>
-        );
-      })}
-    </ResultShell>
-  );
-}
-
 // User list
 function UserListResult({ data }: { data: Record<string, unknown> }) {
   const { search, setSearch } = useListSearch();
@@ -1538,9 +968,173 @@ function LogSourcesResult({ data }: { data: Record<string, unknown> }) {
 // Router
 // ---------------------------------------------------------------------------
 
+/** A field of the rows that a behavior block answers, from blocks.gen.ts. */
+type Column<T extends BehaviorBlockType> =
+  (typeof BEHAVIOR_BLOCKS)[T]["columns"][number]["name"];
+
+/** A card of its own: the card it renders, and the fields of the rows it reads. */
+type OwnCard<T extends BehaviorBlockType> = {
+  card: string;
+  reads: readonly Column<T>[];
+};
+
+/**
+ * The behavior blocks that keep a card of their own, by block type: the
+ * card of the type it names below, and the fields that the card reads. A
+ * field that the behavior no longer answers fails the type check, so the
+ * card cannot go stale the way a hand-written one can. Every other behavior
+ * block renders its rows with GenericRowsResult. osapi-io/osapi#1027 moves
+ * what these cards draw into the definition.
+ */
+const BEHAVIOR_CARDS: { [T in BehaviorBlockType]?: OwnCard<T> } = {
+  "disk-get": { card: "disk-info", reads: ["disks"] },
+  "memory-get": { card: "memory-info", reads: ["memory"] },
+  "status-get": {
+    card: "node-status",
+    reads: ["uptime", "load_average", "memory", "disks", "os_info"],
+  },
+};
+
+/** A value of a row as text: a list joined, an object as JSON. */
+function cellText(v: unknown): string {
+  if (Array.isArray(v)) return v.map((x) => cellText(x)).join(", ");
+  if (v !== null && typeof v === "object") {
+    return Object.entries(v as Record<string, unknown>)
+      .map(([k, x]) => `${k} ${cellText(x)}`)
+      .join(", ");
+  }
+  return String(v);
+}
+
+/**
+ * The result of a behavior block: the rows that its method answers, one per
+ * item, grouped by host, with a column for each field of the output. A host
+ * that failed or was skipped is a header without rows.
+ */
+function GenericRowsResult({
+  data,
+  def,
+}: {
+  data: Record<string, unknown>;
+  def: BehaviorBlockDef;
+}) {
+  const { search, setSearch } = useListSearch();
+  type Row = Record<string, unknown> & {
+    hostname: string;
+    status?: string;
+    error?: string;
+  };
+  const rows = (Array.isArray(data.results) ? data.results : []) as Row[];
+  const hosts: {
+    hostname: string;
+    status?: string;
+    error?: string;
+    rows: Row[];
+  }[] = [];
+  for (const row of rows) {
+    let host = hosts.find((h) => h.hostname === row.hostname);
+    if (!host) {
+      host = {
+        hostname: row.hostname,
+        status: row.status,
+        error: row.error,
+        rows: [],
+      };
+      hosts.push(host);
+    }
+    if (def.columns.some((c) => hasValue(row[c.name]))) host.rows.push(row);
+  }
+  const shown = def.columns.filter((c) => c.name !== "changed");
+  const total = hosts.reduce((n, h) => n + h.rows.length, 0);
+  const noun = `${def.title.toLowerCase()} ${def.method}`;
+  return (
+    <ResultShell
+      jobId={data.job_id as string | undefined}
+      label={noun}
+      data={data}
+    >
+      {total > 1 && (
+        <ListSearchBar
+          search={search}
+          setSearch={setSearch}
+          hasItems={total > 0}
+        />
+      )}
+      {hosts.map((host) => {
+        const visible = host.rows.filter((r) =>
+          matches(search, ...shown.map((c) => cellText(r[c.name]))),
+        );
+        if (search && visible.length === 0 && !host.error) return null;
+        const failed =
+          host.status === "failed" || (host.error && host.status !== "skipped");
+        const changed = host.rows.some((r) => r.changed === true);
+        return (
+          <div
+            key={host.hostname}
+            className="border-b border-border/50 last:border-0"
+          >
+            <HostGroupHeader
+              hostname={host.hostname}
+              status={
+                host.status === "skipped" ? "skipped" : failed ? "failed" : "ok"
+              }
+              detail={
+                host.status === "skipped"
+                  ? "skipped"
+                  : failed
+                    ? "failed"
+                    : def.write
+                      ? changed
+                        ? "changed"
+                        : "unchanged"
+                      : `${host.rows.length} ${host.rows.length === 1 ? "row" : "rows"}`
+              }
+            />
+            {host.error && host.status !== "skipped" && (
+              <HostError>{host.error}</HostError>
+            )}
+            {!def.write &&
+              visible.map((r, i) => (
+                <div
+                  key={i}
+                  className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border/30 px-4 py-2 pl-9 last:border-0"
+                >
+                  {shown
+                    .filter((c) => hasValue(r[c.name]))
+                    .map((c, j) => (
+                      <KeyValue
+                        key={c.name}
+                        label={c.name.replace(/_/g, " ")}
+                        value={cellText(r[c.name])}
+                        variant={j === 0 ? "strong" : undefined}
+                      />
+                    ))}
+                </div>
+              ))}
+          </div>
+        );
+      })}
+    </ResultShell>
+  );
+}
+
 export function ResultCard({ type, result, onAction }: ResultCardProps) {
   if (!result) return null;
   const data = result as Record<string, unknown>;
+
+  // A behavior block: its own card if it keeps one, else its rows.
+  if (type in BEHAVIOR_BLOCKS) {
+    const own = BEHAVIOR_CARDS[type as BehaviorBlockType]?.card;
+    if (!own) {
+      return (
+        <GenericRowsResult
+          data={data}
+          def={BEHAVIOR_BLOCKS[type as BehaviorBlockType]}
+        />
+      );
+    }
+    type = own;
+  }
 
   if (
     (type === "command" ||
@@ -1689,68 +1283,6 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
     );
   }
 
-  // DNS list — show servers and search domains per host
-  if (type === "dns-list" && Array.isArray(data.results)) {
-    const results = data.results as {
-      hostname: string;
-      status?: string;
-      servers?: string[];
-      search_domains?: string[];
-      error?: string;
-    }[];
-    return (
-      <CollectionResult
-        jobId={data.job_id as string | undefined}
-        label="dns"
-        results={results.map((r) => ({
-          hostname: r.hostname,
-          status: hostStatus(r),
-          error: r.error,
-          extra: (
-            <div className="space-y-0.5 text-xs text-text-muted">
-              {r.servers && <p>servers: {r.servers.join(", ")}</p>}
-              {r.search_domains && <p>search: {r.search_domains.join(", ")}</p>}
-            </div>
-          ),
-        }))}
-        data={data}
-      />
-    );
-  }
-
-  // DNS update — host results with status/changed
-  if (type === "dns-update" && Array.isArray(data.results)) {
-    const results = data.results as {
-      hostname: string;
-      status?: string;
-      changed?: boolean;
-      error?: string;
-    }[];
-    return (
-      <CollectionResult
-        jobId={data.job_id as string | undefined}
-        label="dns update"
-        results={results.map((r) => ({
-          hostname: r.hostname,
-          status: hostStatus(r),
-          changed: r.changed,
-          error: r.error,
-        }))}
-        data={data}
-      />
-    );
-  }
-
-  // Interface list — expanded with search
-  if (type === "interface-list" && Array.isArray(data.results)) {
-    return <InterfaceListResult data={data} />;
-  }
-
-  // Route list — expanded with search
-  if (type === "route-list" && Array.isArray(data.results)) {
-    return <RouteListResult data={data} label={type.replace("-", " ")} />;
-  }
-
   // DNS delete / interface CRUD / route CRUD — generic collection results
   if (
     [
@@ -1830,88 +1362,6 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
     );
   }
 
-  // Service list — expanded with search
-  if (type === "service-list" && Array.isArray(data.results)) {
-    return <ServiceListResult data={data} />;
-  }
-
-  // Service get — show per-host service details
-  if (type === "service-get" && Array.isArray(data.results)) {
-    // One row per host: the service, with its systemd state.
-    type ServiceGetEntry = {
-      hostname: string;
-      status?: string;
-      name?: string;
-      state?: string;
-      enabled?: boolean;
-      error?: string;
-    };
-    const entries = data.results as ServiceGetEntry[];
-    return (
-      <CollectionResult
-        jobId={data.job_id as string | undefined}
-        label="service get"
-        results={entries.map((r) => ({
-          hostname: r.hostname,
-          status: hostStatus(r),
-          error: r.error,
-          extra: r.name ? (
-            <span className="flex items-center gap-1.5">
-              <Text>{r.name}</Text>
-              {r.state && (
-                <Text variant={r.state === "running" ? "primary" : "muted"}>
-                  {r.state}
-                </Text>
-              )}
-              {r.enabled !== undefined && (
-                <Text variant="muted">
-                  {r.enabled ? "enabled" : "disabled"}
-                </Text>
-              )}
-            </span>
-          ) : undefined,
-        }))}
-        data={data}
-      />
-    );
-  }
-
-  // Service mutations (create/update/delete/start/stop/restart/enable/disable)
-  if (
-    (type === "service-create" ||
-      type === "service-update" ||
-      type === "service-delete" ||
-      type === "service-start" ||
-      type === "service-stop" ||
-      type === "service-restart" ||
-      type === "service-enable" ||
-      type === "service-disable") &&
-    Array.isArray(data.results)
-  ) {
-    type ServiceMutEntry = {
-      hostname: string;
-      status?: string;
-      name?: string;
-      changed?: boolean;
-      error?: string;
-    };
-    const results = data.results as ServiceMutEntry[];
-    return (
-      <CollectionResult
-        jobId={data.job_id as string | undefined}
-        label={type.replace("service-", "")}
-        results={results.map((r) => ({
-          hostname: r.hostname,
-          status: hostStatus(r),
-          changed: r.changed,
-          error: r.error,
-          extra: r.name ? <Text variant="muted">{r.name}</Text> : undefined,
-        }))}
-        data={data}
-      />
-    );
-  }
-
   // Cron get — per-host single entry
   if (type === "cron-get" && Array.isArray(data.results)) {
     type ScheduleGetEntry = {
@@ -1967,64 +1417,6 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
         data={data}
       />
     );
-  }
-
-  // Package list / get / check-updates — expanded with search
-  if (
-    (type === "package-list" ||
-      type === "package-get" ||
-      type === "package-check-updates") &&
-    Array.isArray(data.results)
-  ) {
-    const pkgLabel =
-      type === "package-list"
-        ? "package list"
-        : type === "package-get"
-          ? "package get"
-          : "available updates";
-    return <PackageListResult data={data} label={pkgLabel} />;
-  }
-
-  // Package install / remove / update — mutation results
-  if (
-    (type === "package-install" ||
-      type === "package-remove" ||
-      type === "package-update") &&
-    Array.isArray(data.results)
-  ) {
-    type PackageMutationResult = {
-      hostname: string;
-      status?: string;
-      name?: string;
-      changed?: boolean;
-      error?: string;
-    };
-    const results = data.results as PackageMutationResult[];
-    const label =
-      type === "package-install"
-        ? "install"
-        : type === "package-remove"
-          ? "remove"
-          : "update";
-    return (
-      <CollectionResult
-        jobId={data.job_id as string | undefined}
-        label={label}
-        results={results.map((r) => ({
-          hostname: r.hostname,
-          status: hostStatus(r),
-          changed: r.changed,
-          error: r.error,
-          extra: r.name ? <Text variant="muted">{r.name}</Text> : undefined,
-        }))}
-        data={data}
-      />
-    );
-  }
-
-  // Sysctl list — expanded with search
-  if (type === "sysctl-list" && Array.isArray(data.results)) {
-    return <SysctlListResult data={data} />;
   }
 
   // Config operations (sysctl, ntp, timezone, hostname)
@@ -2290,93 +1682,6 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
               )}
             </div>
           ) : undefined,
-        }))}
-        data={data}
-      />
-    );
-  }
-
-  // Node load — per-host load averages
-  if (type === "node-load" && Array.isArray(data.results)) {
-    type LoadRow = {
-      hostname: string;
-      status?: string;
-      load_average?: { "1min": number; "5min": number; "15min": number };
-      error?: string;
-    };
-    const results = data.results as LoadRow[];
-    return (
-      <CollectionResult
-        jobId={data.job_id as string | undefined}
-        label="load"
-        results={results.map((r) => ({
-          hostname: r.hostname,
-          status: hostStatus(r),
-          error: r.error,
-          extra:
-            r.load_average && !r.error ? (
-              <Text variant="muted">
-                {r.load_average["1min"].toFixed(2)} /{" "}
-                {r.load_average["5min"].toFixed(2)} /{" "}
-                {r.load_average["15min"].toFixed(2)}
-              </Text>
-            ) : undefined,
-        }))}
-        data={data}
-      />
-    );
-  }
-
-  // Node uptime — per-host uptime string
-  if (type === "node-uptime" && Array.isArray(data.results)) {
-    type UptimeRow = {
-      hostname: string;
-      status?: string;
-      uptime?: string;
-      error?: string;
-    };
-    const results = data.results as UptimeRow[];
-    return (
-      <CollectionResult
-        jobId={data.job_id as string | undefined}
-        label="uptime"
-        results={results.map((r) => ({
-          hostname: r.hostname,
-          status: hostStatus(r),
-          error: r.error,
-          extra:
-            r.uptime && !r.error ? (
-              <Text variant="muted">{r.uptime}</Text>
-            ) : undefined,
-        }))}
-        data={data}
-      />
-    );
-  }
-
-  // Node OS — per-host distribution and version
-  if (type === "node-os" && Array.isArray(data.results)) {
-    type OsRow = {
-      hostname: string;
-      status?: string;
-      os_info?: { distribution: string; version: string };
-      error?: string;
-    };
-    const results = data.results as OsRow[];
-    return (
-      <CollectionResult
-        jobId={data.job_id as string | undefined}
-        label="os info"
-        results={results.map((r) => ({
-          hostname: r.hostname,
-          status: hostStatus(r),
-          error: r.error,
-          extra:
-            r.os_info && !r.error ? (
-              <Text variant="muted">
-                {r.os_info.distribution} {r.os_info.version}
-              </Text>
-            ) : undefined,
         }))}
         data={data}
       />
