@@ -8,6 +8,7 @@ import {
   type Permission,
 } from "./permissions.gen";
 import { OPERATION_PERMISSIONS, type OperationId } from "./operations.gen";
+import { BEHAVIOR_BLOCKS } from "./blocks.gen";
 
 export { ALL_PERMISSIONS, type Permission };
 
@@ -113,51 +114,10 @@ export const BLOCK_OPERATIONS: Record<string, OperationId> = {
   "docker-rm-image": "deleteNodeContainerDockerImage",
   "docker-inspect": "getNodeContainerDockerByID",
   "command-shell": "postNodeCommandShell",
-  "dns-list": "getNodeNetworkDnsByKey",
-  "dns-update": "putNodeNetworkDns",
-  "dns-delete": "deleteNodeNetworkDns",
-  "interface-list": "getNodeNetworkInterface",
-  "interface-get": "getNodeNetworkInterfaceByKey",
-  "interface-create": "postNodeNetworkInterface",
-  "interface-update": "putNodeNetworkInterface",
-  "interface-delete": "deleteNodeNetworkInterface",
-  "route-list": "getNodeNetworkInterfaceRoute",
-  "route-create": "postNodeNetworkInterfaceRoute",
-  "route-update": "putNodeNetworkInterfaceRoute",
-  "route-delete": "deleteNodeNetworkInterfaceRoute",
-  "service-list": "getNodeService",
-  "service-get": "getNodeServiceByKey",
-  "service-create": "postNodeService",
-  "service-update": "putNodeService",
-  "service-delete": "deleteNodeService",
-  "service-start": "postNodeServiceStart",
-  "service-stop": "postNodeServiceStop",
-  "service-restart": "postNodeServiceRestart",
-  "service-enable": "postNodeServiceEnable",
-  "service-disable": "postNodeServiceDisable",
-  "package-list": "getNodePackage",
-  "package-get": "getNodePackageByKey",
-  "package-install": "postNodePackage",
-  "package-remove": "deleteNodePackage",
-  "package-update": "putNodeUpdatepackages",
-  "package-check-updates": "getNodeUpdatepackages",
-  "sysctl-list": "getNodeSysctl",
-  "sysctl-get": "getNodeSysctlByKey",
-  "sysctl-set": "postNodeSysctl",
-  "sysctl-update": "putNodeSysctl",
-  "sysctl-delete": "deleteNodeSysctl",
   "ntp-get": "getNodeNtp",
   "ntp-set": "postNodeNtp",
   "ntp-update": "putNodeNtp",
   "ntp-delete": "deleteNodeNtp",
-  "timezone-get": "getNodeTimezone",
-  "timezone-set": "putNodeTimezone",
-  "hostname-get": "getNodeHostname",
-  "hostname-set": "putNodeHostname",
-  "node-status": "getNodeStatus",
-  "node-load": "getNodeLoad",
-  "node-uptime": "getNodeUptime",
-  "node-os": "getNodeOs",
   "power-reboot": "postNodePowerReboot",
   "power-shutdown": "postNodePowerShutdown",
   "process-list": "getNodeProcess",
@@ -166,8 +126,6 @@ export const BLOCK_OPERATIONS: Record<string, OperationId> = {
   "log-query": "getNodeLog",
   "log-sources": "getNodeLogSource",
   "log-query-unit": "getNodeLogUnit",
-  "disk-info": "getNodeDisk",
-  "memory-info": "getNodeMemory",
   "audit-list": "getAuditLogs",
   "audit-get": "getAuditLogByID",
   "audit-export": "getAuditExport",
@@ -192,8 +150,12 @@ export const BLOCK_OPERATIONS: Record<string, OperationId> = {
 };
 
 export const BLOCK_PERMISSIONS: Record<string, Permission> = Object.fromEntries(
-  Object.entries(BLOCK_OPERATIONS).map(([block, op]) => [
-    block,
-    OPERATION_PERMISSIONS[op],
-  ]),
+  [
+    ...Object.entries(BLOCK_OPERATIONS).map(([block, op]) => [
+      block,
+      OPERATION_PERMISSIONS[op],
+    ]),
+    // A behavior block's permission is its method's, from blocks.gen.ts.
+    ...Object.values(BEHAVIOR_BLOCKS).map((def) => [def.type, def.permission]),
+  ],
 );

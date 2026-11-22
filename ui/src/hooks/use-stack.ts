@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { BEHAVIOR_BLOCKS, type BehaviorName } from "@/lib/blocks.gen";
 
 export type BlockStatus =
   "unchecked" | "pending" | "ready" | "applying" | "applied" | "error";
@@ -25,7 +26,7 @@ export interface BlockGroup {
   categories: BlockCategory[];
 }
 
-export const ALL_BLOCK_TYPES: BlockType[] = [
+const HAND_BLOCK_TYPES: BlockType[] = [
   // ── Services ──────────────────────────────────────────────────────────────
   {
     type: "cron-create",
@@ -64,162 +65,6 @@ export const ALL_BLOCK_TYPES: BlockType[] = [
     group: "services",
   },
   {
-    type: "service-list",
-    label: "List",
-    description: "List systemd services",
-    category: "service",
-    group: "services",
-    readyOnAdd: true,
-  },
-  {
-    type: "service-get",
-    label: "Get",
-    description: "Get service details",
-    category: "service",
-    group: "services",
-  },
-  {
-    type: "service-create",
-    label: "Create",
-    description: "Create a systemd unit",
-    category: "service",
-    group: "services",
-  },
-  {
-    type: "service-update",
-    label: "Update",
-    description: "Update a systemd unit",
-    category: "service",
-    group: "services",
-  },
-  {
-    type: "service-delete",
-    label: "Delete",
-    description: "Delete a systemd unit",
-    category: "service",
-    group: "services",
-  },
-  {
-    type: "service-start",
-    label: "Start",
-    description: "Start a service",
-    category: "service",
-    group: "services",
-  },
-  {
-    type: "service-stop",
-    label: "Stop",
-    description: "Stop a service",
-    category: "service",
-    group: "services",
-  },
-  {
-    type: "service-restart",
-    label: "Restart",
-    description: "Restart a service",
-    category: "service",
-    group: "services",
-  },
-  {
-    type: "service-enable",
-    label: "Enable",
-    description: "Enable a service at boot",
-    category: "service",
-    group: "services",
-  },
-  {
-    type: "service-disable",
-    label: "Disable",
-    description: "Disable a service at boot",
-    category: "service",
-    group: "services",
-  },
-
-  // ── Software ───────────────────────────────────────────────────────────────
-  {
-    type: "package-list",
-    label: "List",
-    description: "List installed packages",
-    category: "package",
-    group: "software",
-    readyOnAdd: true,
-  },
-  {
-    type: "package-get",
-    label: "Get",
-    description: "Get package details",
-    category: "package",
-    group: "software",
-  },
-  {
-    type: "package-install",
-    label: "Install",
-    description: "Install a package",
-    category: "package",
-    group: "software",
-  },
-  {
-    type: "package-remove",
-    label: "Remove",
-    description: "Remove a package",
-    category: "package",
-    group: "software",
-  },
-  {
-    type: "package-update",
-    label: "Refresh Index",
-    description: "Refresh the package index",
-    category: "package",
-    group: "software",
-    readyOnAdd: true,
-  },
-  {
-    type: "package-check-updates",
-    label: "Check Updates",
-    description: "Check for available updates",
-    category: "package",
-    group: "software",
-    readyOnAdd: true,
-  },
-
-  // ── Config ─────────────────────────────────────────────────────────────────
-  {
-    type: "sysctl-list",
-    label: "List",
-    description: "List sysctl parameters",
-    category: "sysctl",
-    group: "config",
-    readyOnAdd: true,
-  },
-  {
-    type: "sysctl-get",
-    label: "Get",
-    description: "Get a sysctl parameter",
-    category: "sysctl",
-    group: "config",
-  },
-  {
-    type: "sysctl-set",
-    label: "Set",
-    description: "Create a sysctl parameter",
-    category: "sysctl",
-    group: "config",
-  },
-  {
-    type: "sysctl-update",
-    label: "Update",
-    description: "Update a sysctl parameter",
-    category: "sysctl",
-    group: "config",
-  },
-  {
-    type: "sysctl-delete",
-    label: "Delete",
-    description: "Delete a sysctl parameter",
-    category: "sysctl",
-    group: "config",
-  },
-  {
     type: "ntp-get",
     label: "Get",
     description: "Get NTP configuration",
@@ -247,70 +92,6 @@ export const ALL_BLOCK_TYPES: BlockType[] = [
     description: "Remove NTP configuration",
     category: "ntp",
     group: "config",
-    readyOnAdd: true,
-  },
-  {
-    type: "timezone-get",
-    label: "Get",
-    description: "Get system timezone",
-    category: "timezone",
-    group: "config",
-    readyOnAdd: true,
-  },
-  {
-    type: "timezone-set",
-    label: "Set",
-    description: "Set system timezone",
-    category: "timezone",
-    group: "config",
-  },
-  {
-    type: "hostname-get",
-    label: "Get",
-    description: "Get system hostname",
-    category: "hostname",
-    group: "config",
-    readyOnAdd: true,
-  },
-  {
-    type: "hostname-set",
-    label: "Set",
-    description: "Set system hostname",
-    category: "hostname",
-    group: "config",
-  },
-
-  // ── Node ──────────────────────────────────────────────────────────────────
-  {
-    type: "node-status",
-    label: "Status",
-    description: "Get node status and conditions",
-    category: "node-info",
-    group: "node",
-    readyOnAdd: true,
-  },
-  {
-    type: "node-load",
-    label: "Load",
-    description: "Get load averages",
-    category: "node-info",
-    group: "node",
-    readyOnAdd: true,
-  },
-  {
-    type: "node-uptime",
-    label: "Uptime",
-    description: "Get system uptime",
-    category: "node-info",
-    group: "node",
-    readyOnAdd: true,
-  },
-  {
-    type: "node-os",
-    label: "OS",
-    description: "Get OS information",
-    category: "node-info",
-    group: "node",
     readyOnAdd: true,
   },
   {
@@ -374,99 +155,12 @@ export const ALL_BLOCK_TYPES: BlockType[] = [
 
   // ── Networking ─────────────────────────────────────────────────────────────
   {
-    type: "dns-list",
-    label: "List",
-    description: "List DNS servers for an interface",
-    category: "dns",
-    group: "networking",
-  },
-  {
-    type: "dns-update",
-    label: "Update",
-    description: "Update DNS servers for an interface",
-    category: "dns",
-    group: "networking",
-  },
-  {
-    type: "dns-delete",
-    label: "Delete",
-    description: "Delete DNS configuration",
-    category: "dns",
-    group: "networking",
-  },
-  {
     type: "ping",
     label: "Ping",
     description: "Ping a remote host",
     category: "network",
     group: "networking",
   },
-  {
-    type: "interface-list",
-    label: "List",
-    description: "List network interfaces",
-    category: "interface",
-    group: "networking",
-    readyOnAdd: true,
-  },
-  {
-    type: "interface-get",
-    label: "Get",
-    description: "Get interface details",
-    category: "interface",
-    group: "networking",
-  },
-  {
-    type: "interface-create",
-    label: "Create",
-    description: "Create a network interface",
-    category: "interface",
-    group: "networking",
-  },
-  {
-    type: "interface-update",
-    label: "Update",
-    description: "Update a network interface",
-    category: "interface",
-    group: "networking",
-  },
-  {
-    type: "interface-delete",
-    label: "Delete",
-    description: "Delete a network interface",
-    category: "interface",
-    group: "networking",
-  },
-  {
-    type: "route-list",
-    label: "List",
-    description: "List the routes of an interface",
-    category: "route",
-    group: "networking",
-  },
-  {
-    type: "route-create",
-    label: "Create",
-    description: "Add a route to an interface",
-    category: "route",
-    group: "networking",
-  },
-  {
-    type: "route-update",
-    label: "Update",
-    description: "Change the gateway or metric of a route",
-    category: "route",
-    group: "networking",
-  },
-  {
-    type: "route-delete",
-    label: "Delete",
-    description: "Drop a route that osapi wrote",
-    category: "route",
-    group: "networking",
-  },
-
-  // ── Security ───────────────────────────────────────────────────────────────
   {
     type: "user-list",
     label: "List",
@@ -734,24 +428,6 @@ export const ALL_BLOCK_TYPES: BlockType[] = [
 
   // ── Hardware ───────────────────────────────────────────────────────────────
   {
-    type: "disk-info",
-    label: "Disk",
-    description: "Get disk information",
-    category: "disk",
-    group: "hardware",
-    readyOnAdd: true,
-  },
-  {
-    type: "memory-info",
-    label: "Memory",
-    description: "Get memory information",
-    category: "memory",
-    group: "hardware",
-    readyOnAdd: true,
-  },
-
-  // ── Audit ──────────────────────────────────────────────────────────────────
-  {
     type: "audit-list",
     label: "List",
     description: "List audit log entries",
@@ -776,21 +452,55 @@ export const ALL_BLOCK_TYPES: BlockType[] = [
   },
 ];
 
+/**
+ * The UI group of each behavior: where its blocks sit in the Add Block
+ * panel. A behavior with no group fails the type check.
+ */
+const BEHAVIOR_GROUPS: Record<BehaviorName, string> = {
+  service: "services",
+  package: "software",
+  updatepackages: "software",
+  sysctl: "config",
+  timezone: "config",
+  hostname: "config",
+  status: "node",
+  load: "node",
+  uptime: "node",
+  os: "node",
+  dns: "networking",
+  interface: "networking",
+  route: "networking",
+  disk: "hardware",
+  memory: "hardware",
+};
+
+/** The block of each method of each behavior, from blocks.gen.ts. */
+const BEHAVIOR_BLOCK_TYPES: BlockType[] = Object.values(BEHAVIOR_BLOCKS).map(
+  (def) => ({
+    type: def.type,
+    label: def.label,
+    description: def.description,
+    category: def.behavior,
+    group: BEHAVIOR_GROUPS[def.behavior],
+    readyOnAdd: !def.fields.some((f) => f.required),
+  }),
+);
+
+export const ALL_BLOCK_TYPES: BlockType[] = [
+  ...HAND_BLOCK_TYPES,
+  ...BEHAVIOR_BLOCK_TYPES,
+];
+
+// The names of the categories of the hand-written blocks. A behavior's
+// category is named by its title, from blocks.gen.ts, or here when the
+// title does not read well.
 const categoryNames: Record<string, string> = {
-  service: "Service",
+  updatepackages: "Package Index",
   cron: "Cron",
-  package: "Package",
-  sysctl: "Sysctl",
   ntp: "NTP",
-  timezone: "Timezone",
-  hostname: "Hostname",
-  "node-info": "Node Info",
   power: "Power",
   process: "Process",
   log: "Log",
-  dns: "DNS",
-  interface: "Interface",
-  route: "Route",
   network: "Network",
   user: "User",
   group: "Group",
@@ -799,17 +509,19 @@ const categoryNames: Record<string, string> = {
   file: "File",
   "file-deploy": "File Deploy",
   command: "Command",
-  disk: "Disk",
-  memory: "Memory",
   audit: "Audit",
 };
+
+const behaviorTitles: Record<string, string> = Object.fromEntries(
+  Object.values(BEHAVIOR_BLOCKS).map((def) => [def.behavior, def.title]),
+);
 
 function buildCategories(groupName: string): BlockCategory[] {
   const types = ALL_BLOCK_TYPES.filter((b) => b.group === groupName);
   const cats = [...new Set(types.map((b) => b.category))];
   return cats.map((cat) => ({
     name: cat,
-    label: categoryNames[cat] || cat,
+    label: categoryNames[cat] || behaviorTitles[cat] || cat,
     types: types.filter((b) => b.category === cat),
   }));
 }
@@ -919,7 +631,13 @@ export function useStack() {
     setBlocks((prev) =>
       prev.map((b) => ({
         ...b,
-        status: b.data && Object.keys(b.data).length > 0 ? "ready" : "pending",
+        // A block that is ready when added (it takes no input) is ready
+        // again; any other block is ready when it has its input.
+        status:
+          ALL_BLOCK_TYPES.find((t) => t.type === b.type)?.readyOnAdd ||
+          (b.data && Object.keys(b.data).length > 0)
+            ? "ready"
+            : "pending",
         result: undefined,
         error: undefined,
       })),

@@ -15,17 +15,10 @@ import { FileDeleteBlock } from "@/components/domain/file-delete-block";
 import { ScheduleDeleteBlock } from "@/components/domain/schedule-delete-block";
 import { ContainerActionBlock } from "@/components/domain/container-action-block";
 import { DockerExecBlock } from "@/components/domain/docker-exec-block";
-import { DnsUpdateBlock } from "@/components/domain/dns-update-block";
-import { ServiceBlock } from "@/components/domain/service-block";
-import { ServiceActionBlock } from "@/components/domain/service-action-block";
-import { PackageBlock } from "@/components/domain/package-block";
-import { SysctlBlock } from "@/components/domain/sysctl-block";
 import { NtpBlock } from "@/components/domain/ntp-block";
 import { PowerBlock } from "@/components/domain/power-block";
 import { ProcessSignalBlock } from "@/components/domain/process-signal-block";
 import { LogQueryBlock } from "@/components/domain/log-query-block";
-import { InterfaceBlock } from "@/components/domain/interface-block";
-import { RouteBlock } from "@/components/domain/route-block";
 import { UserBlock } from "@/components/domain/user-block";
 import { UserPasswordBlock } from "@/components/domain/user-password-block";
 import { UserSSHKeyBlock } from "@/components/domain/user-ssh-key-block";
@@ -52,18 +45,6 @@ import {
   putNodeSchedule,
 } from "@/sdk/gen/schedule-management-api-schedule-operations/schedule-management-api-schedule-operations";
 import {
-  getNodeService,
-  getNodeServiceByKey,
-  postNodeService,
-  putNodeService,
-  deleteNodeService,
-  postNodeServiceStart,
-  postNodeServiceStop,
-  postNodeServiceRestart,
-  postNodeServiceEnable,
-  postNodeServiceDisable,
-} from "@/sdk/gen/service-api-service-operations/service-api-service-operations";
-import {
   postNodeCommandExec,
   postNodeCommandShell,
 } from "@/sdk/gen/command-execution-api-command-operations/command-execution-api-command-operations";
@@ -72,56 +53,13 @@ import {
   postNodeContainerDockerPull,
   deleteNodeContainerDockerImage,
 } from "@/sdk/gen/docker-management-api-docker-image/docker-management-api-docker-image";
-import {
-  getNodeNetworkDnsByKey,
-  putNodeNetworkDns,
-  deleteNodeNetworkDns,
-} from "@/sdk/gen/dns-api-network-dns-operations/dns-api-network-dns-operations";
-import {
-  getNodeNetworkInterface,
-  getNodeNetworkInterfaceByKey,
-  postNodeNetworkInterface,
-  putNodeNetworkInterface,
-  deleteNodeNetworkInterface,
-} from "@/sdk/gen/interface-api-network-interface-operations/interface-api-network-interface-operations";
-import {
-  getNodeNetworkInterfaceRoute,
-  postNodeNetworkInterfaceRoute,
-  putNodeNetworkInterfaceRoute,
-  deleteNodeNetworkInterfaceRoute,
-} from "@/sdk/gen/route-api-route-operations/route-api-route-operations";
 import { postNodeNetworkPing } from "@/sdk/gen/network-management-api-network-operations/network-management-api-network-operations";
-import {
-  getNodePackage,
-  getNodePackageByKey,
-  postNodePackage,
-  deleteNodePackage,
-} from "@/sdk/gen/package-api-package-operations/package-api-package-operations";
-import {
-  getNodeUpdatepackages,
-  putNodeUpdatepackages,
-} from "@/sdk/gen/updatepackages-api-updatepackages-operations/updatepackages-api-updatepackages-operations";
-import {
-  getNodeSysctl,
-  getNodeSysctlByKey,
-  postNodeSysctl,
-  putNodeSysctl,
-  deleteNodeSysctl,
-} from "@/sdk/gen/sysctl-api-sysctl-operations/sysctl-api-sysctl-operations";
 import {
   getNodeNtp,
   postNodeNtp,
   putNodeNtp,
   deleteNodeNtp,
 } from "@/sdk/gen/ntp-management-api-ntp-operations/ntp-management-api-ntp-operations";
-import {
-  getNodeTimezone,
-  putNodeTimezone,
-} from "@/sdk/gen/timezone-api-timezone-operations/timezone-api-timezone-operations";
-import {
-  getNodeHostname,
-  putNodeHostname,
-} from "@/sdk/gen/hostname-api-hostname-operations/hostname-api-hostname-operations";
 import {
   postNodePowerReboot,
   postNodePowerShutdown,
@@ -179,12 +117,6 @@ import {
   postNodeFileUndeploy,
   getNodeFileStatus,
 } from "@/sdk/gen/node-file-operations-api-node-file-operations/node-file-operations-api-node-file-operations";
-import { getNodeDisk } from "@/sdk/gen/disk-api-disk-operations/disk-api-disk-operations";
-import { getNodeLoad } from "@/sdk/gen/load-api-load-operations/load-api-load-operations";
-import { getNodeMemory } from "@/sdk/gen/memory-api-memory-operations/memory-api-memory-operations";
-import { getNodeOs } from "@/sdk/gen/os-api-os-operations/os-api-os-operations";
-import { getNodeUptime } from "@/sdk/gen/uptime-api-uptime-operations/uptime-api-uptime-operations";
-import { getNodeStatus } from "@/sdk/gen/status-api-status-operations/status-api-status-operations";
 import {
   getAuditLogs,
   getAuditLogByID,
@@ -198,6 +130,9 @@ import { Text } from "@/components/ui/text";
 import { Chip } from "@/components/ui/chip";
 import { useAuth } from "@/hooks/use-auth";
 import { BLOCK_PERMISSIONS } from "@/lib/permissions";
+import { BEHAVIOR_BLOCKS, type BehaviorBlockType } from "@/lib/blocks.gen";
+import { runBehavior } from "@/lib/behavior-block";
+import { BehaviorBlockForm } from "@/components/domain/behavior-block-form";
 import {
   Calendar,
   Container,
@@ -378,6 +313,14 @@ export function Configure() {
 
         const t = block.target;
 
+        const behaviorDef = BEHAVIOR_BLOCKS[block.type as BehaviorBlockType];
+        if (behaviorDef) {
+          result = await runBehavior(behaviorDef, t, block.data);
+          setBlockStatus(block.id, "applied", undefined, result.data);
+          await scrollToResult(block.id);
+          continue;
+        }
+
         switch (block.type) {
           case "cron-create":
             result = await postNodeSchedule(t, {
@@ -405,41 +348,6 @@ export function Configure() {
                 (block.data.content_type as "raw" | "template" | undefined) ||
                 undefined,
             });
-            break;
-          case "service-list":
-            result = await getNodeService(t);
-            break;
-          case "service-get":
-            result = await getNodeServiceByKey(t, block.data.name as string);
-            break;
-          case "service-create":
-            result = await postNodeService(t, {
-              name: block.data.name as string,
-              object: block.data.object as string,
-            });
-            break;
-          case "service-update":
-            result = await putNodeService(t, block.data.name as string, {
-              object: block.data.object as string,
-            });
-            break;
-          case "service-delete":
-            result = await deleteNodeService(t, block.data.name as string);
-            break;
-          case "service-start":
-            result = await postNodeServiceStart(t, block.data.name as string);
-            break;
-          case "service-stop":
-            result = await postNodeServiceStop(t, block.data.name as string);
-            break;
-          case "service-restart":
-            result = await postNodeServiceRestart(t, block.data.name as string);
-            break;
-          case "service-enable":
-            result = await postNodeServiceEnable(t, block.data.name as string);
-            break;
-          case "service-disable":
-            result = await postNodeServiceDisable(t, block.data.name as string);
             break;
           case "command": {
             const argsStr = (block.data.args as string) || "";
@@ -563,158 +471,10 @@ export function Configure() {
               command: block.data.command as string,
             });
             break;
-          case "dns-list":
-            result = await getNodeNetworkDnsByKey(
-              t,
-              block.data.interface_name as string,
-            );
-            break;
-          case "dns-update": {
-            const serversStr = (block.data.servers as string) || "";
-            result = await putNodeNetworkDns(
-              t,
-              block.data.interface_name as string,
-              {
-                servers: serversStr
-                  ? serversStr.split(",").map((s) => s.trim())
-                  : undefined,
-              },
-            );
-            break;
-          }
-          case "dns-delete":
-            result = await deleteNodeNetworkDns(
-              t,
-              block.data.interface_name as string,
-            );
-            break;
-          case "interface-list":
-            result = await getNodeNetworkInterface(t);
-            break;
-          case "interface-get":
-            result = await getNodeNetworkInterfaceByKey(
-              t,
-              block.data.name as string,
-            );
-            break;
-          case "interface-create": {
-            const ifAddressesStr = (block.data.addresses as string) || "";
-            result = await postNodeNetworkInterface(
-              t,
-              block.data.name as string,
-              {
-                dhcp4: (block.data.dhcp4 as boolean) || undefined,
-                dhcp6: (block.data.dhcp6 as boolean) || undefined,
-                addresses: ifAddressesStr
-                  ? ifAddressesStr.split(",").map((s) => s.trim())
-                  : undefined,
-                gateway4: (block.data.gateway4 as string) || undefined,
-                gateway6: (block.data.gateway6 as string) || undefined,
-                mtu: block.data.mtu ? Number(block.data.mtu) : undefined,
-                mac_address: (block.data.mac_address as string) || undefined,
-                wakeonlan: (block.data.wakeonlan as boolean) || undefined,
-              },
-            );
-            break;
-          }
-          case "interface-update": {
-            const ifUpdAddressesStr = (block.data.addresses as string) || "";
-            result = await putNodeNetworkInterface(
-              t,
-              block.data.name as string,
-              {
-                dhcp4: (block.data.dhcp4 as boolean) || undefined,
-                dhcp6: (block.data.dhcp6 as boolean) || undefined,
-                addresses: ifUpdAddressesStr
-                  ? ifUpdAddressesStr.split(",").map((s) => s.trim())
-                  : undefined,
-                gateway4: (block.data.gateway4 as string) || undefined,
-                gateway6: (block.data.gateway6 as string) || undefined,
-                mtu: block.data.mtu ? Number(block.data.mtu) : undefined,
-                mac_address: (block.data.mac_address as string) || undefined,
-                wakeonlan: (block.data.wakeonlan as boolean) || undefined,
-              },
-            );
-            break;
-          }
-          case "interface-delete":
-            result = await deleteNodeNetworkInterface(
-              t,
-              block.data.name as string,
-            );
-            break;
-          case "route-list":
-            result = await getNodeNetworkInterfaceRoute(
-              t,
-              block.data.interface_name as string,
-            );
-            break;
-          case "route-create":
-            result = await postNodeNetworkInterfaceRoute(
-              t,
-              block.data.interface_name as string,
-              routeBody(block.data),
-            );
-            break;
-          case "route-update":
-            result = await putNodeNetworkInterfaceRoute(
-              t,
-              block.data.interface_name as string,
-              routeBody(block.data),
-            );
-            break;
-          case "route-delete":
-            result = await deleteNodeNetworkInterfaceRoute(
-              t,
-              block.data.interface_name as string,
-              { destination: (block.data.to as string) || "" },
-            );
-            break;
           case "ping":
             result = await postNodeNetworkPing(t, {
               address: block.data.address as string,
             });
-            break;
-          case "package-list":
-            result = await getNodePackage(t);
-            break;
-          case "package-get":
-            result = await getNodePackageByKey(t, block.data.name as string);
-            break;
-          case "package-install":
-            result = await postNodePackage(t, {
-              name: block.data.name as string,
-              version: (block.data.version as string) || "",
-            });
-            break;
-          case "package-remove":
-            result = await deleteNodePackage(t, block.data.name as string);
-            break;
-          case "package-update":
-            result = await putNodeUpdatepackages(t);
-            break;
-          case "package-check-updates":
-            result = await getNodeUpdatepackages(t);
-            break;
-          case "sysctl-list":
-            result = await getNodeSysctl(t);
-            break;
-          case "sysctl-get":
-            result = await getNodeSysctlByKey(t, block.data.key as string);
-            break;
-          case "sysctl-set":
-            result = await postNodeSysctl(t, {
-              key: block.data.key as string,
-              value: block.data.value as string,
-            });
-            break;
-          case "sysctl-update":
-            result = await putNodeSysctl(t, block.data.key as string, {
-              value: block.data.value as string,
-            });
-            break;
-          case "sysctl-delete":
-            result = await deleteNodeSysctl(t, block.data.key as string);
             break;
           case "ntp-get":
             result = await getNodeNtp(t);
@@ -737,22 +497,6 @@ export function Configure() {
             break;
           case "ntp-delete":
             result = await deleteNodeNtp(t);
-            break;
-          case "timezone-get":
-            result = await getNodeTimezone(t);
-            break;
-          case "timezone-set":
-            result = await putNodeTimezone(t, {
-              timezone: block.data.timezone as string,
-            });
-            break;
-          case "hostname-get":
-            result = await getNodeHostname(t);
-            break;
-          case "hostname-set":
-            result = await putNodeHostname(t, {
-              name: block.data.hostname as string,
-            });
             break;
           case "power-reboot":
             result = await postNodePowerReboot(t, {
@@ -898,24 +642,6 @@ export function Configure() {
               block.data.name as string,
             );
             break;
-          case "node-status":
-            result = await getNodeStatus(t);
-            break;
-          case "node-load":
-            result = await getNodeLoad(t);
-            break;
-          case "node-uptime":
-            result = await getNodeUptime(t);
-            break;
-          case "node-os":
-            result = await getNodeOs(t);
-            break;
-          case "disk-info":
-            result = await getNodeDisk(t);
-            break;
-          case "memory-info":
-            result = await getNodeMemory(t);
-            break;
           case "audit-list":
             result = await getAuditLogs();
             break;
@@ -998,6 +724,19 @@ export function Configure() {
   const renderBlockForm = (block: (typeof blocks)[0], index: number) => {
     const upstream = getUpstreamObjects(index);
 
+    const behaviorDef = BEHAVIOR_BLOCKS[block.type as BehaviorBlockType];
+    if (behaviorDef) {
+      return (
+        <BehaviorBlockForm
+          blockId={block.id}
+          def={behaviorDef}
+          data={block.data}
+          onChange={(data) => updateBlockData(block.id, data)}
+          onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
+        />
+      );
+    }
+
     switch (block.type) {
       case "cron-create":
         return (
@@ -1036,33 +775,6 @@ export function Configure() {
             onChange={(data) => updateBlockData(block.id, data)}
             onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
             upstreamObjects={upstream}
-          />
-        );
-      case "service-list":
-        return null;
-      case "service-create":
-      case "service-update":
-        return (
-          <ServiceBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            upstreamObjects={upstream}
-          />
-        );
-      case "service-get":
-      case "service-start":
-      case "service-stop":
-      case "service-restart":
-      case "service-enable":
-      case "service-disable":
-      case "service-delete":
-        return (
-          <ServiceActionBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            anyService={block.type === "service-get"}
           />
         );
       case "command":
@@ -1201,83 +913,6 @@ export function Configure() {
             placeholder="echo hello | tee /tmp/out.txt"
           />
         );
-      case "dns-list":
-        return (
-          <SingleInputBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            field="interface_name"
-            label="Interface Name"
-            placeholder="eth0 or @fact.interface.primary"
-            facts
-          />
-        );
-      case "dns-update":
-        return (
-          <DnsUpdateBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-          />
-        );
-      case "dns-delete":
-        return (
-          <SingleInputBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            field="interface_name"
-            label="Interface"
-            placeholder="eth0"
-            facts
-          />
-        );
-      case "interface-create":
-      case "interface-update":
-        return (
-          <InterfaceBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-          />
-        );
-      case "interface-get":
-      case "interface-delete":
-        return (
-          <SingleInputBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            field="name"
-            label="Interface Name"
-            placeholder="eth0"
-          />
-        );
-      case "interface-list":
-        return null;
-      case "route-create":
-      case "route-update":
-      case "route-delete":
-        return (
-          <RouteBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            destinationOnly={block.type === "route-delete"}
-          />
-        );
-      case "route-list":
-        return (
-          <SingleInputBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            field="interface_name"
-            label="Interface"
-            placeholder="eth0"
-          />
-        );
       case "ping":
         return (
           <SingleInputBlock
@@ -1290,53 +925,6 @@ export function Configure() {
             facts
           />
         );
-      case "package-install":
-        return (
-          <PackageBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-          />
-        );
-      case "package-get":
-      case "package-remove":
-        return (
-          <SingleInputBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            field="name"
-            label="Package Name"
-            placeholder="nginx"
-          />
-        );
-      case "package-list":
-      case "package-update":
-      case "package-check-updates":
-        return null;
-      case "sysctl-set":
-      case "sysctl-update":
-        return (
-          <SysctlBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-          />
-        );
-      case "sysctl-get":
-      case "sysctl-delete":
-        return (
-          <SingleInputBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            field="key"
-            label="Sysctl Key"
-            placeholder="net.ipv4.ip_forward"
-          />
-        );
-      case "sysctl-list":
-        return null;
       case "ntp-set":
       case "ntp-update":
         return (
@@ -1348,32 +936,6 @@ export function Configure() {
         );
       case "ntp-get":
       case "ntp-delete":
-        return null;
-      case "timezone-set":
-        return (
-          <SingleInputBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            field="timezone"
-            label="Timezone"
-            placeholder="America/New_York"
-          />
-        );
-      case "timezone-get":
-        return null;
-      case "hostname-set":
-        return (
-          <SingleInputBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            field="hostname"
-            label="Hostname"
-            placeholder="web-01.example.com"
-          />
-        );
-      case "hostname-get":
         return null;
       case "power-reboot":
       case "power-shutdown":
@@ -1553,12 +1115,6 @@ export function Configure() {
             placeholder="my-ca"
           />
         );
-      case "node-status":
-      case "node-load":
-      case "node-uptime":
-      case "node-os":
-      case "disk-info":
-      case "memory-info":
       case "audit-list":
       case "audit-export":
         return null;
@@ -1764,15 +1320,4 @@ export function Configure() {
       />
     </ContentArea>
   );
-}
-
-// routeBody is the body of a route create or update: one route, with its
-// metric only when the block gives one.
-function routeBody(data: Record<string, unknown>) {
-  const metric = Number(data.metric);
-  return {
-    destination: (data.to as string) || "",
-    via: (data.via as string) || "",
-    ...(data.metric ? { metric } : {}),
-  };
 }
