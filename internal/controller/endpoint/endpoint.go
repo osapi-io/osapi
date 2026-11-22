@@ -264,7 +264,7 @@ func (g *Group) Permission(
 		return ""
 	case m.permission != "":
 		return m.permission
-	case m.Verb == http.MethodGet:
+	case m.verb == http.MethodGet:
 		return client.Permission(g.Name + ":read")
 	default:
 		return client.Permission(g.Name + ":write")
@@ -402,8 +402,8 @@ func All() []*Group {
 type Method struct {
 	// Name is the method's name in its group, such as list or drain.
 	Name string
-	// Verb is the HTTP method.
-	Verb string
+	// verb is the HTTP method, which Get, Post, Put and Delete set.
+	verb string
 	// In is the input type: a field tagged in:"path" is the key, a field
 	// tagged in:"query" is a query parameter, and the others are the JSON
 	// body.
@@ -445,7 +445,7 @@ func newMethod[In, Out any](
 ) *Method {
 	return &Method{
 		Name:   name,
-		Verb:   verb,
+		verb:   verb,
 		In:     reflect.TypeFor[In](),
 		Out:    reflect.TypeFor[Out](),
 		status: http.StatusOK,
@@ -536,6 +536,12 @@ func (m *Method) Returns(
 	m.returns = doc
 
 	return m
+}
+
+// HTTPMethod is the method's HTTP method, such as GET. Get, Post, Put and
+// Delete set it, so an author cannot name one that is not.
+func (m *Method) HTTPMethod() string {
+	return m.verb
 }
 
 // Permission names the permission the method needs, in place of the
@@ -888,7 +894,7 @@ func (m *Method) OperationID(
 		return m.id
 	}
 
-	return upper(strings.ToLower(m.Verb)) + upper(g.Name) + upper(m.sub) + upper(m.Name)
+	return upper(strings.ToLower(m.verb)) + upper(g.Name) + upper(m.sub) + upper(m.Name)
 }
 
 // Error is an error a method can return, and the status code it maps to.

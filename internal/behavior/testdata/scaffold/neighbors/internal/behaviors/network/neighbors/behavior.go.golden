@@ -29,9 +29,9 @@ import "github.com/osapi-io/osapi/internal/behavior"
 var Behavior = behavior.Register(behavior.Define(
 	"neighbors", "The neighbor table",
 	behavior.Node,
-	behavior.Under("network"),
+	behavior.Under(behavior.GroupNetwork),
 	behavior.API,
-	behavior.Area("config"),
+	behavior.Area(behavior.AreaConfig),
 	behavior.CLI,
 	behavior.Config(defaults),
 	behavior.Platform(behavior.PlatformDebian, newDebian),

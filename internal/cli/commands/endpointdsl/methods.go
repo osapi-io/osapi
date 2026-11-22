@@ -83,7 +83,7 @@ func Get(
 	out := GetOutput{Name: g.Name, Doc: g.Doc, Methods: []Method{}, Types: []Type{}}
 	for _, m := range g.Methods {
 		out.Methods = append(out.Methods, Method{
-			Name: m.Name, Verb: m.Verb, Path: g.Path(m),
+			Name: m.Name, Verb: m.HTTPMethod(), Path: g.Path(m),
 			Permission: string(g.Permission(m)), OperationID: m.OperationID(g),
 		})
 		out.Types = append(out.Types, Type{

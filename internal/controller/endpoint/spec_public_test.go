@@ -82,6 +82,7 @@ var notDSL = map[string]bool{
 	"SubDoc:Group":            true,
 	"Commands:Group":          true,
 	"CommandPermission:Group": true,
+	"HTTPMethod":              true,
 	"Error:InternalError":     true,
 	"Unwrap:InternalError":    true,
 	"Error:AnswerError":       true,

@@ -210,7 +210,7 @@ func commands(
 				jen.Id("name").Op(":").Lit("when the example "+strconv.Quote(ex.Doc)+" is run"),
 				jen.Id("args").Op(":").Index().String().Values(lits...),
 				jen.Id("want").Op(":").Qual(commandtestPath, "Request").Add(genutil.Multi("{", "}",
-					jen.Id("Method").Op(":").Lit(m.Verb),
+					jen.Id("Method").Op(":").Lit(m.HTTPMethod()),
 					jen.Id("Path").Op(":").Lit(path),
 					jen.Id("Body").Op(":").Lit(string(body)),
 				)),

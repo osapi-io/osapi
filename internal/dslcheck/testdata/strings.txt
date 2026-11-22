@@ -1,0 +1,225 @@
+# Each string of the exported API of the three DSLs, with why it is a string.
+# Format: entry<TAB>category<TAB>reason. TestStringsAreReviewed fails on a new
+# string that is not here: make it a type, or add it with its reason.
+# Categories: identity, free text, program, path pattern, fixture, boundary, checked.
+behavior.Action(name string)	identity	a name that the registry, the route or the command path holds
+behavior.Behavior.Doc string	free text	prose for a page or a message
+behavior.Behavior.Group string	checked	set only by Under, which takes a GroupName; validate checks KnownGroups
+behavior.Behavior.Method(name string)	identity	a name that the registry, the route or the command path holds
+behavior.Behavior.Name string	identity	a name that the registry, the route or the command path holds
+behavior.Behavior.Runs []string	program	a program name, which preflight and the fake host check
+behavior.Behavior.RunsIfPresent []string	program	a program name, which preflight and the fake host check
+behavior.Behavior.SettingFlag(path string)	identity	a settings key, such as path
+behavior.Behavior.Sudo []string	program	a program name, which preflight and the fake host check
+behavior.Behavior.Writes []string	path pattern	a path or a path.Match pattern
+behavior.CurrentSpec(factKeys []string)	boundary	the fact keys that the agent reports
+behavior.Define(doc string)	free text	prose for a page or a message
+behavior.Define(name string)	identity	a name that the registry, the route or the command path holds
+behavior.Effect.Command string	fixture	what an example sets up or expects
+behavior.Effect.Content string	fixture	what an example sets up or expects
+behavior.Effect.Path string	fixture	what an example sets up or expects
+behavior.Example.Doc string	free text	prose for a page or a message
+behavior.Exists(content string)	fixture	what an example sets up or expects
+behavior.Exists(path string)	path pattern	a path or a path.Match pattern
+behavior.Given.After string	fixture	what an example sets up or expects
+behavior.Given.Command string	fixture	what an example sets up or expects
+behavior.Given.Content string	fixture	what an example sets up or expects
+behavior.Given.Path string	fixture	what an example sets up or expects
+behavior.InputAttributes(fields []string)	checked	input fields by json name; the span rule checks them
+behavior.Links(path string)	path pattern	a path or a path.Match pattern
+behavior.Links(target string)	fixture	what an example sets up or expects
+behavior.Lookup(name string)	identity	a name that the registry, the route or the command path holds
+behavior.Method.Describe(doc string)	free text	prose for a page or a message
+behavior.Method.Doc string	free text	prose for a page or a message
+behavior.Method.Example(doc string)	free text	prose for a page or a message
+behavior.Method.Explain(long string)	free text	prose for a page or a message
+behavior.Method.Fails(doc string)	free text	prose for a page or a message
+behavior.Method.Fails(errorText string)	free text	prose for a page or a message
+behavior.Method.InPath(name string)	checked	an input field by json name; a path field that the route checks
+behavior.Method.Key(field string)	checked	an input field by json name; validate checks that the input has it
+behavior.Method.KeyField string	checked	set only by Key, which validate checks
+behavior.Method.Long string	free text	prose for a page or a message
+behavior.Method.Name string	identity	a name that the registry, the route or the command path holds
+behavior.Method.NonFact string	free text	prose for a page or a message
+behavior.Method.NotAFact(why string)	free text	prose for a page or a message
+behavior.Method.Runs(programs []string)	program	a program name, which preflight and the fake host check
+behavior.Method.RunsPrograms []string	program	a program name, which preflight and the fake host check
+behavior.Method.Sudo(programs []string)	program	a program name, which preflight and the fake host check
+behavior.Method.SudoPrograms []string	program	a program name, which preflight and the fake host check
+behavior.PlatformPrograms.Programs []string	program	a program name, which preflight and the fake host check
+behavior.Prints(command string)	fixture	what an example sets up or expects
+behavior.Prints(output string)	fixture	what an example sets up or expects
+behavior.PrintsAfter(after string)	fixture	what an example sets up or expects
+behavior.PrintsAfter(command string)	fixture	what an example sets up or expects
+behavior.PrintsAfter(output string)	fixture	what an example sets up or expects
+behavior.Problem.Behavior string	boundary	a record that a check or a chain prints
+behavior.Problem.Fix string	boundary	a record that a check or a chain prints
+behavior.Problem.Message string	boundary	a record that a check or a chain prints
+behavior.Problem.Method string	boundary	a record that a check or a chain prints
+behavior.Problem.Rule string	boundary	a record that a check or a chain prints
+behavior.Ran(args []string)	fixture	what an example sets up or expects
+behavior.Ran(name string)	fixture	what an example sets up or expects
+behavior.Read(name string)	identity	a name that the registry, the route or the command path holds
+behavior.Refusal.Error string	fixture	text that the error of a refusal contains
+behavior.RegisterGroup(name string)	identity	a name that the registry, the route or the command path holds
+behavior.Removed(path string)	path pattern	a path or a path.Match pattern
+behavior.Render(text string)	free text	prose for a page or a message
+behavior.Runs(programs []string)	program	a program name, which preflight and the fake host check
+behavior.RunsIfPresent(programs []string)	program	a program name, which preflight and the fake host check
+behavior.RunsOnPlatform(programs []string)	program	a program name, which preflight and the fake host check
+behavior.Scaffold(doc string)	free text	prose for a page or a message
+behavior.Scaffold(goPackage string)	identity	a Go package name, which Scaffold checks
+behavior.Scaffold(group string)	checked	a group; Scaffold refuses one outside KnownGroups
+behavior.Scaffold(name string)	identity	a name that the registry, the route or the command path holds
+behavior.Scaffold(root string)	path pattern	a path or a path.Match pattern
+behavior.Schema.Description string	boundary	derived from the struct tags, which the tag and validate rules check
+behavior.Schema.Enum []string	boundary	derived from the struct tags, which the tag and validate rules check
+behavior.Schema.Format string	boundary	derived from the struct tags, which the tag and validate rules check
+behavior.Schema.Order []string	boundary	derived from the struct tags, which the tag and validate rules check
+behavior.Schema.Pattern string	boundary	derived from the struct tags, which the tag and validate rules check
+behavior.Schema.Properties map[string]*github.com/osapi-io/osapi/internal/behavior.Schema	boundary	derived from the struct tags, which the tag and validate rules check
+behavior.Schema.Required []string	boundary	derived from the struct tags, which the tag and validate rules check
+behavior.Schema.Type string	boundary	derived from the struct tags, which the tag and validate rules check
+behavior.Schema.Validate string	boundary	derived from the struct tags, which the tag and validate rules check
+behavior.Step.Behavior string	boundary	a record that a check or a chain prints
+behavior.Step.Error string	boundary	a record that a check or a chain prints
+behavior.Step.Method string	boundary	a record that a check or a chain prints
+behavior.Stored(content string)	fixture	what an example sets up or expects
+behavior.Stored(name string)	fixture	what an example sets up or expects
+behavior.Sudo(programs []string)	program	a program name, which preflight and the fake host check
+behavior.TemplateData.Facts map[string]any	boundary	data a template reads
+behavior.TemplateData.Hostname string	boundary	data a template reads
+behavior.TemplateData.Vars map[string]string	boundary	data a template reads
+behavior.TemplateField.Field string	checked	an input field that the template rule checks
+behavior.TemplateField.Vars string	checked	an input field that the template rule checks
+behavior.TestFailure(message string)	free text	prose for a page or a message
+behavior.TestFailure(rule string)	checked	a rule name; the tests fail on a rule with no check
+behavior.Validator(message string)	free text	prose for a page or a message
+behavior.Validator(tag string)	checked	a validate tag that package rule declares and checks
+behavior.Write(name string)	identity	a name that the registry, the route or the command path holds
+behavior.Writes(paths []string)	path pattern	a path or a path.Match pattern
+behavior.Wrote(content string)	fixture	what an example sets up or expects
+behavior.Wrote(path string)	path pattern	a path or a path.Match pattern
+command.Column.Empty string	boundary	what the output prints, derived from the struct tags
+command.Column.Header string	boundary	what the output prints, derived from the struct tags
+command.Column.JSON string	boundary	what the output prints, derived from the struct tags
+command.Column.Label string	boundary	what the output prints, derived from the struct tags
+command.Column.None string	boundary	what the output prints, derived from the struct tags
+command.Column.Prefix string	boundary	what the output prints, derived from the struct tags
+command.Column.Render string	checked	from the render tag, which the tag rule checks
+command.Define(doc string)	free text	prose for a page or a message
+command.Define(name string)	identity	a name that the registry, the route or the command path holds
+command.Example.Doc string	free text	prose for a page or a message
+command.Example.Flags string	checked	the flags of an example; validate checks each against the command
+command.LocalGroup.Doc string	free text	prose for a page or a message
+command.LocalGroup.Long string	free text	prose for a page or a message
+command.LocalGroup.Method(name string)	identity	a name that the registry, the route or the command path holds
+command.LocalGroup.Name string	identity	a name that the registry, the route or the command path holds
+command.LocalGroup.Parents []string	checked	set only by Under, which takes a Parent; validate checks KnownParents
+command.LocalGroup.SubDoc(segment string)	identity	a name that the registry, the route or the command path holds
+command.LocalGroup.SubDocs map[string]string	identity	Sub segments; the subdoc rule checks each
+command.LocalMethod.Example(doc []string)	free text	prose for a page or a message
+command.LocalMethod.Example(flags string)	checked	the flags of an example; validate checks each against the command
+command.LocalMethod.Fails(doc string)	free text	prose for a page or a message
+command.LocalMethod.Flag(keys []string)	checked	config keys; BindFlags panics at start on a key that the config does not have
+command.LocalMethod.Long(text string)	free text	prose for a page or a message
+command.LocalMethod.Name string	identity	a name that the registry, the route or the command path holds
+command.LocalMethod.Says(text string)	free text	prose for a page or a message
+command.LocalMethod.Short(text string)	free text	prose for a page or a message
+command.LocalMethod.Sub(segment string)	identity	a name that the registry, the route or the command path holds
+command.Long(text string)	free text	prose for a page or a message
+command.Lookup(path string)	identity	a command path
+command.Method(name string)	identity	a name that the registry, the route or the command path holds
+command.Output(group string)	identity	a name that the registry, the route or the command path holds
+command.Output(method string)	identity	a name that the registry, the route or the command path holds
+command.Problem.Fix string	boundary	a record that a check or a chain prints
+command.Problem.Group string	boundary	a record that a check or a chain prints
+command.Problem.Message string	boundary	a record that a check or a chain prints
+command.Problem.Method string	boundary	a record that a check or a chain prints
+command.Problem.Rule string	boundary	a record that a check or a chain prints
+command.Process(name string)	identity	a name that the registry, the route or the command path holds
+command.ReadFile(path string)	path pattern	a path or a path.Match pattern
+command.Refusal.Doc string	free text	prose for a page or a message
+command.Render(name string)	identity	a name that the registry, the route or the command path holds
+command.Run(method string)	identity	a name that the registry, the route or the command path holds
+command.Scaffold(doc string)	free text	prose for a page or a message
+command.Scaffold(group string)	identity	a name that the registry, the route or the command path holds
+command.Scaffold(root string)	path pattern	a path or a path.Match pattern
+command.Serve(method string)	identity	a name that the registry, the route or the command path holds
+command.SetTraceID(id string)	identity	a name that the registry, the route or the command path holds
+command.SubDoc(segment string)	identity	a name that the registry, the route or the command path holds
+command.SubDoc(short string)	free text	prose for a page or a message
+command.Table.Empty string	boundary	what the output prints, derived from the struct tags
+command.Table.Headers []string	boundary	what the output prints, derived from the struct tags
+command.Table.Title string	boundary	what the output prints, derived from the struct tags
+command.UsageError.Msg string	free text	prose for a page or a message
+endpoint.Answered.Doc string	free text	prose for a page or a message
+endpoint.CommandLong(text string)	free text	prose for a page or a message
+endpoint.CommandNotes(text string)	free text	prose for a page or a message
+endpoint.Conflict(doc string)	free text	prose for a page or a message
+endpoint.Declared.Where string	boundary	a record that a check prints
+endpoint.Define(doc string)	free text	prose for a page or a message
+endpoint.Define(name string)	identity	a name that the registry, the route or the command path holds
+endpoint.Delete(name string)	identity	a name that the registry, the route or the command path holds
+endpoint.Doc(doc string)	free text	prose for a page or a message
+endpoint.Error.Doc string	free text	prose for a page or a message
+endpoint.Errorf(format string)	free text	prose for a page or a message
+endpoint.Example(example string)	fixture	an example value for the spec
+endpoint.Example(field string)	checked	a json field of T; the field rule checks it
+endpoint.Forbidden(doc string)	free text	prose for a page or a message
+endpoint.Get(name string)	identity	a name that the registry, the route or the command path holds
+endpoint.Group.CommandLong string	free text	prose for a page or a message
+endpoint.Group.CommandNotes string	free text	prose for a page or a message
+endpoint.Group.Doc string	free text	prose for a page or a message
+endpoint.Group.Method(name string)	identity	a name that the registry, the route or the command path holds
+endpoint.Group.Name string	identity	a name that the registry, the route or the command path holds
+endpoint.Group.Prefix string	path pattern	a path prefix whose {field} names validate checks
+endpoint.Group.SubDoc(segment string)	identity	a name that the registry, the route or the command path holds
+endpoint.Group.SubDocs map[string]string	identity	Sub segments; the subdoc rule checks each
+endpoint.Group.Tag string	identity	a name that the registry, the route or the command path holds
+endpoint.Group.TagDisplay string	free text	prose for a page or a message
+endpoint.Group.TagDoc string	free text	prose for a page or a message
+endpoint.Group.Title string	free text	prose for a page or a message
+endpoint.Internal(msg string)	free text	prose for a page or a message
+endpoint.InternalError.Msg string	free text	prose for a page or a message
+endpoint.Invalid(doc string)	free text	prose for a page or a message
+endpoint.Lookup(name string)	identity	a name that the registry, the route or the command path holds
+endpoint.Method.Action(segment string)	identity	a name that the registry, the route or the command path holds
+endpoint.Method.Answers(doc string)	free text	prose for a page or a message
+endpoint.Method.Command(long string)	free text	prose for a page or a message
+endpoint.Method.Command(short string)	free text	prose for a page or a message
+endpoint.Method.Describe(summary string)	free text	prose for a page or a message
+endpoint.Method.Example(doc []string)	free text	prose for a page or a message
+endpoint.Method.Example(flags string)	free text	the flags of an example on a docs page; no check yet compares them with the command's flags
+endpoint.Method.Explain(text string)	free text	prose for a page or a message
+endpoint.Method.Fails(doc string)	free text	prose for a page or a message
+endpoint.Method.ID(id string)	identity	a name that the registry, the route or the command path holds
+endpoint.Method.Location(field string)	checked	a json field of the output; the field rule checks it
+endpoint.Method.Name string	identity	a name that the registry, the route or the command path holds
+endpoint.Method.Notes(text string)	free text	prose for a page or a message
+endpoint.Method.Result(text string)	free text	prose for a page or a message
+endpoint.Method.Returns(doc string)	free text	prose for a page or a message
+endpoint.Method.Says(text string)	free text	prose for a page or a message
+endpoint.Method.Sub(segment string)	identity	a name that the registry, the route or the command path holds
+endpoint.Method.Use(name string)	identity	a name that the registry, the route or the command path holds
+endpoint.NotFound(doc string)	free text	prose for a page or a message
+endpoint.OpenAPI(errorRef string)	identity	the $ref of the error schema
+endpoint.Post(name string)	identity	a name that the registry, the route or the command path holds
+endpoint.Prefix(path string)	path pattern	a path or a path.Match pattern
+endpoint.Problem.Fix string	boundary	a record that a check or a chain prints
+endpoint.Problem.Group string	boundary	a record that a check or a chain prints
+endpoint.Problem.Message string	boundary	a record that a check or a chain prints
+endpoint.Problem.Method string	boundary	a record that a check or a chain prints
+endpoint.Problem.Rule string	boundary	a record that a check or a chain prints
+endpoint.Put(name string)	identity	a name that the registry, the route or the command path holds
+endpoint.Refusal.Doc string	free text	prose for a page or a message
+endpoint.Scaffold(doc string)	free text	prose for a page or a message
+endpoint.Scaffold(name string)	identity	a name that the registry, the route or the command path holds
+endpoint.Scaffold(root string)	path pattern	a path or a path.Match pattern
+endpoint.SubDoc(segment string)	identity	a name that the registry, the route or the command path holds
+endpoint.SubDoc(short string)	free text	prose for a page or a message
+endpoint.Tag(display string)	free text	prose for a page or a message
+endpoint.Tag(doc string)	free text	prose for a page or a message
+endpoint.Tag(name string)	identity	a name that the registry, the route or the command path holds
+endpoint.Title(title string)	free text	prose for a page or a message
+endpoint.Unavailable(doc string)	free text	prose for a page or a message

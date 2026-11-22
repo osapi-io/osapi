@@ -24,8 +24,11 @@ The rules:
   it with .Sub, such as roles list. Add a word to command.Actions only for a
   real action, never for a noun, and to command.Roots only for a command that
   belongs at the root.
-- `help`: Each method has a Short, and a method with input has an Example. Fix:
-  Add .Short("&lt;what it does&gt;") and .Example("--flag value") to the method.
+- `help`: Each method has a Short, and a method with input has an Example. Each
+  flag that an Example names is a flag of the command: a field of its input, a
+  key that its Flag names, or --json, --debug or --osapi-file. Fix: Add
+  .Short("&lt;what it does&gt;") and .Example("--flag value") to the method, and
+  spell each flag of an example as the command has it.
 - `flag`: Each value is a flag: the input is a struct, each field has a json
   name that is its flag with _ as -, no flag or in tag, and a type a flag holds
   (string, bool, int, \[]string, map\[string]string or \[]byte). A command takes

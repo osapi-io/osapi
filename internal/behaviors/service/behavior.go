@@ -181,7 +181,7 @@ var Behavior = behavior.Register(behavior.Define(
 			Result{Name: "app", Changed: true},
 			stored,
 			deployed,
-			behavior.Stored("app-v2.service", unitText+"Restart=always\n", "raw"),
+			behavior.Stored("app-v2.service", unitText+"Restart=always\n", client.ContentRaw),
 			behavior.Wrote(appPath, unitText+"Restart=always\n"),
 			behavior.Ran("systemctl", "daemon-reload"),
 		).
@@ -288,7 +288,7 @@ var Behavior = behavior.Register(behavior.Define(
 	).
 		Example("A unit with no [Install] section", EnableInput{Name: "static"},
 			Result{Name: "static"},
-			behavior.Stored("static.service", staticText, "raw"),
+			behavior.Stored("static.service", staticText, client.ContentRaw),
 			behavior.After(CreateInput{Name: "static", Object: "static.service"}),
 			behavior.Prints(units, "osapi-static.service loaded inactive dead Example static\n"),
 			behavior.Prints(files, "osapi-static.service static -\n"),

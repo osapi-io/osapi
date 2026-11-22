@@ -36,6 +36,10 @@ type roleIn struct {
 
 type roleOut struct{}
 
+type shortIn struct {
+	Name string `json:"name" short:"n" validate:"omitempty" doc:"The name"`
+}
+
 func handleRoles(
 	_ context.Context,
 	_ localDeps,
@@ -87,6 +91,27 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 					Fails("an unknown role", roleIn{Roles: []string{"c"}}).
 					Handle(handleRoles),
 			),
+		},
+		{
+			name: "when an example names a flag that the command does not have",
+			group: command.Define("zzexflag", "Example flags",
+				command.Uses[localDeps](),
+				command.Method[shortIn, roleOut]("get").
+					Short("Get a role").
+					Example("-n a - --name=b").
+					Handle(func(context.Context, localDeps, shortIn) (roleOut, error) {
+						return roleOut{}, nil
+					}),
+				command.Method[roleIn, roleOut]("list").
+					Short("List roles").
+					Example("--rols a --json -j=true \\\n    -d --roles=b").
+					Fails("no roles", roleIn{}).
+					Fails("an unknown role", roleIn{Roles: []string{"c"}}).
+					Handle(handleRoles),
+			),
+			want: []string{
+				`the example "--rols a --json -j=true \\\n    -d --roles=b" names --rols, which the command does not have.`,
+			},
 		},
 		{
 			name: "when the group is Under a word that is not one of KnownParents",

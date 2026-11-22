@@ -346,7 +346,7 @@ func Validate(
 		for _, msg := range refusalProblems(m) {
 			add(m.Name, RuleFails, msg)
 		}
-		if m.Verb != http.MethodGet {
+		if m.HTTPMethod() != http.MethodGet {
 			for _, f := range SentEmpty(bodyFields(m.In)) {
 				add(
 					m.Name,
@@ -360,7 +360,7 @@ func Validate(
 			add(m.Name, RuleHandler, msg)
 		}
 
-		route := m.Verb + " " + g.Path(m)
+		route := m.HTTPMethod() + " " + g.Path(m)
 		if other, ok := routes[route]; ok {
 			add(m.Name, RuleRoute, route+" is also the route of "+other+".")
 		}
