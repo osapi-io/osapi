@@ -68,7 +68,10 @@ const config: Config = {
     navbar: {
       logo: {
         alt: 'OSAPI Logo',
-        src: 'img/logo.png'
+        // The block logo of the README, asset/logo-*.svg: light on a light
+        // page, dark on a dark one.
+        src: 'img/logo-light.svg',
+        srcDark: 'img/logo-dark.svg'
       },
       items: [
         {

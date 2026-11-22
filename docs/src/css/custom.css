@@ -392,3 +392,16 @@ div[class^='announcementBar_'] {
   );
   font-weight: bold;
 }
+
+/* The home page logo: the light one on a light page, the dark one on a dark
+   page, as the navbar's src and srcDark do. */
+.logo-light,
+.logo-dark {
+  display: block;
+  margin: 0 auto;
+}
+
+[data-theme='light'] .logo-dark,
+[data-theme='dark'] .logo-light {
+  display: none;
+}
