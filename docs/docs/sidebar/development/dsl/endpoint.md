@@ -255,9 +255,11 @@ agents share a hostname.
 
 Names the permission the method needs, in place of &lt;group&gt;:read or
 &lt;group&gt;:write. It takes a client.Permission: use a Perm constant of
-pkg/sdk/client, not a string. It must be one that a group, a behavior or the
-hand-written domains declare: a test fails on a name that nothing declares,
-because no role grants it.
+pkg/sdk/client, not a string. The constant is Perm, then the resource and the
+verb, such as PermAgentRead; osapi token roles get --name admin lists each
+permission. It must be one that a group, a behavior or the hand-written domains
+declare: a test fails on a name that nothing declares, because no role grants
+it.
 
 Use: When a different permission covers it, such as agent:read for facts, or
 trace:read for telemetry.
