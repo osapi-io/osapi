@@ -29,6 +29,8 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/osapi-io/osapi/pkg/sdk/client"
+
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 
@@ -261,7 +263,7 @@ func (w write) digest() string {
 // kind is how a deploy treats the file: raw unless the caller says.
 func (w write) kind() string {
 	if w.contentType == "" {
-		return "raw"
+		return string(client.ContentRaw)
 	}
 
 	return w.contentType

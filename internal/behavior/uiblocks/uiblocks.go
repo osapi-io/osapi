@@ -94,7 +94,7 @@ func Blocks(
 			out = append(out, Block{
 				Type:        b.Name + "-" + m.Name,
 				Behavior:    b.Name,
-				Area:        b.Area,
+				Area:        string(b.Area),
 				Title:       command.Title(b),
 				Method:      m.Name,
 				Label:       strings.ToUpper(m.Name[:1]) + m.Name[1:],

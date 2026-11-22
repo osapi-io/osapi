@@ -52,7 +52,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"dns", "The DNS resolvers of each interface of the host",
 	behavior.Node,
 	behavior.API,
-	behavior.Area("networking"),
+	behavior.Area(behavior.AreaNetworking),
 	behavior.CLI,
 	behavior.Under("network"),
 	behavior.Platform(behavior.PlatformDebian, newDebian),

@@ -29,7 +29,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"updatepackages", "The updates the package index has for the host",
 	behavior.Node,
 	behavior.API,
-	behavior.Area("software"),
+	behavior.Area(behavior.AreaSoftware),
 	behavior.CLI,
 	behavior.Platform(behavior.PlatformDebian, newDebian),
 	behavior.Read("list", List).

@@ -79,27 +79,27 @@ var Behavior = behavior.Register(behavior.Define(
 ))
 ```
 
-| Option                    | What it does                                                                                                                                                              |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `behavior.Node`           | The work runs on a host, through the job system. Required.                                                                                                                |
-| `behavior.Under("g")`     | Nests it under a group: `/api/node/{hostname}/g/<name>`, `osapi client node g <name>`.                                                                                    |
-| `behavior.API`            | Serves it over REST and puts it in the OpenAPI spec and the API reference.                                                                                                |
-| `behavior.CLI`            | Generates its commands. Their pages in the CLI reference come from the commands. Needs `API`, because the commands call it.                                               |
-| `Read(name, fn)`          | A method that reads the host: `GET`, the `<name>:read` permission.                                                                                                        |
-| `Write(name, fn)`         | A method that changes it: `POST`, or `PUT` for `update` and `DELETE` for `delete`.                                                                                        |
-| `.Key("field")`           | Puts that input field in the path: `/sysctl/{key}`.                                                                                                                       |
-| `.Describe("...")`        | One line: the command's short help, the operation's summary, the first line of the CLI page.                                                                              |
-| `.Explain("...")`         | Optional longer text: what it touches on the host and what running it twice does. It is the command's long help.                                                          |
-| `.Example(doc, in, out)`  | A sample call. Its command line goes in the examples of the command, under a comment with `doc`. The tests send it and check `out`.                                       |
-| `behavior.Config(v)`      | The behavior's own settings, with `v` as their defaults. See below.                                                                                                       |
-| `behavior.Platform(p, f)` | How the provider is built on platform `p`: `debian`, `darwin`, or `linux` for every Linux host without a provider of its own. On any other, the methods report `skipped`. |
-| `behavior.Sudo("prog")`   | A program the provider runs with sudo. The agent's preflight checks it.                                                                                                   |
-| `behavior.Runs("prog")`   | A program the provider runs without sudo. The agent warns at startup when it is missing.                                                                                  |
-| `behavior.Writes("...")`  | The paths the provider writes, removes or changes the mode of, as patterns. `"*"` is any path. The examples fail on a path that is not declared.                          |
-| `behavior.KeepsState`     | The provider keeps a record in the `file-state` bucket. The examples fail on a record without it.                                                                         |
-| `behavior.Validator(...)` | A `validate` tag of the behavior's own: the check, its schema and its message.                                                                                            |
-| `behavior.Requires(b...)` | Behaviors it is built on. See below.                                                                                                                                      |
-| `behavior.Internal`       | Only other behaviors use it: no route, no command, no permissions.                                                                                                        |
+| Option                                  | What it does                                                                                                                                                              |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `behavior.Node`                         | The work runs on a host, through the job system. Required.                                                                                                                |
+| `behavior.Under(behavior.GroupNetwork)` | Nests it under a group, a `GroupName` of `KnownGroups`: `/api/node/{hostname}/network/<name>`, `osapi client node network <name>`.                                        |
+| `behavior.API`                          | Serves it over REST and puts it in the OpenAPI spec and the API reference.                                                                                                |
+| `behavior.CLI`                          | Generates its commands. Their pages in the CLI reference come from the commands. Needs `API`, because the commands call it.                                               |
+| `Read(name, fn)`                        | A method that reads the host: `GET`, the `<name>:read` permission.                                                                                                        |
+| `Write(name, fn)`                       | A method that changes it: `POST`, or `PUT` for `update` and `DELETE` for `delete`.                                                                                        |
+| `.Key("field")`                         | Puts that input field in the path: `/sysctl/{key}`.                                                                                                                       |
+| `.Describe("...")`                      | One line: the command's short help, the operation's summary, the first line of the CLI page.                                                                              |
+| `.Explain("...")`                       | Optional longer text: what it touches on the host and what running it twice does. It is the command's long help.                                                          |
+| `.Example(doc, in, out)`                | A sample call. Its command line goes in the examples of the command, under a comment with `doc`. The tests send it and check `out`.                                       |
+| `behavior.Config(v)`                    | The behavior's own settings, with `v` as their defaults. See below.                                                                                                       |
+| `behavior.Platform(p, f)`               | How the provider is built on platform `p`: `debian`, `darwin`, or `linux` for every Linux host without a provider of its own. On any other, the methods report `skipped`. |
+| `behavior.Sudo("prog")`                 | A program the provider runs with sudo. The agent's preflight checks it.                                                                                                   |
+| `behavior.Runs("prog")`                 | A program the provider runs without sudo. The agent warns at startup when it is missing.                                                                                  |
+| `behavior.Writes("...")`                | The paths the provider writes, removes or changes the mode of, as patterns. `"*"` is any path. The examples fail on a path that is not declared.                          |
+| `behavior.KeepsState`                   | The provider keeps a record in the `file-state` bucket. The examples fail on a record without it.                                                                         |
+| `behavior.Validator(...)`               | A `validate` tag of the behavior's own: the check, its schema and its message.                                                                                            |
+| `behavior.Requires(b...)`               | Behaviors it is built on. See below.                                                                                                                                      |
+| `behavior.Internal`                     | Only other behaviors use it: no route, no command, no permissions.                                                                                                        |
 
 A behavior with neither `API` nor `CLI` is reachable only through the job system
 or another behavior.

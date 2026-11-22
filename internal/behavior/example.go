@@ -23,6 +23,8 @@ package behavior
 import (
 	"slices"
 	"strings"
+
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // Example is one sample call of a method, used for the docs pages.
@@ -158,7 +160,7 @@ type Given struct {
 	After string `json:"after,omitempty"`
 	// ContentType is the object's content type, for GivenObject, whose name
 	// is Path.
-	ContentType string `json:"content_type,omitempty"`
+	ContentType client.ContentType `json:"content_type,omitempty"`
 }
 
 func (g Given) applyExample(
@@ -232,7 +234,7 @@ func PrintsAfter(
 func Stored(
 	name string,
 	content string,
-	contentType string,
+	contentType client.ContentType,
 ) Given {
 	return Given{Kind: GivenObject, Path: name, Content: content, ContentType: contentType}
 }

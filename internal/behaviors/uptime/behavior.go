@@ -31,7 +31,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"uptime", "Get the uptime of target hosts",
 	behavior.Node,
 	behavior.API,
-	behavior.Area("node"),
+	behavior.Area(behavior.AreaNode),
 	behavior.CLI,
 	// gohai reads /proc/uptime on Linux, and the boot time from sysctl on macOS.
 	behavior.Platform(behavior.PlatformLinux, newReader),

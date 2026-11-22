@@ -825,6 +825,20 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 			},
 		},
 		{
+			name: "when Location or Example names a field that its type does not have",
+			group: endpoint.Define("node", "The nodes",
+				endpoint.Example[Node]("nmae", "web-01"),
+				endpoint.Example[Node]("name", "web-01"),
+				endpoint.Post[noInput, *Node]("create").Location("nmae"),
+				endpoint.Post[noInput, Node]("update").Sub("one").Location("name"),
+				endpoint.SubDoc("one", "One node"),
+			),
+			want: []string{
+				"Example names nmae, which is not a json field of endpoint_test.Node.",
+				"Location names nmae, which is not a json field of *endpoint_test.Node.",
+			},
+		},
+		{
 			name: "when a method has a handler and the group Uses no type",
 			group: endpoint.Define("node", "The nodes",
 				endpoint.Get[noInput, Node]("list").Handle(handleNode),

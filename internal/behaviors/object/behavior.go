@@ -23,6 +23,8 @@ package object
 import (
 	"strings"
 
+	"github.com/osapi-io/osapi/pkg/sdk/client"
+
 	"github.com/osapi-io/osapi/internal/behavior"
 )
 
@@ -53,14 +55,14 @@ var Behavior = behavior.Register(behavior.Define(
 				Name: "example.service", Content: unit, ContentType: "raw",
 				SHA256: "4d38310b40344ae465b2f1f88758809f31ef1aa8287c756a1d65c76ca27dc243",
 			},
-			behavior.Stored("example.service", unit, "raw"),
+			behavior.Stored("example.service", unit, client.ContentRaw),
 		).
 		Example("A template", GetInput{Name: "motd.tmpl"},
 			Object{
 				Name: "motd.tmpl", Content: "Welcome to {{ .Hostname }}\n", ContentType: "template",
 				SHA256: "08c60853fd0933d9903a112a64bb4c742c03961a4e56af1940173403a09746e2",
 			},
-			behavior.Stored("motd.tmpl", "Welcome to {{ .Hostname }}\n", "template"),
+			behavior.Stored("motd.tmpl", "Welcome to {{ .Hostname }}\n", client.ContentTemplate),
 		).
 		Fails("An object the store does not have", GetInput{Name: "nosuch"}, "not found").
 		Fails("No name", GetInput{}, "Name").

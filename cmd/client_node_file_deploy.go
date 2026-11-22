@@ -68,7 +68,7 @@ var clientNodeFileDeployCmd = &cobra.Command{
 			Target:      host,
 			ObjectName:  objectName,
 			Path:        path,
-			ContentType: contentType,
+			ContentType: client.ContentType(contentType),
 			Mode:        mode,
 			Owner:       owner,
 			Group:       group,

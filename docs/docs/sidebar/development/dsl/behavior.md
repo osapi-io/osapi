@@ -56,20 +56,25 @@ provider is not required: a child that needs it declares Requires too.
 Use: For a resource that exists only inside another, such as the SSH keys of a
 user. Not with Under: the parent's path is the group.
 
-### `Area("area")`
+### `Area(AreaName)`
 
 Puts a served behavior in an area of the UI: the group of the Configure page's
-Add Block panel that its blocks sit in, one of services, software, config, node,
-networking, security or hardware.
+Add Block panel that its blocks sit in. Use a constant: AreaServices,
+AreaSoftware, AreaConfig, AreaNode, AreaNetworking, AreaSecurity or
+AreaHardware.
 
 Use: On each behavior with API. behavior validate refuses a served behavior with
 none.
 
-### `Under("group")`
+### `Under(GroupName)`
 
-Nests the behavior in a group: its routes, commands and directory.
+Nests the behavior in a group: its routes, commands, directory and the prefix of
+its permissions. Use a constant, such as GroupNetwork; behavior validate refuses
+a group outside KnownGroups, because a misspelled group makes a new route,
+command and permission.
 
-Use: When the behavior belongs to a group, such as network.
+Use: When the behavior belongs to a group, such as network. Add the group's
+constant to KnownGroups first.
 
 ### `Internal`
 
@@ -289,8 +294,8 @@ Use: For state that a program keeps, not a file.
 ### `Stored(name, content, contentType)`
 
 Says the object store of the fleet has the object name, with its content and its
-content type, raw or template, as osapi client file upload stores it. A provider
-reads it with h.Objects.Object.
+content type, client.ContentRaw or client.ContentTemplate, as osapi client file
+upload stores it. A provider reads it with h.Objects.Object.
 
 Use: For an example of a behavior that deploys an uploaded file, such as through
 the object building block.
