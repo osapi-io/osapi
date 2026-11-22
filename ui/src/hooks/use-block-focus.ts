@@ -1,33 +1,32 @@
 import { useCallback, type RefObject } from "react";
 
 /**
- * Returns a callback that focuses the first input of the first block
- * in the stack after a short delay (to allow React to render the new block).
- *
- * Used by both the sidebar buttons and the command palette when adding blocks.
+ * Returns a callback that focuses a block, after a short delay so React has
+ * rendered it: its first input, or the card itself for a block with no
+ * input, such as a List. Focus brings the block into view, so a person sees
+ * the block that they just added, however long the stack is.
  */
 export function useBlockFocus(
   blockRefs: RefObject<Map<string, HTMLElement> | null>,
-  blockIds: string[],
 ) {
-  return useCallback(() => {
-    setTimeout(() => {
-      const firstId = blockIds.length > 0 ? blockIds[0] : null;
-      const el = firstId
-        ? blockRefs.current?.get(firstId)
-        : blockRefs.current?.values().next().value;
-      if (!el) return;
-      const input = el.querySelector(
-        "input, textarea, select",
-      ) as HTMLElement | null;
-      if (input) {
-        input.focus();
-      } else {
-        // No input (e.g. List blocks) — blur sidebar and focus the card
-        (document.activeElement as HTMLElement)?.blur();
-        el.setAttribute("tabindex", "-1");
-        el.focus({ preventScroll: true });
-      }
-    }, 50);
-  }, [blockRefs, blockIds]);
+  return useCallback(
+    (id: string) => {
+      setTimeout(() => {
+        const el = blockRefs.current?.get(id);
+        if (!el) return;
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        const input = el.querySelector(
+          "input, textarea, select",
+        ) as HTMLElement | null;
+        if (input) {
+          input.focus({ preventScroll: true });
+        } else {
+          (document.activeElement as HTMLElement)?.blur();
+          el.setAttribute("tabindex", "-1");
+          el.focus({ preventScroll: true });
+        }
+      }, 50);
+    },
+    [blockRefs],
+  );
 }
