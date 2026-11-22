@@ -57,7 +57,7 @@ func (suite *GroupPublicTestSuite) TestGroupList() {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","groups":[{"name":"sudo","gid":27,"members":["testuser"]}]}]}`,
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","name":"sudo","gid":27,"members":["testuser"]}]}`,
 					),
 				)
 			},
@@ -71,10 +71,9 @@ func (suite *GroupPublicTestSuite) TestGroupList() {
 				suite.Len(resp.Data.Results, 1)
 				suite.Equal("agent1", resp.Data.Results[0].Hostname)
 				suite.Equal("ok", resp.Data.Results[0].Status)
-				suite.Require().Len(resp.Data.Results[0].Groups, 1)
-				suite.Equal("sudo", resp.Data.Results[0].Groups[0].Name)
-				suite.Equal(27, resp.Data.Results[0].Groups[0].GID)
-				suite.Equal([]string{"testuser"}, resp.Data.Results[0].Groups[0].Members)
+				suite.Equal("sudo", resp.Data.Results[0].Name)
+				suite.Equal(27, resp.Data.Results[0].GID)
+				suite.Equal([]string{"testuser"}, resp.Data.Results[0].Members)
 			},
 		},
 		{
@@ -209,7 +208,7 @@ func (suite *GroupPublicTestSuite) TestGroupGet() {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","groups":[{"name":"docker","gid":999,"members":["user1","user2"]}]}]}`,
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","name":"docker","gid":999,"members":["user1","user2"]}]}`,
 					),
 				)
 			},
@@ -220,9 +219,8 @@ func (suite *GroupPublicTestSuite) TestGroupGet() {
 				suite.NoError(err)
 				suite.NotNil(resp)
 				suite.Len(resp.Data.Results, 1)
-				suite.Require().Len(resp.Data.Results[0].Groups, 1)
-				suite.Equal("docker", resp.Data.Results[0].Groups[0].Name)
-				suite.Equal([]string{"user1", "user2"}, resp.Data.Results[0].Groups[0].Members)
+				suite.Equal("docker", resp.Data.Results[0].Name)
+				suite.Equal([]string{"user1", "user2"}, resp.Data.Results[0].Members)
 			},
 		},
 		{

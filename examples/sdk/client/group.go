@@ -60,10 +60,8 @@ func main() {
 			fmt.Printf("  %s: ERROR %s\n", r.Hostname, r.Error)
 			continue
 		}
-		for _, g := range r.Groups {
-			fmt.Printf("  %s: name=%s gid=%d members=%s\n",
-				r.Hostname, g.Name, g.GID, strings.Join(g.Members, ","))
-		}
+		fmt.Printf("  %s: name=%s gid=%d members=%s\n",
+			r.Hostname, r.Name, r.GID, strings.Join(r.Members, ","))
 	}
 
 	// Create a new group (may fail on non-Debian platforms).

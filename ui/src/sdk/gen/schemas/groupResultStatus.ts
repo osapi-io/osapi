@@ -8,10 +8,10 @@
 /**
  * The status of the operation for this host.
  */
-export type GroupMutationResultStatus = typeof GroupMutationResultStatus[keyof typeof GroupMutationResultStatus];
+export type GroupResultStatus = typeof GroupResultStatus[keyof typeof GroupResultStatus];
 
 
-export const GroupMutationResultStatus = {
+export const GroupResultStatus = {
   ok: 'ok',
   failed: 'failed',
   skipped: 'skipped',

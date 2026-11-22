@@ -43,13 +43,19 @@ permissions (`700` and `600`) if they do not exist.
 
 ### Groups
 
-Group operations manage local groups:
+The [group behavior](../reference/behaviors/group/group.md) manages local
+groups. It reads `/etc/group` through gohai on each platform, and it changes
+groups on the Debian family only. On other platforms, a change reports
+`skipped`.
 
-- **List**: list all groups that are not system groups
+- **List**: list each group with its ID and its members, by name
 - **Get**: get one group by name
-- **Create**: add a new group, with an optional GID
-- **Update**: set the member list of the group
-- **Delete**: remove a group
+- **Create**: add a group with `groupadd`, with an optional GID. A group that
+  the host has already does not change, and reports `changed: false`
+- **Update**: set the members of the group with `gpasswd -M`. The same members,
+  in any order, do not change the group
+- **Delete**: remove a group with `groupdel`. A group that the host does not
+  have reports `changed: false`
 
 ## CLI usage
 

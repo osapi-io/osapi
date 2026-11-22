@@ -220,15 +220,6 @@ const (
 	OperationUserChangePassword = client.OpUserChangePassword
 )
 
-// Group operations.
-const (
-	OperationGroupList   = client.OpGroupList
-	OperationGroupGet    = client.OpGroupGet
-	OperationGroupCreate = client.OpGroupCreate
-	OperationGroupUpdate = client.OpGroupUpdate
-	OperationGroupDelete = client.OpGroupDelete
-)
-
 // SSH Key operations.
 const (
 	OperationSSHKeyList   = client.OpSSHKeyList

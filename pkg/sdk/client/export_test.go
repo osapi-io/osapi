@@ -322,45 +322,13 @@ func SSHKeyMutationResultFromGen(
 	return sshKeyMutationResultFromGen(input)
 }
 
-// GroupInfoCollectionFromList exposes the private
-// groupInfoCollectionFromList for testing.
-func GroupInfoCollectionFromList(
-	input *gen.GroupCollectionResponse,
-) Collection[GroupInfoResult] {
-	return groupInfoCollectionFromList(input)
-}
+// GroupInfoCollectionFromGen exposes the private
+// groupInfoCollectionFromGen for testing.
+var GroupInfoCollectionFromGen = groupInfoCollectionFromGen
 
-// GroupInfoCollectionFromGet exposes the private
-// groupInfoCollectionFromGet for testing.
-func GroupInfoCollectionFromGet(
-	input *gen.GroupCollectionResponse,
-) Collection[GroupInfoResult] {
-	return groupInfoCollectionFromGet(input)
-}
-
-// GroupMutationCollectionFromCreate exposes the private
-// groupMutationCollectionFromCreate for testing.
-func GroupMutationCollectionFromCreate(
-	input *gen.GroupMutationResponse,
-) Collection[GroupMutationResult] {
-	return groupMutationCollectionFromCreate(input)
-}
-
-// GroupMutationCollectionFromUpdate exposes the private
-// groupMutationCollectionFromUpdate for testing.
-func GroupMutationCollectionFromUpdate(
-	input *gen.GroupMutationResponse,
-) Collection[GroupMutationResult] {
-	return groupMutationCollectionFromUpdate(input)
-}
-
-// GroupMutationCollectionFromDelete exposes the private
-// groupMutationCollectionFromDelete for testing.
-func GroupMutationCollectionFromDelete(
-	input *gen.GroupMutationResponse,
-) Collection[GroupMutationResult] {
-	return groupMutationCollectionFromDelete(input)
-}
+// GroupMutationCollectionFromGen exposes the private
+// groupMutationCollectionFromGen for testing.
+var GroupMutationCollectionFromGen = groupMutationCollectionFromGen
 
 // PackageInfoCollectionFromList exposes the private
 // certificateCACollectionFromGen for testing.

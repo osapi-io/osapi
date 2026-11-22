@@ -4,10 +4,10 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { GroupMutationResult } from './groupMutationResult';
+import type { GroupResult } from './groupResult';
 
-export interface GroupMutationResponse {
+export interface GroupDeleteResponse {
   /** The job ID used to process this request. */
   job_id?: string;
-  results: GroupMutationResult[];
+  results: GroupResult[];
 }

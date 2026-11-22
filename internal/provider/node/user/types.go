@@ -38,11 +38,6 @@ type Provider interface {
 	UpdateUser(ctx context.Context, name string, opts UpdateUserOpts) (*Result, error)
 	DeleteUser(ctx context.Context, name string) (*Result, error)
 	ChangePassword(ctx context.Context, name string, passwordHash string) (*Result, error)
-	ListGroups(ctx context.Context) ([]Group, error)
-	GetGroup(ctx context.Context, name string) (*Group, error)
-	CreateGroup(ctx context.Context, opts CreateGroupOpts) (*GroupResult, error)
-	UpdateGroup(ctx context.Context, name string, opts UpdateGroupOpts) (*GroupResult, error)
-	DeleteGroup(ctx context.Context, name string) (*GroupResult, error)
 	ListKeys(ctx context.Context, username string) ([]SSHKey, error)
 	AddKey(ctx context.Context, username string, key SSHKey) (*SSHKeyResult, error)
 	RemoveKey(ctx context.Context, username string, fingerprint string) (*SSHKeyResult, error)
@@ -79,34 +74,8 @@ type UpdateUserOpts struct {
 	Lock   *bool    `json:"lock,omitempty"`
 }
 
-// Group represents a system group.
-type Group struct {
-	Name    string   `json:"name"`
-	GID     int      `json:"gid"`
-	Members []string `json:"members,omitempty"`
-}
-
-// CreateGroupOpts contains options for creating a new group.
-type CreateGroupOpts struct {
-	Name   string `json:"name"`
-	GID    int    `json:"gid,omitempty"`
-	System bool   `json:"system,omitempty"`
-}
-
-// UpdateGroupOpts contains options for updating an existing group.
-type UpdateGroupOpts struct {
-	Members []string `json:"members,omitempty"`
-}
-
 // Result represents the result of a user mutation operation.
 type Result struct {
-	Name    string `json:"name"`
-	Changed bool   `json:"changed"`
-	Error   string `json:"error,omitempty"`
-}
-
-// GroupResult represents the result of a group mutation operation.
-type GroupResult struct {
 	Name    string `json:"name"`
 	Changed bool   `json:"changed"`
 	Error   string `json:"error,omitempty"`

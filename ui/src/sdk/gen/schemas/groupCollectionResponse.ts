@@ -4,10 +4,10 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { GroupEntry } from './groupEntry';
+import type { GroupAccount } from './groupAccount';
 
 export interface GroupCollectionResponse {
   /** The job ID used to process this request. */
   job_id?: string;
-  results: GroupEntry[];
+  results: GroupAccount[];
 }

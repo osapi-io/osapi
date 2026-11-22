@@ -21,6 +21,9 @@ behavior.Effect.Path string	fixture	what an example sets up or expects
 behavior.Example.Doc string	free text	prose for a page or a message
 behavior.Exists(content string)	fixture	what an example sets up or expects
 behavior.Exists(path string)	path pattern	a path or a path.Match pattern
+behavior.ExistsAfter(after string)	fixture	what an example sets up or expects
+behavior.ExistsAfter(content string)	fixture	what an example sets up or expects
+behavior.ExistsAfter(path string)	path pattern	a path or a path.Match pattern
 behavior.Given.After string	fixture	what an example sets up or expects
 behavior.Given.Command string	fixture	what an example sets up or expects
 behavior.Given.Content string	fixture	what an example sets up or expects

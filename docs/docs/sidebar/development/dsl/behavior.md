@@ -309,6 +309,13 @@ Puts a file on the fake host before the call.
 
 Use: When the call reads or changes a file that is there.
 
+### `ExistsAfter("after", "path", "content")`
+
+Says what a file holds on the fake host after a command has run.
+
+Use: For a file that a program changes, such as /etc/group after groupadd.
+Declare its content before with Exists.
+
 ### `Links("path", "target")`
 
 Puts a symbolic link to target on the fake host before the call.

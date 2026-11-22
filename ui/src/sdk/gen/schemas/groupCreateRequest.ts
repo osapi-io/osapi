@@ -6,10 +6,17 @@
  */
 
 export interface GroupCreateRequest {
-  /** Group name. Must start with a lowercase letter or underscore, followed by lowercase letters, digits, underscores, or hyphens, with an optional trailing `$`; 32 characters or fewer. */
-  name: string;
-  /** Numeric group ID. If omitted, the system assigns one. */
+  /**
+     * Its numeric group ID; the system assigns one when it is 0
+     * @minimum 0
+     */
   gid?: number;
-  /** Create a system group. */
+  /**
+     * The group to add, such as developers
+     * @maxLength 32
+     * @pattern ^[a-z_][a-z0-9_-]*\$?$
+     */
+  name: string;
+  /** Add it as a system group, with an ID from the system range */
   system?: boolean;
 }

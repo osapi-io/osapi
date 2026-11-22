@@ -25,10 +25,9 @@ c := client.New("http://localhost:8080", token)
 
 // List all groups
 resp, err := c.Group.List(ctx, "_any")
+// Each result is one group on one host.
 for _, r := range resp.Data.Results {
-    for _, g := range r.Groups {
-        fmt.Printf("%s gid=%d\n", g.Name, g.GID)
-    }
+    fmt.Printf("%s: %s gid=%d\n", r.Hostname, r.Name, r.GID)
 }
 
 // Get a specific group

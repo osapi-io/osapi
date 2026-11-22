@@ -8,10 +8,10 @@
 /**
  * The status of the operation for this host.
  */
-export type GroupEntryStatus = typeof GroupEntryStatus[keyof typeof GroupEntryStatus];
+export type GroupAccountStatus = typeof GroupAccountStatus[keyof typeof GroupAccountStatus];
 
 
-export const GroupEntryStatus = {
+export const GroupAccountStatus = {
   ok: 'ok',
   failed: 'failed',
   skipped: 'skipped',

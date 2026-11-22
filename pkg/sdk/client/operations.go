@@ -110,15 +110,6 @@ const (
 	OpUserChangePassword JobOperation = "node.user.password"
 )
 
-// Group operations.
-const (
-	OpGroupList   JobOperation = "node.group.list"
-	OpGroupGet    JobOperation = "node.group.get"
-	OpGroupCreate JobOperation = "node.group.create"
-	OpGroupUpdate JobOperation = "node.group.update"
-	OpGroupDelete JobOperation = "node.group.delete"
-)
-
 // SSH Key operations.
 const (
 	OpSSHKeyList   JobOperation = "node.sshKey.list"

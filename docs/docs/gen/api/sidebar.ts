@@ -633,7 +633,7 @@ const sidebar: SidebarsConfig = {
       label: "Node/User",
       link: {
         type: "doc",
-        id: "gen/api/user-and-group-management-api-user-operations",
+        id: "gen/api/user-management-api-user-operations",
       },
       items: [
         {
@@ -694,46 +694,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Group",
-      link: {
-        type: "doc",
-        id: "gen/api/user-and-group-management-api-group-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/get-node-group",
-          label: "List all groups",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-node-group",
-          label: "Create a group",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-node-group-by-name",
-          label: "Get a group",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/put-node-group",
-          label: "Update a group",
-          className: "api-method put",
-        },
-        {
-          type: "doc",
-          id: "gen/api/delete-node-group",
-          label: "Delete a group",
-          className: "api-method delete",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Node/Disk",
       link: {
         type: "doc",
@@ -745,6 +705,46 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/get-node-disk",
           label: "Get the disk usage of the host",
           className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Group",
+      link: {
+        type: "doc",
+        id: "gen/api/group-api-group-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-group",
+          label: "List the groups of the host",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-group",
+          label: "Add a group",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-node-group",
+          label: "Remove a group",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-group-by-key",
+          label: "Get one group",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-group",
+          label: "Set the members of a group",
+          className: "api-method put",
         },
       ],
     },
