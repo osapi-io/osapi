@@ -235,7 +235,7 @@ func (s *APIEnablePublicTestSuite) TestEnableValidationHTTP() {
 	})
 }
 
-// TestEnableRBACHTTP sends tokens that do not grant service:write.
+// TestEnableRBACHTTP sends tokens that do not grant service:execute.
 func (s *APIEnablePublicTestSuite) TestEnableRBACHTTP() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
@@ -249,7 +249,7 @@ func (s *APIEnablePublicTestSuite) TestEnableRBACHTTP() {
 			WantCode: http.StatusUnauthorized,
 		},
 		{
-			Name: "when the token lacks service:write, it is a 403",
+			Name: "when the token lacks service:execute, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/service/app/enable",

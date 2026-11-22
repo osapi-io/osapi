@@ -41,6 +41,7 @@ const (
 	PermNetworkWrite        Permission = "network:write"
 	PermServiceRead         Permission = "service:read"
 	PermServiceWrite        Permission = "service:write"
+	PermServiceExecute      Permission = "service:execute"
 	PermStatusRead          Permission = "status:read"
 	PermSysctlRead          Permission = "sysctl:read"
 	PermSysctlWrite         Permission = "sysctl:write"
@@ -49,6 +50,7 @@ const (
 	PermUpdatepackagesRead  Permission = "updatepackages:read"
 	PermUpdatepackagesWrite Permission = "updatepackages:write"
 	PermUptimeRead          Permission = "uptime:read"
+	PermNetworkExecute      Permission = "network:execute"
 	PermAdmissionRead       Permission = "admission:read"
 	PermAdmissionWrite      Permission = "admission:write"
 	PermAgentRead           Permission = "agent:read"
@@ -60,7 +62,10 @@ const (
 
 // Built-in role constants, one for each built-in role.
 const (
-	RoleAdmin Role = "admin"
-	RoleWrite Role = "write"
-	RoleRead  Role = "read"
+	RoleAdmin      Role = "admin"
+	RoleOperator   Role = "operator"
+	RoleAutomation Role = "automation"
+	RoleAuditor    Role = "auditor"
+	RoleRead       Role = "read"
+	RoleObserver   Role = "observer"
 )

@@ -187,8 +187,8 @@ for how osapi finds the OS family.
 | List, Get              | `schedule:read`  |
 | Create, Update, Delete | `schedule:write` |
 
-All built-in roles (`admin`, `write`, `read`) have `schedule:read`. The `admin`
-and `write` roles also have `schedule:write`.
+`admin`, `operator`, `automation` and `read` have `schedule:read`. Only `admin`
+has `schedule:write`, because a cron entry runs a command as any user.
 
 ## Naming rules
 

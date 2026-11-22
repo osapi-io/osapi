@@ -129,7 +129,7 @@ func groupFile(
 			Op(".").Line().Id("Handle").Call(jen.Id(handle)).
 			Op(".").Line().Id("ID").Call(jen.Lit(b.OperationID(m))).
 			Op(".").Line().Id("Describe").Call(jen.Lit(m.Doc)).
-			Op(".").Line().Id("Permission").Call(jen.Lit(string(b.Permission(m.Verb)))).
+			Op(".").Line().Id("Permission").Call(jen.Lit(string(b.Permission(m.PermissionVerb())))).
 			Op(".").Line().Id("Returns").Call(jen.Lit(ok))
 		if m.Action {
 			def = def.Op(".").Line().Id("Action").Call(jen.Lit(m.Name))

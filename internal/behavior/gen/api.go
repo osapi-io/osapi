@@ -59,7 +59,7 @@ func apiTestFile(
 		rows = append(rows, multi("{", "}",
 			jen.Id("method").Op(":").Qual(httpPath, methodConst(m)),
 			jen.Id("path").Op(":").Lit(echoRoute(b, m)),
-			jen.Id("permission").Op(":").Lit(string(b.Permission(m.Verb))),
+			jen.Id("permission").Op(":").Lit(string(b.Permission(m.PermissionVerb()))),
 		))
 	}
 
@@ -177,7 +177,7 @@ func apiMethodTestFile(
 			title(m.Name)), validations)
 	method("Test"+title(m.Name)+"RBACHTTP",
 		fmt.Sprintf("Test%sRBACHTTP sends tokens that do not grant %s.",
-			title(m.Name), b.Permission(m.Verb)), rbac)
+			title(m.Name), b.Permission(m.PermissionVerb())), rbac)
 	suiteRunner(f, name)
 
 	return f, nil
@@ -395,7 +395,7 @@ func rbacCases(
 	none, lacking := base, base
 	none.name, none.token, none.code = "when there is no token, it is a 401", "NoToken", http.StatusUnauthorized
 	lacking.name, lacking.token, lacking.code = "when the token lacks "+string(
-		b.Permission(m.Verb),
+		b.Permission(m.PermissionVerb()),
 	)+
 		", it is a 403", "Lacking", http.StatusForbidden
 	cases := []httpCase{none, lacking}

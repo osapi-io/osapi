@@ -90,9 +90,10 @@ authentication settings.
 ## Permissions
 
 Container operations need `docker:*` permissions. The `admin` role has
-`docker:read`, `docker:write` and `docker:execute`. The `write` role has
-`docker:read` and `docker:write`. The `read` role has only `docker:read`. Refer
-to the [API reference](/category/api) for the permission of each endpoint.
+`docker:read`, `docker:write` and `docker:execute`, which runs a command in a
+container. `automation` has `docker:read` and `docker:write`. `operator` and
+`read` have only `docker:read`. Refer to the [API reference](/category/api) for
+the permission of each endpoint.
 
 Container exec is a privileged operation, like command execution. **It is off by
 default.** The agent refuses each exec job until you set

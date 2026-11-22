@@ -124,8 +124,8 @@ for how osapi finds the OS family.
 | Get                    | `ntp:read`  |
 | Create, Update, Delete | `ntp:write` |
 
-All built-in roles (`admin`, `write`, `read`) include `ntp:read`. The `admin`
-and `write` roles also include `ntp:write`.
+`admin`, `operator`, `automation` and `read` include `ntp:read`. `admin` and
+`automation` also include `ntp:write`.
 
 ## Related
 

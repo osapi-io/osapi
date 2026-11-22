@@ -131,9 +131,9 @@ functions normally in standard container environments.
 | List                   | `certificate:read`  |
 | Create, Update, Delete | `certificate:write` |
 
-Certificate listing requires `certificate:read`, included in all built-in roles
-(`admin`, `write`, `read`). Mutation operations require `certificate:write`,
-included in the `admin` and `write` roles.
+Certificate listing requires `certificate:read`, which `admin`, `operator`,
+`automation` and `read` have. Mutation operations require `certificate:write`,
+which `admin` and `automation` have.
 
 ## Related
 

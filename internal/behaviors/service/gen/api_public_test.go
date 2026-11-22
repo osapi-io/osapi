@@ -53,27 +53,27 @@ func (s *APIPublicTestSuite) TestRoutes() {
 		{
 			method:     http.MethodPost,
 			path:       "/api/node/:hostname/service/:name/start",
-			permission: "service:write",
+			permission: "service:execute",
 		},
 		{
 			method:     http.MethodPost,
 			path:       "/api/node/:hostname/service/:name/stop",
-			permission: "service:write",
+			permission: "service:execute",
 		},
 		{
 			method:     http.MethodPost,
 			path:       "/api/node/:hostname/service/:name/restart",
-			permission: "service:write",
+			permission: "service:execute",
 		},
 		{
 			method:     http.MethodPost,
 			path:       "/api/node/:hostname/service/:name/enable",
-			permission: "service:write",
+			permission: "service:execute",
 		},
 		{
 			method:     http.MethodPost,
 			path:       "/api/node/:hostname/service/:name/disable",
-			permission: "service:write",
+			permission: "service:execute",
 		},
 	}
 

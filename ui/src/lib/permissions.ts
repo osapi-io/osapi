@@ -25,32 +25,37 @@ export interface RoleDefinition {
   permissions: Set<Permission>;
 }
 
-const VIEWER_PERMISSIONS: Permission[] = ROLE_PERMISSIONS.read;
-const OPERATOR_PERMISSIONS: Permission[] = ROLE_PERMISSIONS.write;
-const ADMIN_PERMISSIONS: Permission[] = ROLE_PERMISSIONS.admin;
+// The built-in roles of the controller, one for each kind of person or
+// program that uses osapi. Their permissions come from Go
+// (ROLE_PERMISSIONS), so the UI shows what a token of the role can do. The
+// last is the one with the least, which the UI falls back to.
+const role = (
+  name: keyof typeof ROLE_PERMISSIONS,
+  description: string,
+): RoleDefinition => ({
+  name,
+  label: name,
+  description,
+  jwtRole: name,
+  permissions: new Set(ROLE_PERMISSIONS[name]),
+});
 
 export const ROLES: RoleDefinition[] = [
-  {
-    name: "admin",
-    label: "admin",
-    description: "Full access including audit logs",
-    jwtRole: "admin",
-    permissions: new Set(ADMIN_PERMISSIONS),
-  },
-  {
-    name: "operator",
-    label: "write",
-    description: "Deploy, execute, and manage resources",
-    jwtRole: "write",
-    permissions: new Set(OPERATOR_PERMISSIONS),
-  },
-  {
-    name: "viewer",
-    label: "read",
-    description: "Read-only access to all resources",
-    jwtRole: "read",
-    permissions: new Set(VIEWER_PERMISSIONS),
-  },
+  role(
+    "admin",
+    "Everything, including admission, tokens, shells and the audit log",
+  ),
+  role(
+    "operator",
+    "Reads, and actions such as a restart, a signal or a reboot",
+  ),
+  role(
+    "automation",
+    "Reads, and changes to the configuration, with no actions",
+  ),
+  role("auditor", "The audit log, traces, jobs and health, read only"),
+  role("read", "Reads each thing that is not admin only"),
+  role("observer", "Health, status and agents only, for dashboards"),
 ];
 
 export function getRoleByName(name: string): RoleDefinition | undefined {

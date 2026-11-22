@@ -172,7 +172,7 @@ The command fails in these cases:
 
 ## Permission
 
-It needs the `network:write` permission. `osapi token roles get --name <role>`
+It needs the `network:execute` permission. `osapi token roles get --name <role>`
 shows what a role grants.
 
 ## Flags

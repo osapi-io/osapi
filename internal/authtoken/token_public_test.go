@@ -49,13 +49,6 @@ func (s *AuthTokenPublicTestSuite) TestNew() {
 	s.NotNil(t)
 }
 
-func (s *AuthTokenPublicTestSuite) TestGenerateAllowedRoles() {
-	roles := authtoken.GenerateAllowedRoles(authtoken.RoleHierarchy)
-
-	s.Len(roles, 3)
-	s.ElementsMatch([]string{"admin", "write", "read"}, roles)
-}
-
 func (s *AuthTokenPublicTestSuite) TestGenerate() {
 	tokenString, err := s.token.Generate(s.signingKey, []string{"admin"}, "test-subject", nil)
 
@@ -133,7 +126,7 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 			name: "claims fail struct validation",
 			tokenFunc: func() string {
 				claims := authtoken.CustomClaims{
-					Roles: []string{"invalid_role"},
+					Roles: []string{""},
 					RegisteredClaims: jwt.RegisteredClaims{
 						Issuer:    "osapi",
 						IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -192,12 +185,12 @@ func (s *AuthTokenPublicTestSuite) TestGenerateAndValidateRoundTrip() {
 		},
 		{
 			name:    "multiple roles round trip",
-			roles:   []string{"read", "write"},
+			roles:   []string{"read", "automation"},
 			subject: "rw-user",
 			validateFunc: func(claims *authtoken.CustomClaims, err error) {
 				s.NoError(err)
 				s.NotNil(claims)
-				s.Equal([]string{"read", "write"}, claims.Roles)
+				s.Equal([]string{"read", "automation"}, claims.Roles)
 				s.Equal("rw-user", claims.Subject)
 			},
 		},
