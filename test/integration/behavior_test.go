@@ -120,6 +120,10 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 		skipWrite(s.T())
 	}
 
+	s.refreshIndex()
+	var examples []made
+	defer func() { s.leftNothing(examples) }()
+
 	for _, b := range behavior.All() {
 		if !b.CLI {
 			continue
@@ -132,6 +136,10 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 				s.Run(b.Name+" "+m.Name+" "+ex.Doc, func() {
 					defer s.restore(b)()
 					s.reset(b, ex.Input)
+					// The example's items go again after it, also when it
+					// fails, so the target is as the suite found it.
+					examples = append(examples, madeBy(b, ex))
+					defer s.remove(examples[len(examples)-1])
 					s.store(ex.Given)
 					for _, g := range ex.Given {
 						if g.Kind != behavior.GivenCall {
@@ -159,6 +167,81 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 						}
 					}
 				})
+			}
+		}
+	}
+}
+
+// refreshIndex refreshes the package index of the target, as a person does
+// before an install. The runner's lists are recent, but a lab VM's can be
+// weeks old, and an install of a version that the mirror no longer serves
+// fails with exit status 100. The refresh's own example can run after the
+// package examples, so the suite runs it first.
+func (s *BehaviorSmokeSuite) refreshIndex() {
+	b := behavior.Lookup("updatepackages")
+	if b == nil || b.Method("update") == nil {
+		return
+	}
+	m := b.Method("update")
+	s.results(commandLine(b, m, reflect.New(m.In).Elem().Interface()))
+}
+
+// made is what a write example can leave on the target: the items that its
+// input and its Given calls name, which the behavior's delete removes, and
+// the objects that it uploaded.
+type made struct {
+	b       *behavior.Behavior
+	inputs  []any
+	objects []string
+}
+
+// madeBy is what ex can leave.
+func madeBy(
+	b *behavior.Behavior,
+	ex behavior.Example,
+) made {
+	m := made{b: b, inputs: []any{ex.Input}}
+	for _, g := range ex.Given {
+		switch g.Kind {
+		case behavior.GivenCall:
+			m.inputs = append(m.inputs, g.Input)
+		case behavior.GivenObject:
+			m.objects = append(m.objects, g.Path)
+		}
+	}
+
+	return m
+}
+
+// remove deletes what m names: each item, with the behavior's delete, and
+// each object, with osapi client file delete. An object that is not there
+// is not an error.
+func (s *BehaviorSmokeSuite) remove(
+	m made,
+) {
+	for _, in := range m.inputs {
+		s.reset(m.b, in)
+	}
+	for _, name := range m.objects {
+		_, stderr, code := runCLI("client", "file", "delete", "--name", name)
+		s.True(code == 0 || strings.Contains(stderr, "not found"),
+			"delete object %s: %s", name, stderr)
+	}
+}
+
+// leftNothing runs each delete of the write examples again, at the end of
+// the suite, and requires that none changes the target: each example's
+// remove left nothing behind.
+func (s *BehaviorSmokeSuite) leftNothing(
+	all []made,
+) {
+	for _, m := range all {
+		for _, in := range m.inputs {
+			for _, r := range s.deleteResults(m.b, in) {
+				if r["status"] == "ok" {
+					s.Equal(false, r["changed"],
+						"%s %v was left on the target", m.b.Name, in)
+				}
 			}
 		}
 	}
@@ -192,9 +275,19 @@ func (s *BehaviorSmokeSuite) reset(
 	b *behavior.Behavior,
 	input any,
 ) {
+	s.deleteResults(b, input)
+}
+
+// deleteResults runs the behavior's delete with the fields of input that it
+// takes, and returns its rows; none when the behavior has no delete or input
+// cannot name the item.
+func (s *BehaviorSmokeSuite) deleteResults(
+	b *behavior.Behavior,
+	input any,
+) []map[string]any {
 	del := b.Method("delete")
 	if del == nil {
-		return
+		return nil
 	}
 	data, err := json.Marshal(input)
 	s.Require().NoError(err)
@@ -208,7 +301,7 @@ func (s *BehaviorSmokeSuite) reset(
 			// A delete that the example's input cannot name has nothing
 			// to reset.
 			if strings.Contains(del.In.Field(i).Tag.Get("validate"), "required") {
-				return
+				return nil
 			}
 
 			continue
@@ -216,13 +309,13 @@ func (s *BehaviorSmokeSuite) reset(
 		keep[name] = v
 	}
 	if len(keep) == 0 {
-		return
+		return nil
 	}
 	key, err := json.Marshal(keep)
 	s.Require().NoError(err)
 	in := reflect.New(del.In)
 	s.Require().NoError(json.Unmarshal(key, in.Interface()))
-	s.results(commandLine(b, del, in.Elem().Interface()))
+	return s.results(commandLine(b, del, in.Elem().Interface()))
 }
 
 // restore reads the item of a behavior that has no delete, such as the
