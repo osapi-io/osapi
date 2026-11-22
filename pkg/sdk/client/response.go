@@ -64,25 +64,25 @@ func newResponse[T any](
 ) *Response[T] {
 	r := NewResponse(data, rawJSON)
 	if httpResp != nil {
-		r.traceID = traceIDFromHeader(httpResp.Header.Get("traceresponse"))
+		r.traceID = TraceIDOf(httpResp.Header)
 	}
 
 	return r
 }
 
+// TraceIDOf returns the trace ID of an answer's headers, from its W3C
+// traceresponse header, or "" when it has none. A program that reads the
+// answers itself, as the CLI's transport does for a request that failed,
+// uses it.
+func TraceIDOf(
+	h http.Header,
+) string {
+	return traceIDFromHeader(h.Get("traceresponse"))
+}
+
 // traceIDFromHeader returns the trace ID of a W3C traceresponse header,
 // version-traceid-spanid-flags, or "" when the header is not in that form.
 func traceIDFromHeader(
-	header string,
-) string {
-	return TraceIDFromHeader(header)
-}
-
-// TraceIDFromHeader returns the trace ID of a W3C traceresponse header,
-// such as 00-<trace>-<span>-01, or "" when the header has none. A program
-// that reads the answers itself, as the CLI's transport does for a request
-// that failed, uses it.
-func TraceIDFromHeader(
 	header string,
 ) string {
 	parts := strings.Split(header, "-")

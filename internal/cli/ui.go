@@ -464,7 +464,7 @@ func (t TraceTransport) RoundTrip(
 ) (*http.Response, error) {
 	resp, err := t.Base.RoundTrip(req)
 	if resp != nil {
-		if id := client.TraceIDFromHeader(resp.Header.Get("traceresponse")); id != "" {
+		if id := client.TraceIDOf(resp.Header); id != "" {
 			PrintTraceID(id)
 		}
 	}
