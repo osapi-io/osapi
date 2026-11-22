@@ -5,7 +5,8 @@ title: Home
 ---
 
 <div style={{textAlign: 'center', marginBottom: '2rem'}}>
-  <img src="img/logo.png" style={{maxWidth: '200px'}} />
+  <img className="logo-light" src="img/logo-light.svg" alt="osapi" width="236" />
+  <img className="logo-dark" src="img/logo-dark.svg" alt="osapi" width="236" />
 </div>
 
 # Give your agent a fleet, not a shell
