@@ -43,7 +43,14 @@ function subRows(entry?: ComponentEntry): SubRow[] {
 // RegistryHeader is one row of osapi client health status's component
 // table: hostname, status, conditions, age, CPU, memory and version, in that
 // order.
-function RegistryHeader({ entry }: { entry?: ComponentEntry }) {
+function RegistryHeader({
+  entry,
+  reference,
+}: {
+  entry?: ComponentEntry;
+  // reference is the controller's version, which the page header shows.
+  reference?: string;
+}) {
   if (!entry) return null;
   return (
     <div className="border-b border-border/30 px-3 py-2 text-xs">
@@ -65,7 +72,7 @@ function RegistryHeader({ entry }: { entry?: ComponentEntry }) {
           </span>
         )}
         <div className="ml-auto flex shrink-0 items-center gap-3 text-text-muted">
-          {entry.age && <span>{entry.age}</span>}
+          {entry.age && <span>up {entry.age}</span>}
           {entry.cpu_percent != null && (
             <span>{entry.cpu_percent.toFixed(1)}%</span>
           )}
@@ -74,11 +81,11 @@ function RegistryHeader({ entry }: { entry?: ComponentEntry }) {
           )}
         </div>
       </div>
-      {/* The version on a line of its own: it is long, and its end, the
-          commit, is the part a reader compares. */}
-      {entry.version && (
+      {/* The version only when it is not the one in the page header: a
+          mismatch is what a reader compares for. */}
+      {entry.version && entry.version !== reference && (
         <p
-          className="mt-0.5 truncate font-mono text-[10px] text-text-muted"
+          className="mt-0.5 truncate font-mono text-[10px] text-status-pending"
           title={entry.version}
         >
           {entry.version}
@@ -143,10 +150,6 @@ export function Dashboard() {
               <Badge variant={statusVariant(health.status)}>
                 {health.status}
               </Badge>
-              {health.version && (
-                <Badge variant="muted">{health.version}</Badge>
-              )}
-              {health.uptime && <Badge variant="muted">{health.uptime}</Badge>}
             </>
           )
         }
@@ -158,75 +161,93 @@ export function Dashboard() {
 
       {!loading && !error && health && (
         <>
-          {/* Row 1: Summary stats */}
-          <div className="mb-4 grid grid-cols-4 gap-3">
-            {health.nats && (
-              <StatCard
-                label="NATS"
-                value={health.nats.version}
-                detail={health.nats.url}
-                truncateDetail
-              />
-            )}
-            {health.jobs && (
-              <StatCard
-                label="Jobs"
-                value={health.jobs.total}
-                detail={
-                  <>
-                    <Count n={health.jobs.completed} kind="completed" />,{" "}
-                    <Count n={health.jobs.unprocessed} kind="unprocessed" />,{" "}
-                    <Count n={health.jobs.failed} kind="failed" />,{" "}
-                    <Count n={health.jobs.dlq} kind="dlq" />
-                  </>
-                }
-              />
-            )}
+          {/* Row 1: what needs attention. The NATS version is in the NATS
+              card and the consumer count is on the stream's line. */}
+          <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
             {health.agents && (
               <StatCard
                 label="Agents"
                 value={`${health.agents.ready}/${health.agents.total}`}
-                detail="ready"
+                detail={
+                  health.agents.ready === health.agents.total ? (
+                    "ready"
+                  ) : (
+                    <span className="text-status-pending">
+                      {health.agents.total - health.agents.ready} not ready
+                    </span>
+                  )
+                }
               />
             )}
-            {health.consumers !== undefined && (
+            {health.jobs && (
               <StatCard
-                label="Consumers"
-                value={health.consumers}
-                detail="JetStream"
+                label="Failed jobs"
+                value={<Count n={health.jobs.failed} kind="failed" bare />}
+                detail={
+                  <>
+                    of {health.jobs.total}:{" "}
+                    <Count n={health.jobs.completed} kind="completed" />,{" "}
+                    <Count n={health.jobs.unprocessed} kind="unprocessed" />
+                  </>
+                }
               />
             )}
+            {health.jobs && (
+              <StatCard
+                label="Dead letters"
+                value={<Count n={health.jobs.dlq} kind="dlq" bare />}
+                detail="jobs that used up their retries"
+              />
+            )}
+            <StatCard
+              label="Controller"
+              value={`up ${health.uptime}`}
+              detail={health.version}
+              truncateDetail
+            />
           </div>
 
-          {/* Row 2: Controller + NATS components */}
-          {grouped && (
-            <div className="mb-4 grid grid-cols-12 gap-4">
-              {grouped.controller.length > 0 && (
-                <div className="col-span-7">
-                  <SectionLabel>Controller</SectionLabel>
-                  <Card>
-                    <CardContent className="p-0">
-                      <RegistryHeader entry={controllerEntry} />
-                      {grouped.controller.map((row, i) => (
-                        <ComponentRow
-                          key={row.name}
-                          name={row.name}
-                          status={row.status}
-                          address={row.address}
-                          url={row.url}
-                          isLast={i === grouped.controller.length - 1}
-                        />
-                      ))}
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-              {grouped.nats.length > 0 && (
-                <div className="col-span-5">
+          {/* Row 2: the controller on the left; NATS and its storage on
+              the right, so the short NATS card leaves no gap. */}
+          <div className="mb-6 grid grid-cols-12 gap-4">
+            {grouped && grouped.controller.length > 0 && (
+              <div className="col-span-12 lg:col-span-7">
+                <SectionLabel>Controller</SectionLabel>
+                <Card>
+                  <CardContent className="p-0">
+                    <RegistryHeader
+                      entry={controllerEntry}
+                      reference={health.version}
+                    />
+                    {grouped.controller.map((row, i) => (
+                      <ComponentRow
+                        key={row.name}
+                        name={row.name}
+                        status={row.status}
+                        address={row.address}
+                        url={row.url}
+                        isLast={i === grouped.controller.length - 1}
+                      />
+                    ))}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+            <div className="col-span-12 space-y-4 lg:col-span-5">
+              {grouped && grouped.nats.length > 0 && (
+                <div>
                   <SectionLabel>NATS Server</SectionLabel>
                   <Card>
                     <CardContent className="p-0">
-                      <RegistryHeader entry={natsEntry} />
+                      <RegistryHeader
+                        entry={natsEntry}
+                        reference={health.version}
+                      />
+                      {health.nats && (
+                        <p className="truncate border-b border-border/20 px-3 py-1.5 text-xs text-text-muted">
+                          NATS {health.nats.version}, {health.nats.url}
+                        </p>
+                      )}
                       {grouped.nats.map((row, i) => (
                         <ComponentRow
                           key={row.name}
@@ -241,62 +262,62 @@ export function Dashboard() {
                   </Card>
                 </div>
               )}
-            </div>
-          )}
 
-          {/* Storage, as osapi client health status prints it: a line
-              for each stream, bucket and object store. */}
-          {Boolean(
-            health.streams?.length ||
-            health.kv_buckets?.length ||
-            health.object_stores?.length,
-          ) && (
-            <div className="mb-6">
-              <SectionLabel>Storage</SectionLabel>
-              <Card>
-                <CardContent>
-                  <KVList
-                    pairs={[
-                      ...(health.streams ?? []).map(
-                        (st): [string, ReactNode] => [
-                          "Stream",
-                          <>
-                            {st.name}{" "}
-                            <span className="text-text-muted">
-                              ({st.messages} msgs, {formatBytes(st.bytes)},{" "}
-                              {st.consumers} consumers)
-                            </span>
-                          </>,
-                        ],
-                      ),
-                      ...(health.kv_buckets ?? []).map(
-                        (kv): [string, ReactNode] => [
-                          "Bucket",
-                          <>
-                            {kv.name}{" "}
-                            <span className="text-text-muted">
-                              ({kv.keys} keys, {formatBytes(kv.bytes)})
-                            </span>
-                          </>,
-                        ],
-                      ),
-                      ...(health.object_stores ?? []).map(
-                        (os): [string, ReactNode] => [
-                          "Object store",
-                          <>
-                            {os.name}{" "}
-                            <span className="text-text-muted">
-                              ({formatBytes(os.size)})
-                            </span>
-                          </>,
-                        ],
-                      ),
-                    ]}
-                  />
-                </CardContent>
-              </Card>
+              {/* Storage, as osapi client health status prints it: a line
+                  for each stream, bucket and object store. */}
+              {Boolean(
+                health.streams?.length ||
+                health.kv_buckets?.length ||
+                health.object_stores?.length,
+              ) && (
+                <div>
+                  <SectionLabel>Storage</SectionLabel>
+                  <Card>
+                    <CardContent>
+                      <KVList
+                        pairs={[
+                          ...(health.streams ?? []).map(
+                            (st): [string, ReactNode] => [
+                              "Stream",
+                              <>
+                                {st.name}{" "}
+                                <span className="text-text-muted">
+                                  ({st.messages} msgs, {formatBytes(st.bytes)},{" "}
+                                  {st.consumers} consumers)
+                                </span>
+                              </>,
+                            ],
+                          ),
+                          ...(health.kv_buckets ?? []).map(
+                            (kv): [string, ReactNode] => [
+                              "Bucket",
+                              <>
+                                {kv.name}{" "}
+                                <span className="text-text-muted">
+                                  ({kv.keys} keys, {formatBytes(kv.bytes)})
+                                </span>
+                              </>,
+                            ],
+                          ),
+                          ...(health.object_stores ?? []).map(
+                            (os): [string, ReactNode] => [
+                              "Object store",
+                              <>
+                                {os.name}{" "}
+                                <span className="text-text-muted">
+                                  ({formatBytes(os.size)})
+                                </span>
+                              </>,
+                            ],
+                          ),
+                        ]}
+                      />
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
             </div>
-          )}
+          </div>
 
           {/* Agents — pending agents are managed in Admin > Admission */}
           <section>
@@ -313,6 +334,7 @@ export function Dashboard() {
                 <AgentCard
                   key={agent.hostname}
                   agent={agent}
+                  controllerVersion={health.version}
                   components={
                     health?.registry?.find(
                       (r) =>

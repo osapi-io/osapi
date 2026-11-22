@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,9 @@ interface AgentCardProps {
   // components are the agent's sub-components, from its entry in the
   // health registry.
   components?: ComponentEntry[];
+  // controllerVersion is the controller's build. The card shows the agent's
+  // version only when it differs, since a mismatch is what a reader needs.
+  controllerVersion?: string;
   onRefresh?: () => void;
 }
 
@@ -31,7 +34,12 @@ function NotReported() {
   return <span className="text-text-muted">-</span>;
 }
 
-export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
+export function AgentCard({
+  agent,
+  components,
+  controllerVersion,
+  onRefresh,
+}: AgentCardProps) {
   const { can } = useAuth();
   // A drain or undrain the controller accepted, until the agent's state
   // shows it. The agent acts on it at its next heartbeat, which can be 20s
@@ -140,19 +148,6 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
         </div>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col">
-        {/* In the order of osapi client agent list: machine ID,
-            conditions, labels, age, load, OS, version. */}
-        {(agent.machine_id || agent.fingerprint) && (
-          <div className="mt-1 space-y-0.5">
-            {agent.machine_id && (
-              <CopyField label="Machine ID" value={agent.machine_id} />
-            )}
-            {agent.fingerprint && (
-              <CopyField label="Fingerprint" value={agent.fingerprint} />
-            )}
-          </div>
-        )}
-
         {isPending && (
           <Text variant="muted" as="p" className="mt-1 italic">
             Awaiting admission
@@ -181,8 +176,8 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
         <div className="mt-2 grid grid-cols-2 gap-2">
           <MetricValue icon={Clock}>
             {agent.started_at ? (
-              <span title={agent.uptime}>
-                {formatAgeSince(agent.started_at)}
+              <span title={agent.uptime && `system up ${agent.uptime}`}>
+                up {formatAgeSince(agent.started_at)}
               </span>
             ) : (
               <NotReported />
@@ -223,7 +218,20 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
                 </>
               ),
             ],
-            ["Version", agent.version],
+            // The version only when it is not the controller's: a
+            // mismatch is the case that matters.
+            ...(agent.version &&
+            controllerVersion &&
+            agent.version !== controllerVersion
+              ? [
+                  [
+                    "Version",
+                    <span key="v" className="text-status-pending">
+                      {agent.version}
+                    </span>,
+                  ] as [string, ReactNode],
+                ]
+              : []),
           ]}
         />
 
@@ -236,6 +244,23 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
               </div>
             ))}
           </div>
+        )}
+
+        {/* The identity, which nobody scans, behind a disclosure. */}
+        {(agent.machine_id || agent.fingerprint) && (
+          <details className="mt-2 text-xs">
+            <summary className="cursor-pointer text-text-muted hover:text-text">
+              Identity
+            </summary>
+            <div className="mt-1 space-y-0.5">
+              {agent.machine_id && (
+                <CopyField label="Machine ID" value={agent.machine_id} />
+              )}
+              {agent.fingerprint && (
+                <CopyField label="Fingerprint" value={agent.fingerprint} />
+              )}
+            </div>
+          </details>
         )}
 
         <div className="mt-auto pt-2">
