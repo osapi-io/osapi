@@ -75,6 +75,16 @@ func newResponse[T any](
 func traceIDFromHeader(
 	header string,
 ) string {
+	return TraceIDFromHeader(header)
+}
+
+// TraceIDFromHeader returns the trace ID of a W3C traceresponse header,
+// such as 00-<trace>-<span>-01, or "" when the header has none. A program
+// that reads the answers itself, as the CLI's transport does for a request
+// that failed, uses it.
+func TraceIDFromHeader(
+	header string,
+) string {
 	parts := strings.Split(header, "-")
 	if len(parts) != 4 || len(parts[1]) != 32 {
 		return ""

@@ -24,6 +24,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 
 	"github.com/osapi-io/osapi/pkg/sdk/client"
@@ -90,9 +91,12 @@ var clientCmd = &cobra.Command{
 			appConfig.Controller.Client.URL,
 			appConfig.Controller.Client.Security.BearerToken,
 			client.WithLogger(logger),
+			client.WithHTTPTransport(cli.TraceTransport{Base: http.DefaultTransport}),
 		)
 	},
 	PersistentPostRun: func(_ *cobra.Command, _ []string) {
+		// The trace of a result that had no summary line to carry it.
+		cli.FlushTraceID()
 		// A command that exits through LogFatal does not reach here, so its
 		// span is not sent. The controller still has the request.
 		if commandSpan != nil {

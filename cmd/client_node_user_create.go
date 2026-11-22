@@ -69,8 +69,6 @@ var clientNodeUserCreateCmd = &cobra.Command{
 
 		cli.PrintJobID(resp.Data.JobID)
 
-		cli.PrintTraceID(resp.TraceID())
-
 		results := make([]cli.ResultRow, 0, len(resp.Data.Results))
 		for _, r := range resp.Data.Results {
 			var errPtr *string

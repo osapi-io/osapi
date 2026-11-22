@@ -28,6 +28,8 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -303,6 +305,87 @@ func captureStdout(
 	os.Stdout = old
 
 	return string(out)
+}
+
+// TestFlushTraceID: a trace that no summary line printed is the last line,
+// once; a summary line that printed it leaves nothing; --json prints none.
+func (suite *UIPublicTestSuite) TestFlushTraceID() {
+	const id = "26e448c9dbe1c4a8d216a98c675079c9"
+
+	cli.PrintTraceID(id)
+	out := captureStdout(cli.FlushTraceID)
+	suite.Contains(out, "trace "+id)
+	suite.Empty(captureStdout(cli.FlushTraceID), "printed once")
+
+	cli.PrintTraceID(id)
+	captureStdout(func() {
+		cli.PrintJobID("550e8400-e29b-41d4-a716-446655440000")
+		tr := cli.BuildBroadcastTable(
+			[]cli.ResultRow{{Hostname: "web-01", Status: "ok", Fields: []string{"10"}}},
+			[]string{"VALUE"},
+		)
+		cli.PrintCompactTable(
+			[]cli.Section{{Headers: tr.Headers, Rows: tr.Rows, Errors: tr.Errors}},
+		)
+	})
+	suite.Empty(captureStdout(cli.FlushTraceID), "the summary line had it")
+
+	suite.Empty(captureStdout(cli.FlushTraceID), "no trace, no line")
+
+	cli.SetJSONOutput(true)
+	defer cli.SetJSONOutput(false)
+	cli.PrintTraceID(id)
+	suite.Empty(captureStdout(cli.FlushTraceID), "--json prints none")
+}
+
+// TestTraceTransport: each answer's traceresponse is the command's trace,
+// and an answer with none leaves the trace as it was.
+func (suite *UIPublicTestSuite) TestTraceTransport() {
+	const id = "4bf92f3577b34da6a3ce929d0e0e4736"
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/traced" {
+			w.Header().Set("traceresponse", "00-"+id+"-00f067aa0ba902b7-01")
+		}
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer srv.Close()
+	hc := &http.Client{Transport: cli.TraceTransport{Base: http.DefaultTransport}}
+
+	for _, path := range []string{"/traced", "/untraced"} {
+		resp, err := hc.Get(srv.URL + path)
+		suite.Require().NoError(err)
+		_ = resp.Body.Close()
+	}
+	suite.Contains(
+		captureStdout(cli.FlushTraceID),
+		"trace "+id,
+		"a failed answer has its trace too",
+	)
+
+	_, err := cli.TraceTransport{Base: http.DefaultTransport}.RoundTrip(
+		httptest.NewRequest(http.MethodGet, "http://127.0.0.1:1/", nil),
+	)
+	suite.Error(err, "no answer, no trace")
+	suite.Empty(captureStdout(cli.FlushTraceID))
+}
+
+// TestHandleErrorTrace: a command that fails prints the trace of its request
+// under the error, where a person looks next.
+func (suite *UIPublicTestSuite) TestHandleErrorTrace() {
+	var buf bytes.Buffer
+	cli.SetErrOut(&buf)
+	defer cli.ResetErrOut()
+	cli.SetOsExit(func(int) {})
+	defer cli.ResetOsExit()
+
+	cli.PrintTraceID("4bf92f3577b34da6a3ce929d0e0e4736")
+	cli.HandleError(&client.NotFoundError{
+		APIError: client.APIError{StatusCode: 404, Message: "service \"x\": not found"},
+	}, nil)
+
+	suite.Contains(buf.String(), "not found")
+	suite.Contains(buf.String(), "trace 4bf92f3577b34da6a3ce929d0e0e4736")
+	suite.Empty(captureStdout(cli.FlushTraceID), "printed once")
 }
 
 func (suite *UIPublicTestSuite) TestBoolToSafeString() {

@@ -24,6 +24,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"sort"
 	"strconv"
 	"strings"
@@ -438,13 +439,51 @@ func PrintJobID(
 var pendingTraceID string
 
 // PrintTraceID records the trace of the request that a command's result came
-// from. The summary line ends with it, after the job ID. Search the tracing
-// backend for it to see the request on the controller, the queue and each
-// agent. An empty ID prints nothing.
+// from. TraceTransport calls it for each answer, so a command does not. The
+// summary line ends with it, after the job ID; a command with no summary line
+// prints it last, with FlushTraceID, and a command that fails prints it under
+// its error. Search the tracing backend for it to see the request on the
+// controller, the queue and each agent. An empty ID prints nothing.
 func PrintTraceID(
 	id string,
 ) {
 	pendingTraceID = id
+}
+
+// TraceTransport records the trace of each answer that passes through it,
+// from its traceresponse header, for the command's last line or its error.
+// The CLI gives it to the SDK client, so each command has the trace of its
+// request with no code of its own, also a command that failed.
+type TraceTransport struct {
+	Base http.RoundTripper
+}
+
+// RoundTrip sends req and records the trace of the answer.
+func (t TraceTransport) RoundTrip(
+	req *http.Request,
+) (*http.Response, error) {
+	resp, err := t.Base.RoundTrip(req)
+	if resp != nil {
+		if id := client.TraceIDFromHeader(resp.Header.Get("traceresponse")); id != "" {
+			PrintTraceID(id)
+		}
+	}
+
+	return resp, err
+}
+
+// FlushTraceID prints the trace a command's result came from, when no
+// summary line printed it: a table whose rows are not per-host results, such
+// as the agent list, has no summary line. Each command that has a trace thus
+// prints it, as its last line, in gray. --json prints nothing here; the trace
+// is in the traceresponse header.
+func FlushTraceID() {
+	id := pendingTraceID
+	pendingTraceID = ""
+	if id == "" || jsonOutput {
+		return
+	}
+	fmt.Printf("\n  %s\n", DimStyle.Render("trace "+id))
 }
 
 // statusWeight returns a numeric weight for status ordering.
@@ -738,6 +777,11 @@ func HandleError(
 			_, _ = fmt.Fprintln(errOut, Failure(errOut, msg))
 		} else {
 			_, _ = fmt.Fprintln(errOut, Failure(errOut, err.Error()))
+		}
+		// The trace of the request that failed, where a person looks next.
+		if id := pendingTraceID; id != "" {
+			pendingTraceID = ""
+			_, _ = fmt.Fprintf(errOut, "  %s\n", DimStyle.Render("trace "+id))
 		}
 		osExit(1)
 
