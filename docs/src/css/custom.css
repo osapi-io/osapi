@@ -437,7 +437,9 @@ button[class*='copyButton'] {
 
 /* ---------- Sidebar, table of contents, breadcrumbs ---------- */
 
-/* A page is gray; the open one is the text color, with the dark-blue bar. */
+/* A page is gray. The open one is the text color on the raised background,
+   as a page under the pointer is: no colored bar, as the UI's cards have
+   none. */
 .menu {
   font-size: 0.875rem;
 }
@@ -462,7 +464,7 @@ button[class*='copyButton'] {
   color: var(--osapi-title);
   font-weight: 500;
   background: var(--osapi-raise);
-  box-shadow: inset 3px 0 0 var(--osapi-accent);
+  box-shadow: none;
 }
 
 .table-of-contents {
@@ -628,8 +630,9 @@ button[class*='copyButton'] {
   background: var(--osapi-raise) !important;
   border-color: var(--osapi-border) !important;
   /* !important: the plugin's rule of each language, as
-     .openapi-tabs__code-item--go.active, has the same weight. */
-  box-shadow: inset 0 -2px 0 var(--osapi-accent) !important;
+     .openapi-tabs__code-item--go.active, has the same weight. No blue line
+     under the open tab: the raised background and the border mark it. */
+  box-shadow: none !important;
 }
 
 /* Taken from docusaurus' website. */
@@ -725,4 +728,13 @@ div[class^='announcementBar_'] {
   line-height: var(--ifm-pre-line-height);
   white-space: pre;
   overflow-x: auto;
+}
+
+/* The open tab of a Tabs block: the raised background and the text color,
+   as the open page of the sidebar. Infima draws a blue line under it, and
+   the build's minifier can move its rule past this one, so !important. */
+.tabs__item--active {
+  color: var(--osapi-title) !important;
+  background: var(--osapi-raise);
+  border-bottom-color: transparent !important;
 }

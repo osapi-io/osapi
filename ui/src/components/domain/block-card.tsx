@@ -84,7 +84,11 @@ export const BlockCard = forwardRef<HTMLDivElement, BlockCardProps>(
         <Card
           variant={statusToCardVariant[status]}
           className={cn(
-            focused && "ring-1 ring-primary/30",
+            // The block being edited has the border that a card under the
+            // pointer has, not a blue ring. A status keeps its own border.
+            focused &&
+              (status === "unchecked" || status === "ready") &&
+              "border-white/20",
             status === "applying" && "ring-1 ring-status-pending/40",
           )}
         >
