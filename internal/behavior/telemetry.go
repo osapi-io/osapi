@@ -68,10 +68,13 @@ const (
 )
 
 // The metrics every behavior method records, and the span every call opens.
+// The Prometheus exporter adds the osapi namespace, so MetricCalls is
+// exported as osapi_behavior_calls_total. A name with the namespace in it
+// would be exported as osapi_osapi_behavior_calls_total.
 const (
-	MetricCalls    = "osapi_behavior_calls_total"
-	MetricDuration = "osapi_behavior_duration_seconds"
-	MetricChanges  = "osapi_behavior_changes_total"
+	MetricCalls    = "behavior_calls_total"
+	MetricDuration = "behavior_duration_seconds"
+	MetricChanges  = "behavior_changes_total"
 )
 
 // SpanName is the name of the span a method's call opens on the agent.

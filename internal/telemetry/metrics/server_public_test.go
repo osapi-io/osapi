@@ -35,6 +35,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	prometheusExporter "go.opentelemetry.io/otel/exporters/prometheus"
 
+	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/telemetry/metrics"
 )
 
@@ -440,6 +441,45 @@ func (s *ServerPublicTestSuite) TestRegisterHeartbeatAge() {
 			srv.Stop(ctx)
 		})
 	}
+}
+
+// TestBehaviorMetricNames scrapes the behavior metrics as an agent exports
+// them: the exporter adds the osapi namespace once, so a name that has it
+// already gets it twice.
+func (s *ServerPublicTestSuite) TestBehaviorMetricNames() {
+	port := s.getFreePort()
+	srv := metrics.New("127.0.0.1", port, slog.Default())
+	meter := srv.MeterProvider().Meter("osapi-behavior")
+	for _, name := range []string{behavior.MetricCalls, behavior.MetricChanges} {
+		c, err := meter.Int64Counter(name)
+		s.Require().NoError(err)
+		c.Add(context.Background(), 1)
+	}
+	h, err := meter.Float64Histogram(behavior.MetricDuration)
+	s.Require().NoError(err)
+	h.Record(context.Background(), 0.1)
+	srv.Start()
+	time.Sleep(100 * time.Millisecond)
+	defer func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		srv.Stop(ctx)
+	}()
+
+	resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/metrics", port)) //nolint:gosec
+	s.Require().NoError(err)
+	defer func() { _ = resp.Body.Close() }()
+	body, err := io.ReadAll(resp.Body)
+	s.Require().NoError(err)
+
+	for _, want := range []string{
+		"\nosapi_behavior_calls_total{",
+		"\nosapi_behavior_changes_total{",
+		"\nosapi_behavior_duration_seconds_bucket{",
+	} {
+		s.Contains(string(body), want, "the name that the docs give")
+	}
+	s.NotContains(string(body), "osapi_osapi_", "the namespace once")
 }
 
 func (s *ServerPublicTestSuite) TestNewPrometheusError() {
