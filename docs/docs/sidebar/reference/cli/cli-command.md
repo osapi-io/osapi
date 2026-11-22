@@ -37,6 +37,21 @@ List, describe and validate the local commands, and print their DSL.
 | ------ | ------ | -------- | ----------------------------------------------------- |
 | --name | string | required | The command path of the group, such as token or agent |
 
+## [osapi cli command method get](../../usage/cli/cli/command/method/get.md)
+
+|             |                                                                                     |
+| ----------- | ----------------------------------------------------------------------------------- |
+| Method      | method get                                                                          |
+| Description | Show one method of a local group: its command, flags, output, examples and refusals |
+| Refuses     | no name, no method                                                                  |
+
+### Flags (2)
+
+| FLAG     | TYPE   | VALIDATE | HELP                                                              |
+| -------- | ------ | -------- | ----------------------------------------------------------------- |
+| --name   | string | required | The command path of the local group, such as token                |
+| --method | string | required | The method, such as list or roles get, from osapi cli command get |
+
 ## [osapi cli command create](../../usage/cli/cli/command/create.md)
 
 |             |                                                          |

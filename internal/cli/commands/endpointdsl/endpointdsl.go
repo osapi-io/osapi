@@ -47,6 +47,7 @@ var Group = command.Register(command.Define(
 		"Print the endpoint DSL: each option, method, refinement, error and field tag",
 	),
 	command.SubDoc("openapi", "Print the OpenAPI spec of an endpoint group"),
+	command.SubDoc("method", "Show one method of an endpoint group in full"),
 	command.Method[ListInput, ListOutput]("list").
 		Short("List the endpoint groups this binary has").
 		Example("").
@@ -60,6 +61,18 @@ var Group = command.Register(command.Define(
 		Example("--name agent --json").
 		Fails("no name", GetInput{}).
 		Handle(Get),
+	command.Method[MethodInput, MethodOutput]("get").
+		Sub("method").
+		Short("Show one method of an endpoint group: its route, fields, output, examples and errors").
+		Long("Each input field shows where the request carries it: the path, the query,\n"+
+			"a form or the body. `--json` has the JSON Schema of the input and the\n"+
+			"output. `osapi behavior method get` shows a method of a behavior the same\n"+
+			"way.").
+		Example("--name agent --method drain").
+		Example("--name agent --method drain --json").
+		Fails("no name", MethodInput{Method: "list"}).
+		Fails("no method", MethodInput{Name: "agent"}).
+		Handle(MethodGet),
 	command.Method[GetInput, OpenAPIOutput]("get").
 		Sub("openapi").
 		Short("Print the group's part of the OpenAPI spec, as YAML").

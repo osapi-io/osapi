@@ -113,6 +113,14 @@ type Telemetry struct {
 }
 
 // MethodInput names the behavior and its method.
+// OpenAPIOutput is a served behavior's part of the OpenAPI spec, as YAML,
+// which prints as it is.
+type OpenAPIOutput struct {
+	Name string `json:"name"`
+	YAML string `json:"yaml" render:"body"`
+}
+
+// MethodInput is the behavior and the method to show.
 type MethodInput struct {
 	Name   string `json:"name"   validate:"required" doc:"The behavior, from osapi behavior list"`
 	Method string `json:"method" validate:"required" doc:"The method, from osapi behavior get"`

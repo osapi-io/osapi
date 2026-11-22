@@ -21,6 +21,8 @@
 package endpointdsl
 
 import (
+	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/cli/commands/behaviordsl"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/guide"
 )
@@ -70,6 +72,67 @@ type Method struct {
 	Path        string `json:"path"`
 	Permission  string `json:"permission"   none:"none (public)"`
 	OperationID string `json:"operation_id"                      label:"Operation ID"`
+}
+
+// MethodInput is the group and the method to show.
+type MethodInput struct {
+	Name   string `json:"name"   validate:"required" doc:"The endpoint group, such as agent"`
+	Method string `json:"method" validate:"required" doc:"The method, from osapi controller endpoint get"`
+}
+
+// MethodOutput is one method of a group in full: its route, permission and
+// command, its input fields with where each comes from and its constraints,
+// its output, its examples and what it refuses. It is the shape of osapi
+// behavior method get. --json has the JSON Schema of the input and the
+// output.
+type MethodOutput struct {
+	_           struct{}         `title:"Method"`
+	Name        string           `               json:"name"`
+	Doc         string           `               json:"doc"                  label:"Description"`
+	Long        string           `               json:"long,omitempty"       label:"Detail"`
+	HTTPMethod  string           `               json:"http_method"          label:"HTTP"`
+	Route       string           `               json:"route"`
+	Permission  string           `               json:"permission,omitempty"                      none:"none (public)"`
+	AdminOnly   bool             `               json:"admin_only"           label:"Admin only"`
+	OperationID string           `               json:"operation_id"         label:"Operation ID"`
+	Command     string           `               json:"command"`
+	InputType   string           `               json:"input_type"           label:"Input type"`
+	OutputType  string           `               json:"output_type"          label:"Output type"  none:"none: it answers with no body"`
+	Fields      []Field          `               json:"fields"               label:"Input"                                             empty:"The method takes no input."`
+	Results     []Result         `               json:"results"              label:"Output"`
+	Examples    []Example        `               json:"examples"                                                                       empty:"The method has no example."`
+	Refuses     []string         `               json:"refuses,omitempty"`
+	Errors      []Error          `               json:"errors,omitempty"`
+	Input       *behavior.Schema `               json:"input"                                                                                                             render:"-"`
+	Output      *behavior.Schema `               json:"output"                                                                                                            render:"-"`
+}
+
+// Field is one input field: where the request carries it, its type and its
+// constraints.
+type Field struct {
+	Field       string `json:"field"`
+	In          string `json:"in"`
+	Type        string `json:"type"`
+	Required    bool   `json:"required"`
+	Constraints string `json:"constraints"`
+	Description string `json:"description"`
+}
+
+// Result is one field of the output.
+type Result = behaviordsl.Result
+
+// Example is one example of the method's command: its flags and what it
+// shows.
+type Example struct {
+	Flags string `json:"flags" none:"(none)"`
+	Doc   string `json:"doc"`
+}
+
+// Error is an error that the method maps to a status, with its reason.
+type Error struct {
+	Code   int    `json:"code"`
+	Reason string `json:"reason"`
+	Doc    string `json:"doc"`
 }
 
 // OpenAPIOutput is a group's part of the OpenAPI spec, as YAML, which

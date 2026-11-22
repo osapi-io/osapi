@@ -42,6 +42,7 @@ var Group = command.Register(command.Define(
 		"you run."),
 	command.Uses[Deps](),
 	command.SubDoc("method", "Show one method of a behavior in full"),
+	command.SubDoc("openapi", "Print a served behavior's part of the OpenAPI spec"),
 	command.SubDoc(
 		"spec",
 		"Print the behavior DSL: each option, method, example part and field tag",
@@ -82,6 +83,15 @@ var Group = command.Register(command.Define(
 		Fails("no name", MethodInput{Method: "get"}).
 		Fails("no method", MethodInput{Name: "sysctl"}).
 		Handle(MethodGet),
+	command.Method[GetInput, OpenAPIOutput]("get").
+		Sub("openapi").
+		Short("Print a served behavior's part of the OpenAPI spec, as YAML").
+		Long("It prints the spec as the definition makes it: the part that go generate\n"+
+			"writes to the behavior's gen/api.yaml, and that the join puts in the spec of\n"+
+			"the API. An internal behavior serves no route, so it has none.").
+		Example("--name sysctl").
+		Fails("no name", GetInput{}).
+		Handle(OpenAPIGet),
 	command.Method[CreateInput, CreateOutput]("create").
 		Short("Write a new behavior's standard layout in an osapi checkout").
 		Long("Before you change anything, the result builds, validates and passes every\n"+

@@ -27,10 +27,12 @@ import (
 )
 
 // Deps is what the methods use: the behaviors, their problems, the config
-// keys their settings are, and the spec of the DSL.
+// keys their settings are, the spec of the DSL, and what makes a served
+// behavior's part of the OpenAPI spec.
 type Deps struct {
 	Behaviors func() []*behavior.Behavior
 	Validate  func() []behavior.Problem
 	Keys      func() []config.Key
 	Spec      func() guide.Spec
+	OpenAPI   func(b *behavior.Behavior) (any, error)
 }

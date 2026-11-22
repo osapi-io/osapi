@@ -32,6 +32,21 @@ var endpointGetCmd = &cobra.Command{
 	Use:   "get",
 }
 
+var endpointMethodGetCmd = &cobra.Command{
+	Annotations: map[string]string{clicommand.SubKey: "method"},
+	Args:        cobra.NoArgs,
+	Example:     "  osapi controller endpoint method get --name agent --method drain\n  osapi controller endpoint method get --name agent --method drain --json",
+	Long:        "Each input field shows where the request carries it: the path, the query,\na form or the body. `--json` has the JSON Schema of the input and the\noutput. `osapi behavior method get` shows a method of a behavior the same\nway.",
+	RunE: func(cmd *cobra.Command, _ []string) error {
+		name, _ := cmd.Flags().GetString("name")
+		method, _ := cmd.Flags().GetString("method")
+
+		return clicommand.Run(cmd, endpointdsl.Group, "method get", endpointdsl.MethodInput{Name: name, Method: method})
+	},
+	Short: "Show one method of an endpoint group: its route, fields, output, examples and errors",
+	Use:   "get",
+}
+
 var endpointOpenapiGetCmd = &cobra.Command{
 	Annotations: map[string]string{clicommand.SubKey: "openapi"},
 	Args:        cobra.NoArgs,
@@ -86,11 +101,15 @@ var endpointValidateCmd = &cobra.Command{
 func init() {
 	endpointGetCmd.Flags().String("name", "", "The endpoint group, such as agent")
 	_ = endpointGetCmd.MarkFlagRequired("name")
+	endpointMethodGetCmd.Flags().String("name", "", "The endpoint group, such as agent")
+	_ = endpointMethodGetCmd.MarkFlagRequired("name")
+	endpointMethodGetCmd.Flags().String("method", "", "The method, from osapi controller endpoint get")
+	_ = endpointMethodGetCmd.MarkFlagRequired("method")
 	endpointOpenapiGetCmd.Flags().String("name", "", "The endpoint group, such as agent")
 	_ = endpointOpenapiGetCmd.MarkFlagRequired("name")
 	endpointCreateCmd.Flags().String("name", "", "The group's name: its path segment and CLI group")
 	_ = endpointCreateCmd.MarkFlagRequired("name")
 	endpointCreateCmd.Flags().String("description", "", "What the group is, in one line")
 	_ = endpointCreateCmd.MarkFlagRequired("description")
-	clicommand.AddCommands(endpointdsl.Group, endpointListCmd, endpointGetCmd, endpointOpenapiGetCmd, endpointCreateCmd, endpointSpecGetCmd, endpointValidateCmd)
+	clicommand.AddCommands(endpointdsl.Group, endpointListCmd, endpointGetCmd, endpointMethodGetCmd, endpointOpenapiGetCmd, endpointCreateCmd, endpointSpecGetCmd, endpointValidateCmd)
 }

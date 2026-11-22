@@ -33,6 +33,21 @@ var commandGetCmd = &cobra.Command{
 	Use:   "get",
 }
 
+var commandMethodGetCmd = &cobra.Command{
+	Annotations: map[string]string{clicommand.SubKey: "method"},
+	Args:        cobra.NoArgs,
+	Example:     "  osapi cli command method get --name token --method generate\n  osapi cli command method get --name token --method generate --json",
+	Long:        "Each flag has the validate tag of its field. `--json` has the JSON Schema of\nthe output. `osapi behavior method get` and `osapi controller endpoint\nmethod get` show a method of a behavior and of an endpoint group the same\nway.",
+	RunE: func(cmd *cobra.Command, _ []string) error {
+		name, _ := cmd.Flags().GetString("name")
+		method, _ := cmd.Flags().GetString("method")
+
+		return clicommand.Run(cmd, commanddsl.Group, "method get", commanddsl.MethodInput{Name: name, Method: method})
+	},
+	Short: "Show one method of a local group: its command, flags, output, examples and refusals",
+	Use:   "get",
+}
+
 var commandCreateCmd = &cobra.Command{
 	Args:    cobra.NoArgs,
 	Example: "  osapi cli command create --name widget --description \"The widgets of this host\"",
@@ -73,9 +88,13 @@ var commandValidateCmd = &cobra.Command{
 func init() {
 	commandGetCmd.Flags().String("name", "", "The command path of the group, such as token or agent")
 	_ = commandGetCmd.MarkFlagRequired("name")
+	commandMethodGetCmd.Flags().String("name", "", "The command path of the local group, such as token")
+	_ = commandMethodGetCmd.MarkFlagRequired("name")
+	commandMethodGetCmd.Flags().String("method", "", "The method, such as list or roles get, from osapi cli command get")
+	_ = commandMethodGetCmd.MarkFlagRequired("method")
 	commandCreateCmd.Flags().String("name", "", "The group's name: its command under osapi")
 	_ = commandCreateCmd.MarkFlagRequired("name")
 	commandCreateCmd.Flags().String("description", "", "What the group is, in one line")
 	_ = commandCreateCmd.MarkFlagRequired("description")
-	clicommand.AddCommands(commanddsl.Group, commandListCmd, commandGetCmd, commandCreateCmd, commandSpecGetCmd, commandValidateCmd)
+	clicommand.AddCommands(commanddsl.Group, commandListCmd, commandGetCmd, commandMethodGetCmd, commandCreateCmd, commandSpecGetCmd, commandValidateCmd)
 }
