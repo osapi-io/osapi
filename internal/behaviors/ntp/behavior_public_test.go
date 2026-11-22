@@ -18,22 +18,35 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package ntp
+package ntp_test
 
 import (
-	"context"
+	"testing"
 
-	"github.com/osapi-io/osapi/internal/validation"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
+	"github.com/osapi-io/osapi/internal/behaviors/ntp"
 )
 
-// validateHostname validates a hostname path parameter using the shared
-// validator. Returns the error message and false if invalid.
-//
-// This exists because oapi-codegen does not generate validate tags on
-// path parameters in strict-server mode (upstream limitation).
-func validateHostname(
-	ctx context.Context,
-	hostname string,
-) (string, bool) {
-	return validation.Var(ctx, hostname, "required,min=1,valid_target")
+type BehaviorPublicTestSuite struct {
+	suite.Suite
+}
+
+func (s *BehaviorPublicTestSuite) TestBehavior() {
+	s.Same(ntp.Behavior, behavior.Lookup("ntp"))
+	s.Empty(behavior.ValidateBehavior(ntp.Behavior))
+}
+
+// TestExamples runs every example and refusal on a fake host with each
+// platform's provider, through the methods, and checks what each changes.
+func (s *BehaviorPublicTestSuite) TestExamples() {
+	behaviortest.Run(s.T(), ntp.Behavior)
+}
+
+func TestBehaviorPublicTestSuite(
+	t *testing.T,
+) {
+	suite.Run(t, new(BehaviorPublicTestSuite))
 }

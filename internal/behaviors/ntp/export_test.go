@@ -20,47 +20,9 @@
 
 package ntp
 
-import (
-	"context"
-
-	"github.com/osapi-io/osapi/internal/provider"
+// The parsers and the builder, for the tests of debian.go.
+var (
+	ParseTracking = parseTracking
+	ParseSources  = parseSources
+	NewDebian     = newDebian
 )
-
-// Linux implements the Provider interface for generic Linux.
-// All methods return ErrUnsupported as this is a generic Linux stub.
-type Linux struct{}
-
-// NewLinuxProvider factory to create a new Linux instance.
-func NewLinuxProvider() *Linux {
-	return &Linux{}
-}
-
-// Get returns ErrUnsupported on generic Linux.
-func (l *Linux) Get(
-	_ context.Context,
-) (*Status, error) {
-	return nil, provider.ErrUnsupported
-}
-
-// Create returns ErrUnsupported on generic Linux.
-func (l *Linux) Create(
-	_ context.Context,
-	_ Config,
-) (*CreateResult, error) {
-	return nil, provider.ErrUnsupported
-}
-
-// Update returns ErrUnsupported on generic Linux.
-func (l *Linux) Update(
-	_ context.Context,
-	_ Config,
-) (*UpdateResult, error) {
-	return nil, provider.ErrUnsupported
-}
-
-// Delete returns ErrUnsupported on generic Linux.
-func (l *Linux) Delete(
-	_ context.Context,
-) (*DeleteResult, error) {
-	return nil, provider.ErrUnsupported
-}

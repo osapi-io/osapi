@@ -18,48 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package ntp
+// Package mocks holds the generated double of the ntp provider, for the
+// methods' tests.
+package mocks
 
-import (
-	"log/slog"
-
-	"github.com/labstack/echo/v5"
-
-	"github.com/osapi-io/osapi/internal/authtoken"
-	"github.com/osapi-io/osapi/internal/controller/api"
-	gen "github.com/osapi-io/osapi/internal/controller/api/node/ntp/gen"
-	"github.com/osapi-io/osapi/internal/job/client"
-)
-
-// Handler returns NTP route registration functions.
-func Handler(
-	logger *slog.Logger,
-	jobClient client.JobClient,
-	signingKey string,
-	customRoles authtoken.CustomRoles,
-) []func(e *echo.Echo) {
-	var tokenManager api.TokenValidator = authtoken.New(logger)
-
-	ntpHandler := New(logger, jobClient)
-
-	strictHandler := gen.NewStrictHandler(
-		ntpHandler,
-		[]gen.StrictMiddlewareFunc{
-			func(handler gen.StrictHandlerFunc, _ string) gen.StrictHandlerFunc {
-				return gen.StrictHandlerFunc(api.ScopeMiddleware(
-					api.StrictHandlerFunc(handler),
-					tokenManager,
-					signingKey,
-					string(gen.BearerAuthScopes),
-					customRoles,
-				))
-			},
-		},
-	)
-
-	return []func(e *echo.Echo){
-		func(e *echo.Echo) {
-			gen.RegisterHandlers(e, strictHandler)
-		},
-	}
-}
+//go:generate go tool go.uber.org/mock/mockgen -source=../provider.go -destination=provider.gen.go -package=mocks

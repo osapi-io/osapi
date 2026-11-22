@@ -20,20 +20,46 @@
 
 package ntp
 
-// ParseTracking exposes parseTracking for testing.
-var ParseTracking = parseTracking
+import "context"
 
-// ParseSources exposes parseSources for testing.
-var ParseSources = parseSources
+// Get reads chrony's sync status and its sources.
+func Get(
+	ctx context.Context,
+	p Provider,
+	_ GetInput,
+) (Status, error) {
+	return p.Get(ctx)
+}
 
-// ParseOffset exposes parseOffset for testing.
-var ParseOffset = parseOffset
+// Create manages the servers that chrony uses.
+func Create(
+	ctx context.Context,
+	p Provider,
+	in CreateInput,
+) (Result, error) {
+	changed, err := p.Create(ctx, in.Servers)
 
-// ParseReferenceID exposes parseReferenceID for testing.
-var ParseReferenceID = parseReferenceID
+	return Result{Changed: changed}, err
+}
 
-// GenerateContent exposes generateContent for testing.
-var GenerateContent = generateContent
+// Update replaces the servers that osapi manages.
+func Update(
+	ctx context.Context,
+	p Provider,
+	in UpdateInput,
+) (Result, error) {
+	changed, err := p.Update(ctx, in.Servers)
 
-// ComputeSHA256 exposes computeSHA256 for testing.
-var ComputeSHA256 = computeSHA256
+	return Result{Changed: changed}, err
+}
+
+// Delete stops managing the servers.
+func Delete(
+	ctx context.Context,
+	p Provider,
+	_ DeleteInput,
+) (Result, error) {
+	changed, err := p.Delete(ctx)
+
+	return Result{Changed: changed}, err
+}
