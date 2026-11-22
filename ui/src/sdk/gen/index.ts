@@ -9,6 +9,7 @@ export * from './dns-api-network-dns-operations/dns-api-network-dns-operations';
 export * from './docker-management-api-docker-exec/docker-management-api-docker-exec';
 export * from './docker-management-api-docker-image/docker-management-api-docker-image';
 export * from './docker-management-api-docker-operations/docker-management-api-docker-operations';
+export * from './entry-api-log-entry-operations/entry-api-log-entry-operations';
 export * from './facts-api-facts/facts-api-facts';
 export * from './file-management-api-file-operations/file-management-api-file-operations';
 export * from './group-api-group-operations/group-api-group-operations';
@@ -17,7 +18,6 @@ export * from './hostname-api-hostname-operations/hostname-api-hostname-operatio
 export * from './interface-api-network-interface-operations/interface-api-network-interface-operations';
 export * from './job-management-api-job-operations/job-management-api-job-operations';
 export * from './load-api-load-operations/load-api-load-operations';
-export * from './log-management-api-log-operations/log-management-api-log-operations';
 export * from './memory-api-memory-operations/memory-api-memory-operations';
 export * from './nats-api-nats/nats-api-nats';
 export * from './network-management-api-network-operations/network-management-api-network-operations';
@@ -30,6 +30,7 @@ export * from './process-management-api-process-operations/process-management-ap
 export * from './route-api-route-operations/route-api-route-operations';
 export * from './schedule-management-api-schedule-operations/schedule-management-api-schedule-operations';
 export * from './service-api-service-operations/service-api-service-operations';
+export * from './source-api-log-source-operations/source-api-log-source-operations';
 export * from './status-api-status-operations/status-api-status-operations';
 export * from './sysctl-api-sysctl-operations/sysctl-api-sysctl-operations';
 export * from './telemetry-api-telemetry/telemetry-api-telemetry';

@@ -117,7 +117,6 @@ func (s *ProcessorProcessPublicTestSuite) TestProcessProcessOperation() {
 				nil,
 				processProvider,
 				nil,
-				nil,
 				slog.Default(),
 			)
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
@@ -197,7 +196,6 @@ func (s *ProcessorProcessPublicTestSuite) TestProcessProcessList() {
 				nil,
 				nil,
 				tt.setupMock(),
-				nil,
 				nil,
 				slog.Default(),
 			)
@@ -288,7 +286,6 @@ func (s *ProcessorProcessPublicTestSuite) TestProcessProcessGet() {
 				nil,
 				tt.setupMock(),
 				nil,
-				nil,
 				slog.Default(),
 			)
 			tt.validateFunc(processor(context.Background(), tt.jobRequest))
@@ -377,7 +374,6 @@ func (s *ProcessorProcessPublicTestSuite) TestProcessProcessSignal() {
 				nil,
 				nil,
 				tt.setupMock(),
-				nil,
 				nil,
 				slog.Default(),
 			)

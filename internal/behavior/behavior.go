@@ -148,10 +148,13 @@ type GroupName string
 // GroupNetwork holds the network behaviors: dns, iface and route.
 const GroupNetwork GroupName = "network"
 
+// GroupLog holds the journal behaviors: entry and source.
+const GroupLog GroupName = "log"
+
 // KnownGroups are the groups that a behavior can be Under. Add a constant
 // here to make a new group.
 func KnownGroups() []GroupName {
-	return []GroupName{GroupNetwork}
+	return []GroupName{GroupNetwork, GroupLog}
 }
 
 // Under nests a behavior inside a group: Under(GroupNetwork) puts dns at

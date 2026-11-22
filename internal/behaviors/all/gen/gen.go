@@ -9,6 +9,8 @@ import (
 	_ "github.com/osapi-io/osapi/internal/behaviors/group/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/hostname/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/load/gen"
+	_ "github.com/osapi-io/osapi/internal/behaviors/log/entry/gen"
+	_ "github.com/osapi-io/osapi/internal/behaviors/log/source/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/memory/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/network/dns/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/network/iface/gen"

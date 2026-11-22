@@ -37,7 +37,6 @@ import (
 	commandAPI "github.com/osapi-io/osapi/internal/controller/api/node/command"
 	dockerAPI "github.com/osapi-io/osapi/internal/controller/api/node/container"
 	nodeFileAPI "github.com/osapi-io/osapi/internal/controller/api/node/file"
-	logAPI "github.com/osapi-io/osapi/internal/controller/api/node/log"
 	networkAPI "github.com/osapi-io/osapi/internal/controller/api/node/network"
 	ntpAPI "github.com/osapi-io/osapi/internal/controller/api/node/ntp"
 	powerAPI "github.com/osapi-io/osapi/internal/controller/api/node/power"
@@ -133,7 +132,6 @@ func handlers(
 	handlers = append(handlers, processAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, userAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, certificateAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
-	handlers = append(handlers, logAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 	handlers = append(handlers, nodeFileAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 
 	if d.cfg.Controller.UI.UIEnabled() {

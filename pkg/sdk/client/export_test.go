@@ -354,20 +354,6 @@ func CertificateCAMutationCollectionFromGen(
 	return certificateCAMutationCollectionFromGen(input)
 }
 
-// LogCollectionFromGen exposes the private logCollectionFromGen for testing.
-func LogCollectionFromGen(
-	input *gen.LogCollectionResponse,
-) Collection[LogEntryResult] {
-	return logCollectionFromGen(input)
-}
-
-// LogEntryInfoFromGen exposes the private logEntryInfoFromGen for testing.
-func LogEntryInfoFromGen(
-	input gen.LogEntryInfo,
-) LogEntry {
-	return logEntryInfoFromGen(input)
-}
-
 // ExportNewResponse exposes newResponse for testing.
 func ExportNewResponse[T any](
 	data T,

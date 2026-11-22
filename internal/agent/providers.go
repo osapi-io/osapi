@@ -38,7 +38,6 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
-	logProv "github.com/osapi-io/osapi/internal/provider/node/log"
 	"github.com/osapi-io/osapi/internal/provider/node/memory"
 	ntpProv "github.com/osapi-io/osapi/internal/provider/node/ntp"
 	powerProv "github.com/osapi-io/osapi/internal/provider/node/power"
@@ -184,20 +183,6 @@ func (e hostEnv) user() userProv.Provider {
 		return userProv.NewDarwinProvider()
 	default:
 		return userProv.NewLinuxProvider()
-	}
-}
-
-func (e hostEnv) logs() logProv.Provider {
-	switch e.platform {
-	case "debian":
-		if e.container {
-			return logProv.NewLinuxProvider()
-		}
-		return logProv.NewDebianProvider(e.log, e.exec)
-	case "darwin":
-		return logProv.NewDarwinProvider()
-	default:
-		return logProv.NewLinuxProvider()
 	}
 }
 

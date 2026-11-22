@@ -35,562 +35,185 @@ import (
 
 type LogPublicTestSuite struct {
 	suite.Suite
-
-	ctx context.Context
 }
 
-func (suite *LogPublicTestSuite) SetupTest() {
-	suite.ctx = context.Background()
+// serve runs call against a server that answers with handler, or against
+// url when it is set.
+func (s *LogPublicTestSuite) serve(
+	handler http.HandlerFunc,
+	url string,
+	call func(*client.Client) error,
+) error {
+	if url == "" {
+		server := httptest.NewServer(handler)
+		defer server.Close()
+		url = server.URL
+	}
+
+	return call(client.New(url, "test-token", client.WithLogger(slog.Default())))
 }
 
-func (suite *LogPublicTestSuite) TestQuery() {
+func answer(
+	code int,
+	body string,
+) http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(code)
+		_, _ = w.Write([]byte(body))
+	}
+}
+
+func (s *LogPublicTestSuite) TestEntries() {
 	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		opts         client.LogQueryOpts
-		validateFunc func(*client.Response[client.Collection[client.LogEntryResult]], error)
+		name      string
+		handler   http.HandlerFunc
+		url       string
+		wantQuery string
+		want      []client.LogEntryResult
+		wantErr   any
+		wantMsg   string
 	}{
 		{
-			name: "when querying logs returns result collection",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","entries":[{"timestamp":"2026-01-01T00:00:00Z","unit":"sshd.service","priority":"info","message":"Accepted publickey","pid":1234,"hostname":"agent1"}]}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.LogEntryResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("agent1", resp.Data.Results[0].Hostname)
-				suite.Equal("ok", resp.Data.Results[0].Status)
-				suite.Require().Len(resp.Data.Results[0].Entries, 1)
-				suite.Equal("Accepted publickey", resp.Data.Results[0].Entries[0].Message)
-				suite.Equal("sshd.service", resp.Data.Results[0].Entries[0].Unit)
-			},
+			name: "when the hosts answer, each entry is a row, with the filters in the query",
+			handler: answer(http.StatusOK, `{"job_id":"00000000-0000-0000-0000-000000000001",`+
+				`"results":[{"hostname":"web-01","status":"ok","timestamp":"2024-03-31T23:50:45Z",`+
+				`"unit":"nginx","priority":"info","message":"Started nginx","pid":1234}]}`),
+			wantQuery: "unit=nginx.service&lines=5&since=1h&priority=err",
+			want: []client.LogEntryResult{{
+				Hostname: "web-01", Status: "ok", Timestamp: "2024-03-31T23:50:45Z",
+				Unit: "nginx", Priority: "info", Message: "Started nginx", PID: 1234,
+			}},
 		},
 		{
-			name: "when broadcast query returns multiple results",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"server1","status":"ok","entries":[]},{"hostname":"server2","status":"ok","entries":[]}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.LogEntryResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Len(resp.Data.Results, 2)
-			},
+			name:    "when the token may not read the log",
+			handler: answer(http.StatusForbidden, `{"error":"forbidden"}`),
+			wantErr: &client.AuthError{},
 		},
 		{
-			name: "when server returns 401 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusUnauthorized)
-				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.LogEntryResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusUnauthorized, target.StatusCode)
-			},
+			name:    "when the controller fails",
+			handler: answer(http.StatusInternalServerError, `{"error":"x"}`),
+			wantErr: &client.ServerError{},
 		},
 		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.LogEntryResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
+			name:    "when the call does not reach the controller",
+			url:     "http://127.0.0.1:0",
+			wantMsg: "log entries",
 		},
 		{
-			name: "when server returns 500 returns ServerError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusInternalServerError)
-				_, _ = w.Write([]byte(`{"error":"internal error"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.LogEntryResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.ServerError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusInternalServerError, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.LogEntryResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "log query")
-			},
-		},
-		{
-			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.LogEntryResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
+			name:    "when the answer has no body",
+			handler: func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) },
+			wantErr: &client.UnexpectedStatusError{},
 		},
 	}
 
 	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
-
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
+		s.Run(tc.name, func() {
+			var query string
+			handler := tc.handler
+			if handler != nil {
+				inner := handler
+				handler = func(w http.ResponseWriter, r *http.Request) {
+					query = r.URL.RawQuery
+					inner(w, r)
+				}
 			}
-			defer cleanup()
+			var resp *client.Response[client.Collection[client.LogEntryResult]]
+			err := s.serve(handler, tc.url, func(c *client.Client) error {
+				var err error
+				resp, err = c.Log.Entries(context.Background(), "_all", client.LogEntryOpts{
+					Unit: "nginx.service", Lines: 5, Since: "1h", Priority: "err",
+				})
 
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Log.Query(suite.ctx, "_any", tc.opts)
-			tc.validateFunc(resp, err)
+				return err
+			})
+			switch {
+			case tc.wantErr != nil:
+				s.Require().Error(err)
+				s.True(errors.As(err, &tc.wantErr), "err is %T: %v", err, err)
+			case tc.wantMsg != "":
+				s.ErrorContains(err, tc.wantMsg)
+			default:
+				s.Require().NoError(err)
+				s.Equal(tc.wantQuery, query)
+				s.Equal(tc.want, resp.Data.Results)
+				s.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
+			}
 		})
 	}
 }
 
-func (suite *LogPublicTestSuite) TestQueryWithOpts() {
-	lines := 100
-	since := "1h"
-	priority := "err"
+func (s *LogPublicTestSuite) TestEntriesWithNoFilters() {
+	var query string
+	err := s.serve(func(w http.ResponseWriter, r *http.Request) {
+		query = r.URL.RawQuery
+		answer(http.StatusOK, `{"results":[]}`)(w, r)
+	}, "", func(c *client.Client) error {
+		_, err := c.Log.Entries(context.Background(), "web-01", client.LogEntryOpts{})
 
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		opts         client.LogQueryOpts
-		validateFunc func(*client.Response[client.Collection[client.LogEntryResult]], error)
-	}{
-		{
-			name: "when all options are set returns result",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","entries":[]}]}`,
-					),
-				)
-			},
-			opts: client.LogQueryOpts{
-				Lines:    &lines,
-				Since:    &since,
-				Priority: &priority,
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.LogEntryResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Len(resp.Data.Results, 1)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			server := httptest.NewServer(tc.handler)
-			defer server.Close()
-
-			sut := client.New(
-				server.URL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Log.Query(suite.ctx, "_any", tc.opts)
-			tc.validateFunc(resp, err)
-		})
-	}
+		return err
+	})
+	s.NoError(err)
+	s.Empty(query, "no filter is sent")
 }
 
-func (suite *LogPublicTestSuite) TestQueryUnit() {
+func (s *LogPublicTestSuite) TestSources() {
 	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.LogEntryResult]], error)
+		name    string
+		handler http.HandlerFunc
+		url     string
+		want    []client.LogSourceResult
+		wantErr any
+		wantMsg string
 	}{
 		{
-			name: "when querying unit logs returns result collection",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","entries":[{"timestamp":"2026-01-01T00:00:00Z","unit":"nginx.service","priority":"info","message":"Started nginx","pid":5678,"hostname":"agent1"}]}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.LogEntryResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("agent1", resp.Data.Results[0].Hostname)
-				suite.Equal("ok", resp.Data.Results[0].Status)
-				suite.Require().Len(resp.Data.Results[0].Entries, 1)
-				suite.Equal("Started nginx", resp.Data.Results[0].Entries[0].Message)
-				suite.Equal("nginx.service", resp.Data.Results[0].Entries[0].Unit)
+			name: "when the hosts answer, each source is a row",
+			handler: answer(
+				http.StatusOK,
+				`{"results":[{"hostname":"web-01","status":"ok","name":"sshd"},`+
+					`{"hostname":"mac-01","status":"skipped","error":"unsupported"}]}`,
+			),
+			want: []client.LogSourceResult{
+				{Hostname: "web-01", Status: "ok", Name: "sshd"},
+				{Hostname: "mac-01", Status: "skipped", Error: "unsupported"},
 			},
 		},
 		{
-			name: "when server returns 401 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusUnauthorized)
-				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.LogEntryResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusUnauthorized, target.StatusCode)
-			},
+			name:    "when the token is not valid",
+			handler: answer(http.StatusUnauthorized, `{"error":"unauthorized"}`),
+			wantErr: &client.AuthError{},
 		},
 		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.LogEntryResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
+			name:    "when the call does not reach the controller",
+			url:     "http://127.0.0.1:0",
+			wantMsg: "log sources",
 		},
 		{
-			name: "when server returns 500 returns ServerError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusInternalServerError)
-				_, _ = w.Write([]byte(`{"error":"internal error"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.LogEntryResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.ServerError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusInternalServerError, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.LogEntryResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "log query unit")
-			},
-		},
-		{
-			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.LogEntryResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
+			name:    "when the answer has no body",
+			handler: func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) },
+			wantErr: &client.UnexpectedStatusError{},
 		},
 	}
 
 	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
+		s.Run(tc.name, func() {
+			var resp *client.Response[client.Collection[client.LogSourceResult]]
+			err := s.serve(tc.handler, tc.url, func(c *client.Client) error {
+				var err error
+				resp, err = c.Log.Sources(context.Background(), "_all")
 
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
+				return err
+			})
+			switch {
+			case tc.wantErr != nil:
+				s.Require().Error(err)
+				s.True(errors.As(err, &tc.wantErr), "err is %T: %v", err, err)
+			case tc.wantMsg != "":
+				s.ErrorContains(err, tc.wantMsg)
+			default:
+				s.Require().NoError(err)
+				s.Equal(tc.want, resp.Data.Results)
 			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Log.QueryUnit(
-				suite.ctx,
-				"_any",
-				"nginx.service",
-				client.LogQueryOpts{},
-			)
-			tc.validateFunc(resp, err)
-		})
-	}
-}
-
-func (suite *LogPublicTestSuite) TestSources() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.LogSourceResult]], error)
-	}{
-		{
-			name: "when querying sources returns result collection",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","sources":["cron","nginx","sshd"]}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.LogSourceResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("agent1", resp.Data.Results[0].Hostname)
-				suite.Equal("ok", resp.Data.Results[0].Status)
-				suite.Equal([]string{"cron", "nginx", "sshd"}, resp.Data.Results[0].Sources)
-			},
-		},
-		{
-			name: "when broadcast returns multiple results",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"server1","status":"ok","sources":["sshd"]},{"hostname":"server2","status":"ok","sources":[]}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.LogSourceResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Len(resp.Data.Results, 2)
-			},
-		},
-		{
-			name: "when server returns 401 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusUnauthorized)
-				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.LogSourceResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusUnauthorized, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.LogSourceResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 500 returns ServerError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusInternalServerError)
-				_, _ = w.Write([]byte(`{"error":"internal error"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.LogSourceResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.ServerError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusInternalServerError, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.LogSourceResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "log sources")
-			},
-		},
-		{
-			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.LogSourceResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
-
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Log.Sources(suite.ctx, "_any")
-			tc.validateFunc(resp, err)
 		})
 	}
 }

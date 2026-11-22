@@ -313,7 +313,6 @@ func buildRegistry(
 	powerProvider := e.power()
 	processProvider := e.process()
 	userProvider := e.user()
-	logProvider := e.logs()
 	pingProvider := e.ping()
 	commandProvider := command.New(e.log, e.exec)
 	dockerProvider := e.docker(ctx)
@@ -329,7 +328,6 @@ func buildRegistry(
 			powerProvider,
 			processProvider,
 			userProvider,
-			logProvider,
 			e.log,
 		),
 		hostProvider,
@@ -340,7 +338,6 @@ func buildRegistry(
 		powerProvider,
 		processProvider,
 		userProvider,
-		logProvider,
 	)
 
 	r.Register(

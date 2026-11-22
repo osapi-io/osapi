@@ -18,12 +18,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates log management: query journal entries and
-// query entries scoped to a specific systemd unit.
+// Package main reads the systemd journal of a host: its newest entries, the
+// sources that wrote them, and the entries of one systemd unit.
 //
-// All responses return Collection[LogEntryResult] with per-host results
-// when targeting broadcast targets (_all, _any) or a single hostname. Use
-// .Data.Results to iterate over the entries.
+// Each response is a Collection with one row for each entry, or source, of
+// each host. A host that skipped or failed has one row with its error.
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run log.go
 package main
@@ -52,73 +51,47 @@ func logExample() {
 	ctx := context.Background()
 	hostname := "_any"
 
-	// Query the last 10 journal entries from the target host.
-	// Returns Collection[LogEntryResult] with per-host results.
-	fmt.Println("=== Querying journal entries ===")
-	lines := 10
-	queryResp, err := c.Log.Query(ctx, hostname, client.LogQueryOpts{
-		Lines: &lines,
-	})
+	// The 10 newest entries of each host's journal.
+	fmt.Println("=== The newest entries ===")
+	entries, err := c.Log.Entries(ctx, hostname, client.LogEntryOpts{Lines: 10})
 	if err != nil {
-		log.Fatalf("log query failed: %v", err)
+		log.Fatalf("log entries failed: %v", err)
 	}
-
-	for _, r := range queryResp.Data.Results {
+	for _, r := range entries.Data.Results {
 		if r.Error != "" {
 			fmt.Printf("  %s: ERROR %s\n", r.Hostname, r.Error)
 			continue
 		}
-		fmt.Printf("  %s: %d entries\n", r.Hostname, len(r.Entries))
-		for _, e := range r.Entries[:min(3, len(r.Entries))] {
-			fmt.Printf("    [%s] %s %s: %s\n",
-				e.Timestamp, e.Priority, e.Unit, e.Message)
-		}
-		if len(r.Entries) > 3 {
-			fmt.Printf("    ... and %d more\n", len(r.Entries)-3)
-		}
+		fmt.Printf("  %s [%s] %s %s: %s\n",
+			r.Hostname, r.Timestamp, r.Priority, r.Unit, r.Message)
 	}
 
-	// List available log sources on the host.
-	fmt.Println("\n=== Listing log sources ===")
-	srcResp, err := c.Log.Sources(ctx, hostname)
+	// Each source that wrote to the journal.
+	fmt.Println("\n=== The sources ===")
+	sources, err := c.Log.Sources(ctx, hostname)
 	if err != nil {
 		log.Fatalf("log sources failed: %v", err)
 	}
-
-	for _, r := range srcResp.Data.Results {
+	for _, r := range sources.Data.Results {
 		if r.Error != "" {
 			fmt.Printf("  %s: ERROR %s\n", r.Hostname, r.Error)
 			continue
 		}
-		fmt.Printf("  %s: %d sources\n", r.Hostname, len(r.Sources))
-		for _, src := range r.Sources[:min(10, len(r.Sources))] {
-			fmt.Printf("    %s\n", src)
-		}
-		if len(r.Sources) > 10 {
-			fmt.Printf("    ... and %d more\n", len(r.Sources)-10)
-		}
+		fmt.Printf("  %s: %s\n", r.Hostname, r.Name)
 	}
 
-	// Query entries for the sshd systemd unit.
-	fmt.Println("\n=== Querying sshd.service entries ===")
-	unitResp, err := c.Log.QueryUnit(ctx, hostname, "sshd.service",
-		client.LogQueryOpts{Lines: &lines})
+	// The errors of one systemd unit in the last hour.
+	fmt.Println("\n=== The errors of sshd.service in the last hour ===")
+	unit, err := c.Log.Entries(ctx, hostname, client.LogEntryOpts{
+		Unit:     "sshd.service",
+		Since:    "1 hour ago",
+		Priority: "err",
+	})
 	if err != nil {
-		fmt.Printf("log unit query failed (sshd may not be running): %v\n",
-			err)
-		return
+		log.Fatalf("log entries of sshd.service failed: %v", err)
 	}
-
-	for _, r := range unitResp.Data.Results {
-		if r.Error != "" {
-			fmt.Printf("  %s: ERROR %s\n", r.Hostname, r.Error)
-			continue
-		}
-		fmt.Printf("  %s: %d sshd entries\n", r.Hostname, len(r.Entries))
-		for _, e := range r.Entries {
-			fmt.Printf("    [%s] pid=%d %s\n",
-				e.Priority, e.PID, e.Message)
-		}
+	for _, r := range unit.Data.Results {
+		fmt.Printf("  %s pid=%d %s\n", r.Hostname, r.PID, r.Message)
 	}
 }
 

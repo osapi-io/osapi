@@ -462,34 +462,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Log",
-      link: {
-        type: "doc",
-        id: "gen/api/log-management-api-log-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/get-node-log",
-          label: "Get system log entries",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-node-log-source",
-          label: "List log sources",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-node-log-unit",
-          label: "Get log entries for a systemd unit",
-          className: "api-method get",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Node/Network",
       link: {
         type: "doc",
@@ -782,6 +754,38 @@ const sidebar: SidebarsConfig = {
           type: "doc",
           id: "gen/api/get-node-load",
           label: "Get the load averages of the host",
+          className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Entry",
+      link: {
+        type: "doc",
+        id: "gen/api/entry-api-log-entry-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-log-entry",
+          label: "List the entries of the journal",
+          className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Source",
+      link: {
+        type: "doc",
+        id: "gen/api/source-api-log-source-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-log-source",
+          label: "List the sources of the journal",
           className: "api-method get",
         },
       ],

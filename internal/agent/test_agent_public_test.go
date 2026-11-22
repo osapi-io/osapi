@@ -94,7 +94,6 @@ func newTestAgent(
 			p.powerProvider,
 			nil,
 			nil,
-			nil,
 			logger,
 		),
 		p.hostProvider, p.diskProvider, p.memoryProvider, p.loadProvider,

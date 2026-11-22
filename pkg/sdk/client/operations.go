@@ -117,13 +117,6 @@ const (
 	OpSSHKeyRemove JobOperation = "node.sshKey.remove"
 )
 
-// Log operations.
-const (
-	OpLogQuery     JobOperation = "node.log.query"
-	OpLogQueryUnit JobOperation = "node.log.queryUnit"
-	OpLogSources   JobOperation = "node.log.sources"
-)
-
 // Certificate operations.
 const (
 	OpCertificateCAList   JobOperation = "certificate.ca.list"

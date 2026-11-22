@@ -55,7 +55,7 @@ func (s *ProvidersPublicTestSuite) TestProviders() {
 	areas := []string{
 		"host", "disk", "memory", "load", "ping", "cron",
 		"ntp", "power", "process", "user",
-		"logs", "certificate",
+		"certificate",
 	}
 
 	tests := []struct {
@@ -83,7 +83,6 @@ func (s *ProvidersPublicTestSuite) TestProviders() {
 			except: map[string]string{
 				"ntp":   "Linux",
 				"power": "Linux",
-				"logs":  "Linux",
 			},
 		},
 		{

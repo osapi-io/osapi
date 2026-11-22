@@ -20,7 +20,6 @@ import { DockerExecBlock } from "@/components/domain/docker-exec-block";
 import { NtpBlock } from "@/components/domain/ntp-block";
 import { PowerBlock } from "@/components/domain/power-block";
 import { ProcessSignalBlock } from "@/components/domain/process-signal-block";
-import { LogQueryBlock } from "@/components/domain/log-query-block";
 import { UserBlock } from "@/components/domain/user-block";
 import { UserPasswordBlock } from "@/components/domain/user-password-block";
 import { UserSSHKeyBlock } from "@/components/domain/user-ssh-key-block";
@@ -70,11 +69,6 @@ import {
   getNodeProcessByPid,
   postNodeProcessSignal,
 } from "@/sdk/gen/process-management-api-process-operations/process-management-api-process-operations";
-import {
-  getNodeLog,
-  getNodeLogSource,
-  getNodeLogUnit,
-} from "@/sdk/gen/log-management-api-log-operations/log-management-api-log-operations";
 import {
   postNodeContainerDocker,
   getNodeContainerDocker,
@@ -142,7 +136,6 @@ import {
   Tag,
   Power,
   Activity,
-  FileText,
   Network,
   GitBranch,
   Users,
@@ -178,7 +171,6 @@ const blockIcons: Record<
   // System
   "power-reboot": Power,
   "process-list": Activity,
-  "log-query": FileText,
   // Networking
   "dns-get": Server,
   "interface-list": Network,
@@ -533,23 +525,6 @@ export function Configure() {
               signal: block.data
                 .signal as import("@/sdk/gen/schemas").ProcessSignalRequestSignal,
             });
-            break;
-          case "log-query":
-            result = await getNodeLog(t, {
-              ...(block.data.lines ? { lines: Number(block.data.lines) } : {}),
-              ...(block.data.since
-                ? { since: block.data.since as string }
-                : {}),
-              ...(block.data.priority
-                ? { priority: block.data.priority as string }
-                : {}),
-            });
-            break;
-          case "log-sources":
-            result = await getNodeLogSource(t);
-            break;
-          case "log-query-unit":
-            result = await getNodeLogUnit(t, block.data.name as string);
             break;
           case "user-list":
             result = await getNodeUser(t);
@@ -942,7 +917,6 @@ export function Configure() {
           />
         );
       case "process-list":
-      case "log-sources":
         return null;
       case "process-get":
         return (
@@ -961,25 +935,6 @@ export function Configure() {
             data={block.data}
             onChange={(data) => updateBlockData(block.id, data)}
             onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-          />
-        );
-      case "log-query":
-        return (
-          <LogQueryBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-          />
-        );
-      case "log-query-unit":
-        return (
-          <SingleInputBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            field="name"
-            label="Unit Name"
-            placeholder="nginx.service"
           />
         );
       case "user-list":
