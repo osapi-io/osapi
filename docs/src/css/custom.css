@@ -18,6 +18,7 @@
   --osapi-raise: rgba(16, 24, 40, 0.03);
   --osapi-border: #e2e6ec;
   --osapi-border-hover: #c6ccd6;
+  --osapi-card-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
   --osapi-code-bg: rgba(16, 24, 40, 0.06);
 
   --ifm-color-primary: var(--osapi-text);
@@ -65,6 +66,9 @@
   --osapi-raise: rgba(255, 255, 255, 0.02);
   --osapi-border: rgba(255, 255, 255, 0.09);
   --osapi-border-hover: rgba(255, 255, 255, 0.2);
+  /* The UI's Card: a dark shadow and a faint light line at its top. */
+  --osapi-card-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.03);
   --osapi-code-bg: rgba(255, 255, 255, 0.06);
   --ifm-color-emphasis-300: var(--osapi-border);
   --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.06);
@@ -301,19 +305,21 @@ button[class*='copyButton'] {
 }
 
 /* A DocCard, on an index page, is a card. */
+/* !important on the border: Docusaurus' .cardContainer_* on the same element
+   has the same weight. In the build it can come last, and then the border is
+   emphasis-200, and under the pointer the primary color, the text white. */
 .card {
   background: var(--osapi-card);
-  border: 1px solid var(--osapi-border);
+  border: 1px solid var(--osapi-border) !important;
   border-radius: 8px;
-  box-shadow: none !important;
+  box-shadow: var(--osapi-card-shadow) !important;
   transition: border-color 0.2s ease;
 }
 
-/* On hover, a card is marked as the open page is in the sidebar: the
-   dark-blue bar at its left. */
+/* On hover, as the UI's Card: only the border is brighter. */
 .card:hover {
-  border-color: var(--osapi-border-hover);
-  box-shadow: inset 3px 0 0 var(--osapi-accent) !important;
+  border-color: var(--osapi-border-hover) !important;
+  box-shadow: var(--osapi-card-shadow) !important;
 }
 
 .card.padding--lg {
@@ -354,13 +360,15 @@ button[class*='copyButton'] {
 
 /* The previous and next page links are cards. */
 .pagination-nav__link {
-  border: 1px solid var(--osapi-border);
+  border: 1px solid var(--osapi-border) !important;
   border-radius: 8px;
   background: var(--osapi-card);
+  box-shadow: var(--osapi-card-shadow);
+  transition: border-color 0.2s ease;
 }
 
 .pagination-nav__link:hover {
-  border-color: var(--osapi-border-hover);
+  border-color: var(--osapi-border-hover) !important;
 }
 
 .pagination-nav__sublabel {
