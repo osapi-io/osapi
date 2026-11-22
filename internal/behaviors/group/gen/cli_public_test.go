@@ -61,11 +61,11 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		},
 		{
 			name: "when the example \"A group that the host has\" is run",
-			args: []string{"node", "group", "create", "--target", "server1", "--name", "developers"},
+			args: []string{"node", "group", "create", "--target", "server1", "--name", "osapitest"},
 			want: commandtest.Request{
 				Method: "POST",
 				Path:   "/api/node/server1/group",
-				Body:   "{\"name\":\"developers\"}",
+				Body:   "{\"name\":\"osapitest\"}",
 			},
 		},
 		{
@@ -79,11 +79,11 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		},
 		{
 			name: "when the example \"The members it has\" is run",
-			args: []string{"node", "group", "update", "--target", "server1", "--name", "developers", "--members", "bob", "--members", "alice"},
+			args: []string{"node", "group", "update", "--target", "server1", "--name", "osapitest", "--members", "root"},
 			want: commandtest.Request{
 				Method: "PUT",
-				Path:   "/api/node/server1/group/developers",
-				Body:   "{\"members\":[\"bob\",\"alice\"]}",
+				Path:   "/api/node/server1/group/osapitest",
+				Body:   "{\"members\":[\"root\"]}",
 			},
 		},
 		{

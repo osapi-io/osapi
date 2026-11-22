@@ -96,9 +96,11 @@ var Behavior = behavior.Register(behavior.Define(
 				etcGroup+"osapitest:x:1999:\n"),
 			behavior.Ran("groupadd", "-g", "1999", "-r", "--", "osapitest"),
 		).
-		Example("A group that the host has", CreateInput{Name: "developers"},
-			Result{Name: "developers"},
+		Example("A group that the host has", CreateInput{Name: "osapitest"},
+			Result{Name: "osapitest"},
 			behavior.Exists("/etc/group", etcGroup),
+			added,
+			behavior.After(CreateInput{Name: "osapitest"}),
 		).
 		Fails("A name that is an option", CreateInput{Name: "-r"}, "account_name").
 		Fails("A name longer than 32 characters",
@@ -121,9 +123,14 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.After(CreateInput{Name: "osapitest"}),
 			behavior.Ran("gpasswd", "-M", "root", "--", "osapitest"),
 		).
-		Example("The members it has", UpdateInput{Name: "developers", Members: []string{"bob", "alice"}},
-			Result{Name: "developers"},
+		Example("The members it has", UpdateInput{Name: "osapitest", Members: []string{"root"}},
+			Result{Name: "osapitest"},
 			behavior.Exists("/etc/group", etcGroup),
+			added,
+			behavior.ExistsAfter("gpasswd -M root -- osapitest", "/etc/group",
+				etcGroup+"osapitest:x:1501:root\n"),
+			behavior.After(CreateInput{Name: "osapitest"}),
+			behavior.After(UpdateInput{Name: "osapitest", Members: []string{"root"}}),
 		).
 		Fails("A group that the host does not have", UpdateInput{Name: "nobody"}, "not found").
 		Fails("A name that is an option", UpdateInput{Name: "-r"}, "account_name").

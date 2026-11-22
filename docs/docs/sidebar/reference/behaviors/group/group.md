@@ -162,11 +162,11 @@ None. The method takes no input; its command needs only --target.
 
 ### Examples (3)
 
-| EXAMPLE                        | INPUT                                 | OUTPUT                         |
-| ------------------------------ | ------------------------------------- | ------------------------------ |
-| Add a group                    | name=osapitest                        | name=osapitest, changed=true   |
-| Add a system group with its ID | name=osapitest, gid=1999, system=true | name=osapitest, changed=true   |
-| A group that the host has      | name=developers                       | name=developers, changed=false |
+| EXAMPLE                        | INPUT                                 | OUTPUT                        |
+| ------------------------------ | ------------------------------------- | ----------------------------- |
+| Add a group                    | name=osapitest                        | name=osapitest, changed=true  |
+| Add a system group with its ID | name=osapitest, gid=1999, system=true | name=osapitest, changed=true  |
+| A group that the host has      | name=osapitest                        | name=osapitest, changed=false |
 
 ## Method update
 
@@ -199,10 +199,10 @@ None. The method takes no input; its command needs only --target.
 
 ### Examples (2)
 
-| EXAMPLE            | INPUT                                 | OUTPUT                         |
-| ------------------ | ------------------------------------- | ------------------------------ |
-| Set the members    | name=osapitest, members=\[root]       | name=osapitest, changed=true   |
-| The members it has | name=developers, members=\[bob alice] | name=developers, changed=false |
+| EXAMPLE            | INPUT                           | OUTPUT                        |
+| ------------------ | ------------------------------- | ----------------------------- |
+| Set the members    | name=osapitest, members=\[root] | name=osapitest, changed=true  |
+| The members it has | name=osapitest, members=\[root] | name=osapitest, changed=false |
 
 ## Method delete
 

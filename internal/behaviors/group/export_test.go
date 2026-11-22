@@ -27,3 +27,6 @@ var NewReader = func(h host.Host) (Provider, error) { return newReader(h) }
 
 // IgnoreNotFound is ignoreNotFound, for its test.
 var IgnoreNotFound = ignoreNotFound
+
+// SameMembers is sameMembers, for its test.
+var SameMembers = sameMembers

@@ -69,6 +69,36 @@ func (s *ReaderPublicTestSuite) TestIgnoreNotFound() {
 	}
 }
 
+func (s *ReaderPublicTestSuite) TestSameMembers() {
+	tests := []struct {
+		name string
+		a    []string
+		b    []string
+		want bool
+	}{
+		{
+			name: "when the members are the same in another order",
+			a:    []string{"alice", "bob"},
+			b:    []string{"bob", "alice"},
+			want: true,
+		},
+		{
+			name: "when one names a member twice",
+			a:    []string{"alice"},
+			b:    []string{"alice", "alice"},
+			want: true,
+		},
+		{name: "when both have none", want: true},
+		{name: "when a member differs", a: []string{"alice"}, b: []string{"bob"}},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, group.SameMembers(tc.a, tc.b))
+		})
+	}
+}
+
 func TestReaderPublicTestSuite(
 	t *testing.T,
 ) {
