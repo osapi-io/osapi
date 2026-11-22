@@ -12,9 +12,9 @@ interface RunLinksProps {
 }
 
 /**
- * RunLinks shows the job and the trace of one call of the API, short: a
- * click opens the job on the Jobs page or the trace on the Traces page, and
- * the copy button copies the whole ID.
+ * RunLinks shows the job and the trace of one call of the API, whole, as the
+ * CLI prints them: a click opens the job on the Jobs page or the trace on the
+ * Traces page, and the copy button copies the ID.
  */
 export function RunLinks({ jobId, traceId, className }: RunLinksProps) {
   if (!jobId && !traceId) return null;
@@ -42,7 +42,7 @@ function RunLink({ label, id, to }: { label: string; id: string; to: string }) {
         title={`Open ${label} ${id}`}
         className="text-text-muted transition-colors hover:text-accent-light"
       >
-        {label} {id.slice(0, 8)}
+        {label} {id}
       </Link>
       <button
         type="button"
