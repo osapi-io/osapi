@@ -20,6 +20,18 @@ func decodeList(
 	if msg, ok := server.Query(c, "offset", &in.Offset); !ok {
 		return in, msg, false
 	}
+	if msg, ok := server.Query(c, "writes", &in.Writes); !ok {
+		return in, msg, false
+	}
+	if msg, ok := server.Query(c, "user", &in.User); !ok {
+		return in, msg, false
+	}
+	if msg, ok := server.Query(c, "operation", &in.Operation); !ok {
+		return in, msg, false
+	}
+	if msg, ok := server.Query(c, "status", &in.Status); !ok {
+		return in, msg, false
+	}
 	if msg, ok := server.Valid(c, in); !ok {
 		return in, msg, false
 	}

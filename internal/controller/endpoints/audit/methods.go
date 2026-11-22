@@ -22,6 +22,8 @@ package audit
 import (
 	"context"
 	"errors"
+	"net/http"
+	"strings"
 
 	auditstore "github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
@@ -44,12 +46,59 @@ func List(
 		limit = defaultLimit
 	}
 
-	entries, total, err := d.Store.List(ctx, limit, in.Offset)
+	if !in.filtered() {
+		entries, total, err := d.Store.List(ctx, limit, in.Offset)
+		if err != nil {
+			return ListAuditResponse{}, endpoint.Internal("failed to list audit entries", err)
+		}
+
+		return ListAuditResponse{TotalItems: total, Items: toEntries(entries)}, nil
+	}
+
+	// A filter reads the whole log, newest first, as an export does, and
+	// keeps the page of the entries that match. The store pages by
+	// sequence, so it cannot skip the entries that do not match.
+	all, err := d.Store.ListAll(ctx)
 	if err != nil {
 		return ListAuditResponse{}, endpoint.Internal("failed to list audit entries", err)
 	}
+	matched := make([]auditstore.Entry, 0, len(all))
+	for _, e := range all {
+		if in.matches(e) {
+			matched = append(matched, e)
+		}
+	}
+	page := []auditstore.Entry{}
+	if in.Offset < len(matched) {
+		page = matched[in.Offset:min(in.Offset+limit, len(matched))]
+	}
 
-	return ListAuditResponse{TotalItems: total, Items: toEntries(entries)}, nil
+	return ListAuditResponse{TotalItems: len(matched), Items: toEntries(page)}, nil
+}
+
+// filtered reports whether in sets a filter.
+func (in ListInput) filtered() bool {
+	return in.Writes || in.User != "" || in.Operation != "" || in.Status != 0
+}
+
+// matches reports whether e matches each filter that in sets.
+func (in ListInput) matches(
+	e auditstore.Entry,
+) bool {
+	switch {
+	case in.Writes && e.Method == http.MethodGet:
+		return false
+	case in.User != "" && e.User != in.User:
+		return false
+	case in.Operation != "" &&
+		!strings.Contains(strings.ToLower(e.OperationID), strings.ToLower(in.Operation)) &&
+		!strings.Contains(strings.ToLower(e.Path), strings.ToLower(in.Operation)):
+		return false
+	case in.Status != 0 && e.ResponseCode != in.Status:
+		return false
+	default:
+		return true
+	}
 }
 
 // Export is each entry of the audit log, without pages.

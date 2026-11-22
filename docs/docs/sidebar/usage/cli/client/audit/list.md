@@ -3,7 +3,9 @@
 List audit log entries.
 
 The list shows recent API activity: the user, the HTTP method, the path, the
-response status and the duration.
+response status and the duration. The filters narrow it: --writes for the
+requests that change something, --user, --operation for text of the operation ID
+or the path, and --status.
 
 ```bash
 osapi client audit list [flags]
@@ -14,6 +16,8 @@ osapi client audit list [flags]
 ```bash
 osapi client audit list
 osapi client audit list --limit 10 --offset 20
+osapi client audit list --writes --user ops@example.com
+osapi client audit list --operation hostname --status 403
 osapi client audit list --json
 ```
 
@@ -74,10 +78,14 @@ shows what a role grants.
 
 ## Flags
 
-| Flag       | Description                         | Default |
-| ---------- | ----------------------------------- | ------- |
-| `--limit`  | Maximum number of entries to return | `20`    |
-| `--offset` | Number of entries to skip           |         |
+| Flag          | Description                                                                 | Default |
+| ------------- | --------------------------------------------------------------------------- | ------- |
+| `--limit`     | Maximum number of entries to return                                         | `20`    |
+| `--offset`    | Number of entries to skip                                                   |         |
+| `--operation` | Only the entries whose operation ID or path has this text, such as hostname |         |
+| `--status`    | Only the entries with this response status, such as 403                     |         |
+| `--user`      | Only the entries of this user, the subject of the token                     |         |
+| `--writes`    | Only the requests that change something: each method but GET                |         |
 
 ## Global flags
 

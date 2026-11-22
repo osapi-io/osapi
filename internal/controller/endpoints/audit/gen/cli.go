@@ -17,13 +17,17 @@ var auditListCmd = &cobra.Command{
 		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client audit list\n\x1b[1;38;2;0;213;255mAudit entries (2):\x1b[0m\n  \x1b[38;2;10;143;176mID                                    \x1b[0m\x1b[38;2;10;143;176mTIMESTAMP            \x1b[0m\x1b[38;2;10;143;176mUSER             \x1b[0m\x1b[38;2;10;143;176mMETHOD  \x1b[0m\x1b[38;2;10;143;176mPATH                                         \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mDURATION  \x1b[0m\x1b[38;2;10;143;176mTRACE ID\x1b[0m\n  \x1b[38;2;138;138;138m550e8400-e29b-41d4-a716-446655440000\x1b[0m  \x1b[38;2;138;138;138m2026-01-15 09:58:12\x1b[0m  ops@example.com  \x1b[1mPUT\x1b[0m     /api/node/web-01/sysctl/net.ipv4.ip_forward  200     184ms     \x1b[38;2;138;138;138m26e448c9dbe1c4a8...\x1b[0m\n  \x1b[38;2;138;138;138m6ba7b810-9dad-11d1-80b4-00c04fd430c8\x1b[0m  \x1b[38;2;138;138;138m2026-01-15 09:41:03\x1b[0m  ci@example.com   \x1b[1mGET\x1b[0m     /api/agent                                   200     12ms      \x1b[38;2;138;138;138m\x1b[0m\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"total_items\": 2,\n  \"items\": [\n    {\n      \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n      \"timestamp\": \"2026-01-15T09:58:12Z\",\n      \"user\": \"ops@example.com\",\n      \"roles\": [\n        \"admin\"\n      ],\n      \"method\": \"PUT\",\n      \"path\": \"/api/node/web-01/sysctl/net.ipv4.ip_forward\",\n      \"response_code\": 200,\n      \"duration_ms\": 184,\n      \"source_ip\": \"10.0.0.5\",\n      \"operation_id\": \"UpdateSysctl\",\n      \"trace_id\": \"26e448c9dbe1c4a8d216a98c675079c9\",\n      \"job_id\": \"7c9e6679-7425-40de-944b-e07fc1f90ae7\"\n    },\n    {\n      \"id\": \"6ba7b810-9dad-11d1-80b4-00c04fd430c8\",\n      \"timestamp\": \"2026-01-15T09:41:03Z\",\n      \"user\": \"ci@example.com\",\n      \"roles\": [\n        \"read\"\n      ],\n      \"method\": \"GET\",\n      \"path\": \"/api/agent\",\n      \"response_code\": 200,\n      \"duration_ms\": 12,\n      \"source_ip\": \"10.0.0.9\",\n      \"operation_id\": \"GetAgents\"\n    }\n  ]\n}\n```",
 	},
 	Args:    cobra.NoArgs,
-	Example: "  osapi client audit list\n  osapi client audit list --limit 10 --offset 20\n  osapi client audit list --json",
-	Long:    "The list shows recent API activity: the user, the HTTP method, the path,\nthe response status and the duration.",
+	Example: "  osapi client audit list\n  osapi client audit list --limit 10 --offset 20\n  osapi client audit list --writes --user ops@example.com\n  osapi client audit list --operation hostname --status 403\n  osapi client audit list --json",
+	Long:    "The list shows recent API activity: the user, the HTTP method, the path,\nthe response status and the duration. The filters narrow it: --writes\nfor the requests that change something, --user, --operation for text of\nthe operation ID or the path, and --status.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		limit, _ := cmd.Flags().GetInt("limit")
 		offset, _ := cmd.Flags().GetInt("offset")
+		writes, _ := cmd.Flags().GetBool("writes")
+		user, _ := cmd.Flags().GetString("user")
+		operation, _ := cmd.Flags().GetString("operation")
+		status, _ := cmd.Flags().GetInt("status")
 
-		endpointcommand.Run(cmd, audit.Group, "list", audit.ListInput{Limit: limit, Offset: offset})
+		endpointcommand.Run(cmd, audit.Group, "list", audit.ListInput{Limit: limit, Offset: offset, Writes: writes, User: user, Operation: operation, Status: status})
 	},
 	Short: "List audit log entries",
 	Use:   "list",
@@ -64,6 +68,10 @@ var auditGetCmd = &cobra.Command{
 func init() {
 	auditListCmd.Flags().Int("limit", 20, "Maximum number of entries to return")
 	auditListCmd.Flags().Int("offset", 0, "Number of entries to skip")
+	auditListCmd.Flags().Bool("writes", false, "Only the requests that change something: each method but GET")
+	auditListCmd.Flags().String("user", "", "Only the entries of this user, the subject of the token")
+	auditListCmd.Flags().String("operation", "", "Only the entries whose operation ID or path has this text, such as hostname")
+	auditListCmd.Flags().Int("status", 0, "Only the entries with this response status, such as 403")
 	auditGetCmd.Flags().String("id", "", "The audit entry ID")
 	_ = auditGetCmd.MarkFlagRequired("id")
 	clicommand.AddCommands(audit.Group, auditListCmd, auditExportCmd, auditGetCmd)

@@ -48,15 +48,14 @@ func (suite *AuditPublicTestSuite) TestList() {
 		name         string
 		handler      http.HandlerFunc
 		serverURL    string
-		limit        int
-		offset       int
+		opts         client.AuditListOpts
 		validateFunc func(*client.Response[client.AuditList], error)
 	}{
 		{
-			name:   "when listing audit entries returns audit list",
-			limit:  20,
-			offset: 0,
-			handler: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			name: "when listing audit entries returns audit list",
+			opts: client.AuditListOpts{Limit: 20},
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				suite.Empty(r.URL.Query().Get("writes"), "a filter that is not set is not sent")
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write([]byte(`{"items":[],"total_items":0}`))
@@ -66,6 +65,26 @@ func (suite *AuditPublicTestSuite) TestList() {
 				suite.NotNil(resp)
 				suite.Equal(0, resp.Data.TotalItems)
 				suite.Empty(resp.Data.Items)
+			},
+		},
+		{
+			name: "when filters are set, each is a query parameter",
+			opts: client.AuditListOpts{
+				Limit: 5, Writes: true, User: "ops@example.com", Operation: "hostname", Status: 403,
+			},
+			handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				q := r.URL.Query()
+				suite.Equal("true", q.Get("writes"))
+				suite.Equal("ops@example.com", q.Get("user"))
+				suite.Equal("hostname", q.Get("operation"))
+				suite.Equal("403", q.Get("status"))
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(`{"items":[],"total_items":0}`))
+			}),
+			validateFunc: func(resp *client.Response[client.AuditList], err error) {
+				suite.NoError(err)
+				suite.NotNil(resp)
 			},
 		},
 		{
@@ -84,9 +103,8 @@ func (suite *AuditPublicTestSuite) TestList() {
 			},
 		},
 		{
-			name:   "when server returns 401 returns AuthError",
-			limit:  20,
-			offset: 0,
+			name: "when server returns 401 returns AuthError",
+			opts: client.AuditListOpts{Limit: 20, Offset: 0},
 			handler: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusUnauthorized)
@@ -103,8 +121,7 @@ func (suite *AuditPublicTestSuite) TestList() {
 		},
 		{
 			name:      "when client HTTP request fails returns error",
-			limit:     20,
-			offset:    0,
+			opts:      client.AuditListOpts{Limit: 20, Offset: 0},
 			serverURL: "http://127.0.0.1:0",
 			validateFunc: func(resp *client.Response[client.AuditList], err error) {
 				suite.Error(err)
@@ -113,9 +130,8 @@ func (suite *AuditPublicTestSuite) TestList() {
 			},
 		},
 		{
-			name:   "when response body is nil returns UnexpectedStatusError",
-			limit:  20,
-			offset: 0,
+			name: "when response body is nil returns UnexpectedStatusError",
+			opts: client.AuditListOpts{Limit: 20, Offset: 0},
 			handler: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "text/plain")
 				w.WriteHeader(http.StatusOK)
@@ -147,7 +163,7 @@ func (suite *AuditPublicTestSuite) TestList() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Audit.List(suite.ctx, tc.limit, tc.offset)
+			resp, err := sut.Audit.List(suite.ctx, tc.opts)
 			tc.validateFunc(resp, err)
 		})
 	}

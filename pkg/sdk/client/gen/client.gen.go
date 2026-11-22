@@ -4937,6 +4937,18 @@ type GetAuditLogsParams struct {
 
 	// Offset Number of entries to skip.
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty" validate:"omitempty,min=0"`
+
+	// Writes Only the requests that change something: each method but GET.
+	Writes *bool `form:"writes,omitempty" json:"writes,omitempty" validate:"omitempty"`
+
+	// User Only the entries of this user, the subject of the token.
+	User *string `form:"user,omitempty" json:"user,omitempty" validate:"omitempty,max=256"`
+
+	// Operation Only the entries whose operation ID or path has this text, such as hostname.
+	Operation *string `form:"operation,omitempty" json:"operation,omitempty" validate:"omitempty,max=256"`
+
+	// Status Only the entries with this response status, such as 403.
+	Status *int `form:"status,omitempty" json:"status,omitempty" validate:"omitempty,min=100,max=599"`
 }
 
 // PostFileMultipartBody defines parameters for PostFile.
@@ -8121,6 +8133,54 @@ func NewGetAuditLogsRequest(server string, params *GetAuditLogsParams) (*http.Re
 		if params.Offset != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "offset", *params.Offset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Writes != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "writes", *params.Writes, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.User != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "user", *params.User, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Operation != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "operation", *params.Operation, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Status != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "status", *params.Status, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {

@@ -34,15 +34,44 @@ type AuditService struct {
 	client *gen.ClientWithResponses
 }
 
+// AuditListOpts are the page and the filters of an audit list. An entry
+// is listed when it matches each filter that is set; with a filter, the
+// controller reads the whole log and counts the entries that match.
+type AuditListOpts struct {
+	// Limit is the size of the page, 1 to 100; 0 is the controller's default.
+	Limit int
+	// Offset is the number of entries to skip.
+	Offset int
+	// Writes keeps only the requests that change something: each method but GET.
+	Writes bool
+	// User keeps only the entries of this user, the subject of the token.
+	User string
+	// Operation keeps only the entries whose operation ID or path has this text.
+	Operation string
+	// Status keeps only the entries with this response status, such as 403.
+	Status int
+}
+
 // List retrieves audit log entries with pagination.
 func (s *AuditService) List(
 	ctx context.Context,
-	limit int,
-	offset int,
+	opts AuditListOpts,
 ) (*Response[AuditList], error) {
 	params := &gen.GetAuditLogsParams{
-		Limit:  &limit,
-		Offset: &offset,
+		Limit:  &opts.Limit,
+		Offset: &opts.Offset,
+	}
+	if opts.Writes {
+		params.Writes = &opts.Writes
+	}
+	if opts.User != "" {
+		params.User = &opts.User
+	}
+	if opts.Operation != "" {
+		params.Operation = &opts.Operation
+	}
+	if opts.Status != 0 {
+		params.Status = &opts.Status
 	}
 
 	resp, err := s.client.GetAuditLogsWithResponse(ctx, params)
