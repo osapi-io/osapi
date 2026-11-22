@@ -30,6 +30,8 @@ import (
 	"testing"
 	"time"
 
+	sdkclient "github.com/osapi-io/osapi/pkg/sdk/client"
+
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/stretchr/testify/suite"
@@ -193,6 +195,7 @@ func (s *AgentPublicTestSuite) TestWriteJobResponse() {
 		errorMsg     string
 		errorCode    job.ErrorCode
 		changed      *bool
+		steps        []sdkclient.Step
 		kvError      error
 		validateFunc func(error)
 	}{
@@ -225,6 +228,20 @@ func (s *AgentPublicTestSuite) TestWriteJobResponse() {
 			status:       "failed",
 			errorMsg:     `user "nobody": not found`,
 			errorCode:    job.ErrorCodeNotFound,
+			validateFunc: func(err error) {
+				s.NoError(err)
+			},
+		},
+		{
+			name:         "the steps of the method are stored with the response",
+			jobID:        "job-steps",
+			hostname:     "agent-1",
+			responseData: []byte(`{"changed": true}`),
+			status:       "completed",
+			steps: []sdkclient.Step{{
+				Behavior: "netplan", Method: "update",
+				Steps: []sdkclient.Step{{Behavior: "managedfile", Method: "update"}},
+			}},
 			validateFunc: func(err error) {
 				s.NoError(err)
 			},
@@ -297,7 +314,9 @@ func (s *AgentPublicTestSuite) TestWriteJobResponse() {
 				tt.errorMsg,
 				tt.errorCode,
 				tt.changed,
+				tt.steps,
 			))
+			s.Equal(tt.steps, stored.Steps, "the steps are in what the KV holds")
 			s.Equal(
 				tt.errorCode,
 				stored.ErrorCode,
@@ -393,6 +412,7 @@ func (s *AgentPublicTestSuite) TestWriteJobResponseWithPKISigner() {
 				tt.errorMsg,
 				"",
 				tt.changed,
+				nil,
 			))
 		})
 	}

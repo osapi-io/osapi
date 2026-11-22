@@ -18,6 +18,7 @@ import (
 	client "github.com/osapi-io/nats-client/pkg/client"
 	job "github.com/osapi-io/osapi/internal/job"
 	client0 "github.com/osapi-io/osapi/internal/job/client"
+	client1 "github.com/osapi-io/osapi/pkg/sdk/client"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -408,17 +409,17 @@ func (mr *MockJobClientMockRecorder) WriteAgentTimelineEvent(ctx, hostname, even
 }
 
 // WriteJobResponse mocks base method.
-func (m *MockJobClient) WriteJobResponse(ctx context.Context, jobID, hostname string, responseData []byte, status, errorMsg string, errorCode job.ErrorCode, changed *bool) error {
+func (m *MockJobClient) WriteJobResponse(ctx context.Context, jobID, hostname string, responseData []byte, status, errorMsg string, errorCode job.ErrorCode, changed *bool, steps []client1.Step) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "WriteJobResponse", ctx, jobID, hostname, responseData, status, errorMsg, errorCode, changed)
+	ret := m.ctrl.Call(m, "WriteJobResponse", ctx, jobID, hostname, responseData, status, errorMsg, errorCode, changed, steps)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // WriteJobResponse indicates an expected call of WriteJobResponse.
-func (mr *MockJobClientMockRecorder) WriteJobResponse(ctx, jobID, hostname, responseData, status, errorMsg, errorCode, changed any) *gomock.Call {
+func (mr *MockJobClientMockRecorder) WriteJobResponse(ctx, jobID, hostname, responseData, status, errorMsg, errorCode, changed, steps any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteJobResponse", reflect.TypeOf((*MockJobClient)(nil).WriteJobResponse), ctx, jobID, hostname, responseData, status, errorMsg, errorCode, changed)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteJobResponse", reflect.TypeOf((*MockJobClient)(nil).WriteJobResponse), ctx, jobID, hostname, responseData, status, errorMsg, errorCode, changed, steps)
 }
 
 // WriteStatusEvent mocks base method.
