@@ -71,10 +71,20 @@ osapi token roles list
 osapi token roles get --name write
 ```
 
-Use these commands, because the permissions change when osapi gets new
-behaviors. The permissions of a behavior are `<name>:read` and `<name>:write`.
-`admin` and `write` give the two permissions. `read` gives the read permission.
-[`token roles get`](../usage/cli/token/roles/get.md) shows its output.
+Use these commands, because the permissions change when osapi gets new behaviors
+and endpoint groups. The permissions of a behavior are `<name>:read` and
+`<name>:write`. An endpoint group has `<group>:read` for a `GET` and
+`<group>:write` for the other HTTP methods. A rule gives the built-in roles
+their permissions. No list of roles is kept by hand:
+
+- `admin` gets each permission.
+- `write` gets each `read` and `write` permission that is not admin only.
+- `read` gets each `read` permission that is not admin only.
+
+A permission with the verb `execute` or `shell` is admin only. A method that the
+DSL marks `AdminOnly` makes its permission admin only too, such as
+`admission:write`, `agent:write` and `audit:read`.
+[`token roles get`](../usage/cli/token/roles/get.md) shows the result.
 
 `command:execute` and `command:shell` are two different permissions.
 `command:execute` controls the `exec` endpoint, which takes an argument list.
