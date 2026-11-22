@@ -54,6 +54,10 @@ var ssh = Entry{
 	Description: "OpenBSD Secure Shell server",
 }
 
+// appEntry is the service that the examples deploy, as a read gives it: by
+// the name it was deployed with, and managed.
+var appEntry = Entry{Name: "app", State: "dead", Description: "Example app", Managed: true}
+
 // stored and deployed are the unit file of the examples: uploaded, then
 // deployed with create, so osapi keeps a record of it.
 var (
@@ -85,8 +89,17 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Read("list", List).
 		Describe("List the services of the host").
 		Explain("Lists each service that systemd has loaded, with its state, whether it "+
-			"starts at boot and its description, through gohai. A Mac has no systemd, "+
-			"and reports skipped.").
+			"starts at boot and its description, through gohai. A service that osapi "+
+			"deployed shows by the name it was deployed with, not its unit's osapi- "+
+			"name, and is managed. A Mac has no systemd, and reports skipped.").
+		Example("A service that osapi deployed reads by its name", ListInput{},
+			[]Entry{ssh, appEntry},
+			// Only the Debian writer deploys a service.
+			behavior.OnPlatform(behavior.PlatformDebian),
+			stored, deployed,
+			behavior.Prints(units, sshUnit+appDead),
+			behavior.Prints(files, sshFile+appOff),
+		).
 		Example("A host with two services", ListInput{},
 			[]Entry{ssh, {Name: "osapi-app", State: "dead", Description: "Example app"}},
 			behavior.Prints(units, sshUnit+appDead),
@@ -95,7 +108,9 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Read("get", Get).Key("name").
 		Describe("Get one service").
 		Explain("Reads one service from the same list, by its name with .service or "+
-			"without it. A service that systemd has not loaded is not found.").
+			"without it. A service that osapi deployed reads by the name it was deployed "+
+			"with, such as app, as its writes take it, or by its unit's name, osapi-app. "+
+			"A service that systemd has not loaded is not found.").
 		Example("A running service", GetInput{Name: "ssh"}, ssh,
 			behavior.Prints(units, sshUnit),
 			behavior.Prints(files, sshFile),
@@ -103,6 +118,22 @@ var Behavior = behavior.Register(behavior.Define(
 		Example("A name with .service", GetInput{Name: "ssh.service"}, ssh,
 			behavior.Prints(units, sshUnit),
 			behavior.Prints(files, sshFile),
+		).
+		Example("A service that osapi deployed, by the name it was deployed with",
+			GetInput{Name: "app"}, appEntry,
+			// Only the Debian writer deploys a service.
+			behavior.OnPlatform(behavior.PlatformDebian),
+			stored, deployed,
+			behavior.Prints(units, appDead),
+			behavior.Prints(files, appOff),
+		).
+		Example("A service that osapi deployed, by its unit's name",
+			GetInput{Name: "osapi-app"}, appEntry,
+			// Only the Debian writer deploys a service.
+			behavior.OnPlatform(behavior.PlatformDebian),
+			stored, deployed,
+			behavior.Prints(units, appDead),
+			behavior.Prints(files, appOff),
 		).
 		Fails("A service that systemd has not loaded", GetInput{Name: "nosuch"}, "not found").
 		Fails("A name with a space", GetInput{Name: "a b"}, "Name"),

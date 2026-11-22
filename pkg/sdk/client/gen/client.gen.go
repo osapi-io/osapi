@@ -4187,6 +4187,9 @@ type ServiceEntry struct {
 	// Hostname Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
+	// Managed Whether osapi deployed it, so its writes and actions act on it
+	Managed *bool `json:"managed,omitempty"`
+
 	// Name The service, without .service
 	Name *string `json:"name,omitempty"`
 

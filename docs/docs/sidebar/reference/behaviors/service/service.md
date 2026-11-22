@@ -46,18 +46,18 @@ shows each call that its examples make.
 
 ### Types (10)
 
-| NAME                       | INPUT                                    | OUTPUT                                                   |
-| -------------------------- | ---------------------------------------- | -------------------------------------------------------- |
-| [list](#method-list)       | ListInput                                | \[]Entry &#123; name, state, enabled, description &#125; |
-| [get](#method-get)         | GetInput &#123; name* &#125;             | Entry &#123; name, state, enabled, description &#125;    |
-| [create](#method-create)   | CreateInput &#123; name*, object* &#125; | Result &#123; name, changed &#125;                       |
-| [update](#method-update)   | UpdateInput &#123; name*, object* &#125; | Result &#123; name, changed &#125;                       |
-| [delete](#method-delete)   | DeleteInput &#123; name* &#125;          | Result &#123; name, changed &#125;                       |
-| [start](#method-start)     | StartInput &#123; name* &#125;           | Result &#123; name, changed &#125;                       |
-| [stop](#method-stop)       | StopInput &#123; name* &#125;            | Result &#123; name, changed &#125;                       |
-| [restart](#method-restart) | RestartInput &#123; name* &#125;         | Result &#123; name, changed &#125;                       |
-| [enable](#method-enable)   | EnableInput &#123; name* &#125;          | Result &#123; name, changed &#125;                       |
-| [disable](#method-disable) | DisableInput &#123; name* &#125;         | Result &#123; name, changed &#125;                       |
+| NAME                       | INPUT                                    | OUTPUT                                                            |
+| -------------------------- | ---------------------------------------- | ----------------------------------------------------------------- |
+| [list](#method-list)       | ListInput                                | \[]Entry &#123; name, state, enabled, description, managed &#125; |
+| [get](#method-get)         | GetInput &#123; name* &#125;             | Entry &#123; name, state, enabled, description, managed &#125;    |
+| [create](#method-create)   | CreateInput &#123; name*, object* &#125; | Result &#123; name, changed &#125;                                |
+| [update](#method-update)   | UpdateInput &#123; name*, object* &#125; | Result &#123; name, changed &#125;                                |
+| [delete](#method-delete)   | DeleteInput &#123; name* &#125;          | Result &#123; name, changed &#125;                                |
+| [start](#method-start)     | StartInput &#123; name* &#125;           | Result &#123; name, changed &#125;                                |
+| [stop](#method-stop)       | StopInput &#123; name* &#125;            | Result &#123; name, changed &#125;                                |
+| [restart](#method-restart) | RestartInput &#123; name* &#125;         | Result &#123; name, changed &#125;                                |
+| [enable](#method-enable)   | EnableInput &#123; name* &#125;          | Result &#123; name, changed &#125;                                |
+| [disable](#method-disable) | DisableInput &#123; name* &#125;         | Result &#123; name, changed &#125;                                |
 
 ### Settings (0)
 
@@ -75,24 +75,24 @@ None. Declare them with behavior.Config.
 
 ## Method list
 
-|             |                                                                                                                                                                      |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Name        | list                                                                                                                                                                 |
-| Verb        | read                                                                                                                                                                 |
-| Description | List the services of the host                                                                                                                                        |
-| Detail      | Lists each service that systemd has loaded, with its state, whether it starts at boot and its description, through gohai. A Mac has no systemd, and reports skipped. |
-| HTTP        | GET                                                                                                                                                                  |
-| Route       | /api/node/&#123;hostname&#125;/service                                                                                                                               |
-| Permission  | service:read                                                                                                                                                         |
-| Command     | [osapi client node service list](../../../usage/cli/client/node/service/list.md)                                                                                     |
-| Input type  | ListInput                                                                                                                                                            |
-| Output type | \[]Entry                                                                                                                                                             |
+|             |                                                                                                                                                                                                                                                                                        |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | list                                                                                                                                                                                                                                                                                   |
+| Verb        | read                                                                                                                                                                                                                                                                                   |
+| Description | List the services of the host                                                                                                                                                                                                                                                          |
+| Detail      | Lists each service that systemd has loaded, with its state, whether it starts at boot and its description, through gohai. A service that osapi deployed shows by the name it was deployed with, not its unit's osapi- name, and is managed. A Mac has no systemd, and reports skipped. |
+| HTTP        | GET                                                                                                                                                                                                                                                                                    |
+| Route       | /api/node/&#123;hostname&#125;/service                                                                                                                                                                                                                                                 |
+| Permission  | service:read                                                                                                                                                                                                                                                                           |
+| Command     | [osapi client node service list](../../../usage/cli/client/node/service/list.md)                                                                                                                                                                                                       |
+| Input type  | ListInput                                                                                                                                                                                                                                                                              |
+| Output type | \[]Entry                                                                                                                                                                                                                                                                               |
 
 ### Input (0)
 
 None. The method takes no input; its command needs only --target.
 
-### Output (4)
+### Output (5)
 
 | FIELD       | TYPE    | DESCRIPTION                                                    |
 | ----------- | ------- | -------------------------------------------------------------- |
@@ -100,27 +100,29 @@ None. The method takes no input; its command needs only --target.
 | state       | string  | What systemd says it does now, such as running, exited or dead |
 | enabled     | boolean | Whether it starts at boot: the state of its unit file          |
 | description | string  | The Description= of its unit                                   |
+| managed     | boolean | Whether osapi deployed it, so its writes and actions act on it |
 
-### Examples (1)
+### Examples (2)
 
-| EXAMPLE                  | INPUT  | OUTPUT                                                                                                                                                  |
-| ------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A host with two services | (none) | \[description=OpenBSD Secure Shell server, enabled=true, name=ssh, state=running] \[description=Example app, enabled=false, name=osapi-app, state=dead] |
+| EXAMPLE                                         | INPUT  | OUTPUT                                                                                                                                                                                |
+| ----------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A service that osapi deployed reads by its name | (none) | \[description=OpenBSD Secure Shell server, enabled=true, managed=false, name=ssh, state=running] \[description=Example app, enabled=false, managed=true, name=app, state=dead]        |
+| A host with two services                        | (none) | \[description=OpenBSD Secure Shell server, enabled=true, managed=false, name=ssh, state=running] \[description=Example app, enabled=false, managed=false, name=osapi-app, state=dead] |
 
 ## Method get
 
-|             |                                                                                                                                    |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Name        | get                                                                                                                                |
-| Verb        | read                                                                                                                               |
-| Description | Get one service                                                                                                                    |
-| Detail      | Reads one service from the same list, by its name with .service or without it. A service that systemd has not loaded is not found. |
-| HTTP        | GET                                                                                                                                |
-| Route       | /api/node/&#123;hostname&#125;/service/&#123;name&#125;                                                                            |
-| Permission  | service:read                                                                                                                       |
-| Command     | [osapi client node service get](../../../usage/cli/client/node/service/get.md)                                                     |
-| Input type  | GetInput                                                                                                                           |
-| Output type | Entry                                                                                                                              |
+|             |                                                                                                                                                                                                                                                                                |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Name        | get                                                                                                                                                                                                                                                                            |
+| Verb        | read                                                                                                                                                                                                                                                                           |
+| Description | Get one service                                                                                                                                                                                                                                                                |
+| Detail      | Reads one service from the same list, by its name with .service or without it. A service that osapi deployed reads by the name it was deployed with, such as app, as its writes take it, or by its unit's name, osapi-app. A service that systemd has not loaded is not found. |
+| HTTP        | GET                                                                                                                                                                                                                                                                            |
+| Route       | /api/node/&#123;hostname&#125;/service/&#123;name&#125;                                                                                                                                                                                                                        |
+| Permission  | service:read                                                                                                                                                                                                                                                                   |
+| Command     | [osapi client node service get](../../../usage/cli/client/node/service/get.md)                                                                                                                                                                                                 |
+| Input type  | GetInput                                                                                                                                                                                                                                                                       |
+| Output type | Entry                                                                                                                                                                                                                                                                          |
 
 ### Input (1)
 
@@ -128,7 +130,7 @@ None. The method takes no input; its command needs only --target.
 | ----- | ------ | -------- | --------------------------- | ------------------------------------------------------- |
 | name  | string | yes      | pattern ^\[a-zA-Z0-9_@.-]+$ | The service, such as nginx, with .service or without it |
 
-### Output (4)
+### Output (5)
 
 | FIELD       | TYPE    | DESCRIPTION                                                    |
 | ----------- | ------- | -------------------------------------------------------------- |
@@ -136,13 +138,16 @@ None. The method takes no input; its command needs only --target.
 | state       | string  | What systemd says it does now, such as running, exited or dead |
 | enabled     | boolean | Whether it starts at boot: the state of its unit file          |
 | description | string  | The Description= of its unit                                   |
+| managed     | boolean | Whether osapi deployed it, so its writes and actions act on it |
 
-### Examples (2)
+### Examples (4)
 
-| EXAMPLE              | INPUT            | OUTPUT                                                                         |
-| -------------------- | ---------------- | ------------------------------------------------------------------------------ |
-| A running service    | name=ssh         | name=ssh, state=running, enabled=true, description=OpenBSD Secure Shell server |
-| A name with .service | name=ssh.service | name=ssh, state=running, enabled=true, description=OpenBSD Secure Shell server |
+| EXAMPLE                                                         | INPUT            | OUTPUT                                                                                        |
+| --------------------------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------------- |
+| A running service                                               | name=ssh         | name=ssh, state=running, enabled=true, description=OpenBSD Secure Shell server, managed=false |
+| A name with .service                                            | name=ssh.service | name=ssh, state=running, enabled=true, description=OpenBSD Secure Shell server, managed=false |
+| A service that osapi deployed, by the name it was deployed with | name=app         | name=app, state=dead, enabled=false, description=Example app, managed=true                    |
+| A service that osapi deployed, by its unit's name               | name=osapi-app   | name=app, state=dead, enabled=false, description=Example app, managed=true                    |
 
 ## Method create
 

@@ -13,8 +13,8 @@ import (
 var serviceListCmd = &cobra.Command{
 	Annotations: map[string]string{reference.Permission: "service:read"},
 	Args:        cobra.NoArgs,
-	Example:     "  # A host with two services\n  osapi client node service list --target web-01",
-	Long:        "Lists each service that systemd has loaded, with its state, whether it starts at boot and its description, through gohai. A Mac has no systemd, and reports skipped.",
+	Example:     "  # A service that osapi deployed reads by its name\n  osapi client node service list --target web-01\n\n  # A host with two services\n  osapi client node service list --target web-01",
+	Long:        "Lists each service that systemd has loaded, with its state, whether it starts at boot and its description, through gohai. A service that osapi deployed shows by the name it was deployed with, not its unit's osapi- name, and is managed. A Mac has no systemd, and reports skipped.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("target")
 
@@ -30,8 +30,8 @@ var serviceGetCmd = &cobra.Command{
 		reference.Result:     "The command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A service that systemd has not loaded | `--name nosuch` | not found |\n| A name with a space | `--name \"a b\"` | Name |",
 	},
 	Args:    cobra.NoArgs,
-	Example: "  # A running service\n  osapi client node service get --target web-01 --name ssh\n\n  # A name with .service\n  osapi client node service get --target web-01 --name ssh.service",
-	Long:    "Reads one service from the same list, by its name with .service or without it. A service that systemd has not loaded is not found.",
+	Example: "  # A running service\n  osapi client node service get --target web-01 --name ssh\n\n  # A name with .service\n  osapi client node service get --target web-01 --name ssh.service\n\n  # A service that osapi deployed, by the name it was deployed with\n  osapi client node service get --target web-01 --name app\n\n  # A service that osapi deployed, by its unit's name\n  osapi client node service get --target web-01 --name osapi-app",
+	Long:    "Reads one service from the same list, by its name with .service or without it. A service that osapi deployed reads by the name it was deployed with, such as app, as its writes take it, or by its unit's name, osapi-app. A service that systemd has not loaded is not found.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("target")
 		name, _ := cmd.Flags().GetString("name")
