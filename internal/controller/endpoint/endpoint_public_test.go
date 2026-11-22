@@ -852,6 +852,25 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 			},
 		},
 		{
+			name: "when Prints gives an example another type, or comes before any Example",
+			group: endpoint.Define(
+				"node",
+				"The nodes",
+				endpoint.Get[noInput, Node]("list").Prints(Node{}).Example("").Prints("web-01"),
+				endpoint.Get[noInput, Node](
+					"get",
+				).Sub("one").
+					Example("").
+					Prints(Node{Name: "web-01"}).
+					Example("--json"),
+				endpoint.SubDoc("one", "One node"),
+			),
+			want: []string{
+				"Prints comes before any Example; it gives the last Example its output.",
+				`Prints gives the example "" a string, not a endpoint_test.Node.`,
+			},
+		},
+		{
 			name: "when a method has a handler and the group Uses no type",
 			group: endpoint.Define("node", "The nodes",
 				endpoint.Get[noInput, Node]("list").Handle(handleNode),

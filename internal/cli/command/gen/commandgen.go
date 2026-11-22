@@ -236,8 +236,12 @@ func Commands(
 		if n := m.PageNotes(); n != "" {
 			notes[jen.Qual(referencePath, "Notes")] = jen.Lit(n)
 		}
+		result := Outputs(g, m, strings.TrimSpace(under+path))
 		if r := m.PageResult(); r != "" {
-			notes[jen.Qual(referencePath, "Result")] = jen.Lit(r)
+			result = strings.TrimSpace(result + "\n\n" + r)
+		}
+		if result != "" {
+			notes[jen.Qual(referencePath, "Result")] = jen.Lit(result)
 		}
 		if sub := m.SubPath(); sub != "" && sub != m.CommandName() {
 			notes[jen.Qual(commandPath, "SubKey")] = jen.Lit(sub)

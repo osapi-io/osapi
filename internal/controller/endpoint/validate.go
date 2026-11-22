@@ -72,6 +72,10 @@ const (
 	// converts an untyped literal to Reason, so Because("not_manged")
 	// compiles, and the caller would get a word the schema does not list.
 	RuleReason = "reason"
+	// RulePrints: the output that Prints gives an example is a value of the
+	// method's output type, and Prints follows an Example. Prints takes any
+	// value, so a sample of another type compiles.
+	RulePrints = "prints"
 )
 
 // inValues are the values of the in tag: where a field of a request comes
@@ -101,6 +105,11 @@ func hasField(
 // rule, so an author or an agent can read the rules before breaking one.
 // The tests trigger each rule, and fail on a rule without a check.
 var Checks = guide.Checks{
+	{
+		Rule:     RulePrints,
+		Requires: "The output that Prints gives an example is a value of the method's output type, and Prints follows an Example.",
+		Fix:      "Give Prints a value of the method's output type, after the Example that it shows.",
+	},
 	{
 		Rule:     RuleIn,
 		Requires: "Each in tag of an input field is path, query, form or body.",
@@ -269,6 +278,22 @@ func Validate(
 				add(m.Name, RuleIn, fmt.Sprintf(
 					"input field %s is tagged in:%q; the values are path, query, form and body.",
 					jsonName(f), v))
+			}
+		}
+		if m.unprinted {
+			add(
+				m.Name,
+				RulePrints,
+				"Prints comes before any Example; it gives the last Example its output.",
+			)
+		}
+		for _, ex := range m.examples {
+			if ex.Output == nil {
+				continue
+			}
+			if t := reflect.TypeOf(ex.Output); t != m.Out {
+				add(m.Name, RulePrints, fmt.Sprintf(
+					"Prints gives the example %q a %s, not a %s.", ex.Flags, t, m.Out))
 			}
 		}
 		for _, e := range m.Mapped() {

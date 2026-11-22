@@ -15,6 +15,31 @@ osapi client job retry [flags]
 osapi client job retry --id 550e8400-e29b-41d4-a716-446655440000
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi client job retry --id 550e8400-e29b-41d4-a716-446655440000
+[1;38;2;0;213;255mJob:[0m
+
+  [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+  [38;2;10;143;176mJob ID:[0m    9b2e4c6a-8d0f-4a1b-b3c5-d7e9f1a2b4c6
+  [38;2;10;143;176mStatus:[0m    created
+  [38;2;10;143;176mRevision:[0m  42
+```
+
+With `--json`, the API's response:
+
+```json
+{
+  "job_id": "9b2e4c6a-8d0f-4a1b-b3c5-d7e9f1a2b4c6",
+  "status": "created",
+  "revision": 42,
+  "timestamp": "2026-01-15T10:00:00Z"
+}
+```
+
 ## Permission
 
 It needs the `job:write` permission. `osapi token roles get --name <role>` shows

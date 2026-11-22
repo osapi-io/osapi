@@ -62,6 +62,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Returns("List of stored files.").
 		Command("List stored files", "").
 		Example("").
+		Prints(sampleList).
 		Example("--json").
 		Errors(noStore503),
 	endpoint.Post[UploadInput, FileUploadResponse]("upload").
@@ -89,7 +90,9 @@ var Group = endpoint.Register(endpoint.Define(
 				"file exists with different content, the command rejects the upload with 409\n"+
 				"Conflict. `file update` replaces the file.").
 		Example("--name app.conf --file /tmp/app.conf").
-		Example("--name app.conf.tmpl --file /tmp/app.conf.tmpl --content-type template"),
+		Prints(sampleUpload).
+		Example("--name app.conf.tmpl --file /tmp/app.conf.tmpl --content-type template").
+		Prints(sampleUploadTemplate),
 	endpoint.Get[GetInput, FileInfoResponse]("get").
 		Fails("a name over 255 characters", GetInput{Name: long}).
 		Handle(Get).
@@ -99,6 +102,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Returns("The metadata of the file.").
 		Command("Get file metadata", "").
 		Example("--name app.conf").
+		Prints(sampleInfo).
 		Example("--name app.conf --json").
 		Errors(endpoint.NotFound(ErrNotFound, "File not found."), noStore503),
 	endpoint.Put[UpdateInput, FileUploadResponse]("update").
@@ -118,6 +122,7 @@ var Group = endpoint.Register(endpoint.Define(
 			"The command replaces the content of a stored file, or stores it when the\n"+
 				"name is new. The same content changes nothing (`Changed: false`).").
 		Example("--name app.conf --file /tmp/app.conf").
+		Prints(sampleUpload).
 		Errors(
 			endpoint.Forbidden(ErrProtected, "The file is an osapi file, which a caller cannot write."),
 			noStore503,
@@ -152,6 +157,7 @@ var Group = endpoint.Register(endpoint.Define(
 			"The list shows the deployments whose object changed after the last\n"+
 				"deploy. Those are the files that you must deploy again.").
 		Example("").
+		Prints(sampleStale).
 		Example("--json").
 		Errors(
 			noStore503,

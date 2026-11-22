@@ -44,6 +44,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Returns("Process is alive.").
 		Command("Liveness probe", "").
 		Example("").
+		Prints(sampleLiveness).
 		Example("--json"),
 	endpoint.Get[ReadyInput, ReadyResponse]("ready").
 		Handle(Ready).
@@ -57,6 +58,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Command("Readiness probe",
 			"The command checks that the controller can reach NATS and the KV buckets.").
 		Example("").
+		Prints(sampleReady).
 		Example("--json"),
 	endpoint.Get[StatusInput, StatusResponse]("status").
 		Handle(Status).
@@ -78,5 +80,6 @@ var Group = endpoint.Register(endpoint.Define(
 			"`osapi client agent list` for the labels and the OS of each agent. When a\n"+
 			"check fails, the overall status is `degraded`, and the check shows the error.").
 		Example("").
+		Prints(sampleStatus).
 		Example("--json"),
 ))

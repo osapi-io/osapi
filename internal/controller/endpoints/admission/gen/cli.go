@@ -12,10 +12,13 @@ import (
 )
 
 var admissionListCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "admission:read"},
-	Args:        cobra.NoArgs,
-	Example:     "  osapi client admission list\n  osapi client admission list --state pending",
-	Long:        "Each node that asked to join, each node osapi admitted, and each decision\nagainst a node. An admitted node that is not running is Offline, with when\nit was last seen.",
+	Annotations: map[string]string{
+		reference.Permission: "admission:read",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client admission list\n\x1b[1;38;2;0;213;255mAdmissions (2):\x1b[0m\n  \x1b[38;2;10;143;176mMACHINE ID                        \x1b[0m\x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATE     \x1b[0m\x1b[38;2;10;143;176mONLINE  \x1b[0m\x1b[38;2;10;143;176mLAST SEEN  \x1b[0m\x1b[38;2;10;143;176mFINGERPRINT\x1b[0m\n  \x1b[38;2;138;138;138md530664edc1c431eb5ef1e9dfd6617a5\x1b[0m  \x1b[1mweb-03\x1b[0m    pending   yes     8s         SHA256:1f53dea6b0c3e...\n  \x1b[38;2;138;138;138m8f14e45fceea167a5a36dedd4bea2543\x1b[0m  \x1b[1mweb-01\x1b[0m    admitted  yes     8s         SHA256:9a7c3e1b5d2f4...\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"total_items\": 2,\n  \"items\": [\n    {\n      \"machine_id\": \"d530664edc1c431eb5ef1e9dfd6617a5\",\n      \"hostname\": \"web-03\",\n      \"state\": \"pending\",\n      \"online\": true,\n      \"last_seen\": \"2026-01-15T09:59:52Z\",\n      \"fingerprint\": \"SHA256:1f53dea6b0c3e2f9a8d4c71e5b6a0f2d9c8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a\",\n      \"requested_at\": \"2026-01-15T09:40:00Z\"\n    },\n    {\n      \"machine_id\": \"8f14e45fceea167a5a36dedd4bea2543\",\n      \"hostname\": \"web-01\",\n      \"state\": \"admitted\",\n      \"online\": true,\n      \"last_seen\": \"2026-01-15T09:59:52Z\",\n      \"fingerprint\": \"SHA256:9a7c3e1b5d2f4a6c8e0b1d3f5a7c9e2b4d6f8a0c2e4b6d8f0a1c3e5b7d9f1a3c\",\n      \"admitted_at\": \"2026-01-15T09:40:00Z\"\n    }\n  ]\n}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client admission list\n  osapi client admission list --state pending",
+	Long:    "Each node that asked to join, each node osapi admitted, and each decision\nagainst a node. An admitted node that is not running is Offline, with when\nit was last seen.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		state, _ := cmd.Flags().GetString("state")
 
@@ -26,10 +29,13 @@ var admissionListCmd = &cobra.Command{
 }
 
 var admissionGetCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "admission:read"},
-	Args:        cobra.NoArgs,
-	Example:     "  osapi client admission get --machine-id d530664edc1c431eb5ef1e9dfd6617a5",
-	Long:        "Returns one machine's admission record by machine ID.",
+	Annotations: map[string]string{
+		reference.Permission: "admission:read",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client admission get --machine-id d530664edc1c431eb5ef1e9dfd6617a5\n\x1b[1;38;2;0;213;255mAdmission:\x1b[0m\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n  \x1b[38;2;10;143;176mMachine ID:\x1b[0m    d530664edc1c431eb5ef1e9dfd6617a5\n  \x1b[38;2;10;143;176mHostname:\x1b[0m      web-03\n  \x1b[38;2;10;143;176mState:\x1b[0m         pending\n  \x1b[38;2;10;143;176mOnline:\x1b[0m        yes\n  \x1b[38;2;10;143;176mLast seen:\x1b[0m     8s\n  \x1b[38;2;10;143;176mFingerprint:\x1b[0m   SHA256:1f53dea6b0c3e2f9a8d4c71e5b6a0f2d9c8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a\n  \x1b[38;2;10;143;176mRequested at:\x1b[0m  20m\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"machine_id\": \"d530664edc1c431eb5ef1e9dfd6617a5\",\n  \"hostname\": \"web-03\",\n  \"state\": \"pending\",\n  \"online\": true,\n  \"last_seen\": \"2026-01-15T09:59:52Z\",\n  \"fingerprint\": \"SHA256:1f53dea6b0c3e2f9a8d4c71e5b6a0f2d9c8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a\",\n  \"requested_at\": \"2026-01-15T09:40:00Z\"\n}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client admission get --machine-id d530664edc1c431eb5ef1e9dfd6617a5",
+	Long:    "Returns one machine's admission record by machine ID.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		machineID, _ := cmd.Flags().GetString("machine-id")
 

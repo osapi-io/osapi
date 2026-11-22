@@ -46,5 +46,6 @@ var Group = endpoint.Register(endpoint.Define(
 			"Lists each fact key that an input can refer to as @fact.<key>, with\n"+
 				"its description.").
 		Example("").
+		Prints(sampleKeys).
 		Example("--json"),
 ))

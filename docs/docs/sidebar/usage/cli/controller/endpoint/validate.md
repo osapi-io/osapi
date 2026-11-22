@@ -8,6 +8,9 @@ describes each part of a group.
 
 The rules:
 
+- `prints`: The output that Prints gives an example is a value of the method's
+  output type, and Prints follows an Example. Fix: Give Prints a value of the
+  method's output type, after the Example that it shows.
 - `in`: Each in tag of an input field is path, query, form or body. Fix: Correct
   the value. A field with another value is read from the request body, not from
   where the tag says.

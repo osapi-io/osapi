@@ -63,6 +63,7 @@ var Group = endpoint.Register(endpoint.Define(
 			"The list shows recent API activity: the user, the HTTP method, the path,\n"+
 				"the response status and the duration.").
 		Example("").
+		Prints(sampleList).
 		Example("--limit 10 --offset 20").
 		Example("--json").
 		Errors(notConfigured503),
@@ -78,6 +79,7 @@ var Group = endpoint.Register(endpoint.Define(
 			"To save them, send the JSON to a file:\n"+
 				"osapi client audit export --json > audit.json").
 		Example("").
+		Prints(sampleList).
 		Example("--json").
 		Errors(notConfigured503),
 	endpoint.Get[GetInput, AuditEntryResponse]("get").
@@ -90,6 +92,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Returns("Audit entry found.").
 		Command("Get a single audit log entry", "").
 		Example("--id 550e8400-e29b-41d4-a716-446655440000").
+		Prints(sampleGet).
 		Example("--id 550e8400-e29b-41d4-a716-446655440000 --json").
 		Errors(endpoint.NotFound(ErrNotFound, "Audit entry not found."), notConfigured503),
 ))

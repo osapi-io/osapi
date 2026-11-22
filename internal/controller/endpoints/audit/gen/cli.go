@@ -12,10 +12,13 @@ import (
 )
 
 var auditListCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "audit:read"},
-	Args:        cobra.NoArgs,
-	Example:     "  osapi client audit list\n  osapi client audit list --limit 10 --offset 20\n  osapi client audit list --json",
-	Long:        "The list shows recent API activity: the user, the HTTP method, the path,\nthe response status and the duration.",
+	Annotations: map[string]string{
+		reference.Permission: "audit:read",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client audit list\n\x1b[1;38;2;0;213;255mAudit entries (2):\x1b[0m\n  \x1b[38;2;10;143;176mID                                    \x1b[0m\x1b[38;2;10;143;176mTIMESTAMP            \x1b[0m\x1b[38;2;10;143;176mUSER             \x1b[0m\x1b[38;2;10;143;176mMETHOD  \x1b[0m\x1b[38;2;10;143;176mPATH                                         \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mDURATION  \x1b[0m\x1b[38;2;10;143;176mTRACE ID\x1b[0m\n  \x1b[38;2;138;138;138m550e8400-e29b-41d4-a716-446655440000\x1b[0m  \x1b[38;2;138;138;138m2026-01-15 09:58:12\x1b[0m  ops@example.com  \x1b[1mPUT\x1b[0m     /api/node/web-01/sysctl/net.ipv4.ip_forward  200     184ms     \x1b[38;2;138;138;138m26e448c9dbe1c4a8...\x1b[0m\n  \x1b[38;2;138;138;138m6ba7b810-9dad-11d1-80b4-00c04fd430c8\x1b[0m  \x1b[38;2;138;138;138m2026-01-15 09:41:03\x1b[0m  ci@example.com   \x1b[1mGET\x1b[0m     /api/agent                                   200     12ms      \x1b[38;2;138;138;138m\x1b[0m\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"total_items\": 2,\n  \"items\": [\n    {\n      \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n      \"timestamp\": \"2026-01-15T09:58:12Z\",\n      \"user\": \"ops@example.com\",\n      \"roles\": [\n        \"admin\"\n      ],\n      \"method\": \"PUT\",\n      \"path\": \"/api/node/web-01/sysctl/net.ipv4.ip_forward\",\n      \"response_code\": 200,\n      \"duration_ms\": 184,\n      \"source_ip\": \"10.0.0.5\",\n      \"operation_id\": \"UpdateSysctl\",\n      \"trace_id\": \"26e448c9dbe1c4a8d216a98c675079c9\",\n      \"job_id\": \"7c9e6679-7425-40de-944b-e07fc1f90ae7\"\n    },\n    {\n      \"id\": \"6ba7b810-9dad-11d1-80b4-00c04fd430c8\",\n      \"timestamp\": \"2026-01-15T09:41:03Z\",\n      \"user\": \"ci@example.com\",\n      \"roles\": [\n        \"read\"\n      ],\n      \"method\": \"GET\",\n      \"path\": \"/api/agent\",\n      \"response_code\": 200,\n      \"duration_ms\": 12,\n      \"source_ip\": \"10.0.0.9\",\n      \"operation_id\": \"GetAgents\"\n    }\n  ]\n}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client audit list\n  osapi client audit list --limit 10 --offset 20\n  osapi client audit list --json",
+	Long:    "The list shows recent API activity: the user, the HTTP method, the path,\nthe response status and the duration.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		limit, _ := cmd.Flags().GetInt("limit")
 		offset, _ := cmd.Flags().GetInt("offset")
@@ -27,10 +30,13 @@ var auditListCmd = &cobra.Command{
 }
 
 var auditExportCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "audit:read"},
-	Args:        cobra.NoArgs,
-	Example:     "  osapi client audit export\n  osapi client audit export --json",
-	Long:        "To save them, send the JSON to a file:\nosapi client audit export --json > audit.json",
+	Annotations: map[string]string{
+		reference.Permission: "audit:read",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client audit export\n\x1b[1;38;2;0;213;255mAudit entries (2):\x1b[0m\n  \x1b[38;2;10;143;176mID                                    \x1b[0m\x1b[38;2;10;143;176mTIMESTAMP            \x1b[0m\x1b[38;2;10;143;176mUSER             \x1b[0m\x1b[38;2;10;143;176mMETHOD  \x1b[0m\x1b[38;2;10;143;176mPATH                                         \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mDURATION  \x1b[0m\x1b[38;2;10;143;176mTRACE ID\x1b[0m\n  \x1b[38;2;138;138;138m550e8400-e29b-41d4-a716-446655440000\x1b[0m  \x1b[38;2;138;138;138m2026-01-15 09:58:12\x1b[0m  ops@example.com  \x1b[1mPUT\x1b[0m     /api/node/web-01/sysctl/net.ipv4.ip_forward  200     184ms     \x1b[38;2;138;138;138m26e448c9dbe1c4a8...\x1b[0m\n  \x1b[38;2;138;138;138m6ba7b810-9dad-11d1-80b4-00c04fd430c8\x1b[0m  \x1b[38;2;138;138;138m2026-01-15 09:41:03\x1b[0m  ci@example.com   \x1b[1mGET\x1b[0m     /api/agent                                   200     12ms      \x1b[38;2;138;138;138m\x1b[0m\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"total_items\": 2,\n  \"items\": [\n    {\n      \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n      \"timestamp\": \"2026-01-15T09:58:12Z\",\n      \"user\": \"ops@example.com\",\n      \"roles\": [\n        \"admin\"\n      ],\n      \"method\": \"PUT\",\n      \"path\": \"/api/node/web-01/sysctl/net.ipv4.ip_forward\",\n      \"response_code\": 200,\n      \"duration_ms\": 184,\n      \"source_ip\": \"10.0.0.5\",\n      \"operation_id\": \"UpdateSysctl\",\n      \"trace_id\": \"26e448c9dbe1c4a8d216a98c675079c9\",\n      \"job_id\": \"7c9e6679-7425-40de-944b-e07fc1f90ae7\"\n    },\n    {\n      \"id\": \"6ba7b810-9dad-11d1-80b4-00c04fd430c8\",\n      \"timestamp\": \"2026-01-15T09:41:03Z\",\n      \"user\": \"ci@example.com\",\n      \"roles\": [\n        \"read\"\n      ],\n      \"method\": \"GET\",\n      \"path\": \"/api/agent\",\n      \"response_code\": 200,\n      \"duration_ms\": 12,\n      \"source_ip\": \"10.0.0.9\",\n      \"operation_id\": \"GetAgents\"\n    }\n  ]\n}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client audit export\n  osapi client audit export --json",
+	Long:    "To save them, send the JSON to a file:\nosapi client audit export --json > audit.json",
 	Run: func(cmd *cobra.Command, _ []string) {
 		endpointcommand.Run(cmd, audit.Group, "export", audit.ExportInput{})
 	},
@@ -39,10 +45,13 @@ var auditExportCmd = &cobra.Command{
 }
 
 var auditGetCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "audit:read"},
-	Args:        cobra.NoArgs,
-	Example:     "  osapi client audit get --id 550e8400-e29b-41d4-a716-446655440000\n  osapi client audit get --id 550e8400-e29b-41d4-a716-446655440000 --json",
-	Long:        "Returns a single audit log entry by ID.",
+	Annotations: map[string]string{
+		reference.Permission: "audit:read",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client audit get --id 550e8400-e29b-41d4-a716-446655440000\n\x1b[1;38;2;0;213;255mAudit entry:\x1b[0m\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n  \x1b[38;2;10;143;176mID:\x1b[0m         550e8400-e29b-41d4-a716-446655440000\n  \x1b[38;2;10;143;176mTimestamp:\x1b[0m  2026-01-15 09:58:12\n  \x1b[38;2;10;143;176mUser:\x1b[0m       ops@example.com\n  \x1b[38;2;10;143;176mRoles:\x1b[0m      admin\n  \x1b[38;2;10;143;176mMethod:\x1b[0m     PUT\n  \x1b[38;2;10;143;176mPath:\x1b[0m       /api/node/web-01/sysctl/net.ipv4.ip_forward\n  \x1b[38;2;10;143;176mStatus:\x1b[0m     200\n  \x1b[38;2;10;143;176mDuration:\x1b[0m   184ms\n  \x1b[38;2;10;143;176mSource IP:\x1b[0m  10.0.0.5\n  \x1b[38;2;10;143;176mOperation:\x1b[0m  UpdateSysctl\n  \x1b[38;2;10;143;176mTrace ID:\x1b[0m   26e448c9dbe1c4a8d216a98c675079c9\n  \x1b[38;2;10;143;176mJob ID:\x1b[0m     7c9e6679-7425-40de-944b-e07fc1f90ae7\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"entry\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"timestamp\": \"2026-01-15T09:58:12Z\",\n    \"user\": \"ops@example.com\",\n    \"roles\": [\n      \"admin\"\n    ],\n    \"method\": \"PUT\",\n    \"path\": \"/api/node/web-01/sysctl/net.ipv4.ip_forward\",\n    \"response_code\": 200,\n    \"duration_ms\": 184,\n    \"source_ip\": \"10.0.0.5\",\n    \"operation_id\": \"UpdateSysctl\",\n    \"trace_id\": \"26e448c9dbe1c4a8d216a98c675079c9\",\n    \"job_id\": \"7c9e6679-7425-40de-944b-e07fc1f90ae7\"\n  }\n}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client audit get --id 550e8400-e29b-41d4-a716-446655440000\n  osapi client audit get --id 550e8400-e29b-41d4-a716-446655440000 --json",
+	Long:    "Returns a single audit log entry by ID.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		id, _ := cmd.Flags().GetString("id")
 
