@@ -32,6 +32,7 @@ import (
 	"net"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"slices"
@@ -76,6 +77,9 @@ type fakeHost struct {
 	history []string
 	outputs map[string]string
 	later   []behavior.Given
+	// laterFiles are the files that a command writes when it runs,
+	// declared with ExistsAfter.
+	laterFiles []behavior.Given
 
 	// values is the store's content, and revision its last revision.
 	values   map[string][]byte
@@ -314,6 +318,14 @@ func (h *fakeHost) commands(
 		}
 		h.ran = append(h.ran, line)
 		h.history = append(h.history, line)
+		for _, g := range h.laterFiles {
+			if g.After == line {
+				h.setup = true
+				_ = h.FS.MkdirAll(filepath.Dir(g.Path), 0o755)
+				_ = h.FS.WriteFile(g.Path, []byte(g.Content), 0o644)
+				h.setup = false
+			}
+		}
 
 		return out, nil
 	}

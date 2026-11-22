@@ -156,7 +156,8 @@ type Given struct {
 	Path    string `json:"path,omitempty"`
 	Content string `json:"content,omitempty"`
 	// After is the command line that must have run before Command prints
-	// Content, for a GivenOutput declared with PrintsAfter.
+	// Content, for a GivenOutput declared with PrintsAfter, or before the
+	// file holds Content, for a GivenFile declared with ExistsAfter.
 	After string `json:"after,omitempty"`
 	// ContentType is the object's content type, for GivenObject, whose name
 	// is Path.
@@ -245,6 +246,18 @@ func Exists(
 	content string,
 ) Given {
 	return Given{Kind: GivenFile, Path: path, Content: content}
+}
+
+// ExistsAfter says a file holds content once a command line, after, has
+// run: a file that a program changes, such as /etc/group after groupadd.
+// Declare the file before with Exists and its later content with
+// ExistsAfter, as PrintsAfter does for a command's output.
+func ExistsAfter(
+	after string,
+	path string,
+	content string,
+) Given {
+	return Given{Kind: GivenFile, Path: path, Content: content, After: after}
 }
 
 // Links gives the host a symbolic link at path to target before the call,

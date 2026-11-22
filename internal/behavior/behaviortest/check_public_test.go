@@ -181,8 +181,82 @@ func installPkg(
 	return pkgOut{Changed: true}, nil
 }
 
+// installByFile is installPkg with the state in a file that the install
+// writes, as /etc/group is after groupadd.
+func installByFile(
+	ctx context.Context,
+	p pkg,
+	in pkgIn,
+) (pkgOut, error) {
+	if data, _ := p.h.FS.ReadFile("/var/lib/pkg/" + in.Name); string(data) == "installed" {
+		return pkgOut{}, nil
+	}
+	if _, err := p.h.Exec.RunPrivilegedCmd(
+		ctx,
+		"apt-get",
+		[]string{"install", "--", in.Name},
+	); err != nil {
+		return pkgOut{}, err
+	}
+
+	return pkgOut{Changed: true}, nil
+}
+
 type CheckPublicTestSuite struct {
 	suite.Suite
+}
+
+// TestExistsAfter: a file that a command writes, declared with ExistsAfter,
+// holds its later content once the command runs, so a second run of the
+// example reports changed: false.
+func (s *CheckPublicTestSuite) TestExistsAfter() {
+	tests := []struct {
+		name  string
+		given []behavior.HostOption
+		want  []string
+	}{
+		{
+			name: "when ExistsAfter says the install writes the file",
+			given: []behavior.HostOption{
+				behavior.Exists("/var/lib/pkg/tree", "not-installed"),
+				behavior.ExistsAfter("apt-get install -- tree", "/var/lib/pkg/tree", "installed"),
+			},
+		},
+		{
+			name: "when the file is the same after the install",
+			given: []behavior.HostOption{
+				behavior.Exists("/var/lib/pkg/tree", "not-installed"),
+			},
+			want: []string{"running it again reports changed: true"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			opts := append(
+				[]behavior.HostOption{behavior.Ran("apt-get", "install", "--", "tree")},
+				tc.given...)
+			b := behavior.Define(
+				"pkgfile",
+				"Packages",
+				behavior.Node,
+				behavior.Platform(
+					"debian",
+					func(h host.Host) (pkg, error) { return pkg{h: h}, nil },
+				),
+				behavior.Sudo("apt-get"),
+				behavior.Write("install", installByFile).Describe("Install one").
+					Example("Install tree", pkgIn{Name: "tree"}, pkgOut{Changed: true}, opts...),
+			)
+
+			got := behaviortest.Check(b)
+
+			s.Require().Len(got, len(tc.want), strings.Join(got, "\n"))
+			for i, want := range tc.want {
+				s.Contains(got[i], want)
+			}
+		})
+	}
 }
 
 func (s *CheckPublicTestSuite) TestCheck() {

@@ -249,6 +249,11 @@ func prepare(
 	for _, g := range ex.Given {
 		switch g.Kind {
 		case behavior.GivenFile:
+			if g.After != "" {
+				h.laterFiles = append(h.laterFiles, g)
+
+				continue
+			}
 			h.setup = true
 			_ = h.FS.MkdirAll(filepath.Dir(g.Path), 0o755)
 			_ = h.FS.WriteFile(g.Path, []byte(g.Content), 0o644)
