@@ -29,10 +29,11 @@ export function Chip({
         disabled
           ? "cursor-not-allowed border-border/30 bg-card/50 text-text-muted/40"
           : active
-            ? // The one picked: the text color, a raised fill and the logo's
-              // dark-blue line under it, as the docs mark the open page.
+            ? // The one picked: the border and fill that a chip under the
+              // pointer has, a little stronger, and the white text. No
+              // colored line: the docs mark the open page the same way.
               // Green is a status, not a selection.
-              "border-white/20 bg-white/[0.06] text-white shadow-[inset_0_-2px_0_var(--color-accent)]"
+              "border-white/20 bg-white/[0.06] text-white"
             : "border-border bg-card text-text hover:border-white/20 hover:bg-white/[0.03]",
         className,
       )}
