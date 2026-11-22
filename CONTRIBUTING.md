@@ -631,9 +631,17 @@ export OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEY=$(openssl rand -hex 32)
 
 `configs/osapi.yaml` has a placeholder `signing_key`. The placeholder fails the
 startup validation on purpose. Thus you must set the environment variable above
-to run the controller on your machine. The environment variable overrides the
-value in the file. [Configuration] tells how `OSAPI_` environment variables map
-to configuration keys.
+to run the controller on your machine. The file also has a placeholder
+`bearer_token`, so a client request fails authentication until you set a token
+that the key signs:
+
+```bash
+export OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN=$(./osapi token generate \
+  -f configs/osapi.yaml --roles admin --subject dev --json | jq -r .token)
+```
+
+The environment variable overrides the value in the file. [Configuration] tells
+how `OSAPI_` environment variables map to configuration keys.
 
 **Always build through `just`.** The `//go:embed dist/*` directive in
 `ui/embed.go` requires files in `ui/dist/` at compile time. `just build` runs

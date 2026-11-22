@@ -5,7 +5,10 @@ controller:
   client:
     url: http://0.0.0.0:8080
     security:
-      bearer_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlcyI6WyJhZG1pbiJdLCJpc3MiOiJvc2FwaSIsInN1YiI6ImpvaG5AZGV3ZXkud3MiLCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3QiLCJodHRwOi8vbG9jYWxob3N0Il0sImV4cCI6MTc3ODk2MjI3MiwiaWF0IjoxNzcxMjc2MjcyfQ.G_Ezc7J1lGPQdAtWumObuCFMMi4zPIErNk7dD__66Rk
+      # Placeholder: a client request with it fails authentication. Generate
+      # a token with: osapi token generate --roles admin --subject <you>
+      # or set it via the OSAPI_CONTROLLER_CLIENT_SECURITY_BEARER_TOKEN env var.
+      bearer_token: CHANGE_ME_GENERATE_WITH_OSAPI_TOKEN_GENERATE
   # Embedded management UI served at / (API at /api/).
   ui:
     enabled: true
