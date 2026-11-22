@@ -10,23 +10,31 @@ accounts.
 
 ## How it works
 
-The user and group provider reads and changes the local user database of the
-system: `/etc/passwd`, `/etc/shadow` and `/etc/group`. It uses the standard
-system tools: `useradd`, `usermod`, `userdel`, `groupadd`, `groupmod` and
-`groupdel`. All operations run on the agent and use the job system.
+The [user behavior](../reference/behaviors/user/user.md) and the
+[group behavior](../reference/behaviors/group/group.md) read the local user
+database through gohai on each platform: `/etc/passwd`, `/etc/shadow` and
+`/etc/group`. They change it on the Debian family only, with `useradd`,
+`usermod`, `userdel`, `chpasswd`, `groupadd`, `gpasswd` and `groupdel`. On other
+platforms, a change reports `skipped`. All operations run on the agent and use
+the job system.
 
 ### Users
 
-User operations manage local accounts:
-
-- **List**: list all user accounts that are not system accounts
+- **List**: list each user with its IDs, its home, its shell, its groups and its
+  lock state
 - **Get**: get one user by name
-- **Create**: add a new user, with an optional UID, GID, home, shell, groups and
-  password
-- **Update**: change the shell, home or groups, or lock or unlock an account
-- **Delete**: remove a user account
-- **Password**: change the password of a user (plaintext input, hashed before
-  osapi stores the job)
+- **Create**: add a user with `useradd`, with an optional UID, GID, home, shell,
+  groups and password. A user that the host has already does not change, and
+  reports `changed: false`
+- **Update**: change the shell, the home or the groups with `usermod`, or lock
+  or unlock the password. The values that the user has already do not change it
+- **Delete**: remove a user and its home with `userdel -r`. A user that the host
+  does not have reports `changed: false`
+- **Passwd**: set the password of a user with `chpasswd -e`. Each run reports
+  `changed: true`
+
+The controller hashes each password before it makes the job. Thus the job, NATS
+and the agent have only the hash, never the password.
 
 ### SSH keys
 
@@ -72,11 +80,11 @@ $ osapi client node user get --target web-01 --name deploy
 $ osapi client node user create --target web-01 \
     --name deploy --shell /bin/bash --groups sudo,docker
 
-# Update a user (lock account)
-$ osapi client node user update --target web-01 --name deploy --lock
+# Lock the password of a user
+$ osapi client node user update --target web-01 --name deploy --lock locked
 
-# Change password
-$ osapi client node user password update --target web-01 \
+# Set the password of a user
+$ osapi client node user passwd --target web-01 \
     --name deploy --password 'newpass123'
 
 # Delete a user
@@ -133,25 +141,25 @@ $ osapi client node user create --target group:web \
 
 ## Permissions
 
-| Operation          | Permission   |
-| ------------------ | ------------ |
-| User list/get      | `user:read`  |
-| User mutations     | `user:write` |
-| SSH key list       | `user:read`  |
-| SSH key add/remove | `user:write` |
-| Group list/get     | `user:read`  |
-| Group mutations    | `user:write` |
+| Operation          | Permission    |
+| ------------------ | ------------- |
+| User list/get      | `user:read`   |
+| User mutations     | `user:write`  |
+| SSH key list       | `user:read`   |
+| SSH key add/remove | `user:write`  |
+| Group list/get     | `group:read`  |
+| Group mutations    | `group:write` |
 
 ## Supported platforms
 
-| OS Family | Support |
-| --------- | ------- |
-| Debian    | Full    |
-| Darwin    | Skipped |
-| Linux     | Skipped |
+| OS Family | Read | Change  |
+| --------- | ---- | ------- |
+| Debian    | Yes  | Yes     |
+| Darwin    | Yes  | Skipped |
+| Linux     | Yes  | Skipped |
 
-On a platform that is not supported, user and group operations return
-`status: skipped`. They do not fail.
+On a platform that is not supported, a change returns `status: skipped`. It does
+not fail. SSH key operations run on the Debian family only.
 
 ## Related
 

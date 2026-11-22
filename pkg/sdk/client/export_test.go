@@ -222,51 +222,13 @@ var ProcessInfoCollectionFromGen = processInfoCollectionFromGen
 // processSignalCollectionFromGen for testing.
 var ProcessSignalCollectionFromGen = processSignalCollectionFromGen
 
-func UserInfoCollectionFromList(
-	input *gen.UserCollectionResponse,
-) Collection[UserInfoResult] {
-	return userInfoCollectionFromList(input)
-}
+// UserInfoCollectionFromGen exposes the private
+// userInfoCollectionFromGen for testing.
+var UserInfoCollectionFromGen = userInfoCollectionFromGen
 
-// UserInfoCollectionFromGet exposes the private
-// userInfoCollectionFromGet for testing.
-func UserInfoCollectionFromGet(
-	input *gen.UserCollectionResponse,
-) Collection[UserInfoResult] {
-	return userInfoCollectionFromGet(input)
-}
-
-// UserMutationCollectionFromCreate exposes the private
-// userMutationCollectionFromCreate for testing.
-func UserMutationCollectionFromCreate(
-	input *gen.UserMutationResponse,
-) Collection[UserMutationResult] {
-	return userMutationCollectionFromCreate(input)
-}
-
-// UserMutationCollectionFromUpdate exposes the private
-// userMutationCollectionFromUpdate for testing.
-func UserMutationCollectionFromUpdate(
-	input *gen.UserMutationResponse,
-) Collection[UserMutationResult] {
-	return userMutationCollectionFromUpdate(input)
-}
-
-// UserMutationCollectionFromDelete exposes the private
-// userMutationCollectionFromDelete for testing.
-func UserMutationCollectionFromDelete(
-	input *gen.UserMutationResponse,
-) Collection[UserMutationResult] {
-	return userMutationCollectionFromDelete(input)
-}
-
-// UserMutationCollectionFromPassword exposes the private
-// userMutationCollectionFromPassword for testing.
-func UserMutationCollectionFromPassword(
-	input *gen.UserMutationResponse,
-) Collection[UserMutationResult] {
-	return userMutationCollectionFromPassword(input)
-}
+// UserMutationCollectionFromGen exposes the private
+// userMutationCollectionFromGen for testing.
+var UserMutationCollectionFromGen = userMutationCollectionFromGen
 
 // SSHKeyCollectionFromGen exposes the private
 // sshKeyCollectionFromGen for testing.

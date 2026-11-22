@@ -61,11 +61,10 @@ func main() {
 			fmt.Printf("  %s: ERROR %s\n", r.Hostname, r.Error)
 			continue
 		}
-		for _, u := range r.Users {
-			fmt.Printf("  %s: name=%s uid=%d gid=%d home=%s shell=%s groups=%s locked=%v\n",
-				r.Hostname, u.Name, u.UID, u.GID, u.Home, u.Shell,
-				strings.Join(u.Groups, ","), u.Locked)
-		}
+		// Each result is one user on one host.
+		fmt.Printf("  %s: name=%s uid=%d gid=%d home=%s shell=%s groups=%s locked=%v\n",
+			r.Hostname, r.Name, r.UID, r.GID, r.Home, r.Shell,
+			strings.Join(r.Groups, ","), r.Locked)
 	}
 
 	// Get a specific user account.
@@ -79,10 +78,8 @@ func main() {
 			fmt.Printf("  %s: ERROR %s\n", r.Hostname, r.Error)
 			continue
 		}
-		for _, u := range r.Users {
-			fmt.Printf("  %s: name=%s uid=%d home=%s shell=%s\n",
-				r.Hostname, u.Name, u.UID, u.Home, u.Shell)
-		}
+		fmt.Printf("  %s: name=%s uid=%d home=%s shell=%s\n",
+			r.Hostname, r.Name, r.UID, r.Home, r.Shell)
 	}
 
 	// Create a new user account (may fail on non-Debian platforms).

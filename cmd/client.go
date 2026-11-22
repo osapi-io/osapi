@@ -131,8 +131,9 @@ func init() {
 		PrintJSON: cli.PrintJSON,
 		Print:     cli.Printer{},
 		// These are written by hand, and their inits run after this one: a
-		// behavior goes Under them, as network dns does.
-	}, clientNodeNetworkCmd); err != nil {
+		// behavior goes Under them, as network dns does, or joins them, as
+		// user does with its hand-written ssh-key commands.
+	}, clientNodeNetworkCmd, clientNodeUserCmd); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}

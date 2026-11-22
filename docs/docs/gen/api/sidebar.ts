@@ -431,45 +431,9 @@ const sidebar: SidebarsConfig = {
       label: "Node/User",
       link: {
         type: "doc",
-        id: "gen/api/user-management-api-user-operations",
+        id: "gen/api/user-ssh-key-management-api-user-operations",
       },
       items: [
-        {
-          type: "doc",
-          id: "gen/api/get-node-user",
-          label: "List all users",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-node-user",
-          label: "Create a user",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-node-user-by-name",
-          label: "Get a user",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/put-node-user",
-          label: "Update a user",
-          className: "api-method put",
-        },
-        {
-          type: "doc",
-          id: "gen/api/delete-node-user",
-          label: "Delete a user",
-          className: "api-method delete",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-node-user-password",
-          label: "Change user password",
-          className: "api-method post",
-        },
         {
           type: "doc",
           id: "gen/api/get-node-user-ssh-key",
@@ -1147,6 +1111,52 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/get-node-uptime",
           label: "Get the uptime of the host",
           className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/User",
+      link: {
+        type: "doc",
+        id: "gen/api/user-api-user-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-user",
+          label: "List the users of the host",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-user",
+          label: "Add a user",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-node-user",
+          label: "Remove a user",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-user-by-key",
+          label: "Get one user",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-user",
+          label: "Change a user",
+          className: "api-method put",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-user-passwd",
+          label: "Set the password of a user",
+          className: "api-method post",
         },
       ],
     },

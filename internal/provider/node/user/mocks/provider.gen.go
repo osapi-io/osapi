@@ -56,66 +56,6 @@ func (mr *MockProviderMockRecorder) AddKey(ctx, username, key any) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddKey", reflect.TypeOf((*MockProvider)(nil).AddKey), ctx, username, key)
 }
 
-// ChangePassword mocks base method.
-func (m *MockProvider) ChangePassword(ctx context.Context, name, passwordHash string) (*user.Result, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ChangePassword", ctx, name, passwordHash)
-	ret0, _ := ret[0].(*user.Result)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ChangePassword indicates an expected call of ChangePassword.
-func (mr *MockProviderMockRecorder) ChangePassword(ctx, name, passwordHash any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangePassword", reflect.TypeOf((*MockProvider)(nil).ChangePassword), ctx, name, passwordHash)
-}
-
-// CreateUser mocks base method.
-func (m *MockProvider) CreateUser(ctx context.Context, opts user.CreateUserOpts) (*user.Result, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateUser", ctx, opts)
-	ret0, _ := ret[0].(*user.Result)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateUser indicates an expected call of CreateUser.
-func (mr *MockProviderMockRecorder) CreateUser(ctx, opts any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockProvider)(nil).CreateUser), ctx, opts)
-}
-
-// DeleteUser mocks base method.
-func (m *MockProvider) DeleteUser(ctx context.Context, name string) (*user.Result, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteUser", ctx, name)
-	ret0, _ := ret[0].(*user.Result)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// DeleteUser indicates an expected call of DeleteUser.
-func (mr *MockProviderMockRecorder) DeleteUser(ctx, name any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockProvider)(nil).DeleteUser), ctx, name)
-}
-
-// GetUser mocks base method.
-func (m *MockProvider) GetUser(ctx context.Context, name string) (*user.User, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUser", ctx, name)
-	ret0, _ := ret[0].(*user.User)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetUser indicates an expected call of GetUser.
-func (mr *MockProviderMockRecorder) GetUser(ctx, name any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockProvider)(nil).GetUser), ctx, name)
-}
-
 // ListKeys mocks base method.
 func (m *MockProvider) ListKeys(ctx context.Context, username string) ([]user.SSHKey, error) {
 	m.ctrl.T.Helper()
@@ -131,21 +71,6 @@ func (mr *MockProviderMockRecorder) ListKeys(ctx, username any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListKeys", reflect.TypeOf((*MockProvider)(nil).ListKeys), ctx, username)
 }
 
-// ListUsers mocks base method.
-func (m *MockProvider) ListUsers(ctx context.Context) ([]user.User, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListUsers", ctx)
-	ret0, _ := ret[0].([]user.User)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListUsers indicates an expected call of ListUsers.
-func (mr *MockProviderMockRecorder) ListUsers(ctx any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUsers", reflect.TypeOf((*MockProvider)(nil).ListUsers), ctx)
-}
-
 // RemoveKey mocks base method.
 func (m *MockProvider) RemoveKey(ctx context.Context, username, fingerprint string) (*user.SSHKeyResult, error) {
 	m.ctrl.T.Helper()
@@ -159,19 +84,4 @@ func (m *MockProvider) RemoveKey(ctx context.Context, username, fingerprint stri
 func (mr *MockProviderMockRecorder) RemoveKey(ctx, username, fingerprint any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveKey", reflect.TypeOf((*MockProvider)(nil).RemoveKey), ctx, username, fingerprint)
-}
-
-// UpdateUser mocks base method.
-func (m *MockProvider) UpdateUser(ctx context.Context, name string, opts user.UpdateUserOpts) (*user.Result, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUser", ctx, name, opts)
-	ret0, _ := ret[0].(*user.Result)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UpdateUser indicates an expected call of UpdateUser.
-func (mr *MockProviderMockRecorder) UpdateUser(ctx, name, opts any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockProvider)(nil).UpdateUser), ctx, name, opts)
 }

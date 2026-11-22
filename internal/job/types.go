@@ -176,14 +176,7 @@ const (
 )
 
 // User operations.
-const (
-	OperationUserList           = client.OpUserList
-	OperationUserGet            = client.OpUserGet
-	OperationUserCreate         = client.OpUserCreate
-	OperationUserUpdate         = client.OpUserUpdate
-	OperationUserDelete         = client.OpUserDelete
-	OperationUserChangePassword = client.OpUserChangePassword
-)
+const ()
 
 // SSH Key operations.
 const (

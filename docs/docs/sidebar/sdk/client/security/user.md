@@ -15,7 +15,7 @@ User account management on target hosts.
 | `Create(ctx, hostname, opts)`                   | Create a user account            |
 | `Update(ctx, hostname, name, opts)`             | Update a user account            |
 | `Delete(ctx, hostname, name)`                   | Delete a user account            |
-| `ChangePassword(ctx, hostname, name, password)` | Change a user's password         |
+| `ChangePassword(ctx, hostname, name, password)` | Set the password of a user       |
 | `ListKeys(ctx, hostname, name)`                 | List SSH authorized keys         |
 | `AddKey(ctx, hostname, name, opts)`             | Add an SSH authorized key        |
 | `RemoveKey(ctx, hostname, name, fingerprint)`   | Remove an SSH key by fingerprint |
@@ -29,10 +29,9 @@ c := client.New("http://localhost:8080", token)
 
 // List all users
 resp, err := c.User.List(ctx, "_any")
+// Each result is one user on one host.
 for _, r := range resp.Data.Results {
-    for _, u := range r.Users {
-        fmt.Printf("%s uid=%d\n", u.Name, u.UID)
-    }
+    fmt.Printf("%s: %s uid=%d\n", r.Hostname, r.Name, r.UID)
 }
 
 // Get a specific user
@@ -51,7 +50,7 @@ resp, err := c.User.Update(ctx, "web-01", "deploy", client.UserUpdateOpts{
     Lock: &lock,
 })
 
-// Change password
+// Set the password. The controller hashes it before it makes the job.
 resp, err := c.User.ChangePassword(ctx, "web-01", "deploy", "newpass123")
 
 // Delete a user

@@ -1429,48 +1429,66 @@ func (e UptimeEntryStatus) Valid() bool {
 	}
 }
 
-// Defines values for UserEntryStatus.
+// Defines values for UserAccountStatus.
 const (
-	UserEntryStatusFailed  UserEntryStatus = "failed"
-	UserEntryStatusOk      UserEntryStatus = "ok"
-	UserEntryStatusSkipped UserEntryStatus = "skipped"
-	UserEntryStatusTimeout UserEntryStatus = "timeout"
+	UserAccountStatusFailed  UserAccountStatus = "failed"
+	UserAccountStatusOk      UserAccountStatus = "ok"
+	UserAccountStatusSkipped UserAccountStatus = "skipped"
+	UserAccountStatusTimeout UserAccountStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the UserEntryStatus enum.
-func (e UserEntryStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the UserAccountStatus enum.
+func (e UserAccountStatus) Valid() bool {
 	switch e {
-	case UserEntryStatusFailed:
+	case UserAccountStatusFailed:
 		return true
-	case UserEntryStatusOk:
+	case UserAccountStatusOk:
 		return true
-	case UserEntryStatusSkipped:
+	case UserAccountStatusSkipped:
 		return true
-	case UserEntryStatusTimeout:
+	case UserAccountStatusTimeout:
 		return true
 	default:
 		return false
 	}
 }
 
-// Defines values for UserMutationResultStatus.
+// Defines values for UserResultStatus.
 const (
-	UserMutationResultStatusFailed  UserMutationResultStatus = "failed"
-	UserMutationResultStatusOk      UserMutationResultStatus = "ok"
-	UserMutationResultStatusSkipped UserMutationResultStatus = "skipped"
-	UserMutationResultStatusTimeout UserMutationResultStatus = "timeout"
+	UserResultStatusFailed  UserResultStatus = "failed"
+	UserResultStatusOk      UserResultStatus = "ok"
+	UserResultStatusSkipped UserResultStatus = "skipped"
+	UserResultStatusTimeout UserResultStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the UserMutationResultStatus enum.
-func (e UserMutationResultStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the UserResultStatus enum.
+func (e UserResultStatus) Valid() bool {
 	switch e {
-	case UserMutationResultStatusFailed:
+	case UserResultStatusFailed:
 		return true
-	case UserMutationResultStatusOk:
+	case UserResultStatusOk:
 		return true
-	case UserMutationResultStatusSkipped:
+	case UserResultStatusSkipped:
 		return true
-	case UserMutationResultStatusTimeout:
+	case UserResultStatusTimeout:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for UserUpdateRequestLock.
+const (
+	Locked   UserUpdateRequestLock = "locked"
+	Unlocked UserUpdateRequestLock = "unlocked"
+)
+
+// Valid indicates whether the value is a known member of the UserUpdateRequestLock enum.
+func (e UserUpdateRequestLock) Valid() bool {
+	switch e {
+	case Locked:
+		return true
+	case Unlocked:
 		return true
 	default:
 		return false
@@ -4742,129 +4760,154 @@ type Usage struct {
 	Used int `json:"used"`
 }
 
+// UserAccount defines model for UserAccount.
+type UserAccount struct {
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Gid Its primary group ID
+	Gid *int `json:"gid,omitempty"`
+
+	// Groups The groups it is a member of, besides its primary group
+	Groups *[]string `json:"groups,omitempty"`
+
+	// Home Its home directory
+	Home *string `json:"home,omitempty"`
+
+	// Hostname Hostname of the agent that produced this result.
+	Hostname string `json:"hostname"`
+
+	// Locked Whether a login with its password is refused
+	Locked *bool `json:"locked,omitempty"`
+
+	// Name The user
+	Name *string `json:"name,omitempty"`
+
+	// Shell Its login shell
+	Shell *string `json:"shell,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status UserAccountStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
+
+	// Uid Its numeric user ID
+	Uid *int `json:"uid,omitempty"`
+}
+
+// UserAccountStatus The status of the operation for this host.
+type UserAccountStatus string
+
 // UserCollectionResponse defines model for UserCollectionResponse.
 type UserCollectionResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []UserEntry         `json:"results"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []UserAccount       `json:"results"`
 }
 
 // UserCreateRequest defines model for UserCreateRequest.
 type UserCreateRequest struct {
-	// Gid Primary group ID. If omitted, a group matching the username is created.
+	// Gid Its primary group ID; a group of its own when it is 0
 	Gid *int `json:"gid,omitempty" validate:"omitempty,min=0"`
 
-	// Groups Supplementary group names.
-	Groups *[]string `json:"groups,omitempty" validate:"omitempty,dive,account_name"`
+	// Groups The groups it is a member of, besides its primary group
+	Groups *[]string `json:"groups,omitempty" validate:"omitempty,dive,max=32,account_name"`
 
-	// Home Home directory path.
-	Home *string `json:"home,omitempty" validate:"omitempty,min=1"`
+	// Home Its home directory; /home/<name> when empty
+	Home *string `json:"home,omitempty" validate:"omitempty,startswith=/,no_linebreak"`
 
-	// Name Username for the new account. Must start with a lowercase letter or underscore, followed by lowercase letters, digits, underscores, or hyphens, with an optional trailing `$`; 32 characters or fewer.
-	Name string `json:"name" validate:"required,account_name"`
+	// Name The user to add, such as alice
+	Name string `json:"name" validate:"required,max=32,account_name"`
 
-	// Password Initial password. Sent in plaintext over TLS, hashed by the controller before the job is stored, and never written to disk or logs in plaintext.
-	Password *string `json:"password,omitempty" validate:"omitempty,min=1"`
+	// Password Its password, which osapi hashes on the controller; none when empty
+	Password *string `json:"password,omitempty" validate:"omitempty,no_linebreak"`
 
-	// Shell Login shell path.
-	Shell *string `json:"shell,omitempty" validate:"omitempty,min=1"`
+	// Shell Its login shell, such as /bin/bash; the system's default when empty
+	Shell *string `json:"shell,omitempty" validate:"omitempty,startswith=/,no_linebreak"`
 
-	// System Create a system account.
+	// System Add it as a system user, with an ID from the system range
 	System *bool `json:"system,omitempty" validate:"omitempty"`
 
-	// Uid Numeric user ID. If omitted, the system assigns one.
+	// Uid Its numeric user ID; the system assigns one when it is 0
 	Uid *int `json:"uid,omitempty" validate:"omitempty,min=0"`
 }
 
-// UserEntry User listing result for one host.
-type UserEntry struct {
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname Hostname of the agent that reported this entry.
-	Hostname string `json:"hostname"`
-
-	// Status The status of the operation for this host.
-	Status UserEntryStatus `json:"status"`
-
-	// Users User accounts on this host.
-	Users *[]UserInfo `json:"users,omitempty"`
-}
-
-// UserEntryStatus The status of the operation for this host.
-type UserEntryStatus string
-
-// UserInfo A user account on the target node.
-type UserInfo struct {
-	// Gid Primary group ID.
-	Gid *int `json:"gid,omitempty"`
-
-	// Groups Supplementary group names.
-	Groups *[]string `json:"groups,omitempty"`
-
-	// Home Home directory path.
-	Home *string `json:"home,omitempty"`
-
-	// Locked Whether the account is locked.
-	Locked *bool `json:"locked,omitempty"`
-
-	// Name Username.
-	Name *string `json:"name,omitempty"`
-
-	// Shell Login shell path.
-	Shell *string `json:"shell,omitempty"`
-
-	// Uid Numeric user ID.
-	Uid *int `json:"uid,omitempty"`
-}
-
-// UserMutationResponse defines model for UserMutationResponse.
-type UserMutationResponse struct {
+// UserCreateResponse defines model for UserCreateResponse.
+type UserCreateResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID  `json:"job_id,omitempty"`
-	Results []UserMutationResult `json:"results"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []UserResult        `json:"results"`
 }
 
-// UserMutationResult Result of a user create, update, delete, or password operation for one host.
-type UserMutationResult struct {
-	// Changed Whether the operation modified system state.
+// UserDeleteResponse defines model for UserDeleteResponse.
+type UserDeleteResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []UserResult        `json:"results"`
+}
+
+// UserGetResponse defines model for UserGetResponse.
+type UserGetResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []UserAccount       `json:"results"`
+}
+
+// UserPasswdRequest defines model for UserPasswdRequest.
+type UserPasswdRequest struct {
+	// Password The new password, which osapi hashes on the controller
+	Password *string `json:"password,omitempty" validate:"omitempty,no_linebreak"`
+}
+
+// UserPasswdResponse defines model for UserPasswdResponse.
+type UserPasswdResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []UserResult        `json:"results"`
+}
+
+// UserResult defines model for UserResult.
+type UserResult struct {
+	// Changed Whether the host changed
 	Changed *bool `json:"changed,omitempty"`
 
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
-	// Hostname Hostname of the agent that processed this operation.
+	// Hostname Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
-	// Name Username.
+	// Name The user
 	Name *string `json:"name,omitempty"`
 
 	// Status The status of the operation for this host.
-	Status UserMutationResultStatus `json:"status"`
+	Status UserResultStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
 }
 
-// UserMutationResultStatus The status of the operation for this host.
-type UserMutationResultStatus string
-
-// UserPasswordRequest defines model for UserPasswordRequest.
-type UserPasswordRequest struct {
-	// Password New password. Sent in plaintext over TLS, hashed by the controller before the job is stored, and never written to disk or logs in plaintext.
-	Password string `json:"password" validate:"required,min=1"`
-}
+// UserResultStatus The status of the operation for this host.
+type UserResultStatus string
 
 // UserUpdateRequest defines model for UserUpdateRequest.
 type UserUpdateRequest struct {
-	// Groups Supplementary group names (replaces existing).
-	Groups *[]string `json:"groups,omitempty" validate:"omitempty,dive,account_name"`
+	// Groups The groups it is a member of, which replace the groups it has
+	Groups *[]string `json:"groups,omitempty" validate:"omitempty,dive,max=32,account_name"`
 
-	// Home New home directory path.
-	Home *string `json:"home,omitempty" validate:"omitempty,min=1"`
+	// Home Its home directory, which usermod moves the files to
+	Home *string `json:"home,omitempty" validate:"omitempty,startswith=/,no_linebreak"`
 
-	// Lock Lock or unlock the account.
-	Lock *bool `json:"lock,omitempty" validate:"omitempty"`
+	// Lock Whether to refuse logins with its password: locked refuses them, unlocked allows them
+	Lock *UserUpdateRequestLock `json:"lock,omitempty" validate:"omitempty,oneof=locked unlocked"`
 
-	// Shell New login shell path.
-	Shell *string `json:"shell,omitempty" validate:"omitempty,min=1"`
+	// Shell Its login shell, such as /bin/bash
+	Shell *string `json:"shell,omitempty" validate:"omitempty,startswith=/,no_linebreak"`
+}
+
+// UserUpdateRequestLock Whether to refuse logins with its password: locked refuses them, unlocked allows them
+type UserUpdateRequestLock string
+
+// UserUpdateResponse defines model for UserUpdateResponse.
+type UserUpdateResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []UserResult        `json:"results"`
 }
 
 // CertificateName defines model for CertificateName.
@@ -4896,6 +4939,9 @@ type ProcessPid = int
 
 // SSHKeyFingerprint defines model for SSHKeyFingerprint.
 type SSHKeyFingerprint = string
+
+// SSHKeyUserName defines model for SSHKeyUserName.
+type SSHKeyUserName = string
 
 // ScheduleName defines model for ScheduleName.
 type ScheduleName = string
@@ -5163,8 +5209,8 @@ type PostNodeUserJSONRequestBody = UserCreateRequest
 // PutNodeUserJSONRequestBody defines body for PutNodeUser for application/json ContentType.
 type PutNodeUserJSONRequestBody = UserUpdateRequest
 
-// PostNodeUserPasswordJSONRequestBody defines body for PostNodeUserPassword for application/json ContentType.
-type PostNodeUserPasswordJSONRequestBody = UserPasswordRequest
+// PostNodeUserPasswdJSONRequestBody defines body for PostNodeUserPasswd for application/json ContentType.
+type PostNodeUserPasswdJSONRequestBody = UserPasswdRequest
 
 // PostNodeUserSSHKeyJSONRequestBody defines body for PostNodeUserSSHKey for application/json ContentType.
 type PostNodeUserSSHKeyJSONRequestBody = SSHKeyAddRequest
@@ -5667,29 +5713,29 @@ type ClientInterface interface {
 	// DeleteNodeUser request
 	DeleteNodeUser(ctx context.Context, hostname Hostname, name UserName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetNodeUserByName request
-	GetNodeUserByName(ctx context.Context, hostname Hostname, name UserName, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetNodeUserByKey request
+	GetNodeUserByKey(ctx context.Context, hostname Hostname, name UserName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PutNodeUserWithBody request with any body
 	PutNodeUserWithBody(ctx context.Context, hostname Hostname, name UserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PutNodeUser(ctx context.Context, hostname Hostname, name UserName, body PutNodeUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostNodeUserPasswordWithBody request with any body
-	PostNodeUserPasswordWithBody(ctx context.Context, hostname Hostname, name UserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostNodeUserPasswdWithBody request with any body
+	PostNodeUserPasswdWithBody(ctx context.Context, hostname Hostname, name UserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostNodeUserPassword(ctx context.Context, hostname Hostname, name UserName, body PostNodeUserPasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostNodeUserPasswd(ctx context.Context, hostname Hostname, name UserName, body PostNodeUserPasswdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNodeUserSSHKey request
-	GetNodeUserSSHKey(ctx context.Context, hostname Hostname, name UserName, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetNodeUserSSHKey(ctx context.Context, hostname Hostname, name SSHKeyUserName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostNodeUserSSHKeyWithBody request with any body
-	PostNodeUserSSHKeyWithBody(ctx context.Context, hostname Hostname, name UserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostNodeUserSSHKeyWithBody(ctx context.Context, hostname Hostname, name SSHKeyUserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostNodeUserSSHKey(ctx context.Context, hostname Hostname, name UserName, body PostNodeUserSSHKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostNodeUserSSHKey(ctx context.Context, hostname Hostname, name SSHKeyUserName, body PostNodeUserSSHKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteNodeUserSSHKey request
-	DeleteNodeUserSSHKey(ctx context.Context, hostname Hostname, name UserName, fingerprint SSHKeyFingerprint, reqEditors ...RequestEditorFn) (*http.Response, error)
+	DeleteNodeUserSSHKey(ctx context.Context, hostname Hostname, name SSHKeyUserName, fingerprint SSHKeyFingerprint, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetTrace request
 	GetTrace(ctx context.Context, id string, params *GetTraceParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -7543,8 +7589,8 @@ func (c *Client) DeleteNodeUser(ctx context.Context, hostname Hostname, name Use
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetNodeUserByName(ctx context.Context, hostname Hostname, name UserName, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetNodeUserByNameRequest(c.Server, hostname, name)
+func (c *Client) GetNodeUserByKey(ctx context.Context, hostname Hostname, name UserName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeUserByKeyRequest(c.Server, hostname, name)
 	if err != nil {
 		return nil, err
 	}
@@ -7579,8 +7625,8 @@ func (c *Client) PutNodeUser(ctx context.Context, hostname Hostname, name UserNa
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNodeUserPasswordWithBody(ctx context.Context, hostname Hostname, name UserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeUserPasswordRequestWithBody(c.Server, hostname, name, contentType, body)
+func (c *Client) PostNodeUserPasswdWithBody(ctx context.Context, hostname Hostname, name UserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeUserPasswdRequestWithBody(c.Server, hostname, name, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -7591,8 +7637,8 @@ func (c *Client) PostNodeUserPasswordWithBody(ctx context.Context, hostname Host
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNodeUserPassword(ctx context.Context, hostname Hostname, name UserName, body PostNodeUserPasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeUserPasswordRequest(c.Server, hostname, name, body)
+func (c *Client) PostNodeUserPasswd(ctx context.Context, hostname Hostname, name UserName, body PostNodeUserPasswdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeUserPasswdRequest(c.Server, hostname, name, body)
 	if err != nil {
 		return nil, err
 	}
@@ -7603,7 +7649,7 @@ func (c *Client) PostNodeUserPassword(ctx context.Context, hostname Hostname, na
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetNodeUserSSHKey(ctx context.Context, hostname Hostname, name UserName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) GetNodeUserSSHKey(ctx context.Context, hostname Hostname, name SSHKeyUserName, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetNodeUserSSHKeyRequest(c.Server, hostname, name)
 	if err != nil {
 		return nil, err
@@ -7615,7 +7661,7 @@ func (c *Client) GetNodeUserSSHKey(ctx context.Context, hostname Hostname, name 
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNodeUserSSHKeyWithBody(ctx context.Context, hostname Hostname, name UserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) PostNodeUserSSHKeyWithBody(ctx context.Context, hostname Hostname, name SSHKeyUserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostNodeUserSSHKeyRequestWithBody(c.Server, hostname, name, contentType, body)
 	if err != nil {
 		return nil, err
@@ -7627,7 +7673,7 @@ func (c *Client) PostNodeUserSSHKeyWithBody(ctx context.Context, hostname Hostna
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNodeUserSSHKey(ctx context.Context, hostname Hostname, name UserName, body PostNodeUserSSHKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) PostNodeUserSSHKey(ctx context.Context, hostname Hostname, name SSHKeyUserName, body PostNodeUserSSHKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostNodeUserSSHKeyRequest(c.Server, hostname, name, body)
 	if err != nil {
 		return nil, err
@@ -7639,7 +7685,7 @@ func (c *Client) PostNodeUserSSHKey(ctx context.Context, hostname Hostname, name
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteNodeUserSSHKey(ctx context.Context, hostname Hostname, name UserName, fingerprint SSHKeyFingerprint, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) DeleteNodeUserSSHKey(ctx context.Context, hostname Hostname, name SSHKeyUserName, fingerprint SSHKeyFingerprint, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDeleteNodeUserSSHKeyRequest(c.Server, hostname, name, fingerprint)
 	if err != nil {
 		return nil, err
@@ -12686,8 +12732,8 @@ func NewDeleteNodeUserRequest(server string, hostname Hostname, name UserName) (
 	return req, nil
 }
 
-// NewGetNodeUserByNameRequest generates requests for GetNodeUserByName
-func NewGetNodeUserByNameRequest(server string, hostname Hostname, name UserName) (*http.Request, error) {
+// NewGetNodeUserByKeyRequest generates requests for GetNodeUserByKey
+func NewGetNodeUserByKeyRequest(server string, hostname Hostname, name UserName) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -12781,19 +12827,19 @@ func NewPutNodeUserRequestWithBody(server string, hostname Hostname, name UserNa
 	return req, nil
 }
 
-// NewPostNodeUserPasswordRequest calls the generic PostNodeUserPassword builder with application/json body
-func NewPostNodeUserPasswordRequest(server string, hostname Hostname, name UserName, body PostNodeUserPasswordJSONRequestBody) (*http.Request, error) {
+// NewPostNodeUserPasswdRequest calls the generic PostNodeUserPasswd builder with application/json body
+func NewPostNodeUserPasswdRequest(server string, hostname Hostname, name UserName, body PostNodeUserPasswdJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostNodeUserPasswordRequestWithBody(server, hostname, name, "application/json", bodyReader)
+	return NewPostNodeUserPasswdRequestWithBody(server, hostname, name, "application/json", bodyReader)
 }
 
-// NewPostNodeUserPasswordRequestWithBody generates requests for PostNodeUserPassword with any type of body
-func NewPostNodeUserPasswordRequestWithBody(server string, hostname Hostname, name UserName, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostNodeUserPasswdRequestWithBody generates requests for PostNodeUserPasswd with any type of body
+func NewPostNodeUserPasswdRequestWithBody(server string, hostname Hostname, name UserName, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -12815,7 +12861,7 @@ func NewPostNodeUserPasswordRequestWithBody(server string, hostname Hostname, na
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/api/node/%s/user/%s/password", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/user/%s/passwd", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -12836,7 +12882,7 @@ func NewPostNodeUserPasswordRequestWithBody(server string, hostname Hostname, na
 }
 
 // NewGetNodeUserSSHKeyRequest generates requests for GetNodeUserSSHKey
-func NewGetNodeUserSSHKeyRequest(server string, hostname Hostname, name UserName) (*http.Request, error) {
+func NewGetNodeUserSSHKeyRequest(server string, hostname Hostname, name SSHKeyUserName) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -12877,7 +12923,7 @@ func NewGetNodeUserSSHKeyRequest(server string, hostname Hostname, name UserName
 }
 
 // NewPostNodeUserSSHKeyRequest calls the generic PostNodeUserSSHKey builder with application/json body
-func NewPostNodeUserSSHKeyRequest(server string, hostname Hostname, name UserName, body PostNodeUserSSHKeyJSONRequestBody) (*http.Request, error) {
+func NewPostNodeUserSSHKeyRequest(server string, hostname Hostname, name SSHKeyUserName, body PostNodeUserSSHKeyJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
@@ -12888,7 +12934,7 @@ func NewPostNodeUserSSHKeyRequest(server string, hostname Hostname, name UserNam
 }
 
 // NewPostNodeUserSSHKeyRequestWithBody generates requests for PostNodeUserSSHKey with any type of body
-func NewPostNodeUserSSHKeyRequestWithBody(server string, hostname Hostname, name UserName, contentType string, body io.Reader) (*http.Request, error) {
+func NewPostNodeUserSSHKeyRequestWithBody(server string, hostname Hostname, name SSHKeyUserName, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -12931,7 +12977,7 @@ func NewPostNodeUserSSHKeyRequestWithBody(server string, hostname Hostname, name
 }
 
 // NewDeleteNodeUserSSHKeyRequest generates requests for DeleteNodeUserSSHKey
-func NewDeleteNodeUserSSHKeyRequest(server string, hostname Hostname, name UserName, fingerprint SSHKeyFingerprint) (*http.Request, error) {
+func NewDeleteNodeUserSSHKeyRequest(server string, hostname Hostname, name SSHKeyUserName, fingerprint SSHKeyFingerprint) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -13507,29 +13553,29 @@ type ClientWithResponsesInterface interface {
 	// DeleteNodeUserWithResponse request
 	DeleteNodeUserWithResponse(ctx context.Context, hostname Hostname, name UserName, reqEditors ...RequestEditorFn) (*DeleteNodeUserResponse, error)
 
-	// GetNodeUserByNameWithResponse request
-	GetNodeUserByNameWithResponse(ctx context.Context, hostname Hostname, name UserName, reqEditors ...RequestEditorFn) (*GetNodeUserByNameResponse, error)
+	// GetNodeUserByKeyWithResponse request
+	GetNodeUserByKeyWithResponse(ctx context.Context, hostname Hostname, name UserName, reqEditors ...RequestEditorFn) (*GetNodeUserByKeyResponse, error)
 
 	// PutNodeUserWithBodyWithResponse request with any body
 	PutNodeUserWithBodyWithResponse(ctx context.Context, hostname Hostname, name UserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeUserResponse, error)
 
 	PutNodeUserWithResponse(ctx context.Context, hostname Hostname, name UserName, body PutNodeUserJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeUserResponse, error)
 
-	// PostNodeUserPasswordWithBodyWithResponse request with any body
-	PostNodeUserPasswordWithBodyWithResponse(ctx context.Context, hostname Hostname, name UserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeUserPasswordResponse, error)
+	// PostNodeUserPasswdWithBodyWithResponse request with any body
+	PostNodeUserPasswdWithBodyWithResponse(ctx context.Context, hostname Hostname, name UserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeUserPasswdResponse, error)
 
-	PostNodeUserPasswordWithResponse(ctx context.Context, hostname Hostname, name UserName, body PostNodeUserPasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeUserPasswordResponse, error)
+	PostNodeUserPasswdWithResponse(ctx context.Context, hostname Hostname, name UserName, body PostNodeUserPasswdJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeUserPasswdResponse, error)
 
 	// GetNodeUserSSHKeyWithResponse request
-	GetNodeUserSSHKeyWithResponse(ctx context.Context, hostname Hostname, name UserName, reqEditors ...RequestEditorFn) (*GetNodeUserSSHKeyResponse, error)
+	GetNodeUserSSHKeyWithResponse(ctx context.Context, hostname Hostname, name SSHKeyUserName, reqEditors ...RequestEditorFn) (*GetNodeUserSSHKeyResponse, error)
 
 	// PostNodeUserSSHKeyWithBodyWithResponse request with any body
-	PostNodeUserSSHKeyWithBodyWithResponse(ctx context.Context, hostname Hostname, name UserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeUserSSHKeyResponse, error)
+	PostNodeUserSSHKeyWithBodyWithResponse(ctx context.Context, hostname Hostname, name SSHKeyUserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeUserSSHKeyResponse, error)
 
-	PostNodeUserSSHKeyWithResponse(ctx context.Context, hostname Hostname, name UserName, body PostNodeUserSSHKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeUserSSHKeyResponse, error)
+	PostNodeUserSSHKeyWithResponse(ctx context.Context, hostname Hostname, name SSHKeyUserName, body PostNodeUserSSHKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeUserSSHKeyResponse, error)
 
 	// DeleteNodeUserSSHKeyWithResponse request
-	DeleteNodeUserSSHKeyWithResponse(ctx context.Context, hostname Hostname, name UserName, fingerprint SSHKeyFingerprint, reqEditors ...RequestEditorFn) (*DeleteNodeUserSSHKeyResponse, error)
+	DeleteNodeUserSSHKeyWithResponse(ctx context.Context, hostname Hostname, name SSHKeyUserName, fingerprint SSHKeyFingerprint, reqEditors ...RequestEditorFn) (*DeleteNodeUserSSHKeyResponse, error)
 
 	// GetTraceWithResponse request
 	GetTraceWithResponse(ctx context.Context, id string, params *GetTraceParams, reqEditors ...RequestEditorFn) (*GetTraceResponse, error)
@@ -17576,6 +17622,8 @@ type GetNodeUserResponse struct {
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -17606,10 +17654,12 @@ func (r GetNodeUserResponse) ContentType() string {
 type PostNodeUserResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *UserMutationResponse
+	JSON200      *UserCreateResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -17640,11 +17690,12 @@ func (r PostNodeUserResponse) ContentType() string {
 type DeleteNodeUserResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *UserMutationResponse
+	JSON200      *UserDeleteResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -17672,19 +17723,20 @@ func (r DeleteNodeUserResponse) ContentType() string {
 	return ""
 }
 
-type GetNodeUserByNameResponse struct {
+type GetNodeUserByKeyResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *UserCollectionResponse
+	JSON200      *UserGetResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r GetNodeUserByNameResponse) Status() string {
+func (r GetNodeUserByKeyResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -17692,7 +17744,7 @@ func (r GetNodeUserByNameResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetNodeUserByNameResponse) StatusCode() int {
+func (r GetNodeUserByKeyResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -17700,7 +17752,7 @@ func (r GetNodeUserByNameResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetNodeUserByNameResponse) ContentType() string {
+func (r GetNodeUserByKeyResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -17710,11 +17762,12 @@ func (r GetNodeUserByNameResponse) ContentType() string {
 type PutNodeUserResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *UserMutationResponse
+	JSON200      *UserUpdateResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -17742,19 +17795,20 @@ func (r PutNodeUserResponse) ContentType() string {
 	return ""
 }
 
-type PostNodeUserPasswordResponse struct {
+type PostNodeUserPasswdResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *UserMutationResponse
+	JSON200      *UserPasswdResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r PostNodeUserPasswordResponse) Status() string {
+func (r PostNodeUserPasswdResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -17762,7 +17816,7 @@ func (r PostNodeUserPasswordResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostNodeUserPasswordResponse) StatusCode() int {
+func (r PostNodeUserPasswdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -17770,7 +17824,7 @@ func (r PostNodeUserPasswordResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r PostNodeUserPasswordResponse) ContentType() string {
+func (r PostNodeUserPasswdResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -19264,13 +19318,13 @@ func (c *ClientWithResponses) DeleteNodeUserWithResponse(ctx context.Context, ho
 	return ParseDeleteNodeUserResponse(rsp)
 }
 
-// GetNodeUserByNameWithResponse request returning *GetNodeUserByNameResponse
-func (c *ClientWithResponses) GetNodeUserByNameWithResponse(ctx context.Context, hostname Hostname, name UserName, reqEditors ...RequestEditorFn) (*GetNodeUserByNameResponse, error) {
-	rsp, err := c.GetNodeUserByName(ctx, hostname, name, reqEditors...)
+// GetNodeUserByKeyWithResponse request returning *GetNodeUserByKeyResponse
+func (c *ClientWithResponses) GetNodeUserByKeyWithResponse(ctx context.Context, hostname Hostname, name UserName, reqEditors ...RequestEditorFn) (*GetNodeUserByKeyResponse, error) {
+	rsp, err := c.GetNodeUserByKey(ctx, hostname, name, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetNodeUserByNameResponse(rsp)
+	return ParseGetNodeUserByKeyResponse(rsp)
 }
 
 // PutNodeUserWithBodyWithResponse request with arbitrary body returning *PutNodeUserResponse
@@ -19290,25 +19344,25 @@ func (c *ClientWithResponses) PutNodeUserWithResponse(ctx context.Context, hostn
 	return ParsePutNodeUserResponse(rsp)
 }
 
-// PostNodeUserPasswordWithBodyWithResponse request with arbitrary body returning *PostNodeUserPasswordResponse
-func (c *ClientWithResponses) PostNodeUserPasswordWithBodyWithResponse(ctx context.Context, hostname Hostname, name UserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeUserPasswordResponse, error) {
-	rsp, err := c.PostNodeUserPasswordWithBody(ctx, hostname, name, contentType, body, reqEditors...)
+// PostNodeUserPasswdWithBodyWithResponse request with arbitrary body returning *PostNodeUserPasswdResponse
+func (c *ClientWithResponses) PostNodeUserPasswdWithBodyWithResponse(ctx context.Context, hostname Hostname, name UserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeUserPasswdResponse, error) {
+	rsp, err := c.PostNodeUserPasswdWithBody(ctx, hostname, name, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostNodeUserPasswordResponse(rsp)
+	return ParsePostNodeUserPasswdResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostNodeUserPasswordWithResponse(ctx context.Context, hostname Hostname, name UserName, body PostNodeUserPasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeUserPasswordResponse, error) {
-	rsp, err := c.PostNodeUserPassword(ctx, hostname, name, body, reqEditors...)
+func (c *ClientWithResponses) PostNodeUserPasswdWithResponse(ctx context.Context, hostname Hostname, name UserName, body PostNodeUserPasswdJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeUserPasswdResponse, error) {
+	rsp, err := c.PostNodeUserPasswd(ctx, hostname, name, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostNodeUserPasswordResponse(rsp)
+	return ParsePostNodeUserPasswdResponse(rsp)
 }
 
 // GetNodeUserSSHKeyWithResponse request returning *GetNodeUserSSHKeyResponse
-func (c *ClientWithResponses) GetNodeUserSSHKeyWithResponse(ctx context.Context, hostname Hostname, name UserName, reqEditors ...RequestEditorFn) (*GetNodeUserSSHKeyResponse, error) {
+func (c *ClientWithResponses) GetNodeUserSSHKeyWithResponse(ctx context.Context, hostname Hostname, name SSHKeyUserName, reqEditors ...RequestEditorFn) (*GetNodeUserSSHKeyResponse, error) {
 	rsp, err := c.GetNodeUserSSHKey(ctx, hostname, name, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -19317,7 +19371,7 @@ func (c *ClientWithResponses) GetNodeUserSSHKeyWithResponse(ctx context.Context,
 }
 
 // PostNodeUserSSHKeyWithBodyWithResponse request with arbitrary body returning *PostNodeUserSSHKeyResponse
-func (c *ClientWithResponses) PostNodeUserSSHKeyWithBodyWithResponse(ctx context.Context, hostname Hostname, name UserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeUserSSHKeyResponse, error) {
+func (c *ClientWithResponses) PostNodeUserSSHKeyWithBodyWithResponse(ctx context.Context, hostname Hostname, name SSHKeyUserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeUserSSHKeyResponse, error) {
 	rsp, err := c.PostNodeUserSSHKeyWithBody(ctx, hostname, name, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -19325,7 +19379,7 @@ func (c *ClientWithResponses) PostNodeUserSSHKeyWithBodyWithResponse(ctx context
 	return ParsePostNodeUserSSHKeyResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostNodeUserSSHKeyWithResponse(ctx context.Context, hostname Hostname, name UserName, body PostNodeUserSSHKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeUserSSHKeyResponse, error) {
+func (c *ClientWithResponses) PostNodeUserSSHKeyWithResponse(ctx context.Context, hostname Hostname, name SSHKeyUserName, body PostNodeUserSSHKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeUserSSHKeyResponse, error) {
 	rsp, err := c.PostNodeUserSSHKey(ctx, hostname, name, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -19334,7 +19388,7 @@ func (c *ClientWithResponses) PostNodeUserSSHKeyWithResponse(ctx context.Context
 }
 
 // DeleteNodeUserSSHKeyWithResponse request returning *DeleteNodeUserSSHKeyResponse
-func (c *ClientWithResponses) DeleteNodeUserSSHKeyWithResponse(ctx context.Context, hostname Hostname, name UserName, fingerprint SSHKeyFingerprint, reqEditors ...RequestEditorFn) (*DeleteNodeUserSSHKeyResponse, error) {
+func (c *ClientWithResponses) DeleteNodeUserSSHKeyWithResponse(ctx context.Context, hostname Hostname, name SSHKeyUserName, fingerprint SSHKeyFingerprint, reqEditors ...RequestEditorFn) (*DeleteNodeUserSSHKeyResponse, error) {
 	rsp, err := c.DeleteNodeUserSSHKey(ctx, hostname, name, fingerprint, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -26655,6 +26709,20 @@ func ParseGetNodeUserResponse(rsp *http.Response) (*GetNodeUserResponse, error) 
 		}
 		response.JSON403 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -26682,7 +26750,7 @@ func ParsePostNodeUserResponse(rsp *http.Response) (*PostNodeUserResponse, error
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest UserMutationResponse
+		var dest UserCreateResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -26708,6 +26776,20 @@ func ParsePostNodeUserResponse(rsp *http.Response) (*PostNodeUserResponse, error
 			return nil, err
 		}
 		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
@@ -26736,7 +26818,7 @@ func ParseDeleteNodeUserResponse(rsp *http.Response) (*DeleteNodeUserResponse, e
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest UserMutationResponse
+		var dest UserDeleteResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -26769,6 +26851,13 @@ func ParseDeleteNodeUserResponse(rsp *http.Response) (*DeleteNodeUserResponse, e
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
@@ -26782,22 +26871,22 @@ func ParseDeleteNodeUserResponse(rsp *http.Response) (*DeleteNodeUserResponse, e
 	return response, nil
 }
 
-// ParseGetNodeUserByNameResponse parses an HTTP response from a GetNodeUserByNameWithResponse call
-func ParseGetNodeUserByNameResponse(rsp *http.Response) (*GetNodeUserByNameResponse, error) {
+// ParseGetNodeUserByKeyResponse parses an HTTP response from a GetNodeUserByKeyWithResponse call
+func ParseGetNodeUserByKeyResponse(rsp *http.Response) (*GetNodeUserByKeyResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetNodeUserByNameResponse{
+	response := &GetNodeUserByKeyResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest UserCollectionResponse
+		var dest UserGetResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -26830,6 +26919,13 @@ func ParseGetNodeUserByNameResponse(rsp *http.Response) (*GetNodeUserByNameRespo
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
@@ -26858,7 +26954,7 @@ func ParsePutNodeUserResponse(rsp *http.Response) (*PutNodeUserResponse, error) 
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest UserMutationResponse
+		var dest UserUpdateResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -26891,6 +26987,13 @@ func ParsePutNodeUserResponse(rsp *http.Response) (*PutNodeUserResponse, error) 
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
@@ -26904,22 +27007,22 @@ func ParsePutNodeUserResponse(rsp *http.Response) (*PutNodeUserResponse, error) 
 	return response, nil
 }
 
-// ParsePostNodeUserPasswordResponse parses an HTTP response from a PostNodeUserPasswordWithResponse call
-func ParsePostNodeUserPasswordResponse(rsp *http.Response) (*PostNodeUserPasswordResponse, error) {
+// ParsePostNodeUserPasswdResponse parses an HTTP response from a PostNodeUserPasswdWithResponse call
+func ParsePostNodeUserPasswdResponse(rsp *http.Response) (*PostNodeUserPasswdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostNodeUserPasswordResponse{
+	response := &PostNodeUserPasswdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest UserMutationResponse
+		var dest UserPasswdResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -26952,6 +27055,13 @@ func ParsePostNodeUserPasswordResponse(rsp *http.Response) (*PostNodeUserPasswor
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

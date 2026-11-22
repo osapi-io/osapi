@@ -24,10 +24,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// clientNodeUserCmd represents the clientNodeUser command.
+// clientNodeUserCmd is the user group: the user behavior's commands join
+// it, beside the hand-written ssh-key commands.
 var clientNodeUserCmd = &cobra.Command{
 	Use:   "user",
-	Short: "Manage the local user accounts of target hosts",
+	Short: "The users of the host",
 }
 
 func init() {

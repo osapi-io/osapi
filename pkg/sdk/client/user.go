@@ -32,7 +32,7 @@ type UserService struct {
 	client *gen.ClientWithResponses
 }
 
-// List lists all user accounts on the target host.
+// List lists the users of the target host: a row for each user of each host.
 func (s *UserService) List(
 	ctx context.Context,
 	hostname string,
@@ -47,6 +47,8 @@ func (s *UserService) List(
 		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
+		resp.JSON404,
+		resp.JSON409,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
@@ -59,16 +61,20 @@ func (s *UserService) List(
 		}}
 	}
 
-	return newResponse(userInfoCollectionFromList(resp.JSON200), resp.Body, resp.HTTPResponse), nil
+	return newResponse(
+		userInfoCollectionFromGen(resp.JSON200.Results, resp.JSON200.JobId),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
-// Get retrieves a single user account by name on the target host.
+// Get reads one user by name on the target host.
 func (s *UserService) Get(
 	ctx context.Context,
 	hostname string,
 	name string,
 ) (*Response[Collection[UserInfoResult]], error) {
-	resp, err := s.client.GetNodeUserByNameWithResponse(ctx, hostname, name)
+	resp, err := s.client.GetNodeUserByKeyWithResponse(ctx, hostname, name)
 	if err != nil {
 		return nil, fmt.Errorf("user get: %w", err)
 	}
@@ -79,6 +85,7 @@ func (s *UserService) Get(
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON404,
+		resp.JSON409,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
@@ -91,43 +98,39 @@ func (s *UserService) Get(
 		}}
 	}
 
-	return newResponse(userInfoCollectionFromGet(resp.JSON200), resp.Body, resp.HTTPResponse), nil
+	return newResponse(
+		userInfoCollectionFromGen(resp.JSON200.Results, resp.JSON200.JobId),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
-// Create creates a user account on the target host.
+// Create adds a user on the target host. The controller hashes the password, so
+// the job has only its hash.
 func (s *UserService) Create(
 	ctx context.Context,
 	hostname string,
 	opts UserCreateOpts,
 ) (*Response[Collection[UserMutationResult]], error) {
-	body := gen.UserCreateRequest{
-		Name: opts.Name,
-	}
-
+	body := gen.UserCreateRequest{Name: opts.Name}
 	if opts.UID != 0 {
 		body.Uid = &opts.UID
 	}
-
 	if opts.GID != 0 {
 		body.Gid = &opts.GID
 	}
-
 	if opts.Home != "" {
 		body.Home = &opts.Home
 	}
-
 	if opts.Shell != "" {
 		body.Shell = &opts.Shell
 	}
-
-	if opts.Groups != nil {
+	if len(opts.Groups) > 0 {
 		body.Groups = &opts.Groups
 	}
-
 	if opts.Password != "" {
 		body.Password = &opts.Password
 	}
-
 	if opts.System {
 		body.System = &opts.System
 	}
@@ -142,6 +145,8 @@ func (s *UserService) Create(
 		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
+		resp.JSON404,
+		resp.JSON409,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
@@ -155,13 +160,14 @@ func (s *UserService) Create(
 	}
 
 	return newResponse(
-		userMutationCollectionFromCreate(resp.JSON200),
+		userMutationCollectionFromGen(resp.JSON200.Results, resp.JSON200.JobId),
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
 }
 
-// Update updates a user account on the target host.
+// Update changes a user on the target host: what opts gives and the user does
+// not have already.
 func (s *UserService) Update(
 	ctx context.Context,
 	hostname string,
@@ -169,21 +175,21 @@ func (s *UserService) Update(
 	opts UserUpdateOpts,
 ) (*Response[Collection[UserMutationResult]], error) {
 	body := gen.UserUpdateRequest{}
-
 	if opts.Shell != "" {
 		body.Shell = &opts.Shell
 	}
-
 	if opts.Home != "" {
 		body.Home = &opts.Home
 	}
-
-	if opts.Groups != nil {
+	if len(opts.Groups) > 0 {
 		body.Groups = &opts.Groups
 	}
-
 	if opts.Lock != nil {
-		body.Lock = opts.Lock
+		lock := gen.UserUpdateRequestLock("unlocked")
+		if *opts.Lock {
+			lock = "locked"
+		}
+		body.Lock = &lock
 	}
 
 	resp, err := s.client.PutNodeUserWithResponse(ctx, hostname, name, body)
@@ -197,6 +203,7 @@ func (s *UserService) Update(
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON404,
+		resp.JSON409,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
@@ -210,13 +217,13 @@ func (s *UserService) Update(
 	}
 
 	return newResponse(
-		userMutationCollectionFromUpdate(resp.JSON200),
+		userMutationCollectionFromGen(resp.JSON200.Results, resp.JSON200.JobId),
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
 }
 
-// Delete removes a user account on the target host.
+// Delete removes a user and its home directory on the target host.
 func (s *UserService) Delete(
 	ctx context.Context,
 	hostname string,
@@ -233,6 +240,7 @@ func (s *UserService) Delete(
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON404,
+		resp.JSON409,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
@@ -246,7 +254,48 @@ func (s *UserService) Delete(
 	}
 
 	return newResponse(
-		userMutationCollectionFromDelete(resp.JSON200),
+		userMutationCollectionFromGen(resp.JSON200.Results, resp.JSON200.JobId),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
+}
+
+// ChangePassword sets a user's password on the target host. The controller hashes it,
+// so the job has only its hash.
+func (s *UserService) ChangePassword(
+	ctx context.Context,
+	hostname string,
+	name string,
+	password string,
+) (*Response[Collection[UserMutationResult]], error) {
+	body := gen.UserPasswdRequest{Password: &password}
+
+	resp, err := s.client.PostNodeUserPasswdWithResponse(ctx, hostname, name, body)
+	if err != nil {
+		return nil, fmt.Errorf("user change password: %w", err)
+	}
+
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON400,
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON404,
+		resp.JSON409,
+		resp.JSON500,
+	); err != nil {
+		return nil, err
+	}
+
+	if resp.JSON200 == nil {
+		return nil, &UnexpectedStatusError{APIError{
+			StatusCode: resp.StatusCode(),
+			Message:    "nil response body",
+		}}
+	}
+
+	return newResponse(
+		userMutationCollectionFromGen(resp.JSON200.Results, resp.JSON200.JobId),
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
@@ -357,47 +406,6 @@ func (s *UserService) RemoveKey(
 
 	return newResponse(
 		sshKeyMutationCollectionFromGen(resp.JSON200),
-		resp.Body,
-		resp.HTTPResponse,
-	), nil
-}
-
-// ChangePassword changes a user's password on the target host.
-func (s *UserService) ChangePassword(
-	ctx context.Context,
-	hostname string,
-	name string,
-	password string,
-) (*Response[Collection[UserMutationResult]], error) {
-	body := gen.UserPasswordRequest{
-		Password: password,
-	}
-
-	resp, err := s.client.PostNodeUserPasswordWithResponse(ctx, hostname, name, body)
-	if err != nil {
-		return nil, fmt.Errorf("user change password: %w", err)
-	}
-
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON404,
-		resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
-
-	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
-	}
-
-	return newResponse(
-		userMutationCollectionFromPassword(resp.JSON200),
 		resp.Body,
 		resp.HTTPResponse,
 	), nil

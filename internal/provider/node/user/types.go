@@ -18,9 +18,9 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package user provides user and group management operations.
+// Package user provides the SSH key operations of a user's account.
 //
-// Password and SSH key operations accept values inline in the request
+// SSH key operations accept values inline in the request
 // body rather than via Object Store + file.Deployer (which cron and
 // certificate providers use). These are small values attached to a
 // user account, not file deployments — Object Store would add
@@ -30,55 +30,11 @@ package user
 
 import "context"
 
-// Provider implements the methods to manage users and groups.
+// Provider manages the authorized SSH keys of a user.
 type Provider interface {
-	ListUsers(ctx context.Context) ([]User, error)
-	GetUser(ctx context.Context, name string) (*User, error)
-	CreateUser(ctx context.Context, opts CreateUserOpts) (*Result, error)
-	UpdateUser(ctx context.Context, name string, opts UpdateUserOpts) (*Result, error)
-	DeleteUser(ctx context.Context, name string) (*Result, error)
-	ChangePassword(ctx context.Context, name string, passwordHash string) (*Result, error)
 	ListKeys(ctx context.Context, username string) ([]SSHKey, error)
 	AddKey(ctx context.Context, username string, key SSHKey) (*SSHKeyResult, error)
 	RemoveKey(ctx context.Context, username string, fingerprint string) (*SSHKeyResult, error)
-}
-
-// User represents a system user account.
-type User struct {
-	Name   string   `json:"name"`
-	UID    int      `json:"uid"`
-	GID    int      `json:"gid"`
-	Home   string   `json:"home"`
-	Shell  string   `json:"shell"`
-	Groups []string `json:"groups,omitempty"`
-	Locked bool     `json:"locked"`
-}
-
-// CreateUserOpts contains options for creating a new user.
-type CreateUserOpts struct {
-	Name         string   `json:"name"`
-	UID          int      `json:"uid,omitempty"`
-	GID          int      `json:"gid,omitempty"`
-	Home         string   `json:"home,omitempty"`
-	Shell        string   `json:"shell,omitempty"`
-	Groups       []string `json:"groups,omitempty"`
-	PasswordHash string   `json:"password_hash,omitempty"`
-	System       bool     `json:"system,omitempty"`
-}
-
-// UpdateUserOpts contains options for updating an existing user.
-type UpdateUserOpts struct {
-	Shell  string   `json:"shell,omitempty"`
-	Home   string   `json:"home,omitempty"`
-	Groups []string `json:"groups,omitempty"`
-	Lock   *bool    `json:"lock,omitempty"`
-}
-
-// Result represents the result of a user mutation operation.
-type Result struct {
-	Name    string `json:"name"`
-	Changed bool   `json:"changed"`
-	Error   string `json:"error,omitempty"`
 }
 
 // SSHKey represents an SSH public key from authorized_keys.
