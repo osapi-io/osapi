@@ -53,7 +53,7 @@ export function ComponentRow({
               href={url}
               target="_blank"
               rel="noopener noreferrer"
-              className="truncate text-text hover:underline"
+              className="truncate text-heading-1 underline-offset-[0.2em] hover:underline"
               title={url}
             >
               {url}

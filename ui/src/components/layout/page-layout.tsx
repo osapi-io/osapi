@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { NetworkMapBackground } from "./network-map-background";
 import { Navbar } from "./navbar";
 import { CommandBar } from "@/components/ui/command-bar";
 import { useCommands } from "@/hooks/use-commands";
@@ -109,6 +110,7 @@ export function PageLayout({ children }: PageLayoutProps) {
 
   return (
     <div ref={root} className="relative min-h-screen">
+      <NetworkMapBackground />
       <div className="relative z-10">
         <Navbar />
         {children}
