@@ -19,7 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 // Command operations writes the UI's permission of each operation from the
-// joined spec. go generate ./... runs it after just join-spec.
+// endpoint groups, the behaviors and the hand-written domains' specs.
 package main
 
 //go:generate go run . --root ../../../..
@@ -31,18 +31,15 @@ import (
 	"path/filepath"
 
 	"github.com/osapi-io/osapi/internal/authtoken"
+	_ "github.com/osapi-io/osapi/internal/behaviors/all"
+	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all"
 )
 
 func main() {
 	root := flag.String("root", ".", "The root of the osapi repository")
 	flag.Parse()
 
-	spec, err := os.ReadFile(filepath.Join(*root, "internal/controller/api/gen/api.yaml"))
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-	ops, err := authtoken.OperationPermissions(spec)
+	ops, err := authtoken.Operations(*root)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

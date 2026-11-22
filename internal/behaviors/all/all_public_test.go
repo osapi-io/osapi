@@ -71,6 +71,31 @@ func (s *AllPublicTestSuite) TestUIPermissionsAreCurrent() {
 		"%s is stale: run go generate ./internal/behaviors/all", authtoken.TypeScriptFile)
 }
 
+// TestUIOperationsAreCurrent checks that the UI's permission of each
+// operation, which go generate writes from the definitions and the
+// hand-written domains' specs, is what the joined spec says, and that the
+// file is current.
+func (s *AllPublicTestSuite) TestUIOperationsAreCurrent() {
+	root := filepath.Join("..", "..", "..")
+	got, err := authtoken.Operations(root)
+	s.Require().NoError(err)
+	spec, err := os.ReadFile(
+		filepath.Join(root, "internal", "controller", "api", "gen", "api.yaml"),
+	)
+	s.Require().NoError(err)
+	joined, err := authtoken.OperationPermissions(spec)
+	s.Require().NoError(err)
+	s.Equal(joined, got, "the definitions and the hand-written specs agree with the joined spec")
+	file, err := os.ReadFile(filepath.Join(root, authtoken.OperationsFile))
+	s.Require().NoError(err)
+	s.Equal(
+		authtoken.OperationsTypeScript(got),
+		string(file),
+		"%s is stale: run go generate ./internal/authtoken/gen/operations",
+		authtoken.OperationsFile,
+	)
+}
+
 // TestPermissionsAreDeclared checks the permissions of every registered
 // endpoint group and behavior: a method that names a permission that nothing
 // declares answers 403 to every caller, and a permission that is admin only
