@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Service | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/reference/chains/service"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Service | OSAPI"><meta data-rh="true" name="description" content="The behaviors that service calls, and each call that its examples make."><meta data-rh="true" property="og:description" content="The behaviors that service calls, and each call that its examples make."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/reference/chains/service"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/reference/chains/service" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/reference/chains/service" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Reference","item":"https://osapi-io.github.io/osapi/sidebar/reference/"},{"@type":"ListItem","position":2,"name":"Chains","item":"https://osapi-io.github.io/osapi/sidebar/reference/chains/"},{"@type":"ListItem","position":3,"name":"Service","item":"https://osapi-io.github.io/osapi/sidebar/reference/chains/service"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.6b23676e.css">
-<script src="/osapi/assets/js/runtime~main.a4ff62e0.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.fbf896a1.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.4451a06c.js" defer="defer"></script>
 </head>
 <body>
@@ -41,6 +41,138 @@
 
 
 <table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td>Behavior</td><td><a class="" href="/osapi/sidebar/reference/behaviors/service">service</a></td></tr><tr><td>Chain</td><td>service → (object, managedfile)</td></tr><tr><td>Calls</td><td><a class="" href="/osapi/sidebar/reference/behaviors/object">object</a>, <a class="" href="/osapi/sidebar/reference/behaviors/managedfile">managedfile</a></td></tr><tr><td>Used by</td><td>none</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-service-that-osapi-deployed-reads-by-its-name-list">A service that osapi deployed reads by its name (list)<a href="#a-service-that-osapi-deployed-reads-by-its-name-list" class="hash-link" aria-label="Direct link to A service that osapi deployed reads by its name (list)" title="Direct link to A service that osapi deployed reads by its name (list)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service list</td><td></td><td>[{&quot;name&quot;:&quot;ssh&quot;,&quot;state&quot;:&quot;running&quot;,&quot;enabled&quot;:true,&quot;description&quot;:&quot;OpenBS…</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/systemd/system/osapi-app.service</td><td>metadata={&quot;object&quot;:&quot;app.service&quot;} path=/etc/systemd/system/osapi-app.…</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-host-with-two-services-list">A host with two services (list)<a href="#a-host-with-two-services-list" class="hash-link" aria-label="Direct link to A host with two services (list)" title="Direct link to A host with two services (list)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service list</td><td></td><td>[{&quot;name&quot;:&quot;ssh&quot;,&quot;state&quot;:&quot;running&quot;,&quot;enabled&quot;:true,&quot;description&quot;:&quot;OpenBS…</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/systemd/system/osapi-app.service</td><td>error: /etc/systemd/system/osapi-app.service: not managed</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-running-service-get">A running service (get)<a href="#a-running-service-get" class="hash-link" aria-label="Direct link to A running service (get)" title="Direct link to A running service (get)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service get</td><td>name=ssh</td><td>description=&quot;OpenBSD Secure Shell server&quot; enabled=true managed=false …</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/systemd/system/osapi-ssh.service</td><td>error: /etc/systemd/system/osapi-ssh.service: not managed</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-name-with-service-get">A name with .service (get)<a href="#a-name-with-service-get" class="hash-link" aria-label="Direct link to A name with .service (get)" title="Direct link to A name with .service (get)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service get</td><td>name=ssh.service</td><td>description=&quot;OpenBSD Secure Shell server&quot; enabled=true managed=false …</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/systemd/system/osapi-ssh.service</td><td>error: /etc/systemd/system/osapi-ssh.service: not managed</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-service-that-osapi-deployed-by-the-name-it-was-deployed-with-get">A service that osapi deployed, by the name it was deployed with (get)<a href="#a-service-that-osapi-deployed-by-the-name-it-was-deployed-with-get" class="hash-link" aria-label="Direct link to A service that osapi deployed, by the name it was deployed with (get)" title="Direct link to A service that osapi deployed, by the name it was deployed with (get)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service get</td><td>name=app</td><td>description=&quot;Example app&quot; enabled=false managed=true name=app state=d…</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/systemd/system/osapi-app.service</td><td>metadata={&quot;object&quot;:&quot;app.service&quot;} path=/etc/systemd/system/osapi-app.…</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-service-that-osapi-deployed-by-its-units-name-get">A service that osapi deployed, by its unit&#x27;s name (get)<a href="#a-service-that-osapi-deployed-by-its-units-name-get" class="hash-link" aria-label="Direct link to A service that osapi deployed, by its unit&#x27;s name (get)" title="Direct link to A service that osapi deployed, by its unit&#x27;s name (get)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service get</td><td>name=osapi-app</td><td>description=&quot;Example app&quot; enabled=false managed=true name=app state=d…</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/systemd/system/osapi-app.service</td><td>metadata={&quot;object&quot;:&quot;app.service&quot;} path=/etc/systemd/system/osapi-app.…</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="deploy-a-unit-file-create">Deploy a unit file (create)<a href="#deploy-a-unit-file-create" class="hash-link" aria-label="Direct link to Deploy a unit file (create)" title="Direct link to Deploy a unit file (create)" translate="no">​</a></h2>
 
 
@@ -339,6 +471,6 @@
 
 
 
-<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service disable</td><td>name=app</td><td>changed=true name=app</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/systemd/system/osapi-app.service</td><td>metadata={&quot;object&quot;:&quot;app.service&quot;} path=/etc/systemd/system/osapi-app.…</td></tr></tbody></table></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/reference/chains/route"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Route</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/reference/chains/status"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Status</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#chain" class="table-of-contents__link toc-highlight">Chain</a></li><li><a href="#deploy-a-unit-file-create" class="table-of-contents__link toc-highlight">Deploy a unit file (create)</a></li><li><a href="#a-unit-file-that-has-the-content-create" class="table-of-contents__link toc-highlight">A unit file that has the content (create)</a></li><li><a href="#a-new-unit-file-update" class="table-of-contents__link toc-highlight">A new unit file (update)</a></li><li><a href="#remove-a-service-delete" class="table-of-contents__link toc-highlight">Remove a service (delete)</a></li><li><a href="#a-service-that-osapi-did-not-deploy-delete" class="table-of-contents__link toc-highlight">A service that osapi did not deploy (delete)</a></li><li><a href="#a-unit-file-that-osapi-did-not-deploy-delete" class="table-of-contents__link toc-highlight">A unit file that osapi did not deploy (delete)</a></li><li><a href="#start-the-service-start" class="table-of-contents__link toc-highlight">Start the service (start)</a></li><li><a href="#stop-the-service-stop" class="table-of-contents__link toc-highlight">Stop the service (stop)</a></li><li><a href="#restart-the-service-restart" class="table-of-contents__link toc-highlight">Restart the service (restart)</a></li><li><a href="#enable-the-service-enable" class="table-of-contents__link toc-highlight">Enable the service (enable)</a></li><li><a href="#a-unit-with-no-install-section-enable" class="table-of-contents__link toc-highlight">A unit with no [Install] section (enable)</a></li><li><a href="#disable-the-service-disable" class="table-of-contents__link toc-highlight">Disable the service (disable)</a></li></ul></div></div></div></div></main></div></div></div></div>
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>service disable</td><td>name=app</td><td>changed=true name=app</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/systemd/system/osapi-app.service</td><td>metadata={&quot;object&quot;:&quot;app.service&quot;} path=/etc/systemd/system/osapi-app.…</td></tr></tbody></table></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/reference/chains/route"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Route</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/reference/chains/status"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Status</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#chain" class="table-of-contents__link toc-highlight">Chain</a></li><li><a href="#a-service-that-osapi-deployed-reads-by-its-name-list" class="table-of-contents__link toc-highlight">A service that osapi deployed reads by its name (list)</a></li><li><a href="#a-host-with-two-services-list" class="table-of-contents__link toc-highlight">A host with two services (list)</a></li><li><a href="#a-running-service-get" class="table-of-contents__link toc-highlight">A running service (get)</a></li><li><a href="#a-name-with-service-get" class="table-of-contents__link toc-highlight">A name with .service (get)</a></li><li><a href="#a-service-that-osapi-deployed-by-the-name-it-was-deployed-with-get" class="table-of-contents__link toc-highlight">A service that osapi deployed, by the name it was deployed with (get)</a></li><li><a href="#a-service-that-osapi-deployed-by-its-units-name-get" class="table-of-contents__link toc-highlight">A service that osapi deployed, by its unit&#39;s name (get)</a></li><li><a href="#deploy-a-unit-file-create" class="table-of-contents__link toc-highlight">Deploy a unit file (create)</a></li><li><a href="#a-unit-file-that-has-the-content-create" class="table-of-contents__link toc-highlight">A unit file that has the content (create)</a></li><li><a href="#a-new-unit-file-update" class="table-of-contents__link toc-highlight">A new unit file (update)</a></li><li><a href="#remove-a-service-delete" class="table-of-contents__link toc-highlight">Remove a service (delete)</a></li><li><a href="#a-service-that-osapi-did-not-deploy-delete" class="table-of-contents__link toc-highlight">A service that osapi did not deploy (delete)</a></li><li><a href="#a-unit-file-that-osapi-did-not-deploy-delete" class="table-of-contents__link toc-highlight">A unit file that osapi did not deploy (delete)</a></li><li><a href="#start-the-service-start" class="table-of-contents__link toc-highlight">Start the service (start)</a></li><li><a href="#stop-the-service-stop" class="table-of-contents__link toc-highlight">Stop the service (stop)</a></li><li><a href="#restart-the-service-restart" class="table-of-contents__link toc-highlight">Restart the service (restart)</a></li><li><a href="#enable-the-service-enable" class="table-of-contents__link toc-highlight">Enable the service (enable)</a></li><li><a href="#a-unit-with-no-install-section-enable" class="table-of-contents__link toc-highlight">A unit with no [Install] section (enable)</a></li><li><a href="#disable-the-service-disable" class="table-of-contents__link toc-highlight">Disable the service (disable)</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>

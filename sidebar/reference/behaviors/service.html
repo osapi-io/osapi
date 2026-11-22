@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Service | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/reference/behaviors/service"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Service | OSAPI"><meta data-rh="true" name="description" content="The systemd services of the host. osapi behavior get --name service and"><meta data-rh="true" property="og:description" content="The systemd services of the host. osapi behavior get --name service and"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/reference/behaviors/service"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/reference/behaviors/service" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/reference/behaviors/service" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Reference","item":"https://osapi-io.github.io/osapi/sidebar/reference/"},{"@type":"ListItem","position":2,"name":"Behaviors","item":"https://osapi-io.github.io/osapi/sidebar/reference/behaviors/"},{"@type":"ListItem","position":3,"name":"Service","item":"https://osapi-io.github.io/osapi/sidebar/reference/behaviors/service/"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.6b23676e.css">
-<script src="/osapi/assets/js/runtime~main.a4ff62e0.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.fbf896a1.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.4451a06c.js" defer="defer"></script>
 </head>
 <body>
@@ -238,7 +238,7 @@ shows each call that its examples make.</p>
 
 
 
-<table><thead><tr><th>NAME</th><th>INPUT</th><th>OUTPUT</th></tr></thead><tbody><tr><td><a href="#method-list" class="">list</a></td><td>ListInput</td><td>[]Entry { name, state, enabled, description }</td></tr><tr><td><a href="#method-get" class="">get</a></td><td>GetInput { name* }</td><td>Entry { name, state, enabled, description }</td></tr><tr><td><a href="#method-create" class="">create</a></td><td>CreateInput { name*, object* }</td><td>Result { name, changed }</td></tr><tr><td><a href="#method-update" class="">update</a></td><td>UpdateInput { name*, object* }</td><td>Result { name, changed }</td></tr><tr><td><a href="#method-delete" class="">delete</a></td><td>DeleteInput { name* }</td><td>Result { name, changed }</td></tr><tr><td><a href="#method-start" class="">start</a></td><td>StartInput { name* }</td><td>Result { name, changed }</td></tr><tr><td><a href="#method-stop" class="">stop</a></td><td>StopInput { name* }</td><td>Result { name, changed }</td></tr><tr><td><a href="#method-restart" class="">restart</a></td><td>RestartInput { name* }</td><td>Result { name, changed }</td></tr><tr><td><a href="#method-enable" class="">enable</a></td><td>EnableInput { name* }</td><td>Result { name, changed }</td></tr><tr><td><a href="#method-disable" class="">disable</a></td><td>DisableInput { name* }</td><td>Result { name, changed }</td></tr></tbody></table>
+<table><thead><tr><th>NAME</th><th>INPUT</th><th>OUTPUT</th></tr></thead><tbody><tr><td><a href="#method-list" class="">list</a></td><td>ListInput</td><td>[]Entry { name, state, enabled, description, managed }</td></tr><tr><td><a href="#method-get" class="">get</a></td><td>GetInput { name* }</td><td>Entry { name, state, enabled, description, managed }</td></tr><tr><td><a href="#method-create" class="">create</a></td><td>CreateInput { name*, object* }</td><td>Result { name, changed }</td></tr><tr><td><a href="#method-update" class="">update</a></td><td>UpdateInput { name*, object* }</td><td>Result { name, changed }</td></tr><tr><td><a href="#method-delete" class="">delete</a></td><td>DeleteInput { name* }</td><td>Result { name, changed }</td></tr><tr><td><a href="#method-start" class="">start</a></td><td>StartInput { name* }</td><td>Result { name, changed }</td></tr><tr><td><a href="#method-stop" class="">stop</a></td><td>StopInput { name* }</td><td>Result { name, changed }</td></tr><tr><td><a href="#method-restart" class="">restart</a></td><td>RestartInput { name* }</td><td>Result { name, changed }</td></tr><tr><td><a href="#method-enable" class="">enable</a></td><td>EnableInput { name* }</td><td>Result { name, changed }</td></tr><tr><td><a href="#method-disable" class="">disable</a></td><td>DisableInput { name* }</td><td>Result { name, changed }</td></tr></tbody></table>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="settings-0">Settings (0)<a href="#settings-0" class="hash-link" aria-label="Direct link to Settings (0)" title="Direct link to Settings (0)" translate="no">​</a></h3>
 <p>None. Declare them with behavior.Config.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="telemetry">Telemetry<a href="#telemetry" class="hash-link" aria-label="Direct link to Telemetry" title="Direct link to Telemetry" translate="no">​</a></h2>
@@ -322,10 +322,10 @@ shows each call that its examples make.</p>
 
 
 
-<table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td>Name</td><td>list</td></tr><tr><td>Verb</td><td>read</td></tr><tr><td>Description</td><td>List the services of the host</td></tr><tr><td>Detail</td><td>Lists each service that systemd has loaded, with its state, whether it starts at boot and its description, through gohai. A Mac has no systemd, and reports skipped.</td></tr><tr><td>HTTP</td><td>GET</td></tr><tr><td>Route</td><td>/api/node/{hostname}/service</td></tr><tr><td>Permission</td><td>service:read</td></tr><tr><td>Command</td><td><a class="" href="/osapi/sidebar/usage/cli/client/node/service/list">osapi client node service list</a></td></tr><tr><td>Input type</td><td>ListInput</td></tr><tr><td>Output type</td><td>[]Entry</td></tr></tbody></table>
+<table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td>Name</td><td>list</td></tr><tr><td>Verb</td><td>read</td></tr><tr><td>Description</td><td>List the services of the host</td></tr><tr><td>Detail</td><td>Lists each service that systemd has loaded, with its state, whether it starts at boot and its description, through gohai. A service that osapi deployed shows by the name it was deployed with, not its unit&#x27;s osapi- name, and is managed. A Mac has no systemd, and reports skipped.</td></tr><tr><td>HTTP</td><td>GET</td></tr><tr><td>Route</td><td>/api/node/{hostname}/service</td></tr><tr><td>Permission</td><td>service:read</td></tr><tr><td>Command</td><td><a class="" href="/osapi/sidebar/usage/cli/client/node/service/list">osapi client node service list</a></td></tr><tr><td>Input type</td><td>ListInput</td></tr><tr><td>Output type</td><td>[]Entry</td></tr></tbody></table>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="input-0">Input (0)<a href="#input-0" class="hash-link" aria-label="Direct link to Input (0)" title="Direct link to Input (0)" translate="no">​</a></h3>
 <p>None. The method takes no input; its command needs only --target.</p>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="output-4">Output (4)<a href="#output-4" class="hash-link" aria-label="Direct link to Output (4)" title="Direct link to Output (4)" translate="no">​</a></h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="output-5">Output (5)<a href="#output-5" class="hash-link" aria-label="Direct link to Output (5)" title="Direct link to Output (5)" translate="no">​</a></h3>
 
 
 
@@ -356,8 +356,13 @@ shows each call that its examples make.</p>
 
 
 
-<table><thead><tr><th>FIELD</th><th>TYPE</th><th>DESCRIPTION</th></tr></thead><tbody><tr><td>name</td><td>string</td><td>The service, without .service</td></tr><tr><td>state</td><td>string</td><td>What systemd says it does now, such as running, exited or dead</td></tr><tr><td>enabled</td><td>boolean</td><td>Whether it starts at boot: the state of its unit file</td></tr><tr><td>description</td><td>string</td><td>The Description= of its unit</td></tr></tbody></table>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="examples-1">Examples (1)<a href="#examples-1" class="hash-link" aria-label="Direct link to Examples (1)" title="Direct link to Examples (1)" translate="no">​</a></h3>
+
+
+
+
+
+<table><thead><tr><th>FIELD</th><th>TYPE</th><th>DESCRIPTION</th></tr></thead><tbody><tr><td>name</td><td>string</td><td>The service, without .service</td></tr><tr><td>state</td><td>string</td><td>What systemd says it does now, such as running, exited or dead</td></tr><tr><td>enabled</td><td>boolean</td><td>Whether it starts at boot: the state of its unit file</td></tr><tr><td>description</td><td>string</td><td>The Description= of its unit</td></tr><tr><td>managed</td><td>boolean</td><td>Whether osapi deployed it, so its writes and actions act on it</td></tr></tbody></table>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="examples-2">Examples (2)<a href="#examples-2" class="hash-link" aria-label="Direct link to Examples (2)" title="Direct link to Examples (2)" translate="no">​</a></h3>
 
 
 
@@ -373,7 +378,12 @@ shows each call that its examples make.</p>
 
 
 
-<table><thead><tr><th>EXAMPLE</th><th>INPUT</th><th>OUTPUT</th></tr></thead><tbody><tr><td>A host with two services</td><td>(none)</td><td>[description=OpenBSD Secure Shell server, enabled=true, name=ssh, state=running] [description=Example app, enabled=false, name=osapi-app, state=dead]</td></tr></tbody></table>
+
+
+
+
+
+<table><thead><tr><th>EXAMPLE</th><th>INPUT</th><th>OUTPUT</th></tr></thead><tbody><tr><td>A service that osapi deployed reads by its name</td><td>(none)</td><td>[description=OpenBSD Secure Shell server, enabled=true, managed=false, name=ssh, state=running] [description=Example app, enabled=false, managed=true, name=app, state=dead]</td></tr><tr><td>A host with two services</td><td>(none)</td><td>[description=OpenBSD Secure Shell server, enabled=true, managed=false, name=ssh, state=running] [description=Example app, enabled=false, managed=false, name=osapi-app, state=dead]</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="method-get">Method get<a href="#method-get" class="hash-link" aria-label="Direct link to Method get" title="Direct link to Method get" translate="no">​</a></h2>
 
 
@@ -424,7 +434,7 @@ shows each call that its examples make.</p>
 
 
 
-<table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td>Name</td><td>get</td></tr><tr><td>Verb</td><td>read</td></tr><tr><td>Description</td><td>Get one service</td></tr><tr><td>Detail</td><td>Reads one service from the same list, by its name with .service or without it. A service that systemd has not loaded is not found.</td></tr><tr><td>HTTP</td><td>GET</td></tr><tr><td>Route</td><td>/api/node/{hostname}/service/{name}</td></tr><tr><td>Permission</td><td>service:read</td></tr><tr><td>Command</td><td><a class="" href="/osapi/sidebar/usage/cli/client/node/service/get">osapi client node service get</a></td></tr><tr><td>Input type</td><td>GetInput</td></tr><tr><td>Output type</td><td>Entry</td></tr></tbody></table>
+<table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td>Name</td><td>get</td></tr><tr><td>Verb</td><td>read</td></tr><tr><td>Description</td><td>Get one service</td></tr><tr><td>Detail</td><td>Reads one service from the same list, by its name with .service or without it. A service that osapi deployed reads by the name it was deployed with, such as app, as its writes take it, or by its unit&#x27;s name, osapi-app. A service that systemd has not loaded is not found.</td></tr><tr><td>HTTP</td><td>GET</td></tr><tr><td>Route</td><td>/api/node/{hostname}/service/{name}</td></tr><tr><td>Permission</td><td>service:read</td></tr><tr><td>Command</td><td><a class="" href="/osapi/sidebar/usage/cli/client/node/service/get">osapi client node service get</a></td></tr><tr><td>Input type</td><td>GetInput</td></tr><tr><td>Output type</td><td>Entry</td></tr></tbody></table>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="input-1">Input (1)<a href="#input-1" class="hash-link" aria-label="Direct link to Input (1)" title="Direct link to Input (1)" translate="no">​</a></h3>
 
 
@@ -446,7 +456,7 @@ shows each call that its examples make.</p>
 
 
 <table><thead><tr><th>FIELD</th><th>TYPE</th><th>REQUIRED</th><th>CONSTRAINTS</th><th>DESCRIPTION</th></tr></thead><tbody><tr><td>name</td><td>string</td><td>yes</td><td>pattern ^[a-zA-Z0-9_@.-]+$</td><td>The service, such as nginx, with .service or without it</td></tr></tbody></table>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="output-4-1">Output (4)<a href="#output-4-1" class="hash-link" aria-label="Direct link to Output (4)" title="Direct link to Output (4)" translate="no">​</a></h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="output-5-1">Output (5)<a href="#output-5-1" class="hash-link" aria-label="Direct link to Output (5)" title="Direct link to Output (5)" translate="no">​</a></h3>
 
 
 
@@ -477,8 +487,13 @@ shows each call that its examples make.</p>
 
 
 
-<table><thead><tr><th>FIELD</th><th>TYPE</th><th>DESCRIPTION</th></tr></thead><tbody><tr><td>name</td><td>string</td><td>The service, without .service</td></tr><tr><td>state</td><td>string</td><td>What systemd says it does now, such as running, exited or dead</td></tr><tr><td>enabled</td><td>boolean</td><td>Whether it starts at boot: the state of its unit file</td></tr><tr><td>description</td><td>string</td><td>The Description= of its unit</td></tr></tbody></table>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="examples-2">Examples (2)<a href="#examples-2" class="hash-link" aria-label="Direct link to Examples (2)" title="Direct link to Examples (2)" translate="no">​</a></h3>
+
+
+
+
+
+<table><thead><tr><th>FIELD</th><th>TYPE</th><th>DESCRIPTION</th></tr></thead><tbody><tr><td>name</td><td>string</td><td>The service, without .service</td></tr><tr><td>state</td><td>string</td><td>What systemd says it does now, such as running, exited or dead</td></tr><tr><td>enabled</td><td>boolean</td><td>Whether it starts at boot: the state of its unit file</td></tr><tr><td>description</td><td>string</td><td>The Description= of its unit</td></tr><tr><td>managed</td><td>boolean</td><td>Whether osapi deployed it, so its writes and actions act on it</td></tr></tbody></table>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="examples-4">Examples (4)<a href="#examples-4" class="hash-link" aria-label="Direct link to Examples (4)" title="Direct link to Examples (4)" translate="no">​</a></h3>
 
 
 
@@ -499,7 +514,17 @@ shows each call that its examples make.</p>
 
 
 
-<table><thead><tr><th>EXAMPLE</th><th>INPUT</th><th>OUTPUT</th></tr></thead><tbody><tr><td>A running service</td><td>name=ssh</td><td>name=ssh, state=running, enabled=true, description=OpenBSD Secure Shell server</td></tr><tr><td>A name with .service</td><td>name=ssh.service</td><td>name=ssh, state=running, enabled=true, description=OpenBSD Secure Shell server</td></tr></tbody></table>
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>EXAMPLE</th><th>INPUT</th><th>OUTPUT</th></tr></thead><tbody><tr><td>A running service</td><td>name=ssh</td><td>name=ssh, state=running, enabled=true, description=OpenBSD Secure Shell server, managed=false</td></tr><tr><td>A name with .service</td><td>name=ssh.service</td><td>name=ssh, state=running, enabled=true, description=OpenBSD Secure Shell server, managed=false</td></tr><tr><td>A service that osapi deployed, by the name it was deployed with</td><td>name=app</td><td>name=app, state=dead, enabled=false, description=Example app, managed=true</td></tr><tr><td>A service that osapi deployed, by its unit&#x27;s name</td><td>name=osapi-app</td><td>name=app, state=dead, enabled=false, description=Example app, managed=true</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="method-create">Method create<a href="#method-create" class="hash-link" aria-label="Direct link to Method create" title="Direct link to Method create" translate="no">​</a></h2>
 
 
@@ -724,7 +749,7 @@ shows each call that its examples make.</p>
 
 
 <table><thead><tr><th>FIELD</th><th>TYPE</th><th>DESCRIPTION</th></tr></thead><tbody><tr><td>name</td><td>string</td><td>The service</td></tr><tr><td>changed</td><td>boolean</td><td>Whether the host changed</td></tr></tbody></table>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="examples-1-1">Examples (1)<a href="#examples-1-1" class="hash-link" aria-label="Direct link to Examples (1)" title="Direct link to Examples (1)" translate="no">​</a></h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="examples-1">Examples (1)<a href="#examples-1" class="hash-link" aria-label="Direct link to Examples (1)" title="Direct link to Examples (1)" translate="no">​</a></h3>
 
 
 
@@ -956,7 +981,7 @@ shows each call that its examples make.</p>
 
 
 <table><thead><tr><th>FIELD</th><th>TYPE</th><th>DESCRIPTION</th></tr></thead><tbody><tr><td>name</td><td>string</td><td>The service</td></tr><tr><td>changed</td><td>boolean</td><td>Whether the host changed</td></tr></tbody></table>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="examples-1-2">Examples (1)<a href="#examples-1-2" class="hash-link" aria-label="Direct link to Examples (1)" title="Direct link to Examples (1)" translate="no">​</a></h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="examples-1-1">Examples (1)<a href="#examples-1-1" class="hash-link" aria-label="Direct link to Examples (1)" title="Direct link to Examples (1)" translate="no">​</a></h3>
 
 
 
@@ -1067,7 +1092,7 @@ shows each call that its examples make.</p>
 
 
 <table><thead><tr><th>FIELD</th><th>TYPE</th><th>DESCRIPTION</th></tr></thead><tbody><tr><td>name</td><td>string</td><td>The service</td></tr><tr><td>changed</td><td>boolean</td><td>Whether the host changed</td></tr></tbody></table>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="examples-1-3">Examples (1)<a href="#examples-1-3" class="hash-link" aria-label="Direct link to Examples (1)" title="Direct link to Examples (1)" translate="no">​</a></h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="examples-1-2">Examples (1)<a href="#examples-1-2" class="hash-link" aria-label="Direct link to Examples (1)" title="Direct link to Examples (1)" translate="no">​</a></h3>
 
 
 
@@ -1178,7 +1203,7 @@ shows each call that its examples make.</p>
 
 
 <table><thead><tr><th>FIELD</th><th>TYPE</th><th>DESCRIPTION</th></tr></thead><tbody><tr><td>name</td><td>string</td><td>The service</td></tr><tr><td>changed</td><td>boolean</td><td>Whether the host changed</td></tr></tbody></table>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="examples-1-4">Examples (1)<a href="#examples-1-4" class="hash-link" aria-label="Direct link to Examples (1)" title="Direct link to Examples (1)" translate="no">​</a></h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="examples-1-3">Examples (1)<a href="#examples-1-3" class="hash-link" aria-label="Direct link to Examples (1)" title="Direct link to Examples (1)" translate="no">​</a></h3>
 
 
 
@@ -1405,7 +1430,7 @@ shows each call that its examples make.</p>
 
 
 <table><thead><tr><th>FIELD</th><th>TYPE</th><th>DESCRIPTION</th></tr></thead><tbody><tr><td>name</td><td>string</td><td>The service</td></tr><tr><td>changed</td><td>boolean</td><td>Whether the host changed</td></tr></tbody></table>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="examples-1-5">Examples (1)<a href="#examples-1-5" class="hash-link" aria-label="Direct link to Examples (1)" title="Direct link to Examples (1)" translate="no">​</a></h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="examples-1-4">Examples (1)<a href="#examples-1-4" class="hash-link" aria-label="Direct link to Examples (1)" title="Direct link to Examples (1)" translate="no">​</a></h3>
 
 
 
@@ -1421,6 +1446,6 @@ shows each call that its examples make.</p>
 
 
 
-<table><thead><tr><th>EXAMPLE</th><th>INPUT</th><th>OUTPUT</th></tr></thead><tbody><tr><td>Disable the service</td><td>name=app</td><td>name=app, changed=true</td></tr></tbody></table></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/reference/behaviors/route"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Route</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/reference/behaviors/status"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Status</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#behavior" class="table-of-contents__link toc-highlight">Behavior</a><ul><li><a href="#methods-10" class="table-of-contents__link toc-highlight">Methods (10)</a></li><li><a href="#types-10" class="table-of-contents__link toc-highlight">Types (10)</a></li><li><a href="#settings-0" class="table-of-contents__link toc-highlight">Settings (0)</a></li></ul></li><li><a href="#telemetry" class="table-of-contents__link toc-highlight">Telemetry</a></li><li><a href="#method-list" class="table-of-contents__link toc-highlight">Method list</a><ul><li><a href="#input-0" class="table-of-contents__link toc-highlight">Input (0)</a></li><li><a href="#output-4" class="table-of-contents__link toc-highlight">Output (4)</a></li><li><a href="#examples-1" class="table-of-contents__link toc-highlight">Examples (1)</a></li></ul></li><li><a href="#method-get" class="table-of-contents__link toc-highlight">Method get</a><ul><li><a href="#input-1" class="table-of-contents__link toc-highlight">Input (1)</a></li><li><a href="#output-4-1" class="table-of-contents__link toc-highlight">Output (4)</a></li><li><a href="#examples-2" class="table-of-contents__link toc-highlight">Examples (2)</a></li></ul></li><li><a href="#method-create" class="table-of-contents__link toc-highlight">Method create</a><ul><li><a href="#input-2" class="table-of-contents__link toc-highlight">Input (2)</a></li><li><a href="#output-2" class="table-of-contents__link toc-highlight">Output (2)</a></li><li><a href="#examples-2-1" class="table-of-contents__link toc-highlight">Examples (2)</a></li></ul></li><li><a href="#method-update" class="table-of-contents__link toc-highlight">Method update</a><ul><li><a href="#input-2-1" class="table-of-contents__link toc-highlight">Input (2)</a></li><li><a href="#output-2-1" class="table-of-contents__link toc-highlight">Output (2)</a></li><li><a href="#examples-1-1" class="table-of-contents__link toc-highlight">Examples (1)</a></li></ul></li><li><a href="#method-delete" class="table-of-contents__link toc-highlight">Method delete</a><ul><li><a href="#input-1-1" class="table-of-contents__link toc-highlight">Input (1)</a></li><li><a href="#output-2-2" class="table-of-contents__link toc-highlight">Output (2)</a></li><li><a href="#examples-3" class="table-of-contents__link toc-highlight">Examples (3)</a></li></ul></li><li><a href="#method-start" class="table-of-contents__link toc-highlight">Method start</a><ul><li><a href="#input-1-2" class="table-of-contents__link toc-highlight">Input (1)</a></li><li><a href="#output-2-3" class="table-of-contents__link toc-highlight">Output (2)</a></li><li><a href="#examples-1-2" class="table-of-contents__link toc-highlight">Examples (1)</a></li></ul></li><li><a href="#method-stop" class="table-of-contents__link toc-highlight">Method stop</a><ul><li><a href="#input-1-3" class="table-of-contents__link toc-highlight">Input (1)</a></li><li><a href="#output-2-4" class="table-of-contents__link toc-highlight">Output (2)</a></li><li><a href="#examples-1-3" class="table-of-contents__link toc-highlight">Examples (1)</a></li></ul></li><li><a href="#method-restart" class="table-of-contents__link toc-highlight">Method restart</a><ul><li><a href="#input-1-4" class="table-of-contents__link toc-highlight">Input (1)</a></li><li><a href="#output-2-5" class="table-of-contents__link toc-highlight">Output (2)</a></li><li><a href="#examples-1-4" class="table-of-contents__link toc-highlight">Examples (1)</a></li></ul></li><li><a href="#method-enable" class="table-of-contents__link toc-highlight">Method enable</a><ul><li><a href="#input-1-5" class="table-of-contents__link toc-highlight">Input (1)</a></li><li><a href="#output-2-6" class="table-of-contents__link toc-highlight">Output (2)</a></li><li><a href="#examples-2-2" class="table-of-contents__link toc-highlight">Examples (2)</a></li></ul></li><li><a href="#method-disable" class="table-of-contents__link toc-highlight">Method disable</a><ul><li><a href="#input-1-6" class="table-of-contents__link toc-highlight">Input (1)</a></li><li><a href="#output-2-7" class="table-of-contents__link toc-highlight">Output (2)</a></li><li><a href="#examples-1-5" class="table-of-contents__link toc-highlight">Examples (1)</a></li></ul></li></ul></div></div></div></div></main></div></div></div></div>
+<table><thead><tr><th>EXAMPLE</th><th>INPUT</th><th>OUTPUT</th></tr></thead><tbody><tr><td>Disable the service</td><td>name=app</td><td>name=app, changed=true</td></tr></tbody></table></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/reference/behaviors/route"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Route</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/reference/behaviors/status"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Status</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#behavior" class="table-of-contents__link toc-highlight">Behavior</a><ul><li><a href="#methods-10" class="table-of-contents__link toc-highlight">Methods (10)</a></li><li><a href="#types-10" class="table-of-contents__link toc-highlight">Types (10)</a></li><li><a href="#settings-0" class="table-of-contents__link toc-highlight">Settings (0)</a></li></ul></li><li><a href="#telemetry" class="table-of-contents__link toc-highlight">Telemetry</a></li><li><a href="#method-list" class="table-of-contents__link toc-highlight">Method list</a><ul><li><a href="#input-0" class="table-of-contents__link toc-highlight">Input (0)</a></li><li><a href="#output-5" class="table-of-contents__link toc-highlight">Output (5)</a></li><li><a href="#examples-2" class="table-of-contents__link toc-highlight">Examples (2)</a></li></ul></li><li><a href="#method-get" class="table-of-contents__link toc-highlight">Method get</a><ul><li><a href="#input-1" class="table-of-contents__link toc-highlight">Input (1)</a></li><li><a href="#output-5-1" class="table-of-contents__link toc-highlight">Output (5)</a></li><li><a href="#examples-4" class="table-of-contents__link toc-highlight">Examples (4)</a></li></ul></li><li><a href="#method-create" class="table-of-contents__link toc-highlight">Method create</a><ul><li><a href="#input-2" class="table-of-contents__link toc-highlight">Input (2)</a></li><li><a href="#output-2" class="table-of-contents__link toc-highlight">Output (2)</a></li><li><a href="#examples-2-1" class="table-of-contents__link toc-highlight">Examples (2)</a></li></ul></li><li><a href="#method-update" class="table-of-contents__link toc-highlight">Method update</a><ul><li><a href="#input-2-1" class="table-of-contents__link toc-highlight">Input (2)</a></li><li><a href="#output-2-1" class="table-of-contents__link toc-highlight">Output (2)</a></li><li><a href="#examples-1" class="table-of-contents__link toc-highlight">Examples (1)</a></li></ul></li><li><a href="#method-delete" class="table-of-contents__link toc-highlight">Method delete</a><ul><li><a href="#input-1-1" class="table-of-contents__link toc-highlight">Input (1)</a></li><li><a href="#output-2-2" class="table-of-contents__link toc-highlight">Output (2)</a></li><li><a href="#examples-3" class="table-of-contents__link toc-highlight">Examples (3)</a></li></ul></li><li><a href="#method-start" class="table-of-contents__link toc-highlight">Method start</a><ul><li><a href="#input-1-2" class="table-of-contents__link toc-highlight">Input (1)</a></li><li><a href="#output-2-3" class="table-of-contents__link toc-highlight">Output (2)</a></li><li><a href="#examples-1-1" class="table-of-contents__link toc-highlight">Examples (1)</a></li></ul></li><li><a href="#method-stop" class="table-of-contents__link toc-highlight">Method stop</a><ul><li><a href="#input-1-3" class="table-of-contents__link toc-highlight">Input (1)</a></li><li><a href="#output-2-4" class="table-of-contents__link toc-highlight">Output (2)</a></li><li><a href="#examples-1-2" class="table-of-contents__link toc-highlight">Examples (1)</a></li></ul></li><li><a href="#method-restart" class="table-of-contents__link toc-highlight">Method restart</a><ul><li><a href="#input-1-4" class="table-of-contents__link toc-highlight">Input (1)</a></li><li><a href="#output-2-5" class="table-of-contents__link toc-highlight">Output (2)</a></li><li><a href="#examples-1-3" class="table-of-contents__link toc-highlight">Examples (1)</a></li></ul></li><li><a href="#method-enable" class="table-of-contents__link toc-highlight">Method enable</a><ul><li><a href="#input-1-5" class="table-of-contents__link toc-highlight">Input (1)</a></li><li><a href="#output-2-6" class="table-of-contents__link toc-highlight">Output (2)</a></li><li><a href="#examples-2-2" class="table-of-contents__link toc-highlight">Examples (2)</a></li></ul></li><li><a href="#method-disable" class="table-of-contents__link toc-highlight">Method disable</a><ul><li><a href="#input-1-6" class="table-of-contents__link toc-highlight">Input (1)</a></li><li><a href="#output-2-7" class="table-of-contents__link toc-highlight">Output (2)</a></li><li><a href="#examples-1-4" class="table-of-contents__link toc-highlight">Examples (1)</a></li></ul></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
