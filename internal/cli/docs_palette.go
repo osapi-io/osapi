@@ -35,10 +35,9 @@ const (
 )
 
 // docsColors are the colors of the docs site for one page theme: the
-// headings in page order, the link and accent colors and the gray.
+// headings in page order, the accent color and the gray.
 type docsColors struct {
 	headings []lipgloss.Color
-	link     lipgloss.Color
 	accent   lipgloss.Color
 	gray     lipgloss.Color
 }
@@ -58,13 +57,11 @@ var docsStatus = [][2]string{
 var (
 	docsDark = docsColors{
 		headings: headingColors,
-		link:     LogoBlueText,
 		accent:   LogoBlue,
 		gray:     LogoGray,
 	}
 	docsLight = docsColors{
 		headings: tinted(headingColors),
-		link:     tints[LogoBlueText],
 		accent:   LogoBlue,
 		gray:     LogoGray,
 	}
@@ -109,7 +106,6 @@ func writeDocsVars(
 	for i, h := range c.headings {
 		fmt.Fprintf(sb, "  --osapi-heading-%d: %s;\n", i+1, h)
 	}
-	fmt.Fprintf(sb, "  --osapi-link: %s;\n", c.link)
 	fmt.Fprintf(sb, "  --osapi-accent: %s;\n", c.accent)
 	fmt.Fprintf(sb, "  --osapi-gray: %s;\n", c.gray)
 	for _, st := range docsStatus {
@@ -147,7 +143,6 @@ func writeDocsTS(
 	}
 	fmt.Fprintf(sb, "  %s: {\n", name)
 	fmt.Fprintf(sb, "    headings: [%s],\n", strings.Join(quoted, ", "))
-	fmt.Fprintf(sb, "    link: %q,\n", string(c.link))
 	fmt.Fprintf(sb, "    accent: %q,\n", string(c.accent))
 	fmt.Fprintf(sb, "    gray: %q,\n", string(c.gray))
 	sb.WriteString("  },\n")

@@ -1,134 +1,152 @@
-/**
- * Any CSS included here will be global. The classic template
- * bundles Infima by default. Infima is a CSS framework designed to
- * work well for content-centric websites.
+/*
+ * The docs site has the look of the UI, ui/src/index.css and its
+ * components: a black navbar, a #0a0a0a page, black cards with a faint
+ * border, small type, and color only for the headings, the logo, code and a
+ * status. The palette, --osapi-heading-* and the status colors, is
+ * palette.gen.css, generated from internal/cli/theme.go.
  */
 
-/* The palette, --osapi-*, is palette.gen.css, generated from the CLI's
-   colors in internal/cli/theme.go, as the UI's are. Green means a status
-   only, as in the UI and the CLI: links and the active item take the logo's
-   blue, and each h2 takes a logo color in page order. */
+/* ---------- Tokens ---------- */
+
+/* The light page: the same roles on white. */
 :root {
-  --ifm-color-primary: var(--osapi-link);
-  --ifm-color-primary-dark: color-mix(in srgb, var(--osapi-link) 90%, black);
-  --ifm-color-primary-darker: color-mix(in srgb, var(--osapi-link) 85%, black);
-  --ifm-color-primary-darkest: color-mix(in srgb, var(--osapi-link) 70%, black);
-  --ifm-color-primary-light: color-mix(in srgb, var(--osapi-link) 90%, white);
-  --ifm-color-primary-lighter: color-mix(in srgb, var(--osapi-link) 85%, white);
-  --ifm-color-primary-lightest: color-mix(
-    in srgb,
-    var(--osapi-link) 70%,
-    white
-  );
-  /* The UI's mono font: the system's own first. */
-  --ifm-font-family-monospace:
-    ui-monospace, 'SF Mono', Menlo, 'JetBrains Mono', monospace;
-  --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
-  --ifm-table-head-background: transparent;
-  --ifm-table-stripe-background: transparent;
+  --osapi-text: #18202b;
+  --osapi-title: #0b1220;
+  --osapi-muted: #687385;
+  --osapi-page: #f7f8fa;
+  --osapi-card: #ffffff;
+  --osapi-raise: rgba(16, 24, 40, 0.03);
   --osapi-border: #e2e6ec;
   --osapi-border-hover: #c6ccd6;
-  --osapi-surface: #f8f9fb;
+  --osapi-code-bg: rgba(16, 24, 40, 0.06);
+
+  --ifm-color-primary: var(--osapi-text);
+  --ifm-color-primary-dark: var(--osapi-text);
+  --ifm-color-primary-darker: var(--osapi-text);
+  --ifm-color-primary-darkest: var(--osapi-text);
+  --ifm-color-primary-light: var(--osapi-text);
+  --ifm-color-primary-lighter: var(--osapi-text);
+  --ifm-color-primary-lightest: var(--osapi-text);
+  --ifm-font-color-base: var(--osapi-text);
+  --ifm-heading-color: var(--osapi-text);
+  --ifm-link-color: var(--osapi-text);
+  --ifm-link-hover-color: var(--osapi-text);
+  --ifm-background-color: var(--osapi-page);
+  --ifm-background-surface-color: var(--osapi-page);
+  --ifm-navbar-background-color: var(--osapi-card);
+  --ifm-toc-border-color: var(--osapi-border);
+  --ifm-hr-border-color: var(--osapi-border);
+  --ifm-table-border-color: var(--osapi-border);
+  --ifm-table-head-background: transparent;
+  --ifm-table-stripe-background: transparent;
+  --ifm-code-background: var(--osapi-code-bg);
+
+  /* The UI's type: the system font, a small scale. */
+  --ifm-font-size-base: 0.9375rem;
+  --ifm-line-height-base: 1.65;
+  --ifm-h1-font-size: 1.75rem;
+  --ifm-h2-font-size: 1.0625rem;
+  --ifm-h3-font-size: 0.9375rem;
+  --ifm-h4-font-size: 0.875rem;
+  --ifm-heading-font-weight: 600;
+  --ifm-font-family-monospace:
+    ui-monospace, 'SF Mono', Menlo, 'JetBrains Mono', monospace;
+  --ifm-code-font-size: 85%;
+  --docusaurus-highlighted-code-line-bg: rgba(16, 24, 40, 0.06);
 }
 
-/* The UI's dark page: #0a0a0a under black cards and code. */
+/* The dark page: the UI's own values. */
 [data-theme='dark'] {
-  --ifm-background-color: #0a0a0a;
-  --ifm-background-surface-color: #0a0a0a;
-  --ifm-color-emphasis-0: #0a0a0a;
-  --ifm-navbar-background-color: #000000;
-  --ifm-color-gray-1000: #000000;
-  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.06);
+  --osapi-text: #e2e8f0;
+  --osapi-title: #ffffff;
+  --osapi-muted: #8a8a8a;
+  --osapi-page: #0a0a0a;
+  --osapi-card: #000000;
+  --osapi-raise: rgba(255, 255, 255, 0.02);
   --osapi-border: rgba(255, 255, 255, 0.09);
   --osapi-border-hover: rgba(255, 255, 255, 0.2);
-  --osapi-surface: #000000;
+  --osapi-code-bg: rgba(255, 255, 255, 0.06);
+  --ifm-color-emphasis-300: var(--osapi-border);
+  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.06);
 }
 
-/* A section heading takes a logo color in page order, after the dark-blue
-   bar, as a section of the UI does. */
+[data-theme='dark'] body,
+[data-theme='dark'] #__docusaurus,
+[data-theme='dark'] .main-wrapper,
+[data-theme='dark'] main {
+  background-color: var(--osapi-page) !important;
+}
+
+/* ---------- Navbar: the UI's navbar ---------- */
+
+.navbar {
+  min-height: 4rem;
+  border-bottom: 1px solid var(--osapi-border);
+  box-shadow: none;
+  backdrop-filter: blur(12px);
+}
+
+.navbar .navbar__link {
+  color: var(--osapi-muted);
+  font-weight: 500;
+}
+
+.navbar .navbar__link:hover,
+.navbar .navbar__link--active {
+  color: var(--osapi-text);
+}
+
+.navbar .clean-btn,
+.navbar .header-github-link::before {
+  color: var(--osapi-muted);
+}
+
+.navbar .dropdown__menu {
+  background: var(--osapi-card);
+  border: 1px solid var(--osapi-border);
+  border-radius: 6px;
+}
+
+.navbar .dropdown__link {
+  color: var(--osapi-muted);
+  font-size: 0.875rem;
+}
+
+.navbar .dropdown__link:hover,
+.navbar .dropdown__link--active {
+  color: var(--osapi-text);
+  background: var(--osapi-raise);
+}
+
+/* ---------- Headings: the UI's page header and section labels ---------- */
+
+/* The page title, as the UI's: bold, the brightest text. */
+.markdown h1,
+.markdown header h1 {
+  color: var(--osapi-title);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.75rem;
+}
+
+/* A section: a logo color in page order, after the dark-blue bar. */
+.markdown h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2.25rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
 .markdown h2::before {
   content: '';
-  display: inline-block;
+  flex: none;
   width: 4px;
-  height: 0.8em;
-  margin-right: 0.5rem;
+  height: 0.9em;
   border-radius: 2px;
   background: var(--osapi-accent);
-  vertical-align: -0.05em;
-}
-
-.markdown h2 {
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-/* The page that is open, in the sidebar: the text color and the dark-blue
-   bar of a section heading, as the UI marks where a person is. Blue is a
-   link only. */
-.menu__link--active:not(.menu__link--sublist) {
-  color: #e2e8f0;
-  background: rgba(255, 255, 255, 0.05);
-  box-shadow: inset 3px 0 0 var(--osapi-accent);
-  font-weight: 600;
-}
-
-[data-theme='light'] .menu__link--active:not(.menu__link--sublist) {
-  color: #18202b;
-  background: rgba(16, 24, 40, 0.05);
-}
-
-/* The breadcrumb of the open page: the text color, as in the sidebar. */
-.breadcrumbs__item--active .breadcrumbs__link {
-  color: #e2e8f0;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-[data-theme='light'] .breadcrumbs__item--active .breadcrumbs__link {
-  color: #18202b;
-  background: rgba(16, 24, 40, 0.05);
-}
-
-/* A category with the open page in it: the text color, not a link. */
-.menu__link--sublist.menu__link--active,
-.menu__list-item-collapsible--active .menu__link {
-  color: inherit;
-}
-
-/* A table as the UI's: faint lines, and a header in small gray capitals. */
-.markdown table {
-  border-collapse: collapse;
-  display: table;
-  width: 100%;
-}
-
-.markdown table thead tr {
-  background: transparent;
-  border-bottom: 1px solid var(--osapi-border-hover);
-}
-
-.markdown table th {
-  color: var(--osapi-gray);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  text-align: left;
-}
-
-.markdown table tr {
-  background: transparent;
-  border-top: 1px solid var(--osapi-border);
-}
-
-.markdown table th,
-.markdown table td {
-  border: none;
-  padding: 0.55rem 0.9rem;
-}
-
-.markdown table tbody tr:hover {
-  background: color-mix(in srgb, var(--osapi-link) 5%, transparent);
 }
 
 .markdown h2:nth-of-type(5n + 1) {
@@ -151,131 +169,445 @@
   color: var(--osapi-heading-5);
 }
 
-/* Force black background everywhere Infima hardcodes dark greys */
-[data-theme='dark'] body,
-[data-theme='dark'] #__docusaurus,
-[data-theme='dark'] .main-wrapper,
-[data-theme='dark'] main {
-  background-color: #0a0a0a !important;
+/* Under a section, a heading is the text color, as a card title is. */
+.markdown h3 {
+  color: var(--osapi-title);
+  font-size: 1rem;
+  font-weight: 600;
 }
 
-/* Navbar: as the UI's, black with a faint rule under it; a link is gray
-   and the page that is open is the text color. */
-.navbar {
-  background-color: #000000;
+.markdown h4 {
+  color: var(--osapi-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* ---------- Text under a heading: the text color and gray ---------- */
+
+/* A link: a word in the logo's cyan, with no line under it until a pointer
+   is on it. On a light page, the dark tint of cyan, which reads on white. */
+.markdown a,
+.alert a {
+  color: var(--osapi-heading-1);
+  text-decoration: none;
+}
+
+.markdown a:hover,
+.alert a:hover {
+  color: var(--osapi-heading-1);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+/* Inline code: a quiet chip, as the UI's IDs and values. */
+.markdown code:not(pre code) {
+  border: none;
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+  background: var(--osapi-code-bg);
+}
+
+/* ---------- Cards: the UI's Card ---------- */
+
+/* A table is a card: faint lines, a header in small gray capitals. */
+.markdown table {
+  display: table;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--osapi-border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--osapi-card);
+  font-size: 0.8125rem;
+}
+
+.markdown table thead tr,
+.markdown table tr {
+  background: transparent;
+  border: none;
+}
+
+.markdown table th {
+  color: var(--osapi-muted);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-align: left;
   border-bottom: 1px solid var(--osapi-border);
-  min-height: 4rem;
-  display: flex;
-  align-items: center;
-  backdrop-filter: blur(12px);
 }
 
-.navbar .navbar__link {
-  color: var(--osapi-gray);
+.markdown table th,
+.markdown table td {
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  padding: 0.55rem 1rem;
+}
+
+/* A table with no header, such as the key-value tables of a behavior page:
+   no empty header bar, and the key gray, as the UI's key-value lists. */
+.markdown table thead:not(:has(th:not(:empty))) {
+  display: none;
+}
+
+.markdown table:has(thead th:empty) td:first-child {
+  color: var(--osapi-muted);
+}
+
+.markdown table tbody tr + tr td {
+  border-top: 1px solid var(--osapi-border);
+}
+
+.markdown table tbody tr:hover {
+  background: var(--osapi-raise);
+}
+
+/* A code block is a card. */
+[class*='codeBlockContainer'] {
+  border: 1px solid var(--osapi-border);
+  border-radius: 8px;
+  box-shadow: none !important;
+  background: var(--osapi-card) !important;
+  --prism-background-color: var(--osapi-card) !important;
+}
+
+[class*='codeBlockContainer'] pre,
+[class*='codeBlockContainer'] code {
+  background: var(--osapi-card) !important;
+}
+
+div[class^='codeBlockTitle'] {
+  background: var(--osapi-card) !important;
+  border-bottom: 1px solid var(--osapi-border) !important;
+  color: var(--osapi-muted);
+  font-size: 0.75rem;
+}
+
+button[class*='copyButton'] {
+  border: 1px solid var(--osapi-border);
+  color: var(--osapi-muted);
+  background: var(--osapi-card);
+}
+
+/* A DocCard, on an index page, is a card. */
+.card {
+  background: var(--osapi-card);
+  border: 1px solid var(--osapi-border);
+  border-radius: 8px;
+  box-shadow: none !important;
+  transition: border-color 0.2s ease;
+}
+
+/* On hover, a card is marked as the open page is in the sidebar: the
+   dark-blue bar at its left. */
+.card:hover {
+  border-color: var(--osapi-border-hover);
+  box-shadow: inset 3px 0 0 var(--osapi-accent) !important;
+}
+
+.card.padding--lg {
+  padding: 1rem 1.25rem !important;
+}
+
+/* A card is a link as a whole: no line under its text, and its title is the
+   title color, not a section's. */
+.markdown a.card,
+.markdown a.card * {
+  text-decoration: none;
+}
+
+/* The title, as a UI card's: no emoji icon before it. */
+.markdown .card h2 {
+  display: block;
+  margin: 0 0 0.35rem;
+  color: var(--osapi-title);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.theme-doc-card-icon {
+  display: none;
+}
+
+.markdown .card h2::before {
+  display: none;
+}
+
+.card p {
+  color: var(--osapi-muted);
+  font-size: 0.8125rem;
+}
+
+/* The previous and next page links are cards. */
+.pagination-nav__link {
+  border: 1px solid var(--osapi-border);
+  border-radius: 8px;
+  background: var(--osapi-card);
+}
+
+.pagination-nav__link:hover {
+  border-color: var(--osapi-border-hover);
+}
+
+.pagination-nav__sublabel {
+  color: var(--osapi-muted);
+}
+
+/* ---------- Notes: the UI's info box ---------- */
+
+/* A note is a quiet box. Only a warning, a danger or a success has a
+   status color, as in the UI, where a color is a state. */
+.alert {
+  background: var(--osapi-raise);
+  border: 1px solid var(--osapi-border);
+  border-left-width: 1px;
+  border-radius: 8px;
+  color: var(--osapi-text);
+  box-shadow: none;
+  --ifm-alert-foreground-color: var(--osapi-text);
+}
+
+.alert div[class*='admonitionHeading'] {
+  color: var(--osapi-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.alert div[class*='admonitionHeading'] svg {
+  fill: var(--osapi-muted);
+}
+
+.alert--success {
+  border-left: 3px solid var(--osapi-ok);
+}
+
+.alert--warning {
+  border-left: 3px solid var(--osapi-warn);
+}
+
+.alert--warning div[class*='admonitionHeading'] {
+  color: var(--osapi-warn);
+}
+
+.alert--warning div[class*='admonitionHeading'] svg {
+  fill: var(--osapi-warn);
+}
+
+.alert--danger {
+  border-left: 3px solid var(--osapi-error);
+}
+
+.alert--danger div[class*='admonitionHeading'] {
+  color: var(--osapi-error);
+}
+
+.alert--danger div[class*='admonitionHeading'] svg {
+  fill: var(--osapi-error);
+}
+
+[data-theme='light'] .alert--warning div[class*='admonitionHeading'] {
+  color: #b45309;
+}
+
+[data-theme='light'] .alert--warning div[class*='admonitionHeading'] svg {
+  fill: #b45309;
+}
+
+/* ---------- Sidebar, table of contents, breadcrumbs ---------- */
+
+/* A page is gray; the open one is the text color, with the dark-blue bar. */
+.menu {
+  font-size: 0.875rem;
+}
+
+.menu__link {
+  color: var(--osapi-muted);
+  font-weight: 400;
+}
+
+.menu__link:hover {
+  color: var(--osapi-text);
+  background: var(--osapi-raise);
+}
+
+.menu__link--sublist,
+.menu__list-item-collapsible--active .menu__link {
+  color: var(--osapi-text);
   font-weight: 500;
 }
 
-.navbar .navbar__link:hover,
-.navbar .navbar__link--active {
-  color: #e2e8f0;
+.menu__link--active:not(.menu__link--sublist) {
+  color: var(--osapi-title);
+  font-weight: 500;
+  background: var(--osapi-raise);
+  box-shadow: inset 3px 0 0 var(--osapi-accent);
 }
 
-.navbar .navbar__title {
-  color: #ffffff;
+.table-of-contents {
+  font-size: 0.8125rem;
 }
 
-[data-theme='light'] .navbar {
-  background-color: #ffffff;
-  border-bottom: 1px solid var(--osapi-border);
+.table-of-contents__link {
+  color: var(--osapi-muted);
 }
 
-[data-theme='light'] .navbar .navbar__link {
-  color: #687385;
+.table-of-contents__link:hover,
+.table-of-contents__link--active {
+  color: var(--osapi-title);
 }
 
-[data-theme='light'] .navbar .navbar__link:hover,
-[data-theme='light'] .navbar .navbar__link--active {
-  color: #18202b;
+.breadcrumbs {
+  font-size: 0.75rem;
 }
 
-[data-theme='light'] .navbar .navbar__title {
-  color: #18202b;
+.breadcrumbs__link {
+  color: var(--osapi-muted);
+  background: transparent;
 }
 
-[data-theme='light'] .navbar .header-github-link::before {
-  background-color: #1a1a2e;
+.breadcrumbs__item--active .breadcrumbs__link {
+  color: var(--osapi-text);
+  background: transparent;
 }
 
-[data-theme='light'] .navbar .header-github-link:hover::before {
-  background-color: var(--osapi-link);
+/* ---------- API pages ---------- */
+
+/* An HTTP method is a quiet chip in a logo color, as a badge of the UI:
+   GET cyan, POST yellow, PUT and PATCH blue, DELETE magenta. Green and red
+   are left for a status. */
+:root {
+  /* No green or red outside the palette: the theme's state colors are the
+     UI's, and a required field is magenta, not an error. */
+  --ifm-color-success: var(--osapi-ok);
+  --ifm-color-danger: var(--osapi-error);
+  --ifm-color-warning: var(--osapi-warn);
+  --openapi-required: var(--osapi-heading-2);
+  --openapi-deprecated: var(--osapi-heading-3);
+  --openapi-nullable: var(--osapi-muted);
+  --osapi-get: var(--osapi-heading-1);
+  --osapi-post: var(--osapi-heading-3);
+  --osapi-put: var(--osapi-heading-5);
+  --osapi-delete: var(--osapi-heading-2);
 }
 
-[data-theme='light'] .navbar button[class*='toggle'] svg,
-[data-theme='light'] .navbar .clean-btn svg {
-  color: #1a1a2e;
-  fill: #1a1a2e;
-}
-
-[data-theme='light'] .navbar button[class*='toggle']:hover,
-[data-theme='light'] .navbar .clean-btn:hover {
-  background-color: color-mix(in srgb, var(--osapi-link) 15%, transparent);
-}
-
-[data-theme='light'] .navbar button[class*='toggle']:hover svg,
-[data-theme='light'] .navbar .clean-btn:hover svg {
-  color: var(--osapi-link);
-  fill: var(--osapi-link);
-}
-
-[data-theme='light'] .navbar .dropdown__link {
-  color: #1a1a2e;
-}
-
-/* Sidebar Method labels */
 .api-method > .menu__link {
   align-items: center;
   justify-content: start;
 }
 
 .api-method > .menu__link::before {
-  width: 50px;
-  height: 20px;
-  font-size: 12px;
-  line-height: 20px;
-  text-transform: uppercase;
-  font-weight: 600;
-  border-radius: 0.25rem;
-  border: 1px solid;
-  margin-right: var(--ifm-spacing-horizontal);
-  text-align: center;
   flex-shrink: 0;
-  border-color: transparent;
-  color: white;
+  width: 46px;
+  height: 18px;
+  margin-right: var(--ifm-spacing-horizontal);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 18px;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--osapi-method);
+  background: color-mix(in srgb, var(--osapi-method) 14%, transparent);
 }
 
 .get > .menu__link::before {
   content: 'get';
-  background-color: var(--ifm-color-primary);
-}
-
-.put > .menu__link::before {
-  content: 'put';
-  background-color: var(--openapi-code-blue);
+  --osapi-method: var(--osapi-get);
 }
 
 .post > .menu__link::before {
   content: 'post';
-  background-color: var(--openapi-code-green);
+  --osapi-method: var(--osapi-post);
 }
 
-.delete > .menu__link::before {
-  content: 'del';
-  background-color: var(--openapi-code-red);
+.put > .menu__link::before {
+  content: 'put';
+  --osapi-method: var(--osapi-put);
 }
 
 .patch > .menu__link::before {
   content: 'patch';
-  background-color: var(--openapi-code-orange);
+  --osapi-method: var(--osapi-put);
+}
+
+.delete > .menu__link::before {
+  content: 'del';
+  --osapi-method: var(--osapi-delete);
+}
+
+/* A required field: magenta, not the red of an error. */
+.openapi-schema__required {
+  color: var(--osapi-heading-2) !important;
+}
+
+/* The method and the path at the top of an endpoint's page. */
+.openapi__method-endpoint {
+  background: var(--osapi-card) !important;
+  border: 1px solid var(--osapi-border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.openapi__method-endpoint .badge {
+  border: none;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  color: var(--osapi-method);
+  background: color-mix(in srgb, var(--osapi-method) 14%, transparent);
+}
+
+.openapi__method-endpoint .badge--primary {
+  --osapi-method: var(--osapi-get);
+}
+
+.openapi__method-endpoint .badge--success {
+  --osapi-method: var(--osapi-post);
+}
+
+.openapi__method-endpoint .badge--info,
+.openapi__method-endpoint .badge--warning {
+  --osapi-method: var(--osapi-put);
+}
+
+.openapi__method-endpoint .badge--danger {
+  --osapi-method: var(--osapi-delete);
+}
+
+.markdown h2.openapi__method-endpoint-path {
+  display: block;
+  margin: 0;
+  color: var(--osapi-title);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.9375rem;
+}
+
+.markdown h2.openapi__method-endpoint-path::before {
+  display: none;
+}
+
+/* A tab, of response codes or of languages: gray, and the open one the
+   text color with the dark-blue line under it, as the open page is marked. */
+.openapi-tabs__response-code-item,
+.openapi-tabs__code-item {
+  color: var(--osapi-muted) !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 6px;
+}
+
+.openapi-tabs__response-code-item.active,
+.openapi-tabs__code-item.active {
+  color: var(--osapi-title) !important;
+  background: var(--osapi-raise) !important;
+  border-color: var(--osapi-border) !important;
+  box-shadow: inset 0 -2px 0 var(--osapi-accent);
 }
 
 /* Taken from docusaurus' website. */
@@ -295,218 +627,19 @@
   background-color: var(--ifm-navbar-link-hover-color);
 }
 
-/* Dark card styling for DocCardList and category cards */
-[data-theme='dark'] .card {
-  background-color: #000000;
-  border: 1px solid var(--osapi-border);
-  border-radius: 0.5rem;
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.03);
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-[data-theme='dark'] .card:hover {
-  border-color: var(--osapi-border-hover);
-  box-shadow:
-    0 4px 16px color-mix(in srgb, var(--osapi-accent) 12%, transparent),
-    0 1px 2px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-[data-theme='light'] .card {
-  background-color: var(--osapi-surface);
-  border: 1px solid var(--osapi-border);
-  border-radius: 0.5rem;
-  box-shadow: 0 1.5px 3px 0 rgba(16, 24, 40, 0.08) !important;
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-[data-theme='light'] .card:hover {
-  border-color: var(--osapi-border-hover);
-  box-shadow: 0 2px 8px rgba(16, 24, 40, 0.08) !important;
-}
-
-[data-theme='light'] [class*='cardContainer'] {
-  box-shadow: 0 1.5px 3px 0 rgba(16, 24, 40, 0.08) !important;
-  border: 1px solid var(--osapi-border) !important;
-}
-
-[data-theme='light'] [class*='cardContainer']:hover {
-  box-shadow: 0 2px 8px rgba(16, 24, 40, 0.08) !important;
-  border-color: var(--osapi-border-hover) !important;
-}
-
-/* Code blocks — black background, 3D bevel, green accent */
-[data-theme='dark'] [class*='codeBlockContainer'] {
-  background-color: #000000 !important;
-  border: 1px solid var(--osapi-border);
-  border-radius: 0.5rem;
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.03);
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-[data-theme='dark'] [class*='codeBlockContainer']:hover {
-  border-color: var(--osapi-border-hover);
-  box-shadow:
-    0 4px 16px color-mix(in srgb, var(--osapi-accent) 12%, transparent),
-    0 1px 2px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-[data-theme='dark'] pre {
-  background-color: #000000 !important;
-  border: none;
-}
-
-/* Code text color — syntax highlighting handled by Prism theme plugin */
-[data-theme='dark'] code {
-  color: #e2e8f0;
-}
-
-[data-theme='light'] [class*='codeBlockContainer'] {
-  --prism-background-color: var(--osapi-surface);
-  background: var(--osapi-surface) !important;
-  box-shadow: 0 1.5px 3px 0 rgba(16, 24, 40, 0.08) !important;
-  border: 1px solid var(--osapi-border);
-  border-radius: 0.5rem;
-}
-
-[data-theme='light'] pre {
-  background-color: var(--osapi-surface) !important;
-}
-
-[data-theme='light'] button[class*='copyButton'] {
-  background-color: transparent;
-  border: 1px solid var(--osapi-border);
-  color: var(--osapi-link);
-}
-
-[data-theme='light'] button[class*='copyButton']:hover {
-  background-color: color-mix(in srgb, var(--osapi-link) 10%, transparent);
-  border-color: var(--osapi-border-hover);
-}
-
-/* Code title bar (filename) */
-[data-theme='dark'] div[class^='codeBlockTitle'] {
-  background-color: #000000 !important;
-  border-bottom: 1px solid var(--osapi-border);
-  color: var(--osapi-gray);
-}
-
-/* Admonitions — dark card style with colored left border */
-[data-theme='dark'] .alert {
-  border: 1px solid var(--osapi-border);
-  border-left: 4px solid;
-  border-radius: 0.5rem;
-  color: #e2e8f0;
-  padding: 1rem 1.25rem;
-}
-
-[data-theme='dark'] .alert div[class*='admonitionHeading'] {
-  background: transparent;
-}
-
-[data-theme='dark'] .alert--secondary {
-  background-color: rgba(255, 255, 255, 0.03);
-  border-left-color: var(--osapi-gray);
-}
-
-[data-theme='dark'] .alert--info {
-  background-color: color-mix(in srgb, var(--osapi-link) 8%, transparent);
-  border-color: color-mix(in srgb, var(--osapi-link) 20%, transparent);
-  border-left-color: var(--osapi-link);
-}
-
-[data-theme='dark'] .alert--success {
-  background-color: color-mix(in srgb, var(--osapi-ok) 8%, transparent);
-  border-color: color-mix(in srgb, var(--osapi-ok) 20%, transparent);
-  border-left-color: var(--osapi-ok);
-}
-
-[data-theme='dark'] .alert--warning {
-  background-color: color-mix(in srgb, var(--osapi-warn) 8%, transparent);
-  border-color: color-mix(in srgb, var(--osapi-warn) 20%, transparent);
-  border-left-color: var(--osapi-warn);
-}
-
-[data-theme='dark'] .alert--danger {
-  background-color: color-mix(in srgb, var(--osapi-error) 8%, transparent);
-  border-color: color-mix(in srgb, var(--osapi-error) 20%, transparent);
-  border-left-color: var(--osapi-error);
-}
-
-[data-theme='dark'] .alert--secondary div[class*='admonitionHeading'] {
-  color: var(--osapi-gray);
-}
-
-[data-theme='dark'] .alert--info div[class*='admonitionHeading'] {
-  color: var(--osapi-link);
-}
-
-[data-theme='dark'] .alert--success div[class*='admonitionHeading'] {
-  color: var(--osapi-ok);
-}
-
-[data-theme='dark'] .alert--warning div[class*='admonitionHeading'] {
-  color: var(--osapi-warn);
-}
-
-[data-theme='dark'] .alert--danger div[class*='admonitionHeading'] {
-  color: var(--osapi-error);
-}
-
-[data-theme='dark'] .alert a {
-  color: var(--osapi-link);
-  text-decoration: none;
-}
-
-[data-theme='dark'] .alert a:hover {
-  color: var(--ifm-color-primary-lightest);
-  text-decoration: none;
-}
-
-/* OpenAPI docs — button and label fixes */
-[data-theme='dark'] .openapi-explorer__request-btn {
+/* The API explorer's send button: the UI's primary button, the logo blue. */
+.openapi-explorer__request-btn {
   background-color: var(--osapi-accent) !important;
+  border-color: var(--osapi-accent) !important;
   color: #ffffff !important;
   font-weight: 600;
-}
-
-[data-theme='dark'] .openapi-explorer__request-btn:hover {
-  background-color: var(--osapi-link) !important;
-  color: #ffffff !important;
-}
-
-[data-theme='light'] .alert {
-  border-left: 4px solid;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 /* Taken from docusaurus' website. */
 div[class^='announcementBar_'] {
   font-size: 20px;
-
-  --site-announcement-bar-stripe-color1: #eef0ff;
-  --site-announcement-bar-stripe-color2: #f6f7ff;
-
-  background: repeating-linear-gradient(
-    35deg,
-    var(--site-announcement-bar-stripe-color1),
-    var(--site-announcement-bar-stripe-color1) 20px,
-    var(--site-announcement-bar-stripe-color2) 10px,
-    var(--site-announcement-bar-stripe-color2) 40px
-  );
   font-weight: bold;
+  background: var(--osapi-raise);
 }
 
 /* The home page logo: the light one on a light page, the dark one on a dark
@@ -520,4 +653,38 @@ div[class^='announcementBar_'] {
 [data-theme='light'] .logo-dark,
 [data-theme='dark'] .logo-light {
   display: none;
+}
+
+/* A Mermaid diagram on a dark page: black boxes with the faint border of a
+   card, gray lines, and labels on the page color, not gray patches. */
+[data-theme='dark'] .docusaurus-mermaid-container .node rect,
+[data-theme='dark'] .docusaurus-mermaid-container .node polygon,
+[data-theme='dark'] .docusaurus-mermaid-container .actor,
+[data-theme='dark'] .docusaurus-mermaid-container rect.actor {
+  fill: var(--osapi-card) !important;
+  stroke: var(--osapi-border-hover) !important;
+}
+
+[data-theme='dark'] .docusaurus-mermaid-container .edgeLabel p,
+[data-theme='dark'] .docusaurus-mermaid-container .edgeLabel,
+[data-theme='dark'] .docusaurus-mermaid-container .edgeLabel rect,
+[data-theme='dark'] .docusaurus-mermaid-container .labelBkg {
+  background-color: var(--osapi-page) !important;
+  fill: var(--osapi-page) !important;
+  color: var(--osapi-muted) !important;
+}
+
+[data-theme='dark'] .docusaurus-mermaid-container .flowchart-link,
+[data-theme='dark'] .docusaurus-mermaid-container .messageLine0,
+[data-theme='dark'] .docusaurus-mermaid-container .messageLine1,
+[data-theme='dark'] .docusaurus-mermaid-container .actor-line {
+  stroke: var(--osapi-muted) !important;
+}
+
+/* bash marks a word as a function when it is a known command, such as node
+   or ssh, which colors words at random in a command line: it stays the text
+   color. Prism's theme cannot set a color for one language. */
+.language-bash .token.function,
+.language-shell-session .token.function {
+  color: inherit !important;
 }

@@ -40,8 +40,7 @@ func (s *DocsPalettePublicTestSuite) TestDocsPaletteCSS() {
 
 	s.Contains(css, ":root {\n  --osapi-heading-1: #0a8fb0;")
 	s.Contains(css, "[data-theme='dark'] {\n  --osapi-heading-1: #00d5ff;")
-	s.Contains(css, "  --osapi-link: #6b5cff;")
-	s.Contains(css, "  --osapi-link: #5a4cd8;")
+	s.NotContains(css, "--osapi-link", "a link is a heading color, not a color of its own")
 	s.Contains(css, "  --osapi-accent: #2300fd;")
 	s.Contains(css, "  --osapi-ok: #67ea94;")
 	s.Contains(css, "  --osapi-warn: #ffd787;")

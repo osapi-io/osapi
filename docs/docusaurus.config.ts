@@ -48,6 +48,8 @@ function codeTheme(
         style: { color: blue }
       },
       { types: ['punctuation', 'operator'], style: { color: p.gray } },
+      // bash: a flag, such as -r, and an argument of an assignment.
+      { types: ['parameter', 'assign-left'], style: { color: blue } },
       { types: ['deleted'], style: { color: '#ef4444' } }
     ]
   };
@@ -609,18 +611,18 @@ const config: Config = {
     prism: {
       theme: codeTheme(palette.light, '#18202b', '#f8f9fb'),
       darkTheme: codeTheme(palette.dark, '#e2e8f0', '#000000'),
-      prism: {
-        additionalLanguages: [
-          'ruby',
-          'csharp',
-          'php',
-          'java',
-          'powershell',
-          'json',
-          'bash',
-          'shell-session'
-        ]
-      },
+      // At this level, not in a prism key of its own, which Docusaurus
+      // does not read: bash and the rest were never highlighted.
+      additionalLanguages: [
+        'ruby',
+        'csharp',
+        'php',
+        'java',
+        'powershell',
+        'json',
+        'bash',
+        'shell-session'
+      ],
       languageTabs: [
         {
           highlight: 'python',
