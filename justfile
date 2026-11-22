@@ -197,6 +197,9 @@ spec-client-check:
 examples-check:
     #!/usr/bin/env bash
     set -euo pipefail
+    # A directory with no example, such as one that holds only a built binary
+    # that .gitignore ignores, has nothing to check: *.go matches nothing.
+    shopt -s nullglob
     broken=0
     for dir in examples/sdk/*/; do
         dir=${dir%/}
