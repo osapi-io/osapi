@@ -92,9 +92,10 @@ func Get(
 			Span:       "behavior." + b.Name + ".<method>",
 			ChildSpans: append([]string{}, behavior.ChildSpans(b)...),
 			Metrics: []string{
-				behavior.MetricCalls,
-				behavior.MetricDuration,
-				behavior.MetricChanges,
+				// As Prometheus shows them: the exporter adds the namespace.
+				"osapi_" + behavior.MetricCalls,
+				"osapi_" + behavior.MetricDuration,
+				"osapi_" + behavior.MetricChanges,
 			},
 			Attributes: []string{
 				string(
