@@ -90,6 +90,8 @@ var notDSL = map[string]bool{
 	"Reason":                       true,
 	"Groups":                       true,
 	"ValidateOutput":               true,
+	"TagKeys":                      true,
+	"KnownParents":                 true,
 	"Columns":                      true,
 	"Format:Column":                true,
 	"FormatKV:Column":              true,

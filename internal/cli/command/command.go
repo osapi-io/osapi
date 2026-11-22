@@ -37,6 +37,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/osapi-io/osapi/pkg/sdk/client"
+
 	"github.com/spf13/cobra"
 
 	"github.com/osapi-io/osapi/internal/cli/reference"
@@ -64,7 +66,7 @@ type Group interface {
 	Commands() []Command
 	// CommandPermission is the permission the command of method m needs, or
 	// "" for one that needs none.
-	CommandPermission(m Command) string
+	CommandPermission(m Command) client.Permission
 }
 
 // Command is one method of a group: one command.
@@ -167,8 +169,8 @@ func annotate(
 func permissionOf(
 	g Group,
 	sub string,
-) string {
-	perm := ""
+) client.Permission {
+	var perm client.Permission
 	for _, c := range g.Commands() {
 		if sub != "" && c.SubPath() != sub {
 			continue
@@ -273,7 +275,7 @@ func attach(
 				Long:  e.group.GroupLong(),
 			}
 			annotate(group, reference.Notes, e.group.GroupNotes())
-			annotate(group, reference.Permission, permissionOf(e.group, ""))
+			annotate(group, reference.Permission, string(permissionOf(e.group, "")))
 			into.AddCommand(group)
 		}
 		for _, c := range e.cmds {
@@ -291,7 +293,7 @@ func attach(
 						short = strings.ToUpper(sub[:1]) + sub[1:] + " commands"
 					}
 					parent = &cobra.Command{Use: sub, Short: short}
-					annotate(parent, reference.Permission, permissionOf(e.group, sub))
+					annotate(parent, reference.Permission, string(permissionOf(e.group, sub)))
 					group.AddCommand(parent)
 				}
 			}

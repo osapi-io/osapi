@@ -350,8 +350,8 @@ func (g *Group) Commands() []command.Command {
 // group's methods, for the command layer.
 func (g *Group) CommandPermission(
 	m command.Command,
-) string {
-	return string(g.Permission(m.(*Method)))
+) client.Permission {
+	return g.Permission(m.(*Method))
 }
 
 var (

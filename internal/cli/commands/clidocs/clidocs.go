@@ -27,7 +27,7 @@ import "github.com/osapi-io/osapi/internal/cli/command"
 // Group is the docs group's definition.
 var Group = command.Register(command.Define(
 	"docs", "Write the CLI reference pages of the docs site",
-	command.Under("cli"),
+	command.Under(command.ParentCLI),
 	command.Uses[Deps](),
 	command.SubDoc("dsl", "Write the DSL reference pages of the docs site"),
 	command.SubDoc("reference", "Write the reference pages of the docs site"),

@@ -36,7 +36,7 @@ import (
 var Group = command.Register(command.Define(
 	"endpoint",
 	"List, describe and validate the controller's own endpoints, and print their DSL",
-	command.Under("controller"),
+	command.Under(command.ParentController),
 	command.Long("An endpoint is one operation of the controller itself, such as\n"+
 		"`GET /api/agent`. It runs on the controller, not on a host. Work on a host\n"+
 		"is a behavior: see `osapi behavior`. These commands read the definitions in\n"+

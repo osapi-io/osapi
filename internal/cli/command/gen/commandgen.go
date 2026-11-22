@@ -231,7 +231,7 @@ func Commands(
 		}
 		notes := jen.Dict{}
 		if perm := g.CommandPermission(m); perm != "" {
-			notes[jen.Qual(referencePath, "Permission")] = jen.Lit(perm)
+			notes[jen.Qual(referencePath, "Permission")] = jen.Lit(string(perm))
 		}
 		if n := m.PageNotes(); n != "" {
 			notes[jen.Qual(referencePath, "Notes")] = jen.Lit(n)

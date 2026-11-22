@@ -30,7 +30,7 @@ import "github.com/osapi-io/osapi/internal/cli/command"
 var Group = command.Register(command.Define(
 	"agent", "Run the agent",
 	command.Flat(),
-	command.Under("agent"),
+	command.Under(command.ParentAgent),
 	command.Uses[Deps](),
 	command.Process("start").
 		Short("Start the node agent").

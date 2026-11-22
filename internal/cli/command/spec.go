@@ -96,8 +96,8 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindOption,
-			Name: `Under("word", ...)`,
-			Does: "Puts the group's command under the command of the words, such as controller for osapi controller endpoint. Attach makes a word that has no command, and uses a hand-written one that cmd/commands.go names.",
+			Name: `Under(Parent, ...)`,
+			Does: "Puts the group's command under the command of the words, such as ParentController for osapi controller endpoint. Use a Parent constant: validate refuses a word outside KnownParents, because Attach makes a word that has no command, so a misspelled word was a new command with no error. Attach uses a hand-written command that cmd/commands.go names.",
 			When: "When the commands belong to a command that is there already, such as controller. Without it, the group is under the root.",
 		},
 

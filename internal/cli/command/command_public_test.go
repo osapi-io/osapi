@@ -26,6 +26,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/client"
+
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
 
@@ -40,13 +42,13 @@ type group struct {
 	subs                   map[string]string
 }
 
-func (g group) GroupName() string                        { return g.name }
-func (g group) GroupDoc() string                         { return g.doc }
-func (g group) GroupNotes() string                       { return g.notes }
-func (g group) GroupLong() string                        { return g.long }
-func (g group) SubDoc(segment string) string             { return g.subs[segment] }
-func (g group) Commands() []command.Command              { return nil }
-func (g group) CommandPermission(command.Command) string { return "" }
+func (g group) GroupName() string                                   { return g.name }
+func (g group) GroupDoc() string                                    { return g.doc }
+func (g group) GroupNotes() string                                  { return g.notes }
+func (g group) GroupLong() string                                   { return g.long }
+func (g group) SubDoc(segment string) string                        { return g.subs[segment] }
+func (g group) Commands() []command.Command                         { return nil }
+func (g group) CommandPermission(command.Command) client.Permission { return "" }
 
 func (g group) CommandPath() []string {
 	if g.path != nil {
@@ -161,8 +163,8 @@ type permGroup struct {
 
 func (g permGroup) Commands() []command.Command { return g.cmds }
 
-func (g permGroup) CommandPermission(m command.Command) string {
-	return g.perms[m.MethodName()]
+func (g permGroup) CommandPermission(m command.Command) client.Permission {
+	return client.Permission(g.perms[m.MethodName()])
 }
 
 // TestAttachHelp gives the commands that Attach makes the help of their

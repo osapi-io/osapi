@@ -30,6 +30,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/client"
+
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/apicontract"
@@ -640,8 +642,8 @@ func (s *EndpointPublicTestSuite) TestCommandLayer() {
 	s.Require().Len(methods, 2)
 	s.Equal("list", methods[0].MethodName())
 	s.Equal(reflect.TypeFor[noInput](), methods[0].Input())
-	s.Equal("sysctl:read", g.CommandPermission(methods[0]))
-	s.Equal("sysctl:admin", g.CommandPermission(methods[1]))
+	s.Equal(client.Permission("sysctl:read"), g.CommandPermission(methods[0]))
+	s.Equal(client.Permission("sysctl:admin"), g.CommandPermission(methods[1]))
 }
 
 func (s *EndpointPublicTestSuite) TestRefusals() {

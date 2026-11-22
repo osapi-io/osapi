@@ -27,7 +27,7 @@ import "github.com/osapi-io/osapi/internal/cli/command"
 // Group is the admission group's definition.
 var Group = command.Register(command.Define(
 	"admission", "Show what admits this machine",
-	command.Under("agent"),
+	command.Under(command.ParentAgent),
 	command.Uses[Deps](),
 	command.Method[GetInput, GetOutput]("get").
 		Short("Show what admits this machine").

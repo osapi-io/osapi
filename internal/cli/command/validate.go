@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -148,7 +149,7 @@ var Checks = guide.Checks{
 	},
 	{
 		Rule:     RuleTag,
-		Requires: "Each render tag of an output field is one the output knows: -, bytes, age, time, duration, duration=ms, status or short=N with N above 0. An empty tag is on a list, and a title tag is on the blank field _ of the output type.",
+		Requires: "Each tag key of an output field is one of command.KnownTags. Each render tag is one the output knows: -, bytes, age, time, duration, duration=ms, status or short=N with N above 0. An empty tag is on a list, and a title tag is on the blank field _ of the output type.",
 		Fix:      "Use a render value that osapi cli command spec get lists, put empty on a list field, and put title on a field _ struct{} of the output type.",
 	},
 	{
@@ -211,6 +212,14 @@ func Validate(
 	for _, w := range append(append([]string(nil), g.Parents...), g.Name) {
 		if !name.MatchString(w) {
 			add("", RuleName, fmt.Sprintf("the word %q is not lowercase letters and digits.", w))
+		}
+	}
+	for _, w := range g.Parents {
+		if name.MatchString(w) && !slices.Contains(KnownParents(), Parent(w)) {
+			add("", RuleName, fmt.Sprintf(
+				"the group is Under %q, which is not one of KnownParents; use a command.Parent constant.",
+				w,
+			))
 		}
 	}
 	if len(g.Methods) == 0 {
@@ -444,6 +453,49 @@ func TagProblems(
 	return tagProblems(t, map[reflect.Type]bool{})
 }
 
+// KnownTags are the struct tag keys that a field of an input or an output
+// of a command, a behavior or an endpoint can carry: the DSLs, the
+// validator, the output's renderer and the settings loader read them. A key
+// outside the list is a typo: Go reads a tag only by its exact key, so the
+// field gets nothing from it.
+var KnownTags = []string{
+	"default", "doc", "empty", "example", "flag", "in", "json", "label",
+	"mapstructure", "none", "param", "pattern", "prefix", "render", "secret",
+	"short", "table", "telemetry", "template", "title", "validate", "yaml",
+}
+
+// TagKeys are the keys of tag, in order, by the convention that
+// reflect.StructTag.Get reads: key:"value" pairs separated by spaces.
+func TagKeys(
+	tag reflect.StructTag,
+) []string {
+	var keys []string
+	s := string(tag)
+	for s != "" {
+		s = strings.TrimLeft(s, " ")
+		i := strings.Index(s, ":\"")
+		if i <= 0 {
+			break
+		}
+		keys = append(keys, s[:i])
+		s = s[i+2:]
+		for j := 0; j < len(s); j++ {
+			if s[j] == '\\' {
+				j++
+
+				continue
+			}
+			if s[j] == '"' {
+				s = s[j+1:]
+
+				break
+			}
+		}
+	}
+
+	return keys
+}
+
 func tagProblems(
 	t reflect.Type,
 	seen map[reflect.Type]bool,
@@ -460,6 +512,14 @@ func tagProblems(
 			continue
 		}
 		where := t.Name() + "." + f.Name
+		for _, key := range TagKeys(f.Tag) {
+			if !slices.Contains(KnownTags, key) {
+				out = append(
+					out,
+					fmt.Sprintf("%s has the tag key %q, which nothing reads.", where, key),
+				)
+			}
+		}
 		if render, ok := f.Tag.Lookup("render"); ok && !knownRender(render) {
 			out = append(
 				out,

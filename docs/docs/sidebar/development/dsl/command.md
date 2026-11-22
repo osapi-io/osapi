@@ -72,11 +72,13 @@ has none.
 
 Use: For each Sub segment of the group whose word is not the method's.
 
-### `Under("word", ...)`
+### `Under(Parent, ...)`
 
-Puts the group's command under the command of the words, such as controller for
-osapi controller endpoint. Attach makes a word that has no command, and uses a
-hand-written one that cmd/commands.go names.
+Puts the group's command under the command of the words, such as
+ParentController for osapi controller endpoint. Use a Parent constant: validate
+refuses a word outside KnownParents, because Attach makes a word that has no
+command, so a misspelled word was a new command with no error. Attach uses a
+hand-written command that cmd/commands.go names.
 
 Use: When the commands belong to a command that is there already, such as
 controller. Without it, the group is under the root.
