@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Validate | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/command/validate"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Validate | OSAPI"><meta data-rh="true" name="description" content="Check every local group against the rules of a definition, and the output of"><meta data-rh="true" property="og:description" content="Check every local group against the rules of a definition, and the output of"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/command/validate"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/command/validate" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/command/validate" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Usage","item":"https://osapi-io.github.io/osapi/sidebar/usage/"},{"@type":"ListItem","position":2,"name":"CLI","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/"},{"@type":"ListItem","position":3,"name":"CLI","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/"},{"@type":"ListItem","position":4,"name":"Command","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/command/"},{"@type":"ListItem","position":5,"name":"Validate","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/command/validate"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.5cfa669d.css">
-<script src="/osapi/assets/js/runtime~main.1cfeb865.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.cf6b1084.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.ef2fa2fa.js" defer="defer"></script>
 </head>
 <body>
@@ -62,11 +62,12 @@ commands do, such as Read the roles and what each grants.</li>
 func(context.Context, D, In) (Out, error), with D that type and In and Out the
 method&#x27;s types. Fix: Add command.Uses[Deps]() to Define, and .Handle(fn) to
 each method, with the signature that the message names.</li>
-<li class=""><code>tag</code>: Each render tag of an output field is one the output knows: -, bytes,
-age, time, duration, duration=ms, status or short=N with N above 0. An empty
-tag is on a list, and a title tag is on the blank field _ of the output type.
-Fix: Use a render value that osapi cli command spec get lists, put empty on a
-list field, and put title on a field _ struct{} of the output type.</li>
+<li class=""><code>tag</code>: Each tag key of an output field is one of command.KnownTags. Each
+render tag is one the output knows: -, bytes, age, time, duration,
+duration=ms, status or short=N with N above 0. An empty tag is on a list, and
+a title tag is on the blank field _ of the output type. Fix: Use a render
+value that osapi cli command spec get lists, put empty on a list field, and
+put title on a field _ struct{} of the output type.</li>
 <li class=""><code>says</code>: A method that answers with no body says what occurred: its name has a
 past tense, such as admitted for admit, or .Says gives the text. Fix: Add
 .Says(&quot;&lt;state&gt;&quot;) to the method, such as .Says(&quot;draining&quot;) for drain.</li>
