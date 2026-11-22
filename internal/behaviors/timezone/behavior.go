@@ -35,6 +35,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"timezone", "The timezone of the host",
 	behavior.Node,
 	behavior.API,
+	behavior.Area("config"),
 	behavior.CLI,
 	behavior.Platform(behavior.PlatformLinux, newReader),
 	behavior.Platform(behavior.PlatformDarwin, newReader),

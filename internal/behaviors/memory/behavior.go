@@ -28,6 +28,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"memory", "Get the memory usage of target hosts",
 	behavior.Node,
 	behavior.API,
+	behavior.Area("hardware"),
 	behavior.CLI,
 	behavior.Platform(behavior.PlatformLinux, newReader),
 	behavior.Platform(behavior.PlatformDarwin, newReader),

@@ -101,6 +101,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindOption,
+			Name: `Area("area")`,
+			Does: "Puts a served behavior in an area of the UI: the group of the Configure page's Add Block panel that its blocks sit in, one of services, software, config, node, networking, security or hardware.",
+			When: "On each behavior with API. behavior validate refuses a served behavior with none.",
+		},
+		{
+			Kind: KindOption,
 			Name: `Under("group")`,
 			Does: "Nests the behavior in a group: its routes, commands and directory.",
 			When: "When the behavior belongs to a group, such as network.",

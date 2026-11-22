@@ -97,7 +97,7 @@ func updateMotd(
 func Example() {
 	motd := behavior.Define("motd", "The message shown at login",
 		behavior.Node,
-		behavior.API,
+		behavior.API, behavior.Area("config"),
 		behavior.CLI,
 		behavior.Read("get", getMotd).
 			Describe("Get the message of the day"),

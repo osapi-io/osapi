@@ -270,8 +270,16 @@ func (s *TemplatePublicTestSuite) TestTemplateRule() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			b := behavior.Define("files", "Files", behavior.Node, onDebian, behavior.API,
-				behavior.CLI, tc.m.Describe("Create").Example("One", nil, nil))
+			b := behavior.Define(
+				"files",
+				"Files",
+				behavior.Node,
+				onDebian,
+				behavior.API,
+				behavior.Area("config"),
+				behavior.CLI,
+				tc.m.Describe("Create").Example("One", nil, nil),
+			)
 			var msgs []string
 			for _, p := range behavior.ValidateBehavior(b) {
 				if p.Rule == behavior.RuleTemplate {

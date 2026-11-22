@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { BEHAVIOR_BLOCKS, type BehaviorName } from "@/lib/blocks.gen";
+import { BEHAVIOR_BLOCKS } from "@/lib/blocks.gen";
 
 export type BlockStatus =
   "unchecked" | "pending" | "ready" | "applying" | "applied" | "error";
@@ -452,28 +452,6 @@ const HAND_BLOCK_TYPES: BlockType[] = [
   },
 ];
 
-/**
- * The UI group of each behavior: where its blocks sit in the Add Block
- * panel. A behavior with no group fails the type check.
- */
-const BEHAVIOR_GROUPS: Record<BehaviorName, string> = {
-  service: "services",
-  package: "software",
-  updatepackages: "software",
-  sysctl: "config",
-  timezone: "config",
-  hostname: "config",
-  status: "node",
-  load: "node",
-  uptime: "node",
-  os: "node",
-  dns: "networking",
-  interface: "networking",
-  route: "networking",
-  disk: "hardware",
-  memory: "hardware",
-};
-
 /** The block of each method of each behavior, from blocks.gen.ts. */
 const BEHAVIOR_BLOCK_TYPES: BlockType[] = Object.values(BEHAVIOR_BLOCKS).map(
   (def) => ({
@@ -481,7 +459,7 @@ const BEHAVIOR_BLOCK_TYPES: BlockType[] = Object.values(BEHAVIOR_BLOCKS).map(
     label: def.label,
     description: def.description,
     category: def.behavior,
-    group: BEHAVIOR_GROUPS[def.behavior],
+    group: def.area,
     readyOnAdd: !def.fields.some((f) => f.required),
   }),
 );
@@ -526,7 +504,29 @@ function buildCategories(groupName: string): BlockCategory[] {
   }));
 }
 
-export const BLOCK_GROUPS: BlockGroup[] = [
+/**
+ * The area of each behavior, from behavior.Area in its definition, is a
+ * group of the panel: a new area fails the type check here until the panel
+ * has a group for it.
+ */
+type BehaviorArea =
+  (typeof BEHAVIOR_BLOCKS)[keyof typeof BEHAVIOR_BLOCKS]["area"];
+type GroupName =
+  | "services"
+  | "software"
+  | "config"
+  | "node"
+  | "networking"
+  | "security"
+  | "containers"
+  | "files"
+  | "command"
+  | "hardware"
+  | "audit";
+const areaIsGroup = (a: BehaviorArea): GroupName => a;
+void areaIsGroup;
+
+export const BLOCK_GROUPS: (BlockGroup & { name: GroupName })[] = [
   {
     name: "services",
     label: "Services",

@@ -28,6 +28,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"load", "Get the load averages of target hosts",
 	behavior.Node,
 	behavior.API,
+	behavior.Area("node"),
 	behavior.CLI,
 	// gohai reads /proc/loadavg on Linux, and vm.loadavg from sysctl on macOS.
 	behavior.Platform(behavior.PlatformLinux, newReader),

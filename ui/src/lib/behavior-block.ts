@@ -19,14 +19,24 @@ export interface BehaviorBlockField {
   readonly secret?: boolean;
 }
 
+/**
+ * A field of the rows that a block answers, as the CLI's output shows it:
+ * its label, its render tag, such as bytes, and for an object or a list of
+ * objects the columns of the object.
+ */
 export interface BehaviorBlockColumn {
   readonly name: string;
+  readonly label: string;
   readonly doc: string;
+  readonly render?: string;
+  readonly kind: "value" | "values" | "object" | "list";
+  readonly columns?: readonly BehaviorBlockColumn[];
 }
 
 export interface BehaviorBlockDef {
   readonly type: string;
   readonly behavior: string;
+  readonly area: string;
   readonly title: string;
   readonly method: string;
   readonly label: string;

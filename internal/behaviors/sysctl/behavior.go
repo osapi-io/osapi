@@ -47,6 +47,7 @@ var Behavior = behavior.Register(behavior.Define(
 	// move them.
 	behavior.Writes(DefaultDir+"/osapi-*.conf"),
 	behavior.API,
+	behavior.Area("config"),
 	behavior.CLI,
 	behavior.Read("list", List).
 		Describe("List the kernel's parameters and which osapi manages").

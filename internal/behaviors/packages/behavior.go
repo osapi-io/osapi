@@ -53,6 +53,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"package", "The packages installed on the host",
 	behavior.Node,
 	behavior.API,
+	behavior.Area("software"),
 	behavior.CLI,
 	behavior.Platform(behavior.PlatformDebian, newDebian),
 	behavior.Platform(behavior.PlatformLinux, newReader),

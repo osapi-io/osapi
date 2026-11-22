@@ -62,6 +62,8 @@ type Behavior struct {
 	// Group nests the behavior under another path and command, such as
 	// network for dns. Empty sits it directly under node.
 	Group string
+	// Area is where the UI shows the behavior, one of Areas. Area sets it.
+	Area string
 	// Parent is the behavior whose items this one's items are under, set
 	// with Of: a user's SSH keys are under the user. Nil for a behavior of
 	// the host.
@@ -142,6 +144,20 @@ func Under(
 	group string,
 ) Option {
 	return optionFunc(func(b *Behavior) { b.Group = group })
+}
+
+// Areas are the areas of the UI that a served behavior can sit in: the
+// groups of the Configure page's Add Block panel.
+var Areas = []string{"services", "software", "config", "node", "networking", "security", "hardware"}
+
+// Area puts a served behavior in an area of the UI: Area("hardware") puts
+// disk's blocks under Hardware in the Configure page's Add Block panel.
+// behavior validate refuses a behavior with API and no area, or an area
+// that is not one of Areas.
+func Area(
+	name string,
+) Option {
+	return optionFunc(func(b *Behavior) { b.Area = name })
 }
 
 // Of puts a behavior's items under an item of parent: Of(user.Behavior)
