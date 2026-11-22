@@ -155,7 +155,53 @@ func GenerateReference(
 		)
 	}
 
+	if err := writeTables(root, d.Tables); err != nil {
+		return ReferenceOutput{}, err
+	}
+
 	return ReferenceOutput{Pages: len(pages)}, nil
+}
+
+// tableDirs are where pages that a person wrote have generated tables.
+var tableDirs = []string{"docs/docs/sidebar/features"}
+
+// writeTables writes each generated table of the pages in tableDirs again,
+// and keeps the rest of each page as it is.
+func writeTables(
+	root string,
+	tables func(string, string) (string, error),
+) error {
+	if tables == nil {
+		return nil
+	}
+	for _, dir := range tableDirs {
+		err := filepath.WalkDir(
+			filepath.Join(root, dir),
+			func(path string, e fs.DirEntry, err error) error {
+				if err != nil || e.IsDir() || !strings.HasSuffix(path, ".md") {
+					return err
+				}
+				data, err := os.ReadFile(path)
+				if err != nil {
+					return err
+				}
+				text, err := tables(root, string(data))
+				if err != nil {
+					return fmt.Errorf("%s: %w", path, err)
+				}
+				if text == string(data) {
+					return nil
+				}
+
+				return os.WriteFile(path, []byte(text), 0o644)
+			},
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // page is the text of p: its front matter and title, its intro, then each

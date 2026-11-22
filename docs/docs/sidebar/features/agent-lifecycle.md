@@ -58,13 +58,15 @@ Conditions (2):
 
 Set the limits in `osapi.yaml`:
 
-```yaml
-agent:
-  conditions:
-    memory_pressure_threshold: 90 # percent used
-    high_load_multiplier: 2.0 # load1 / cpu_count
-    disk_pressure_threshold: 90 # percent used
-```
+<!-- osapi:config agent.conditions -->
+
+| Key                                          | Type  | Default | Environment                                        | Description                               |
+| -------------------------------------------- | ----- | ------- | -------------------------------------------------- | ----------------------------------------- |
+| `agent.conditions.memory_pressure_threshold` | int   | `90`    | `OSAPI_AGENT_CONDITIONS_MEMORY_PRESSURE_THRESHOLD` | Memory pressure threshold (percent used). |
+| `agent.conditions.high_load_multiplier`      | float | `2`     | `OSAPI_AGENT_CONDITIONS_HIGH_LOAD_MULTIPLIER`      | High load multiplier (load1 / cpu_count). |
+| `agent.conditions.disk_pressure_threshold`   | int   | `90`    | `OSAPI_AGENT_CONDITIONS_DISK_PRESSURE_THRESHOLD`   | Disk pressure threshold (percent used).   |
+
+<!-- /osapi:config -->
 
 ## Agent drain
 

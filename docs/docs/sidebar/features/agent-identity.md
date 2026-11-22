@@ -287,45 +287,28 @@ before the controller can verify the agents.
 
 ### Agent PKI
 
-```yaml
-agent:
-  pki:
-    # Enable PKI enrollment and job signature verification.
-    enabled: false
-    # Directory for agent keypair storage.
-    key_dir: /etc/osapi/pki
-```
+<!-- osapi:config agent.pki -->
 
-| Field     | Type   | Default          | Description                                 |
-| --------- | ------ | ---------------- | ------------------------------------------- |
-| `enabled` | bool   | `false`          | Turn on PKI enrollment and job verification |
-| `key_dir` | string | `/etc/osapi/pki` | Directory for `agent.key` and `agent.pub`   |
+| Key                 | Type   | Default          | Environment               | Description                                           |
+| ------------------- | ------ | ---------------- | ------------------------- | ----------------------------------------------------- |
+| `agent.pki.enabled` | bool   | `false`          | `OSAPI_AGENT_PKI_ENABLED` | Enable PKI enrollment and job signature verification. |
+| `agent.pki.key_dir` | string | `/etc/osapi/pki` | `OSAPI_AGENT_PKI_KEY_DIR` | Directory for agent keypair storage.                  |
+
+<!-- /osapi:config -->
 
 ### Controller PKI
 
-```yaml
-controller:
-  pki:
-    # Enable PKI enrollment and job signing.
-    enabled: false
-    # Directory for controller keypair storage.
-    key_dir: /etc/osapi/pki
-    # Admit each machine that asks to join (development and tests).
-    auto_admit: false
-    # Grace period for key rotation (Go duration).
-    rotation_grace_period: 24h
-    # Delete an admitted machine that has not reported for this long
-    # (Go duration, such as 720h). Empty is never.
-    delete_after: ''
-```
+<!-- osapi:config controller.pki -->
 
-| Field                   | Type   | Default          | Description                                                    |
-| ----------------------- | ------ | ---------------- | -------------------------------------------------------------- |
-| `enabled`               | bool   | `false`          | Turn on PKI enrollment and job signing                         |
-| `key_dir`               | string | `/etc/osapi/pki` | Directory for the controller key pair                          |
-| `auto_admit`            | bool   | `false`          | Admit each machine that asks to join (development and tests)   |
-| `rotation_grace_period` | string | `24h`            | osapi accepts both keys during rotation                        |
-| `delete_after`          | string | empty            | Delete an admitted machine that has not reported for this long |
+| Key                                    | Type   | Default          | Environment                                  | Description                                                                                                       |
+| -------------------------------------- | ------ | ---------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `controller.pki.enabled`               | bool   | `false`          | `OSAPI_CONTROLLER_PKI_ENABLED`               | Enable PKI enrollment and job signing.                                                                            |
+| `controller.pki.key_dir`               | string | `/etc/osapi/pki` | `OSAPI_CONTROLLER_PKI_KEY_DIR`               | Directory for controller keypair storage.                                                                         |
+| `controller.pki.auto_admit`            | bool   | `false`          | `OSAPI_CONTROLLER_PKI_AUTO_ADMIT`            | Admit each machine that asks to join, with no operator (dev/test only).                                           |
+| `controller.pki.rotation_grace_period` | string | `24h`            | `OSAPI_CONTROLLER_PKI_ROTATION_GRACE_PERIOD` | Grace period during key rotation where both old and new keys are accepted. Go duration format.                    |
+| `controller.pki.delete_after`          | string | none             | `OSAPI_CONTROLLER_PKI_DELETE_AFTER`          | Delete an admitted machine that has not reported for this long, such as 720h. Empty is never. Go duration format. |
+
+<!-- /osapi:config -->
 
 ## What does not change
 

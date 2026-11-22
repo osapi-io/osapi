@@ -75,21 +75,22 @@ the REST endpoints.
 
 ## Configuration
 
-```yaml
-nats:
-  kv:
-    bucket: 'job-queue' # KV bucket for job definitions
-    response_bucket: 'job-responses' # KV bucket for results
-    ttl: '1h' # Entry time-to-live
-    max_bytes: 104857600 # 100 MiB max bucket size
+<!-- osapi:config nats.kv agent.max_jobs agent.queue_group agent.hostname agent.labels -->
 
-agent:
-  max_jobs: 10 # Max concurrent jobs
-  queue_group: 'job-agents' # Queue group for load balancing
-  hostname: '' # Defaults to OS hostname
-  labels: # Key-value labels for routing
-    group: 'web.dev.us-east'
-```
+| Key                       | Type   | Default                                   | Environment                     | Description                                                                                                                                                                                       |
+| ------------------------- | ------ | ----------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `agent.queue_group`       | string | `job-agents`                              | `OSAPI_AGENT_QUEUE_GROUP`       | Queue group for load-balanced (_any) subscriptions.                                                                                                                                               |
+| `agent.hostname`          | string | none; `` in `configs/osapi.yaml`          | `OSAPI_AGENT_HOSTNAME`          | Agent hostname for direct routing. Defaults to the system hostname when empty.                                                                                                                    |
+| `agent.max_jobs`          | int    | `10`                                      | `OSAPI_AGENT_MAX_JOBS`          | Maximum number of concurrent jobs to process.                                                                                                                                                     |
+| `agent.labels`            | map    | none                                      | `OSAPI_AGENT_LABELS`            | Key-value labels for label-based routing (max 5). Values can be hierarchical with dot separators. Each label creates NATS consumers for prefix matching. See Job System Architecture for details. |
+| `nats.kv.bucket`          | string | `job-queue`                               | `OSAPI_NATS_KV_BUCKET`          | KV bucket for immutable job definitions and status events.                                                                                                                                        |
+| `nats.kv.response_bucket` | string | `job-responses`                           | `OSAPI_NATS_KV_RESPONSE_BUCKET` | KV bucket for agent result storage.                                                                                                                                                               |
+| `nats.kv.ttl`             | string | none; `1h` in `configs/osapi.yaml`        | `OSAPI_NATS_KV_TTL`             | TTL for KV entries (Go duration).                                                                                                                                                                 |
+| `nats.kv.max_bytes`       | int    | none; `104857600` in `configs/osapi.yaml` | `OSAPI_NATS_KV_MAX_BYTES`       | Maximum total size of the bucket in bytes.                                                                                                                                                        |
+| `nats.kv.storage`         | string | none; `file` in `configs/osapi.yaml`      | `OSAPI_NATS_KV_STORAGE`         | Storage backend: 'file' or 'memory'.                                                                                                                                                              |
+| `nats.kv.replicas`        | int    | none; `1` in `configs/osapi.yaml`         | `OSAPI_NATS_KV_REPLICAS`        | Number of KV replicas.                                                                                                                                                                            |
+
+<!-- /osapi:config -->
 
 Refer to [Configuration](../usage/configuration.md) for all the settings, with
 the NATS stream, consumer and DLQ settings.

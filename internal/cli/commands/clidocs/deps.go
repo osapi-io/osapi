@@ -34,6 +34,10 @@ type Deps struct {
 	// Pages are the pages of the reference: each is the output of the list
 	// or get commands that show it.
 	Pages func() ([]Page, error)
+	// Tables is page, a page that a person wrote, with each generated table
+	// in it written again, such as the config keys of a feature page. root
+	// is the repository's root, which has the files a table reads.
+	Tables func(root string, page string) (string, error)
 }
 
 // Page is one page of the reference, at Path from the repository root. A

@@ -220,6 +220,57 @@ func (s *MethodsPublicTestSuite) TestGenerateReference() {
 	s.Error(err, "a page in a directory it cannot write into")
 }
 
+// TestGenerateReferenceTables writes the generated tables of a page that a
+// person wrote, and keeps the rest of the page.
+func (s *MethodsPublicTestSuite) TestGenerateReferenceTables() {
+	root := s.T().TempDir()
+	features := filepath.Join(root, "docs/docs/sidebar/features")
+	s.Require().NoError(os.MkdirAll(features, 0o755))
+	metrics := filepath.Join(features, "metrics.md")
+	s.Require().NoError(os.WriteFile(metrics, []byte("# Metrics\n\nTABLE\n"), 0o644))
+	same := filepath.Join(features, "same.md")
+	s.Require().NoError(os.WriteFile(same, []byte("# Same\n"), 0o644))
+	s.Require().NoError(os.WriteFile(filepath.Join(features, "logo.svg"), []byte("TABLE"), 0o644))
+	none := func() ([]clidocs.Page, error) { return nil, nil }
+	var roots []string
+	tables := func(r string, page string) (string, error) {
+		roots = append(roots, r)
+
+		return strings.ReplaceAll(page, "TABLE", "| a | b |"), nil
+	}
+
+	_, err := clidocs.GenerateReference(context.Background(),
+		clidocs.Deps{Pages: none, Tables: tables}, clidocs.ReferenceInput{Root: root})
+
+	s.Require().NoError(err)
+	got, _ := os.ReadFile(metrics)
+	s.Equal("# Metrics\n\n| a | b |\n", string(got))
+	got, _ = os.ReadFile(same)
+	s.Equal("# Same\n", string(got), "a page with no table is as it was")
+	got, _ = os.ReadFile(filepath.Join(features, "logo.svg"))
+	s.Equal("TABLE", string(got), "only a markdown page is read")
+	s.Equal([]string{root, root}, roots, "the tables read from the root")
+
+	_, err = clidocs.GenerateReference(context.Background(), clidocs.Deps{
+		Pages:  none,
+		Tables: func(string, string) (string, error) { return "", errors.New("no config") },
+	}, clidocs.ReferenceInput{Root: root})
+	s.ErrorContains(err, "metrics.md: no config", "the error names the page")
+
+	s.Require().NoError(os.Chmod(metrics, 0o000))
+	defer func() { _ = os.Chmod(metrics, 0o644) }()
+	_, err = clidocs.GenerateReference(context.Background(),
+		clidocs.Deps{Pages: none, Tables: tables}, clidocs.ReferenceInput{Root: root})
+	s.Error(err, "a page it cannot read")
+
+	s.Require().NoError(os.Chmod(metrics, 0o644))
+	s.Require().NoError(os.WriteFile(metrics, []byte("TABLE"), 0o644))
+	s.Require().NoError(os.Chmod(metrics, 0o444))
+	_, err = clidocs.GenerateReference(context.Background(),
+		clidocs.Deps{Pages: none, Tables: tables}, clidocs.ReferenceInput{Root: root})
+	s.Error(err, "a page it cannot write")
+}
+
 func TestMethodsPublicTestSuite(
 	t *testing.T,
 ) {
