@@ -43,13 +43,14 @@ type TraceResponse struct {
 // TraceNode is one span of the tree of a trace: what ran it, its status
 // and what it acted on, then the span itself and its children.
 type TraceNode struct {
-	Name     string      `json:"name"               doc:"The name of the span, such as job.process."                                                                   label:"Span"`
-	On       string      `json:"on"                 doc:"What ran the span: the role of its service, such as controller, agent or cli."`
-	Duration string      `json:"duration"           doc:"How long the span took, as a Go duration."                                                                                 render:"duration"`
-	Status   string      `json:"status"             doc:"The job's status on a job.process, changed or unchanged on a behavior write, and ok or error on other spans."              render:"status"`
-	Detail   string      `json:"detail,omitempty"   doc:"What the span acted on, as key=value pairs, led by error= on a failed span."`
-	Span     TraceSpan   `json:"span"               doc:"The span as the backend has it."                                                                                                             table:"-"`
-	Children []TraceNode `json:"children,omitempty" doc:"The spans under this one, in start order."`
+	Name      string      `json:"name"                 doc:"The name of the span, such as job.process."                                                                                                                                                    label:"Span"`
+	On        string      `json:"on"                   doc:"What ran the span: the role of its service, such as controller, agent or cli."`
+	Duration  string      `json:"duration"             doc:"How long the span took, as a Go duration."                                                                                                                                                                  render:"duration"`
+	Status    string      `json:"status"               doc:"The job's status on a job.process, changed or unchanged on a behavior write, and ok or error on other spans."                                                                                               render:"status"`
+	Detail    string      `json:"detail,omitempty"     doc:"What the span acted on, as key=value pairs, led by error= on a failed span."`
+	ClockSkew string      `json:"clock_skew,omitempty" doc:"How far the span and the spans under it were moved forward, as a Go duration, because the span started before its parent: the clock of its host is behind. Empty when the span was not moved."                                table:"-"`
+	Span      TraceSpan   `json:"span"                 doc:"The span as the backend has it."                                                                                                                                                                                              table:"-"`
+	Children  []TraceNode `json:"children,omitempty"   doc:"The spans under this one, in start order."`
 }
 
 // TraceSpan is one span of a trace.

@@ -877,6 +877,7 @@ schema TimezoneUpdateRequest.timezone! = string
 schema TimezoneUpdateResponse.job_id = string/uuid
 schema TimezoneUpdateResponse.results! = [TimezoneResult]
 schema TraceNode.children = [TraceNode]
+schema TraceNode.clock_skew = string
 schema TraceNode.detail = string
 schema TraceNode.duration! = string
 schema TraceNode.name! = string

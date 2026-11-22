@@ -9,6 +9,8 @@ import type { TraceSpan } from './traceSpan';
 export interface TraceNode {
   /** The spans under this one, in start order. */
   children?: TraceNode[];
+  /** How far the span and the spans under it were moved forward, as a Go duration, because the span started before its parent: the clock of its host is behind. Empty when the span was not moved. */
+  clock_skew?: string;
   /** What the span acted on, as key=value pairs, led by error= on a failed span. */
   detail?: string;
   /** How long the span took, as a Go duration. */
