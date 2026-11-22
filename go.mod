@@ -30,7 +30,6 @@ require (
 	github.com/osapi-io/gohai v1.11.0
 	github.com/osapi-io/nats-client v1.2.0
 	github.com/osapi-io/nats-server v1.1.0
-	github.com/prometheus-community/pro-bing v0.9.1
 	github.com/prometheus/client_golang v1.25.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/cast v1.10.0

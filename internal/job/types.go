@@ -149,11 +149,6 @@ type OperationType = client.JobOperation
 // Node operations — read-only operations that query node state.
 const ()
 
-// Network operations.
-const (
-	OperationNetworkPingDo = client.OpNetworkPingDo
-)
-
 // Command operations — execute arbitrary commands on agents.
 const (
 	OperationCommandExecExecute  = client.OpCommandExec
@@ -328,16 +323,6 @@ type QueueStats struct {
 // NodeHostnameGetData represents data for hostname retrieval
 type NodeHostnameGetData struct {
 	// No additional data needed for hostname retrieval
-}
-
-// NetworkPingExecuteData represents data for ping operations
-type NetworkPingExecuteData struct {
-	// Target is the hostname or IP address to ping
-	Target string `json:"target"`
-	// Count is the number of ping packets to send (optional, default: 4)
-	Count int `json:"count,omitempty"`
-	// Timeout is the timeout duration in seconds (optional, default: 5)
-	Timeout int `json:"timeout,omitempty"`
 }
 
 // CommandExecData represents data for direct command execution

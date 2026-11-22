@@ -40,7 +40,6 @@ import (
 	agentmocks "github.com/osapi-io/osapi/internal/agent/mocks"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/mocks"
-	pingMocks "github.com/osapi-io/osapi/internal/provider/network/ping/mocks"
 	diskMocks "github.com/osapi-io/osapi/internal/provider/node/disk/mocks"
 	hostMocks "github.com/osapi-io/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/osapi-io/osapi/internal/provider/node/load/mocks"
@@ -209,7 +208,6 @@ func (s *SpanPublicTestSuite) TestJobProcessJoinsTheTrace() {
 		diskProvider:   diskMocks.NewDefaultMockProvider(ctrl),
 		memoryProvider: memoryMocks.NewDefaultMockProvider(ctrl),
 		loadProvider:   loadMocks.NewDefaultMockProvider(ctrl),
-		pingProvider:   pingMocks.NewDefaultMockProvider(ctrl),
 	})
 	agent.ExportIdentityAttrs(a, "web-01", "abc123", nil)
 

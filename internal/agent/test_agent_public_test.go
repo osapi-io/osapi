@@ -21,6 +21,8 @@
 package agent_test
 
 import (
+	"context"
+	"encoding/json"
 	"log/slog"
 
 	"github.com/avfs/avfs"
@@ -28,11 +30,11 @@ import (
 	"github.com/osapi-io/osapi/internal/agent"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/exec"
+	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/provider/command"
 	dockerProv "github.com/osapi-io/osapi/internal/provider/container/docker"
 	fileProv "github.com/osapi-io/osapi/internal/provider/file"
-	"github.com/osapi-io/osapi/internal/provider/network/ping"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
@@ -55,7 +57,6 @@ type newTestAgentParams struct {
 	diskProvider    disk.Provider
 	memoryProvider  memory.Provider
 	loadProvider    load.Provider
-	pingProvider    ping.Provider
 	commandProvider command.Provider
 	fileProvider    fileProv.Provider
 	dockerProvider  dockerProv.Provider
@@ -99,10 +100,13 @@ func newTestAgent(
 		p.hostProvider, p.diskProvider, p.memoryProvider, p.loadProvider,
 	)
 
+	// The handler tests send network.ping.do as a sample job. The network
+	// domain is a behavior now, so a test processor answers it.
 	registry.Register(
 		"network",
-		agent.NewNetworkProcessor(p.pingProvider, logger),
-		p.pingProvider,
+		func(context.Context, job.Request) (json.RawMessage, error) {
+			return json.RawMessage(`{"packets_sent":3,"packets_received":3,"packet_loss":0}`), nil
+		},
 	)
 
 	registry.Register(

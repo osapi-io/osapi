@@ -13,7 +13,7 @@ privileges, and the agents make the changes.
 | Resource  | Operations           | Description                                   |
 | --------- | -------------------- | --------------------------------------------- |
 | DNS       | Read, Update, Delete | Nameservers and search domains per interface  |
-| Ping      | Read                 | ICMP connectivity check to a target host      |
+| Ping      | Action               | ICMP connectivity check to a target host      |
 | Interface | Full CRUD            | Each interface, and osapi's Netplan config    |
 | Route     | Full CRUD            | The static routes of an interface, one a call |
 
@@ -48,10 +48,16 @@ the configured servers.
 
 :::
 
-**Ping.** Sends ICMP echo requests to a target host and reports the results.
+**Ping.** Ping is the `ping` action of the
+[connectivity behavior](../reference/behaviors/connectivity/connectivity.md),
+`osapi client node network connectivity ping --address <ip>`. It runs the host's
+`ping`, three echo requests, and reports what came back: the packets sent and
+received, the loss, and the round-trip times. A host that does not answer is
+100% loss, not an error. Ping changes nothing on the host, so it reports
+`changed: false`. On macOS it runs `ping6` for an IPv6 address.
 
-On Linux, the agent sends a ping on an ICMP datagram socket, also when it runs
-as root. The kernel permits this only for the groups in
+On Linux, the `ping` of iputils sends on an ICMP datagram socket, also when the
+agent runs as root. The kernel permits this only for the groups in
 `net.ipv4.ping_group_range`. If the group of the agent is not in the range, the
 ping fails. On Debian, Ubuntu and Fedora, systemd permits each group; the
 default of the kernel permits none.
@@ -62,10 +68,10 @@ group:
 sudo sysctl -w net.ipv4.ping_group_range="0 2147483647"
 ```
 
-The agent sends three echo requests and waits up to 4 seconds for the replies. A
-reply that does not come back in that time is loss, in the `LOSS` column. It is
-not a failure of the ping. When the job ends, for example because it is
-cancelled, the ping stops.
+`ping` waits two seconds for each reply and four seconds in all. A reply that
+does not come back in that time is loss, in the `LOSS` column. It is not a
+failure of the ping. When the job ends, for example because it is cancelled, the
+ping stops.
 
 If each ping from a host times out, but other traffic from that host works,
 something between the host and the target drops ICMP. An example is a VM behind
@@ -74,8 +80,8 @@ the replies to the pings of the VM.
 
 Refer to [CLI Reference](../usage/cli/client/node/network/network.mdx) for usage
 and examples, or the
-[API Reference](/gen/api/network-management-api-network-operations) for the REST
-endpoints.
+[API Reference](/gen/api/connectivity-api-network-connectivity-operations) for
+the REST endpoints.
 
 ## Configuration
 
@@ -88,12 +94,11 @@ authentication settings.
 The generated page of each behavior gives the permission, the platforms and the
 route of each method: [dns](../reference/behaviors/dns/dns.md),
 [interface](../reference/behaviors/interface/interface.md),
-[route](../reference/behaviors/route/route.md). The pages come from the
-definitions, so they stay true when a method changes, and this page does not
-copy them. [Authentication](authentication.md) tells which permissions each role
-has.
-
-Ping is not a behavior: it needs `network:read`.
+[route](../reference/behaviors/route/route.md) and
+[connectivity](../reference/behaviors/connectivity/connectivity.md). The pages
+come from the definitions, so they stay true when a method changes, and this
+page does not copy them. [Authentication](authentication.md) tells which
+permissions each role has.
 
 ## Related
 

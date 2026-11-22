@@ -462,22 +462,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Network",
-      link: {
-        type: "doc",
-        id: "gen/api/network-management-api-network-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/post-node-network-ping",
-          label: "Ping a remote server",
-          className: "api-method post",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Node/NTP",
       link: {
         type: "doc",
@@ -803,6 +787,22 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/get-node-memory",
           label: "Get the memory usage of the host",
           className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Connectivity",
+      link: {
+        type: "doc",
+        id: "gen/api/connectivity-api-network-connectivity-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/post-node-network-connectivity-ping",
+          label: "Ping an address from the host",
+          className: "api-method post",
         },
       ],
     },

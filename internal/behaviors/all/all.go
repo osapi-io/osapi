@@ -33,6 +33,7 @@ import (
 	_ "github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	_ "github.com/osapi-io/osapi/internal/behaviors/memory"
 	_ "github.com/osapi-io/osapi/internal/behaviors/netplan"
+	_ "github.com/osapi-io/osapi/internal/behaviors/network/connectivity"
 	_ "github.com/osapi-io/osapi/internal/behaviors/network/dns"
 	_ "github.com/osapi-io/osapi/internal/behaviors/network/iface"
 	_ "github.com/osapi-io/osapi/internal/behaviors/network/route"

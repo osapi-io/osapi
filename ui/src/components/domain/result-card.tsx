@@ -1233,49 +1233,6 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
     );
   }
 
-  // Ping — show RTT stats per host
-  if (type === "ping" && Array.isArray(data.results)) {
-    const results = data.results as {
-      hostname: string;
-      status?: string;
-      packets_sent?: number;
-      packets_received?: number;
-      packet_loss?: number;
-      min_rtt?: string;
-      avg_rtt?: string;
-      max_rtt?: string;
-      error?: string;
-    }[];
-    return (
-      <CollectionResult
-        jobId={data.job_id as string | undefined}
-        label="ping"
-        results={results.map((r) => ({
-          hostname: r.hostname,
-          status: hostStatus(r),
-          error: r.error,
-          extra: !r.error ? (
-            <div className="flex gap-3 text-xs text-text-muted">
-              <span>
-                {r.packets_received}/{r.packets_sent} recv
-              </span>
-              {r.packet_loss != null && (
-                <span>{Math.round(r.packet_loss)}% loss</span>
-              )}
-              {r.avg_rtt && <span>avg {r.avg_rtt}</span>}
-              {r.min_rtt && r.max_rtt && (
-                <span>
-                  {r.min_rtt} – {r.max_rtt}
-                </span>
-              )}
-            </div>
-          ) : undefined,
-        }))}
-        data={data}
-      />
-    );
-  }
-
   // Cron get — per-host single entry
   if (type === "cron-get" && Array.isArray(data.results)) {
     type ScheduleGetEntry = {

@@ -133,13 +133,6 @@ const HAND_BLOCK_TYPES: BlockType[] = [
 
   // ── Networking ─────────────────────────────────────────────────────────────
   {
-    type: "ping",
-    label: "Ping",
-    description: "Ping a remote host",
-    category: "network",
-    group: "networking",
-  },
-  {
     type: "user-list",
     label: "List",
     description: "List user accounts",

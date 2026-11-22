@@ -12,6 +12,7 @@ import (
 	_ "github.com/osapi-io/osapi/internal/behaviors/log/entry/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/log/source/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/memory/gen"
+	_ "github.com/osapi-io/osapi/internal/behaviors/network/connectivity/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/network/dns/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/network/iface/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/network/route/gen"

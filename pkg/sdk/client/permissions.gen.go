@@ -6,8 +6,6 @@ package client
 // Permission constants, one for each permission osapi knows.
 const (
 	PermNodeRead            Permission = "node:read"
-	PermNetworkRead         Permission = "network:read"
-	PermNetworkWrite        Permission = "network:write"
 	PermFileRead            Permission = "file:read"
 	PermFileWrite           Permission = "file:write"
 	PermHealthRead          Permission = "health:read"
@@ -39,6 +37,8 @@ const (
 	PermOsRead              Permission = "os:read"
 	PermPackageRead         Permission = "package:read"
 	PermPackageWrite        Permission = "package:write"
+	PermNetworkRead         Permission = "network:read"
+	PermNetworkWrite        Permission = "network:write"
 	PermServiceRead         Permission = "service:read"
 	PermServiceWrite        Permission = "service:write"
 	PermStatusRead          Permission = "status:read"

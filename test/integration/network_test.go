@@ -23,7 +23,6 @@
 package integration_test
 
 import (
-	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -71,51 +70,6 @@ func (s *NetworkSmokeSuite) TestNetworkDnsGet() {
 				s.Require().True(ok)
 				s.Contains(first, "servers")
 				s.Contains(first, "search_domains")
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			stdout, _, exitCode := runCLI(tt.args...)
-			tt.validateFunc(stdout, exitCode)
-		})
-	}
-}
-
-func (s *NetworkSmokeSuite) TestNetworkPingPost() {
-	skipWriteOp(s.T(), "PING")
-
-	if runtime.GOOS == "darwin" {
-		s.T().Skip("ICMP ping requires root on macOS")
-	}
-
-	tests := []struct {
-		name         string
-		args         []string
-		validateFunc func(stdout string, exitCode int)
-	}{
-		{
-			name: "returns ping results",
-			args: []string{"client", "node", "network", "ping", "--address", "127.0.0.1", "--json"},
-			validateFunc: func(
-				stdout string,
-				exitCode int,
-			) {
-				s.Require().Equal(0, exitCode)
-
-				var result map[string]any
-				err := parseJSON(stdout, &result)
-				s.Require().NoError(err)
-
-				results, ok := result["results"].([]any)
-				s.Require().True(ok)
-				s.GreaterOrEqual(len(results), 1)
-
-				first, ok := results[0].(map[string]any)
-				s.Require().True(ok)
-				s.Contains(first, "changed")
-				s.Equal(false, first["changed"])
 			},
 		},
 	}

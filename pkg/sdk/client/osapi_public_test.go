@@ -72,7 +72,7 @@ func (suite *ClientPublicTestSuite) TestNew() {
 				suite.NotNil(c.Uptime)
 				suite.NotNil(c.OS)
 				suite.NotNil(c.DNS)
-				suite.NotNil(c.Ping)
+				suite.NotNil(c.Connectivity)
 				suite.NotNil(c.Command)
 				suite.NotNil(c.FileDeploy)
 				suite.NotNil(c.Job)

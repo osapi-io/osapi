@@ -313,7 +313,6 @@ func buildRegistry(
 	powerProvider := e.power()
 	processProvider := e.process()
 	userProvider := e.user()
-	pingProvider := e.ping()
 	commandProvider := command.New(e.log, e.exec)
 	dockerProvider := e.docker(ctx)
 	cronProvider := e.cron()
@@ -338,12 +337,6 @@ func buildRegistry(
 		powerProvider,
 		processProvider,
 		userProvider,
-	)
-
-	r.Register(
-		"network",
-		NewNetworkProcessor(pingProvider, e.log),
-		pingProvider,
 	)
 
 	r.Register(
