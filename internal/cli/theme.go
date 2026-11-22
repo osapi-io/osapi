@@ -299,7 +299,8 @@ func renderCell(
 // tints are the dark tints of the heading colors. A block's table headers
 // and key-value labels take the tint of its heading's color, so a block reads
 // as one unit and labels sit a step below the heading that owns them. The web
-// UI copies them as --color-tint-1 to --color-tint-5 in ui/src/index.css.
+// UI does not use them: its labels are gray, so the color of a section does
+// not mix with the status colors of the cards under it.
 var tints = map[lipgloss.Color]lipgloss.Color{
 	LogoCyan:     lipgloss.Color("#0a8fb0"),
 	LogoMagenta:  lipgloss.Color("#b030b0"),

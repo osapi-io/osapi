@@ -125,7 +125,7 @@ export function AgentCard({ agent, components, onRefresh }: AgentCardProps) {
       className="flex flex-col"
     >
       <CardHeader>
-        <Monitor className="h-4 w-4 text-tint" />
+        <Monitor className="h-4 w-4 text-text-muted" />
         <CardTitle className="truncate" title={agent.hostname}>
           {agent.hostname}
         </CardTitle>

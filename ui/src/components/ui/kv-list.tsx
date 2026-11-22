@@ -23,7 +23,7 @@ export function KVList({ pairs, className }: KVListProps) {
         .filter(([, v]) => v != null && v !== false)
         .map(([k, v], i) => (
           <div key={`${k}-${i}`} className="contents">
-            <dt className="text-tint">{k}:</dt>
+            <dt className="text-text-muted">{k}:</dt>
             <dd className="min-w-0 text-text">{v}</dd>
           </div>
         ))}
