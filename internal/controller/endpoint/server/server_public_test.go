@@ -129,7 +129,7 @@ func (s *ServerPublicTestSuite) serve(
 		r := server.Route{
 			Method:     m.Verb,
 			Path:       server.Path(group, m),
-			Permission: group.Permission(m),
+			Permission: string(group.Permission(m)),
 		}
 		switch m.Name {
 		case "remove":

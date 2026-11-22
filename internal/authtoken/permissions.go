@@ -140,7 +140,7 @@ const PermissionRule = "permission"
 func init() {
 	rule.Declare(rule.Custom{
 		Tag:     PermissionRule,
-		Check:   func(p string) bool { return slices.Contains(AllPermissions(), p) },
+		Check:   func(p string) bool { return slices.Contains(AllPermissions(), Permission(p)) },
 		Schema:  rule.None,
 		Message: "is not a permission: osapi token roles get --name admin lists each one",
 	})
@@ -163,7 +163,7 @@ func Roles() []string {
 func AdminOnly(
 	p Permission,
 ) bool {
-	_, verb, _ := strings.Cut(p, ":")
+	_, verb, _ := strings.Cut(string(p), ":")
 	if slices.Contains(adminVerbs, verb) {
 		return true
 	}
@@ -197,7 +197,7 @@ func RolePermissions(
 
 	var out []Permission
 	for _, p := range AllPermissions() {
-		_, verb, _ := strings.Cut(p, ":")
+		_, verb, _ := strings.Cut(string(p), ":")
 		if grants(verb) && !AdminOnly(p) {
 			out = append(out, p)
 		}
@@ -271,7 +271,7 @@ func ResolvePermissions(
 		// Fall back to default role permissions
 		if perms, ok := RolePermissions(role); ok {
 			for _, p := range perms {
-				set[p] = true
+				set[string(p)] = true
 			}
 		}
 	}
@@ -284,4 +284,17 @@ func HasPermission(
 	required string,
 ) bool {
 	return resolved[required]
+}
+
+// Strings is perms as strings, for a token's claims and the output of a
+// command, which hold a permission as text.
+func Strings(
+	perms []Permission,
+) []string {
+	out := make([]string, 0, len(perms))
+	for _, p := range perms {
+		out = append(out, string(p))
+	}
+
+	return out
 }

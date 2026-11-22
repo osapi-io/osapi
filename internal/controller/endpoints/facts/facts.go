@@ -21,7 +21,10 @@
 // behavior's input can refer to as @fact.<key>.
 package facts
 
-import "github.com/osapi-io/osapi/internal/controller/endpoint"
+import (
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
+)
 
 // Group is the facts group's definition.
 var Group = endpoint.Register(endpoint.Define(
@@ -34,7 +37,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Handle(Keys).
 		Sub("keys").
 		ID("GetFactKeys").
-		Permission("agent:read").
+		Permission(client.PermAgentRead).
 		Describe("List available fact keys").
 		Explain("Returns the list of fact keys that can be used in @fact. references. "+
 			"Includes built-in keys and any custom keys registered by agents.").

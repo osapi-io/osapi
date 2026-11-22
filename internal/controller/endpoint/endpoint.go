@@ -35,6 +35,7 @@ import (
 	"sync"
 
 	"github.com/osapi-io/osapi/internal/cli/command"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // Group is a set of endpoints under one path, /api/<name>, such as agent.
@@ -257,16 +258,16 @@ func (g *Group) Path(
 // method needs none, and has "".
 func (g *Group) Permission(
 	m *Method,
-) string {
+) client.Permission {
 	switch {
 	case m.public:
 		return ""
 	case m.permission != "":
 		return m.permission
 	case m.Verb == http.MethodGet:
-		return g.Name + ":read"
+		return client.Permission(g.Name + ":read")
 	default:
-		return g.Name + ":write"
+		return client.Permission(g.Name + ":write")
 	}
 }
 
@@ -274,7 +275,7 @@ func (g *Group) Permission(
 // whether the method marks it admin only, and whether the method names it,
 // with Permission, rather than takes its group's.
 type Declared struct {
-	Permission string
+	Permission client.Permission
 	AdminOnly  bool
 	Named      bool
 	// Where is the group and method, such as agent drain, for an error.
@@ -350,7 +351,7 @@ func (g *Group) Commands() []command.Command {
 func (g *Group) CommandPermission(
 	m command.Command,
 ) string {
-	return g.Permission(m.(*Method))
+	return string(g.Permission(m.(*Method)))
 }
 
 var (
@@ -413,7 +414,7 @@ type Method struct {
 	sub, action, id  string
 	summary, explain string
 	returns          string
-	permission       string
+	permission       client.Permission
 	public           bool
 	adminOnly        bool
 	handler          any
@@ -539,7 +540,7 @@ func (m *Method) Returns(
 // Permission names the permission the method needs, in place of the
 // group's read or write permission.
 func (m *Method) Permission(
-	permission string,
+	permission client.Permission,
 ) *Method {
 	m.permission = permission
 

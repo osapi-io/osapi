@@ -29,6 +29,7 @@ import (
 	"slices"
 
 	"github.com/osapi-io/osapi/internal/validation"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // Placement says where a behavior's work happens.
@@ -235,7 +236,7 @@ func Define(
 // dns under network needs network:read.
 func (b *Behavior) Permission(
 	v Verb,
-) string {
+) client.Permission {
 	if b.Parent != nil {
 		return b.Parent.Permission(v)
 	}
@@ -244,7 +245,7 @@ func (b *Behavior) Permission(
 		prefix = b.Group
 	}
 
-	return prefix + ":" + string(v)
+	return client.Permission(prefix + ":" + string(v))
 }
 
 // Method returns the method with the given name, or nil.

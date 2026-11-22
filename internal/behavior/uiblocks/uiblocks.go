@@ -101,7 +101,7 @@ func Blocks(
 				Description: m.Doc,
 				HTTPMethod:  m.HTTPMethod(),
 				Path:        b.Path(m),
-				Permission:  b.Permission(m.Verb),
+				Permission:  string(b.Permission(m.Verb)),
 				Write:       m.Verb == behavior.VerbWrite,
 				Fields:      fields(m),
 				Columns:     columns(m.Out),

@@ -251,12 +251,13 @@ Adds a Result section to the CLI command's page.
 Use: For what the command does in a case that needs words, such as when two
 agents share a hostname.
 
-### `.Permission("group:verb")`
+### `.Permission(client.PermGroupVerb)`
 
 Names the permission the method needs, in place of &lt;group&gt;:read or
-&lt;group&gt;:write. It must be one that a group, a behavior or the hand-written
-domains declare: a test fails on a name that nothing declares, because no role
-grants it.
+&lt;group&gt;:write. It takes a client.Permission: use a Perm constant of
+pkg/sdk/client, not a string. It must be one that a group, a behavior or the
+hand-written domains declare: a test fails on a name that nothing declares,
+because no role grants it.
 
 Use: When a different permission covers it, such as agent:read for facts, or
 trace:read for telemetry.

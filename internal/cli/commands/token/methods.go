@@ -75,7 +75,10 @@ func Roles(
 	roles := make([]Role, 0, 3+len(custom))
 	for _, name := range authtoken.Roles() {
 		perms, _ := authtoken.RolePermissions(name)
-		roles = append(roles, Role{Name: name, Source: "built-in", Permissions: perms})
+		roles = append(
+			roles,
+			Role{Name: name, Source: "built-in", Permissions: authtoken.Strings(perms)},
+		)
 	}
 	names := make([]string, 0, len(custom))
 	for name := range custom {

@@ -335,7 +335,7 @@ func (s *EndpointPublicTestSuite) TestPathPermissionAndID() {
 			g := endpoint.Define("node", "The nodes", tc.method)
 
 			s.Equal(tc.path, g.Path(tc.method))
-			s.Equal(tc.perm, g.Permission(tc.method))
+			s.Equal(tc.perm, string(g.Permission(tc.method)))
 			s.Equal(tc.id, tc.method.OperationID(g))
 		})
 	}

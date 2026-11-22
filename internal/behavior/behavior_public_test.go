@@ -239,7 +239,7 @@ func (s *BehaviorPublicTestSuite) TestPermission() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			assert.Equal(s.T(), tc.want, tc.b.Permission(tc.verb))
+			assert.Equal(s.T(), tc.want, string(tc.b.Permission(tc.verb)))
 		})
 	}
 }

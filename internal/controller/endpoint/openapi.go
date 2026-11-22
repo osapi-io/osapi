@@ -114,7 +114,7 @@ func (b *builder) operation(
 		Responses:   openapi3.NewResponses(),
 	}
 	if perm := g.Permission(m); perm != "" {
-		op.Security = &openapi3.SecurityRequirements{{bearer: []string{perm}}}
+		op.Security = &openapi3.SecurityRequirements{{bearer: []string{string(perm)}}}
 	} else {
 		op.Security = &openapi3.SecurityRequirements{}
 	}

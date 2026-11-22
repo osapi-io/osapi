@@ -125,9 +125,9 @@ func Get(
 		if b.API {
 			row.HTTPMethod, row.Route, row.Permission = m.HTTPMethod(), b.Path(
 				m,
-			), b.Permission(
+			), string(b.Permission(
 				m.Verb,
-			)
+			))
 		}
 		if b.CLI {
 			row.Command = b.Command(m)
@@ -191,7 +191,11 @@ func MethodGet(
 		Input: input, Output: output, Calls: m.Examples, Refusals: m.Refusals,
 	}
 	if b.API {
-		out.HTTPMethod, out.Route, out.Permission = m.HTTPMethod(), b.Path(m), b.Permission(m.Verb)
+		out.HTTPMethod, out.Route, out.Permission = m.HTTPMethod(), b.Path(
+			m,
+		), string(
+			b.Permission(m.Verb),
+		)
 	}
 	if b.CLI {
 		out.Command = b.Command(m)

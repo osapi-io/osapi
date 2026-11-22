@@ -394,7 +394,9 @@ func rbacCases(
 
 	none, lacking := base, base
 	none.name, none.token, none.code = "when there is no token, it is a 401", "NoToken", http.StatusUnauthorized
-	lacking.name, lacking.token, lacking.code = "when the token lacks "+b.Permission(m.Verb)+
+	lacking.name, lacking.token, lacking.code = "when the token lacks "+string(
+		b.Permission(m.Verb),
+	)+
 		", it is a 403", "Lacking", http.StatusForbidden
 	cases := []httpCase{none, lacking}
 

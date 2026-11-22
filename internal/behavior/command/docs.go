@@ -71,7 +71,7 @@ func Annotations(
 ) map[string]string {
 	out := map[string]string{}
 	if b.API {
-		out[reference.Permission] = b.Permission(m.Verb)
+		out[reference.Permission] = string(b.Permission(m.Verb))
 	}
 
 	var parts []string

@@ -234,8 +234,9 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindRefine,
-			Name: `.Permission("group:verb")`,
+			Name: `.Permission(client.PermGroupVerb)`,
 			Does: "Names the permission the method needs, in place of <group>:read or <group>:write. " +
+				"It takes a client.Permission: use a Perm constant of pkg/sdk/client, not a string. " +
 				"It must be one that a group, a behavior or the hand-written domains declare: " +
 				"a test fails on a name that nothing declares, because no role grants it.",
 			When: "When a different permission covers it, such as agent:read for facts, or trace:read for telemetry.",

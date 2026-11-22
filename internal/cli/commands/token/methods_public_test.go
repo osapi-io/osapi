@@ -172,7 +172,7 @@ func (s *MethodsPublicTestSuite) TestRoles() {
 				}, names)
 				s.Equal([]string{"node:read"}, got.Roles[4].Permissions)
 				perms, _ := authtoken.RolePermissions("read")
-				s.Equal(perms, got.Roles[2].Permissions)
+				s.Equal(authtoken.Strings(perms), got.Roles[2].Permissions)
 			},
 		},
 		{

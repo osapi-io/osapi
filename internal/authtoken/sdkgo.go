@@ -61,7 +61,7 @@ func Go() string {
 func ConstName(
 	p Permission,
 ) string {
-	resource, verb, _ := strings.Cut(p, ":")
+	resource, verb, _ := strings.Cut(string(p), ":")
 
 	return "Perm" + capital(resource) + capital(verb)
 }
@@ -86,7 +86,7 @@ func RoleTable() string {
 		perms, _ := RolePermissions(role)
 		names := make([]string, 0, len(perms))
 		for _, p := range perms {
-			names = append(names, "`"+p+"`")
+			names = append(names, "`"+string(p)+"`")
 		}
 		fmt.Fprintf(&sb, "| `%s` | %s |\n", role, strings.Join(names, ", "))
 	}
