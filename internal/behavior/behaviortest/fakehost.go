@@ -444,5 +444,5 @@ func (o objects) Object(
 		return nil, "", fmt.Errorf("object %q: %w", name, behavior.ErrNotFound)
 	}
 
-	return []byte(g.Content), g.ContentType, nil
+	return []byte(g.Content), string(g.ContentType), nil
 }

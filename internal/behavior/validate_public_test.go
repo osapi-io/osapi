@@ -243,6 +243,14 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 			wantRules: []string{behavior.RuleSurface},
 		},
 		{
+			name: "when a behavior is Under a group that is not one of KnownGroups",
+			b: behavior.Define("dns", "Resolvers", behavior.Node, onDebian,
+				behavior.Under("netwrok"),
+				behavior.Read("list", readList).Describe("List"),
+			),
+			wantRules: []string{behavior.RuleName},
+		},
+		{
 			name: "when a served behavior's area is not one of Areas",
 			b: behavior.Define("sysctl", "Kernel parameters", behavior.Node, onDebian, behavior.API,
 				behavior.Area("kitchen"),

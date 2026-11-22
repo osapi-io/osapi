@@ -24,6 +24,8 @@ import (
 	"context"
 	"strings"
 
+	"github.com/osapi-io/osapi/pkg/sdk/client"
+
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	"github.com/osapi-io/osapi/internal/behaviors/object"
@@ -61,7 +63,7 @@ var appEntry = Entry{Name: "app", State: "dead", Description: "Example app", Man
 // stored and deployed are the unit file of the examples: uploaded, then
 // deployed with create, so osapi keeps a record of it.
 var (
-	stored   = behavior.Stored("app.service", unitText, "raw")
+	stored   = behavior.Stored("app.service", unitText, client.ContentRaw)
 	deployed = behavior.After(CreateInput{Name: "app", Object: "app.service"})
 )
 
@@ -79,7 +81,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"service", "The systemd services of the host",
 	behavior.Node,
 	behavior.API,
-	behavior.Area("services"),
+	behavior.Area(behavior.AreaServices),
 	behavior.CLI,
 	behavior.Requires(object.Behavior),
 	behavior.Requires(managedfile.Behavior),
@@ -150,13 +152,13 @@ var Behavior = behavior.Register(behavior.Define(
 			"start and enable are their own actions.").
 		Example("Deploy a unit file", CreateInput{Name: "app", Object: "app.service"},
 			Result{Name: "app", Changed: true},
-			behavior.Stored("app.service", unitText, "raw"),
+			behavior.Stored("app.service", unitText, client.ContentRaw),
 			behavior.Wrote(appPath, unitText),
 			behavior.Ran("systemctl", "daemon-reload"),
 		).
 		Example("A unit file that has the content", CreateInput{Name: "app", Object: "app.service"},
 			Result{Name: "app"},
-			behavior.Stored("app.service", unitText, "raw"),
+			behavior.Stored("app.service", unitText, client.ContentRaw),
 			behavior.After(CreateInput{Name: "app", Object: "app.service"}),
 		).
 		Fails("An object the store does not have", CreateInput{Name: "app", Object: "nosuch"}, "not found").
@@ -200,7 +202,7 @@ var Behavior = behavior.Register(behavior.Define(
 			"systemd. A service with no unit file does not change.").
 		Example("Remove a service", DeleteInput{Name: "app"},
 			Result{Name: "app", Changed: true},
-			behavior.Stored("app.service", unitText, "raw"),
+			behavior.Stored("app.service", unitText, client.ContentRaw),
 			behavior.After(CreateInput{Name: "app", Object: "app.service"}),
 			behavior.Removed(appPath),
 			behavior.Ran("systemctl", "disable", "--now", "osapi-app.service"),

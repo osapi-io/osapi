@@ -880,29 +880,34 @@ type Error struct {
 	// Code is the status code.
 	Code int
 	// Reason is the word of the answer's reason field, one of Reasons.
-	Reason string
+	Reason Reason
 	// Doc says when it occurs, for the spec.
 	Doc string
 }
+
+// Reason is the reason of an error answer, one of Reasons. A program
+// branches on it, so a reason outside the list breaks the contract of the
+// spec's ErrorResponse.
+type Reason string
 
 // The reasons of an error answer: why the request failed, as a word that a
 // program branches on. The HTTP status is the class of the problem, the
 // reason its cause, and the message is for a person. The ErrorResponse
 // schema of the spec lists the same words.
 const (
-	ReasonInvalidRequest = "invalid_request"
-	ReasonUnauthorized   = "unauthorized"
-	ReasonForbidden      = "forbidden"
-	ReasonNotFound       = "not_found"
-	ReasonNotManaged     = "not_managed"
-	ReasonNotInstalled   = "not_installed"
-	ReasonConflict       = "conflict"
-	ReasonUnavailable    = "unavailable"
-	ReasonServerError    = "server_error"
+	ReasonInvalidRequest Reason = "invalid_request"
+	ReasonUnauthorized   Reason = "unauthorized"
+	ReasonForbidden      Reason = "forbidden"
+	ReasonNotFound       Reason = "not_found"
+	ReasonNotManaged     Reason = "not_managed"
+	ReasonNotInstalled   Reason = "not_installed"
+	ReasonConflict       Reason = "conflict"
+	ReasonUnavailable    Reason = "unavailable"
+	ReasonServerError    Reason = "server_error"
 )
 
 // Reasons are each reason, in the order of the schema.
-var Reasons = []string{
+var Reasons = []Reason{
 	ReasonInvalidRequest, ReasonUnauthorized, ReasonForbidden, ReasonNotFound,
 	ReasonNotManaged, ReasonNotInstalled, ReasonConflict, ReasonUnavailable,
 	ReasonServerError,
@@ -912,7 +917,7 @@ var Reasons = []string{
 // a 404 that no route matches, or a 405.
 func ReasonFor(
 	status int,
-) string {
+) Reason {
 	switch {
 	case status == http.StatusUnauthorized:
 		return ReasonUnauthorized
@@ -934,7 +939,7 @@ func ReasonFor(
 // Because is e with reason instead of the reason of its status, such as
 // not_managed for a 409 that osapi did not deploy.
 func (e Error) Because(
-	reason string,
+	reason Reason,
 ) Error {
 	e.Reason = reason
 

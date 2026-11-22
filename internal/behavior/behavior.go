@@ -64,7 +64,7 @@ type Behavior struct {
 	// network for dns. Empty sits it directly under node.
 	Group string
 	// Area is where the UI shows the behavior, one of Areas. Area sets it.
-	Area string
+	Area AreaName
 	// Parent is the behavior whose items this one's items are under, set
 	// with Of: a user's SSH keys are under the user. Nil for a behavior of
 	// the host.
@@ -139,24 +139,55 @@ var API Option = optionFunc(func(b *Behavior) { b.API = true })
 // docs pages. It needs API, because the commands call it.
 var CLI Option = optionFunc(func(b *Behavior) { b.CLI = true })
 
-// Under nests a behavior inside a group: Under("network") puts dns at
+// GroupName is a group that behaviors nest under. The group is a path
+// segment, a CLI command and the prefix of the permissions of each behavior
+// in it. Thus a misspelled group makes a new route, command and permission
+// with no error, and behavior validate refuses a name outside KnownGroups.
+type GroupName string
+
+// GroupNetwork holds the network behaviors: dns, iface and route.
+const GroupNetwork GroupName = "network"
+
+// KnownGroups are the groups that a behavior can be Under. Add a constant
+// here to make a new group.
+func KnownGroups() []GroupName {
+	return []GroupName{GroupNetwork}
+}
+
+// Under nests a behavior inside a group: Under(GroupNetwork) puts dns at
 // /api/node/{hostname}/network/dns and `osapi client node network dns`.
 func Under(
-	group string,
+	group GroupName,
 ) Option {
-	return optionFunc(func(b *Behavior) { b.Group = group })
+	return optionFunc(func(b *Behavior) { b.Group = string(group) })
 }
+
+// AreaName is an area of the UI, one of Areas.
+type AreaName string
+
+// The areas of the UI.
+const (
+	AreaServices   AreaName = "services"
+	AreaSoftware   AreaName = "software"
+	AreaConfig     AreaName = "config"
+	AreaNode       AreaName = "node"
+	AreaNetworking AreaName = "networking"
+	AreaSecurity   AreaName = "security"
+	AreaHardware   AreaName = "hardware"
+)
 
 // Areas are the areas of the UI that a served behavior can sit in: the
 // groups of the Configure page's Add Block panel.
-var Areas = []string{"services", "software", "config", "node", "networking", "security", "hardware"}
+var Areas = []AreaName{
+	AreaServices, AreaSoftware, AreaConfig, AreaNode, AreaNetworking, AreaSecurity, AreaHardware,
+}
 
-// Area puts a served behavior in an area of the UI: Area("hardware") puts
+// Area puts a served behavior in an area of the UI: Area(AreaHardware) puts
 // disk's blocks under Hardware in the Configure page's Add Block panel.
 // behavior validate refuses a behavior with API and no area, or an area
 // that is not one of Areas.
 func Area(
-	name string,
+	name AreaName,
 ) Option {
 	return optionFunc(func(b *Behavior) { b.Area = name })
 }

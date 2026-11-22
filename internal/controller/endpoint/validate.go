@@ -64,11 +64,37 @@ const (
 	// RuleIn: each in tag of an input field is path, query, form or body.
 	// Any other value falls into the request body with no error.
 	RuleIn = "in"
+	// RuleField: a field that Location or Example names is a json field of
+	// its type. A misspelled name gave a Location of <nil>, or dropped the
+	// example from the spec, with no error.
+	RuleField = "field"
+	// RuleReason: each error that a method maps has one of Reasons. Go
+	// converts an untyped literal to Reason, so Because("not_manged")
+	// compiles, and the caller would get a word the schema does not list.
+	RuleReason = "reason"
 )
 
 // inValues are the values of the in tag: where a field of a request comes
 // from.
 var inValues = []string{"path", "query", "form", "body"}
+
+// hasField reports whether t, or the type t points to, has a field with the
+// json name name.
+func hasField(
+	t reflect.Type,
+	name string,
+) bool {
+	for t.Kind() == reflect.Pointer {
+		t = t.Elem()
+	}
+	for _, f := range fields(t) {
+		if jsonName(f) == name {
+			return true
+		}
+	}
+
+	return false
+}
 
 // Checks are the rules Validate applies. osapi controller endpoint
 // validate --help prints each one, and each problem carries the fix of its
@@ -79,6 +105,16 @@ var Checks = guide.Checks{
 		Rule:     RuleIn,
 		Requires: "Each in tag of an input field is path, query, form or body.",
 		Fix:      "Correct the value. A field with another value is read from the request body, not from where the tag says.",
+	},
+	{
+		Rule:     RuleReason,
+		Requires: "Each error that a method maps has a reason of endpoint.Reasons.",
+		Fix:      "Use a Reason constant, such as endpoint.ReasonNotManaged, in Because.",
+	},
+	{
+		Rule:     RuleField,
+		Requires: "The field that Location names is a json field of the method's output, and the field that Example[T] names is a json field of T.",
+		Fix:      "Correct the name to the json name of the field, such as job_id.",
 	},
 	{
 		Rule:     RuleName,
@@ -188,6 +224,19 @@ func Validate(
 	if len(g.Methods) == 0 {
 		add("", RuleMethods, "the group has no methods.")
 	}
+	var named []string
+	for t, examples := range g.Examples {
+		for field := range examples {
+			if !hasField(t, field) {
+				named = append(named, fmt.Sprintf(
+					"Example names %s, which is not a json field of %s.", field, t))
+			}
+		}
+	}
+	slices.Sort(named)
+	for _, msg := range named {
+		add("", RuleField, msg)
+	}
 
 	names := map[string]bool{}
 	ids := map[string]string{}
@@ -221,6 +270,17 @@ func Validate(
 					"input field %s is tagged in:%q; the values are path, query, form and body.",
 					jsonName(f), v))
 			}
+		}
+		for _, e := range m.Mapped() {
+			if !slices.Contains(Reasons, e.Reason) {
+				add(m.Name, RuleReason, fmt.Sprintf(
+					"an error of %d has the reason %q, which is not one of endpoint.Reasons.",
+					e.Code, e.Reason))
+			}
+		}
+		if l := m.location; l != "" && !hasField(m.Out, l) {
+			add(m.Name, RuleField, fmt.Sprintf(
+				"Location names %s, which is not a json field of %s.", l, m.Out))
 		}
 
 		keys := 0

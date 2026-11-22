@@ -237,5 +237,5 @@ func errorHandler(
 
 		return
 	}
-	_ = c.JSON(code, map[string]string{"error": msg, "reason": endpoint.ReasonFor(code)})
+	_ = c.JSON(code, map[string]string{"error": msg, "reason": string(endpoint.ReasonFor(code))})
 }

@@ -50,7 +50,7 @@ const scopesKey = "BearerAuth.Scopes"
 type ErrorResponse struct {
 	Error string `json:"error"`
 	// Reason is why, as one of endpoint.Reasons.
-	Reason string `json:"reason"`
+	Reason endpoint.Reason `json:"reason"`
 }
 
 // Route is one generated endpoint: its HTTP method, its echo path, the
@@ -238,7 +238,7 @@ func status(
 	g *endpoint.Group,
 	m *endpoint.Method,
 	err error,
-) (int, string) {
+) (int, endpoint.Reason) {
 	for _, e := range m.Mapped() {
 		if errors.Is(err, e.Err) {
 			return e.Code, e.Reason

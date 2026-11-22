@@ -31,6 +31,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/client"
+
 	"github.com/osapi-io/osapi/internal/atomicfile"
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 )
@@ -56,7 +58,7 @@ func (p *Service) Deploy(
 	// omit ContentType and have the file provider respect the uploader's intent.
 	contentType := req.ContentType
 	if contentType == "" {
-		contentType = "raw"
+		contentType = string(client.ContentRaw)
 
 		info, infoErr := p.objStore.ObjectInfo(ctx, p.objBucket, req.ObjectName)
 		if infoErr == nil && info.Headers != nil {
@@ -66,7 +68,7 @@ func (p *Service) Deploy(
 		}
 	}
 
-	if contentType == "template" {
+	if contentType == string(client.ContentTemplate) {
 		content, err = p.renderTemplate(content, req.Vars)
 		if err != nil {
 			return nil, fmt.Errorf("file deploy: render template: %w", err)

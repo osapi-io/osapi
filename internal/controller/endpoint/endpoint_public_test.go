@@ -825,6 +825,31 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 			},
 		},
 		{
+			name: "when an error has a reason that is not one of Reasons",
+			group: endpoint.Define("node", "The nodes",
+				endpoint.Get[noInput, Node]("list").Errors(
+					endpoint.Conflict(errors.New("x"), "A conflict").Because("not_manged"),
+				),
+			),
+			want: []string{
+				`an error of 409 has the reason "not_manged", which is not one of endpoint.Reasons.`,
+			},
+		},
+		{
+			name: "when Location or Example names a field that its type does not have",
+			group: endpoint.Define("node", "The nodes",
+				endpoint.Example[Node]("nmae", "web-01"),
+				endpoint.Example[Node]("name", "web-01"),
+				endpoint.Post[noInput, *Node]("create").Location("nmae"),
+				endpoint.Post[noInput, Node]("update").Sub("one").Location("name"),
+				endpoint.SubDoc("one", "One node"),
+			),
+			want: []string{
+				"Example names nmae, which is not a json field of endpoint_test.Node.",
+				"Location names nmae, which is not a json field of *endpoint_test.Node.",
+			},
+		},
+		{
 			name: "when a method has a handler and the group Uses no type",
 			group: endpoint.Define("node", "The nodes",
 				endpoint.Get[noInput, Node]("list").Handle(handleNode),

@@ -213,7 +213,11 @@ func (s *SpecPublicTestSuite) TestReasonsMatchTheSchema() {
 	}
 	s.Require().NoError(yaml.Unmarshal(raw, &doc))
 	reason := doc.Components.Schemas["ErrorResponse"].Properties["reason"]
-	s.Equal(endpoint.Reasons, reason.Enum)
+	want := make([]string, 0, len(endpoint.Reasons))
+	for _, r := range endpoint.Reasons {
+		want = append(want, string(r))
+	}
+	s.Equal(want, reason.Enum)
 	for _, r := range endpoint.Reasons {
 		s.Contains(reason.Description, r+":", "the schema says what %s means", r)
 	}
@@ -230,7 +234,7 @@ func (s *SpecPublicTestSuite) TestReasons() {
 	s.Equal(endpoint.ReasonInvalidRequest, endpoint.Invalid(err, "").Reason)
 	s.Equal(endpoint.ReasonForbidden, endpoint.Forbidden(err, "").Reason)
 	s.Equal(endpoint.ReasonUnavailable, endpoint.Unavailable(err, "").Reason)
-	for status, want := range map[int]string{
+	for status, want := range map[int]endpoint.Reason{
 		401: endpoint.ReasonUnauthorized, 403: endpoint.ReasonForbidden,
 		404: endpoint.ReasonNotFound, 405: endpoint.ReasonInvalidRequest,
 		409: endpoint.ReasonConflict, 503: endpoint.ReasonUnavailable,

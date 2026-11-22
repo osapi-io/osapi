@@ -33,7 +33,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"hostname", "Get or set the hostname of target hosts",
 	behavior.Node,
 	behavior.API,
-	behavior.Area("config"),
+	behavior.Area(behavior.AreaConfig),
 	behavior.CLI,
 	// gohai reads the name from hostname, on Linux and on macOS.
 	behavior.Platform(behavior.PlatformLinux, newLinux),

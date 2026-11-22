@@ -378,6 +378,15 @@ func ValidateBehavior(
 			b.Group,
 		)
 	}
+	if b.Group != "" && b.Group != "all" && namePattern.MatchString(b.Group) &&
+		!slices.Contains(KnownGroups(), GroupName(b.Group)) {
+		add(
+			"",
+			RuleName,
+			"group %q is not one of KnownGroups; use a behavior.Group constant, such as GroupNetwork",
+			b.Group,
+		)
+	}
 	if b.Placement == "" {
 		add("", RulePlacement, "no placement; add behavior.Node")
 	}
@@ -398,7 +407,7 @@ func ValidateBehavior(
 			RuleSurface,
 			"served, but area %q is not one of %s; add behavior.Area(...), so the UI can place its blocks",
 			b.Area,
-			strings.Join(Areas, ", "),
+			areaList(),
 		)
 	}
 	if b.CLI && !b.API {
@@ -987,6 +996,16 @@ func knownPlatformList() string {
 	names := make([]string, 0, len(KnownPlatforms()))
 	for _, p := range KnownPlatforms() {
 		names = append(names, string(p))
+	}
+
+	return strings.Join(names, ", ")
+}
+
+// areaList is Areas, for a message.
+func areaList() string {
+	names := make([]string, 0, len(Areas))
+	for _, a := range Areas {
+		names = append(names, string(a))
 	}
 
 	return strings.Join(names, ", ")

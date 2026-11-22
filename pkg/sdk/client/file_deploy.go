@@ -27,6 +27,18 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
+// ContentType is how a deploy treats a file: as bytes, or as a template.
+type ContentType string
+
+// The content types of a file.
+const (
+	// ContentRaw writes the bytes as they are.
+	ContentRaw ContentType = "raw"
+	// ContentTemplate renders the file with Go text/template and the agent's
+	// facts before it writes it.
+	ContentTemplate ContentType = "template"
+)
+
 // FileDeployOpts contains parameters for file deployment.
 type FileDeployOpts struct {
 	// ObjectName is the name of the file in the Object Store (required).
@@ -35,8 +47,8 @@ type FileDeployOpts struct {
 	// Path is the destination path on the target filesystem (required).
 	Path string
 
-	// ContentType is "raw" or "template" (required).
-	ContentType string
+	// ContentType is ContentRaw or ContentTemplate (required).
+	ContentType ContentType
 
 	// Mode is the file permission mode (e.g., "0644"). Optional.
 	Mode string

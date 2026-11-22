@@ -110,7 +110,7 @@ func main() {
 	deploy, err := c.FileDeploy.Deploy(ctx, client.FileDeployOpts{
 		ObjectName:  "app.conf",
 		Path:        "/tmp/app.conf",
-		ContentType: "raw",
+		ContentType: client.ContentRaw,
 		Mode:        "0644",
 		Target:      "_all",
 	})

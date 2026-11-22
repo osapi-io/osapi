@@ -151,7 +151,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"route", "The routes of an interface",
 	behavior.Node,
 	behavior.API,
-	behavior.Area("networking"),
+	behavior.Area(behavior.AreaNetworking),
 	behavior.CLI,
 	behavior.Of(iface.Behavior),
 	behavior.Platform(behavior.PlatformDebian, newDebian),

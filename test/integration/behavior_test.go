@@ -260,7 +260,7 @@ func (s *BehaviorSmokeSuite) store(
 		path := filepath.Join(s.T().TempDir(), "object")
 		s.Require().NoError(os.WriteFile(path, []byte(g.Content), 0o600))
 		_, stderr, code := runCLI("client", "file", "upload", "--name", g.Path,
-			"--file", path, "--content-type", g.ContentType)
+			"--file", path, "--content-type", string(g.ContentType))
 		s.Require().Equal(0, code, "upload %s: %s", g.Path, stderr)
 	}
 }

@@ -101,15 +101,15 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindOption,
-			Name: `Area("area")`,
-			Does: "Puts a served behavior in an area of the UI: the group of the Configure page's Add Block panel that its blocks sit in, one of services, software, config, node, networking, security or hardware.",
+			Name: `Area(AreaName)`,
+			Does: "Puts a served behavior in an area of the UI: the group of the Configure page's Add Block panel that its blocks sit in. Use a constant: AreaServices, AreaSoftware, AreaConfig, AreaNode, AreaNetworking, AreaSecurity or AreaHardware.",
 			When: "On each behavior with API. behavior validate refuses a served behavior with none.",
 		},
 		{
 			Kind: KindOption,
-			Name: `Under("group")`,
-			Does: "Nests the behavior in a group: its routes, commands and directory.",
-			When: "When the behavior belongs to a group, such as network.",
+			Name: `Under(GroupName)`,
+			Does: "Nests the behavior in a group: its routes, commands, directory and the prefix of its permissions. Use a constant, such as GroupNetwork; behavior validate refuses a group outside KnownGroups, because a misspelled group makes a new route, command and permission.",
+			When: "When the behavior belongs to a group, such as network. Add the group's constant to KnownGroups first.",
 		},
 		{
 			Kind: KindOption,
@@ -125,8 +125,8 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindOption,
-			Name: `Platform("debian", build)`,
-			Does: "Builds the provider on that platform: a distribution, darwin, or linux for each Linux host without its own. On another platform, the methods report skipped.",
+			Name: `Platform(PlatformDebian, build)`,
+			Does: "Builds the provider on that platform: a distribution, darwin, or linux for each Linux host without its own. On another platform, the methods report skipped. Use a constant: PlatformDebian, PlatformDarwin or PlatformLinux. behavior validate refuses a name outside KnownPlatforms, here and in On, RunsOnPlatform and OnPlatform.",
 			When: "One time for each platform that the behavior supports.",
 		},
 		{
@@ -348,7 +348,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindExample,
 			Name: `Stored(name, content, contentType)`,
-			Does: "Says the object store of the fleet has the object name, with its content and its content type, raw or template, as osapi client file upload stores it. A provider reads it with h.Objects.Object.",
+			Does: "Says the object store of the fleet has the object name, with its content and its content type, client.ContentRaw or client.ContentTemplate, as osapi client file upload stores it. A provider reads it with h.Objects.Object.",
 			When: "For an example of a behavior that deploys an uploaded file, such as through the object building block.",
 		},
 		{

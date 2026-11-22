@@ -92,7 +92,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"status", "The status summary of a node",
 	behavior.Node,
 	behavior.API,
-	behavior.Area("node"),
+	behavior.Area(behavior.AreaNode),
 	behavior.CLI,
 	behavior.Platform(behavior.PlatformLinux, newReader),
 	behavior.Platform(behavior.PlatformDarwin, newReader),

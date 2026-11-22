@@ -158,7 +158,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"interface", "The network interfaces of the host",
 	behavior.Node,
 	behavior.API,
-	behavior.Area("networking"),
+	behavior.Area(behavior.AreaNetworking),
 	behavior.CLI,
 	behavior.Under("network"),
 	behavior.Platform(behavior.PlatformDebian, newDebian),
