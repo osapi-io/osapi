@@ -59,7 +59,7 @@ func apiTestFile(
 		rows = append(rows, multi("{", "}",
 			jen.Id("method").Op(":").Qual(httpPath, methodConst(m)),
 			jen.Id("path").Op(":").Lit(echoRoute(b, m)),
-			jen.Id("permission").Op(":").Lit(b.Permission(m.Verb)),
+			jen.Id("permission").Op(":").Lit(string(b.Permission(m.Verb))),
 		))
 	}
 
