@@ -118,6 +118,12 @@ func Run[Out any](
 	if msg, ok := behavior.CheckTemplates(input); !ok {
 		return out, fmt.Errorf("%w: %s", ErrInvalid, msg)
 	}
+	// The controller step, such as a password hash, runs here, so what the
+	// job keeps has no plain secret.
+	input, err := b.RunBefore(ctx, m, input)
+	if err != nil {
+		return out, endpoint.Internal("the controller step failed", err)
+	}
 
 	// The request's span says which behavior it ran and where; the agent's
 	// span for the same job adds the outcome.

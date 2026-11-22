@@ -462,7 +462,7 @@ func TagProblems(
 // outside the list is a typo: Go reads a tag only by its exact key, so the
 // field gets nothing from it.
 var KnownTags = []string{
-	"default", "doc", "empty", "example", "flag", "in", "json", "label",
+	"before", "default", "doc", "empty", "example", "flag", "in", "json", "label",
 	"mapstructure", "none", "param", "pattern", "prefix", "render", "secret",
 	"short", "table", "telemetry", "template", "title", "validate", "yaml",
 }

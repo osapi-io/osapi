@@ -335,6 +335,50 @@ func sortedBody(
 	return string(out)
 }
 
+// pwIn is the input of a write whose controller step hashes its password.
+type pwIn struct {
+	Name         string `json:"name"`
+	Password     string `json:"password,omitempty"      secret:"true"`
+	PasswordHash string `json:"password_hash,omitempty"               before:"set"`
+}
+
+func setPassword(context.Context, provider, pwIn) (kvOut, error) { return kvOut{}, nil }
+
+// TestRunBefore: the controller step runs before the job is queued, so the
+// job data has the hash and not the plain password; a step that fails
+// queues nothing.
+func (s *DispatchPublicTestSuite) TestRunBefore() {
+	account := behavior.Define("account", "Accounts",
+		behavior.Write("update", setPassword).Before(
+			func(_ context.Context, in pwIn) (pwIn, error) {
+				if in.Password == "boom" {
+					return pwIn{}, errors.New("no salt")
+				}
+				in.PasswordHash, in.Password = "$6$hash", ""
+
+				return in, nil
+			}),
+	)
+	op := job.OperationType("behavior.account.update")
+
+	s.Run("when the step runs, the job has the hash and not the password", func() {
+		s.jobs.EXPECT().
+			Modify(gomock.Any(), "server1", job.CategoryBehavior, op,
+				pwIn{Name: "web", PasswordHash: "$6$hash"}).
+			Return("job-1", completed("server1", `{"changed":true}`, yes()), nil)
+
+		_, err := dispatch.Run[answer](context.Background(), dispatch.Deps{JobClient: s.jobs},
+			account, "update", "server1", pwIn{Name: "web", Password: "hunter2"})
+		s.NoError(err)
+	})
+
+	s.Run("when the step fails, no job is queued", func() {
+		_, err := dispatch.Run[answer](context.Background(), dispatch.Deps{JobClient: s.jobs},
+			account, "update", "server1", pwIn{Name: "web", Password: "boom"})
+		s.ErrorContains(err, "the controller step failed")
+	})
+}
+
 func TestDispatchPublicTestSuite(
 	t *testing.T,
 ) {

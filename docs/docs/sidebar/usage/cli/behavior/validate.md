@@ -92,6 +92,11 @@ The rules:
 - `secret`: No input field is both secret:"true" and telemetry:"attr". Fix:
   Remove telemetry:"attr" from the secret field. A secret is never recorded on a
   span.
+- `before`: A .Before step is func(context.Context, In) (In, error), on a method
+  that the API serves and that has a secret:"true" input field. Each input field
+  tagged before:"set" has a step to set it. Fix: Give the step the method's
+  input type in and out, serve the behavior, mark the plain secret
+  secret:"true", and tag only the fields that the step fills before:"set".
 - `tag`: Each struct tag of an input field has a known key (behavior.KnownTags),
   secret is "true" and telemetry is "attr". Fix: Correct the key or the value. A
   misspelled secret tag puts the field in the audit log, and a misspelled

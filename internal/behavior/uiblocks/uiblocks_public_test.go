@@ -73,6 +73,24 @@ type BlocksPublicTestSuite struct {
 	suite.Suite
 }
 
+// TestBlocksLeaveOutWhatTheStepSets: the form of a block has no field that
+// the method's .Before step sets.
+func (s *BlocksPublicTestSuite) TestBlocksLeaveOutWhatTheStepSets() {
+	type pwIn struct {
+		Password string `json:"password" doc:"The password" secret:"true"`
+		Hash     string `json:"hash"     doc:"The hash"                   before:"set"`
+	}
+	b := behavior.Define("acct", "Accounts", behavior.Node, behavior.API, behavior.Area("config"),
+		behavior.Write("update", func(context.Context, struct{}, pwIn) (struct{}, error) {
+			return struct{}{}, nil
+		}),
+	)
+	got := uiblocks.Blocks([]*behavior.Behavior{b})
+	s.Require().Len(got, 1)
+	s.Require().Len(got[0].Fields, 1)
+	s.Equal("password", got[0].Fields[0].Name)
+}
+
 func (s *BlocksPublicTestSuite) TestBlocks() {
 	b := behavior.Define("item", "Items", behavior.Node, behavior.API, behavior.Area("hardware"),
 		behavior.Read("list", read),

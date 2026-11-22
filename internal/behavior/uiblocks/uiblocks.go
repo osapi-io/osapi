@@ -128,7 +128,7 @@ func fields(
 	for i := range t.NumField() {
 		f := t.Field(i)
 		name := behavior.JSONName(f)
-		if !f.IsExported() || name == "-" {
+		if !f.IsExported() || name == "-" || behavior.SetByBefore(f) {
 			continue
 		}
 		in := "body"

@@ -67,7 +67,8 @@ func Flags(
 	for i := range in.NumField() {
 		f := in.Field(i)
 		name := jsonName(f)
-		if !f.IsExported() || name == "" {
+		// A field that the controller step sets is not the caller's to send.
+		if !f.IsExported() || name == "" || behavior.SetByBefore(f) {
 			continue
 		}
 

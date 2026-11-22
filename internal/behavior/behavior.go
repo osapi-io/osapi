@@ -355,6 +355,8 @@ type Method struct {
 	// github.com/osapi-io/osapi/internal/behaviors/managedfile.Update, so a
 	// test can find a direct call of it that skips Call.
 	fn string
+	// before is the controller step that .Before sets, or the zero Value.
+	before reflect.Value
 }
 
 func (m *Method) apply(
