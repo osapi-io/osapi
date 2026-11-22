@@ -11,10 +11,13 @@ import (
 )
 
 var osGetCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "os:read"},
-	Args:        cobra.NoArgs,
-	Example:     "  # An Ubuntu host\n  osapi client node os get --target web-01\n\n  # A Mac\n  osapi client node os get --target web-01",
-	Long:        "Reads the distribution and its version: the ID and VERSION_ID of /etc/os-release on Linux, and darwin with the ProductVersion of sw_vers on macOS, such as darwin 15.5.",
+	Annotations: map[string]string{
+		reference.Permission: "os:read",
+		reference.Result:     "Each example prints this:\n\nAn Ubuntu host:\n\n```ansi\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mOS INFO\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      ubuntu 24.04\n\n  1 host: \x1b[38;2;103;234;147m1 ok\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nA Mac:\n\n```ansi\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mOS INFO\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      darwin 15.5\n\n  1 host: \x1b[38;2;103;234;147m1 ok\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  # An Ubuntu host\n  osapi client node os get --target web-01\n\n  # A Mac\n  osapi client node os get --target web-01",
+	Long:    "Reads the distribution and its version: the ID and VERSION_ID of /etc/os-release on Linux, and darwin with the ProductVersion of sw_vers on macOS, such as darwin 15.5.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("target")
 

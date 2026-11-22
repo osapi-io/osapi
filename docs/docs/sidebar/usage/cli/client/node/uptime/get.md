@@ -17,6 +17,20 @@ osapi client node uptime get [flags]
 osapi client node uptime get --target web-01
 ```
 
+## Result
+
+Each example prints this:
+
+A host up for a day, two hours and five minutes:
+
+```ansi
+[1;38;2;0;213;255mResults:[0m
+  [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mUPTIME                     [0m[38;2;10;143;176mSECONDS[0m
+  [1mweb-01[0m    [38;2;103;234;147mok[0m      1 day, 2 hours, 5 minutes  93900
+
+  1 host: [38;2;103;234;147m1 ok[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+```
+
 ## Permission
 
 It needs the `uptime:read` permission. `osapi token roles get --name <role>`

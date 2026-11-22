@@ -21,17 +21,24 @@
 package command
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
-// exampleHost is the target of each example command.
-const exampleHost = "web-01"
+// exampleHost is the target of each example command, and exampleJobID and
+// exampleTraceID fill the output that a docs page shows for it.
+const (
+	exampleHost    = "web-01"
+	exampleJobID   = "550e8400-e29b-41d4-a716-446655440000"
+	exampleTraceID = "26e448c9dbe1c4a8d216a98c675079c9"
+)
 
 // Example is a method's examples as the command lines of its cobra Example,
 // each one under a comment that tells what it does.
@@ -68,6 +75,9 @@ func Annotations(
 	}
 
 	var parts []string
+	if out := Output(m); out != "" {
+		parts = append(parts, out)
+	}
 	var effects []string
 	for _, ex := range m.Examples {
 		if len(ex.Effects) == 0 {
@@ -107,6 +117,68 @@ func Annotations(
 	}
 
 	return out
+}
+
+// Output is what each example of m prints, as osapi client prints it: the
+// CLI's own printer, with its colors, in a fenced block of language ansi,
+// which the docs site shows in those colors. Each example is one host,
+// web-01, that answers the example's output. An example with no output, such
+// as one of a write that answers only changed, still shows its row.
+func Output(
+	m *behavior.Method,
+) string {
+	blocks := make([]string, 0, len(m.Examples))
+	for _, ex := range m.Examples {
+		result, ok := exampleResult(m, ex.Output)
+		if !ok {
+			continue
+		}
+		screen := cli.Capture(func() {
+			// As Print, with m itself, which need not be registered.
+			cli.PrintJobID(result.JobID)
+			cli.PrintTraceID(exampleTraceID)
+			cli.PrintCompactTable([]cli.Section{Table(m, result)})
+			// A table with no summary line leaves the trace pending; it is
+			// not this example's to print later.
+			cli.PrintTraceID("")
+		})
+		blocks = append(blocks, fmt.Sprintf("%s:\n\n```ansi\n%s\n```",
+			ex.Doc, strings.Trim(screen, "\n")))
+	}
+	if len(blocks) == 0 {
+		return ""
+	}
+
+	return "Each example prints this:\n\n" + strings.Join(blocks, "\n\n")
+}
+
+// exampleResult is the answer that example output gives from one host,
+// web-01, shaped as the server shapes it: a row for each element of a list,
+// with the hostname and the status. A write's row has changed. ok is false
+// for an output that is not an object or a list of objects.
+func exampleResult(
+	m *behavior.Method,
+	output any,
+) (Result, bool) {
+	// An example's output is the method's output type, which encodes.
+	raw, _ := json.Marshal(output)
+	var rows []map[string]any
+	if err := json.Unmarshal(raw, &rows); err != nil {
+		var one map[string]any
+		if err := json.Unmarshal(raw, &one); err != nil {
+			return Result{}, false
+		}
+		rows = []map[string]any{one}
+	}
+	for _, r := range rows {
+		r["hostname"] = exampleHost
+		r["status"] = "ok"
+		if _, ok := r["changed"]; !ok && m.Verb == behavior.VerbWrite {
+			r["changed"] = true
+		}
+	}
+
+	return Result{JobID: exampleJobID, Results: rows}, true
 }
 
 // cellEscaper keeps text in one cell of a markdown table: a newline would

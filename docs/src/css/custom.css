@@ -688,3 +688,19 @@ div[class^='announcementBar_'] {
 .language-shell-session .token.function {
   color: inherit !important;
 }
+
+/* The CLI's output, in the CLI's own colors: a terminal, black on both
+   page themes, framed as a code block. */
+.osapi-terminal {
+  margin-bottom: var(--ifm-leading);
+  padding: var(--ifm-pre-padding);
+  border: 1px solid var(--osapi-border);
+  border-radius: 8px;
+  background: #000000;
+  color: #e2e8f0;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: var(--ifm-code-font-size);
+  line-height: var(--ifm-pre-line-height);
+  white-space: pre;
+  overflow-x: auto;
+}

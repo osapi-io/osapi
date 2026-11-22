@@ -11,10 +11,13 @@ import (
 )
 
 var timezoneGetCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "timezone:read"},
-	Args:        cobra.NoArgs,
-	Example:     "  # A Linux host on UTC\n  osapi client node timezone get --target web-01\n\n  # A Mac on UTC\n  osapi client node timezone get --target web-01",
-	Long:        "Reads the IANA name of the timezone and its offset from UTC now: the zone that /etc/localtime links to, or /etc/timezone on Linux.",
+	Annotations: map[string]string{
+		reference.Permission: "timezone:read",
+		reference.Result:     "Each example prints this:\n\nA Linux host on UTC:\n\n```ansi\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mTIMEZONE  \x1b[0m\x1b[38;2;10;143;176mUTC OFFSET\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      UTC       +00:00\n\n  1 host: \x1b[38;2;103;234;147m1 ok\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nA Mac on UTC:\n\n```ansi\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mTIMEZONE  \x1b[0m\x1b[38;2;10;143;176mUTC OFFSET\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      UTC       +00:00\n\n  1 host: \x1b[38;2;103;234;147m1 ok\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  # A Linux host on UTC\n  osapi client node timezone get --target web-01\n\n  # A Mac on UTC\n  osapi client node timezone get --target web-01",
+	Long:    "Reads the IANA name of the timezone and its offset from UTC now: the zone that /etc/localtime links to, or /etc/timezone on Linux.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("target")
 
@@ -27,7 +30,7 @@ var timezoneGetCmd = &cobra.Command{
 var timezoneUpdateCmd = &cobra.Command{
 	Annotations: map[string]string{
 		reference.Permission: "timezone:write",
-		reference.Result:     "With the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Set a new timezone | runs `timedatectl set-timezone America/New_York` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A name that is not a timezone | `--timezone ../../etc/passwd` | not a valid timezone name |\n| A name that starts with a dash | `--timezone -UTC` | not a valid timezone name |\n| A name longer than 64 characters | `--timezone aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | timezone |",
+		reference.Result:     "Each example prints this:\n\nSet a new timezone:\n\n```ansi\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS   \x1b[0m\x1b[38;2;10;143;176mTIMEZONE\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mchanged\x1b[0m  America/New_York\n\n  1 host: \x1b[38;2;103;234;147m1 changed\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nA host that already has the timezone:\n\n```ansi\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mTIMEZONE\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      UTC\n\n  1 host: \x1b[38;2;103;234;147m1 ok\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith the default settings, each example does this on the host:\n\n| Example | On the host |\n| --- | --- |\n| Set a new timezone | runs `timedatectl set-timezone America/New_York` |\n\nThe command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A name that is not a timezone | `--timezone ../../etc/passwd` | not a valid timezone name |\n| A name that starts with a dash | `--timezone -UTC` | not a valid timezone name |\n| A name longer than 64 characters | `--timezone aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | timezone |",
 	},
 	Args:    cobra.NoArgs,
 	Example: "  # Set a new timezone\n  osapi client node timezone update --target web-01 --timezone America/New_York\n\n  # A host that already has the timezone\n  osapi client node timezone update --target web-01 --timezone UTC",

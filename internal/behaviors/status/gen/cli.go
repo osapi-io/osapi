@@ -11,10 +11,13 @@ import (
 )
 
 var statusGetCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "status:read"},
-	Args:        cobra.NoArgs,
-	Example:     "  # An Ubuntu host\n  osapi client node status get --target web-01\n\n  # A Mac\n  osapi client node status get --target web-01",
-	Long:        "Runs the get of the hostname, uptime, os, load, memory and disk behaviors on the host, and answers with each. A read that fails is in errors, as its name and its error, and the other fields still answer.",
+	Annotations: map[string]string{
+		reference.Permission: "status:read",
+		reference.Result:     "Each example prints this:\n\nAn Ubuntu host:\n\n```ansi\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mNAME    \x1b[0m\x1b[38;2;10;143;176mUPTIME                           \x1b[0m\x1b[38;2;10;143;176mOS INFO       \x1b[0m\x1b[38;2;10;143;176mLOAD AVERAGE    \x1b[0m\x1b[38;2;10;143;176mMEMORY                \x1b[0m\x1b[38;2;10;143;176mDISKS  \x1b[0m\x1b[38;2;10;143;176mERRORS\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[1mweb-01\x1b[0m  1 day, 2 hours, 5 minutes 93900  ubuntu 24.04  0.32 0.28 0.25  8.0 GB 2.0 GB 4.0 GB  /      \n\n  1 host: \x1b[38;2;103;234;147m1 ok\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nA Mac:\n\n```ansi\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mNAME    \x1b[0m\x1b[38;2;10;143;176mUPTIME                           \x1b[0m\x1b[38;2;10;143;176mOS INFO      \x1b[0m\x1b[38;2;10;143;176mLOAD AVERAGE    \x1b[0m\x1b[38;2;10;143;176mMEMORY                \x1b[0m\x1b[38;2;10;143;176mDISKS  \x1b[0m\x1b[38;2;10;143;176mERRORS\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[1mweb-01\x1b[0m  1 day, 2 hours, 5 minutes 93900  darwin 15.5  0.32 0.28 0.25  8.0 GB 2.0 GB 4.0 GB  /      \n\n  1 host: \x1b[38;2;103;234;147m1 ok\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  # An Ubuntu host\n  osapi client node status get --target web-01\n\n  # A Mac\n  osapi client node status get --target web-01",
+	Long:    "Runs the get of the hostname, uptime, os, load, memory and disk behaviors on the host, and answers with each. A read that fails is in errors, as its name and its error, and the other fields still answer.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("target")
 
