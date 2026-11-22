@@ -186,12 +186,7 @@ func fleetResult(
 	out := Result{JobID: one.JobID}
 	for _, host := range fleetHosts[:2] {
 		for _, row := range one.Results {
-			copied := make(map[string]any, len(row))
-			for k, v := range row {
-				copied[k] = v
-			}
-			copied["hostname"] = host
-			out.Results = append(out.Results, copied)
+			out.Results = append(out.Results, rowFor(row, host))
 		}
 	}
 	out.Results = append(out.Results, map[string]any{
@@ -334,4 +329,89 @@ func ExampleFlags(
 	input any,
 ) string {
 	return "--target " + exampleHost + exampleArgs(input)
+}
+
+// exampleFailure is the error that a host gives in a screen of Screen where
+// the operation failed on it.
+const exampleFailure = "permission denied"
+
+// Screen is the screen of the first example of a behavior's method, as the
+// CLI prints it, for a page that a person wrote: the osapi:output marker
+// gives its arguments. They are the behavior, the method, then each host,
+// as host, host:skipped or host:failed. One host is --target host; more are
+// --target _all, and each answers in the order given. With --json last, it
+// is the API's response, which the CLI prints with no table and no color.
+func Screen(
+	args []string,
+) string {
+	if len(args) < 3 {
+		return "osapi:output needs a behavior, a method and a host"
+	}
+	b := behavior.Lookup(args[0])
+	if b == nil || b.Method(args[1]) == nil || len(b.Method(args[1]).Examples) == 0 {
+		return fmt.Sprintf(
+			"osapi:output: no behavior %s with a method %s and an example",
+			args[0],
+			args[1],
+		)
+	}
+	m := b.Method(args[1])
+	hosts := args[2:]
+	asJSON := hosts[len(hosts)-1] == "--json"
+	if asJSON {
+		hosts = hosts[:len(hosts)-1]
+	}
+	ex := m.Examples[0]
+	one, _ := exampleResult(m, ex.Output)
+
+	out := Result{JobID: one.JobID}
+	for _, h := range hosts {
+		name, status, _ := strings.Cut(h, ":")
+		switch status {
+		case "skipped":
+			out.Results = append(out.Results, map[string]any{
+				"hostname": name, "status": "skipped", "error": behavior.ErrUnsupported.Error(),
+			})
+		case "failed":
+			out.Results = append(out.Results, map[string]any{
+				"hostname": name, "status": "failed", "error": exampleFailure,
+			})
+		default:
+			for _, row := range one.Results {
+				out.Results = append(out.Results, rowFor(row, name))
+			}
+		}
+	}
+
+	target := "_all"
+	if len(hosts) == 1 {
+		target, _, _ = strings.Cut(hosts[0], ":")
+	}
+	line := b.Command(m) + " --target " + target + exampleArgs(ex.Input)
+	if asJSON {
+		// The body as the API sends it: compact, and with no color.
+		body, _ := json.Marshal(out)
+
+		return "```ansi\n$ " + line + " --json\n" + string(body) + "\n```"
+	}
+
+	return screen(m, line, out)
+}
+
+// rowFor is row as host answers it: each value that is the example's host,
+// such as the name that hostname get reads, is host's own.
+func rowFor(
+	row map[string]any,
+	host string,
+) map[string]any {
+	out := make(map[string]any, len(row))
+	for k, v := range row {
+		if v == exampleHost {
+			v = host
+		}
+		out[k] = v
+	}
+	out["hostname"] = host
+
+	return out
 }

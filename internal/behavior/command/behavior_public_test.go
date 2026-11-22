@@ -338,6 +338,75 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 	)
 }
 
+// TestScreen renders the osapi:output marker of a page that a person wrote:
+// one host, the fleet with hosts that skip and fail, the --json body, and a
+// value that is the example's host becomes each host's own.
+func (s *BehaviorcmdPublicTestSuite) TestScreen() {
+	behavior.Register(behavior.Define("zzscreen", "Screens", behavior.Node, behavior.API,
+		behavior.Read("list", read).Example("Every key", input{Key: "k"}, []entry{{Key: "web-01"}}),
+		behavior.Read("bare", read),
+	))
+
+	tests := []struct {
+		name     string
+		args     []string
+		contains []string
+		missing  []string
+	}{
+		{
+			name:     "when the marker names too little",
+			args:     []string{"zzscreen", "list"},
+			contains: []string{"osapi:output needs a behavior, a method and a host"},
+		},
+		{
+			name:     "when no behavior has the name",
+			args:     []string{"nope", "list", "web-01"},
+			contains: []string{"no behavior nope with a method list and an example"},
+		},
+		{
+			name:     "when the method has no example",
+			args:     []string{"zzscreen", "bare", "web-01"},
+			contains: []string{"no behavior zzscreen with a method bare"},
+		},
+		{
+			name: "when one host answers",
+			args: []string{"zzscreen", "list", "web-01"},
+			contains: []string{
+				"```ansi\n$ osapi client node zzscreen list --target web-01 --key k\n",
+				"\x1b[",
+			},
+		},
+		{
+			name: "when the fleet answers, with a host that skips and one that fails",
+			args: []string{"zzscreen", "list", "db-01", "mac-01:skipped", "web-02:failed"},
+			contains: []string{
+				"--target _all --key k",
+				"db-01", "operation not supported on this OS family", "permission denied",
+			},
+			missing: []string{"web-01"},
+		},
+		{
+			name: "when the marker asks for the JSON body",
+			args: []string{"zzscreen", "list", "web-01", "--json"},
+			contains: []string{
+				"$ osapi client node zzscreen list --target web-01 --key k --json\n{\"job_id\":",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			got := command.Screen(tc.args)
+			for _, c := range tc.contains {
+				s.Contains(got, c)
+			}
+			for _, m := range tc.missing {
+				s.NotContains(got, m, "a value that is the example's host is each host's own")
+			}
+		})
+	}
+}
+
 // TestPrint writes a method's answer as the job, the trace and the table,
 // which the endpoint command runtime calls as each behavior method's
 // renderer.
