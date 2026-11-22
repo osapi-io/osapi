@@ -22,6 +22,8 @@ package cmd
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/cli"
@@ -34,6 +36,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/commands/clidocs"
 	"github.com/osapi-io/osapi/internal/cli/commands/commanddsl"
 	"github.com/osapi-io/osapi/internal/cli/commands/endpointdsl"
+	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
@@ -303,4 +306,22 @@ func endpointTitle(
 	}
 
 	return strings.ToUpper(g.Name[:1]) + g.Name[1:]
+}
+
+// configTables is page with each config table in it written again, from
+// config.Keys and the config that osapi ships, under root.
+func configTables(
+	root string,
+	page string,
+) (string, error) {
+	data, err := os.ReadFile(filepath.Join(root, config.ShippedFile))
+	if err != nil {
+		return "", err
+	}
+	shipped, err := config.Shipped(data)
+	if err != nil {
+		return "", err
+	}
+
+	return config.DocTables(page, shipped), nil
 }

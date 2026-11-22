@@ -163,12 +163,17 @@ data.
 
 ## Configuration
 
-| Key                    | Description                          | Default       |
-| ---------------------- | ------------------------------------ | ------------- |
-| `agent.facts.interval` | How often the agent collects facts   | `60s`         |
-| `nats.facts.bucket`    | Name of the KV bucket for the facts  | `agent-facts` |
-| `nats.facts.ttl`       | TTL of the fact entries              | `5m`          |
-| `nats.facts.storage`   | Storage backend (`file` or `memory`) | `file`        |
+<!-- osapi:config agent.facts nats.facts -->
+
+| Key                    | Type   | Default                                     | Environment                  | Description                                       |
+| ---------------------- | ------ | ------------------------------------------- | ---------------------------- | ------------------------------------------------- |
+| `agent.facts.interval` | string | `60s`                                       | `OSAPI_AGENT_FACTS_INTERVAL` | How often the agent collects and publishes facts. |
+| `nats.facts.bucket`    | string | none; `agent-facts` in `configs/osapi.yaml` | `OSAPI_NATS_FACTS_BUCKET`    | KV bucket for agent facts entries.                |
+| `nats.facts.ttl`       | string | none; `5m` in `configs/osapi.yaml`          | `OSAPI_NATS_FACTS_TTL`       | TTL for facts entries (Go duration).              |
+| `nats.facts.storage`   | string | none; `file` in `configs/osapi.yaml`        | `OSAPI_NATS_FACTS_STORAGE`   | Storage backend: 'file' or 'memory'.              |
+| `nats.facts.replicas`  | int    | none; `1` in `configs/osapi.yaml`           | `OSAPI_NATS_FACTS_REPLICAS`  | Number of KV replicas.                            |
+
+<!-- /osapi:config -->
 
 Refer to [Configuration](../usage/configuration.md) for all the settings.
 

@@ -102,7 +102,12 @@ func init() {
 	command.Provide(behaviordsl.Group, behaviorDSLDeps)
 	command.Provide(chain.Group, chainDeps)
 	command.Provide(clidocs.Group, func() clidocs.Deps {
-		return clidocs.Deps{Root: rootCmd, DSLs: dslPages, Pages: referencePages}
+		return clidocs.Deps{
+			Root:   rootCmd,
+			DSLs:   dslPages,
+			Pages:  referencePages,
+			Tables: configTables,
+		}
 	})
 	command.Provide(startcmd.Group, func() startcmd.Deps {
 		return startcmd.Deps{NATS: natsDeps(), Controller: controllerDeps(), Agent: agentDeps()}

@@ -17,17 +17,13 @@ user, root or a different user.
 
 ## Configuration
 
-```yaml
-agent:
-  privilege_escalation:
-    # Activate least-privilege mode: sudo for write commands
-    # and capability verification at startup.
-    enabled: false
-```
+<!-- osapi:config agent.privilege_escalation -->
 
-| Field     | Type | Default | Description                                                       |
-| --------- | ---- | ------- | ----------------------------------------------------------------- |
-| `enabled` | bool | false   | Activate sudo for write commands and capability checks at startup |
+| Key                                  | Type | Default                               | Environment                                | Description                                                                     |
+| ------------------------------------ | ---- | ------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------- |
+| `agent.privilege_escalation.enabled` | bool | none; `false` in `configs/osapi.yaml` | `OSAPI_AGENT_PRIVILEGE_ESCALATION_ENABLED` | Least-privilege mode: sudo for write commands and capability checks at startup. |
+
+<!-- /osapi:config -->
 
 ## How it works
 
