@@ -186,16 +186,25 @@
 
 /* A link: a word in the logo's cyan, with no line under it until a pointer
    is on it. On a light page, the dark tint of cyan, which reads on white. */
+/* The build's minifier merges rules and can move one past a rule of the
+   same weight, as Docusaurus' underline of a link in an admonition. Thus
+   !important, where an order decided the winner in dev. */
 .markdown a,
 .alert a {
   color: var(--osapi-heading-1);
-  text-decoration: none;
+  text-decoration: none !important;
+}
+
+/* In an admonition, Docusaurus' rule of the same weight makes a link the
+   text color. */
+.alert a {
+  color: var(--osapi-heading-1) !important;
 }
 
 .markdown a:hover,
 .alert a:hover {
   color: var(--osapi-heading-1);
-  text-decoration: underline;
+  text-decoration: underline !important;
   text-underline-offset: 0.2em;
 }
 
@@ -314,8 +323,11 @@ button[class*='copyButton'] {
 /* A card is a link as a whole: no line under its text, and its title is the
    title color, not a section's. */
 .markdown a.card,
+.markdown a.card:hover,
 .markdown a.card * {
-  text-decoration: none;
+  /* :hover outranks .markdown a:hover, which underlines a link. The two
+     were equal, and the build's minifier can put either one last. */
+  text-decoration: none !important;
 }
 
 /* The title, as a UI card's: no emoji icon before it. */
@@ -607,7 +619,9 @@ button[class*='copyButton'] {
   color: var(--osapi-title) !important;
   background: var(--osapi-raise) !important;
   border-color: var(--osapi-border) !important;
-  box-shadow: inset 0 -2px 0 var(--osapi-accent);
+  /* !important: the plugin's rule of each language, as
+     .openapi-tabs__code-item--go.active, has the same weight. */
+  box-shadow: inset 0 -2px 0 var(--osapi-accent) !important;
 }
 
 /* Taken from docusaurus' website. */
