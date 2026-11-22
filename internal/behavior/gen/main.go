@@ -98,7 +98,7 @@ func run(
 		return err
 	}
 
-	return nil
+	return w.Flush()
 }
 
 // behavior writes b's gen directory.

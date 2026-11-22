@@ -92,7 +92,7 @@ func run(
 		}
 	}
 
-	return nil
+	return w.Flush()
 }
 
 // write writes the spec of gs at path, with ErrorResponse pointing at the

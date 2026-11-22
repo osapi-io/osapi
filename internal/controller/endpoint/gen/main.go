@@ -104,7 +104,7 @@ func run(
 		return err
 	}
 
-	return nil
+	return w.Flush()
 }
 
 func group(

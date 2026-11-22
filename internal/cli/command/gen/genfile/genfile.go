@@ -20,8 +20,14 @@
 
 // Package genfile writes generated files for the local, endpoint and
 // behavior generators alike: it removes the files a run made before, writes
-// each file under the repository's root, groups a Go file's imports as the
-// repository does, and formats every Go file it wrote once, at the end.
+// each file under the repository's root, and groups a Go file's imports as
+// the repository does.
+//
+// A Writer changes nothing on disk until Flush. Clean, Write, Go, Remove and
+// Registry only record what to do, so a run that fails or panics part way,
+// such as on a literal that jennifer cannot write, leaves the files of the
+// last run as they were. Flush writes each file to a temporary file beside
+// it and renames it, then removes the stale ones.
 package genfile
 
 import (
@@ -40,9 +46,16 @@ import (
 const module = "github.com/osapi-io/osapi"
 
 // Writer writes generated files under Root, a path relative to the working
-// directory, such as ../../.. from a go:generate line.
+// directory, such as ../../.. from a go:generate line. Call Flush when the
+// whole run succeeds.
 type Writer struct {
 	Root string
+
+	// files are the files to write, by their path under Root.
+	files map[string][]byte
+	// stale are the files to remove, by their path under Root, unless the
+	// run writes them again.
+	stale map[string]bool
 }
 
 // Clean removes each file of dir that a generator made, by the comment that
@@ -66,26 +79,36 @@ func (w *Writer) Clean(
 		}
 		if bytes.HasPrefix(data, []byte("// Code generated")) ||
 			bytes.HasPrefix(data, []byte("# Code generated")) {
-			if err := os.Remove(p); err != nil {
-				return err
-			}
+			w.removeLater(filepath.Join(dir, e.Name()))
 		}
 	}
 
 	return nil
 }
 
-// Write writes data at rel under the root, with the directories it needs.
+// removeLater records that Flush removes rel, unless the run writes it.
+func (w *Writer) removeLater(
+	rel string,
+) {
+	if w.stale == nil {
+		w.stale = map[string]bool{}
+	}
+	w.stale[filepath.Clean(rel)] = true
+}
+
+// Write records data for rel under the root. Flush writes it.
 func (w *Writer) Write(
 	rel string,
 	data []byte,
 ) error {
-	p := filepath.Join(w.Root, rel)
-	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
-		return err
+	if w.files == nil {
+		w.files = map[string][]byte{}
 	}
+	rel = filepath.Clean(rel)
+	w.files[rel] = data
+	delete(w.stale, rel)
 
-	return os.WriteFile(p, data, 0o644)
+	return nil
 }
 
 // Go renders f to rel, with its imports in the repository's three groups:
@@ -95,15 +118,23 @@ func (w *Writer) Write(
 func (w *Writer) Go(
 	rel string,
 	f *jen.File,
-) error {
+) (err error) {
+	// jennifer panics on a literal of a type it cannot write, such as a
+	// named string type.
+	defer func() {
+		if p := recover(); p != nil {
+			err = fmt.Errorf("%s: %v", rel, p)
+		}
+	}()
 	var buf bytes.Buffer
-	if err := f.Render(&buf); err != nil {
-		return fmt.Errorf("%s: %w", rel, err)
+	var src []byte
+	err = f.Render(&buf)
+	if err == nil {
+		imports.LocalPrefix = module
+		src, err = imports.Process(rel, buf.Bytes(), &imports.Options{
+			Comments: true, TabIndent: true, TabWidth: 8, FormatOnly: true,
+		})
 	}
-	imports.LocalPrefix = module
-	src, err := imports.Process(rel, buf.Bytes(), &imports.Options{
-		Comments: true, TabIndent: true, TabWidth: 8, FormatOnly: true,
-	})
 	if err != nil {
 		return fmt.Errorf("%s: %w", rel, err)
 	}
@@ -111,12 +142,74 @@ func (w *Writer) Go(
 	return w.Write(rel, src)
 }
 
-// Remove removes rel under the root, when it is there.
+// Remove records that Flush removes rel under the root, when it is there.
 func (w *Writer) Remove(
 	rel string,
 ) error {
-	if err := os.Remove(filepath.Join(w.Root, rel)); err != nil &&
-		!errors.Is(err, os.ErrNotExist) {
+	rel = filepath.Clean(rel)
+	delete(w.files, rel)
+	w.removeLater(rel)
+
+	return nil
+}
+
+// Flush makes the changes that the run recorded: it writes each file, with
+// the directories it needs, through a temporary file and a rename, then
+// removes each stale file. Call it only when the whole run succeeded.
+func (w *Writer) Flush() error {
+	paths := make([]string, 0, len(w.files))
+	for rel := range w.files {
+		paths = append(paths, rel)
+	}
+	sort.Strings(paths)
+	for _, rel := range paths {
+		if err := w.writeFile(rel, w.files[rel]); err != nil {
+			return err
+		}
+	}
+	stale := make([]string, 0, len(w.stale))
+	for rel := range w.stale {
+		stale = append(stale, rel)
+	}
+	sort.Strings(stale)
+	for _, rel := range stale {
+		if err := os.Remove(filepath.Join(w.Root, rel)); err != nil &&
+			!errors.Is(err, os.ErrNotExist) {
+			return err
+		}
+	}
+	w.files, w.stale = nil, nil
+
+	return nil
+}
+
+// writeFile writes data at rel under the root through a temporary file in
+// the same directory, which it renames over rel.
+func (w *Writer) writeFile(
+	rel string,
+	data []byte,
+) error {
+	p := filepath.Join(w.Root, rel)
+	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+		return err
+	}
+	tmp, err := os.CreateTemp(filepath.Dir(p), "."+filepath.Base(p)+".*")
+	if err != nil {
+		return err
+	}
+	_, err = tmp.Write(data)
+	if closeErr := tmp.Close(); err == nil {
+		err = closeErr
+	}
+	if err == nil {
+		err = os.Chmod(tmp.Name(), 0o644)
+	}
+	if err == nil {
+		err = os.Rename(tmp.Name(), p)
+	}
+	if err != nil {
+		_ = os.Remove(tmp.Name())
+
 		return err
 	}
 
