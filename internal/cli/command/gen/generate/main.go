@@ -85,12 +85,16 @@ func run(
 		pkgs = append(pkgs, pkg+"/gen")
 	}
 
-	return w.Registry(
+	if err := w.Registry(
 		allGen,
 		generated,
 		[]string{"Package gen registers the commands of every local group."},
 		pkgs,
-	)
+	); err != nil {
+		return err
+	}
+
+	return w.Flush()
 }
 
 // pkgOf is the package of g's definition: the package of the type it Uses.
