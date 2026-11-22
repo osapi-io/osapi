@@ -59,7 +59,7 @@ var probes = []struct {
 func checkProbes(
 	b *behavior.Behavior,
 	m *behavior.Method,
-	platform string,
+	platform behavior.PlatformName,
 	ex behavior.Example,
 ) []string {
 	in := reflect.ValueOf(ex.Input)
@@ -105,7 +105,7 @@ func checkProbes(
 func probe(
 	b *behavior.Behavior,
 	m *behavior.Method,
-	platform string,
+	platform behavior.PlatformName,
 	ex behavior.Example,
 	input any,
 	value string,

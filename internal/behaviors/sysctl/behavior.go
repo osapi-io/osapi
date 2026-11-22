@@ -41,7 +41,7 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Node,
 	behavior.Config(defaults),
 	behavior.Requires(managedfile.Behavior),
-	behavior.Platform("debian", newDebian),
+	behavior.Platform(behavior.PlatformDebian, newDebian),
 	behavior.Sudo("sysctl"),
 	// The conf files, in the default directory. behaviors.sysctl.dir can
 	// move them.

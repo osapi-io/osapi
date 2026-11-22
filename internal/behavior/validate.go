@@ -335,8 +335,27 @@ func ValidateBehavior(
 	if len(b.Platforms) == 0 {
 		add("", RulePlatform, "no provider for any platform; add behavior.Platform")
 	}
-	platforms := map[string]bool{}
+	// unknown reports a platform name that no host reports: a declaration
+	// with it would never apply, and a provider or a program would be
+	// skipped with no error.
+	unknown := func(method, what string, p PlatformName) bool {
+		if slices.Contains(KnownPlatforms(), p) {
+			return false
+		}
+		add(
+			method,
+			RulePlatform,
+			"%s names %q, which is not a platform; use a behavior.Platform constant (%s)",
+			what,
+			p,
+			knownPlatformList(),
+		)
+
+		return true
+	}
+	platforms := map[PlatformName]bool{}
 	for _, pp := range b.Platforms {
+		unknown("", "Platform", pp.Name)
 		if platforms[pp.Name] {
 			add("", RulePlatform, "platform %q is declared twice", pp.Name)
 		}
@@ -349,8 +368,24 @@ func ValidateBehavior(
 		}
 	}
 
+	for _, pr := range b.PlatformRuns {
+		unknown("", "RunsOnPlatform", pr.Platform)
+	}
 	for _, m := range b.Methods {
+		for _, e := range m.Examples {
+			for _, p := range e.Platforms {
+				unknown(m.Name, "OnPlatform", p)
+			}
+		}
+		for _, r := range m.Refusals {
+			for _, p := range r.Platforms {
+				unknown(m.Name, "OnPlatform", p)
+			}
+		}
 		for _, p := range m.Platforms {
+			if unknown(m.Name, "On", p) {
+				continue
+			}
 			if b.resolve(p) == nil {
 				add(
 					m.Name,
@@ -848,4 +883,14 @@ func keyNameProblems(
 	}
 
 	return problems
+}
+
+// knownPlatformList is KnownPlatforms, for a message.
+func knownPlatformList() string {
+	names := make([]string, 0, len(KnownPlatforms()))
+	for _, p := range KnownPlatforms() {
+		names = append(names, string(p))
+	}
+
+	return strings.Join(names, ", ")
 }

@@ -31,7 +31,7 @@ import (
 // PlatformProvider is how a behavior's provider is built on one platform.
 type PlatformProvider struct {
 	// Name is the platform, as gohai's family.Detect names it.
-	Name string
+	Name PlatformName
 	// Type is the provider type the builder returns.
 	Type  reflect.Type
 	build func(h any) (any, error)
@@ -49,7 +49,7 @@ type PlatformProvider struct {
 // The provider P must implement the provider type of every method, which
 // osapi behavior validate checks.
 func Platform[H any, P any](
-	name string,
+	name PlatformName,
 	build func(h H) (P, error),
 ) Option {
 	return optionFunc(func(b *Behavior) {
@@ -94,7 +94,7 @@ func Runs(
 // PlatformPrograms are the programs that a behavior runs on one platform
 // only, such as vm_stat on darwin.
 type PlatformPrograms struct {
-	Platform string
+	Platform PlatformName
 	Programs []string
 }
 
@@ -103,7 +103,7 @@ type PlatformPrograms struct {
 // agent and the integration test of a Linux host do not look for a program
 // that only macOS has.
 func RunsOnPlatform(
-	platform string,
+	platform PlatformName,
 	programs ...string,
 ) Option {
 	return optionFunc(func(b *Behavior) {
@@ -142,18 +142,30 @@ func Writes(
 // requires one that keeps state gets it from there.
 var KeepsState Option = optionFunc(func(b *Behavior) { b.KeepsState = true })
 
-// The platforms a behavior can name besides a distribution.
+// PlatformName is a platform that a behavior can name: PlatformLinux, or a
+// platform as gohai's family.Detect names it. Use a constant: behavior
+// validate fails on a name that is not one of KnownPlatforms, because a host
+// never reports it and the declaration would never apply.
+type PlatformName string
+
+// KnownPlatforms are the platforms that a behavior can name. Add a constant
+// here before a behavior names a new family of gohai.
+func KnownPlatforms() []PlatformName {
+	return []PlatformName{PlatformLinux, PlatformDarwin, PlatformDebian}
+}
+
+// The platforms a behavior can name.
 const (
 	// PlatformLinux is any Linux host: the provider for a host whose own
 	// platform the behavior does not declare, unless it is macOS. A behavior
 	// that works the same on every distribution, such as one reading /proc,
 	// declares it once.
-	PlatformLinux = "linux"
+	PlatformLinux PlatformName = "linux"
 	// PlatformDarwin is macOS.
-	PlatformDarwin = family.Darwin
+	PlatformDarwin PlatformName = family.Darwin
 	// PlatformDebian is the Debian family, as gohai names it: Debian,
 	// Ubuntu, Raspbian, Linux Mint and the others of Ohai's table.
-	PlatformDebian = family.Debian
+	PlatformDebian PlatformName = family.Debian
 )
 
 // Provider builds b's provider for platform with h, the host.Host the agent
@@ -162,7 +174,7 @@ const (
 // Linux and macOS only, so every platform name but darwin is a Linux
 // distribution. It returns nil and no error when b declares neither.
 func (b *Behavior) Provider(
-	platform string,
+	platform PlatformName,
 	h any,
 ) (any, error) {
 	pp := b.resolve(platform)
@@ -180,7 +192,7 @@ func (b *Behavior) Provider(
 
 // platform is the provider b declares for name, or nil.
 func (b *Behavior) platform(
-	name string,
+	name PlatformName,
 ) *PlatformProvider {
 	for _, pp := range b.Platforms {
 		if pp.Name == name {
@@ -196,7 +208,7 @@ func (b *Behavior) platform(
 // the one each platform On names resolves to, as Provider resolves it.
 func (b *Behavior) Serves(
 	m *Method,
-	platform string,
+	platform PlatformName,
 ) bool {
 	if len(m.Platforms) == 0 {
 		return true
@@ -213,7 +225,7 @@ func (b *Behavior) Serves(
 // resolve is the provider b declares for platform itself, or else, on a
 // platform other than macOS, the one declared for PlatformLinux, or nil.
 func (b *Behavior) resolve(
-	platform string,
+	platform PlatformName,
 ) *PlatformProvider {
 	pp := b.platform(platform)
 	if pp == nil && platform != PlatformDarwin {
@@ -227,7 +239,7 @@ func (b *Behavior) resolve(
 // behavior's own, and each method's that runs there, once each. An empty
 // platform is every platform.
 func (b *Behavior) Programs(
-	platform string,
+	platform PlatformName,
 ) (sudo []string, runs []string) {
 	add := func(to []string, programs []string) []string {
 		for _, p := range programs {

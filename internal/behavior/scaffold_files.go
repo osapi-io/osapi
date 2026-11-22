@@ -255,7 +255,7 @@ func (sc scaffold) behaviorFile() *jen.File {
 		b("Area").Call(jen.Lit("config")),
 		b("CLI"),
 		b("Config").Call(jen.Id("defaults")),
-		b("Platform").Call(jen.Lit("debian"), jen.Id("newDebian")),
+		b("Platform").Call(b("PlatformDebian"), jen.Id("newDebian")),
 		b("Writes").Call(jen.Id("defaultPath")),
 		b("Read").Call(jen.Lit("get"), jen.Id("Get")).
 			Add(next("Describe", jen.Lit("Get the "+sc.name+" value"))).

@@ -70,7 +70,7 @@ func (e exec) mock(
 // build is the provider on platform, with files, and commands that answer
 // as e says.
 func (s *ProviderPublicTestSuite) build(
-	platform string,
+	platform behavior.PlatformName,
 	files map[string]string,
 	e exec,
 	container bool,
@@ -92,7 +92,7 @@ func (s *ProviderPublicTestSuite) build(
 func (s *ProviderPublicTestSuite) TestHostnameErrors() {
 	tests := []struct {
 		name     string
-		platform string
+		platform behavior.PlatformName
 		exec     exec
 		want     string
 	}{
@@ -130,7 +130,7 @@ func (s *ProviderPublicTestSuite) TestHostnameErrors() {
 func (s *ProviderPublicTestSuite) TestSetHostnameErrors() {
 	tests := []struct {
 		name      string
-		platform  string
+		platform  behavior.PlatformName
 		exec      exec
 		container bool
 		want      error

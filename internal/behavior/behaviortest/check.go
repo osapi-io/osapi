@@ -125,7 +125,7 @@ func Check(
 func checkExample(
 	b *behavior.Behavior,
 	m *behavior.Method,
-	platform string,
+	platform behavior.PlatformName,
 	ex behavior.Example,
 ) []string {
 	h, p, problem := prepare(b, platform, ex)
@@ -198,7 +198,7 @@ func checkExample(
 func checkRefusal(
 	b *behavior.Behavior,
 	m *behavior.Method,
-	platform string,
+	platform behavior.PlatformName,
 	r behavior.Refusal,
 ) string {
 	_, p, problem := prepare(b, platform, r.Example)
@@ -236,7 +236,7 @@ func checkRefusal(
 // and builds b's provider on it.
 func prepare(
 	b *behavior.Behavior,
-	platform string,
+	platform behavior.PlatformName,
 	ex behavior.Example,
 ) (*fakeHost, any, string) {
 	h := newHost(b, platform)

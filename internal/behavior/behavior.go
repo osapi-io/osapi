@@ -309,7 +309,7 @@ type Method struct {
 	// Platforms limits the method to these of its behavior's platforms. Empty
 	// means every platform the behavior declares. On any other platform the
 	// method reports skipped, and its examples do not run there.
-	Platforms []string
+	Platforms []PlatformName
 	// SudoPrograms and RunsPrograms are the programs only this method runs,
 	// with and without sudo. A host needs them only where the method runs.
 	SudoPrograms []string
@@ -369,7 +369,7 @@ func (m *Method) InPath(
 // read can run on every platform its behavior declares while the update runs
 // only on debian. Elsewhere the method reports skipped.
 func (m *Method) On(
-	platforms ...string,
+	platforms ...PlatformName,
 ) *Method {
 	m.Platforms = append(m.Platforms, platforms...)
 
@@ -400,7 +400,7 @@ func (m *Method) Runs(
 // platform: every platform without On, else one On names, or any platform
 // but darwin when On names PlatformLinux.
 func (m *Method) RunsOn(
-	platform string,
+	platform PlatformName,
 ) bool {
 	if len(m.Platforms) == 0 {
 		return true
@@ -418,8 +418,8 @@ func (m *Method) RunsOn(
 // platform is platform: the same platform, or linux for each platform that
 // is not darwin.
 func covers(
-	p string,
-	platform string,
+	p PlatformName,
+	platform PlatformName,
 ) bool {
 	return p == platform || (p == PlatformLinux && platform != PlatformDarwin)
 }

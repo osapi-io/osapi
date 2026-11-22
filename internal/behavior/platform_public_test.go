@@ -37,8 +37,8 @@ type PlatformPublicTestSuite struct {
 func (s *PlatformPublicTestSuite) TestProvider() {
 	tests := []struct {
 		name     string
-		declared string
-		platform string
+		declared behavior.PlatformName
+		platform behavior.PlatformName
 		host     any
 		build    func(host.Host) (fakeProvider, error)
 		want     any
@@ -128,7 +128,7 @@ func (s *PlatformPublicTestSuite) TestProvider() {
 func (s *PlatformPublicTestSuite) TestProviderPrefersOwnPlatform() {
 	tests := []struct {
 		name     string
-		platform string
+		platform behavior.PlatformName
 		want     fakeProvider
 	}{
 		{name: "when the host is debian", platform: "debian", want: fakeProvider{prefix: "debian"}},
@@ -162,41 +162,49 @@ func (s *PlatformPublicTestSuite) TestOn() {
 	linux := func(host.Host) (fakeProvider, error) { return fakeProvider{}, nil }
 	tests := []struct {
 		name       string
-		on         []string
-		platforms  []string
-		host       string
+		on         []behavior.PlatformName
+		platforms  []behavior.PlatformName
+		host       behavior.PlatformName
 		wantRuns   bool
-		serves     string
+		serves     behavior.PlatformName
 		wantServes bool
 	}{
 		{
-			name: "when the method names no platform", platforms: []string{"linux"},
+			name: "when the method names no platform", platforms: []behavior.PlatformName{"linux"},
 			host: "fedora", wantRuns: true, serves: "linux", wantServes: true,
 		},
 		{
-			name: "when the host is the platform On names", on: []string{"debian"},
-			platforms: []string{"linux"}, host: "debian", wantRuns: true,
+			name: "when the host is the platform On names", on: []behavior.PlatformName{"debian"},
+			platforms: []behavior.PlatformName{"linux"}, host: "debian", wantRuns: true,
 			serves: "linux", wantServes: true,
 		},
 		{
-			name: "when the host is another distribution", on: []string{"debian"},
-			platforms: []string{"linux"}, host: "fedora", wantRuns: false,
+			name: "when the host is another distribution", on: []behavior.PlatformName{"debian"},
+			platforms: []behavior.PlatformName{"linux"}, host: "fedora", wantRuns: false,
 			serves: "darwin", wantServes: false,
 		},
 		{
-			name: "when On names linux and the host is a distribution", on: []string{"linux"},
-			platforms: []string{"linux", "darwin"}, host: "fedora", wantRuns: true,
-			serves: "darwin", wantServes: false,
+			name:       "when On names linux and the host is a distribution",
+			on:         []behavior.PlatformName{"linux"},
+			platforms:  []behavior.PlatformName{"linux", "darwin"},
+			host:       "fedora",
+			wantRuns:   true,
+			serves:     "darwin",
+			wantServes: false,
 		},
 		{
-			name: "when On names linux and the host is macOS", on: []string{"linux"},
-			platforms: []string{"linux"}, host: "darwin", wantRuns: false,
+			name: "when On names linux and the host is macOS", on: []behavior.PlatformName{"linux"},
+			platforms: []behavior.PlatformName{"linux"}, host: "darwin", wantRuns: false,
 			serves: "linux", wantServes: true,
 		},
 		{
-			name: "when On names a platform with no provider", on: []string{"darwin"},
-			platforms: []string{"linux"}, host: "darwin", wantRuns: true,
-			serves: "linux", wantServes: false,
+			name:       "when On names a platform with no provider",
+			on:         []behavior.PlatformName{"darwin"},
+			platforms:  []behavior.PlatformName{"linux"},
+			host:       "darwin",
+			wantRuns:   true,
+			serves:     "linux",
+			wantServes: false,
 		},
 	}
 
@@ -225,7 +233,7 @@ func (s *PlatformPublicTestSuite) TestPrograms() {
 	)
 	tests := []struct {
 		name     string
-		platform string
+		platform behavior.PlatformName
 		wantSudo []string
 		wantRuns []string
 	}{

@@ -32,10 +32,10 @@ import (
 // ChainRun is one example of a method, run on a fake host, with each Call
 // that it made: the root step is the method, and its steps are the calls.
 type ChainRun struct {
-	Method   string         `json:"method"`
-	Example  string         `json:"example"`
-	Platform string         `json:"platform"`
-	Root     *behavior.Step `json:"root"`
+	Method   string                `json:"method"`
+	Example  string                `json:"example"`
+	Platform behavior.PlatformName `json:"platform"`
+	Root     *behavior.Step        `json:"root"`
 }
 
 // Chains runs each example of each method of b once, on the first platform
@@ -47,7 +47,7 @@ func Chains(
 	var runs []ChainRun
 	for _, m := range b.Methods {
 		for _, ex := range m.Examples {
-			platform := ""
+			var platform behavior.PlatformName
 			for _, pp := range b.Platforms {
 				if b.Serves(m, pp.Name) && ex.RunsOn(pp.Name) {
 					platform = pp.Name
