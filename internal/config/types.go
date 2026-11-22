@@ -234,14 +234,13 @@ type NATSStream struct {
 
 // NATSKV configuration for KeyValue bucket settings.
 type NATSKV struct {
-	// Bucket is the KV bucket name for job definitions and status events.
-	Bucket string `mapstructure:"bucket" validate:"required,nats_name" doc:"KV bucket for immutable job definitions and status events."`
-	// ResponseBucket is the KV bucket name for agent result storage.
-	ResponseBucket string `mapstructure:"response_bucket" validate:"required,nats_name" doc:"KV bucket for agent result storage."`
-	TTL            string `mapstructure:"ttl"                                           doc:"TTL for KV entries (Go duration)."` // e.g. "1h", "30m"
-	MaxBytes       int64  `mapstructure:"max_bytes"                                     doc:"Maximum total size of the bucket in bytes."`
-	Storage        string `mapstructure:"storage"                                       doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
-	Replicas       int    `mapstructure:"replicas"                                      doc:"Number of KV replicas."`
+	// Bucket is the KV bucket name for job definitions, status events and
+	// agent results.
+	Bucket   string `mapstructure:"bucket"    validate:"required,nats_name" doc:"KV bucket for job definitions, status events and each agent's result."`
+	TTL      string `mapstructure:"ttl"                                     doc:"How long a job's definition, status events and results stay in the bucket (Go duration), as nats setup sets it. Empty keeps them until max_bytes."` // e.g. "24h"
+	MaxBytes int64  `mapstructure:"max_bytes"                               doc:"Maximum total size of the bucket in bytes."`
+	Storage  string `mapstructure:"storage"                                 doc:"Storage backend: 'file' or 'memory'."` // "file" or "memory"
+	Replicas int    `mapstructure:"replicas"                                doc:"Number of KV replicas."`
 }
 
 // KVBucketInfo holds a KV bucket's human-readable name and its configured

@@ -80,7 +80,7 @@ func serverNATS(
 			Storage:  "memory",
 			Replicas: 1,
 		},
-		KV:        config.NATSKV{Bucket: "job-queue", ResponseBucket: "job-responses"},
+		KV:        config.NATSKV{Bucket: "job-queue"},
 		DLQ:       config.NATSDLQ{MaxAge: "24h", Storage: "memory", Replicas: 1},
 		Audit:     config.NATSAudit{Stream: "AUDIT", Subject: "audit"},
 		Registry:  config.NATSRegistry{Bucket: "agent-registry"},

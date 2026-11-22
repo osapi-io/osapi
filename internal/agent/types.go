@@ -179,6 +179,4 @@ type JobContext struct {
 	AgentHostname string
 	// JobData contains the raw job request data
 	JobData []byte
-	// ResponseKV is the key-value bucket for storing responses
-	ResponseKV string
 }

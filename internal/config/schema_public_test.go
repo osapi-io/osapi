@@ -65,7 +65,7 @@ func (s *ConfigPublicTestSuite) TestValidate() {
 				},
 				NATS: config.NATS{
 					Stream:   config.NATSStream{Name: "JOBS", Subjects: "jobs.>"},
-					KV:       config.NATSKV{Bucket: "job-queue", ResponseBucket: "job-responses"},
+					KV:       config.NATSKV{Bucket: "job-queue"},
 					Registry: config.NATSRegistry{Bucket: "agent-registry"},
 				},
 				Agent: config.AgentConfig{
@@ -143,7 +143,7 @@ func (s *ConfigPublicTestSuite) TestValidate() {
 				},
 				NATS: config.NATS{
 					Stream:   config.NATSStream{Name: "JOBS", Subjects: "jobs.>"},
-					KV:       config.NATSKV{Bucket: "job-queue", ResponseBucket: "job-responses"},
+					KV:       config.NATSKV{Bucket: "job-queue"},
 					Registry: config.NATSRegistry{Bucket: "agent-registry"},
 				},
 				Agent: config.AgentConfig{
@@ -250,7 +250,7 @@ func (s *ConfigPublicTestSuite) TestValidateBuckets() {
 	base := func() config.NATS {
 		return config.NATS{
 			Stream:    config.NATSStream{Name: "JOBS", Subjects: "jobs.>"},
-			KV:        config.NATSKV{Bucket: "job-queue", ResponseBucket: "job-responses"},
+			KV:        config.NATSKV{Bucket: "job-queue"},
 			Registry:  config.NATSRegistry{Bucket: "agent-registry"},
 			Facts:     config.NATSFacts{Bucket: "agent-facts"},
 			State:     config.NATSState{Bucket: "agent-state"},
@@ -297,11 +297,6 @@ func (s *ConfigPublicTestSuite) TestValidateBuckets() {
 			name:    "when two KV settings name the same bucket fails",
 			change:  func(n *config.NATS) { n.Registry.Bucket = "job-queue" },
 			wantErr: `nats.kv.bucket and nats.registry.bucket are both "job-queue": each needs its own bucket`,
-		},
-		{
-			name:    "when the jobs and the responses share a bucket fails",
-			change:  func(n *config.NATS) { n.KV.ResponseBucket = "job-queue" },
-			wantErr: `nats.kv.bucket and nats.kv.response_bucket are both "job-queue"`,
 		},
 	}
 
@@ -356,7 +351,7 @@ func (s *ConfigPublicTestSuite) TestValidateURL() {
 			},
 			NATS: config.NATS{
 				Stream:   config.NATSStream{Name: "JOBS", Subjects: "jobs.>"},
-				KV:       config.NATSKV{Bucket: "job-queue", ResponseBucket: "job-responses"},
+				KV:       config.NATSKV{Bucket: "job-queue"},
 				Registry: config.NATSRegistry{Bucket: "agent-registry"},
 			},
 			Agent: config.AgentConfig{

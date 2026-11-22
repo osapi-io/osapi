@@ -52,7 +52,6 @@ var Defaults = map[string]any{
 	"nats.stream.name":         "JOBS",
 	"nats.stream.subjects":     "jobs.>",
 	"nats.kv.bucket":           "job-queue",
-	"nats.kv.response_bucket":  "job-responses",
 	"nats.registry.bucket":     "agent-registry",
 	"nats.registry.ttl":        "30s",
 	"nats.enrollment.bucket":   "agent-enrollment",

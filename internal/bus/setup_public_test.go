@@ -62,7 +62,7 @@ func fullNATS() config.NATS {
 			Replicas: 1,
 			Discard:  "new",
 		},
-		KV:        config.NATSKV{Bucket: "job-queue", ResponseBucket: "job-responses"},
+		KV:        config.NATSKV{Bucket: "job-queue"},
 		DLQ:       config.NATSDLQ{MaxAge: "24h", Storage: "memory", Replicas: 1},
 		Audit:     config.NATSAudit{Stream: "AUDIT", Subject: "audit"},
 		Registry:  config.NATSRegistry{Bucket: "agent-registry"},
@@ -92,7 +92,7 @@ func (s *SetupPublicTestSuite) TestSetup() {
 			cfg:         fullNATS,
 			wantStreams: []string{"ns-JOBS", "ns-AUDIT", "ns-JOBS-DLQ"},
 			wantKVs: []string{
-				"ns-job-queue", "ns-job-responses", "ns-agent-registry",
+				"ns-job-queue", "ns-agent-registry",
 				"ns-agent-facts", "ns-agent-state", "ns-file-state",
 			},
 			wantObjects: 1,
@@ -111,7 +111,7 @@ func (s *SetupPublicTestSuite) TestSetup() {
 				return c
 			},
 			wantStreams: []string{"ns-JOBS", "ns-JOBS-DLQ"},
-			wantKVs:     []string{"ns-job-queue", "ns-job-responses"},
+			wantKVs:     []string{"ns-job-queue"},
 		},
 		{
 			name:       "when the JOBS stream fails returns the error",
