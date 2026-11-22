@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Metrics | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/metrics"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Metrics | OSAPI"><meta data-rh="true" name="description" content="Each osapi component has a /metrics endpoint for Prometheus, on its own port."><meta data-rh="true" property="og:description" content="Each osapi component has a /metrics endpoint for Prometheus, on its own port."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/metrics"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/metrics" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/metrics" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Metrics","item":"https://osapi-io.github.io/osapi/sidebar/features/metrics"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.5cfa669d.css">
-<script src="/osapi/assets/js/runtime~main.c2990cca.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.604943db.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.ef2fa2fa.js" defer="defer"></script>
 </head>
 <body>
@@ -66,7 +66,15 @@ metrics server is enabled.</p>
 
 
 
-<table><thead><tr><th>Component</th><th>Default Port</th><th>Config Key</th></tr></thead><tbody><tr><td>Controller</td><td>9090</td><td><code>controller.metrics.port</code></td></tr><tr><td>Agent</td><td>9091</td><td><code>agent.metrics.port</code></td></tr><tr><td>NATS</td><td>9092</td><td><code>nats.server.metrics.port</code></td></tr></tbody></table>
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Key</th><th>Type</th><th>Default</th><th>Environment</th><th>Description</th></tr></thead><tbody><tr><td><code>controller.metrics.port</code></td><td>int</td><td><code>9090</code></td><td><code>OSAPI_CONTROLLER_METRICS_PORT</code></td><td>Port the metrics server listens on.</td></tr><tr><td><code>agent.metrics.port</code></td><td>int</td><td>none; <code>9091</code> in <code>configs/osapi.yaml</code></td><td><code>OSAPI_AGENT_METRICS_PORT</code></td><td>Port the metrics server listens on.</td></tr><tr><td><code>nats.server.metrics.port</code></td><td>int</td><td>none; <code>9092</code> in <code>configs/osapi.yaml</code></td><td><code>OSAPI_NATS_SERVER_METRICS_PORT</code></td><td>Port the metrics server listens on.</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="application-metrics-reference">Application metrics reference<a href="#application-metrics-reference" class="hash-link" aria-label="Direct link to Application metrics reference" title="Direct link to Application metrics reference" translate="no">​</a></h2>
 <p>osapi records all application metrics through OpenTelemetry, and exports them
 through the OTEL Prometheus exporter with the <code>osapi</code> namespace. The exporter
@@ -176,7 +184,103 @@ it is not. Use this to gate traffic until the component has fully started.</p>
 <div class="language-yaml codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-yaml codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token comment" style="color:#8a8a8a;font-style:italic"># prometheus.yml</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain"></span><span class="token key atrule" style="color:#ff00ff">scrape_configs</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  </span><span class="token punctuation" style="color:#8a8a8a">-</span><span class="token plain"> </span><span class="token key atrule" style="color:#ff00ff">job_name</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> </span><span class="token string" style="color:#ffd100">&#x27;osapi-controller&#x27;</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    </span><span class="token key atrule" style="color:#ff00ff">static_configs</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">      </span><span class="token punctuation" style="color:#8a8a8a">-</span><span class="token plain"> </span><span class="token key atrule" style="color:#ff00ff">targets</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> </span><span class="token punctuation" style="color:#8a8a8a">[</span><span class="token string" style="color:#ffd100">&#x27;localhost:9090&#x27;</span><span class="token punctuation" style="color:#8a8a8a">]</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  </span><span class="token punctuation" style="color:#8a8a8a">-</span><span class="token plain"> </span><span class="token key atrule" style="color:#ff00ff">job_name</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> </span><span class="token string" style="color:#ffd100">&#x27;osapi-agent&#x27;</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    </span><span class="token key atrule" style="color:#ff00ff">static_configs</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">      </span><span class="token punctuation" style="color:#8a8a8a">-</span><span class="token plain"> </span><span class="token key atrule" style="color:#ff00ff">targets</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> </span><span class="token punctuation" style="color:#8a8a8a">[</span><span class="token string" style="color:#ffd100">&#x27;localhost:9091&#x27;</span><span class="token punctuation" style="color:#8a8a8a">]</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  </span><span class="token punctuation" style="color:#8a8a8a">-</span><span class="token plain"> </span><span class="token key atrule" style="color:#ff00ff">job_name</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> </span><span class="token string" style="color:#ffd100">&#x27;osapi-nats&#x27;</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    </span><span class="token key atrule" style="color:#ff00ff">static_configs</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">      </span><span class="token punctuation" style="color:#8a8a8a">-</span><span class="token plain"> </span><span class="token key atrule" style="color:#ff00ff">targets</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> </span><span class="token punctuation" style="color:#8a8a8a">[</span><span class="token string" style="color:#ffd100">&#x27;localhost:9092&#x27;</span><span class="token punctuation" style="color:#8a8a8a">]</span><br></div></code></pre></div></div>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="configuration">Configuration<a href="#configuration" class="hash-link" aria-label="Direct link to Configuration" title="Direct link to Configuration" translate="no">​</a></h2>
 <p>You can enable or disable the metrics server of each component separately:</p>
-<div class="language-yaml codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-yaml codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token key atrule" style="color:#ff00ff">controller</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  </span><span class="token key atrule" style="color:#ff00ff">metrics</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    </span><span class="token key atrule" style="color:#ff00ff">enabled</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> </span><span class="token boolean important" style="color:#ff00ff">true</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    </span><span class="token key atrule" style="color:#ff00ff">port</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> </span><span class="token number" style="color:#6b5cff">9090</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain"></span><span class="token key atrule" style="color:#ff00ff">agent</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  </span><span class="token key atrule" style="color:#ff00ff">metrics</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    </span><span class="token key atrule" style="color:#ff00ff">enabled</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> </span><span class="token boolean important" style="color:#ff00ff">true</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    </span><span class="token key atrule" style="color:#ff00ff">port</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> </span><span class="token number" style="color:#6b5cff">9091</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain"></span><span class="token key atrule" style="color:#ff00ff">nats</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  </span><span class="token key atrule" style="color:#ff00ff">server</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    </span><span class="token key atrule" style="color:#ff00ff">metrics</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">      </span><span class="token key atrule" style="color:#ff00ff">enabled</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> </span><span class="token boolean important" style="color:#ff00ff">true</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">      </span><span class="token key atrule" style="color:#ff00ff">port</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> </span><span class="token number" style="color:#6b5cff">9092</span><br></div></code></pre></div></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Key</th><th>Type</th><th>Default</th><th>Environment</th><th>Description</th></tr></thead><tbody><tr><td><code>controller.metrics.enabled</code></td><td>bool</td><td>none; <code>true</code> in <code>configs/osapi.yaml</code></td><td><code>OSAPI_CONTROLLER_METRICS_ENABLED</code></td><td>Enable the metrics endpoint (default: true).</td></tr><tr><td><code>controller.metrics.host</code></td><td>string</td><td>none; <code>0.0.0.0</code> in <code>configs/osapi.yaml</code></td><td><code>OSAPI_CONTROLLER_METRICS_HOST</code></td><td>Host the metrics server binds to.</td></tr><tr><td><code>controller.metrics.port</code></td><td>int</td><td><code>9090</code></td><td><code>OSAPI_CONTROLLER_METRICS_PORT</code></td><td>Port the metrics server listens on.</td></tr><tr><td><code>controller.metrics.url</code></td><td>string</td><td>none</td><td><code>OSAPI_CONTROLLER_METRICS_URL</code></td><td>Where a person opens the metrics endpoint, shown by health beside the bind address.</td></tr><tr><td><code>agent.metrics.enabled</code></td><td>bool</td><td>none; <code>true</code> in <code>configs/osapi.yaml</code></td><td><code>OSAPI_AGENT_METRICS_ENABLED</code></td><td>Enable the metrics endpoint (default: true).</td></tr><tr><td><code>agent.metrics.host</code></td><td>string</td><td>none; <code>0.0.0.0</code> in <code>configs/osapi.yaml</code></td><td><code>OSAPI_AGENT_METRICS_HOST</code></td><td>Host the metrics server binds to.</td></tr><tr><td><code>agent.metrics.port</code></td><td>int</td><td>none; <code>9091</code> in <code>configs/osapi.yaml</code></td><td><code>OSAPI_AGENT_METRICS_PORT</code></td><td>Port the metrics server listens on.</td></tr><tr><td><code>agent.metrics.url</code></td><td>string</td><td>none</td><td><code>OSAPI_AGENT_METRICS_URL</code></td><td>Where a person opens the metrics endpoint, shown by health beside the bind address.</td></tr><tr><td><code>nats.server.metrics.enabled</code></td><td>bool</td><td>none; <code>true</code> in <code>configs/osapi.yaml</code></td><td><code>OSAPI_NATS_SERVER_METRICS_ENABLED</code></td><td>Enable the metrics endpoint (default: true).</td></tr><tr><td><code>nats.server.metrics.host</code></td><td>string</td><td>none; <code>0.0.0.0</code> in <code>configs/osapi.yaml</code></td><td><code>OSAPI_NATS_SERVER_METRICS_HOST</code></td><td>Host the metrics server binds to.</td></tr><tr><td><code>nats.server.metrics.port</code></td><td>int</td><td>none; <code>9092</code> in <code>configs/osapi.yaml</code></td><td><code>OSAPI_NATS_SERVER_METRICS_PORT</code></td><td>Port the metrics server listens on.</td></tr><tr><td><code>nats.server.metrics.url</code></td><td>string</td><td>none</td><td><code>OSAPI_NATS_SERVER_METRICS_URL</code></td><td>Where a person opens the metrics endpoint, shown by health beside the bind address.</td></tr></tbody></table>
 <p>Set <code>enabled: false</code> to disable the metrics endpoint for a component. See the
 <a class="" href="/osapi/sidebar/usage/configuration">Configuration</a> reference for the full list of
 settings and environment variable overrides.</p>
