@@ -25,6 +25,13 @@ import "time"
 type ListInput struct {
 	Limit  int `json:"limit"  in:"query" validate:"omitempty,min=1,max=100" default:"20" doc:"Maximum number of entries to return."`
 	Offset int `json:"offset" in:"query" validate:"omitempty,min=0"         default:"0"  doc:"Number of entries to skip."`
+	// The filters. An entry is listed when it matches each filter that is
+	// set. With a filter, the list reads the whole log and counts the
+	// entries that match.
+	Writes    bool   `json:"writes,omitempty"    in:"query" validate:"omitempty"                 doc:"Only the requests that change something: each method but GET."`
+	User      string `json:"user,omitempty"      in:"query" validate:"omitempty,max=256"         doc:"Only the entries of this user, the subject of the token."`
+	Operation string `json:"operation,omitempty" in:"query" validate:"omitempty,max=256"         doc:"Only the entries whose operation ID or path has this text, such as hostname."`
+	Status    int    `json:"status,omitempty"    in:"query" validate:"omitempty,min=100,max=599" doc:"Only the entries with this response status, such as 403."`
 }
 
 // ExportInput is the input of export, which has none.

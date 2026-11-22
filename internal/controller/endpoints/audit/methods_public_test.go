@@ -140,6 +140,63 @@ func (s *MethodsPublicTestSuite) TestList() {
 			},
 		},
 		{
+			name: "when a filter is set, it reads the whole log and pages the entries that match",
+			in:   audit.ListInput{Writes: true, Limit: 1},
+			setup: func() {
+				other := full
+				other.ID = "other"
+				s.store.EXPECT().ListAll(gomock.Any()).
+					Return([]auditstore.Entry{bare, full, other}, nil)
+			},
+			validateFunc: func(got audit.ListAuditResponse, err error) {
+				s.Require().NoError(err)
+				s.Equal(2, got.TotalItems, "the GET is not a write")
+				s.Require().Len(got.Items, 1)
+				s.Equal(entryID, got.Items[0].ID)
+			},
+		},
+		{
+			name: "when each filter is set, an entry must match each",
+			in: audit.ListInput{
+				User: "ops@example.com", Operation: "EXEC", Status: 202, Offset: 0,
+			},
+			setup: func() {
+				otherUser, otherStatus, otherPath := full, full, full
+				otherUser.User = "dev@example.com"
+				otherStatus.ResponseCode = 403
+				otherPath.OperationID, otherPath.Path = "GetNodeHostname", "/api/node/web-01/hostname"
+				byPath := full
+				byPath.OperationID = ""
+				s.store.EXPECT().ListAll(gomock.Any()).
+					Return([]auditstore.Entry{full, otherUser, otherStatus, otherPath, byPath}, nil)
+			},
+			validateFunc: func(got audit.ListAuditResponse, err error) {
+				s.Require().NoError(err)
+				s.Equal(2, got.TotalItems, "the operation ID or the path, in any case")
+			},
+		},
+		{
+			name: "when the offset is past the entries that match, the page is empty",
+			in:   audit.ListInput{Status: 500, Offset: 5},
+			setup: func() {
+				s.store.EXPECT().ListAll(gomock.Any()).Return([]auditstore.Entry{full}, nil)
+			},
+			validateFunc: func(got audit.ListAuditResponse, err error) {
+				s.Require().NoError(err)
+				s.Equal(audit.ListAuditResponse{TotalItems: 0, Items: []audit.AuditEntry{}}, got)
+			},
+		},
+		{
+			name: "when a filter is set and the store fails, the caller gets a message without the store's error",
+			in:   audit.ListInput{User: "x"},
+			setup: func() {
+				s.store.EXPECT().ListAll(gomock.Any()).Return(nil, errors.New("nats: timeout"))
+			},
+			validateFunc: func(_ audit.ListAuditResponse, err error) {
+				s.EqualError(err, "failed to list audit entries")
+			},
+		},
+		{
 			name:    "when the audit log is not configured, it is ErrNotConfigured and names the setting",
 			noStore: true,
 			setup:   func() {},

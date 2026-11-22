@@ -17,4 +17,22 @@ export type GetAuditLogsParams = {
    * @minimum 0
    */
   offset?: number;
+  /** Only the requests that change something: each method but GET. */
+  writes?: boolean;
+  /**
+   * Only the entries of this user, the subject of the token.
+   * @maxLength 256
+   */
+  user?: string;
+  /**
+   * Only the entries whose operation ID or path has this text, such as hostname.
+   * @maxLength 256
+   */
+  operation?: string;
+  /**
+   * Only the entries with this response status, such as 403.
+   * @minimum 100
+   * @maximum 599
+   */
+  status?: number;
 };

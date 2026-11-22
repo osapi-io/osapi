@@ -23,6 +23,7 @@ package audit
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
@@ -54,6 +55,10 @@ var Group = endpoint.Register(endpoint.Define(
 		Fails("a limit below 1", ListInput{Limit: -1}).
 		Fails("a limit over 100", ListInput{Limit: 101}).
 		Fails("a negative offset", ListInput{Offset: -1}).
+		Fails("a user over 256 characters", ListInput{User: strings.Repeat("u", 257)}).
+		Fails("an operation over 256 characters", ListInput{Operation: strings.Repeat("o", 257)}).
+		Fails("a status below 100", ListInput{Status: 99}).
+		Fails("a status over 599", ListInput{Status: 600}).
 		Handle(List).
 		ID("GetAuditLogs").
 		Describe("List audit log entries").
@@ -61,10 +66,14 @@ var Group = endpoint.Register(endpoint.Define(
 		Returns("List of audit entries.").
 		Command("List audit log entries",
 			"The list shows recent API activity: the user, the HTTP method, the path,\n"+
-				"the response status and the duration.").
+				"the response status and the duration. The filters narrow it: --writes\n"+
+				"for the requests that change something, --user, --operation for text of\n"+
+				"the operation ID or the path, and --status.").
 		Example("").
 		Prints(sampleList).
 		Example("--limit 10 --offset 20").
+		Example("--writes --user ops@example.com").
+		Example("--operation hostname --status 403").
 		Example("--json").
 		Errors(notConfigured503),
 	endpoint.Get[ExportInput, ListAuditResponse]("export").

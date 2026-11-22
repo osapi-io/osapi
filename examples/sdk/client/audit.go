@@ -48,7 +48,7 @@ func main() {
 	ctx := context.Background()
 
 	// List recent audit entries.
-	list, err := c.Audit.List(ctx, 10, 0)
+	list, err := c.Audit.List(ctx, client.AuditListOpts{Limit: 10})
 	if err != nil {
 		log.Fatalf("list audit: %v", err)
 	}
