@@ -22,6 +22,7 @@ package clidocs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -163,7 +164,7 @@ func GenerateReference(
 }
 
 // tableDirs are where pages that a person wrote have generated tables.
-var tableDirs = []string{"docs/docs/sidebar/features"}
+var tableDirs = []string{"docs/docs/sidebar/features", "docs/docs/sidebar/usage"}
 
 // writeTables writes each generated table of the pages in tableDirs again,
 // and keeps the rest of each page as it is.
@@ -178,6 +179,10 @@ func writeTables(
 		err := filepath.WalkDir(
 			filepath.Join(root, dir),
 			func(path string, e fs.DirEntry, err error) error {
+				// A tree with no such directory has no tables in it.
+				if errors.Is(err, fs.ErrNotExist) {
+					return nil
+				}
 				if err != nil || e.IsDir() || !strings.HasSuffix(path, ".md") {
 					return err
 				}

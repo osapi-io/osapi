@@ -24,14 +24,8 @@ import (
 	"strings"
 
 	"gopkg.in/yaml.v3"
-)
 
-// The markers of a generated config table on a docs page: the keys under
-// each prefix that the start marker names, which DocTables writes between
-// the two. A page keeps its own text around them.
-const (
-	docTableStart = "<!-- osapi:config "
-	docTableEnd   = "<!-- /osapi:config -->"
+	"github.com/osapi-io/osapi/internal/guide"
 )
 
 // ShippedFile is the config that osapi ships, from the repository's root. A
@@ -68,33 +62,16 @@ func Shipped(
 }
 
 // DocTables is page with each generated config table written again, from
-// Keys and the shipped config. A page with no markers is as it is.
+// Keys and the shipped config: a table goes between
+// <!-- osapi:config prefixes --> and <!-- /osapi:config -->. A page with no
+// markers is as it is.
 func DocTables(
 	page string,
 	shipped map[string]any,
 ) string {
-	var sb strings.Builder
-	for {
-		i := strings.Index(page, docTableStart)
-		if i < 0 {
-			sb.WriteString(page)
-
-			return sb.String()
-		}
-		head := page[i+len(docTableStart):]
-		closing := strings.Index(head, "-->")
-		end := strings.Index(head, docTableEnd)
-		if closing < 0 || end < closing {
-			sb.WriteString(page)
-
-			return sb.String()
-		}
-		prefixes := strings.Fields(head[:closing])
-		sb.WriteString(page[:i+len(docTableStart)+closing+len("-->")])
-		// Blank lines around the table, as Prettier writes them.
-		sb.WriteString("\n\n" + DocTable(prefixes, shipped) + "\n\n")
-		page = head[end:]
-	}
+	return guide.Fill(page, "config", func(prefixes []string) string {
+		return DocTable(prefixes, shipped)
+	})
 }
 
 // DocTable is the keys under prefixes as a markdown table, its columns
