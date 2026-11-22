@@ -114,8 +114,8 @@ var Checks = guide.Checks{
 	},
 	{
 		Rule:     RuleHelp,
-		Requires: "Each method has a Short, and a method with input has an Example.",
-		Fix:      "Add .Short(\"<what it does>\") and .Example(\"--flag value\") to the method.",
+		Requires: "Each method has a Short, and a method with input has an Example. Each flag that an Example names is a flag of the command: a field of its input, a key that its Flag names, or --json, --debug or --osapi-file.",
+		Fix:      "Add .Short(\"<what it does>\") and .Example(\"--flag value\") to the method, and spell each flag of an example as the command has it.",
 	},
 	{
 		Rule:     RuleFlag,
@@ -262,6 +262,9 @@ func Validate(
 		}
 		if len(fields) > 0 && len(m.examples) == 0 {
 			add(m.Name, RuleHelp, "the method has input and no Example.")
+		}
+		for _, msg := range exampleFlagProblems(m, fields) {
+			add(m.Name, RuleHelp, msg)
 		}
 
 		if m.In.Kind() != reflect.Struct {
@@ -564,4 +567,54 @@ func knownRender(
 	}
 
 	return renderValues[render]
+}
+
+// globalFlags are the flags of each command, which the root command adds:
+// the long names and their short letters.
+var globalFlags = map[string]bool{
+	"json": true, "debug": true, "osapi-file": true, "help": true,
+	"j": true, "d": true, "f": true, "h": true,
+}
+
+// exampleFlagProblems are the flags that an example of m names and the
+// command does not have. A misspelled flag made a docs page show a command
+// that fails.
+func exampleFlagProblems(
+	m *LocalMethod,
+	fields []reflect.StructField,
+) []string {
+	flags := map[string]bool{}
+	for _, f := range fields {
+		flags[FlagName(f)] = true
+		if short := f.Tag.Get("short"); short != "" {
+			flags[short] = true
+		}
+	}
+	for _, k := range m.keys {
+		// As config.FlagName names the flag of a key.
+		flags[strings.NewReplacer(".", "-", "_", "-").Replace(k)] = true
+	}
+	var out []string
+	for _, e := range m.examples {
+		for _, word := range strings.Fields(e.Flags) {
+			name, ok := strings.CutPrefix(word, "-")
+			if !ok || name == "" {
+				continue
+			}
+			name = strings.TrimPrefix(name, "-")
+			name, _, _ = strings.Cut(name, "=")
+			if !flags[name] && !globalFlags[name] {
+				out = append(
+					out,
+					fmt.Sprintf(
+						"the example %q names %s, which the command does not have.",
+						e.Flags,
+						word,
+					),
+				)
+			}
+		}
+	}
+
+	return out
 }

@@ -127,7 +127,7 @@ func (s *ServerPublicTestSuite) serve(
 	routes := make([]server.Route, 0, len(group.Methods))
 	for _, m := range group.Methods {
 		r := server.Route{
-			Method:     m.Verb,
+			Method:     m.HTTPMethod(),
 			Path:       server.Path(group, m),
 			Permission: string(group.Permission(m)),
 		}

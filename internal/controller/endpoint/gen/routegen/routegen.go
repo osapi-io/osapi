@@ -54,7 +54,7 @@ func Routes(
 	items := make([]jen.Code, 0, len(g.Methods))
 	for _, m := range g.Methods {
 		items = append(items, genutil.Multi("{", "}",
-			jen.Id("Method").Op(":").Qual("net/http", verbConst(m.Verb)),
+			jen.Id("Method").Op(":").Qual("net/http", verbConst(m.HTTPMethod())),
 			jen.Id("Path").Op(":").Lit(server.Path(g, m)),
 			jen.Id("Permission").Op(":").Lit(string(g.Permission(m))),
 			jen.Id("Handler").Op(":").Qual(serverPath, "Serve").Call(

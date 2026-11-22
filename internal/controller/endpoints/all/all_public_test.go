@@ -105,7 +105,7 @@ func (s *AllPublicTestSuite) TestRefusals() {
 				s.Run(g.Name+" "+m.Name+": "+r.Doc, func() {
 					path, body, contentType, err := command.Build(g, m, r.Input)
 					s.Require().NoError(err)
-					req := httptest.NewRequest(m.Verb, path, bytes.NewReader(body))
+					req := httptest.NewRequest(m.HTTPMethod(), path, bytes.NewReader(body))
 					req.Header.Set("Content-Type", contentType)
 					req.Header.Set("Authorization", "Bearer "+token)
 					rec := httptest.NewRecorder()

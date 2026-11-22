@@ -168,7 +168,7 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 				def, err := os.ReadFile(
 					filepath.Join(root, "internal/behaviors/network/neighbors/behavior.go"))
 				s.Require().NoError(err)
-				s.Contains(string(def), `behavior.Under("network"),`)
+				s.Contains(string(def), `behavior.Under(behavior.GroupNetwork),`)
 
 				test, err := os.ReadFile(
 					filepath.Join(
@@ -197,6 +197,14 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 			bname:   "neighbors",
 			doc:     "x",
 			wantErr: "group \"Net-work\" must be lowercase",
+		},
+		{
+			name:    "when the group is not one of KnownGroups",
+			setup:   func() string { return s.checkout(allGo) },
+			group:   "storage",
+			bname:   "neighbors",
+			doc:     "x",
+			wantErr: "group \"storage\" is not one of KnownGroups",
 		},
 		{
 			name:    "when the name is not a Go package name",

@@ -83,7 +83,7 @@ func Run[In any](
 		return
 	}
 
-	resp, err := caller().Send(cmd.Context(), m.Verb, path, contentType, body)
+	resp, err := caller().Send(cmd.Context(), m.HTTPMethod(), path, contentType, body)
 	data, ok := answered(m, err)
 	if err != nil && !ok {
 		clicommand.Report(err)

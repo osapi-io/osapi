@@ -29,6 +29,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 )
 
@@ -76,6 +77,10 @@ func Scaffold(
 	if group != "" && !scaffoldName.MatchString(group) {
 		return nil, fmt.Errorf(
 			"group %q must be lowercase letters and digits, starting with a letter", group)
+	}
+	if group != "" && !slices.Contains(KnownGroups(), GroupName(group)) {
+		return nil, fmt.Errorf(
+			"group %q is not one of KnownGroups; add its constant to KnownGroups first", group)
 	}
 	if doc == "" || strings.ContainsAny(doc, "\r\n") {
 		return nil, errors.New("description must be one line")

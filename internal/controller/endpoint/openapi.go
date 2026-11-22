@@ -85,7 +85,7 @@ func OpenAPI(
 			item = &openapi3.PathItem{}
 			doc.Paths.Set(path, item)
 		}
-		item.SetOperation(m.Verb, op)
+		item.SetOperation(m.HTTPMethod(), op)
 	}
 	if len(b.params) > 0 {
 		doc.Components.Parameters = b.params
