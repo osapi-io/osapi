@@ -238,6 +238,18 @@ for them there only.
 Use: With On, for a program the other platforms do not have, such as hostnamectl
 for a hostname update.
 
+### `.Before(fn) on a method`
+
+Runs fn, func(ctx context.Context, in In) (In, error), on the controller in the
+method's route, in a span of its own, before osapi queues the job. It changes
+what the caller sent into what the agent gets, such as a password into its hash
+with password.Hash. Each field tagged secret:"true" must be empty after it: else
+the job is not queued, so the plain secret never goes in the job data, NATS or
+the job KV.
+
+Use: When the agent must not see a secret in plain text. Tag the field that the
+step fills before:"set", and clear the secret in the step.
+
 ### `.AdminOnly() on a method`
 
 Makes the permission of the method's verb, such as &lt;name&gt;:write, one that
@@ -599,6 +611,13 @@ that ships, never recorded on a span.
 
 Use: On each input that holds a password, a key or a token.
 
+### `before:"set"`
+
+The method's .Before step sets the field. It is not in the request, the command
+or the UI: the caller does not send it.
+
+Use: On the field that the step fills, such as password_hash.
+
 ### `mapstructure:"name"`
 
 The config key of a settings field.
@@ -683,12 +702,6 @@ Use: Stop, and tell the person what is missing. Do not build around it.
 A method that streams its output, or that takes a file in its request. A
 behavior reads an object that osapi client file upload stored, with the object
 building block.
-
-Use: Stop, and tell the person what is missing. Do not build around it.
-
-### `A step on the controller`
-
-Work before osapi queues the job, such as a password hash.
 
 Use: Stop, and tell the person what is missing. Do not build around it.
 

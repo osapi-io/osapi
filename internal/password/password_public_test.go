@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package user_test
+package password_test
 
 import (
 	"errors"
@@ -27,28 +27,28 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	apiuser "github.com/osapi-io/osapi/internal/controller/api/node/user"
+	"github.com/osapi-io/osapi/internal/password"
 )
 
-type PasswordHashPublicTestSuite struct {
+type HashPublicTestSuite struct {
 	suite.Suite
 }
 
-func (s *PasswordHashPublicTestSuite) TearDownSubTest() {
-	apiuser.ResetGenerateHashFn()
+func (s *HashPublicTestSuite) TearDownSubTest() {
+	password.ResetGenerate()
 }
 
-func (s *PasswordHashPublicTestSuite) TestHashPassword() {
+func (s *HashPublicTestSuite) TestHash() {
 	tests := []struct {
 		name         string
-		password     string
+		plain        string
 		setup        func()
 		validateFunc func(hash string, err error)
 	}{
 		{
-			name:     "produces a sha-512 crypt hash",
-			password: "correct horse battery staple",
-			setup:    func() {},
+			name:  "produces a sha-512 crypt hash",
+			plain: "correct horse battery staple",
+			setup: func() {},
 			validateFunc: func(hash string, err error) {
 				s.NoError(err)
 				s.True(strings.HasPrefix(hash, "$6$"))
@@ -56,30 +56,30 @@ func (s *PasswordHashPublicTestSuite) TestHashPassword() {
 			},
 		},
 		{
-			name:     "empty password still hashes",
-			password: "",
-			setup:    func() {},
+			name:  "empty password still hashes",
+			plain: "",
+			setup: func() {},
 			validateFunc: func(hash string, err error) {
 				s.NoError(err)
 				s.True(strings.HasPrefix(hash, "$6$"))
 			},
 		},
 		{
-			name:     "two calls produce different hashes",
-			password: "same-password",
-			setup:    func() {},
+			name:  "two calls produce different hashes",
+			plain: "same-password",
+			setup: func() {},
 			validateFunc: func(hash string, err error) {
 				s.NoError(err)
-				other, err := apiuser.HashPasswordForTest("same-password")
+				other, err := password.Hash("same-password")
 				s.NoError(err)
 				s.NotEqual(hash, other, "salts must be random per call")
 			},
 		},
 		{
-			name:     "when the underlying generator fails",
-			password: "correct horse battery staple",
+			name:  "when the underlying generator fails",
+			plain: "correct horse battery staple",
 			setup: func() {
-				apiuser.SetGenerateHashFn(func(_ []byte, _ []byte) (string, error) {
+				password.SetGenerate(func(_ []byte, _ []byte) (string, error) {
 					return "", errors.New("salt decode failed")
 				})
 			},
@@ -95,14 +95,14 @@ func (s *PasswordHashPublicTestSuite) TestHashPassword() {
 		s.Run(tc.name, func() {
 			tc.setup()
 
-			hash, err := apiuser.HashPasswordForTest(tc.password)
+			hash, err := password.Hash(tc.plain)
 			tc.validateFunc(hash, err)
 		})
 	}
 }
 
-func TestPasswordHashPublicTestSuite(
+func TestHashPublicTestSuite(
 	t *testing.T,
 ) {
-	suite.Run(t, new(PasswordHashPublicTestSuite))
+	suite.Run(t, new(HashPublicTestSuite))
 }

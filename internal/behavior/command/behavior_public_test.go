@@ -79,6 +79,18 @@ type BehaviorcmdPublicTestSuite struct {
 	suite.Suite
 }
 
+// TestFlagsLeaveOutWhatTheStepSets: a field that a method's .Before step
+// sets is not the caller's to send, so it has no flag.
+func (s *BehaviorcmdPublicTestSuite) TestFlagsLeaveOutWhatTheStepSets() {
+	type in struct {
+		Password string `json:"password" doc:"The password" secret:"true"`
+		Hash     string `json:"hash"     doc:"The hash"                   before:"set"`
+	}
+	flags := command.Flags(reflect.TypeFor[in]())
+	s.Require().Len(flags, 1)
+	s.Equal("password", flags[0].Name)
+}
+
 func (s *BehaviorcmdPublicTestSuite) TestFlags() {
 	tests := []struct {
 		name string

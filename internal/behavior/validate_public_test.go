@@ -649,6 +649,59 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 			wantRules: []string{behavior.RulePlatform},
 		},
 		{
+			name: "when a .Before step has the method's input in and out, it breaks no rule",
+			b: behavior.Define("account", "Accounts", behavior.Node, onDebian,
+				behavior.API, behavior.Area(behavior.AreaConfig),
+				behavior.Write("update", setPassword).Describe("Update").Before(hashStep).
+					Fails("no name", pwIn{}, "name"),
+			),
+		},
+		{
+			name: "when a .Before step is not func(context.Context, In) (In, error)",
+			b: behavior.Define("account", "Accounts", behavior.Node, onDebian,
+				behavior.API, behavior.Area(behavior.AreaConfig),
+				behavior.Write("update", setPassword).Describe("Update").
+					Before(func(pwIn) pwIn { return pwIn{} }).
+					Fails("no name", pwIn{}, "name"),
+			),
+			wantRules: []string{behavior.RuleBefore},
+		},
+		{
+			name: "when a .Before step is on a behavior that is not served",
+			b: behavior.Define("account", "Accounts", behavior.Node, onDebian,
+				behavior.Write("update", setPassword).Describe("Update").Before(hashStep).
+					Fails("no name", pwIn{}, "name"),
+			),
+			wantRules: []string{behavior.RuleBefore},
+		},
+		{
+			name: "when a .Before step has no secret field to keep out of the job",
+			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
+				behavior.API, behavior.Area(behavior.AreaConfig),
+				behavior.Write("update", set).Describe("Update").Key("key").
+					Before(func(_ context.Context, in getIn) (getIn, error) { return in, nil }).
+					Fails("no key", getIn{}, "key"),
+			),
+			wantRules: []string{behavior.RuleBefore},
+		},
+		{
+			name: "when a field is tagged before with no step, or a value other than set",
+			b: behavior.Define(
+				"account",
+				"Accounts",
+				behavior.Node,
+				onDebian,
+				behavior.API,
+				behavior.Area(behavior.AreaConfig),
+				behavior.Write("update", func(context.Context, fakeProvider, badBeforeIn) (result, error) {
+					return result{}, nil
+				}).
+					Describe("Update").
+					Fails("no name", badBeforeIn{}, "name"),
+			),
+			wantRules: []string{behavior.RuleBefore, behavior.RuleBefore},
+		},
+		{
 			name: "when an input field's secret tag is not true",
 			b: behavior.Define(
 				"sysctl",
@@ -917,4 +970,9 @@ type badKeyIn struct {
 
 type badSecretOut struct {
 	Key string `json:"key" doc:"The key" secret:"yes"`
+}
+
+type badBeforeIn struct {
+	Name string `json:"name"           validate:"required"  doc:"The user" telemetry:"attr"`
+	Hash string `json:"hash,omitempty" validate:"omitempty" doc:"The hash"                  before:"later"`
 }

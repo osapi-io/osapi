@@ -107,6 +107,10 @@ const (
 	// input or an output field. A typo of either drops what
 	// the tag does with no error: a secret reaches the audit log.
 	RuleTag = "tag"
+	// RuleBefore: a .Before step is func(context.Context, In) (In, error),
+	// on a served method with a secret field, and each field tagged before
+	// is set by one.
+	RuleBefore = "before"
 )
 
 // tagProblems are the RuleTag problems of t's fields, and of the fields of
@@ -462,6 +466,9 @@ func ValidateBehavior(
 	seen := map[string]bool{}
 	routes := map[string]string{}
 	for _, m := range b.Methods {
+		for _, msg := range beforeProblems(b, m) {
+			add(m.Name, RuleBefore, "%s", msg)
+		}
 		// Two methods on one verb and path would be one route, and only one
 		// of them could be served.
 		route := m.HTTPMethod() + " " + b.Path(m)

@@ -301,6 +301,17 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindRefine,
+			Name: ".Before(fn) on a method",
+			Does: "Runs fn, func(ctx context.Context, in In) (In, error), on the controller in the method's " +
+				"route, in a span of its own, before osapi queues the job. It changes what the caller sent " +
+				"into what the agent gets, such as a password into its hash with password.Hash. Each " +
+				"field tagged secret:\"true\" must be empty after it: else the job is not queued, so the " +
+				"plain secret never goes in the job data, NATS or the job KV.",
+			When: "When the agent must not see a secret in plain text. Tag the field that the step fills " +
+				"before:\"set\", and clear the secret in the step.",
+		},
+		{
+			Kind: KindRefine,
 			Name: ".AdminOnly() on a method",
 			Does: "Makes the permission of the method's verb, such as <name>:write, one that only the " +
 				"admin role grants. With no mark, admin and write get <name>:read and <name>:write, and " +
@@ -494,6 +505,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindTag,
+			Name: `before:"set"`,
+			Does: "The method's .Before step sets the field. It is not in the request, the command or the UI: the caller does not send it.",
+			When: "On the field that the step fills, such as password_hash.",
+		},
+		{
+			Kind: KindTag,
 			Name: `mapstructure:"name"`,
 			Does: "The config key of a settings field.",
 			When: "On each field of the struct given to Config.",
@@ -557,12 +574,6 @@ var Spec = guide.Spec{
 			Kind: KindNotYet,
 			Name: "Streaming and uploads",
 			Does: "A method that streams its output, or that takes a file in its request. A behavior reads an object that osapi client file upload stored, with the object building block.",
-			When: "Stop, and tell the person what is missing. Do not build around it.",
-		},
-		{
-			Kind: KindNotYet,
-			Name: "A step on the controller",
-			Does: "Work before osapi queues the job, such as a password hash.",
 			When: "Stop, and tell the person what is missing. Do not build around it.",
 		},
 	},

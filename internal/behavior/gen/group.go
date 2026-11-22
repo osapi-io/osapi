@@ -231,7 +231,7 @@ func requestFields(
 	for i := range m.In.NumField() {
 		fld := m.In.Field(i)
 		name := behavior.JSONName(fld)
-		if !fld.IsExported() || name == "-" {
+		if !fld.IsExported() || name == "-" || behavior.SetByBefore(fld) {
 			continue
 		}
 		tags := map[string]string{"json": fld.Tag.Get("json")}
@@ -343,7 +343,7 @@ func input(
 	for i := range m.In.NumField() {
 		fld := m.In.Field(i)
 		name := behavior.JSONName(fld)
-		if !fld.IsExported() || name == "-" {
+		if !fld.IsExported() || name == "-" || behavior.SetByBefore(fld) {
 			continue
 		}
 		from := jen.Id("in").Dot(fld.Name)
