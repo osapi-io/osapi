@@ -5,7 +5,53 @@ import type * as Preset from '@docusaurus/preset-classic';
 import type { Config } from '@docusaurus/types';
 import type * as Plugin from '@docusaurus/types/src/plugin';
 import type * as OpenApiPlugin from 'docusaurus-plugin-openapi-docs';
-import { themes as prismThemes } from 'prism-react-renderer';
+import type { PrismTheme } from 'prism-react-renderer';
+import { palette } from './src/palette.gen';
+
+// codeTheme is a Prism theme from the CLI's palette, so a code block reads as
+// the terminal output it shows: keywords magenta, strings yellow, functions
+// and properties cyan, numbers the logo blue, comments gray.
+function codeTheme(
+  p: (typeof palette)['dark'] | (typeof palette)['light'],
+  text: string,
+  background: string
+): PrismTheme {
+  const [cyan, magenta, yellow, , blue] = p.headings;
+  return {
+    plain: { color: text, backgroundColor: background },
+    styles: [
+      {
+        types: ['comment', 'prolog', 'doctype', 'cdata'],
+        style: { color: p.gray, fontStyle: 'italic' }
+      },
+      {
+        types: ['keyword', 'builtin', 'important', 'atrule'],
+        style: { color: magenta }
+      },
+      {
+        types: ['string', 'char', 'attr-value', 'regex', 'inserted'],
+        style: { color: yellow }
+      },
+      {
+        types: [
+          'function',
+          'class-name',
+          'property',
+          'attr-name',
+          'tag',
+          'selector'
+        ],
+        style: { color: cyan }
+      },
+      {
+        types: ['number', 'boolean', 'constant', 'symbol', 'variable'],
+        style: { color: blue }
+      },
+      { types: ['punctuation', 'operator'], style: { color: p.gray } },
+      { types: ['deleted'], style: { color: '#ef4444' } }
+    ]
+  };
+}
 
 const config: Config = {
   title: 'OSAPI',
@@ -53,7 +99,10 @@ const config: Config = {
         blog: {},
         pages: {},
         theme: {
-          customCss: require.resolve('./src/css/custom.css')
+          customCss: [
+            require.resolve('./src/css/palette.gen.css'),
+            require.resolve('./src/css/custom.css')
+          ]
         }
       } satisfies Preset.Options
     ]
@@ -77,7 +126,9 @@ const config: Config = {
         {
           label: 'Getting Started',
           position: 'left',
-          to: '/osapi'
+          to: '/osapi',
+          // Active on the home page only: '/osapi' starts every URL.
+          activeBaseRegex: '^/osapi/?$'
         },
         {
           type: 'dropdown',
@@ -232,10 +283,12 @@ const config: Config = {
           ]
         },
         {
-          type: 'doc',
+          // A link, not a doc item: a doc item is active on each page of
+          // its sidebar, which is every page.
           label: 'Usage',
           position: 'left',
-          docId: 'sidebar/usage/usage'
+          to: '/osapi/sidebar/usage/',
+          activeBaseRegex: '/sidebar/usage/'
         },
         {
           type: 'dropdown',
@@ -554,8 +607,8 @@ const config: Config = {
       disableSwitch: false
     },
     prism: {
-      theme: prismThemes.github,
-      darkTheme: prismThemes.palenight,
+      theme: codeTheme(palette.light, '#18202b', '#f8f9fb'),
+      darkTheme: codeTheme(palette.dark, '#e2e8f0', '#000000'),
       prism: {
         additionalLanguages: [
           'ruby',
