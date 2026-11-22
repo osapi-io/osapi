@@ -68,6 +68,7 @@ var Group = endpoint.Register(endpoint.Define(
 				"against a node. An admitted node that is not running is Offline, with when\n"+
 				"it was last seen.").
 		Example("").
+		Prints(sampleList).
 		Example("--state pending").
 		Errors(notConfigured503),
 	endpoint.Get[MachineInput, Admission]("get").
@@ -79,6 +80,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Returns("The admission record.").
 		Command("Get a machine's admission record", "").
 		Example("--machine-id d530664edc1c431eb5ef1e9dfd6617a5").
+		Prints(samplePending).
 		Errors(endpoint.NotFound(ErrNotFound, "No admission record for the machine."), notConfigured503),
 	endpoint.Post[AdmitInput, struct{}]("admit").
 		AdminOnly().

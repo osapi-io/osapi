@@ -71,6 +71,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Command("Show the health of each agent",
 			"Each agent, with its process CPU and memory and each of its sub-components, from the\nhealth status of the controller. agent list shows the host of each agent.").
 		Example("").
+		Prints(sampleStatus).
 		Example("--json"),
 	endpoint.Get[ListInput, ListAgentsResponse]("list").
 		Notes("The `--json` output has more system facts that the agent collects:\n"+
@@ -79,6 +80,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Command("List active agents",
 			"This command reads the agent heartbeat registry directly. It makes no job.\nEach agent writes a heartbeat every 10 seconds, with a 30-second TTL. When\nan agent stops its heartbeat, it goes from the list.").
 		Example("").
+		Prints(sampleList).
 		Handle(List).
 		ID("GetAgents").
 		Describe("List active agents").
@@ -89,6 +91,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Command("Get agent details",
 			"This command reads the agent heartbeat registry directly. It makes no job.\nThe data comes from the last heartbeat of the agent. `node status` runs a\nfull inspection through the job system, with disk usage and more metrics.").
 		Example("--hostname web-01").
+		Prints(sampleWeb01).
 		Handle(Get).
 		ID("GetAgentDetails").
 		Describe("Get agent details").

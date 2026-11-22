@@ -12,10 +12,13 @@ import (
 )
 
 var jobListCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "job:read"},
-	Args:        cobra.NoArgs,
-	Example:     "  osapi client job list\n  osapi client job list --status completed --limit 3",
-	Long:        "Retrieve jobs, optionally filtered by status.",
+	Annotations: map[string]string{
+		reference.Permission: "job:read",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client job list\n\x1b[1;38;2;0;213;255mJobs (2):\x1b[0m\n  \x1b[38;2;10;143;176mJOB ID                                \x1b[0m\x1b[38;2;10;143;176mSTATUS     \x1b[0m\x1b[38;2;10;143;176mCREATED              \x1b[0m\x1b[38;2;10;143;176mTARGET  \x1b[0m\x1b[38;2;10;143;176mOPERATION\x1b[0m\n  \x1b[38;2;138;138;138m550e8400-e29b-41d4-a716-446655440000\x1b[0m  \x1b[38;2;103;234;147mcompleted\x1b[0m  \x1b[38;2;138;138;138m2026-01-15 09:58:12\x1b[0m  web-01  node.sysctl.update\n  \x1b[38;2;138;138;138m7c9e6679-7425-40de-944b-e07fc1f90ae7\x1b[0m  \x1b[38;2;239;68;68mfailed\x1b[0m     \x1b[38;2;138;138;138m2026-01-15 09:41:03\x1b[0m  _all    node.package.update\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n  \x1b[38;2;10;143;176mStatus counts:\x1b[0m  completed:1, failed:1\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"total_items\": 2,\n  \"status_counts\": {\n    \"completed\": 1,\n    \"failed\": 1\n  },\n  \"items\": [\n    {\n      \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n      \"status\": \"completed\",\n      \"created\": \"2026-01-15T09:58:12Z\",\n      \"target\": \"web-01\",\n      \"operation\": {\n        \"type\": \"node.sysctl.update\",\n        \"data\": {\n          \"key\": \"net.ipv4.ip_forward\",\n          \"value\": \"1\"\n        }\n      },\n      \"hostname\": \"web-01\",\n      \"updated_at\": \"2026-01-15T09:58:13Z\",\n      \"changed\": true,\n      \"responses\": [\n        {\n          \"hostname\": \"web-01\",\n          \"status\": \"completed\",\n          \"changed\": true,\n          \"data\": {\n            \"changed\": true,\n            \"key\": \"net.ipv4.ip_forward\"\n          }\n        }\n      ],\n      \"agent_states\": [\n        {\n          \"hostname\": \"web-01\",\n          \"status\": \"completed\",\n          \"duration\": \"184ms\"\n        }\n      ],\n      \"timeline\": [\n        {\n          \"timestamp\": \"2026-01-15T09:58:12Z\",\n          \"event\": \"submitted\",\n          \"message\": \"job created\"\n        },\n        {\n          \"timestamp\": \"2026-01-15T09:58:12Z\",\n          \"event\": \"acknowledged\",\n          \"hostname\": \"web-01\"\n        },\n        {\n          \"timestamp\": \"2026-01-15T09:58:13Z\",\n          \"event\": \"completed\",\n          \"hostname\": \"web-01\"\n        }\n      ]\n    },\n    {\n      \"id\": \"7c9e6679-7425-40de-944b-e07fc1f90ae7\",\n      \"status\": \"failed\",\n      \"created\": \"2026-01-15T09:41:03Z\",\n      \"target\": \"_all\",\n      \"operation\": {\n        \"type\": \"node.package.update\"\n      },\n      \"error\": \"apt-get: unable to lock the administration directory\"\n    }\n  ]\n}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client job list\n  osapi client job list --status completed --limit 3",
+	Long:    "Retrieve jobs, optionally filtered by status.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		status, _ := cmd.Flags().GetString("status")
 		limit, _ := cmd.Flags().GetInt("limit")
@@ -28,10 +31,13 @@ var jobListCmd = &cobra.Command{
 }
 
 var jobGetCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "job:read"},
-	Args:        cobra.NoArgs,
-	Example:     "  osapi client job get --id 550e8400-e29b-41d4-a716-446655440000",
-	Long:        "Retrieve details of a specific job by its ID.",
+	Annotations: map[string]string{
+		reference.Permission: "job:read",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client job get --id 550e8400-e29b-41d4-a716-446655440000\n\x1b[1;38;2;0;213;255mJob:\x1b[0m\n  \x1b[38;2;176;48;176mJob ID:\x1b[0m    550e8400-e29b-41d4-a716-446655440000\n  \x1b[38;2;176;48;176mStatus:\x1b[0m    \x1b[38;2;103;234;147mcompleted\x1b[0m\n  \x1b[38;2;176;48;176mCreated:\x1b[0m   2026-01-15 09:58:12\n  \x1b[38;2;176;48;176mTarget:\x1b[0m    web-01\n  \x1b[38;2;176;48;176mHostname:\x1b[0m  web-01\n  \x1b[38;2;176;48;176mUpdated:\x1b[0m   2026-01-15 09:58:13\n  \x1b[38;2;176;48;176mChanged:\x1b[0m   yes\n\n\x1b[1;38;2;255;0;255mOperation:\x1b[0m\n  \x1b[38;2;176;143;0mType:\x1b[0m  node.sysctl.update\n\n\x1b[1;38;2;255;209;0mOperation data:\x1b[0m\n  \x1b[38;2;176;143;0mkey:\x1b[0m    net.ipv4.ip_forward\n  \x1b[38;2;176;143;0mvalue:\x1b[0m  1\n\n\x1b[1;38;2;69;174;23mResponses (1):\x1b[0m\n  \x1b[38;2;58;143;20mHOSTNAME  \x1b[0m\x1b[38;2;58;143;20mSTATUS     \x1b[0m\x1b[38;2;58;143;20mCHANGED  \x1b[0m\x1b[38;2;58;143;20mDATA\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mcompleted\x1b[0m  yes      changed:yes, key:net.ipv4.ip_forward\n\n\x1b[1;38;2;107;92;255mAgent states (1):\x1b[0m\n  \x1b[38;2;89;76;216mHOSTNAME  \x1b[0m\x1b[38;2;89;76;216mSTATUS     \x1b[0m\x1b[38;2;89;76;216mDURATION\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mcompleted\x1b[0m  184ms\n\n\x1b[1;38;2;0;213;255mTimeline (3):\x1b[0m\n  \x1b[38;2;10;143;176mTIMESTAMP            \x1b[0m\x1b[38;2;10;143;176mEVENT         \x1b[0m\x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mMESSAGE\x1b[0m\n  \x1b[38;2;138;138;138m2026-01-15 09:58:12\x1b[0m  submitted     \x1b[1m\x1b[0m          job created\n  \x1b[38;2;138;138;138m2026-01-15 09:58:12\x1b[0m  acknowledged  \x1b[1mweb-01\x1b[0m    \n  \x1b[38;2;138;138;138m2026-01-15 09:58:13\x1b[0m  completed     \x1b[1mweb-01\x1b[0m    \n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"status\": \"completed\",\n  \"created\": \"2026-01-15T09:58:12Z\",\n  \"target\": \"web-01\",\n  \"operation\": {\n    \"type\": \"node.sysctl.update\",\n    \"data\": {\n      \"key\": \"net.ipv4.ip_forward\",\n      \"value\": \"1\"\n    }\n  },\n  \"hostname\": \"web-01\",\n  \"updated_at\": \"2026-01-15T09:58:13Z\",\n  \"changed\": true,\n  \"responses\": [\n    {\n      \"hostname\": \"web-01\",\n      \"status\": \"completed\",\n      \"changed\": true,\n      \"data\": {\n        \"changed\": true,\n        \"key\": \"net.ipv4.ip_forward\"\n      }\n    }\n  ],\n  \"agent_states\": [\n    {\n      \"hostname\": \"web-01\",\n      \"status\": \"completed\",\n      \"duration\": \"184ms\"\n    }\n  ],\n  \"timeline\": [\n    {\n      \"timestamp\": \"2026-01-15T09:58:12Z\",\n      \"event\": \"submitted\",\n      \"message\": \"job created\"\n    },\n    {\n      \"timestamp\": \"2026-01-15T09:58:12Z\",\n      \"event\": \"acknowledged\",\n      \"hostname\": \"web-01\"\n    },\n    {\n      \"timestamp\": \"2026-01-15T09:58:13Z\",\n      \"event\": \"completed\",\n      \"hostname\": \"web-01\"\n    }\n  ]\n}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client job get --id 550e8400-e29b-41d4-a716-446655440000",
+	Long:    "Retrieve details of a specific job by its ID.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		id, _ := cmd.Flags().GetString("id")
 
@@ -56,10 +62,13 @@ var jobDeleteCmd = &cobra.Command{
 }
 
 var jobRetryCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "job:write"},
-	Args:        cobra.NoArgs,
-	Example:     "  osapi client job retry --id 550e8400-e29b-41d4-a716-446655440000",
-	Long:        "The new job has the same operation as the old job. The original job stays in\nthe history. Its timeline gets a `retried` event that links to the new job.",
+	Annotations: map[string]string{
+		reference.Permission: "job:write",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client job retry --id 550e8400-e29b-41d4-a716-446655440000\n\x1b[1;38;2;0;213;255mJob:\x1b[0m\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n  \x1b[38;2;10;143;176mJob ID:\x1b[0m    9b2e4c6a-8d0f-4a1b-b3c5-d7e9f1a2b4c6\n  \x1b[38;2;10;143;176mStatus:\x1b[0m    created\n  \x1b[38;2;10;143;176mRevision:\x1b[0m  42\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"job_id\": \"9b2e4c6a-8d0f-4a1b-b3c5-d7e9f1a2b4c6\",\n  \"status\": \"created\",\n  \"revision\": 42,\n  \"timestamp\": \"2026-01-15T10:00:00Z\"\n}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client job retry --id 550e8400-e29b-41d4-a716-446655440000",
+	Long:    "The new job has the same operation as the old job. The original job stays in\nthe history. Its timeline gets a `retried` event that links to the new job.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		id, _ := cmd.Flags().GetString("id")
 		targetHostname, _ := cmd.Flags().GetString("target")

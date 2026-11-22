@@ -423,6 +423,7 @@ type Method struct {
 	cmdUse           string
 	cmdLong          string
 	examples         []CommandExample
+	unprinted        bool
 	prefix           []string
 	refusals         []Refusal
 	notes, result    string
@@ -639,6 +640,23 @@ func (m *Method) Example(
 	doc ...string,
 ) *Method {
 	m.examples = append(m.examples, CommandExample{Flags: flags, Doc: strings.Join(doc, " ")})
+
+	return m
+}
+
+// Prints gives the last Example its output: what the API answers, a value
+// of the method's output type. The docs page of the command shows it as the
+// CLI prints it, and as JSON for --json. endpoint validate refuses a value
+// of another type, and Prints before an Example.
+func (m *Method) Prints(
+	out any,
+) *Method {
+	if len(m.examples) == 0 {
+		m.unprinted = true
+
+		return m
+	}
+	m.examples[len(m.examples)-1].Output = out
 
 	return m
 }

@@ -64,6 +64,7 @@ var Group = endpoint.Register(endpoint.Define(
 				"The backend gets the spans a few seconds after the request: a trace\n"+
 				"that is not found yet is there after a few seconds.").
 		Example("--id 26e448c9dbe1c4a8d216a98c675079c9").
+		Prints(sampleTrace).
 		Example("--id 26e448c9dbe1c4a8d216a98c675079c9 --all").
 		Example("--id 26e448c9dbe1c4a8d216a98c675079c9 --json").
 		Errors(

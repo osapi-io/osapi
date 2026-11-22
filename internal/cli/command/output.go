@@ -300,7 +300,7 @@ func (c Column) format(
 		return p.Age(time.Duration(n) * time.Second)
 	case c.Render == RenderAge && isString:
 		if t, err := time.Parse(time.RFC3339Nano, s); err == nil {
-			return p.Age(time.Since(t))
+			return p.Age(Now().Sub(t))
 		}
 	case (c.Render == RenderTime || isTime(c.Type)) && isString:
 		if t, err := time.Parse(time.RFC3339Nano, s); err == nil {
@@ -1056,4 +1056,38 @@ func zero(
 	}
 
 	return false
+}
+
+// Now is the time that an age is from: the clock, or the fixed time that
+// SetNow gives, so a docs page that shows an age is the same on each run.
+func Now() time.Time {
+	if fixedNow.IsZero() {
+		return time.Now()
+	}
+
+	return fixedNow
+}
+
+// fixedNow is the time that SetNow gave, or zero for the clock.
+var fixedNow time.Time
+
+// SetNow fixes the time that an age is from to t, or gives the clock back
+// with the zero time. The generator of the docs pages fixes it.
+func SetNow(
+	t time.Time,
+) {
+	fixedNow = t
+}
+
+// Derive prints answer, the JSON that method m of g answered, through p as
+// the CLI prints it from the output type. in is the method's input, for the
+// one line of an answer with no body.
+func Derive(
+	p Printer,
+	g Group,
+	m Command,
+	in any,
+	answer []byte,
+) error {
+	return derive(p, g, m, in, answer)
 }

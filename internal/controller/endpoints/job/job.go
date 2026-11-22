@@ -55,6 +55,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Returns("A list of jobs.").
 		Command("List jobs", "").
 		Example("").
+		Prints(sampleList).
 		Example("--status completed --limit 3"),
 	endpoint.Get[GetInput, JobDetailResponse]("get").
 		Fails("an ID that is not a UUID", GetInput{ID: "not-a-uuid"}).
@@ -65,6 +66,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Returns("The job details.").
 		Command("Get job details and status", "").
 		Example("--id 550e8400-e29b-41d4-a716-446655440000").
+		Prints(sampleDetail).
 		Errors(endpoint.NotFound(ErrNotFound, "Job not found.")),
 	endpoint.Delete[DeleteInput, struct{}]("delete").
 		Fails("an ID that is not a UUID", DeleteInput{ID: "not-a-uuid"}).
@@ -93,6 +95,7 @@ var Group = endpoint.Register(endpoint.Define(
 			"The new job has the same operation as the old job. The original job stays in\n"+
 				"the history. Its timeline gets a `retried` event that links to the new job.").
 		Example("--id 550e8400-e29b-41d4-a716-446655440000").
+		Prints(sampleRetry).
 		Errors(
 			endpoint.NotFound(ErrNotFound, "Job not found."),
 			endpoint.Invalid(ErrNoOperation,

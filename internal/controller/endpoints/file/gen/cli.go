@@ -12,10 +12,13 @@ import (
 )
 
 var fileListCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "file:read"},
-	Args:        cobra.NoArgs,
-	Example:     "  osapi client file list\n  osapi client file list --json",
-	Long:        "List all files stored in the Object Store.",
+	Annotations: map[string]string{
+		reference.Permission: "file:read",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client file list\n\x1b[1;38;2;0;213;255mFiles (2):\x1b[0m\n  \x1b[38;2;10;143;176mNAME           \x1b[0m\x1b[38;2;10;143;176mSHA256                                                            \x1b[0m\x1b[38;2;10;143;176mSIZE    \x1b[0m\x1b[38;2;10;143;176mSOURCE\x1b[0m\n  \x1b[1mapp.conf\x1b[0m       a3f1c2e4b5d6978812f3e4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b9a0f1e2d3c4b5  1.0 KB  user\n  \x1b[1mapp.conf.tmpl\x1b[0m  7d8e9fa0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8  512 B   user\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"items\": [\n    {\n      \"name\": \"app.conf\",\n      \"sha256\": \"a3f1c2e4b5d6978812f3e4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b9a0f1e2d3c4b5\",\n      \"size\": 1024,\n      \"content_type\": \"raw\",\n      \"source\": \"user\"\n    },\n    {\n      \"name\": \"app.conf.tmpl\",\n      \"sha256\": \"7d8e9fa0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8\",\n      \"size\": 512,\n      \"content_type\": \"template\",\n      \"source\": \"user\"\n    }\n  ],\n  \"total_items\": 2\n}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client file list\n  osapi client file list --json",
+	Long:    "List all files stored in the Object Store.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		endpointcommand.Run(cmd, file.Group, "list", file.ListInput{})
 	},
@@ -24,10 +27,13 @@ var fileListCmd = &cobra.Command{
 }
 
 var fileUploadCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "file:write"},
-	Args:        cobra.NoArgs,
-	Example:     "  osapi client file upload --name app.conf --file /tmp/app.conf\n  osapi client file upload --name app.conf.tmpl --file /tmp/app.conf.tmpl --content-type template",
-	Long:        "An upload of the same content changes nothing (`Changed: false`). If the\nfile exists with different content, the command rejects the upload with 409\nConflict. `file update` replaces the file.",
+	Annotations: map[string]string{
+		reference.Permission: "file:write",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client file upload --name app.conf --file /tmp/app.conf\n\x1b[1;38;2;0;213;255mFile:\x1b[0m\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n  \x1b[38;2;10;143;176mName:\x1b[0m          app.conf\n  \x1b[38;2;10;143;176mSHA256:\x1b[0m        a3f1c2e4b5d6978812f3e4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b9a0f1e2d3c4b5\n  \x1b[38;2;10;143;176mSize:\x1b[0m          1.0 KB\n  \x1b[38;2;10;143;176mChanged:\x1b[0m       yes\n  \x1b[38;2;10;143;176mContent type:\x1b[0m  raw\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"name\": \"app.conf\",\n  \"sha256\": \"a3f1c2e4b5d6978812f3e4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b9a0f1e2d3c4b5\",\n  \"size\": 1024,\n  \"changed\": true,\n  \"content_type\": \"raw\"\n}\n```\n\nThe command prints:\n\n```ansi\n$ osapi client file upload --name app.conf.tmpl --file /tmp/app.conf.tmpl --content-type template\n\x1b[1;38;2;0;213;255mFile:\x1b[0m\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n  \x1b[38;2;10;143;176mName:\x1b[0m          app.conf.tmpl\n  \x1b[38;2;10;143;176mSHA256:\x1b[0m        7d8e9fa0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8\n  \x1b[38;2;10;143;176mSize:\x1b[0m          512 B\n  \x1b[38;2;10;143;176mChanged:\x1b[0m       yes\n  \x1b[38;2;10;143;176mContent type:\x1b[0m  template\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"name\": \"app.conf.tmpl\",\n  \"sha256\": \"7d8e9fa0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8\",\n  \"size\": 512,\n  \"changed\": true,\n  \"content_type\": \"template\"\n}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client file upload --name app.conf --file /tmp/app.conf\n  osapi client file upload --name app.conf.tmpl --file /tmp/app.conf.tmpl --content-type template",
+	Long:    "An upload of the same content changes nothing (`Changed: false`). If the\nfile exists with different content, the command rejects the upload with 409\nConflict. `file update` replaces the file.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		name, _ := cmd.Flags().GetString("name")
 		contentType, _ := cmd.Flags().GetString("content-type")
@@ -44,10 +50,13 @@ var fileUploadCmd = &cobra.Command{
 }
 
 var fileGetCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "file:read"},
-	Args:        cobra.NoArgs,
-	Example:     "  osapi client file get --name app.conf\n  osapi client file get --name app.conf --json",
-	Long:        "Get metadata for a specific file in the Object Store.",
+	Annotations: map[string]string{
+		reference.Permission: "file:read",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client file get --name app.conf\n\x1b[1;38;2;0;213;255mFile:\x1b[0m\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n  \x1b[38;2;10;143;176mName:\x1b[0m          app.conf\n  \x1b[38;2;10;143;176mSHA256:\x1b[0m        a3f1c2e4b5d6978812f3e4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b9a0f1e2d3c4b5\n  \x1b[38;2;10;143;176mSize:\x1b[0m          1.0 KB\n  \x1b[38;2;10;143;176mContent type:\x1b[0m  raw\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"name\": \"app.conf\",\n  \"sha256\": \"a3f1c2e4b5d6978812f3e4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b9a0f1e2d3c4b5\",\n  \"size\": 1024,\n  \"content_type\": \"raw\"\n}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client file get --name app.conf\n  osapi client file get --name app.conf --json",
+	Long:    "Get metadata for a specific file in the Object Store.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		name, _ := cmd.Flags().GetString("name")
 
@@ -58,10 +67,13 @@ var fileGetCmd = &cobra.Command{
 }
 
 var fileUpdateCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "file:write"},
-	Args:        cobra.NoArgs,
-	Example:     "  osapi client file update --name app.conf --file /tmp/app.conf",
-	Long:        "The command replaces the content of a stored file, or stores it when the\nname is new. The same content changes nothing (`Changed: false`).",
+	Annotations: map[string]string{
+		reference.Permission: "file:write",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client file update --name app.conf --file /tmp/app.conf\n\x1b[1;38;2;0;213;255mFile:\x1b[0m\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n  \x1b[38;2;10;143;176mName:\x1b[0m          app.conf\n  \x1b[38;2;10;143;176mSHA256:\x1b[0m        a3f1c2e4b5d6978812f3e4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b9a0f1e2d3c4b5\n  \x1b[38;2;10;143;176mSize:\x1b[0m          1.0 KB\n  \x1b[38;2;10;143;176mChanged:\x1b[0m       yes\n  \x1b[38;2;10;143;176mContent type:\x1b[0m  raw\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"name\": \"app.conf\",\n  \"sha256\": \"a3f1c2e4b5d6978812f3e4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b9a0f1e2d3c4b5\",\n  \"size\": 1024,\n  \"changed\": true,\n  \"content_type\": \"raw\"\n}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client file update --name app.conf --file /tmp/app.conf",
+	Long:    "The command replaces the content of a stored file, or stores it when the\nname is new. The same content changes nothing (`Changed: false`).",
 	Run: func(cmd *cobra.Command, _ []string) {
 		name, _ := cmd.Flags().GetString("name")
 		contentType, _ := cmd.Flags().GetString("content-type")
@@ -95,6 +107,7 @@ var fileStaleCmd = &cobra.Command{
 	Annotations: map[string]string{
 		clicommand.SubKey:    "stale",
 		reference.Permission: "file:read",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client file stale list\n\x1b[1;38;2;0;213;255mStale deployments (1):\x1b[0m\n  \x1b[38;2;10;143;176mOBJECT    \x1b[0m\x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mPROVIDER  \x1b[0m\x1b[38;2;10;143;176mDEPLOYED             \x1b[0m\x1b[38;2;10;143;176mDEPLOYED SHA     \x1b[0m\x1b[38;2;10;143;176mCURRENT SHA\x1b[0m\n  app.conf  \x1b[1mweb-01\x1b[0m    file      2026-01-14 16:20:00  0b1c2d3e4f5a...  a3f1c2e4b5d6...\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"items\": [\n    {\n      \"object_name\": \"app.conf\",\n      \"hostname\": \"web-01\",\n      \"provider\": \"file\",\n      \"deployed_at\": \"2026-01-14T16:20:00Z\",\n      \"path\": \"/etc/app/app.conf\",\n      \"deployed_sha\": \"0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c\",\n      \"current_sha\": \"a3f1c2e4b5d6978812f3e4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b9a0f1e2d3c4b5\"\n    }\n  ],\n  \"total_items\": 1\n}\n```",
 	},
 	Args:    cobra.NoArgs,
 	Example: "  osapi client file stale list\n  osapi client file stale list --json",

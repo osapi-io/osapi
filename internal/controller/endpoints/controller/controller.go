@@ -45,5 +45,6 @@ var Group = endpoint.Register(endpoint.Define(
 		Permission(client.PermHealthRead).
 		Command("Show the health of the controller", "Each controller, with each of its sub-components, from the health status of the controller.").
 		Example("").
+		Prints(sampleStatus).
 		Example("--json"),
 ))

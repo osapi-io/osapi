@@ -578,6 +578,32 @@ func (s *OutputPublicTestSuite) TestPrintsGroups() {
 	s.Equal("list:{}", printed)
 }
 
+// TestDerive prints an answer of a method from its output type, with an age
+// from the time that SetNow fixes, so a docs page is the same on each run.
+func (s *OutputPublicTestSuite) TestDerive() {
+	type aged struct {
+		Name string `json:"name"`
+		Seen string `json:"seen" render:"age"`
+	}
+	m := command.Method[struct{}, aged]("get")
+	g := command.Define("zzderive", "Derive", m)
+	t0 := time.Date(2026, time.January, 15, 10, 0, 0, 0, time.UTC)
+
+	command.SetNow(t0)
+	s.Equal(t0, command.Now())
+	r := &recorder{}
+	s.Require().NoError(command.Derive(r, g, m, struct{}{},
+		[]byte(`{"name":"web-01","seen":"2026-01-15T09:59:30Z"}`)))
+	s.Contains(r.b.String(), "30s ago")
+	s.Error(
+		command.Derive(&recorder{}, g, m, struct{}{}, []byte(`{"name":`)),
+		"an answer that is not JSON",
+	)
+
+	command.SetNow(time.Time{})
+	s.WithinDuration(time.Now(), command.Now(), time.Minute, "the clock, with no fixed time")
+}
+
 func (s *OutputPublicTestSuite) TestRender() {
 	r := &recorder{}
 	s.Require().NoError(command.Render(r, "zzrender", &plain{Items: []row{{Name: "web-01"}}}))

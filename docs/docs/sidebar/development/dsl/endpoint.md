@@ -213,6 +213,17 @@ and the CLI page show each one.
 
 Use: At least one for each method: the call a person makes most.
 
+### `.Prints(out)`
+
+Gives the last Example its output: what the API answers, a value of the method's
+output type. The CLI page shows it as the CLI prints it, in its colors, and as
+the JSON that --json prints. endpoint validate refuses a value of another type,
+and Prints before an Example.
+
+Use: After the first Example of each method that answers with a body. Times in
+the value are relative to 2026-01-15 10:00 UTC, the time that the docs generator
+fixes, so an age is the same on each run.
+
 ### `.Use("name")`
 
 Names the CLI command apart from the method. A method whose Sub differs from its

@@ -105,6 +105,10 @@ type Command interface {
 type Example struct {
 	Flags string
 	Doc   string
+	// Output is what the API answers for the example, a value of the
+	// method's output type, which Prints sets. The docs page of the command
+	// shows it as the CLI prints it. Nil shows no output.
+	Output any
 }
 
 // Deps is what the commands need from the CLI.

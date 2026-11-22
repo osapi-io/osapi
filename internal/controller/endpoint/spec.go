@@ -204,6 +204,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindRefine,
+			Name: ".Prints(out)",
+			Does: "Gives the last Example its output: what the API answers, a value of the method's output type. The CLI page shows it as the CLI prints it, in its colors, and as the JSON that --json prints. endpoint validate refuses a value of another type, and Prints before an Example.",
+			When: "After the first Example of each method that answers with a body. Times in the value are relative to 2026-01-15 10:00 UTC, the time that the docs generator fixes, so an age is the same on each run.",
+		},
+		{
+			Kind: KindRefine,
 			Name: `.Use("name")`,
 			Does: "Names the CLI command apart from the method. A method whose Sub differs from its command name goes under a command of the Sub.",
 			When: "When the command's verb is a method name the group has already, such as list under pending beside the group's own list.",
