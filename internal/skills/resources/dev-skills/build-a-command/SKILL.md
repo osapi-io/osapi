@@ -46,7 +46,7 @@ The design is `components/osapi/commands.md` in osapi-io/specs. Read it first.
 | Runs on the machine of the person, with no API: the config, a file, a token | A local command: this skill |
 | Calls the API for work on the controller: the registry, the job queue, the audit log | An endpoint: use the build-an-endpoint skill |
 | Calls the API for work on a host | A behavior: use the build-a-behavior skill |
-| Runs for a long time and stops on a signal, such as `agent start` | Not yet: the DSL has no method for a process. Keep it in `cmd/` |
+| Runs for a long time and stops on a signal, such as `controller start` | A local command, made with `command.Process`: this skill. "The rules to keep" tells how |
 
 ## Find what you need
 
@@ -115,7 +115,10 @@ The design is `components/osapi/commands.md` in osapi-io/specs. Read it first.
   `rule.Declare`, with its check and its message.
 - `--json` prints the output of the method. Do not make a second shape for it.
 - A command that runs until a signal, such as `nats server start`, is
-  `command.Process("start").Setup(fn)`. `fn` gets the command's context and the
+  `command.Process("start").Setup(fn)`. `internal/cli/commands/controllercmd`
+  is a complete one:
+  `command.Process("start").Flag("controller.api.port").Setup(Start)`. `fn`
+  gets the command's context and the
   deps, makes each component and starts nothing, and returns
   `command.Running{Components, Cleanup}`. `command.Serve` starts them, waits
   until the context ends, then stops them with `context.WithoutCancel` and
@@ -155,7 +158,7 @@ each question.
 | --- | --- |
 | Does it call the API? | This skill, or build-an-endpoint or build-a-behavior |
 | Is it a new command, or one that moves? | A move keeps the name, the flags and the output; tell the user each difference |
-| Where does it go in the tree? | Under the root, or under a command with `Under`, such as `controller` |
+| Where does it go in the tree? | Under the root, or under a command with `Under` and a `command.Parent` constant, such as `command.ParentController` |
 | What does it read from the machine? | A field of `Deps` for each: the config, the file system, a clock |
 | What does a person read at a shell? | The tags of the output type, and its shape |
 
