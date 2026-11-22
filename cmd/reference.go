@@ -313,8 +313,9 @@ func endpointTitle(
 
 // configTables is page with each generated table in it written again: the
 // config tables, from config.Keys and the config that osapi ships under
-// root, the role table, from authtoken.RolePermissions, and the metrics
-// reference, from instruments.All.
+// root, the role table, from authtoken.RolePermissions, the metrics
+// reference, from instruments.All, and the screens of the CLI's output,
+// from the examples of a behavior.
 func configTables(
 	root string,
 	page string,
@@ -334,7 +335,9 @@ func configTables(
 		return authtoken.RoleTable()
 	})
 
-	return guide.Fill(page, "metrics", func([]string) string {
+	page = guide.Fill(page, "metrics", func([]string) string {
 		return instruments.Table()
-	}), nil
+	})
+
+	return guide.Fill(page, "output", behaviorcommand.Screen), nil
 }
