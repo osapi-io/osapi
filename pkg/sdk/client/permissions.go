@@ -27,10 +27,3 @@ type Permission = string
 
 // Role represents a built-in RBAC role name.
 type Role = string
-
-// Built-in role constants.
-const (
-	RoleAdmin Role = "admin"
-	RoleWrite Role = "write"
-	RoleRead  Role = "read"
-)

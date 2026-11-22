@@ -270,6 +270,35 @@ func (g *Group) Permission(
 	}
 }
 
+// Declared is a permission that a method of a group needs: the permission,
+// whether the method marks it admin only, and whether the method names it,
+// with Permission, rather than takes its group's.
+type Declared struct {
+	Permission string
+	AdminOnly  bool
+	Named      bool
+	// Where is the group and method, such as agent drain, for an error.
+	Where string
+}
+
+// Declared is the permission of each method of g that needs one.
+func (g *Group) Declared() []Declared {
+	var out []Declared
+	for _, m := range g.Methods {
+		if m.public {
+			continue
+		}
+		out = append(out, Declared{
+			Permission: g.Permission(m),
+			AdminOnly:  m.adminOnly,
+			Named:      m.permission != "",
+			Where:      g.Name + " " + m.Name,
+		})
+	}
+
+	return out
+}
+
 // A group is a group of the command layer, and a method one of its
 // commands: the CLI's commands are made from them.
 var (
@@ -386,6 +415,7 @@ type Method struct {
 	returns          string
 	permission       string
 	public           bool
+	adminOnly        bool
 	handler          any
 	cmdShort         string
 	location         string
@@ -512,6 +542,16 @@ func (m *Method) Permission(
 	permission string,
 ) *Method {
 	m.permission = permission
+
+	return m
+}
+
+// AdminOnly makes the method's permission one that only the admin role
+// grants, such as admission:write: write and read do not get it. Each method
+// with one permission must agree. An execute or shell permission is admin
+// only with no mark.
+func (m *Method) AdminOnly() *Method {
+	m.adminOnly = true
 
 	return m
 }

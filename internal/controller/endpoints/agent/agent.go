@@ -95,6 +95,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Returns("Agent details.").
 		Errors(endpoint.NotFound(ErrNotFound, "Agent not found")),
 	endpoint.Post[DrainInput, struct{}]("drain").
+		AdminOnly().
 		Fails("a hostname over 255 characters", DrainInput{Hostname: long}).
 		Status(http.StatusNoContent).
 		Command("Drain an agent",
@@ -113,6 +114,7 @@ var Group = endpoint.Register(endpoint.Define(
 			endpoint.Conflict(ErrState, "Agent already in requested state."),
 		),
 	endpoint.Post[UndrainInput, struct{}]("undrain").
+		AdminOnly().
 		Fails("a hostname over 255 characters", UndrainInput{Hostname: long}).
 		Status(http.StatusNoContent).
 		Command("Undrain an agent",

@@ -254,10 +254,23 @@ agents share a hostname.
 ### `.Permission("group:verb")`
 
 Names the permission the method needs, in place of &lt;group&gt;:read or
-&lt;group&gt;:write.
+&lt;group&gt;:write. It must be one that a group, a behavior or the hand-written
+domains declare: a test fails on a name that nothing declares, because no role
+grants it.
 
 Use: When a different permission covers it, such as agent:read for facts, or
 trace:read for telemetry.
+
+### `.AdminOnly()`
+
+Makes the method's permission one that only the admin role grants. By the rule,
+admin gets each permission, write each read and write permission, and read each
+read permission; an execute or shell permission is admin only with no mark. Each
+method with the same permission must agree. osapi token roles get --name write
+shows what a role gets.
+
+Use: For a trust decision or a record of who did what, such as admission:write,
+agent:write or audit:read.
 
 ### `.Public()`
 

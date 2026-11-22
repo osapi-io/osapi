@@ -199,6 +199,21 @@ func (s *EndpointPublicTestSuite) TestUsesAndHandle() {
 	s.Equal([]endpoint.Error{e}, created.Mapped())
 }
 
+func (s *EndpointPublicTestSuite) TestDeclared() {
+	g := endpoint.Define("node", "Nodes",
+		endpoint.Get[noInput, Node]("list"),
+		endpoint.Post[keyInput, Node]("drain").AdminOnly(),
+		endpoint.Get[noInput, Node]("trace").Permission("trace:read"),
+		endpoint.Get[noInput, struct{}]("ping").Public(),
+	)
+
+	s.Equal([]endpoint.Declared{
+		{Permission: "node:read", Where: "node list"},
+		{Permission: "node:write", AdminOnly: true, Where: "node drain"},
+		{Permission: "trace:read", Named: true, Where: "node trace"},
+	}, g.Declared(), "a public method needs no permission")
+}
+
 func (s *EndpointPublicTestSuite) TestCommandHelp() {
 	plain := endpoint.Get[noInput, Node]("get").Describe("Get a node").Explain("API words.")
 	s.Equal("Get a node", plain.CommandShort())

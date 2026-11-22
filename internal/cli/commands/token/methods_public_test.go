@@ -33,7 +33,10 @@ import (
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/commands/token"
+
+	// The endpoint groups declare their permissions, as in the binary.
 	"github.com/osapi-io/osapi/internal/cli/commands/token/mocks"
+	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all"
 )
 
 const key = "0123456789abcdef0123456789abcdef"
@@ -67,6 +70,7 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 				Roles: []string{"read"}, Subject: "ops", Permissions: []string{"node:read"},
 			},
 			setup: func() {
+				s.config.EXPECT().CustomRoles().Return(nil, nil)
 				s.config.EXPECT().SigningKey().Return(key)
 				s.tokens.EXPECT().
 					Generate(key, []string{"read"}, "ops", []string{"node:read"}).
@@ -84,12 +88,49 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 			name: "when the token cannot be signed, it is the error",
 			in:   token.GenerateInput{Roles: []string{"read"}, Subject: "ops"},
 			setup: func() {
+				s.config.EXPECT().CustomRoles().Return(nil, nil)
 				s.config.EXPECT().SigningKey().Return("")
 				s.tokens.EXPECT().Generate("", []string{"read"}, "ops", nil).
 					Return("", errors.New("no key"))
 			},
 			validateFunc: func(_ token.GenerateOutput, err error) {
 				s.EqualError(err, "failed to generate token: no key")
+			},
+		},
+		{
+			name: "when the role is a custom role of the config, it is signed",
+			in:   token.GenerateInput{Roles: []string{"auditor"}, Subject: "ops"},
+			setup: func() {
+				s.config.EXPECT().CustomRoles().
+					Return(map[string][]string{"auditor": {"audit:read"}}, nil)
+				s.config.EXPECT().SigningKey().Return(key)
+				s.tokens.EXPECT().Generate(key, []string{"auditor"}, "ops", nil).
+					Return("signed", nil)
+			},
+			validateFunc: func(got token.GenerateOutput, err error) {
+				s.Require().NoError(err)
+				s.Equal("signed", got.Token)
+			},
+		},
+		{
+			name: "when the role is neither built in nor of the config, it is refused",
+			in:   token.GenerateInput{Roles: []string{"root"}, Subject: "ops"},
+			setup: func() {
+				s.config.EXPECT().CustomRoles().Return(nil, nil)
+			},
+			validateFunc: func(_ token.GenerateOutput, err error) {
+				s.ErrorIs(err, token.ErrNoRole)
+				s.ErrorContains(err, `role "root"`)
+			},
+		},
+		{
+			name: "when the config cannot be read, it is the error",
+			in:   token.GenerateInput{Roles: []string{"read"}, Subject: "ops"},
+			setup: func() {
+				s.config.EXPECT().CustomRoles().Return(nil, errors.New("no file"))
+			},
+			validateFunc: func(_ token.GenerateOutput, err error) {
+				s.EqualError(err, "no file")
 			},
 		},
 	}

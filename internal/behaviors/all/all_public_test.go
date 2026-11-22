@@ -43,6 +43,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli"
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
+	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all"
 )
 
 // AllPublicTestSuite checks that every behavior all.go registers is valid
@@ -68,6 +69,14 @@ func (s *AllPublicTestSuite) TestUIPermissionsAreCurrent() {
 	s.Require().NoError(err)
 	s.Equal(authtoken.TypeScript(), string(got),
 		"%s is stale: run go generate ./internal/behaviors/all", authtoken.TypeScriptFile)
+}
+
+// TestPermissionsAreDeclared checks the permissions of every registered
+// endpoint group and behavior: a method that names a permission that nothing
+// declares answers 403 to every caller, and a permission that is admin only
+// on one method must be on each.
+func (s *AllPublicTestSuite) TestPermissionsAreDeclared() {
+	s.Empty(authtoken.Check())
 }
 
 // TestSDKPermissionsAreCurrent checks that the SDK's permission constants,

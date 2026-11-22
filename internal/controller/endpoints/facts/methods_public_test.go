@@ -32,6 +32,10 @@ import (
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/facts"
+
+	// Each group, as in the binary: facts needs agent:read, which the agent
+	// group declares.
+	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/facts/gen"
 	factskeys "github.com/osapi-io/osapi/internal/facts"
 )

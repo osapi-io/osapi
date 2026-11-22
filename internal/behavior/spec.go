@@ -301,6 +301,15 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindRefine,
+			Name: ".AdminOnly() on a method",
+			Does: "Makes the permission of the method's verb, such as <name>:write, one that only the " +
+				"admin role grants. With no mark, admin and write get <name>:read and <name>:write, and " +
+				"read gets <name>:read. Each method with the same verb must agree. osapi token roles " +
+				"get --name write shows what a role gets.",
+			When: "For a write that is a trust decision, which an operator with the write role must not make.",
+		},
+		{
+			Kind: KindRefine,
 			Name: `.Explain("text")`,
 			Does: "The longer description: what the method touches, and what a second call does.",
 			When: "When one line does not say what the method changes.",

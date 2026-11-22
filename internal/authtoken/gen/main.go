@@ -28,6 +28,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/authtoken"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all"
+	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all"
 )
 
 // main writes the UI's permissions, authtoken.TypeScript, and the SDK's

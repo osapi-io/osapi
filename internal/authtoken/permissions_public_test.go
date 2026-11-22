@@ -29,6 +29,10 @@ import (
 
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/behavior"
+	_ "github.com/osapi-io/osapi/internal/behaviors/all"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all"
+	"github.com/osapi-io/osapi/internal/validation"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -65,6 +69,29 @@ var _ = behavior.Register(behavior.Define("motdperm", "Message of the day", beha
 	behavior.Read("get", motd),
 	behavior.Write("update", motd),
 ))
+
+// keyperm's write is admin only.
+var _ = behavior.Register(behavior.Define("keyperm", "Keys", behavior.API,
+	behavior.Node,
+	behavior.Read("get", motd),
+	behavior.Write("update", motd).AdminOnly(),
+))
+
+// Endpoint groups registered in this test binary only: one whose method
+// names a permission that nothing declares, and one whose two writes
+// disagree on AdminOnly.
+type epIn struct{}
+
+var (
+	_ = endpoint.Register(endpoint.Define("zztypo", "A typo",
+		endpoint.Get[epIn, epIn]("status").Permission("helth:read"),
+	))
+	_ = endpoint.Register(endpoint.Define("zzsplit", "Two writes",
+		endpoint.Post[epIn, epIn]("one").AdminOnly(),
+		endpoint.Post[epIn, epIn]("two"),
+		endpoint.Get[epIn, epIn]("open").Public(),
+	))
+)
 
 type PermissionsPublicTestSuite struct {
 	suite.Suite
@@ -277,7 +304,10 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 func (s *PermissionsPublicTestSuite) TestAllPermissions() {
 	all := authtoken.AllPermissions()
 
-	s.Contains(all, client.PermSysctlRead, "the hand-written domains' permissions")
+	s.Contains(all, client.PermCommandShell, "the hand-written domains' permissions")
+	s.Contains(all, client.PermAuditRead, "an endpoint group's, from its methods")
+	s.Contains(all, "zzsplit:write")
+	s.NotContains(all, "helth:read", "a permission that a method only names is not one")
 	s.Contains(all, "motdperm:read", "a behavior's, from its methods")
 	s.Contains(all, "motdperm:write")
 	s.NotContains(all, "hiddenperm:read", "a behavior with no API adds no permission")
@@ -296,7 +326,7 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 	}{
 		{
 			name: "when admin, it gets a behavior's read and write",
-			role: client.RoleAdmin,
+			role: authtoken.RoleAdmin,
 			validateFunc: func(perms []string, ok bool) {
 				s.True(ok)
 				s.Contains(perms, "motdperm:read")
@@ -306,7 +336,7 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 		},
 		{
 			name: "when write, it gets a behavior's read and write",
-			role: client.RoleWrite,
+			role: authtoken.RoleWrite,
 			validateFunc: func(perms []string, ok bool) {
 				s.True(ok)
 				s.Contains(perms, "motdperm:read")
@@ -316,11 +346,33 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 		},
 		{
 			name: "when read, it gets only a behavior's read",
-			role: client.RoleRead,
+			role: authtoken.RoleRead,
 			validateFunc: func(perms []string, ok bool) {
 				s.True(ok)
 				s.Contains(perms, "motdperm:read")
 				s.NotContains(perms, "motdperm:write")
+			},
+		},
+		{
+			name: "when write, it does not get an admin-only permission",
+			role: authtoken.RoleWrite,
+			validateFunc: func(perms []string, ok bool) {
+				s.True(ok)
+				s.Contains(perms, "keyperm:read")
+				s.NotContains(perms, "keyperm:write", "marked AdminOnly on a behavior")
+				s.NotContains(perms, client.PermAdmissionWrite, "marked AdminOnly on an endpoint")
+				s.NotContains(perms, client.PermAuditRead, "a read can be admin only")
+				s.NotContains(perms, client.PermPowerExecute, "an execute verb is admin only")
+				s.Contains(perms, client.PermJobWrite)
+			},
+		},
+		{
+			name: "when read, it does not get an admin-only read",
+			role: authtoken.RoleRead,
+			validateFunc: func(perms []string, ok bool) {
+				s.True(ok)
+				s.NotContains(perms, client.PermAuditRead)
+				s.Contains(perms, client.PermAdmissionRead)
 			},
 		},
 		{
@@ -338,6 +390,37 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 			tt.validateFunc(authtoken.RolePermissions(tt.role))
 		})
 	}
+}
+
+func (s *PermissionsPublicTestSuite) TestPermissionRule() {
+	_, ok := validation.Var(context.Background(), "job:read", authtoken.PermissionRule)
+	s.True(ok, "a permission that osapi knows")
+	msg, ok := validation.Var(context.Background(), "helth:read", authtoken.PermissionRule)
+	s.False(ok)
+	s.Contains(msg, "is not a permission")
+}
+
+func (s *PermissionsPublicTestSuite) TestRoles() {
+	s.Equal([]string{"admin", "write", "read"}, authtoken.Roles())
+}
+
+func (s *PermissionsPublicTestSuite) TestAdminOnly() {
+	s.True(authtoken.AdminOnly(client.PermCommandShell), "by its verb")
+	s.True(authtoken.AdminOnly(client.PermAgentWrite), "by its mark")
+	s.False(authtoken.AdminOnly(client.PermAgentRead))
+}
+
+func (s *PermissionsPublicTestSuite) TestCheck() {
+	errs := authtoken.Check()
+	got := make([]string, 0, len(errs))
+	for _, err := range errs {
+		got = append(got, err.Error())
+	}
+
+	s.Equal([]string{
+		"endpoint zztypo status names helth:read, which nothing declares: no role grants it",
+		"zzsplit:write is AdminOnly on endpoint zzsplit one but not on endpoint zzsplit two",
+	}, got, "only this binary's test groups are wrong; the real ones are not")
 }
 
 func (s *PermissionsPublicTestSuite) TestGo() {

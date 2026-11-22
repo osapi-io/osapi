@@ -24,11 +24,7 @@
 package token
 
 import (
-	"slices"
-
-	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/cli/command"
-	"github.com/osapi-io/osapi/internal/validation/rule"
 )
 
 // Group is the token group's definition. The commands, their flags, their
@@ -43,7 +39,6 @@ var Group = command.Register(command.Define(
 		Example("--subject user123 --roles=read").
 		Example("--subject svc@example.com --roles=read \\\n    -p node:read -p health:read").
 		Fails("no roles", GenerateInput{Subject: "ops"}).
-		Fails("an unknown role", GenerateInput{Roles: []string{"root"}, Subject: "ops"}).
 		Fails("no subject", GenerateInput{Roles: []string{"read"}}).
 		Fails("an unknown permission", GenerateInput{
 			Roles: []string{"read"}, Subject: "ops", Permissions: []string{"root:all"},
@@ -74,16 +69,3 @@ var Group = command.Register(command.Define(
 		Fails("no token", ValidateInput{}).
 		Handle(Validate),
 ))
-
-// Permission is the validate rule of a permission that a token can carry:
-// one of the permissions of this binary, behaviors included.
-const Permission = "permission"
-
-func init() {
-	rule.Declare(rule.Custom{
-		Tag:     Permission,
-		Check:   func(p string) bool { return slices.Contains(authtoken.AllPermissions(), p) },
-		Schema:  rule.None,
-		Message: "is not a permission: osapi token roles get --name admin lists each one",
-	})
-}

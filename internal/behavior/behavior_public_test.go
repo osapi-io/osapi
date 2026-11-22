@@ -439,6 +439,11 @@ func (s *BehaviorPublicTestSuite) TestDescribe() {
 	assert.Equal(s.T(), "Get one", m.Doc)
 }
 
+func (s *BehaviorPublicTestSuite) TestAdminOnly() {
+	assert.False(s.T(), behavior.Write("update", set).Admin)
+	assert.True(s.T(), behavior.Write("update", set).AdminOnly().Admin)
+}
+
 func (s *BehaviorPublicTestSuite) TestProviderType() {
 	assert.Equal(s.T(), "fakeProvider", behavior.Read("get", get).ProviderType().Name())
 }

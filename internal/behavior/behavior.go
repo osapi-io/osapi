@@ -281,6 +281,9 @@ type Method struct {
 	Long string
 	// Verb is read or write. An action is a write.
 	Verb Verb
+	// Admin is true for a method declared with .AdminOnly: only the admin
+	// role gets its permission, not write or read.
+	Admin bool
 	// Action is true for a write declared with Action: it is named for what
 	// it does, such as restart, and its route ends in its name.
 	Action bool
@@ -449,6 +452,14 @@ func (m *Method) Explain(
 	long string,
 ) *Method {
 	m.Long = long
+
+	return m
+}
+
+// AdminOnly makes the method's permission one that only the admin role
+// grants. Each method of the behavior with that verb must agree.
+func (m *Method) AdminOnly() *Method {
+	m.Admin = true
 
 	return m
 }

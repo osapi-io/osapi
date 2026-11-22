@@ -24,9 +24,9 @@ import "time"
 
 // GenerateInput is what a new token carries.
 type GenerateInput struct {
-	Roles       []string `json:"roles"       short:"r" validate:"required,dive,oneof=admin read write" doc:"Roles for the token"`
-	Subject     string   `json:"subject"     short:"u" validate:"required"                             doc:"Subject for the token (e.g., user ID or unique identifier)"`
-	Permissions []string `json:"permissions" short:"p" validate:"omitempty,dive,permission"            doc:"Direct permissions, which override the roles; osapi token roles get --name admin lists each one"`
+	Roles       []string `json:"roles"       short:"r" validate:"required"                  doc:"Roles for the token: built-in, or a custom role of the config"`
+	Subject     string   `json:"subject"     short:"u" validate:"required"                  doc:"Subject for the token (e.g., user ID or unique identifier)"`
+	Permissions []string `json:"permissions" short:"p" validate:"omitempty,dive,permission" doc:"Direct permissions, which override the roles; osapi token roles get --name admin lists each one"`
 }
 
 // GenerateOutput is a new token, with what it carries.
