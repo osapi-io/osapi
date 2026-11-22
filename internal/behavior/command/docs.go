@@ -75,7 +75,7 @@ func Annotations(
 	}
 
 	var parts []string
-	if out := Output(m); out != "" {
+	if out := Output(b, m); out != "" {
 		parts = append(parts, out)
 	}
 	var effects []string
@@ -119,37 +119,88 @@ func Annotations(
 	return out
 }
 
-// Output is what each example of m prints, as osapi client prints it: the
-// CLI's own printer, with its colors, in a fenced block of language ansi,
-// which the docs site shows in those colors. Each example is one host,
-// web-01, that answers the example's output. An example with no output, such
-// as one of a write that answers only changed, still shows its row.
+// Output is what each example of m prints, as the CLI prints it, colors
+// included: the command and its table for one host, the same command for
+// the fleet, where one host skips, and the API's response with --json. Each
+// screen is a fenced ansi block, which the docs site shows as a terminal.
+// An example whose output is not an object, or a list of them, has none.
 func Output(
+	b *behavior.Behavior,
 	m *behavior.Method,
 ) string {
-	blocks := make([]string, 0, len(m.Examples))
+	command := b.Command(m)
+	sections := make([]string, 0, len(m.Examples))
 	for _, ex := range m.Examples {
-		result, ok := exampleResult(m, ex.Output)
+		one, ok := exampleResult(m, ex.Output)
 		if !ok {
 			continue
 		}
-		screen := cli.Capture(func() {
-			// As Print, with m itself, which need not be registered.
-			cli.PrintJobID(result.JobID)
-			cli.PrintTraceID(exampleTraceID)
-			cli.PrintCompactTable([]cli.Section{Table(m, result)})
-			// A table with no summary line leaves the trace pending; it is
-			// not this example's to print later.
-			cli.PrintTraceID("")
-		})
-		blocks = append(blocks, fmt.Sprintf("%s:\n\n```ansi\n%s\n```",
-			ex.Doc, strings.Trim(screen, "\n")))
+		args := exampleArgs(ex.Input)
+		// one is decoded JSON, which always encodes again.
+		body, _ := json.MarshalIndent(one, "", "  ")
+		sections = append(sections, fmt.Sprintf(
+			"%s, on one host:\n\n%s\n\nOn each host, where one cannot run it:\n\n%s\n\n"+
+				"With `--json`, the API's response:\n\n```json\n%s\n```",
+			ex.Doc,
+			screen(m, command+" --target "+exampleHost+args, one),
+			screen(m, command+" --target _all"+args, fleetResult(one)),
+			body,
+		))
 	}
-	if len(blocks) == 0 {
+	if len(sections) == 0 {
 		return ""
 	}
 
-	return "Each example prints this:\n\n" + strings.Join(blocks, "\n\n")
+	return strings.Join(sections, "\n\n")
+}
+
+// screen is line, as a person types it, and what the CLI prints for result,
+// in a fenced ansi block.
+func screen(
+	m *behavior.Method,
+	line string,
+	result Result,
+) string {
+	printed := cli.Capture(func() {
+		// As Print, with m itself, which need not be registered.
+		cli.PrintJobID(result.JobID)
+		cli.PrintTraceID(exampleTraceID)
+		cli.PrintCompactTable([]cli.Section{Table(m, result)})
+		// A table with no summary line leaves the trace pending; it is not
+		// this example's to print later.
+		cli.PrintTraceID("")
+	})
+
+	return "```ansi\n$ " + line + "\n" + strings.Trim(printed, "\n") + "\n```"
+}
+
+// fleetHosts are the hosts of the fleet example: two that return the
+// example's output, and a Mac that skips, as it does a Linux-only behavior.
+var fleetHosts = []string{"web-01", "web-02", "mac-01"}
+
+// fleetResult is one as the fleet answers it: its rows from each of the
+// first two hosts, and the last host skipped.
+func fleetResult(
+	one Result,
+) Result {
+	out := Result{JobID: one.JobID}
+	for _, host := range fleetHosts[:2] {
+		for _, row := range one.Results {
+			copied := make(map[string]any, len(row))
+			for k, v := range row {
+				copied[k] = v
+			}
+			copied["hostname"] = host
+			out.Results = append(out.Results, copied)
+		}
+	}
+	out.Results = append(out.Results, map[string]any{
+		"hostname": fleetHosts[2],
+		"status":   "skipped",
+		"error":    behavior.ErrUnsupported.Error(),
+	})
+
+	return out
 }
 
 // exampleResult is the answer that example output gives from one host,
