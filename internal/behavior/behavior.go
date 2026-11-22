@@ -48,6 +48,12 @@ const (
 	VerbRead Verb = "read"
 	// VerbWrite changes the host. Its output reports whether it did.
 	VerbWrite Verb = "write"
+	// VerbExecute is the permission verb of an action, such as a restart or
+	// a reboot: it makes something happen on the host, but it does not change
+	// what the host is configured to be. An action is a write in each other
+	// way; only its permission is <name>:execute, which the operator role
+	// gets and the automation role does not.
+	VerbExecute Verb = "execute"
 )
 
 // Behavior is one area of a host that osapi manages, such as kernel
@@ -581,9 +587,9 @@ func Write[P any, In any, Out any](
 }
 
 // Action declares a write named for what it does to the host, such as
-// restart or reboot, which no create, update or delete says. It is a write in
-// each other way: <group>:write, a modify job, and an output that reports
-// Changed. Its route is POST on the method's path with its name after it,
+// restart or reboot, which no create, update or delete says. Its permission
+// is <group>:execute. It is a write in each other way: a modify job, and an
+// output that reports Changed. Its route is POST on the method's path with its name after it,
 // /service/{name}/restart, so two actions on one item have two routes. The
 // name is one of the CLI's actions, osapi cli command spec get lists them.
 func Action[P any, In any, Out any](
@@ -629,6 +635,16 @@ func newMethod[P any, In any, Out any](
 			return out, in, err
 		},
 	}
+}
+
+// PermissionVerb is the verb of the method's permission: execute for an
+// action, else its verb.
+func (m *Method) PermissionVerb() Verb {
+	if m.Action {
+		return VerbExecute
+	}
+
+	return m.Verb
 }
 
 // HTTPMethod is the method's HTTP verb: GET for a read, POST for an action,

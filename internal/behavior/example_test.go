@@ -107,7 +107,7 @@ func Example() {
 	)
 
 	for _, m := range motd.Methods {
-		fmt.Println(m.HTTPMethod(), motd.Path(m), motd.Permission(m.Verb))
+		fmt.Println(m.HTTPMethod(), motd.Path(m), motd.Permission(m.PermissionVerb()))
 		fmt.Println("  ", motd.Command(m))
 	}
 
@@ -127,7 +127,7 @@ func ExampleUnder() {
 	)
 
 	m := dns.Methods[0]
-	fmt.Println(dns.Path(m), dns.Permission(m.Verb))
+	fmt.Println(dns.Path(m), dns.Permission(m.PermissionVerb()))
 
 	// Output:
 	// /api/node/{hostname}/network/dns network:read

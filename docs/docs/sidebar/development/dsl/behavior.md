@@ -179,8 +179,9 @@ Use: For each change. fn is func(ctx, p Provider, in In) (Out, error).
 ### `Action("name", fn)`
 
 A write named for what it does, such as restart: POST on the method's path with
-the name after it, /service/&#123;name&#125;/restart, and &lt;group&gt;:write.
-Named with one of the CLI's actions. Out has Changed bool.
+the name after it, /service/&#123;name&#125;/restart, and &lt;group&gt;:execute,
+which the operator role gets and automation does not. Named with one of the
+CLI's actions. Out has Changed bool.
 
 Use: For a change that create, update and delete do not say, such as start,
 stop, restart, enable, signal or reboot.
@@ -253,12 +254,15 @@ step fills before:"set", and clear the secret in the step.
 ### `.AdminOnly() on a method`
 
 Makes the permission of the method's verb, such as &lt;name&gt;:write, one that
-only the admin role grants. With no mark, admin and write get &lt;name&gt;:read
-and &lt;name&gt;:write, and read gets &lt;name&gt;:read. Each method with the
-same verb must agree. osapi token roles get --name write shows what a role gets.
+only the admin role grants. With no mark, admin gets each permission; operator
+each read and each execute permission, and automation each read and each write
+permission, that is not admin only; read each read that is not admin only;
+auditor and observer get their lists. An action's permission is
+&lt;name&gt;:execute. Each method with the same verb must agree. osapi token
+roles get --name automation shows what a role gets.
 
-Use: For a write that is a trust decision, which an operator with the write role
-must not make.
+Use: For a write that is a trust decision or reaches root, which automation must
+not make, such as an account or a cron entry.
 
 ### `.Explain("text")`
 

@@ -100,8 +100,21 @@ var builtinPermissions = []Permission{
 }
 
 // adminVerbs are the verbs of a permission that only the admin role gets:
-// to run a command, to open a shell, to signal a process or reboot.
-var adminVerbs = []string{"execute", "shell"}
+// to open a shell.
+var adminVerbs = []string{"shell"}
+
+// builtinAdminOnly are the permissions of the hand-written domains that only
+// the admin role gets, because each reaches root directly: an arbitrary
+// command (command:execute, docker:execute), an account or an SSH key
+// (user:write), and a cron entry, which runs as any user (schedule:write).
+// A behavior or a group that takes one over marks its methods AdminOnly,
+// and Check fails until it does.
+var builtinAdminOnly = []Permission{
+	"command:execute",
+	"docker:execute",
+	"user:write",
+	"schedule:write",
+}
 
 // declared is a permission that something needs: a hand-written domain, a
 // method of an endpoint group, or a method of a behavior.
@@ -122,7 +135,11 @@ type declared struct {
 func declarations() []declared {
 	out := make([]declared, 0, len(builtinPermissions))
 	for _, p := range builtinPermissions {
-		out = append(out, declared{permission: p, where: "authtoken"})
+		out = append(out, declared{
+			permission: p,
+			adminOnly:  slices.Contains(builtinAdminOnly, p),
+			where:      "authtoken",
+		})
 	}
 	for _, d := range dsl.All() {
 		if !d.ServesAPI() {
@@ -168,20 +185,45 @@ func init() {
 	})
 }
 
-// The built-in roles. The SDK's Role constants are written from Roles.
+// The built-in roles, one for each kind of person or program that uses
+// osapi. The SDK's Role constants are written from Roles.
 const (
+	// RoleAdmin is the owner of the fleet: each permission.
 	RoleAdmin Role = "admin"
-	RoleWrite Role = "write"
-	RoleRead  Role = "read"
+	// RoleOperator is the person on call: each read, and each action that
+	// makes something happen (execute), such as a restart, a signal or a
+	// reboot, but no change to the configuration.
+	RoleOperator Role = "operator"
+	// RoleAutomation is CI or a workflow that changes the configuration:
+	// each read and each write, but no action.
+	RoleAutomation Role = "automation"
+	// RoleAuditor reads the audit log, the traces and the jobs, and the
+	// health. It changes and runs nothing.
+	RoleAuditor Role = "auditor"
+	// RoleRead reads each thing that is not admin only. Logs, files and
+	// process arguments can hold secrets, and read has them.
+	RoleRead Role = "read"
+	// RoleObserver is a dashboard or a monitor: the health, the status of
+	// each host, and the agents with their facts. It reads no file, log or
+	// command output.
+	RoleObserver Role = "observer"
 )
 
-// Roles are the built-in roles, from the most to the least that each grants.
+// Roles are the built-in roles.
 func Roles() []Role {
-	return []Role{RoleAdmin, RoleWrite, RoleRead}
+	return []Role{RoleAdmin, RoleOperator, RoleAutomation, RoleAuditor, RoleRead, RoleObserver}
 }
 
+// auditorPermissions and observerPermissions are the roles that a list
+// defines, not a verb: what an auditor and an observer read.
+var (
+	auditorPermissions  = []Permission{"audit:read", "trace:read", "job:read", "health:read"}
+	observerPermissions = []Permission{"health:read", "status:read", "agent:read"}
+)
+
 // AdminOnly reports whether only the admin role grants p: its verb is
-// execute or shell, or a method that needs it is marked AdminOnly.
+// shell, the hand-written domain that needs it says so, or a method that
+// needs it is marked AdminOnly.
 func AdminOnly(
 	p Permission,
 ) bool {
@@ -199,20 +241,33 @@ func AdminOnly(
 }
 
 // RolePermissions is what a built-in role grants, and whether role is one.
-// admin grants each permission. write grants each read and write permission
-// that is not admin only. read grants each read permission that is not admin
-// only.
+// admin grants each permission. operator grants each read and each execute
+// permission that is not admin only, and automation each read and each
+// write that is not admin only. read grants each read that is not admin
+// only. auditor and observer grant their lists, of the permissions that
+// osapi knows. Thus a new behavior's permissions go to the roles of their
+// verbs, and nobody adds them to a role by hand.
 func RolePermissions(
 	role Role,
 ) ([]Permission, bool) {
-	var grants func(verb string) bool
+	var grants func(p Permission, verb string) bool
 	switch role {
 	case RoleAdmin:
 		return AllPermissions(), true
-	case RoleWrite:
-		grants = func(verb string) bool { return verb == "read" || verb == "write" }
+	case RoleOperator:
+		grants = func(p Permission, verb string) bool {
+			return (verb == "read" || verb == "execute") && !AdminOnly(p)
+		}
+	case RoleAutomation:
+		grants = func(p Permission, verb string) bool {
+			return (verb == "read" || verb == "write") && !AdminOnly(p)
+		}
 	case RoleRead:
-		grants = func(verb string) bool { return verb == "read" }
+		grants = func(p Permission, verb string) bool { return verb == "read" && !AdminOnly(p) }
+	case RoleAuditor:
+		grants = func(p Permission, _ string) bool { return slices.Contains(auditorPermissions, p) }
+	case RoleObserver:
+		grants = func(p Permission, _ string) bool { return slices.Contains(observerPermissions, p) }
 	default:
 		return nil, false
 	}
@@ -220,7 +275,7 @@ func RolePermissions(
 	var out []Permission
 	for _, p := range AllPermissions() {
 		_, verb, _ := strings.Cut(string(p), ":")
-		if grants(verb) && !AdminOnly(p) {
+		if grants(p, verb) {
 			out = append(out, p)
 		}
 	}

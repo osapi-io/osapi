@@ -74,7 +74,7 @@ type Token int
 const (
 	// Read is a token with the built-in read role.
 	Read Token = iota
-	// Write is a token with the built-in write role.
+	// Write is a token with the roles that change a host without admin: automation and operator.
 	Write
 	// NoToken sends no Authorization header.
 	NoToken
@@ -343,7 +343,9 @@ func token(
 	case Read:
 		roles = []string{"read"}
 	case Write:
-		roles = []string{"write"}
+		// The two roles that change a host without admin: automation for a
+		// write, operator for an action (its execute permission).
+		roles = []string{"automation", "operator"}
 	case Lacking:
 		roles, perms = []string{"admin"}, []string{"node:read"}
 	case Admin:

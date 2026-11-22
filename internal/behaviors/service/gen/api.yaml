@@ -630,7 +630,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - service:write
+            - service:execute
       summary: Make a service that osapi deployed not start at boot
       tags:
         - service_operations
@@ -686,7 +686,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - service:write
+            - service:execute
       summary: Make a service that osapi deployed start at boot
       tags:
         - service_operations
@@ -742,7 +742,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - service:write
+            - service:execute
       summary: Restart a service that osapi deployed
       tags:
         - service_operations
@@ -798,7 +798,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - service:write
+            - service:execute
       summary: Start a service that osapi deployed
       tags:
         - service_operations
@@ -854,7 +854,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - service:write
+            - service:execute
       summary: Stop a service that osapi deployed
       tags:
         - service_operations

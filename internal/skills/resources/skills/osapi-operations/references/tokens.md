@@ -10,7 +10,7 @@ osapi token generate --roles read --subject ci --permissions node:read --json
 osapi token validate --token <jwt> --json
 ```
 
-Roles are `admin`, `write` and `read`. `--permissions` grants exactly the
+Roles are `admin`, `operator`, `automation`, `auditor`, `read` and `observer`; `osapi token roles get --name <role>` lists each one's permissions. `--permissions` grants exactly the
 listed permissions instead of a role's; `osapi help token generate --json`
 lists them.
 

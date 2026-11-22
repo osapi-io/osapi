@@ -127,8 +127,8 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 			},
 		},
 		{
-			name:  "write role gets write permissions but not audit or command",
-			roles: []string{"write"},
+			name:  "automation role gets write permissions but not audit or command",
+			roles: []string{"automation"},
 			validateFunc: func(resolved map[string]bool) {
 				for _, p := range []string{
 					string(client.PermNodeRead),
@@ -274,7 +274,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 		},
 		{
 			name:  "multiple roles merge permissions",
-			roles: []string{"read", "write"},
+			roles: []string{"read", "automation"},
 			validateFunc: func(resolved map[string]bool) {
 				for _, p := range []string{
 					string(client.PermNodeRead),
@@ -338,39 +338,47 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 		validateFunc func(perms []authtoken.Permission, ok bool)
 	}{
 		{
-			name: "when admin, it gets a behavior's read and write",
+			name: "when admin, it gets each permission",
 			role: authtoken.RoleAdmin,
 			validateFunc: func(perms []authtoken.Permission, ok bool) {
 				s.True(ok)
-				s.Contains(perms, authtoken.Permission("motdperm:read"))
-				s.Contains(perms, authtoken.Permission("motdperm:write"))
+				s.Equal(authtoken.AllPermissions(), perms)
 				s.Contains(perms, client.PermCommandShell)
 			},
 		},
 		{
-			name: "when write, it gets a behavior's read and write",
-			role: authtoken.RoleWrite,
+			name: "when operator, it gets each read and each execute that is not admin only",
+			role: authtoken.RoleOperator,
 			validateFunc: func(perms []authtoken.Permission, ok bool) {
 				s.True(ok)
 				s.Contains(perms, authtoken.Permission("motdperm:read"))
-				s.Contains(perms, authtoken.Permission("motdperm:write"))
+				s.NotContains(
+					perms,
+					authtoken.Permission("motdperm:write"),
+					"a write is not an action",
+				)
+				s.Contains(perms, client.PermPowerExecute)
+				s.Contains(perms, client.PermProcessExecute)
+				s.NotContains(
+					perms,
+					client.PermCommandExecute,
+					"an arbitrary command is admin only",
+				)
+				s.NotContains(
+					perms,
+					client.PermDockerExecute,
+					"a command in a container is admin only",
+				)
 				s.NotContains(perms, client.PermCommandShell)
 			},
 		},
 		{
-			name: "when read, it gets only a behavior's read",
-			role: authtoken.RoleRead,
+			name: "when automation, it gets each read and each write that is not admin only",
+			role: authtoken.RoleAutomation,
 			validateFunc: func(perms []authtoken.Permission, ok bool) {
 				s.True(ok)
 				s.Contains(perms, authtoken.Permission("motdperm:read"))
-				s.NotContains(perms, authtoken.Permission("motdperm:write"))
-			},
-		},
-		{
-			name: "when write, it does not get an admin-only permission",
-			role: authtoken.RoleWrite,
-			validateFunc: func(perms []authtoken.Permission, ok bool) {
-				s.True(ok)
+				s.Contains(perms, authtoken.Permission("motdperm:write"))
 				s.Contains(perms, authtoken.Permission("keyperm:read"))
 				s.NotContains(
 					perms,
@@ -379,22 +387,51 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 				)
 				s.NotContains(perms, client.PermAdmissionWrite, "marked AdminOnly on an endpoint")
 				s.NotContains(perms, client.PermAuditRead, "a read can be admin only")
-				s.NotContains(perms, client.PermPowerExecute, "an execute verb is admin only")
+				s.NotContains(perms, client.PermPowerExecute, "an action is not a write")
+				s.NotContains(perms, client.PermUserWrite, "an account reaches root")
+				s.NotContains(perms, client.PermScheduleWrite, "a cron entry runs as any user")
+				s.Contains(perms, client.PermFileWrite, "a file stays with automation")
 				s.Contains(perms, client.PermJobWrite)
 			},
 		},
 		{
-			name: "when read, it does not get an admin-only read",
+			name: "when read, it gets each read that is not admin only",
 			role: authtoken.RoleRead,
 			validateFunc: func(perms []authtoken.Permission, ok bool) {
 				s.True(ok)
+				s.Contains(perms, authtoken.Permission("motdperm:read"))
+				s.NotContains(perms, authtoken.Permission("motdperm:write"))
 				s.NotContains(perms, client.PermAuditRead)
 				s.Contains(perms, client.PermAdmissionRead)
+				s.Contains(perms, client.PermLogRead, "read keeps logs, files and processes")
+			},
+		},
+		{
+			name: "when auditor, it gets the audit log, the traces, the jobs and the health",
+			role: authtoken.RoleAuditor,
+			validateFunc: func(perms []authtoken.Permission, ok bool) {
+				s.True(ok)
+				s.ElementsMatch([]authtoken.Permission{
+					client.PermAuditRead,
+					client.PermTraceRead,
+					client.PermJobRead,
+					client.PermHealthRead,
+				}, perms)
+			},
+		},
+		{
+			name: "when observer, it gets the health, the status and the agents only",
+			role: authtoken.RoleObserver,
+			validateFunc: func(perms []authtoken.Permission, ok bool) {
+				s.True(ok)
+				s.ElementsMatch([]authtoken.Permission{
+					client.PermHealthRead, client.PermStatusRead, client.PermAgentRead,
+				}, perms)
 			},
 		},
 		{
 			name: "when the role is not built in",
-			role: "auditor",
+			role: "write",
 			validateFunc: func(perms []authtoken.Permission, ok bool) {
 				s.False(ok)
 				s.Nil(perms)
@@ -418,11 +455,16 @@ func (s *PermissionsPublicTestSuite) TestPermissionRule() {
 }
 
 func (s *PermissionsPublicTestSuite) TestRoles() {
-	s.Equal([]authtoken.Role{"admin", "write", "read"}, authtoken.Roles())
+	s.Equal(
+		[]authtoken.Role{"admin", "operator", "automation", "auditor", "read", "observer"},
+		authtoken.Roles(),
+	)
 }
 
 func (s *PermissionsPublicTestSuite) TestAdminOnly() {
 	s.True(authtoken.AdminOnly(client.PermCommandShell), "by its verb")
+	s.True(authtoken.AdminOnly(client.PermCommandExecute), "a hand-written domain says so")
+	s.False(authtoken.AdminOnly(client.PermPowerExecute), "an execute verb is not admin only")
 	s.True(authtoken.AdminOnly(client.PermAgentWrite), "by its mark")
 	s.False(authtoken.AdminOnly(client.PermAgentRead))
 }
@@ -463,7 +505,7 @@ func (s *PermissionsPublicTestSuite) TestRoleTable() {
 	table := authtoken.RoleTable()
 
 	s.True(strings.HasPrefix(table, "| Role | Permissions |\n| --- | --- |\n"))
-	for _, role := range []authtoken.Role{"admin", "write", "read"} {
+	for _, role := range authtoken.Roles() {
 		perms, _ := authtoken.RolePermissions(role)
 		names := make([]string, 0, len(perms))
 		for _, p := range perms {
@@ -486,18 +528,24 @@ func (s *PermissionsPublicTestSuite) TestTypeScript() {
 		s.Contains(ts, "  \""+string(p)+"\",\n", "ALL_PERMISSIONS has %s", p)
 	}
 
-	for _, role := range []authtoken.Role{"admin", "write", "read"} {
+	for _, role := range authtoken.Roles() {
 		perms, ok := authtoken.RolePermissions(role)
 		s.Require().True(ok)
-		start := strings.Index(ts, "  "+string(role)+": [\n")
+		start := strings.Index(ts, "  "+string(role)+": [")
 		s.Require().GreaterOrEqual(start, 0, "ROLE_PERMISSIONS has %s", role)
-		block := ts[start : start+strings.Index(ts[start:], "  ],\n")]
-		s.Equal(
-			len(perms),
-			strings.Count(block, "\n    \""),
-			"the %s role lists each of its permissions",
-			role,
-		)
+		block := ts[start : start+strings.Index(ts[start:], "],\n")]
+		s.Equal(len(perms), strings.Count(block, "\"")/2,
+			"the %s role lists each of its permissions", role)
+		if line := ts[start : start+strings.Index(ts[start:], "\n")]; strings.HasSuffix(
+			line,
+			"],",
+		) {
+			s.LessOrEqual(
+				len(line),
+				80,
+				"a role on one line fits in 80 columns, as Prettier keeps it",
+			)
+		}
 	}
 }
 

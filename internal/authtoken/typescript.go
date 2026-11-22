@@ -59,9 +59,27 @@ func TypeScript() string {
 	sb.WriteString("export const ROLE_PERMISSIONS: Record<string, Permission[]> = {\n")
 	for _, role := range Roles() {
 		perms, _ := RolePermissions(role)
-		fmt.Fprintf(&sb, "  %s: [\n", role)
+		quoted := make([]string, 0, len(perms))
 		for _, p := range perms {
-			fmt.Fprintf(&sb, "    %q,\n", p)
+			quoted = append(quoted, fmt.Sprintf("%q", p))
+		}
+		// Prettier keeps an array on one line when it fits in 80 columns,
+		// and the file must be what Prettier writes.
+		if line := "  " + string(
+			role,
+		) + ": [" + strings.Join(
+			quoted,
+			", ",
+		) + "],"; len(
+			line,
+		) <= 80 {
+			sb.WriteString(line + "\n")
+
+			continue
+		}
+		fmt.Fprintf(&sb, "  %s: [\n", role)
+		for _, q := range quoted {
+			fmt.Fprintf(&sb, "    %s,\n", q)
 		}
 		sb.WriteString("  ],\n")
 	}

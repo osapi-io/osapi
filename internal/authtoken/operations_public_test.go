@@ -73,7 +73,7 @@ func (s *OperationsPublicTestSuite) TestRegistryOperations() {
 	motd := behavior.Lookup("motdperm")
 	for _, m := range motd.Methods {
 		id := motd.OperationID(m)
-		s.Equal(string(motd.Permission(m.Verb)), got[strings.ToLower(id[:1])+id[1:]],
+		s.Equal(string(motd.Permission(m.PermissionVerb())), got[strings.ToLower(id[:1])+id[1:]],
 			"a served behavior's method has its permission")
 	}
 	hidden := behavior.Lookup("hiddenperm")

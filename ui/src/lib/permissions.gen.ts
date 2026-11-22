@@ -38,6 +38,7 @@ export type Permission =
   | "package:write"
   | "service:read"
   | "service:write"
+  | "service:execute"
   | "status:read"
   | "sysctl:read"
   | "sysctl:write"
@@ -91,6 +92,7 @@ export const ALL_PERMISSIONS: Permission[] = [
   "package:write",
   "service:read",
   "service:write",
+  "service:execute",
   "status:read",
   "sysctl:read",
   "sysctl:write",
@@ -147,6 +149,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "package:write",
     "service:read",
     "service:write",
+    "service:execute",
     "status:read",
     "sysctl:read",
     "sysctl:write",
@@ -163,7 +166,40 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "job:read",
     "job:write",
   ],
-  write: [
+  operator: [
+    "node:read",
+    "network:read",
+    "file:read",
+    "health:read",
+    "trace:read",
+    "docker:read",
+    "schedule:read",
+    "ntp:read",
+    "power:execute",
+    "process:read",
+    "process:execute",
+    "user:read",
+    "log:read",
+    "certificate:read",
+    "disk:read",
+    "group:read",
+    "hostname:read",
+    "load:read",
+    "memory:read",
+    "os:read",
+    "package:read",
+    "service:read",
+    "service:execute",
+    "status:read",
+    "sysctl:read",
+    "timezone:read",
+    "updatepackages:read",
+    "uptime:read",
+    "admission:read",
+    "agent:read",
+    "job:read",
+  ],
+  automation: [
     "node:read",
     "network:read",
     "network:write",
@@ -174,12 +210,10 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "docker:read",
     "docker:write",
     "schedule:read",
-    "schedule:write",
     "ntp:read",
     "ntp:write",
     "process:read",
     "user:read",
-    "user:write",
     "log:read",
     "certificate:read",
     "certificate:write",
@@ -208,6 +242,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "job:read",
     "job:write",
   ],
+  auditor: ["health:read", "trace:read", "audit:read", "job:read"],
   read: [
     "node:read",
     "network:read",
@@ -238,4 +273,5 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "agent:read",
     "job:read",
   ],
+  observer: ["health:read", "status:read", "agent:read"],
 };
