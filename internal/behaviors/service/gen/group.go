@@ -24,6 +24,7 @@ type ServiceEntry struct {
 	State       *string `doc:"What systemd says it does now, such as running, exited or dead" json:"state,omitempty"`
 	Enabled     *bool   `doc:"Whether it starts at boot: the state of its unit file" json:"enabled,omitempty"`
 	Description *string `doc:"The Description= of its unit" json:"description,omitempty"`
+	Managed     *bool   `doc:"Whether osapi deployed it, so its writes and actions act on it" json:"managed,omitempty"`
 	Error       *string `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
@@ -266,7 +267,8 @@ var Group = endpoint.Define(
 		Describe("List the services of the host").
 		Permission("service:read").
 		Returns("Each target host's result.").
-		Explain("Lists each service that systemd has loaded, with its state, whether it starts at boot and its description, through gohai. A Mac has no systemd, and reports skipped.").
+		Explain("Lists each service that systemd has loaded, with its state, whether it starts at boot and its description, through gohai. A service that osapi deployed shows by the name it was deployed with, not its unit's osapi- name, and is managed. A Mac has no systemd, and reports skipped.").
+		Example("--target web-01", "A service that osapi deployed reads by its name").
 		Example("--target web-01", "A host with two services").
 		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host does not have what the request names, such as the object of a deploy."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotManaged), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotInstalled)),
 	endpoint.Get[GetRequest, ServiceGetResponse]("get").
@@ -275,9 +277,11 @@ var Group = endpoint.Define(
 		Describe("Get one service").
 		Permission("service:read").
 		Returns("Each target host's result.").
-		Explain("Reads one service from the same list, by its name with .service or without it. A service that systemd has not loaded is not found.").
+		Explain("Reads one service from the same list, by its name with .service or without it. A service that osapi deployed reads by the name it was deployed with, such as app, as its writes take it, or by its unit's name, osapi-app. A service that systemd has not loaded is not found.").
 		Example("--target web-01 --name ssh", "A running service").
 		Example("--target web-01 --name ssh.service", "A name with .service").
+		Example("--target web-01 --name app", "A service that osapi deployed, by the name it was deployed with").
+		Example("--target web-01 --name osapi-app", "A service that osapi deployed, by its unit's name").
 		Result("The command fails in these cases:\n\n| Call | Flags | Fails with |\n| --- | --- | --- |\n| A service that systemd has not loaded | `--name nosuch` | not found |\n| A name with a space | `--name \"a b\"` | Name |").
 		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host has no service with that name."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotManaged), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotInstalled)),
 	endpoint.Post[CreateRequest, ServiceCreateResponse]("create").

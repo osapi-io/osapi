@@ -28,6 +28,40 @@ func (s *APIListPublicTestSuite) SetupSuite() {
 func (s *APIListPublicTestSuite) TestList() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
+			Name: "when the example \"A service that osapi deployed reads by its name\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/service",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"service.list",
+				service.ListInput{},
+				servertest.Completed("server1", `[{"name":"ssh","state":"running","enabled":true,"description":"OpenBSD Secure Shell server","managed":false},{"name":"app","state":"dead","enabled":false,"description":"Example app","managed":true}]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"description":"OpenBSD Secure Shell server","enabled":true,"hostname":"server1","managed":false,"name":"ssh","state":"running","status":"ok"},{"description":"Example app","enabled":false,"hostname":"server1","managed":true,"name":"app","state":"dead","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"A service that osapi deployed reads by its name\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/service",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"service.list",
+				service.ListInput{},
+				servertest.Completed("server1", `[{"name":"ssh","state":"running","enabled":true,"description":"OpenBSD Secure Shell server","managed":false},{"name":"app","state":"dead","enabled":false,"description":"Example app","managed":true}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"description":"OpenBSD Secure Shell server","enabled":true,"hostname":"server1","managed":false,"name":"ssh","state":"running","status":"ok"},{"description":"Example app","enabled":false,"hostname":"server1","managed":true,"name":"app","state":"dead","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
 			Name: "when the example \"A host with two services\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
@@ -38,10 +72,10 @@ func (s *APIListPublicTestSuite) TestList() {
 				"server1",
 				"service.list",
 				service.ListInput{},
-				servertest.Completed("server1", `[{"name":"ssh","state":"running","enabled":true,"description":"OpenBSD Secure Shell server"},{"name":"osapi-app","state":"dead","enabled":false,"description":"Example app"}]`),
+				servertest.Completed("server1", `[{"name":"ssh","state":"running","enabled":true,"description":"OpenBSD Secure Shell server","managed":false},{"name":"osapi-app","state":"dead","enabled":false,"description":"Example app","managed":false}]`),
 			),
 			WantCode: http.StatusOK,
-			WantBody: `{"job_id":"job-1","results":[{"description":"OpenBSD Secure Shell server","enabled":true,"hostname":"server1","name":"ssh","state":"running","status":"ok"},{"description":"Example app","enabled":false,"hostname":"server1","name":"osapi-app","state":"dead","status":"ok"}]}`,
+			WantBody: `{"job_id":"job-1","results":[{"description":"OpenBSD Secure Shell server","enabled":true,"hostname":"server1","managed":false,"name":"ssh","state":"running","status":"ok"},{"description":"Example app","enabled":false,"hostname":"server1","managed":false,"name":"osapi-app","state":"dead","status":"ok"}]}`,
 		},
 		{
 			Name: "when the example \"A host with two services\" is broadcast, every host's result is returned",
@@ -54,12 +88,12 @@ func (s *APIListPublicTestSuite) TestList() {
 				"_all",
 				"service.list",
 				service.ListInput{},
-				servertest.Completed("server1", `[{"name":"ssh","state":"running","enabled":true,"description":"OpenBSD Secure Shell server"},{"name":"osapi-app","state":"dead","enabled":false,"description":"Example app"}]`),
+				servertest.Completed("server1", `[{"name":"ssh","state":"running","enabled":true,"description":"OpenBSD Secure Shell server","managed":false},{"name":"osapi-app","state":"dead","enabled":false,"description":"Example app","managed":false}]`),
 				servertest.Skipped("server2"),
 				servertest.Failed("server3", "boom"),
 			),
 			WantCode: http.StatusOK,
-			WantBody: `{"job_id":"job-1","results":[{"description":"OpenBSD Secure Shell server","enabled":true,"hostname":"server1","name":"ssh","state":"running","status":"ok"},{"description":"Example app","enabled":false,"hostname":"server1","name":"osapi-app","state":"dead","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+			WantBody: `{"job_id":"job-1","results":[{"description":"OpenBSD Secure Shell server","enabled":true,"hostname":"server1","managed":false,"name":"ssh","state":"running","status":"ok"},{"description":"Example app","enabled":false,"hostname":"server1","managed":false,"name":"osapi-app","state":"dead","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
 		},
 		{
 			Name: "when the host skips it, its row says skipped",

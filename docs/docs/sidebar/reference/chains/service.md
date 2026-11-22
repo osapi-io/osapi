@@ -18,6 +18,48 @@ The behaviors that service calls, and each call that its examples make.
 | Calls    | [object](../behaviors/object/object.md), [managedfile](../behaviors/managedfile/managedfile.md) |
 | Used by  | none                                                                                            |
 
+## A service that osapi deployed reads by its name (list)
+
+| CALL               | SENDS                                      | GETS                                                                             |
+| ------------------ | ------------------------------------------ | -------------------------------------------------------------------------------- |
+| service list       |                                            | \[&#123;"name":"ssh","state":"running","enabled":true,"description":"OpenBS…     |
+| └─ managedfile get | path=/etc/systemd/system/osapi-app.service | metadata=&#123;"object":"app.service"&#125; path=/etc/systemd/system/osapi-app.… |
+
+## A host with two services (list)
+
+| CALL               | SENDS                                      | GETS                                                                         |
+| ------------------ | ------------------------------------------ | ---------------------------------------------------------------------------- |
+| service list       |                                            | \[&#123;"name":"ssh","state":"running","enabled":true,"description":"OpenBS… |
+| └─ managedfile get | path=/etc/systemd/system/osapi-app.service | error: /etc/systemd/system/osapi-app.service: not managed                    |
+
+## A running service (get)
+
+| CALL               | SENDS                                      | GETS                                                                   |
+| ------------------ | ------------------------------------------ | ---------------------------------------------------------------------- |
+| service get        | name=ssh                                   | description="OpenBSD Secure Shell server" enabled=true managed=false … |
+| └─ managedfile get | path=/etc/systemd/system/osapi-ssh.service | error: /etc/systemd/system/osapi-ssh.service: not managed              |
+
+## A name with .service (get)
+
+| CALL               | SENDS                                      | GETS                                                                   |
+| ------------------ | ------------------------------------------ | ---------------------------------------------------------------------- |
+| service get        | name=ssh.service                           | description="OpenBSD Secure Shell server" enabled=true managed=false … |
+| └─ managedfile get | path=/etc/systemd/system/osapi-ssh.service | error: /etc/systemd/system/osapi-ssh.service: not managed              |
+
+## A service that osapi deployed, by the name it was deployed with (get)
+
+| CALL               | SENDS                                      | GETS                                                                             |
+| ------------------ | ------------------------------------------ | -------------------------------------------------------------------------------- |
+| service get        | name=app                                   | description="Example app" enabled=false managed=true name=app state=d…           |
+| └─ managedfile get | path=/etc/systemd/system/osapi-app.service | metadata=&#123;"object":"app.service"&#125; path=/etc/systemd/system/osapi-app.… |
+
+## A service that osapi deployed, by its unit's name (get)
+
+| CALL               | SENDS                                      | GETS                                                                             |
+| ------------------ | ------------------------------------------ | -------------------------------------------------------------------------------- |
+| service get        | name=osapi-app                             | description="Example app" enabled=false managed=true name=app state=d…           |
+| └─ managedfile get | path=/etc/systemd/system/osapi-app.service | metadata=&#123;"object":"app.service"&#125; path=/etc/systemd/system/osapi-app.… |
+
 ## Deploy a unit file (create)
 
 | CALL                  | SENDS                                                                                  | GETS                                                                         |

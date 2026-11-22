@@ -89,6 +89,56 @@ func newDebian(
 	}, nil
 }
 
+// Services is each service of the host. A unit that osapi deployed reads by
+// the name it was deployed with, as its writes and actions take it, not by
+// the unit's name: app, not osapi-app. Its Managed is true.
+func (d *debian) Services(
+	ctx context.Context,
+) ([]Entry, error) {
+	list, err := d.reader.Services(ctx)
+	for i, s := range list {
+		name, ok := strings.CutPrefix(s.Name, prefix)
+		if !ok {
+			continue
+		}
+		owned, oerr := d.owned(ctx, unitPath(name))
+		if oerr != nil {
+			return nil, oerr
+		}
+		if owned {
+			list[i].Name, list[i].Managed = name, true
+		}
+	}
+
+	return list, err
+}
+
+// Service is one service, by the name that its writes take. A service that
+// osapi deployed is found by that name, or by the unit's name with the
+// prefix, and it wins over a unit of the host with the same name, as the
+// writes act on it. Any other name is the unit's own.
+func (d *debian) Service(
+	ctx context.Context,
+	name string,
+) (Entry, error) {
+	name = strings.TrimSuffix(name, ".service")
+	bare := strings.TrimPrefix(name, prefix)
+	owned, err := d.owned(ctx, unitPath(bare))
+	if err != nil {
+		return Entry{}, err
+	}
+	if !owned {
+		return d.reader.Service(ctx, name)
+	}
+	s, err := d.reader.Service(ctx, prefix+bare)
+	if err != nil {
+		return Entry{}, err
+	}
+	s.Name, s.Managed = bare, true
+
+	return s, nil
+}
+
 // Deploy writes the object of u as the unit file, and reloads systemd when
 // the file changed. An update of a service that osapi did not deploy is not
 // found.

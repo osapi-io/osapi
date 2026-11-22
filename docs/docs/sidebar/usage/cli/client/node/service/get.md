@@ -3,7 +3,9 @@
 Get one service.
 
 Reads one service from the same list, by its name with .service or without it. A
-service that systemd has not loaded is not found.
+service that osapi deployed reads by the name it was deployed with, such as app,
+as its writes take it, or by its unit's name, osapi-app. A service that systemd
+has not loaded is not found.
 
 ```bash
 osapi client node service get [flags]
@@ -17,6 +19,12 @@ osapi client node service get --target web-01 --name ssh
 
 # A name with .service
 osapi client node service get --target web-01 --name ssh.service
+
+# A service that osapi deployed, by the name it was deployed with
+osapi client node service get --target web-01 --name app
+
+# A service that osapi deployed, by its unit's name
+osapi client node service get --target web-01 --name osapi-app
 ```
 
 ## Result

@@ -34,6 +34,9 @@ type ServiceInfo struct {
 	State       string `json:"state,omitempty"`
 	Enabled     bool   `json:"enabled"`
 	Description string `json:"description,omitempty"`
+	// Managed is whether osapi deployed the service, so its writes and
+	// actions act on it. Name is then the name it was deployed with.
+	Managed bool `json:"managed"`
 }
 
 // ServiceMutationResult is a service after a write or an action.
@@ -74,6 +77,7 @@ func serviceInfosFromGen(
 			State:       derefString(r.State),
 			Enabled:     derefBool(r.Enabled),
 			Description: derefString(r.Description),
+			Managed:     derefBool(r.Managed),
 		})
 	}
 

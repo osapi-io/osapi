@@ -75,7 +75,7 @@ export const getGetNodeServiceUrl = (hostname: string,) => {
 }
 
 /**
- * Lists each service that systemd has loaded, with its state, whether it starts at boot and its description, through gohai. A Mac has no systemd, and reports skipped.
+ * Lists each service that systemd has loaded, with its state, whether it starts at boot and its description, through gohai. A service that osapi deployed shows by the name it was deployed with, not its unit's osapi- name, and is managed. A Mac has no systemd, and reports skipped.
  * @summary List the services of the host
  */
 export const getNodeService = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeServiceResponse> => {
@@ -297,7 +297,7 @@ export const getGetNodeServiceByKeyUrl = (hostname: string,
 }
 
 /**
- * Reads one service from the same list, by its name with .service or without it. A service that systemd has not loaded is not found.
+ * Reads one service from the same list, by its name with .service or without it. A service that osapi deployed reads by the name it was deployed with, such as app, as its writes take it, or by its unit's name, osapi-app. A service that systemd has not loaded is not found.
  * @summary Get one service
  */
 export const getNodeServiceByKey = async (hostname: string,

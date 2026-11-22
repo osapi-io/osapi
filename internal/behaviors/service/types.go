@@ -66,6 +66,7 @@ type Entry struct {
 	State       string `json:"state"       doc:"What systemd says it does now, such as running, exited or dead"`
 	Enabled     bool   `json:"enabled"     doc:"Whether it starts at boot: the state of its unit file"`
 	Description string `json:"description" doc:"The Description= of its unit"`
+	Managed     bool   `json:"managed"     doc:"Whether osapi deployed it, so its writes and actions act on it"`
 }
 
 // Result is a service after a write or an action.

@@ -80,7 +80,7 @@ func (suite *ServicePublicTestSuite) calls() map[string]call {
 
 const serviceRow = `{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"web-01",` +
 	`"status":"ok","name":"ssh","state":"running","enabled":true,` +
-	`"description":"OpenBSD Secure Shell server","changed":true}]}`
+	`"description":"OpenBSD Secure Shell server","managed":true,"changed":true}]}`
 
 func (suite *ServicePublicTestSuite) TestService() {
 	tests := []struct {
@@ -154,7 +154,7 @@ func (suite *ServicePublicTestSuite) TestFields() {
 	suite.Require().NoError(err)
 	suite.Equal(client.ServiceInfo{
 		Hostname: "web-01", Status: "ok", Name: "ssh", State: "running",
-		Enabled: true, Description: "OpenBSD Secure Shell server",
+		Enabled: true, Description: "OpenBSD Secure Shell server", Managed: true,
 	}, list.Data.Results[0])
 	suite.Equal("00000000-0000-0000-0000-000000000001", list.Data.JobID)
 

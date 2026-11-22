@@ -776,6 +776,7 @@ schema ServiceEntry.description = string
 schema ServiceEntry.enabled = boolean
 schema ServiceEntry.error = string
 schema ServiceEntry.hostname! = string
+schema ServiceEntry.managed = boolean
 schema ServiceEntry.name = string
 schema ServiceEntry.state = string
 schema ServiceEntry.status! = string(ok|failed|skipped|timeout)

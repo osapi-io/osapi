@@ -24,6 +24,15 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		want commandtest.Request
 	}{
 		{
+			name: "when the example \"A service that osapi deployed reads by its name\" is run",
+			args: []string{"node", "service", "list", "--target", "server1"},
+			want: commandtest.Request{
+				Method: "GET",
+				Path:   "/api/node/server1/service",
+				Body:   "",
+			},
+		},
+		{
 			name: "when the example \"A host with two services\" is run",
 			args: []string{"node", "service", "list", "--target", "server1"},
 			want: commandtest.Request{
@@ -47,6 +56,24 @@ func (s *CLIPublicTestSuite) TestCommands() {
 			want: commandtest.Request{
 				Method: "GET",
 				Path:   "/api/node/server1/service/ssh.service",
+				Body:   "",
+			},
+		},
+		{
+			name: "when the example \"A service that osapi deployed, by the name it was deployed with\" is run",
+			args: []string{"node", "service", "get", "--target", "server1", "--name", "app"},
+			want: commandtest.Request{
+				Method: "GET",
+				Path:   "/api/node/server1/service/app",
+				Body:   "",
+			},
+		},
+		{
+			name: "when the example \"A service that osapi deployed, by its unit's name\" is run",
+			args: []string{"node", "service", "get", "--target", "server1", "--name", "osapi-app"},
+			want: commandtest.Request{
+				Method: "GET",
+				Path:   "/api/node/server1/service/osapi-app",
 				Body:   "",
 			},
 		},

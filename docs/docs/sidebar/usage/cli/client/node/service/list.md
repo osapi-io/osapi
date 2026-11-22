@@ -3,8 +3,9 @@
 List the services of the host.
 
 Lists each service that systemd has loaded, with its state, whether it starts at
-boot and its description, through gohai. A Mac has no systemd, and reports
-skipped.
+boot and its description, through gohai. A service that osapi deployed shows by
+the name it was deployed with, not its unit's osapi- name, and is managed. A Mac
+has no systemd, and reports skipped.
 
 ```bash
 osapi client node service list [flags]
@@ -13,6 +14,9 @@ osapi client node service list [flags]
 ## Examples
 
 ```bash
+# A service that osapi deployed reads by its name
+osapi client node service list --target web-01
+
 # A host with two services
 osapi client node service list --target web-01
 ```

@@ -15,6 +15,8 @@ export interface ServiceEntry {
   error?: string;
   /** Hostname of the agent that produced this result. */
   hostname: string;
+  /** Whether osapi deployed it, so its writes and actions act on it */
+  managed?: boolean;
   /** The service, without .service */
   name?: string;
   /** What systemd says it does now, such as running, exited or dead */
