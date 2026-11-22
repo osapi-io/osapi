@@ -1,13 +1,14 @@
 ---
 name: build-a-dsl
 description: >
-  Add a DSL to osapi, or change what the three DSLs share: the behavior DSL
-  (internal/behavior), the endpoint DSL (internal/controller/endpoint) and the
-  command DSL (internal/cli/command). Use when asked to add a fourth DSL, or
-  when a change touches the parts that each DSL has: the guide.Spec and
+  Add a DSL to osapi, or change what the DSLs share: the behavior DSL
+  (internal/behavior), the chain rules, the endpoint DSL
+  (internal/controller/endpoint) and the command DSL (internal/cli/command).
+  Use when asked to add a DSL, or when a change touches the parts that each
+  DSL has: the shared commands and the internal/dsl registry, the guide.Spec and
   guide.Checks tables and the tests that keep them complete, validate, typed
   values and the KnownTags list of tag keys, the permissions that the role rule
-  reads (declarations, the SDK constants generator and RegistryOperations), the
+  reads, the
   generators and genfile.Writer, the scaffold command and its check, the
   generated DSL pages, the dev skill of a DSL, records of calls at run time, or
   what extensions need. Not for a change inside one DSL: build-a-behavior,
@@ -17,10 +18,30 @@ description: >
 # Build a DSL
 
 A DSL of osapi is a Go package whose definitions osapi turns into routes,
-commands, a spec, docs and tests. The three DSLs define different things, but
-each has the same parts. A new DSL gets each part, or the change says why it
-does not need it. A change to a part of one DSL that the others share changes
-each DSL, or it says why not.
+commands, a spec, docs and tests. The DSLs define different things, but each
+has the same parts. A new DSL gets each part, or the change says why it does
+not need it. A change to a part of one DSL that the others share changes each
+DSL, or it says why not.
+
+The contract is code, not this page. Each DSL registers once in
+`internal/dsl` (`dsl.Register` in the `dsl.go` of its package): its name, the
+command of its group, its skill, its docs page, and, when it serves the API,
+its permissions and its operations. `TestEveryDSLHasTheSharedParts` in
+`internal/cli/commands/all` fails when a registered DSL lacks one of these
+commands, its skill or its page, unless its `Without` says why:
+
+| Command       | Shows                                                    |
+| ------------- | -------------------------------------------------------- |
+| `list`        | each definition                                          |
+| `get`         | one definition                                           |
+| `method get`  | one method of a definition in full                       |
+| `spec get`    | each part of the DSL                                     |
+| `validate`    | each problem, with its rule and its fix                  |
+| `create`      | a new definition that builds and passes its tests        |
+| `openapi get` | a definition's part of the OpenAPI spec, for a DSL that serves the API |
+
+`dsl.Commands()` is the list. Today chain says why it has no `create`,
+`method get` or `openapi get`, and command says why it has no `openapi get`.
 
 This skill gives a procedure and decisions. The binary tells you about each
 DSL:
@@ -29,6 +50,8 @@ DSL:
   and `cli command spec get` tell each part of a DSL.
 - `behavior validate`, `behavior chain validate`, `controller endpoint validate`
   and `cli command validate` tell each rule, with `--help` for the rules.
+- `behavior method get`, `controller endpoint method get` and
+  `cli command method get` show one method the same way.
 
 `references/parts.md` names each part, where it is, and what a new DSL does for
 it. Read it before you start.
@@ -46,12 +69,14 @@ it. Read it before you start.
    a validate rule that refuses a value outside the set. Go converts an untyped
    string literal to the type, so the rule is the guard. Struct tags use the
    keys of `command.KnownTags`.
-4. **Wire the permissions, if the DSL serves API routes.** Add the registry of
-   the DSL to the three places that read permissions: `declarations()` in
-   `internal/authtoken/permissions.go`, the generator of the SDK constants in
-   `internal/authtoken/gen`, and `RegistryOperations` in
-   `internal/authtoken/operations.go`. Give it an `AdminOnly()` option. A DSL
-   with no API route declares none.
+4. **Register the DSL.** Call `dsl.Register` in a `dsl.go` of the DSL's
+   package, with each shared part, and a `Without` entry with a reason for each
+   shared command that does not apply. A DSL that serves API routes gives
+   `Permissions` and `Operations`: the role rule (`declarations()`), the SDK's
+   `Perm*` and `Role*` constants and the UI's operation permissions
+   (`RegistryOperations`) read them from `dsl.All()`, so nothing else names the
+   DSL. Give it an `AdminOnly()` option. A DSL with no API route gives neither.
+   Then add each shared command, and run `TestEveryDSLHasTheSharedParts`.
 5. **Generate through `genfile.Writer`.** Record each change and `Flush` at the
    end, so a failed run changes nothing on disk. Write a named type with
    `jen.Lit(string(v))`. Add the generated files to `go-generate-check`.

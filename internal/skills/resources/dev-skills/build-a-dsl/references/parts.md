@@ -59,17 +59,17 @@ refuses one of an input field, with the same list. Go reads a tag only by its
 exact key, so a misspelled key such as `secrte` does nothing and no compiler
 reports it. Add a new tag key to `command.KnownTags`.
 
-Planned: a test that fails on a new bare `string` in the exported API of a DSL,
-and on a string literal where a typed value goes
-([osapi-io/osapi#1078](https://github.com/osapi-io/osapi/issues/1078)).
+`internal/dslcheck` fails on a new bare `string` in the exported API of a DSL
+that its allowlist does not give a reason for, and on a string literal where a
+typed value goes (osapi-io/osapi#1078).
 
 ## Permissions
 
 A DSL whose definitions serve API routes declares the permission of each method.
-`declarations()` in `internal/authtoken/permissions.go` reads them from the
-registries: `endpoint.All()` and `behavior.All()`. A new DSL with API routes
-adds its registry there. Then the built-in roles get its permissions by the
-rule:
+`declarations()` in `internal/authtoken/permissions.go` reads them from
+`dsl.All()`: the `Permissions` that each registered DSL gives. A new DSL with
+API routes gives them when it registers. Then the built-in roles get its
+permissions by the rule:
 
 - `admin` gets each permission.
 - `write` gets each `read` and `write` permission that is not admin only.
@@ -80,13 +80,15 @@ DSL marks `AdminOnly()` is admin only too. Give a new DSL that serves the API an
 `AdminOnly()` option. `authtoken.Check()` fails a permission that a method names
 but nothing declares, and methods that disagree on `AdminOnly`.
 
-Two other places read the registries, and a new DSL with API routes adds its
-registry to each:
+Two other places read `dsl.All()`, so a new DSL needs no change in them:
 
 - `internal/authtoken/gen`, which writes the `Perm*` and `Role*` constants of
-  the SDK.
+  the SDK from the permissions.
 - `RegistryOperations` in `internal/authtoken/operations.go`, which gives the
-  permission of each operation of the UI.
+  permission of each operation of the UI from the `Operations` of each DSL.
+
+Each generator registers the definitions by a blank import of their `all`
+package. A new DSL's `all` package goes in those imports.
 
 A DSL with no API route declares no permission. The command DSL is an example:
 `CommandPermission` of a local group is empty.

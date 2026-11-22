@@ -1,0 +1,62 @@
+{
+  "skill_name": "build-a-command",
+  "evals": [
+    {
+      "id": "greet",
+      "prompt": "Add a local command group to osapi named greet, with one command, osapi greet get --name <name>, that prints a greeting for the name. A name is required.",
+      "group": "greet",
+      "refusals": true,
+      "expected_output": "internal/cli/commands/greet with a get method, its input and output types, a refusal for no name, its tests, and every check passing.",
+      "assertions": [
+        "cli command validate passes",
+        "the group is registered under its name",
+        "its package tests pass with 100% coverage",
+        "every test in internal/cli/commands/all passes",
+        "at least one refusal is declared with Fails",
+        "generated files are current",
+        "lint reports no issues in the group",
+        "nothing outside the group, its registration, its wiring and generated files changed"
+      ],
+      "kind": "build"
+    },
+    {
+      "id": "checksum",
+      "prompt": "Add a local command group to osapi named checksum, with osapi checksum get --file <path>, that prints the SHA-256 of a file on this machine. The file system is a dependency, so a test can give it files.",
+      "group": "checksum",
+      "refusals": true,
+      "expected_output": "internal/cli/commands/checksum with a get method that takes its file system from Deps, a test that gives it files, a refusal for no file, and every check passing.",
+      "assertions": [
+        "cli command validate passes",
+        "the group is registered under its name",
+        "its package tests pass with 100% coverage",
+        "every test in internal/cli/commands/all passes",
+        "at least one refusal is declared with Fails",
+        "generated files are current",
+        "lint reports no issues in the group",
+        "nothing outside the group, its registration, its wiring and generated files changed"
+      ],
+      "kind": "build"
+    },
+    {
+      "id": "logs",
+      "prompt": "Add a command for the logs.",
+      "expected_output": "No change. The session asks which logs, whose, and what the command does with them.",
+      "assertions": [
+        "nothing in the checkout changed",
+        "the answer asks the user at least two questions"
+      ],
+      "kind": "ask"
+    },
+    {
+      "id": "jobcount",
+      "prompt": "Add a local command group to osapi that asks the controller how many jobs failed today.",
+      "expects": "endpoint",
+      "expected_output": "No change. The session says that a command that calls the API comes from an endpoint group or a behavior, not from a local group, and names the build-an-endpoint skill.",
+      "assertions": [
+        "nothing in the checkout changed",
+        "the answer says that it is an endpoint"
+      ],
+      "kind": "refuse"
+    }
+  ]
+}
