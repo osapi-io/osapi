@@ -96,6 +96,26 @@ func (s *ConnectPublicTestSuite) startServer() (config.NATS, config.NATSConnecti
 	}
 }
 
+// TestConnectKeepsTheBucketsSettings: a process that connects with its own
+// config does not change a bucket that exists. The agent connects with no
+// TTL and the controller with one, and an update from each flipped the job
+// queue's age, which removed every job older than the shorter one.
+func (s *ConnectPublicTestSuite) TestConnectKeepsTheBucketsSettings() {
+	// The server made the buckets from its config, with no TTL.
+	cfg, conn := s.startServer()
+	cfg.KV.TTL = "1h"
+	cfg.Facts.Bucket = "new-facts"
+	c, err := client.Connect(context.Background(), slog.Default(), conn, cfg, time.Second, nil, nil)
+	s.Require().NoError(err)
+	defer c.NATS.Close()
+
+	jobs, err := c.NATS.KVStatus(context.Background(), c.JobsBucket)
+	s.Require().NoError(err)
+	s.Equal(time.Duration(0), jobs.TTL(), "a connection with another TTL did not change the bucket")
+	_, err = c.NATS.KVStatus(context.Background(), "test-new-facts")
+	s.NoError(err, "a bucket that was missing is created")
+}
+
 func (s *ConnectPublicTestSuite) TestConnect() {
 	tests := []struct {
 		name      string
@@ -148,7 +168,17 @@ func (s *ConnectPublicTestSuite) TestConnect() {
 				cfg.Registry.Bucket = "bad name"
 				return cfg, conn
 			},
-			wantErr: "create KV bucket test-bad name: ",
+			wantErr: "KV bucket test-bad name: ",
+		},
+		{
+			name: "when a missing bucket cannot be created returns the error",
+			setup: func() (config.NATS, config.NATSConnection) {
+				cfg, conn := s.startServer()
+				cfg.Facts.Bucket = "unmade"
+				cfg.Facts.Replicas = 5
+				return cfg, conn
+			},
+			wantErr: "create KV bucket test-unmade: ",
 		},
 	}
 
