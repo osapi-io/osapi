@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Link, useParams } from "react-router-dom";
 import { useVimScroll } from "@/hooks/use-vim-scroll";
 import { useAuth } from "@/hooks/use-auth";
 import { ContentArea } from "@/components/layout/content-area";
@@ -52,7 +53,66 @@ const STATUS_OPTIONS = [
   { value: "skipped", label: "Skipped" },
 ];
 
+// LinkedJob is the job that /admin/jobs/:id names, such as the job of a
+// block's result on the Configure page: its detail, above the list, whether
+// or not the job is on the page of the list that shows.
+function LinkedJob({ id }: { id: string }) {
+  const [job, setJob] = useState<JobDetailResponse | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    getJobByID(id)
+      .then((res) => {
+        if (!mounted) return;
+        if (res.status === 200) {
+          setJob(res.data as JobDetailResponse);
+          setFailed(null);
+        } else {
+          setFailed(
+            res.status === 404
+              ? `Job ${id} not found`
+              : "Failed to load the job",
+          );
+        }
+      })
+      .catch((e) => {
+        if (mounted)
+          setFailed(e instanceof Error ? e.message : "Failed to load the job");
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [id]);
+
+  return (
+    <div className="mb-4">
+      <SectionLabel>
+        Job <span className="font-mono">{id}</span>
+        <Link
+          to="/admin/jobs"
+          className="ml-3 text-xs text-text-muted transition-colors hover:text-text"
+        >
+          close
+        </Link>
+      </SectionLabel>
+      <Card>
+        <CardContent>
+          {failed ? (
+            <Text variant="muted">{failed}</Text>
+          ) : job ? (
+            <JobView job={job} />
+          ) : (
+            <Spinner size="inline" />
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export function Jobs() {
+  const { id: linkedId } = useParams();
   useVimScroll();
   const { can } = useAuth();
 
@@ -191,6 +251,8 @@ export function Jobs() {
           )
         }
       />
+
+      {linkedId && <LinkedJob id={linkedId} />}
 
       {loading && <Spinner />}
 

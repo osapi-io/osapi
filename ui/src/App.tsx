@@ -27,6 +27,7 @@ function AuthenticatedApp() {
         <Route path="/roles" element={<Navigate to="/admin/roles" replace />} />
         <Route path="/admin/audit" element={<Audit />} />
         <Route path="/admin/jobs" element={<Jobs />} />
+        <Route path="/admin/jobs/:id" element={<Jobs />} />
         <Route path="/admin/traces" element={<Traces />} />
         <Route path="/admin/traces/:id" element={<Traces />} />
         <Route path="/admin/roles" element={<Roles />} />

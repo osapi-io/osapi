@@ -7,6 +7,7 @@
 // answers. A behavior that changes changes its block; nobody edits the UI.
 // ---------------------------------------------------------------------------
 
+import { traceIdOf } from "@/lib/trace";
 import { apiFetch } from "@/sdk/fetch";
 
 export interface BehaviorBlockField {
@@ -136,7 +137,11 @@ export async function runBehavior(
   if (res.status >= 400) {
     const body = res.data as { error?: string; reason?: string } | undefined;
     const reason = body?.reason ? ` (${body.reason})` : "";
-    throw new Error(`${body?.error ?? `HTTP ${res.status}`}${reason}`);
+    // The error keeps the trace, so the block links it also when it failed.
+    throw Object.assign(
+      new Error(`${body?.error ?? `HTTP ${res.status}`}${reason}`),
+      { traceId: traceIdOf(res) },
+    );
   }
   return res;
 }

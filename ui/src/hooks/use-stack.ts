@@ -579,6 +579,8 @@ export interface Block {
   data: Record<string, unknown>;
   result?: unknown;
   error?: string;
+  /** The trace of the block's last call, from the answer's traceresponse header. */
+  traceId?: string;
 }
 
 let nextId = 1;
@@ -615,9 +617,17 @@ export function useStack() {
   );
 
   const setBlockStatus = useCallback(
-    (id: string, status: BlockStatus, error?: string, result?: unknown) => {
+    (
+      id: string,
+      status: BlockStatus,
+      error?: string,
+      result?: unknown,
+      traceId?: string,
+    ) => {
       setBlocks((prev) =>
-        prev.map((b) => (b.id === id ? { ...b, status, error, result } : b)),
+        prev.map((b) =>
+          b.id === id ? { ...b, status, error, result, traceId } : b,
+        ),
       );
     },
     [],
