@@ -160,6 +160,10 @@ import {
   MemoryStick,
   ClipboardList,
   FileDown,
+  Gauge,
+  Timer,
+  Info,
+  RefreshCw,
 } from "lucide-react";
 
 const blockIcons: Record<
@@ -171,6 +175,7 @@ const blockIcons: Record<
   "cron-create": Calendar,
   // Software
   "package-list": Package,
+  "updatepackages-list": RefreshCw,
   // Config
   "sysctl-list": SlidersHorizontal,
   "ntp-get": Clock,
@@ -181,7 +186,7 @@ const blockIcons: Record<
   "process-list": Activity,
   "log-query": FileText,
   // Networking
-  "dns-list": Server,
+  "dns-get": Server,
   "interface-list": Network,
   "route-list": GitBranch,
   ping: Radio,
@@ -197,10 +202,13 @@ const blockIcons: Record<
   // Command
   command: Terminal,
   // Node
-  "node-status": Monitor,
+  "status-get": Monitor,
+  "load-get": Gauge,
+  "uptime-get": Timer,
+  "os-get": Info,
   // Hardware
-  "disk-info": HardDrive,
-  "memory-info": MemoryStick,
+  "disk-get": HardDrive,
+  "memory-get": MemoryStick,
   // Audit
   "audit-list": ClipboardList,
 };

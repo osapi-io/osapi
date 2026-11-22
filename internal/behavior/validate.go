@@ -301,6 +301,15 @@ func ValidateBehavior(
 			b.Doc,
 		)
 	}
+	if b.API && !slices.Contains(Areas, b.Area) {
+		add(
+			"",
+			RuleSurface,
+			"served, but area %q is not one of %s; add behavior.Area(...), so the UI can place its blocks",
+			b.Area,
+			strings.Join(Areas, ", "),
+		)
+	}
 	if b.CLI && !b.API {
 		add("", RuleSurface, "CLI without API; the commands call the API, so add behavior.API")
 	}

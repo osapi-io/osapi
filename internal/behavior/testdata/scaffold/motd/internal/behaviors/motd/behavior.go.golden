@@ -30,6 +30,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"motd", "The \"message\" shown at login",
 	behavior.Node,
 	behavior.API,
+	behavior.Area("config"),
 	behavior.CLI,
 	behavior.Config(defaults),
 	behavior.Platform("debian", newDebian),

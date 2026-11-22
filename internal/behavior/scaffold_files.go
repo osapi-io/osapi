@@ -250,6 +250,9 @@ func (sc scaffold) behaviorFile() *jen.File {
 	}
 	opts = append(opts,
 		b("API"),
+		// The scaffold writes a config file, so its blocks go under Config in
+		// the UI; the author moves it to the area that fits.
+		b("Area").Call(jen.Lit("config")),
 		b("CLI"),
 		b("Config").Call(jen.Id("defaults")),
 		b("Platform").Call(jen.Lit("debian"), jen.Id("newDebian")),

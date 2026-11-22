@@ -47,10 +47,20 @@ type itemIn struct {
 }
 
 type row struct {
-	Name    string `json:"name"    doc:"The item"`
-	Changed bool   `json:"changed" doc:"Whether the host changed"`
-	Skip    string `json:"-"`
+	Name    string   `json:"name"    doc:"The item"`
+	Changed bool     `json:"changed" doc:"Whether the host changed"`
+	Size    int      `json:"size"    doc:"Its size"                 render:"bytes" label:"Bytes"`
+	Usage   usage    `json:"usage"   doc:"Its usage"`
+	Disks   []*usage `json:"disks"   doc:"Its disks"`
+	Tags    []string `json:"tags"    doc:"Its tags"`
+	Ptr     *usage   `json:"ptr"     doc:"A pointer"`
+	Hidden  string   `json:"hidden"  doc:"Not shown"                render:"-"`
+	Skip    string   `json:"-"`
 	_       string
+}
+
+type usage struct {
+	Total int `json:"total" doc:"Total bytes" render:"bytes"`
 }
 
 func read(context.Context, provider, itemIn) ([]row, error) { return nil, nil }
@@ -64,7 +74,7 @@ type BlocksPublicTestSuite struct {
 }
 
 func (s *BlocksPublicTestSuite) TestBlocks() {
-	b := behavior.Define("item", "Items", behavior.Node, behavior.API,
+	b := behavior.Define("item", "Items", behavior.Node, behavior.API, behavior.Area("hardware"),
 		behavior.Read("list", read),
 		behavior.Write("update", write).Key("name"),
 		behavior.Read("get", none),
@@ -95,10 +105,19 @@ func (s *BlocksPublicTestSuite) TestBlocks() {
 		{Name: "labels", In: "query", Kind: "object", Doc: "Labels"},
 		{Name: "token", In: "query", Kind: "string", Doc: "A secret", Secret: true},
 	}, list.Fields)
+	s.Equal("hardware", list.Area)
+	total := []uiblocks.Column{
+		{Name: "total", Label: "Total", Doc: "Total bytes", Render: "bytes", Kind: "value"},
+	}
 	s.Equal([]uiblocks.Column{
-		{Name: "name", Doc: "The item"},
-		{Name: "changed", Doc: "Whether the host changed"},
-	}, list.Columns)
+		{Name: "name", Label: "Name", Doc: "The item", Kind: "value"},
+		{Name: "changed", Label: "Changed", Doc: "Whether the host changed", Kind: "value"},
+		{Name: "size", Label: "Bytes", Doc: "Its size", Render: "bytes", Kind: "value"},
+		{Name: "usage", Label: "Usage", Doc: "Its usage", Kind: "object", Columns: total},
+		{Name: "disks", Label: "Disks", Doc: "Its disks", Kind: "list", Columns: total},
+		{Name: "tags", Label: "Tags", Doc: "Its tags", Kind: "values"},
+		{Name: "ptr", Label: "Ptr", Doc: "A pointer", Kind: "object", Columns: total},
+	}, list.Columns, "the CLI's columns: labels, render tags, nested objects and lists; render:\"-\" is left out")
 
 	update := got[1]
 	s.Equal("PUT", update.HTTPMethod)

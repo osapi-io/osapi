@@ -27,9 +27,13 @@ import { IconButton } from "@/components/ui/icon-button";
 import { HostGroupHeader } from "@/components/domain/host-group-header";
 import { ResultSummary } from "@/components/domain/result-summary";
 import { hostOutcome, hostOutcomes } from "@/lib/outcome";
-import { formatDurationMs, formatTime } from "@/lib/format";
+import { formatBytes, formatDurationMs, formatTime } from "@/lib/format";
 import { BEHAVIOR_BLOCKS, type BehaviorBlockType } from "@/lib/blocks.gen";
-import { hasValue, type BehaviorBlockDef } from "@/lib/behavior-block";
+import {
+  hasValue,
+  type BehaviorBlockColumn,
+  type BehaviorBlockDef,
+} from "@/lib/behavior-block";
 
 interface ResultCardProps {
   type: string;
@@ -969,41 +973,92 @@ function LogSourcesResult({ data }: { data: Record<string, unknown> }) {
 // ---------------------------------------------------------------------------
 
 /** A field of the rows that a behavior block answers, from blocks.gen.ts. */
-type Column<T extends BehaviorBlockType> =
-  (typeof BEHAVIOR_BLOCKS)[T]["columns"][number]["name"];
-
-/** A card of its own: the card it renders, and the fields of the rows it reads. */
-type OwnCard<T extends BehaviorBlockType> = {
-  card: string;
-  reads: readonly Column<T>[];
-};
-
 /**
- * The behavior blocks that keep a card of their own, by block type: the
- * card of the type it names below, and the fields that the card reads. A
- * field that the behavior no longer answers fails the type check, so the
- * card cannot go stale the way a hand-written one can. Every other behavior
- * block renders its rows with GenericRowsResult. osapi-io/osapi#1027 moves
- * what these cards draw into the definition.
+ * A value as the CLI's output shows it, by its column's render tag: bytes
+ * as a size, a time in the one time format, milliseconds as a duration, and
+ * short=N cut to N characters. A list is joined.
  */
-const BEHAVIOR_CARDS: { [T in BehaviorBlockType]?: OwnCard<T> } = {
-  "disk-get": { card: "disk-info", reads: ["disks"] },
-  "memory-get": { card: "memory-info", reads: ["memory"] },
-  "status-get": {
-    card: "node-status",
-    reads: ["uptime", "load_average", "memory", "disks", "os_info"],
-  },
-};
+function formatCell(c: BehaviorBlockColumn, v: unknown): string {
+  if (Array.isArray(v)) return v.map((x) => formatCell(c, x)).join(", ");
+  if (v !== null && typeof v === "object") return objectText(c, v);
+  const r = c.render ?? "";
+  if (r === "bytes" && typeof v === "number") return formatBytes(v);
+  if (r === "time" && typeof v === "string") return formatTime(v);
+  if (r === "duration=ms" && typeof v === "number") {
+    return formatDurationMs(v);
+  }
+  if (r.startsWith("short=")) {
+    const n = Number(r.slice("short=".length));
+    const t = String(v);
+    return t.length > n ? `${t.slice(0, n)}...` : t;
+  }
+  if (typeof v === "boolean") return v ? "yes" : "no";
+  return String(v);
+}
 
-/** A value of a row as text: a list joined, an object as JSON. */
-function cellText(v: unknown): string {
-  if (Array.isArray(v)) return v.map((x) => cellText(x)).join(", ");
-  if (v !== null && typeof v === "object") {
-    return Object.entries(v as Record<string, unknown>)
-      .map(([k, x]) => `${k} ${cellText(x)}`)
+/** An object as one line, each field by its label: Total 1.9 GB, Used 227 MB. */
+function objectText(c: BehaviorBlockColumn, v: object): string {
+  const cols = c.columns ?? [];
+  const o = v as Record<string, unknown>;
+  if (cols.length === 0) {
+    return Object.entries(o)
+      .map(([k, x]) => `${k} ${String(x)}`)
       .join(", ");
   }
-  return String(v);
+  return cols
+    .filter((sub) => hasValue(o[sub.name]))
+    .map((sub) => `${sub.label.toLowerCase()} ${formatCell(sub, o[sub.name])}`)
+    .join(", ");
+}
+
+/**
+ * What a host's rows count: its rows, or, for one row that is only a list,
+ * such as the disks of a host, the items of the list: 4 disks.
+ */
+function countOf(
+  def: BehaviorBlockDef,
+  rows: readonly Record<string, unknown>[],
+): string {
+  const shown = def.columns.filter((c) => c.name !== "changed");
+  const list = shown.length === 1 && shown[0].kind === "list" ? shown[0] : null;
+  if (rows.length === 1 && list && Array.isArray(rows[0][list.name])) {
+    const n = (rows[0][list.name] as unknown[]).length;
+    const noun = list.label.toLowerCase();
+    return `${n} ${n === 1 ? noun.replace(/s$/, "") : noun}`;
+  }
+  return `${rows.length} ${rows.length === 1 ? "row" : "rows"}`;
+}
+
+/** The text of every value of a row, for the search. */
+function rowText(cols: readonly BehaviorBlockColumn[], r: object): string[] {
+  const o = r as Record<string, unknown>;
+  return cols.map((c) => (hasValue(o[c.name]) ? formatCell(c, o[c.name]) : ""));
+}
+
+/** The fields of an object or a list item, as label and value pairs. */
+function Pairs({
+  cols,
+  item,
+  strongFirst,
+}: {
+  cols: readonly BehaviorBlockColumn[];
+  item: Record<string, unknown>;
+  strongFirst?: boolean;
+}) {
+  return (
+    <>
+      {cols
+        .filter((c) => c.kind !== "list" && hasValue(item[c.name]))
+        .map((c, j) => (
+          <KeyValue
+            key={c.name}
+            label={c.label.toLowerCase()}
+            value={formatCell(c, item[c.name])}
+            variant={strongFirst && j === 0 ? "strong" : undefined}
+          />
+        ))}
+    </>
+  );
 }
 
 /**
@@ -1062,7 +1117,7 @@ function GenericRowsResult({
       )}
       {hosts.map((host) => {
         const visible = host.rows.filter((r) =>
-          matches(search, ...shown.map((c) => cellText(r[c.name]))),
+          matches(search, ...rowText(shown, r)),
         );
         if (search && visible.length === 0 && !host.error) return null;
         const failed =
@@ -1087,7 +1142,7 @@ function GenericRowsResult({
                       ? changed
                         ? "changed"
                         : "unchanged"
-                      : `${host.rows.length} ${host.rows.length === 1 ? "row" : "rows"}`
+                      : countOf(def, host.rows)
               }
             />
             {host.error && host.status !== "skipped" && (
@@ -1099,16 +1154,29 @@ function GenericRowsResult({
                   key={i}
                   className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border/30 px-4 py-2 pl-9 last:border-0"
                 >
+                  <Pairs cols={shown} item={r} strongFirst />
+                  {/* A list in the row, such as the disks of a host: one
+                      line for each item, under the row. */}
                   {shown
-                    .filter((c) => hasValue(r[c.name]))
-                    .map((c, j) => (
-                      <KeyValue
-                        key={c.name}
-                        label={c.name.replace(/_/g, " ")}
-                        value={cellText(r[c.name])}
-                        variant={j === 0 ? "strong" : undefined}
-                      />
-                    ))}
+                    .filter(
+                      (c) => c.kind === "list" && Array.isArray(r[c.name]),
+                    )
+                    .flatMap((c) =>
+                      (r[c.name] as Record<string, unknown>[]).map(
+                        (item, k) => (
+                          <div
+                            key={`${c.name}-${k}`}
+                            className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 pl-4"
+                          >
+                            <Pairs
+                              cols={c.columns ?? []}
+                              item={item}
+                              strongFirst
+                            />
+                          </div>
+                        ),
+                      ),
+                    )}
                 </div>
               ))}
           </div>
@@ -1122,18 +1190,15 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
   if (!result) return null;
   const data = result as Record<string, unknown>;
 
-  // A behavior block: its own card if it keeps one, else its rows.
+  // A behavior block shows its rows as the CLI does, from the columns of
+  // its method's output: no behavior has a card of its own.
   if (type in BEHAVIOR_BLOCKS) {
-    const own = BEHAVIOR_CARDS[type as BehaviorBlockType]?.card;
-    if (!own) {
-      return (
-        <GenericRowsResult
-          data={data}
-          def={BEHAVIOR_BLOCKS[type as BehaviorBlockType]}
-        />
-      );
-    }
-    type = own;
+    return (
+      <GenericRowsResult
+        data={data}
+        def={BEHAVIOR_BLOCKS[type as BehaviorBlockType]}
+      />
+    );
   }
 
   if (
@@ -1636,131 +1701,6 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
           </div>
         )}
       </ResultShell>
-    );
-  }
-
-  // Node status — per-host with uptime, load, memory, disk, os_info
-  if (type === "node-status" && Array.isArray(data.results)) {
-    type NodeStatusRow = {
-      hostname: string;
-      status?: string;
-      uptime?: { uptime: string; seconds: number };
-      load_average?: { "1min": number; "5min": number; "15min": number };
-      memory?: { total: number; used: number; free: number };
-      disks?: { name: string; total: number; used: number; free: number }[];
-      os_info?: { distribution: string; version: string };
-      error?: string;
-    };
-    const results = data.results as NodeStatusRow[];
-    return (
-      <CollectionResult
-        jobId={data.job_id as string | undefined}
-        label="node status"
-        results={results.map((r) => ({
-          hostname: r.hostname,
-          status: hostStatus(r),
-          error: r.error,
-          extra: !r.error ? (
-            <div className="flex flex-wrap gap-3 text-xs text-text-muted">
-              {r.uptime && <span>up {r.uptime.uptime}</span>}
-              {r.load_average && (
-                <span>
-                  load {r.load_average["1min"].toFixed(2)}/
-                  {r.load_average["5min"].toFixed(2)}/
-                  {r.load_average["15min"].toFixed(2)}
-                </span>
-              )}
-              {r.memory && (
-                <span>
-                  mem {formatSize(r.memory.used)}/{formatSize(r.memory.total)}
-                </span>
-              )}
-              {r.os_info && (
-                <span>
-                  {r.os_info.distribution} {r.os_info.version}
-                </span>
-              )}
-            </div>
-          ) : undefined,
-        }))}
-        data={data}
-      />
-    );
-  }
-
-  // Disk info — per-host disk list
-  if (type === "disk-info" && Array.isArray(data.results)) {
-    type DiskRow = {
-      hostname: string;
-      status?: string;
-      disks?: { name: string; total: number; used: number; free: number }[];
-      error?: string;
-    };
-    const results = data.results as DiskRow[];
-    return (
-      <ResultShell
-        jobId={data.job_id as string | undefined}
-        label="disk"
-        data={data}
-      >
-        {results.map((r, i) => (
-          <div key={i} className="border-b border-border/50 last:border-0">
-            <HostGroupHeader
-              hostname={r.hostname}
-              status={hostStatus(r)}
-              detail={
-                r.error
-                  ? undefined
-                  : `${r.disks?.length ?? 0} disk${(r.disks?.length ?? 0) !== 1 ? "s" : ""}`
-              }
-            />
-            {r.error && <HostError>{r.error}</HostError>}
-            {!r.error &&
-              r.disks?.map((d, j) => (
-                <div
-                  key={j}
-                  className="flex items-center gap-4 border-b border-border/30 px-4 py-2 pl-9 last:border-0"
-                >
-                  <KeyValue label="dev" value={d.name} variant="strong" />
-                  <KeyValue label="total" value={formatSize(d.total)} />
-                  <KeyValue label="used" value={formatSize(d.used)} />
-                  <KeyValue label="free" value={formatSize(d.free)} />
-                </div>
-              ))}
-          </div>
-        ))}
-      </ResultShell>
-    );
-  }
-
-  // Memory info — per-host memory stats
-  if (type === "memory-info" && Array.isArray(data.results)) {
-    type MemRow = {
-      hostname: string;
-      status?: string;
-      memory?: { total: number; used: number; free: number };
-      error?: string;
-    };
-    const results = data.results as MemRow[];
-    return (
-      <CollectionResult
-        jobId={data.job_id as string | undefined}
-        label="memory"
-        results={results.map((r) => ({
-          hostname: r.hostname,
-          status: hostStatus(r),
-          error: r.error,
-          extra:
-            r.memory && !r.error ? (
-              <div className="flex gap-3 text-xs text-text-muted">
-                <span>total {formatSize(r.memory.total)}</span>
-                <span>used {formatSize(r.memory.used)}</span>
-                <span>free {formatSize(r.memory.free)}</span>
-              </div>
-            ) : undefined,
-        }))}
-        data={data}
-      />
     );
   }
 

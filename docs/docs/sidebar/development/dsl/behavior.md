@@ -56,6 +56,15 @@ provider is not required: a child that needs it declares Requires too.
 Use: For a resource that exists only inside another, such as the SSH keys of a
 user. Not with Under: the parent's path is the group.
 
+### `Area("area")`
+
+Puts a served behavior in an area of the UI: the group of the Configure page's
+Add Block panel that its blocks sit in, one of services, software, config, node,
+networking, security or hardware.
+
+Use: On each behavior with API. behavior validate refuses a served behavior with
+none.
+
 ### `Under("group")`
 
 Nests the behavior in a group: its routes, commands and directory.

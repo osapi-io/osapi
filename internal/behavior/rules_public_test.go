@@ -95,7 +95,7 @@ func (s *RulesPublicTestSuite) TestKeyIsRequired() {
 
 func (s *RulesPublicTestSuite) TestInput() {
 	got := s.problems(behavior.Define("note", "x", behavior.Node, onDebian,
-		behavior.API, behavior.CLI,
+		behavior.API, behavior.Area("config"), behavior.CLI,
 		behavior.Read("list", readBadInput).Describe("List")))
 	s.Equal([]string{
 		"input field NoJSON has no json name",

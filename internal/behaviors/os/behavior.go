@@ -29,6 +29,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"os", "Get the operating system of target hosts",
 	behavior.Node,
 	behavior.API,
+	behavior.Area("node"),
 	behavior.CLI,
 	// gohai reads /etc/os-release on Linux, and sw_vers on macOS.
 	behavior.Platform(behavior.PlatformLinux, newReader),

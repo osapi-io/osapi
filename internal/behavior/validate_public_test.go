@@ -222,12 +222,33 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 		},
 		{
 			name: "when a write's optional body field is sent empty",
-			b: behavior.Define("pkg", "Packages", behavior.Node, behavior.API, onDebian,
+			b: behavior.Define(
+				"pkg",
+				"Packages",
+				behavior.Node,
+				behavior.API,
+				behavior.Area("config"),
+				onDebian,
 				behavior.Write("create", setSentEmpty).Key("name").Describe("Install").
 					Fails("too long", sentEmptyIn{Name: "a", Version: "0123456789"}, "x").
 					Fails("too long", sentEmptyIn{Name: "a", Note: "0123456789"}, "x"),
 			),
 			wantRules: []string{behavior.RuleOptional},
+		},
+		{
+			name: "when a served behavior has no area of the UI",
+			b: behavior.Define("sysctl", "Kernel parameters", behavior.Node, onDebian, behavior.API,
+				behavior.Read("list", readList).Describe("List"),
+			),
+			wantRules: []string{behavior.RuleSurface},
+		},
+		{
+			name: "when a served behavior's area is not one of Areas",
+			b: behavior.Define("sysctl", "Kernel parameters", behavior.Node, onDebian, behavior.API,
+				behavior.Area("kitchen"),
+				behavior.Read("list", readList).Describe("List"),
+			),
+			wantRules: []string{behavior.RuleSurface},
 		},
 		{
 			name: "when the optional field is on a behavior with no API",
@@ -328,7 +349,14 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 		},
 		{
 			name: "when a CLI method has no example",
-			b: behavior.Define("sysctl", "x", behavior.Node, onDebian, behavior.API, behavior.CLI,
+			b: behavior.Define(
+				"sysctl",
+				"x",
+				behavior.Node,
+				onDebian,
+				behavior.API,
+				behavior.Area("config"),
+				behavior.CLI,
 				behavior.Read("get", get).Describe("Get"),
 			),
 			wantRules: []string{behavior.RuleExample},
@@ -487,7 +515,14 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 		},
 		{
 			name: "when a CLI input field cannot be a flag",
-			b: behavior.Define("sysctl", "x", behavior.Node, onDebian, behavior.API, behavior.CLI,
+			b: behavior.Define(
+				"sysctl",
+				"x",
+				behavior.Node,
+				onDebian,
+				behavior.API,
+				behavior.Area("config"),
+				behavior.CLI,
 				behavior.Read("list", listWide).Describe("List").
 					Example("All", wideIn{}, []entry{}),
 			),
@@ -495,7 +530,14 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 		},
 		{
 			name: "when an input is not a struct",
-			b: behavior.Define("sysctl", "x", behavior.Node, onDebian, behavior.API, behavior.CLI,
+			b: behavior.Define(
+				"sysctl",
+				"x",
+				behavior.Node,
+				onDebian,
+				behavior.API,
+				behavior.Area("config"),
+				behavior.CLI,
 				behavior.Read("status", readBare).Describe("Status").
 					Example("All", "x", entry{}),
 			),
@@ -586,7 +628,7 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 				behavior.Node,
 				onDebian,
 				behavior.Internal,
-				behavior.API,
+				behavior.API, behavior.Area("config"),
 				behavior.Read("get", get).Describe("Get"),
 			),
 			wantRules: []string{behavior.RuleSurface},

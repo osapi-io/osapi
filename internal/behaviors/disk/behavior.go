@@ -29,6 +29,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"disk", "Get the disk usage of target hosts",
 	behavior.Node,
 	behavior.API,
+	behavior.Area("hardware"),
 	behavior.CLI,
 	// gohai reads /proc/mounts, df, lsblk and zfs on Linux, and mount and df
 	// on macOS.

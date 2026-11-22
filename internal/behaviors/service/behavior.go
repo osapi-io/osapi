@@ -79,6 +79,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"service", "The systemd services of the host",
 	behavior.Node,
 	behavior.API,
+	behavior.Area("services"),
 	behavior.CLI,
 	behavior.Requires(object.Behavior),
 	behavior.Requires(managedfile.Behavior),
