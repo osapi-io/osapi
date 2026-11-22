@@ -2788,6 +2788,9 @@ type JobDetailResponse struct {
 		Status   *string `json:"status,omitempty"`
 	} `json:"agent_states,omitempty"`
 
+	// Chain The calls of other behaviors that the method made on each host, one line for each host, such as web-01: netplan update (changed) → managedfile update (changed).
+	Chain *[]string `json:"chain,omitempty"`
+
 	// Changed Whether the operation modified system state. Null for pending/failed jobs; true/false for completed jobs.
 	Changed *bool `json:"changed,omitempty"`
 
@@ -2821,6 +2824,9 @@ type JobDetailResponse struct {
 		Error    *string     `json:"error,omitempty"`
 		Hostname string      `json:"hostname"`
 		Status   *string     `json:"status,omitempty"`
+
+		// Steps The calls of other behaviors that the method made on the host, also when one failed.
+		Steps *[]Step `json:"steps,omitempty"`
 	} `json:"responses,omitempty"`
 
 	// Result The result data if completed.
@@ -4365,6 +4371,16 @@ type StatusResponse struct {
 
 	// Version Application version.
 	Version string `json:"version"`
+}
+
+// Step defines model for Step.
+type Step struct {
+	Behavior   string  `json:"behavior"`
+	Changed    *bool   `json:"changed,omitempty"`
+	DurationMs int64   `json:"duration_ms"`
+	Error      *string `json:"error,omitempty"`
+	Method     string  `json:"method"`
+	Steps      *[]Step `json:"steps,omitempty"`
 }
 
 // StreamInfo defines model for StreamInfo.

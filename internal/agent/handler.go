@@ -30,6 +30,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/behavior"
+
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -447,8 +449,12 @@ func (a *Agent) handleJobMessage(
 		// Extend the ack deadline periodically while the operation runs, so
 		// an operation that outlives AckWait is not redelivered mid-flight.
 		stopKeepAlive := a.startInProgressKeepAlive(ctx, msg)
-		result, err = a.processJobOperation(ctx, jobRequest)
+		// Each behavior.Call under the method adds its step to root, so
+		// the response says which behaviors the job called on the host.
+		root := &behavior.Step{}
+		result, err = a.processJobOperation(behavior.Record(ctx, root), jobRequest)
 		stopKeepAlive()
+		response.Steps = root.Wire()
 	}
 	if err != nil && errors.Is(err, provider.ErrUnsupported) {
 		a.logger.WarnContext(
@@ -512,7 +518,8 @@ func (a *Agent) handleJobMessage(
 	}
 
 	err = a.jobClient.WriteJobResponse(ctx, jobKey, hostname,
-		response.Data, string(response.Status), errorMsg, response.ErrorCode, response.Changed)
+		response.Data, string(response.Status), errorMsg, response.ErrorCode, response.Changed,
+		response.Steps)
 	if err != nil {
 		// The operation already ran. Returning an error here would leave
 		// the message unacked, and JetStream would redeliver it — but

@@ -653,7 +653,7 @@ func (s *ConsumerPublicTestSuite) TestHandleJobMessageJS() {
 
 				// Mock response write
 				s.mockJobClient.EXPECT().
-					WriteJobResponse(gomock.Any(), "test-job-key", gomock.Any(), gomock.Any(), "completed", "", gomock.Any(), gomock.Any()).
+					WriteJobResponse(gomock.Any(), "test-job-key", gomock.Any(), gomock.Any(), "completed", "", gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil)
 			},
 			validateFunc: func(err error) {

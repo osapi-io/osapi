@@ -19,6 +19,8 @@
 // DEALINGS IN THE SOFTWARE.
 package job
 
+import "github.com/osapi-io/osapi/pkg/sdk/client"
+
 // ListInput is a page of the job queue, and the status to filter by.
 type ListInput struct {
 	Status string `json:"status" in:"query" validate:"omitempty,oneof=submitted processing completed failed partial_failure" doc:"Filter jobs by status."`
@@ -66,19 +68,20 @@ type ListJobsResponse struct {
 // JobDetailResponse is one job, with what each agent did with it. The
 // fields of a list come first, in the order of its columns.
 type JobDetailResponse struct { //nolint:revive // the schema name is part of the API
-	ID          string          `json:"id,omitempty"           validate:"uuid" doc:"Unique identifier of the job."                                                                                                                            label:"Job ID"`
-	Status      string          `json:"status,omitempty"                       doc:"Current status of the job."                                                                                                                                               render:"status"`
-	Created     string          `json:"created,omitempty"                      doc:"Creation timestamp."                                                                                                                                                      render:"time"`
+	ID          string          `json:"id,omitempty"           validate:"uuid" doc:"Unique identifier of the job."                                                                                                                                    label:"Job ID"`
+	Status      string          `json:"status,omitempty"                       doc:"Current status of the job."                                                                                                                                                       render:"status"`
+	Created     string          `json:"created,omitempty"                      doc:"Creation timestamp."                                                                                                                                                              render:"time"`
 	Target      string          `json:"target,omitempty"                       doc:"The target the request gave: _any, _all, a hostname, or a label such as group:web.dev. A job stored before targets were kept has the host that answered."`
 	Operation   *Operation      `json:"operation,omitempty"                    doc:"What the job asked for, with each secret masked."`
-	Hostname    string          `json:"hostname,omitempty"                     doc:"Agent hostname that processed the job."                                                                                                                                                   table:"-"`
-	UpdatedAt   string          `json:"updated_at,omitempty"                   doc:"Last update timestamp."                                                                                                                                   label:"Updated" render:"time"   table:"-"`
-	Changed     *bool           `json:"changed,omitempty"                      doc:"Whether the operation modified system state. Null for pending/failed jobs; true/false for completed jobs."                                                                                table:"-"`
-	Error       string          `json:"error,omitempty"                        doc:"Error message if failed."                                                                                                                                                                 table:"-"`
-	Result      any             `json:"result,omitempty"                       doc:"The result data if completed."                                                                                                                                                            table:"-"`
-	Responses   []Response      `json:"responses,omitempty"                    doc:"What each agent answered, by hostname."                                                                                                                                                   table:"-"`
-	AgentStates []AgentState    `json:"agent_states,omitempty"                 doc:"How far each agent got, by hostname."                                                                                                                                                     table:"-"`
-	Timeline    []TimelineEvent `json:"timeline,omitempty"                     doc:"Chronological sequence of job lifecycle events."                                                                                                                                          table:"-"`
+	Hostname    string          `json:"hostname,omitempty"                     doc:"Agent hostname that processed the job."                                                                                                                                                           table:"-"`
+	UpdatedAt   string          `json:"updated_at,omitempty"                   doc:"Last update timestamp."                                                                                                                                           label:"Updated" render:"time"   table:"-"`
+	Changed     *bool           `json:"changed,omitempty"                      doc:"Whether the operation modified system state. Null for pending/failed jobs; true/false for completed jobs."                                                                                        table:"-"`
+	Error       string          `json:"error,omitempty"                        doc:"Error message if failed."                                                                                                                                                                         table:"-"`
+	Result      any             `json:"result,omitempty"                       doc:"The result data if completed."                                                                                                                                                                    table:"-"`
+	Responses   []Response      `json:"responses,omitempty"                    doc:"What each agent answered, by hostname."                                                                                                                                                           table:"-"`
+	Chain       []string        `json:"chain,omitempty"                        doc:"The calls of other behaviors that the method made on each host, one line for each host, such as web-01: netplan update (changed) → managedfile update (changed)."`
+	AgentStates []AgentState    `json:"agent_states,omitempty"                 doc:"How far each agent got, by hostname."                                                                                                                                                             table:"-"`
+	Timeline    []TimelineEvent `json:"timeline,omitempty"                     doc:"Chronological sequence of job lifecycle events."                                                                                                                                                  table:"-"`
 }
 
 // Operation is what a job asked for: its type, such as node.hostname.get,
@@ -90,11 +93,12 @@ type Operation = struct {
 
 // Response is what one agent answered, in place in the spec.
 type Response = struct {
-	Hostname string `json:"hostname"`
-	Status   string `json:"status,omitempty"  render:"status"`
-	Changed  *bool  `json:"changed,omitempty"`
-	Error    string `json:"error,omitempty"`
-	Data     any    `json:"data,omitempty"                    doc:"Agent result data."`
+	Hostname string        `json:"hostname"`
+	Status   string        `json:"status,omitempty"  render:"status"`
+	Changed  *bool         `json:"changed,omitempty"`
+	Error    string        `json:"error,omitempty"`
+	Data     any           `json:"data,omitempty"                    doc:"Agent result data."`
+	Steps    []client.Step `json:"steps,omitempty"                   doc:"The calls of other behaviors that the method made on the host, also when one failed."`
 }
 
 // AgentState is how far one agent got, in place in the spec.

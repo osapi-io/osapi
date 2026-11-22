@@ -278,6 +278,7 @@ export * from './statusEntry';
 export * from './statusEntryStatus';
 export * from './statusGetResponse';
 export * from './statusResponse';
+export * from './step';
 export * from './streamInfo';
 export * from './sysctlCollectionResponse';
 export * from './sysctlCreateRequest';

@@ -30,6 +30,8 @@ import (
 	"testing"
 	"time"
 
+	sdkclient "github.com/osapi-io/osapi/pkg/sdk/client"
+
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -184,7 +186,19 @@ func (s *MethodsPublicTestSuite) TestGet() {
 						Status: job.StatusCompleted, Hostname: "web-01",
 						Data: json.RawMessage(`{"uptime":5}`), Changed: ptr(false),
 					},
-					"web-02": {Status: job.StatusFailed, Hostname: "web-02", Error: "boom"},
+					"web-02": {
+						Status: job.StatusFailed, Hostname: "web-02", Error: "boom",
+						Steps: []sdkclient.Step{
+							{
+								Behavior: "netplan",
+								Method:   "update",
+								Changed:  ptr(true),
+								Steps: []sdkclient.Step{
+									{Behavior: "managedfile", Method: "update", Error: "boom"},
+								},
+							},
+						},
+					},
 				}
 				qj.AgentStates = map[string]job.AgentState{
 					"web-01": {Status: "completed", Duration: "1.2s"},
@@ -205,6 +219,13 @@ func (s *MethodsPublicTestSuite) TestGet() {
 				s.Equal("web-02", got.Responses[1].Hostname)
 				s.Equal("boom", got.Responses[1].Error)
 				s.Nil(got.Responses[1].Data)
+				s.Nil(got.Responses[0].Steps, "a method that called no other behavior")
+				s.Len(got.Responses[1].Steps, 1)
+				s.Equal(
+					[]string{"web-02: netplan update (changed) → managedfile update (failed)"},
+					got.Chain,
+					"one line for each host whose method called other behaviors",
+				)
 				s.Require().Len(got.AgentStates, 2)
 				s.Equal(
 					jobgroup.AgentState{Hostname: "web-01", Status: "completed", Duration: "1.2s"},

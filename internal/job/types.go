@@ -131,6 +131,9 @@ type Response struct {
 	// Changed indicates whether the operation modified system state.
 	// Nil for query operations; set for mutation operations.
 	Changed *bool `json:"changed,omitempty"`
+	// Steps are the calls of other behaviors that the job's method made on
+	// the host, also when one failed. Empty for a method that calls none.
+	Steps []client.Step `json:"steps,omitempty"`
 	// Hostname identifies which agent processed this job.
 	Hostname string `json:"hostname"`
 	// Timestamp indicates when the response was created.
