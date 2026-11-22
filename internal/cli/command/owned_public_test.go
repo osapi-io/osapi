@@ -87,6 +87,20 @@ func (s *OwnedPublicTestSuite) TestTagKeys() {
 	}
 }
 
+func (s *OwnedPublicTestSuite) TestCommandFlags() {
+	type body struct {
+		Reason string `json:"reason"`
+	}
+	type in struct {
+		Hostname string `json:"hostname" flag:"target" short:"T"`
+		MaxJobs  int    `json:"max_jobs"`
+		Body     body   `                                        in:"body"`
+		Hidden   string `json:"-"`
+	}
+	s.Equal(map[string]bool{"target": true, "T": true, "max-jobs": true, "reason": true},
+		command.InputFlags(reflect.TypeFor[in]()))
+}
+
 func TestOwnedPublicTestSuite(
 	t *testing.T,
 ) {

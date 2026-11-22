@@ -111,6 +111,7 @@ command.Define(doc string)	free text	prose for a page or a message
 command.Define(name string)	identity	a name that the registry, the route or the command path holds
 command.Example.Doc string	free text	prose for a page or a message
 command.Example.Flags string	checked	the flags of an example; validate checks each against the command
+command.ExampleFlagProblems(flags map[string]bool)	checked	the flag names of a command, from InputFlags of its input type
 command.LocalGroup.Doc string	free text	prose for a page or a message
 command.LocalGroup.Long string	free text	prose for a page or a message
 command.LocalGroup.Method(name string)	identity	a name that the registry, the route or the command path holds
@@ -190,7 +191,7 @@ endpoint.Method.Command(long string)	free text	prose for a page or a message
 endpoint.Method.Command(short string)	free text	prose for a page or a message
 endpoint.Method.Describe(summary string)	free text	prose for a page or a message
 endpoint.Method.Example(doc []string)	free text	prose for a page or a message
-endpoint.Method.Example(flags string)	free text	the flags of an example on a docs page; no check yet compares them with the command's flags
+endpoint.Method.Example(flags string)	checked	the flags of an example; validate checks each against the command
 endpoint.Method.Explain(text string)	free text	prose for a page or a message
 endpoint.Method.Fails(doc string)	free text	prose for a page or a message
 endpoint.Method.ID(id string)	identity	a name that the registry, the route or the command path holds

@@ -30,6 +30,8 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/osapi-io/osapi/internal/cli/command"
+
 	"github.com/osapi-io/osapi/internal/validation"
 
 	"github.com/osapi-io/osapi/internal/validation/rule"
@@ -72,6 +74,10 @@ const (
 	// converts an untyped literal to Reason, so Because("not_manged")
 	// compiles, and the caller would get a word the schema does not list.
 	RuleReason = "reason"
+	// RuleExample: each flag that an Example names is a flag of the
+	// method's command. A misspelled flag showed a command on its docs page
+	// that fails.
+	RuleExample = "example"
 	// RulePrints: the output that Prints gives an example is a value of the
 	// method's output type, and Prints follows an Example. Prints takes any
 	// value, so a sample of another type compiles.
@@ -105,6 +111,11 @@ func hasField(
 // rule, so an author or an agent can read the rules before breaking one.
 // The tests trigger each rule, and fail on a rule without a check.
 var Checks = guide.Checks{
+	{
+		Rule:     RuleExample,
+		Requires: "Each flag that an Example names is a flag of the method's command: a field of its input, a field of the struct that in:\"body\" names, or --json, --debug or --osapi-file.",
+		Fix:      "Spell each flag of the example as the command has it: osapi controller endpoint get --name <group> lists the methods, and the command's --help lists its flags.",
+	},
 	{
 		Rule:     RulePrints,
 		Requires: "The output that Prints gives an example is a value of the method's output type, and Prints follows an Example.",
@@ -295,6 +306,9 @@ func Validate(
 				add(m.Name, RulePrints, fmt.Sprintf(
 					"Prints gives the example %q a %s, not a %s.", ex.Flags, t, m.Out))
 			}
+		}
+		for _, msg := range command.ExampleFlagProblems(m.Examples(), command.InputFlags(m.In)) {
+			add(m.Name, RuleExample, msg)
 		}
 		for _, e := range m.Mapped() {
 			if !slices.Contains(Reasons, e.Reason) {

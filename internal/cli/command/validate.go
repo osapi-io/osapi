@@ -263,7 +263,7 @@ func Validate(
 		if len(fields) > 0 && len(m.examples) == 0 {
 			add(m.Name, RuleHelp, "the method has input and no Example.")
 		}
-		for _, msg := range exampleFlagProblems(m, fields) {
+		for _, msg := range exampleFlagProblems(m) {
 			add(m.Name, RuleHelp, msg)
 		}
 
@@ -577,25 +577,63 @@ var globalFlags = map[string]bool{
 }
 
 // exampleFlagProblems are the flags that an example of m names and the
-// command does not have. A misspelled flag made a docs page show a command
-// that fails.
+// command does not have: its input's flags, and the flag of each key that
+// its Flag names.
 func exampleFlagProblems(
 	m *LocalMethod,
-	fields []reflect.StructField,
 ) []string {
-	flags := map[string]bool{}
-	for _, f := range fields {
-		flags[FlagName(f)] = true
-		if short := f.Tag.Get("short"); short != "" {
-			flags[short] = true
-		}
-	}
+	flags := InputFlags(m.In)
 	for _, k := range m.keys {
 		// As config.FlagName names the flag of a key.
 		flags[strings.NewReplacer(".", "-", "_", "-").Replace(k)] = true
 	}
+
+	return ExampleFlagProblems(m.examples, flags)
+}
+
+// InputFlags are the flags of the command of a method whose input is in,
+// as the command generator declares them: each field's flag tag, else its
+// FlagName, and its short tag. A field tagged in:"body" that is a struct
+// gives a flag for each of its fields. The keys are the names without the
+// dashes.
+func InputFlags(
+	in reflect.Type,
+) map[string]bool {
+	flags := map[string]bool{}
+	add := func(f reflect.StructField) {
+		name := FlagName(f)
+		if tag := f.Tag.Get("flag"); tag != "" {
+			name = tag
+		}
+		flags[name] = true
+		if short := f.Tag.Get("short"); short != "" {
+			flags[short] = true
+		}
+	}
+	for _, f := range structFields(in) {
+		if f.Tag.Get("in") == "body" && f.Type.Kind() == reflect.Struct {
+			for _, bf := range structFields(f.Type) {
+				add(bf)
+			}
+
+			continue
+		}
+		add(f)
+	}
+
+	return flags
+}
+
+// ExampleFlagProblems are the flags that examples name and that are not in
+// flags or the flags of each command. A misspelled flag made a docs page
+// show a command that fails. The command DSL and the endpoint DSL both
+// check their examples with it.
+func ExampleFlagProblems(
+	examples []Example,
+	flags map[string]bool,
+) []string {
 	var out []string
-	for _, e := range m.examples {
+	for _, e := range examples {
 		for _, word := range strings.Fields(e.Flags) {
 			name, ok := strings.CutPrefix(word, "-")
 			if !ok || name == "" {
