@@ -57,8 +57,6 @@ var clientContainerDockerImagePullCmd = &cobra.Command{
 
 		cli.PrintJobID(resp.Data.JobID)
 
-		cli.PrintTraceID(resp.TraceID())
-
 		results := make([]cli.ResultRow, 0)
 		for _, r := range resp.Data.Results {
 			var errPtr *string
