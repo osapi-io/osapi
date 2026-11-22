@@ -68,6 +68,10 @@ const (
 	// its type. A misspelled name gave a Location of <nil>, or dropped the
 	// example from the spec, with no error.
 	RuleField = "field"
+	// RuleReason: each error that a method maps has one of Reasons. Go
+	// converts an untyped literal to Reason, so Because("not_manged")
+	// compiles, and the caller would get a word the schema does not list.
+	RuleReason = "reason"
 )
 
 // inValues are the values of the in tag: where a field of a request comes
@@ -101,6 +105,11 @@ var Checks = guide.Checks{
 		Rule:     RuleIn,
 		Requires: "Each in tag of an input field is path, query, form or body.",
 		Fix:      "Correct the value. A field with another value is read from the request body, not from where the tag says.",
+	},
+	{
+		Rule:     RuleReason,
+		Requires: "Each error that a method maps has a reason of endpoint.Reasons.",
+		Fix:      "Use a Reason constant, such as endpoint.ReasonNotManaged, in Because.",
 	},
 	{
 		Rule:     RuleField,
@@ -260,6 +269,13 @@ func Validate(
 				add(m.Name, RuleIn, fmt.Sprintf(
 					"input field %s is tagged in:%q; the values are path, query, form and body.",
 					jsonName(f), v))
+			}
+		}
+		for _, e := range m.Mapped() {
+			if !slices.Contains(Reasons, e.Reason) {
+				add(m.Name, RuleReason, fmt.Sprintf(
+					"an error of %d has the reason %q, which is not one of endpoint.Reasons.",
+					e.Code, e.Reason))
 			}
 		}
 		if l := m.location; l != "" && !hasField(m.Out, l) {

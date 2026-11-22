@@ -825,6 +825,17 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 			},
 		},
 		{
+			name: "when an error has a reason that is not one of Reasons",
+			group: endpoint.Define("node", "The nodes",
+				endpoint.Get[noInput, Node]("list").Errors(
+					endpoint.Conflict(errors.New("x"), "A conflict").Because("not_manged"),
+				),
+			),
+			want: []string{
+				`an error of 409 has the reason "not_manged", which is not one of endpoint.Reasons.`,
+			},
+		},
+		{
 			name: "when Location or Example names a field that its type does not have",
 			group: endpoint.Define("node", "The nodes",
 				endpoint.Example[Node]("nmae", "web-01"),

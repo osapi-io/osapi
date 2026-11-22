@@ -8,6 +8,8 @@ describes each part of a group.
 
 The rules:
 
+- `reason`: Each error that a method maps has a reason of endpoint.Reasons. Fix:
+  Use a Reason constant, such as endpoint.ReasonNotManaged, in Because.
 - `field`: The field that Location names is a json field of the method's output,
   and the field that Example\[T] names is a json field of T. Fix: Correct the
   name to the json name of the field, such as job_id.
