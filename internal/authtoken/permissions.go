@@ -25,8 +25,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/osapi-io/osapi/internal/behavior"
-	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	"github.com/osapi-io/osapi/internal/dsl"
+
 	"github.com/osapi-io/osapi/internal/validation/rule"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
@@ -115,8 +115,8 @@ type declared struct {
 	where string
 }
 
-// declarations are the permissions of the hand-written domains, then each
-// registered endpoint group's, then each registered behavior's. They are
+// declarations are the permissions of the hand-written domains, then those
+// of each registered DSL whose definitions serve the API, from dsl.All. They are
 // made on each call, not once, because a group or a behavior registers in
 // the init of its own package, which can run after this package's.
 func declarations() []declared {
@@ -124,26 +124,16 @@ func declarations() []declared {
 	for _, p := range builtinPermissions {
 		out = append(out, declared{permission: p, where: "authtoken"})
 	}
-	for _, g := range endpoint.All() {
-		for _, d := range g.Declared() {
-			out = append(out, declared{
-				permission: d.Permission,
-				adminOnly:  d.AdminOnly,
-				named:      d.Named,
-				where:      "endpoint " + d.Where,
-			})
-		}
-	}
-	for _, b := range behavior.All() {
-		// Only a behavior served over the API has methods a token can call.
-		if !b.API {
+	for _, d := range dsl.All() {
+		if !d.ServesAPI() {
 			continue
 		}
-		for _, m := range b.Methods {
+		for _, p := range d.Permissions() {
 			out = append(out, declared{
-				permission: b.Permission(m.Verb),
-				adminOnly:  m.Admin,
-				where:      "behavior " + b.Name + " " + m.Name,
+				permission: p.Permission,
+				adminOnly:  p.AdminOnly,
+				named:      p.Named,
+				where:      p.Where,
 			})
 		}
 	}

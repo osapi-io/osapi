@@ -27,10 +27,9 @@ import (
 	"slices"
 	"strings"
 
-	"gopkg.in/yaml.v3"
+	"github.com/osapi-io/osapi/internal/dsl"
 
-	"github.com/osapi-io/osapi/internal/behavior"
-	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	"gopkg.in/yaml.v3"
 )
 
 // OperationsFile is where the UI keeps the permission of each operation,
@@ -88,19 +87,12 @@ func Operations(
 // definitions. A public method needs no permission and is not in it.
 func RegistryOperations() map[string]string {
 	out := map[string]string{}
-	for _, g := range endpoint.All() {
-		for _, m := range g.Methods {
-			if perm := g.Permission(m); perm != "" {
-				out[uiName(m.OperationID(g))] = string(perm)
-			}
-		}
-	}
-	for _, b := range behavior.All() {
-		if !b.API {
+	for _, d := range dsl.All() {
+		if !d.ServesAPI() {
 			continue
 		}
-		for _, m := range b.Methods {
-			out[uiName(b.OperationID(m))] = string(b.Permission(m.Verb))
+		for _, op := range d.Operations() {
+			out[uiName(op.ID)] = string(op.Permission)
 		}
 	}
 

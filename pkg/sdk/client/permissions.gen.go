@@ -29,13 +29,6 @@ const (
 	PermLogRead             Permission = "log:read"
 	PermCertificateRead     Permission = "certificate:read"
 	PermCertificateWrite    Permission = "certificate:write"
-	PermAdmissionRead       Permission = "admission:read"
-	PermAdmissionWrite      Permission = "admission:write"
-	PermAgentRead           Permission = "agent:read"
-	PermAgentWrite          Permission = "agent:write"
-	PermAuditRead           Permission = "audit:read"
-	PermJobRead             Permission = "job:read"
-	PermJobWrite            Permission = "job:write"
 	PermDiskRead            Permission = "disk:read"
 	PermHostnameRead        Permission = "hostname:read"
 	PermHostnameWrite       Permission = "hostname:write"
@@ -54,6 +47,13 @@ const (
 	PermUpdatepackagesRead  Permission = "updatepackages:read"
 	PermUpdatepackagesWrite Permission = "updatepackages:write"
 	PermUptimeRead          Permission = "uptime:read"
+	PermAdmissionRead       Permission = "admission:read"
+	PermAdmissionWrite      Permission = "admission:write"
+	PermAgentRead           Permission = "agent:read"
+	PermAgentWrite          Permission = "agent:write"
+	PermAuditRead           Permission = "audit:read"
+	PermJobRead             Permission = "job:read"
+	PermJobWrite            Permission = "job:write"
 )
 
 // Built-in role constants, one for each built-in role.
