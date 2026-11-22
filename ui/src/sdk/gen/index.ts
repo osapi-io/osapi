@@ -22,7 +22,7 @@ export * from './load-api-load-operations/load-api-load-operations';
 export * from './memory-api-memory-operations/memory-api-memory-operations';
 export * from './nats-api-nats/nats-api-nats';
 export * from './node-file-operations-api-node-file-operations/node-file-operations-api-node-file-operations';
-export * from './ntp-management-api-ntp-operations/ntp-management-api-ntp-operations';
+export * from './ntp-api-ntp-operations/ntp-api-ntp-operations';
 export * from './os-api-os-operations/os-api-os-operations';
 export * from './package-api-package-operations/package-api-package-operations';
 export * from './power-api-power-operations/power-api-power-operations';

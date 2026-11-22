@@ -60,6 +60,10 @@ jobs:
       # they never change the runner's own network.
       - name: Dummy interface
         run: sudo ip link add osapi0 type dummy
+      # The ntp examples run chronyc and write to /etc/chrony/sources.d, so
+      # the runner needs chrony.
+      - name: chrony
+        run: sudo apt-get update && sudo apt-get install -y chrony
       # As root, with the behavior write examples on: the runner is thrown
       # away after the job, so they may change its kernel parameters and /etc.
       - name: Integration

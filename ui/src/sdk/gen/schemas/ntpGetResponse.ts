@@ -4,10 +4,10 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { NtpStatusEntry } from './ntpStatusEntry';
+import type { NtpStatus } from './ntpStatus';
 
-export interface NtpCollectionResponse {
+export interface NtpGetResponse {
   /** The job ID used to process this request. */
   job_id?: string;
-  results: NtpStatusEntry[];
+  results: NtpStatus[];
 }

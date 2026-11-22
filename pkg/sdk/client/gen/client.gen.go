@@ -811,48 +811,48 @@ func (e NodeConditionType) Valid() bool {
 	}
 }
 
-// Defines values for NtpMutationResultStatus.
+// Defines values for NtpResultStatus.
 const (
-	NtpMutationResultStatusFailed  NtpMutationResultStatus = "failed"
-	NtpMutationResultStatusOk      NtpMutationResultStatus = "ok"
-	NtpMutationResultStatusSkipped NtpMutationResultStatus = "skipped"
-	NtpMutationResultStatusTimeout NtpMutationResultStatus = "timeout"
+	NtpResultStatusFailed  NtpResultStatus = "failed"
+	NtpResultStatusOk      NtpResultStatus = "ok"
+	NtpResultStatusSkipped NtpResultStatus = "skipped"
+	NtpResultStatusTimeout NtpResultStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the NtpMutationResultStatus enum.
-func (e NtpMutationResultStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the NtpResultStatus enum.
+func (e NtpResultStatus) Valid() bool {
 	switch e {
-	case NtpMutationResultStatusFailed:
+	case NtpResultStatusFailed:
 		return true
-	case NtpMutationResultStatusOk:
+	case NtpResultStatusOk:
 		return true
-	case NtpMutationResultStatusSkipped:
+	case NtpResultStatusSkipped:
 		return true
-	case NtpMutationResultStatusTimeout:
+	case NtpResultStatusTimeout:
 		return true
 	default:
 		return false
 	}
 }
 
-// Defines values for NtpStatusEntryStatus.
+// Defines values for NtpStatusStatus.
 const (
-	NtpStatusEntryStatusFailed  NtpStatusEntryStatus = "failed"
-	NtpStatusEntryStatusOk      NtpStatusEntryStatus = "ok"
-	NtpStatusEntryStatusSkipped NtpStatusEntryStatus = "skipped"
-	NtpStatusEntryStatusTimeout NtpStatusEntryStatus = "timeout"
+	NtpStatusStatusFailed  NtpStatusStatus = "failed"
+	NtpStatusStatusOk      NtpStatusStatus = "ok"
+	NtpStatusStatusSkipped NtpStatusStatus = "skipped"
+	NtpStatusStatusTimeout NtpStatusStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the NtpStatusEntryStatus enum.
-func (e NtpStatusEntryStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the NtpStatusStatus enum.
+func (e NtpStatusStatus) Valid() bool {
 	switch e {
-	case NtpStatusEntryStatusFailed:
+	case NtpStatusStatusFailed:
 		return true
-	case NtpStatusEntryStatusOk:
+	case NtpStatusStatusOk:
 		return true
-	case NtpStatusEntryStatusSkipped:
+	case NtpStatusStatusSkipped:
 		return true
-	case NtpStatusEntryStatusTimeout:
+	case NtpStatusStatusTimeout:
 		return true
 	default:
 		return false
@@ -3537,92 +3537,92 @@ type NodeCondition struct {
 // NodeConditionType defines model for NodeCondition.Type.
 type NodeConditionType string
 
-// NtpCollectionResponse defines model for NtpCollectionResponse.
-type NtpCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []NtpStatusEntry    `json:"results"`
-}
-
 // NtpCreateRequest defines model for NtpCreateRequest.
 type NtpCreateRequest struct {
-	// Servers List of NTP server addresses to configure.
-	Servers []string `json:"servers" validate:"required,min=1"`
+	// Servers The NTP servers, hostnames or IP addresses
+	Servers []string `json:"servers" validate:"required,min=1,max=16,dive,ntp_server"`
 }
 
 // NtpCreateResponse defines model for NtpCreateResponse.
 type NtpCreateResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []NtpMutationResult `json:"results"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []NtpResult         `json:"results"`
 }
 
 // NtpDeleteResponse defines model for NtpDeleteResponse.
 type NtpDeleteResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []NtpMutationResult `json:"results"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []NtpResult         `json:"results"`
 }
 
-// NtpMutationResult Result of an NTP create, update, or delete operation for one host.
-type NtpMutationResult struct {
-	// Changed Whether the operation modified system state.
+// NtpGetResponse defines model for NtpGetResponse.
+type NtpGetResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []NtpStatus         `json:"results"`
+}
+
+// NtpResult defines model for NtpResult.
+type NtpResult struct {
+	// Changed Whether the host changed
 	Changed *bool `json:"changed,omitempty"`
 
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
-	// Hostname Hostname of the agent that processed this operation.
+	// Hostname Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
 	// Status The status of the operation for this host.
-	Status NtpMutationResultStatus `json:"status"`
+	Status NtpResultStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
 }
 
-// NtpMutationResultStatus The status of the operation for this host.
-type NtpMutationResultStatus string
+// NtpResultStatus The status of the operation for this host.
+type NtpResultStatus string
 
-// NtpStatusEntry NTP status for a single host.
-type NtpStatusEntry struct {
-	// CurrentSource The currently selected NTP source.
+// NtpStatus defines model for NtpStatus.
+type NtpStatus struct {
+	// CurrentSource The source that chrony follows now
 	CurrentSource *string `json:"current_source,omitempty"`
 
-	// Error Error message if the agent failed to retrieve NTP status.
+	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
-	// Hostname Hostname of the agent that reported this entry.
+	// Hostname Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
-	// Offset Clock offset from the NTP source.
+	// Offset The offset of the system clock from NTP time, such as +0.000003422s
 	Offset *string `json:"offset,omitempty"`
 
-	// Servers Configured NTP server addresses.
+	// Servers The sources that chrony has
 	Servers *[]string `json:"servers,omitempty"`
 
 	// Status The status of the operation for this host.
-	Status NtpStatusEntryStatus `json:"status"`
+	Status NtpStatusStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
 
-	// Stratum NTP stratum level.
+	// Stratum The NTP stratum of the host
 	Stratum *int `json:"stratum,omitempty"`
 
-	// Synchronized Whether the system clock is synchronized.
+	// Synchronized Whether chrony is synchronized to a source
 	Synchronized *bool `json:"synchronized,omitempty"`
 }
 
-// NtpStatusEntryStatus The status of the operation for this host.
-type NtpStatusEntryStatus string
+// NtpStatusStatus The status of the operation for this host.
+type NtpStatusStatus string
 
 // NtpUpdateRequest defines model for NtpUpdateRequest.
 type NtpUpdateRequest struct {
-	// Servers List of NTP server addresses to configure.
-	Servers []string `json:"servers" validate:"required,min=1"`
+	// Servers The NTP servers, hostnames or IP addresses
+	Servers []string `json:"servers" validate:"required,min=1,max=16,dive,ntp_server"`
 }
 
 // NtpUpdateResponse defines model for NtpUpdateResponse.
 type NtpUpdateResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []NtpMutationResult `json:"results"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []NtpResult         `json:"results"`
 }
 
 // OSInfoResponse Operating system information.
@@ -16097,6 +16097,8 @@ type DeleteNodeNtpResponse struct {
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -16127,10 +16129,12 @@ func (r DeleteNodeNtpResponse) ContentType() string {
 type GetNodeNtpResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *NtpCollectionResponse
+	JSON200      *NtpGetResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -16165,6 +16169,8 @@ type PostNodeNtpResponse struct {
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -16200,6 +16206,7 @@ type PutNodeNtpResponse struct {
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -23755,6 +23762,20 @@ func ParseDeleteNodeNtpResponse(rsp *http.Response) (*DeleteNodeNtpResponse, err
 		}
 		response.JSON403 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -23782,7 +23803,7 @@ func ParseGetNodeNtpResponse(rsp *http.Response) (*GetNodeNtpResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest NtpCollectionResponse
+		var dest NtpGetResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -23808,6 +23829,20 @@ func ParseGetNodeNtpResponse(rsp *http.Response) (*GetNodeNtpResponse, error) {
 			return nil, err
 		}
 		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
@@ -23862,6 +23897,20 @@ func ParsePostNodeNtpResponse(rsp *http.Response) (*PostNodeNtpResponse, error) 
 			return nil, err
 		}
 		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
@@ -23923,6 +23972,13 @@ func ParsePutNodeNtpResponse(rsp *http.Response) (*PutNodeNtpResponse, error) {
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

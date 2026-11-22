@@ -6,6 +6,11 @@
  */
 
 export interface NtpCreateRequest {
-  /** List of NTP server addresses to configure. */
+  /**
+     * The NTP servers, hostnames or IP addresses
+     * @minItems 1
+     * @maxItems 16
+     * @items.pattern ^[A-Za-z0-9][A-Za-z0-9.:-]{0,252}$
+     */
   servers: string[];
 }

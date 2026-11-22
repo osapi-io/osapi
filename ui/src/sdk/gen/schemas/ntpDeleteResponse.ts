@@ -4,10 +4,10 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { NtpMutationResult } from './ntpMutationResult';
+import type { NtpResult } from './ntpResult';
 
 export interface NtpDeleteResponse {
   /** The job ID used to process this request. */
   job_id?: string;
-  results: NtpMutationResult[];
+  results: NtpResult[];
 }

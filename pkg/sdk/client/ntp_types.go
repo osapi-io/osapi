@@ -21,6 +21,8 @@
 package client
 
 import (
+	openapi_types "github.com/oapi-codegen/runtime/types"
+
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
@@ -59,7 +61,7 @@ type NtpUpdateOpts struct {
 // ntpStatusCollectionFromGen converts a gen.NtpCollectionResponse
 // to a Collection[NtpStatusResult].
 func ntpStatusCollectionFromGen(
-	g *gen.NtpCollectionResponse,
+	g *gen.NtpGetResponse,
 ) Collection[NtpStatusResult] {
 	results := make([]NtpStatusResult, 0, len(g.Results))
 	for _, r := range g.Results {
@@ -86,20 +88,7 @@ func ntpStatusCollectionFromGen(
 func ntpMutationCollectionFromCreate(
 	g *gen.NtpCreateResponse,
 ) Collection[NtpMutationResult] {
-	results := make([]NtpMutationResult, 0, len(g.Results))
-	for _, r := range g.Results {
-		results = append(results, NtpMutationResult{
-			Hostname: r.Hostname,
-			Status:   string(r.Status),
-			Changed:  derefBool(r.Changed),
-			Error:    derefString(r.Error),
-		})
-	}
-
-	return Collection[NtpMutationResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
-	}
+	return ntpMutationCollection(g.Results, g.JobId)
 }
 
 // ntpMutationCollectionFromUpdate converts a gen.NtpUpdateResponse
@@ -107,20 +96,7 @@ func ntpMutationCollectionFromCreate(
 func ntpMutationCollectionFromUpdate(
 	g *gen.NtpUpdateResponse,
 ) Collection[NtpMutationResult] {
-	results := make([]NtpMutationResult, 0, len(g.Results))
-	for _, r := range g.Results {
-		results = append(results, NtpMutationResult{
-			Hostname: r.Hostname,
-			Status:   string(r.Status),
-			Changed:  derefBool(r.Changed),
-			Error:    derefString(r.Error),
-		})
-	}
-
-	return Collection[NtpMutationResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
-	}
+	return ntpMutationCollection(g.Results, g.JobId)
 }
 
 // ntpMutationCollectionFromDelete converts a gen.NtpDeleteResponse
@@ -128,8 +104,17 @@ func ntpMutationCollectionFromUpdate(
 func ntpMutationCollectionFromDelete(
 	g *gen.NtpDeleteResponse,
 ) Collection[NtpMutationResult] {
-	results := make([]NtpMutationResult, 0, len(g.Results))
-	for _, r := range g.Results {
+	return ntpMutationCollection(g.Results, g.JobId)
+}
+
+// derefStringSlice returns the value pointed to by s, or nil if s is nil.
+// ntpMutationCollection is the result of each host of a write.
+func ntpMutationCollection(
+	rows []gen.NtpResult,
+	jobID *openapi_types.UUID,
+) Collection[NtpMutationResult] {
+	results := make([]NtpMutationResult, 0, len(rows))
+	for _, r := range rows {
 		results = append(results, NtpMutationResult{
 			Hostname: r.Hostname,
 			Status:   string(r.Status),
@@ -140,11 +125,10 @@ func ntpMutationCollectionFromDelete(
 
 	return Collection[NtpMutationResult]{
 		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
+		JobID:   jobIDFromGen(jobID),
 	}
 }
 
-// derefStringSlice returns the value pointed to by s, or nil if s is nil.
 func derefStringSlice(
 	s *[]string,
 ) []string {

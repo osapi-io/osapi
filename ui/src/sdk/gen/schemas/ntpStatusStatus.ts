@@ -8,10 +8,10 @@
 /**
  * The status of the operation for this host.
  */
-export type NtpStatusEntryStatus = typeof NtpStatusEntryStatus[keyof typeof NtpStatusEntryStatus];
+export type NtpStatusStatus = typeof NtpStatusStatus[keyof typeof NtpStatusStatus];
 
 
-export const NtpStatusEntryStatus = {
+export const NtpStatusStatus = {
   ok: 'ok',
   failed: 'failed',
   skipped: 'skipped',

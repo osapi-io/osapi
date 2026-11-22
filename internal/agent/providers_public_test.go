@@ -54,7 +54,6 @@ var gohaiReads = map[string]bool{
 func (s *ProvidersPublicTestSuite) TestProviders() {
 	areas := []string{
 		"host", "disk", "memory", "load", "cron",
-		"ntp", "process", "user",
 		"certificate",
 	}
 
@@ -80,9 +79,7 @@ func (s *ProvidersPublicTestSuite) TestProviders() {
 			container: true,
 			buckets:   true,
 			want:      "Debian",
-			except: map[string]string{
-				"ntp": "Linux",
-			},
+			except:    map[string]string{},
 		},
 		{
 			name:     "when Debian has no file buckets leaves out what needs them",

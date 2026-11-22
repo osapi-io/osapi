@@ -39,7 +39,6 @@ import (
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
 	"github.com/osapi-io/osapi/internal/provider/node/memory"
-	ntpProv "github.com/osapi-io/osapi/internal/provider/node/ntp"
 	cronProv "github.com/osapi-io/osapi/internal/provider/schedule/cron"
 	"github.com/osapi-io/osapi/internal/telemetry/process"
 )
@@ -60,7 +59,6 @@ type newTestAgentParams struct {
 	fileProvider    fileProv.Provider
 	dockerProvider  dockerProv.Provider
 	cronProvider    cronProv.Provider
-	ntpProvider     ntpProv.Provider
 	processProvider process.Provider
 	execManager     exec.Manager
 	registryBucket  string
@@ -89,7 +87,6 @@ func newTestAgent(
 	registry.Register(
 		"node",
 		agent.NewNodeProcessor(
-			p.ntpProvider,
 			nil,
 			nil,
 			logger,

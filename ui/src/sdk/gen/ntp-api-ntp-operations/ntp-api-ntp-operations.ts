@@ -6,18 +6,86 @@
  */
 import type {
   ErrorResponse,
-  NtpCollectionResponse,
   NtpCreateRequest,
   NtpCreateResponse,
   NtpDeleteResponse,
+  NtpGetResponse,
   NtpUpdateRequest,
   NtpUpdateResponse
 } from '../schemas';
 
 import { apiFetch } from '../../fetch';
 
+export type deleteNodeNtpResponse200 = {
+  data: NtpDeleteResponse
+  status: 200
+}
+
+export type deleteNodeNtpResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type deleteNodeNtpResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type deleteNodeNtpResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type deleteNodeNtpResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteNodeNtpResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type deleteNodeNtpResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type deleteNodeNtpResponseSuccess = (deleteNodeNtpResponse200) & {
+  headers: Headers;
+};
+export type deleteNodeNtpResponseError = (deleteNodeNtpResponse400 | deleteNodeNtpResponse401 | deleteNodeNtpResponse403 | deleteNodeNtpResponse404 | deleteNodeNtpResponse409 | deleteNodeNtpResponse500) & {
+  headers: Headers;
+};
+
+export type deleteNodeNtpResponse = (deleteNodeNtpResponseSuccess | deleteNodeNtpResponseError)
+
+export const getDeleteNodeNtpUrl = (hostname: string,) => {
+
+
+
+
+  return `/api/node/${hostname}/ntp`
+}
+
+/**
+ * Removes /etc/chrony/sources.d/osapi-ntp.sources and reloads the sources, so chrony uses its other sources. When osapi set no servers, it reports changed: false.
+ * @summary Remove the NTP servers that osapi set
+ */
+export const deleteNodeNtp = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<deleteNodeNtpResponse> => {
+
+  return apiFetch<deleteNodeNtpResponse>(getDeleteNodeNtpUrl(hostname),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
 export type getNodeNtpResponse200 = {
-  data: NtpCollectionResponse
+  data: NtpGetResponse
   status: 200
 }
 
@@ -36,6 +104,16 @@ export type getNodeNtpResponse403 = {
   status: 403
 }
 
+export type getNodeNtpResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getNodeNtpResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type getNodeNtpResponse500 = {
   data: ErrorResponse
   status: 500
@@ -44,7 +122,7 @@ export type getNodeNtpResponse500 = {
 export type getNodeNtpResponseSuccess = (getNodeNtpResponse200) & {
   headers: Headers;
 };
-export type getNodeNtpResponseError = (getNodeNtpResponse400 | getNodeNtpResponse401 | getNodeNtpResponse403 | getNodeNtpResponse500) & {
+export type getNodeNtpResponseError = (getNodeNtpResponse400 | getNodeNtpResponse401 | getNodeNtpResponse403 | getNodeNtpResponse404 | getNodeNtpResponse409 | getNodeNtpResponse500) & {
   headers: Headers;
 };
 
@@ -59,8 +137,8 @@ export const getGetNodeNtpUrl = (hostname: string,) => {
 }
 
 /**
- * Get NTP sync status and configured servers on the target node.
- * @summary Get NTP status
+ * Reads chronyc tracking, for whether chrony is synchronized, its stratum, its offset from NTP time and the source that it follows, and chronyc sources, for each source that it has.
+ * @summary Get the sync status of chrony and its sources
  */
 export const getNodeNtp = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeNtpResponse> => {
 
@@ -94,6 +172,16 @@ export type postNodeNtpResponse403 = {
   status: 403
 }
 
+export type postNodeNtpResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type postNodeNtpResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type postNodeNtpResponse500 = {
   data: ErrorResponse
   status: 500
@@ -102,7 +190,7 @@ export type postNodeNtpResponse500 = {
 export type postNodeNtpResponseSuccess = (postNodeNtpResponse200) & {
   headers: Headers;
 };
-export type postNodeNtpResponseError = (postNodeNtpResponse400 | postNodeNtpResponse401 | postNodeNtpResponse403 | postNodeNtpResponse500) & {
+export type postNodeNtpResponseError = (postNodeNtpResponse400 | postNodeNtpResponse401 | postNodeNtpResponse403 | postNodeNtpResponse404 | postNodeNtpResponse409 | postNodeNtpResponse500) & {
   headers: Headers;
 };
 
@@ -117,8 +205,8 @@ export const getPostNodeNtpUrl = (hostname: string,) => {
 }
 
 /**
- * Deploy a managed NTP server configuration on the target node. Idempotent: returns changed=false if already managed.
- * @summary Create NTP configuration
+ * Writes a server line for each server to /etc/chrony/sources.d/osapi-ntp.sources, and reloads the sources with chronyc reload sources. A file that has the same servers does not change, and reports changed: false.
+ * @summary Set the NTP servers that chrony uses
  */
 export const postNodeNtp = async (hostname: string,
     ntpCreateRequest: NtpCreateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeNtpResponse> => {
@@ -172,6 +260,11 @@ export type putNodeNtpResponse404 = {
   status: 404
 }
 
+export type putNodeNtpResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type putNodeNtpResponse500 = {
   data: ErrorResponse
   status: 500
@@ -180,7 +273,7 @@ export type putNodeNtpResponse500 = {
 export type putNodeNtpResponseSuccess = (putNodeNtpResponse200) & {
   headers: Headers;
 };
-export type putNodeNtpResponseError = (putNodeNtpResponse400 | putNodeNtpResponse401 | putNodeNtpResponse403 | putNodeNtpResponse404 | putNodeNtpResponse500) & {
+export type putNodeNtpResponseError = (putNodeNtpResponse400 | putNodeNtpResponse401 | putNodeNtpResponse403 | putNodeNtpResponse404 | putNodeNtpResponse409 | putNodeNtpResponse500) & {
   headers: Headers;
 };
 
@@ -195,8 +288,8 @@ export const getPutNodeNtpUrl = (hostname: string,) => {
 }
 
 /**
- * Replace the managed NTP server configuration on the target node. Fails if not currently managed.
- * @summary Update NTP configuration
+ * The same as create, for servers that osapi set already. It fails with not found when osapi set none. The servers that the file has already report changed: false.
+ * @summary Replace the NTP servers that osapi set
  */
 export const putNodeNtp = async (hostname: string,
     ntpUpdateRequest: NtpUpdateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<putNodeNtpResponse> => {
@@ -221,64 +314,6 @@ return apiFetch<putNodeNtpResponse>(getPutNodeNtpUrl(hostname),
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(ntpUpdateRequest)
-  }
-);}
-
-
-export type deleteNodeNtpResponse200 = {
-  data: NtpDeleteResponse
-  status: 200
-}
-
-export type deleteNodeNtpResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type deleteNodeNtpResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-
-export type deleteNodeNtpResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type deleteNodeNtpResponse500 = {
-  data: ErrorResponse
-  status: 500
-}
-
-export type deleteNodeNtpResponseSuccess = (deleteNodeNtpResponse200) & {
-  headers: Headers;
-};
-export type deleteNodeNtpResponseError = (deleteNodeNtpResponse400 | deleteNodeNtpResponse401 | deleteNodeNtpResponse403 | deleteNodeNtpResponse500) & {
-  headers: Headers;
-};
-
-export type deleteNodeNtpResponse = (deleteNodeNtpResponseSuccess | deleteNodeNtpResponseError)
-
-export const getDeleteNodeNtpUrl = (hostname: string,) => {
-
-
-
-
-  return `/api/node/${hostname}/ntp`
-}
-
-/**
- * Remove the managed NTP server configuration from the target node.
- * @summary Delete NTP configuration
- */
-export const deleteNodeNtp = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<deleteNodeNtpResponse> => {
-
-  return apiFetch<deleteNodeNtpResponse>(getDeleteNodeNtpUrl(hostname),
-  {
-    ...options,
-    method: 'DELETE'
-
-
   }
 );}
 

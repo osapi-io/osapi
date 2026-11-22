@@ -85,8 +85,6 @@ var builtinPermissions = []Permission{
 	"docker:execute",
 	"schedule:read",
 	"schedule:write",
-	"ntp:read",
-	"ntp:write",
 	"power:execute",
 	"process:read",
 	"process:execute",

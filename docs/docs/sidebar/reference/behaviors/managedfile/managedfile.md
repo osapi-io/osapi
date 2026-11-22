@@ -12,22 +12,22 @@ same.
 
 ## Behavior
 
-|             |                                                                                                   |
-| ----------- | ------------------------------------------------------------------------------------------------- |
-| Name        | managedfile                                                                                       |
-| Description | Files osapi writes on a host and keeps a record of                                                |
-| Placement   | node                                                                                              |
-| Internal    | yes                                                                                               |
-| API         | no                                                                                                |
-| CLI         | no                                                                                                |
-| Next        | no                                                                                                |
-| Platforms   | debian                                                                                            |
-| Sudo        | chown                                                                                             |
-| Runs        | stat                                                                                              |
-| Writes      | *                                                                                                 |
-| Keeps state | yes                                                                                               |
-| Uses        | none                                                                                              |
-| Used by     | [netplan](../netplan/netplan.md), [service](../service/service.md), [sysctl](../sysctl/sysctl.md) |
+|             |                                                                                                                         |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Name        | managedfile                                                                                                             |
+| Description | Files osapi writes on a host and keeps a record of                                                                      |
+| Placement   | node                                                                                                                    |
+| Internal    | yes                                                                                                                     |
+| API         | no                                                                                                                      |
+| CLI         | no                                                                                                                      |
+| Next        | no                                                                                                                      |
+| Platforms   | debian                                                                                                                  |
+| Sudo        | chown                                                                                                                   |
+| Runs        | stat                                                                                                                    |
+| Writes      | *                                                                                                                       |
+| Keeps state | yes                                                                                                                     |
+| Uses        | none                                                                                                                    |
+| Used by     | [netplan](../netplan/netplan.md), [ntp](../ntp/ntp.md), [service](../service/service.md), [sysctl](../sysctl/sysctl.md) |
 
 ### Methods (3)
 

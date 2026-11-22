@@ -37,6 +37,7 @@ import (
 	_ "github.com/osapi-io/osapi/internal/behaviors/network/dns"
 	_ "github.com/osapi-io/osapi/internal/behaviors/network/iface"
 	_ "github.com/osapi-io/osapi/internal/behaviors/network/route"
+	_ "github.com/osapi-io/osapi/internal/behaviors/ntp"
 	_ "github.com/osapi-io/osapi/internal/behaviors/object"
 	_ "github.com/osapi-io/osapi/internal/behaviors/os"
 	_ "github.com/osapi-io/osapi/internal/behaviors/packages"

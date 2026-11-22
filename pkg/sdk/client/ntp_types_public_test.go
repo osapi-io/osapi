@@ -44,24 +44,24 @@ func (suite *NTPTypesPublicTestSuite) TestNtpStatusCollectionFromGen() {
 
 	tests := []struct {
 		name         string
-		input        *gen.NtpCollectionResponse
+		input        *gen.NtpGetResponse
 		validateFunc func(client.Collection[client.NtpStatusResult])
 	}{
 		{
 			name: "when all fields are populated",
-			input: func() *gen.NtpCollectionResponse {
+			input: func() *gen.NtpGetResponse {
 				synced := true
 				stratum := 2
 				offset := "+0.001s"
 				source := "pool.ntp.org"
 				servers := []string{"0.pool.ntp.org", "1.pool.ntp.org"}
 
-				return &gen.NtpCollectionResponse{
+				return &gen.NtpGetResponse{
 					JobId: &testUUID,
-					Results: []gen.NtpStatusEntry{
+					Results: []gen.NtpStatus{
 						{
 							Hostname:      "web-01",
-							Status:        gen.NtpStatusEntryStatusOk,
+							Status:        gen.NtpStatusStatusOk,
 							Synchronized:  &synced,
 							Stratum:       &stratum,
 							Offset:        &offset,
@@ -88,14 +88,14 @@ func (suite *NTPTypesPublicTestSuite) TestNtpStatusCollectionFromGen() {
 		},
 		{
 			name: "when minimal with error",
-			input: func() *gen.NtpCollectionResponse {
+			input: func() *gen.NtpGetResponse {
 				errMsg := "permission denied"
 
-				return &gen.NtpCollectionResponse{
-					Results: []gen.NtpStatusEntry{
+				return &gen.NtpGetResponse{
+					Results: []gen.NtpStatus{
 						{
 							Hostname: "web-01",
-							Status:   gen.NtpStatusEntryStatusFailed,
+							Status:   gen.NtpStatusStatusFailed,
 							Error:    &errMsg,
 						},
 					},
@@ -118,21 +118,21 @@ func (suite *NTPTypesPublicTestSuite) TestNtpStatusCollectionFromGen() {
 		},
 		{
 			name: "when multiple results",
-			input: func() *gen.NtpCollectionResponse {
+			input: func() *gen.NtpGetResponse {
 				synced1 := true
 				synced2 := false
 
-				return &gen.NtpCollectionResponse{
+				return &gen.NtpGetResponse{
 					JobId: &testUUID,
-					Results: []gen.NtpStatusEntry{
+					Results: []gen.NtpStatus{
 						{
 							Hostname:     "web-01",
-							Status:       gen.NtpStatusEntryStatusOk,
+							Status:       gen.NtpStatusStatusOk,
 							Synchronized: &synced1,
 						},
 						{
 							Hostname:     "web-02",
-							Status:       gen.NtpStatusEntryStatusOk,
+							Status:       gen.NtpStatusStatusOk,
 							Synchronized: &synced2,
 						},
 					},
@@ -174,10 +174,10 @@ func (suite *NTPTypesPublicTestSuite) TestNtpMutationCollectionFromCreate() {
 
 				return &gen.NtpCreateResponse{
 					JobId: &testUUID,
-					Results: []gen.NtpMutationResult{
+					Results: []gen.NtpResult{
 						{
 							Hostname: "web-01",
-							Status:   gen.NtpMutationResultStatusOk,
+							Status:   gen.NtpResultStatusOk,
 							Changed:  &changed,
 						},
 					},
@@ -200,10 +200,10 @@ func (suite *NTPTypesPublicTestSuite) TestNtpMutationCollectionFromCreate() {
 				errMsg := "permission denied"
 
 				return &gen.NtpCreateResponse{
-					Results: []gen.NtpMutationResult{
+					Results: []gen.NtpResult{
 						{
 							Hostname: "web-01",
-							Status:   gen.NtpMutationResultStatusFailed,
+							Status:   gen.NtpResultStatusFailed,
 							Error:    &errMsg,
 						},
 					},
@@ -250,10 +250,10 @@ func (suite *NTPTypesPublicTestSuite) TestNtpMutationCollectionFromUpdate() {
 
 				return &gen.NtpUpdateResponse{
 					JobId: &testUUID,
-					Results: []gen.NtpMutationResult{
+					Results: []gen.NtpResult{
 						{
 							Hostname: "web-01",
-							Status:   gen.NtpMutationResultStatusOk,
+							Status:   gen.NtpResultStatusOk,
 							Changed:  &changed,
 						},
 					},
@@ -273,10 +273,10 @@ func (suite *NTPTypesPublicTestSuite) TestNtpMutationCollectionFromUpdate() {
 		{
 			name: "when minimal with nil pointers",
 			input: &gen.NtpUpdateResponse{
-				Results: []gen.NtpMutationResult{
+				Results: []gen.NtpResult{
 					{
 						Hostname: "web-01",
-						Status:   gen.NtpMutationResultStatusSkipped,
+						Status:   gen.NtpResultStatusSkipped,
 					},
 				},
 			},
@@ -321,10 +321,10 @@ func (suite *NTPTypesPublicTestSuite) TestNtpMutationCollectionFromDelete() {
 
 				return &gen.NtpDeleteResponse{
 					JobId: &testUUID,
-					Results: []gen.NtpMutationResult{
+					Results: []gen.NtpResult{
 						{
 							Hostname: "web-01",
-							Status:   gen.NtpMutationResultStatusOk,
+							Status:   gen.NtpResultStatusOk,
 							Changed:  &changed,
 						},
 					},
@@ -344,10 +344,10 @@ func (suite *NTPTypesPublicTestSuite) TestNtpMutationCollectionFromDelete() {
 		{
 			name: "when minimal with nil pointers",
 			input: &gen.NtpDeleteResponse{
-				Results: []gen.NtpMutationResult{
+				Results: []gen.NtpResult{
 					{
 						Hostname: "web-01",
-						Status:   gen.NtpMutationResultStatusSkipped,
+						Status:   gen.NtpResultStatusSkipped,
 					},
 				},
 			},

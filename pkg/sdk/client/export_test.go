@@ -171,7 +171,7 @@ func SysctlMutationCollectionFromDelete(
 // NtpStatusCollectionFromGen exposes the private
 // ntpStatusCollectionFromGen for testing.
 func NtpStatusCollectionFromGen(
-	input *gen.NtpCollectionResponse,
+	input *gen.NtpGetResponse,
 ) Collection[NtpStatusResult] {
 	return ntpStatusCollectionFromGen(input)
 }
