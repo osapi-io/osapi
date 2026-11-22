@@ -37,6 +37,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"reflect"
 	"sort"
 	"strings"
 	"testing"
@@ -50,6 +51,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/authtoken"
+	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/api"
@@ -252,20 +254,77 @@ func (j *Job) expect(
 	jobs *jobmocks.MockJobClient,
 ) {
 	cat := job.CategoryBehavior
+	input := jobInput(j.input)
 	switch {
 	case job.IsBroadcastTarget(j.target) && j.write:
-		jobs.EXPECT().ModifyBroadcast(gomock.Any(), j.target, cat, j.op, j.input).
+		jobs.EXPECT().ModifyBroadcast(gomock.Any(), j.target, cat, j.op, input).
 			Return(jobID, byHost(j.replies), j.err)
 	case job.IsBroadcastTarget(j.target):
-		jobs.EXPECT().QueryBroadcast(gomock.Any(), j.target, cat, j.op, j.input).
+		jobs.EXPECT().QueryBroadcast(gomock.Any(), j.target, cat, j.op, input).
 			Return(jobID, byHost(j.replies), j.err)
 	case j.write:
-		jobs.EXPECT().Modify(gomock.Any(), j.target, cat, j.op, j.input).
+		jobs.EXPECT().Modify(gomock.Any(), j.target, cat, j.op, input).
 			Return(jobID, first(j.replies), j.err)
 	default:
-		jobs.EXPECT().Query(gomock.Any(), j.target, cat, j.op, j.input).
+		jobs.EXPECT().Query(gomock.Any(), j.target, cat, j.op, input).
 			Return(jobID, first(j.replies), j.err)
 	}
+}
+
+// jobInput matches the input that the job gets for an example's input. A
+// method whose .Before step fills a field, such as a password hash with a
+// new salt each time, does not make the same input twice: the job then has
+// the example's other fields, each secret field empty, and each field that
+// the step sets filled when the example's is.
+func jobInput(
+	want any,
+) gomock.Matcher {
+	t := reflect.TypeOf(want)
+	if t == nil || t.Kind() != reflect.Struct {
+		return gomock.Eq(want)
+	}
+	for i := range t.NumField() {
+		if behavior.SetByBefore(t.Field(i)) {
+			return beforeInput{want: reflect.ValueOf(want)}
+		}
+	}
+
+	return gomock.Eq(want)
+}
+
+// beforeInput is jobInput's matcher for a method with a .Before step.
+type beforeInput struct {
+	want reflect.Value
+}
+
+func (m beforeInput) Matches(
+	x any,
+) bool {
+	got := reflect.ValueOf(x)
+	if got.Type() != m.want.Type() {
+		return false
+	}
+	for i := range got.NumField() {
+		f := got.Type().Field(i)
+		switch {
+		case behavior.Secret(f):
+			if !got.Field(i).IsZero() {
+				return false
+			}
+		case behavior.SetByBefore(f):
+			if got.Field(i).IsZero() != m.want.Field(i).IsZero() {
+				return false
+			}
+		case !reflect.DeepEqual(got.Field(i).Interface(), m.want.Field(i).Interface()):
+			return false
+		}
+	}
+
+	return true
+}
+
+func (m beforeInput) String() string {
+	return fmt.Sprintf("is %v after its controller step", m.want.Interface())
 }
 
 func (h *Harness) serve(

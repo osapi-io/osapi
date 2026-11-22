@@ -20,14 +20,27 @@
 
 package user
 
-// ValidatePasswordInputForTest exposes validatePasswordInput to external
-// tests. Every caller validates name via validateAccountName first, which
-// already rejects a colon or line break, so the name-side branch here is
-// unreachable through CreateUser or ChangePassword — this lets a test reach
-// it directly.
-func ValidatePasswordInputForTest(
-	name string,
-	passwordHash string,
-) error {
-	return validatePasswordInput(name, passwordHash)
+import "github.com/osapi-io/osapi/internal/behavior/host"
+
+// NewReader is newReader, for the tests of what the reader refuses.
+var NewReader = func(h host.Host) (Provider, error) { return newReader(h) }
+
+// IgnoreNotFound is ignoreNotFound, for its test.
+var IgnoreNotFound = ignoreNotFound
+
+// SameGroups is sameGroups, for its test.
+var SameGroups = sameGroups
+
+// HashCreate is create's controller step, for its test.
+var HashCreate = hashCreate
+
+// HashPassword is the password action's controller step, for its test.
+var HashPassword = hashPassword
+
+// SetHashFn swaps the hash of the steps, and returns how to put it back.
+func SetHashFn(fn func(string) (string, error)) func() {
+	old := hashFn
+	hashFn = fn
+
+	return func() { hashFn = old }
 }

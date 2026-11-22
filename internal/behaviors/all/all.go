@@ -51,4 +51,5 @@ import (
 	_ "github.com/osapi-io/osapi/internal/behaviors/timezone"
 	_ "github.com/osapi-io/osapi/internal/behaviors/updatepackages"
 	_ "github.com/osapi-io/osapi/internal/behaviors/uptime"
+	_ "github.com/osapi-io/osapi/internal/behaviors/user"
 )

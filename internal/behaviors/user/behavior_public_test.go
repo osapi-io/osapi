@@ -1,5 +1,3 @@
-//go:build integration
-
 // Copyright (c) 2026 John Dewey
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,54 +18,35 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package integration_test
+package user_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
+	"github.com/osapi-io/osapi/internal/behaviors/user"
 )
 
-type UserSmokeSuite struct {
+type BehaviorPublicTestSuite struct {
 	suite.Suite
 }
 
-func (s *UserSmokeSuite) TestUserList() {
-	tests := []struct {
-		name         string
-		args         []string
-		validateFunc func(stdout string, exitCode int)
-	}{
-		{
-			name: "returns user results",
-			args: []string{"client", "node", "user", "list", "--json"},
-			validateFunc: func(
-				stdout string,
-				exitCode int,
-			) {
-				s.Require().Equal(0, exitCode)
-
-				var result map[string]any
-				err := parseJSON(stdout, &result)
-				s.Require().NoError(err)
-
-				results, ok := result["results"].([]any)
-				s.Require().True(ok)
-				s.NotNil(results)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			stdout, _, exitCode := runCLI(tt.args...)
-			tt.validateFunc(stdout, exitCode)
-		})
-	}
+func (s *BehaviorPublicTestSuite) TestBehavior() {
+	s.Same(user.Behavior, behavior.Lookup("user"))
+	s.Empty(behavior.ValidateBehavior(user.Behavior))
 }
 
-func TestUserSmokeSuite(
+// TestExamples runs every example and refusal on a fake host with each
+// platform's provider, through the methods, and checks what each changes.
+func (s *BehaviorPublicTestSuite) TestExamples() {
+	behaviortest.Run(s.T(), user.Behavior)
+}
+
+func TestBehaviorPublicTestSuite(
 	t *testing.T,
 ) {
-	suite.Run(t, new(UserSmokeSuite))
+	suite.Run(t, new(BehaviorPublicTestSuite))
 }

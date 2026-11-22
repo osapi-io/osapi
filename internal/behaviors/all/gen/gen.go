@@ -29,4 +29,5 @@ import (
 	_ "github.com/osapi-io/osapi/internal/behaviors/timezone/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/updatepackages/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/uptime/gen"
+	_ "github.com/osapi-io/osapi/internal/behaviors/user/gen"
 )

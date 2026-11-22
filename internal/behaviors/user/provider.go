@@ -20,18 +20,16 @@
 
 package user
 
-import (
-	"github.com/osapi-io/osapi/internal/password"
-)
+import "context"
 
-// SetHashPasswordFn overrides the password hashing function for testing.
-func SetHashPasswordFn(
-	fn func(string) (string, error),
-) {
-	hashPassword = fn
-}
-
-// ResetHashPasswordFn restores the default password hashing function.
-func ResetHashPasswordFn() {
-	hashPassword = password.Hash
+// Provider reads the users of the host and changes them. reader.go reads
+// them through gohai on every platform, and debian.go changes them on the
+// Debian family.
+type Provider interface {
+	List(ctx context.Context) ([]Account, error)
+	Get(ctx context.Context, name string) (Account, error)
+	Create(ctx context.Context, in CreateInput) (bool, error)
+	Update(ctx context.Context, in UpdateInput) (bool, error)
+	Delete(ctx context.Context, name string) (bool, error)
+	SetPassword(ctx context.Context, name string, hash string) error
 }
