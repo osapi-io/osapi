@@ -41,16 +41,22 @@ for example `otel_scope_name`, so that you can find the source of a metric.
 Each component also has the Go runtime metrics (goroutines, memory, GC) and the
 process metrics (CPU, memory, file descriptors).
 
-| Metric                                         | Type      | Labels                                      | Component  | Description                        |
-| ---------------------------------------------- | --------- | ------------------------------------------- | ---------- | ---------------------------------- |
-| `osapi_component_up`                           | gauge     |                                             | all        | 1 when ready, 0 when not           |
-| `osapi_subsystem_up`                           | gauge     | subsystem                                   | all        | 1 when subsystem is ok, 0 when not |
-| `osapi_jobs_created_total`                     | counter   |                                             | controller | Jobs submitted via API             |
-| `osapi_jobs_processed_total`                   | counter   | status                                      | agent      | Jobs completed or failed           |
-| `osapi_jobs_active`                            | gauge     |                                             | agent      | Currently executing jobs           |
-| `osapi_job_duration_seconds`                   | histogram |                                             | agent      | Job execution duration             |
-| `osapi_heartbeat_age_seconds`                  | gauge     |                                             | agent      | Seconds since last heartbeat write |
-| `osapi_nats_client_operation_duration_seconds` | histogram | db_operation_name, db_namespace, error_type | all        | The duration of each call to NATS  |
+<!-- osapi:metrics -->
+
+| Metric                            | Type      | Labels                                                                                  | Component  | Description                                             |
+| --------------------------------- | --------- | --------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------- |
+| `osapi_component_up`              | gauge     |                                                                                         | all        | Whether the component is ready (1) or not (0).          |
+| `osapi_subsystem_up`              | gauge     | subsystem                                                                               | all        | Whether a subsystem is healthy (1) or not (0).          |
+| `osapi_heartbeat_age_seconds`     | gauge     |                                                                                         | agent      | Seconds since last successful heartbeat write.          |
+| `osapi_jobs_created_total`        | counter   |                                                                                         | controller | Total jobs submitted via API.                           |
+| `osapi_jobs_processed_total`      | counter   | status                                                                                  | agent      | Total jobs processed.                                   |
+| `osapi_jobs_active`               | gauge     |                                                                                         | agent      | Currently executing jobs.                               |
+| `osapi_job_duration_seconds`      | histogram |                                                                                         | agent      | Job execution duration in seconds.                      |
+| `osapi_behavior_calls_total`      | counter   | osapi_behavior_name, osapi_behavior_method, osapi_behavior_verb, osapi_behavior_outcome | agent      | Behavior method calls, by behavior, method and outcome. |
+| `osapi_behavior_duration_seconds` | histogram | osapi_behavior_name, osapi_behavior_method, osapi_behavior_verb                         | agent      | Behavior method duration in seconds.                    |
+| `osapi_behavior_changes_total`    | counter   | osapi_behavior_name, osapi_behavior_method, osapi_behavior_verb                         | agent      | Behavior writes that changed the host.                  |
+
+<!-- /osapi:metrics -->
 
 The `osapi_subsystem_up` gauge has a `subsystem` label that names its internal
 service, for example `api`, `heartbeat`, `metrics`, `notifier`, `tracing` or

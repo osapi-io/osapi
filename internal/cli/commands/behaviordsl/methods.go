@@ -29,6 +29,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/cli/command"
+	"github.com/osapi-io/osapi/internal/telemetry/instruments"
 )
 
 // List is each behavior, with the names of its methods.
@@ -92,10 +93,9 @@ func Get(
 			Span:       "behavior." + b.Name + ".<method>",
 			ChildSpans: append([]string{}, behavior.ChildSpans(b)...),
 			Metrics: []string{
-				// As Prometheus shows them: the exporter adds the namespace.
-				"osapi_" + behavior.MetricCalls,
-				"osapi_" + behavior.MetricDuration,
-				"osapi_" + behavior.MetricChanges,
+				instruments.BehaviorCalls.Exported(),
+				instruments.BehaviorDuration.Exported(),
+				instruments.BehaviorChanges.Exported(),
 			},
 			Attributes: []string{
 				string(

@@ -27,6 +27,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/telemetry/instruments"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -67,16 +68,6 @@ const (
 	OutcomeError = "error"
 )
 
-// The metrics every behavior method records, and the span every call opens.
-// The Prometheus exporter adds the osapi namespace, so MetricCalls is
-// exported as osapi_behavior_calls_total. A name with the namespace in it
-// would be exported as osapi_osapi_behavior_calls_total.
-const (
-	MetricCalls    = "behavior_calls_total"
-	MetricDuration = "behavior_duration_seconds"
-	MetricChanges  = "behavior_changes_total"
-)
-
 // SpanName is the name of the span a method's call opens on the agent.
 func (b *Behavior) SpanName(
 	m *Method,
@@ -113,7 +104,7 @@ func (m *Method) SpanInputs() []string {
 	return append(keys, tagged...)
 }
 
-type instruments struct {
+type meters struct {
 	calls    metric.Int64Counter
 	duration metric.Float64Histogram
 	changes  metric.Int64Counter
@@ -121,7 +112,7 @@ type instruments struct {
 
 var (
 	instMu sync.RWMutex
-	inst   *instruments
+	inst   *meters
 )
 
 // SetMeterProvider creates the behavior instruments on mp. The agent calls it
@@ -131,19 +122,19 @@ func SetMeterProvider(
 	mp metric.MeterProvider,
 ) {
 	meter := mp.Meter("osapi-behavior")
-	i := &instruments{}
+	i := &meters{}
 	i.calls, _ = meter.Int64Counter(
-		MetricCalls,
-		metric.WithDescription("Behavior method calls, by behavior, method and outcome"),
+		instruments.BehaviorCalls.Name,
+		metric.WithDescription(instruments.BehaviorCalls.Doc),
 	)
 	i.duration, _ = meter.Float64Histogram(
-		MetricDuration,
-		metric.WithDescription("Behavior method duration in seconds"),
-		metric.WithUnit("s"),
+		instruments.BehaviorDuration.Name,
+		metric.WithDescription(instruments.BehaviorDuration.Doc),
+		metric.WithUnit(instruments.BehaviorDuration.Unit),
 	)
 	i.changes, _ = meter.Int64Counter(
-		MetricChanges,
-		metric.WithDescription("Behavior writes that changed the host"),
+		instruments.BehaviorChanges.Name,
+		metric.WithDescription(instruments.BehaviorChanges.Doc),
 	)
 
 	instMu.Lock()
@@ -151,7 +142,7 @@ func SetMeterProvider(
 	instMu.Unlock()
 }
 
-func current() *instruments {
+func current() *meters {
 	instMu.RLock()
 	i := inst
 	instMu.RUnlock()

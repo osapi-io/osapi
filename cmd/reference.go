@@ -40,6 +40,7 @@ import (
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/guide"
+	"github.com/osapi-io/osapi/internal/telemetry/instruments"
 )
 
 // referenceDir is the root of the reference section of the docs site.
@@ -312,7 +313,8 @@ func endpointTitle(
 
 // configTables is page with each generated table in it written again: the
 // config tables, from config.Keys and the config that osapi ships under
-// root, and the role table, from authtoken.RolePermissions.
+// root, the role table, from authtoken.RolePermissions, and the metrics
+// reference, from instruments.All.
 func configTables(
 	root string,
 	page string,
@@ -328,7 +330,11 @@ func configTables(
 
 	page = config.DocTables(page, shipped)
 
-	return guide.Fill(page, "roles", func([]string) string {
+	page = guide.Fill(page, "roles", func([]string) string {
 		return authtoken.RoleTable()
+	})
+
+	return guide.Fill(page, "metrics", func([]string) string {
+		return instruments.Table()
 	}), nil
 }

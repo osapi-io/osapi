@@ -23,6 +23,8 @@ package client
 import (
 	"go.opentelemetry.io/otel/metric"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+
+	"github.com/osapi-io/osapi/internal/telemetry/instruments"
 )
 
 // SetMeterProvider creates OTEL instruments for job metrics.
@@ -31,7 +33,7 @@ func (c *Client) SetMeterProvider(
 ) {
 	meter := mp.Meter("osapi-controller")
 	c.jobsCreated, _ = meter.Int64Counter(
-		"jobs_created_total",
-		metric.WithDescription("Total jobs submitted via API"),
+		instruments.JobsCreated.Name,
+		metric.WithDescription(instruments.JobsCreated.Doc),
 	)
 }

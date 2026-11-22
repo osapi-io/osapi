@@ -35,7 +35,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	prometheusExporter "go.opentelemetry.io/otel/exporters/prometheus"
 
-	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/telemetry/instruments"
 	"github.com/osapi-io/osapi/internal/telemetry/metrics"
 )
 
@@ -450,12 +450,12 @@ func (s *ServerPublicTestSuite) TestBehaviorMetricNames() {
 	port := s.getFreePort()
 	srv := metrics.New("127.0.0.1", port, slog.Default())
 	meter := srv.MeterProvider().Meter("osapi-behavior")
-	for _, name := range []string{behavior.MetricCalls, behavior.MetricChanges} {
+	for _, name := range []string{instruments.BehaviorCalls.Name, instruments.BehaviorChanges.Name} {
 		c, err := meter.Int64Counter(name)
 		s.Require().NoError(err)
 		c.Add(context.Background(), 1)
 	}
-	h, err := meter.Float64Histogram(behavior.MetricDuration)
+	h, err := meter.Float64Histogram(instruments.BehaviorDuration.Name)
 	s.Require().NoError(err)
 	h.Record(context.Background(), 0.1)
 	srv.Start()

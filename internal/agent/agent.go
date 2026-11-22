@@ -40,6 +40,8 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/node/load"
 	"github.com/osapi-io/osapi/internal/provider/node/memory"
 	"github.com/osapi-io/osapi/internal/telemetry/process"
+
+	"github.com/osapi-io/osapi/internal/telemetry/instruments"
 )
 
 // New creates a new agent instance.
@@ -106,16 +108,17 @@ func (a *Agent) SetMeterProvider(
 ) {
 	meter := mp.Meter("osapi-agent")
 	a.jobsProcessed, _ = meter.Int64Counter(
-		"jobs_processed_total",
-		metric.WithDescription("Total jobs processed"),
+		instruments.JobsProcessed.Name,
+		metric.WithDescription(instruments.JobsProcessed.Doc),
 	)
 	a.jobsActive, _ = meter.Int64UpDownCounter(
-		"jobs_active",
-		metric.WithDescription("Currently executing jobs"),
+		instruments.JobsActive.Name,
+		metric.WithDescription(instruments.JobsActive.Doc),
 	)
 	a.jobDuration, _ = meter.Float64Histogram(
-		"job_duration_seconds",
-		metric.WithDescription("Job execution duration in seconds"),
+		instruments.JobDuration.Name,
+		metric.WithDescription(instruments.JobDuration.Doc),
+		metric.WithUnit(instruments.JobDuration.Unit),
 	)
 
 	// Behaviors record their calls through the same provider.
