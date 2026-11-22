@@ -59,7 +59,7 @@ func (d *debian) Get(
 	}
 	status := parseTracking(tracking)
 
-	sources, err := d.exec.RunCmd(ctx, "chronyc", []string{"sources", "-c"})
+	sources, err := d.exec.RunCmd(ctx, "chronyc", []string{"-c", "sources"})
 	if err != nil {
 		return Status{}, fmt.Errorf("ntp get: chronyc sources: %w", err)
 	}
@@ -221,7 +221,9 @@ func parseReferenceID(
 	return m[1]
 }
 
-// parseSources extracts server names from chronyc sources -c CSV output.
+// parseSources extracts server names from the CSV output of chronyc -c
+// sources. -c is an option of chronyc, not of sources: chronyc sources -c
+// prints the table, not CSV.
 // Each line has comma-separated fields; the Name is at index 2.
 func parseSources(
 	output string,

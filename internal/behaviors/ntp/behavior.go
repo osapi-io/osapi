@@ -80,14 +80,14 @@ var Behavior = behavior.Register(behavior.Define(
 				Servers:       []string{"time.cloudflare.com", "0.pool.ntp.org"},
 			},
 			behavior.Prints("chronyc tracking", tracking),
-			behavior.Prints("chronyc sources -c", sources),
+			behavior.Prints("chronyc -c sources", sources),
 		).
 		Example("A host that chrony does not synchronize", GetInput{},
 			Status{Offset: "-0.000001834s"},
 			behavior.Prints("chronyc tracking",
 				"System time     : 0.000001834 seconds slow of NTP time\n"+
 					"Leap status     : Not synchronised\n"),
-			behavior.Prints("chronyc sources -c", ""),
+			behavior.Prints("chronyc -c sources", ""),
 		),
 	behavior.Write("create", Create).
 		Describe("Set the NTP servers that chrony uses").

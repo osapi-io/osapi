@@ -254,7 +254,7 @@ INF preflight checks done
 | `hostnamectl hostname`      | Hostname |
 | `journalctl`                | Log      |
 | `chronyc tracking`          | NTP      |
-| `chronyc sources -c`        | NTP      |
+| `chronyc -c sources`        | NTP      |
 | `id -Gn`                    | User     |
 | `passwd -S`                 | User     |
 | `dpkg-query`                | Package  |

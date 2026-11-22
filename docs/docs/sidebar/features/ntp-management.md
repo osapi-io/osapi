@@ -31,7 +31,7 @@ written, and chrony reads it at its next start. `managedfile` records the file
 in the file-state KV bucket, and `update` fails with not found when that record
 is missing.
 
-The get operation runs `chronyc tracking` and `chronyc sources -c`. It reports
+The get operation runs `chronyc tracking` and `chronyc -c sources`. It reports
 whether chrony is synchronized, its stratum, its offset from NTP time, the
 source that it follows, and each source that it has. This is the live state of
 chrony, not a fact of the host, so it does not go through gohai.
