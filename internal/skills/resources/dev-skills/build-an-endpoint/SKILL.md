@@ -259,3 +259,8 @@ endpoint.
 `controller endpoint spec get` lists each part of the DSL. If a request needs a part
 that is not in the list, say so and stop. Do not write a handler for a group,
 and do not wire a group into the controller by hand.
+
+When the change touches what the DSLs share, such as the spec and checks
+tables, typed values and `command.KnownTags`, the permissions that the role
+rule reads, `genfile.Writer` or the generated DSL pages, read the build-a-dsl
+skill first: `osapi skill get --name build-a-dsl`.

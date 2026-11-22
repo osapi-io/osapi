@@ -238,3 +238,8 @@ Change the definition and generate. Do not write CLI docs for a behavior.
 supported yet". If a request needs one, say so and stop. Do not build around it.
 
 A behavior needs no edits outside its directory. The only exception is a package that CI's integration job says is missing from its runner. If you must edit other code, for example `cmd/agent_setup.go`, `internal/validation` or `internal/authtoken`, the platform does not have a declaration that you need. Say so. Do not add the code by hand.
+
+When the change touches what the DSLs share, such as the spec and checks
+tables, typed values and `command.KnownTags`, the permissions that the role
+rule reads, `genfile.Writer` or the generated DSL pages, read the build-a-dsl
+skill first: `osapi skill get --name build-a-dsl`.

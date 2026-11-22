@@ -182,3 +182,8 @@ mise exec -- just test
 
 Never edit a path that `cli command spec get` lists under "Generated, never edited".
 Change the definition and generate. Do not write CLI docs for a local command.
+
+When the change touches what the DSLs share, such as the spec and checks
+tables, typed values and `command.KnownTags`, the permissions that the role
+rule reads, `genfile.Writer` or the generated DSL pages, read the build-a-dsl
+skill first: `osapi skill get --name build-a-dsl`.
