@@ -219,7 +219,7 @@ cli-docs-generate:
     go run . cli docs generate --dir docs/docs/sidebar/usage/cli
     go run . cli docs dsl generate --dir docs/docs/sidebar/development/dsl
     go run . cli docs reference generate
-    cd docs && bun run prettier docs/sidebar/usage/cli docs/sidebar/development/dsl docs/sidebar/reference docs/sidebar/features --write --config prettier.config.js --ignore-path .prettierignore > /dev/null
+    cd docs && bun run prettier docs/sidebar/usage/cli docs/sidebar/development/dsl docs/sidebar/reference docs/sidebar/features docs/sidebar/usage/configuration.md --write --config prettier.config.js --ignore-path .prettierignore > /dev/null
 
 # The CLI reference pages are generated from the cobra command tree. A command
 # without a page, a page without a command, or a flag that changed fails here.
@@ -227,7 +227,7 @@ cli-docs-gen-check:
     #!/usr/bin/env bash
     set -euo pipefail
     pages() {
-        find docs/docs/sidebar/usage/cli docs/docs/sidebar/development/dsl docs/docs/sidebar/reference docs/docs/sidebar/features -type f -print | sort | xargs shasum
+        find docs/docs/sidebar/usage/cli docs/docs/sidebar/development/dsl docs/docs/sidebar/reference docs/docs/sidebar/features docs/docs/sidebar/usage/configuration.md -type f -print | sort | xargs shasum
     }
     before=$(pages)
     just cli-docs-generate

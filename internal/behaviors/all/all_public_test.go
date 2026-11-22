@@ -70,6 +70,16 @@ func (s *AllPublicTestSuite) TestUIPermissionsAreCurrent() {
 		"%s is stale: run go generate ./internal/behaviors/all", authtoken.TypeScriptFile)
 }
 
+// TestSDKPermissionsAreCurrent checks that the SDK's permission constants,
+// which go generate writes from internal/authtoken, are each permission a
+// token can have now, a behavior's included.
+func (s *AllPublicTestSuite) TestSDKPermissionsAreCurrent() {
+	got, err := os.ReadFile(filepath.Join("..", "..", "..", authtoken.GoFile))
+	s.Require().NoError(err)
+	s.Equal(authtoken.Go(), string(got),
+		"%s is stale: run go generate ./internal/behaviors/all", authtoken.GoFile)
+}
+
 // TestUIStatusesAreCurrent checks that the UI's status tones, which go
 // generate writes from internal/cli, are the tones the CLI prints now.
 func (s *AllPublicTestSuite) TestUIStatusesAreCurrent() {

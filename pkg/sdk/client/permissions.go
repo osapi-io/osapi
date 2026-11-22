@@ -25,49 +25,6 @@ package client
 // "docker:execute").
 type Permission = string
 
-// Permission constants.
-const (
-	PermAdmissionRead    Permission = "admission:read"
-	PermAdmissionWrite   Permission = "admission:write"
-	PermAgentRead        Permission = "agent:read"
-	PermAgentWrite       Permission = "agent:write"
-	PermNodeRead         Permission = "node:read"
-	PermNetworkRead      Permission = "network:read"
-	PermNetworkWrite     Permission = "network:write"
-	PermJobRead          Permission = "job:read"
-	PermJobWrite         Permission = "job:write"
-	PermHealthRead       Permission = "health:read"
-	PermAuditRead        Permission = "audit:read"
-	PermTraceRead        Permission = "trace:read"
-	PermCommandExecute   Permission = "command:execute"
-	PermCommandShell     Permission = "command:shell"
-	PermFileRead         Permission = "file:read"
-	PermFileWrite        Permission = "file:write"
-	PermDockerRead       Permission = "docker:read"
-	PermDockerWrite      Permission = "docker:write"
-	PermDockerExecute    Permission = "docker:execute"
-	PermCronRead         Permission = "schedule:read"
-	PermCronWrite        Permission = "schedule:write"
-	PermSysctlRead       Permission = "sysctl:read"
-	PermSysctlWrite      Permission = "sysctl:write"
-	PermNtpRead          Permission = "ntp:read"
-	PermNtpWrite         Permission = "ntp:write"
-	PermTimezoneRead     Permission = "timezone:read"
-	PermTimezoneWrite    Permission = "timezone:write"
-	PermPowerExecute     Permission = "power:execute"
-	PermProcessRead      Permission = "process:read"
-	PermProcessExecute   Permission = "process:execute"
-	PermUserRead         Permission = "user:read"
-	PermUserWrite        Permission = "user:write"
-	PermPackageRead      Permission = "package:read"
-	PermPackageWrite     Permission = "package:write"
-	PermLogRead          Permission = "log:read"
-	PermCertificateRead  Permission = "certificate:read"
-	PermCertificateWrite Permission = "certificate:write"
-	PermServiceRead      Permission = "service:read"
-	PermServiceWrite     Permission = "service:write"
-)
-
 // Role represents a built-in RBAC role name.
 type Role = string
 

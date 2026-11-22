@@ -28,6 +28,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/cli"
 
+	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/behavior"
 	behaviorcommand "github.com/osapi-io/osapi/internal/behavior/command"
 	"github.com/osapi-io/osapi/internal/cli/command"
@@ -38,6 +39,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/commands/endpointdsl"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	"github.com/osapi-io/osapi/internal/guide"
 )
 
 // referenceDir is the root of the reference section of the docs site.
@@ -308,8 +310,9 @@ func endpointTitle(
 	return strings.ToUpper(g.Name[:1]) + g.Name[1:]
 }
 
-// configTables is page with each config table in it written again, from
-// config.Keys and the config that osapi ships, under root.
+// configTables is page with each generated table in it written again: the
+// config tables, from config.Keys and the config that osapi ships under
+// root, and the role table, from authtoken.RolePermissions.
 func configTables(
 	root string,
 	page string,
@@ -323,5 +326,9 @@ func configTables(
 		return "", err
 	}
 
-	return config.DocTables(page, shipped), nil
+	page = config.DocTables(page, shipped)
+
+	return guide.Fill(page, "roles", func([]string) string {
+		return authtoken.RoleTable()
+	}), nil
 }

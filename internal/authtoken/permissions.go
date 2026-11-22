@@ -30,91 +30,50 @@ import (
 // Permission is a type alias for client.Permission.
 type Permission = client.Permission
 
-// Permission constants re-exported from the SDK.
-const (
-	PermAdmissionRead    = client.PermAdmissionRead
-	PermAdmissionWrite   = client.PermAdmissionWrite
-	PermAgentRead        = client.PermAgentRead
-	PermAgentWrite       = client.PermAgentWrite
-	PermNodeRead         = client.PermNodeRead
-	PermNetworkRead      = client.PermNetworkRead
-	PermNetworkWrite     = client.PermNetworkWrite
-	PermJobRead          = client.PermJobRead
-	PermJobWrite         = client.PermJobWrite
-	PermHealthRead       = client.PermHealthRead
-	PermAuditRead        = client.PermAuditRead
-	PermTraceRead        = client.PermTraceRead
-	PermCommandExecute   = client.PermCommandExecute
-	PermCommandShell     = client.PermCommandShell
-	PermFileRead         = client.PermFileRead
-	PermFileWrite        = client.PermFileWrite
-	PermDockerRead       = client.PermDockerRead
-	PermDockerWrite      = client.PermDockerWrite
-	PermDockerExecute    = client.PermDockerExecute
-	PermCronRead         = client.PermCronRead
-	PermCronWrite        = client.PermCronWrite
-	PermSysctlRead       = client.PermSysctlRead
-	PermSysctlWrite      = client.PermSysctlWrite
-	PermNtpRead          = client.PermNtpRead
-	PermNtpWrite         = client.PermNtpWrite
-	PermTimezoneRead     = client.PermTimezoneRead
-	PermTimezoneWrite    = client.PermTimezoneWrite
-	PermPowerExecute     = client.PermPowerExecute
-	PermProcessRead      = client.PermProcessRead
-	PermProcessExecute   = client.PermProcessExecute
-	PermUserRead         = client.PermUserRead
-	PermUserWrite        = client.PermUserWrite
-	PermPackageRead      = client.PermPackageRead
-	PermPackageWrite     = client.PermPackageWrite
-	PermLogRead          = client.PermLogRead
-	PermCertificateRead  = client.PermCertificateRead
-	PermCertificateWrite = client.PermCertificateWrite
-	PermServiceRead      = client.PermServiceRead
-	PermServiceWrite     = client.PermServiceWrite
-)
-
-// builtinPermissions are the hand-written domains' permissions. A behavior's
+// builtinPermissions are the hand-written domains' permissions. They are the
+// source of the SDK's constants, which go generate ./internal/behaviors/all
+// writes from AllPermissions. A behavior's
 // are not listed here: AllPermissions adds them from its definition.
 var builtinPermissions = []Permission{
-	PermAdmissionRead,
-	PermAdmissionWrite,
-	PermAgentRead,
-	PermAgentWrite,
-	PermNodeRead,
-	PermNetworkRead,
-	PermNetworkWrite,
-	PermJobRead,
-	PermJobWrite,
-	PermHealthRead,
-	PermAuditRead,
-	PermTraceRead,
-	PermCommandExecute,
-	PermCommandShell,
-	PermFileRead,
-	PermFileWrite,
-	PermDockerRead,
-	PermDockerWrite,
-	PermDockerExecute,
-	PermCronRead,
-	PermCronWrite,
-	PermSysctlRead,
-	PermSysctlWrite,
-	PermNtpRead,
-	PermNtpWrite,
-	PermTimezoneRead,
-	PermTimezoneWrite,
-	PermPowerExecute,
-	PermProcessRead,
-	PermProcessExecute,
-	PermUserRead,
-	PermUserWrite,
-	PermPackageRead,
-	PermPackageWrite,
-	PermLogRead,
-	PermCertificateRead,
-	PermCertificateWrite,
-	PermServiceRead,
-	PermServiceWrite,
+	"admission:read",
+	"admission:write",
+	"agent:read",
+	"agent:write",
+	"node:read",
+	"network:read",
+	"network:write",
+	"job:read",
+	"job:write",
+	"health:read",
+	"audit:read",
+	"trace:read",
+	"command:execute",
+	"command:shell",
+	"file:read",
+	"file:write",
+	"docker:read",
+	"docker:write",
+	"docker:execute",
+	"schedule:read",
+	"schedule:write",
+	"sysctl:read",
+	"sysctl:write",
+	"ntp:read",
+	"ntp:write",
+	"timezone:read",
+	"timezone:write",
+	"power:execute",
+	"process:read",
+	"process:execute",
+	"user:read",
+	"user:write",
+	"package:read",
+	"package:write",
+	"log:read",
+	"certificate:read",
+	"certificate:write",
+	"service:read",
+	"service:write",
 }
 
 // builtinRolePermissions maps built-in role names to the hand-written domains'
@@ -122,99 +81,99 @@ var builtinPermissions = []Permission{
 var builtinRolePermissions = map[string][]Permission{
 	client.RoleAdmin: {
 		// Admitting a node is a trust decision: only admin may make it.
-		PermAdmissionRead,
-		PermAdmissionWrite,
-		PermAgentRead,
-		PermAgentWrite,
-		PermNodeRead,
-		PermNetworkRead,
-		PermNetworkWrite,
-		PermJobRead,
-		PermJobWrite,
-		PermHealthRead,
-		PermTraceRead,
-		PermAuditRead,
-		PermCommandExecute,
-		PermCommandShell,
-		PermFileRead,
-		PermFileWrite,
-		PermDockerRead,
-		PermDockerWrite,
-		PermDockerExecute,
-		PermCronRead,
-		PermCronWrite,
-		PermSysctlRead,
-		PermSysctlWrite,
-		PermNtpRead,
-		PermNtpWrite,
-		PermTimezoneRead,
-		PermTimezoneWrite,
-		PermPowerExecute,
-		PermProcessRead,
-		PermProcessExecute,
-		PermUserRead,
-		PermUserWrite,
-		PermPackageRead,
-		PermPackageWrite,
-		PermLogRead,
-		PermCertificateRead,
-		PermCertificateWrite,
-		PermServiceRead,
-		PermServiceWrite,
+		"admission:read",
+		"admission:write",
+		"agent:read",
+		"agent:write",
+		"node:read",
+		"network:read",
+		"network:write",
+		"job:read",
+		"job:write",
+		"health:read",
+		"trace:read",
+		"audit:read",
+		"command:execute",
+		"command:shell",
+		"file:read",
+		"file:write",
+		"docker:read",
+		"docker:write",
+		"docker:execute",
+		"schedule:read",
+		"schedule:write",
+		"sysctl:read",
+		"sysctl:write",
+		"ntp:read",
+		"ntp:write",
+		"timezone:read",
+		"timezone:write",
+		"power:execute",
+		"process:read",
+		"process:execute",
+		"user:read",
+		"user:write",
+		"package:read",
+		"package:write",
+		"log:read",
+		"certificate:read",
+		"certificate:write",
+		"service:read",
+		"service:write",
 	},
 	client.RoleWrite: {
-		PermAdmissionRead,
-		PermAgentRead,
-		PermNodeRead,
-		PermNetworkRead,
-		PermNetworkWrite,
-		PermJobRead,
-		PermJobWrite,
-		PermHealthRead,
-		PermTraceRead,
-		PermFileRead,
-		PermFileWrite,
-		PermDockerRead,
-		PermDockerWrite,
-		PermCronRead,
-		PermCronWrite,
-		PermSysctlRead,
-		PermSysctlWrite,
-		PermNtpRead,
-		PermNtpWrite,
-		PermTimezoneRead,
-		PermTimezoneWrite,
-		PermProcessRead,
-		PermUserRead,
-		PermUserWrite,
-		PermPackageRead,
-		PermPackageWrite,
-		PermLogRead,
-		PermCertificateRead,
-		PermCertificateWrite,
-		PermServiceRead,
-		PermServiceWrite,
+		"admission:read",
+		"agent:read",
+		"node:read",
+		"network:read",
+		"network:write",
+		"job:read",
+		"job:write",
+		"health:read",
+		"trace:read",
+		"file:read",
+		"file:write",
+		"docker:read",
+		"docker:write",
+		"schedule:read",
+		"schedule:write",
+		"sysctl:read",
+		"sysctl:write",
+		"ntp:read",
+		"ntp:write",
+		"timezone:read",
+		"timezone:write",
+		"process:read",
+		"user:read",
+		"user:write",
+		"package:read",
+		"package:write",
+		"log:read",
+		"certificate:read",
+		"certificate:write",
+		"service:read",
+		"service:write",
 	},
 	client.RoleRead: {
-		PermAdmissionRead,
-		PermAgentRead,
-		PermNodeRead,
-		PermNetworkRead,
-		PermJobRead,
-		PermHealthRead,
-		PermTraceRead,
-		PermFileRead,
-		PermDockerRead,
-		PermCronRead,
-		PermSysctlRead,
-		PermNtpRead,
-		PermTimezoneRead,
-		PermProcessRead,
-		PermUserRead,
-		PermPackageRead,
-		PermLogRead,
-		PermCertificateRead,
-		PermServiceRead,
+		"admission:read",
+		"agent:read",
+		"node:read",
+		"network:read",
+		"job:read",
+		"health:read",
+		"trace:read",
+		"file:read",
+		"docker:read",
+		"schedule:read",
+		"sysctl:read",
+		"ntp:read",
+		"timezone:read",
+		"process:read",
+		"user:read",
+		"package:read",
+		"log:read",
+		"certificate:read",
+		"service:read",
 	},
 }
 
