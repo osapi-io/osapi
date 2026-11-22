@@ -30,6 +30,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/telemetry/instruments"
+	"gopkg.in/yaml.v3"
 )
 
 // List is each behavior, with the names of its methods.
@@ -187,7 +188,7 @@ func MethodGet(
 	out := MethodOutput{
 		Name: m.Name, Verb: m.Verb, Doc: m.Doc, Long: m.Long,
 		InputType: behavior.TypeName(m.In), OutputType: behavior.TypeName(m.Out),
-		Fields: fields(input), Results: results(output), Examples: []ExampleRow{},
+		Fields: Fields(input), Results: Results(output), Examples: []ExampleRow{},
 		Input: input, Output: output, Calls: m.Examples, Refusals: m.Refusals,
 	}
 	if b.API {
@@ -280,9 +281,10 @@ func Validate(
 	return out, command.Fail()
 }
 
-// fields are the input's fields in declared order, with their
-// constraints.
-func fields(
+// Fields are the fields of an input schema in declared order, with their
+// constraints. The method get of the endpoint and the command DSLs uses it
+// too, so the three show a method the same way.
+func Fields(
 	s *behavior.Schema,
 ) []Field {
 	out := make([]Field, 0, len(s.Order))
@@ -297,9 +299,10 @@ func fields(
 	return out
 }
 
-// results are the output's fields in declared order. A list is described
-// by its element, since each element is one result row.
-func results(
+// Results are the fields of an output schema in declared order. A list is
+// described by its element, since each element is one result row. The method
+// get of the endpoint and the command DSLs uses it too.
+func Results(
 	s *behavior.Schema,
 ) []Result {
 	if s.Items != nil {
@@ -425,4 +428,38 @@ func names(
 	}
 
 	return out
+}
+
+// OpenAPIGet is the served behavior's part of the OpenAPI spec, as YAML: the
+// part that go generate writes to its gen/api.yaml and that the join puts in
+// the spec of the API.
+func OpenAPIGet(
+	_ context.Context,
+	d Deps,
+	in GetInput,
+) (OpenAPIOutput, error) {
+	b, err := find(d, in.Name)
+	if err != nil {
+		return OpenAPIOutput{}, err
+	}
+	if !b.API {
+		return OpenAPIOutput{}, fmt.Errorf(
+			"behavior %s serves no route: it has no behavior.API, so it has no part of the spec",
+			b.Name,
+		)
+	}
+	doc, err := d.OpenAPI(b)
+	if err != nil {
+		return OpenAPIOutput{}, fmt.Errorf("the spec of %s does not build: %w", b.Name, err)
+	}
+	// The spec goes through JSON, so its keys are its json names.
+	raw, _ := json.Marshal(doc)
+	var tree any
+	_ = json.Unmarshal(raw, &tree)
+	var out strings.Builder
+	enc := yaml.NewEncoder(&out)
+	enc.SetIndent(2)
+	_ = enc.Encode(tree)
+
+	return OpenAPIOutput{Name: b.Name, YAML: out.String()}, nil
 }

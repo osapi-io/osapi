@@ -24,6 +24,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/behavior"
@@ -31,6 +32,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/osapi-io/osapi/internal/cli/command"
+	"github.com/osapi-io/osapi/internal/cli/commands/behaviordsl"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
@@ -120,6 +122,122 @@ func OpenAPIGet(
 	_ = enc.Encode(tree)
 
 	return OpenAPIOutput{Name: g.Name, YAML: b.String()}, nil
+}
+
+// MethodGet is one method of the group in full: its route, permission,
+// command, input fields, output, examples, refusals and errors.
+func MethodGet(
+	_ context.Context,
+	d Deps,
+	in MethodInput,
+) (MethodOutput, error) {
+	g, err := find(d, in.Name)
+	if err != nil {
+		return MethodOutput{}, err
+	}
+	var m *endpoint.Method
+	for _, candidate := range g.Methods {
+		if candidate.Name == in.Method {
+			m = candidate
+		}
+	}
+	if m == nil {
+		return MethodOutput{}, fmt.Errorf(
+			"endpoint group %s has no method %q: osapi controller endpoint get --name %s shows them",
+			g.Name,
+			in.Method,
+			g.Name,
+		)
+	}
+	input, err := behavior.SchemaFor(m.In)
+	if err != nil {
+		return MethodOutput{}, fmt.Errorf("%s %s input: %w", g.Name, m.Name, err)
+	}
+	output, err := behavior.SchemaFor(m.Out)
+	if err != nil {
+		return MethodOutput{}, fmt.Errorf("%s %s output: %w", g.Name, m.Name, err)
+	}
+	words := append([]string{"osapi", "client"}, g.CommandPath()...)
+	if sub := m.SubPath(); sub != "" && sub != m.CommandName() {
+		words = append(words, sub)
+	}
+	out := MethodOutput{
+		Name: m.Name, Doc: m.CommandShort(), Long: m.CommandLong(),
+		HTTPMethod: m.HTTPMethod(), Route: g.Path(m), Permission: string(g.Permission(m)),
+		OperationID: m.OperationID(g), Command: strings.Join(append(words, m.CommandName()), " "),
+		InputType: behavior.TypeName(m.In), OutputType: behavior.TypeName(m.Out),
+		Fields: []Field{}, Results: behaviordsl.Results(output), Examples: []Example{},
+		Input: input, Output: output,
+	}
+	for _, dc := range g.Declared() {
+		if dc.Where == g.Name+" "+m.Name {
+			out.AdminOnly = dc.AdminOnly
+		}
+	}
+	where := map[string]string{}
+	for _, f := range fields(m.In) {
+		in := f.Tag.Get("in")
+		if in == "" {
+			in = "body"
+		}
+		where[jsonName(f)] = in
+	}
+	for _, f := range behaviordsl.Fields(input) {
+		// A field tagged in:"body" that is a struct is the whole body, so
+		// its fields are the fields of the request.
+		if body := input.Properties[f.Field]; where[f.Field] == "body" && len(body.Order) > 0 {
+			for _, bf := range behaviordsl.Fields(body) {
+				out.Fields = append(out.Fields, Field{
+					Field: bf.Field, In: "body", Type: bf.Type, Required: bf.Required,
+					Constraints: bf.Constraints, Description: bf.Description,
+				})
+			}
+
+			continue
+		}
+		out.Fields = append(out.Fields, Field{
+			Field: f.Field, In: where[f.Field], Type: f.Type, Required: f.Required,
+			Constraints: f.Constraints, Description: f.Description,
+		})
+	}
+	for _, e := range m.Examples() {
+		out.Examples = append(out.Examples, Example{Flags: e.Flags, Doc: e.Doc})
+	}
+	for _, r := range m.Refusals() {
+		out.Refuses = append(out.Refuses, r.Doc)
+	}
+	for _, e := range m.Mapped() {
+		out.Errors = append(out.Errors, Error{Code: e.Code, Reason: string(e.Reason), Doc: e.Doc})
+	}
+
+	return out, nil
+}
+
+// fields are the exported fields of t, a struct, that JSON reads. An
+// endpoint method's input is a struct: its schema is built first.
+func fields(
+	t reflect.Type,
+) []reflect.StructField {
+	var out []reflect.StructField
+	for f := range t.Fields() {
+		if f.IsExported() && jsonName(f) != "-" {
+			out = append(out, f)
+		}
+	}
+
+	return out
+}
+
+// jsonName is the json name of f, or its Go name when it has none.
+func jsonName(
+	f reflect.StructField,
+) string {
+	name, _, _ := strings.Cut(f.Tag.Get("json"), ",")
+	if name == "" {
+		return f.Name
+	}
+
+	return name
 }
 
 // Create writes a new endpoint group in the checkout, and is its files and

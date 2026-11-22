@@ -52,6 +52,20 @@ List, describe and validate the behaviors this binary has.
 | --name   | string | required | The behavior, from osapi behavior list |
 | --method | string | required | The method, from osapi behavior get    |
 
+## [osapi behavior openapi get](../../usage/cli/behavior/openapi/get.md)
+
+|             |                                                             |
+| ----------- | ----------------------------------------------------------- |
+| Method      | openapi get                                                 |
+| Description | Print a served behavior's part of the OpenAPI spec, as YAML |
+| Refuses     | no name                                                     |
+
+### Flags (1)
+
+| FLAG   | TYPE   | VALIDATE | HELP                                   |
+| ------ | ------ | -------- | -------------------------------------- |
+| --name | string | required | The behavior, from osapi behavior list |
+
 ## [osapi behavior create](../../usage/cli/behavior/create.md)
 
 |             |                                                             |

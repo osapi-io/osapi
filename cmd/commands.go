@@ -218,6 +218,14 @@ func behaviorDSLDeps() behaviordsl.Deps {
 		Validate:  behavior.Validate,
 		Keys:      config.Keys,
 		Spec:      func() guide.Spec { return behavior.CurrentSpec(job.FactKeys()...) },
+		OpenAPI: func(b *behavior.Behavior) (any, error) {
+			g := behavior.GroupOf(b)
+			if g == nil {
+				return nil, fmt.Errorf("%s has no endpoint group: run go generate", b.Name)
+			}
+
+			return endpoint.OpenAPI(g, endpoint.ErrorRef)
+		},
 	}
 }
 

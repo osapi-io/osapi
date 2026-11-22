@@ -88,6 +88,119 @@ func (s *MethodsPublicTestSuite) TestGet() {
 	}
 }
 
+type chanOut = chan int
+
+// broken has a method whose input and one whose output have no schema.
+type plainIn struct {
+	Name string `json:"name" validate:"required" doc:"The name"`
+}
+
+var broken = endpoint.Define("zzbroken", "Broken",
+	endpoint.Get[chanOut, struct{}]("list"),
+	endpoint.Get[struct{}, chanOut]("get").Sub("one"),
+	endpoint.Post[plainIn, struct{}]("create"),
+)
+
+func (s *MethodsPublicTestSuite) TestMethodGet() {
+	d := s.deps()
+	d.Groups = func() []*endpoint.Group { return append(endpoint.All(), broken) }
+	tests := []struct {
+		name         string
+		in           endpointdsl.MethodInput
+		validateFunc func(endpointdsl.MethodOutput, error)
+	}{
+		{
+			name: "when the method is an action, it has its route, permission, command and errors",
+			in:   endpointdsl.MethodInput{Name: "agent", Method: "drain"},
+			validateFunc: func(got endpointdsl.MethodOutput, err error) {
+				s.Require().NoError(err)
+				s.Equal("POST", got.HTTPMethod)
+				s.Equal("agent:write", got.Permission)
+				s.True(got.AdminOnly)
+				s.Equal("osapi client agent drain", got.Command)
+				s.Equal("path", got.Fields[0].In)
+				s.NotEmpty(got.Errors)
+				s.NotEmpty(got.Examples)
+				s.NotNil(got.Input)
+			},
+		},
+		{
+			name: "when a field is a query parameter, it says so, and the output has its fields",
+			in:   endpointdsl.MethodInput{Name: "audit", Method: "list"},
+			validateFunc: func(got endpointdsl.MethodOutput, err error) {
+				s.Require().NoError(err)
+				s.Equal("query", got.Fields[0].In)
+				s.Equal("audit:read", got.Permission)
+				s.NotEmpty(got.Results)
+			},
+		},
+		{
+			name: "when the body is a struct, its fields are the body's",
+			in:   endpointdsl.MethodInput{Name: "admission", Method: "admit"},
+			validateFunc: func(got endpointdsl.MethodOutput, err error) {
+				s.Require().NoError(err)
+				s.Require().Len(got.Fields, 2)
+				s.Equal(endpointdsl.Field{
+					Field: "machine_id", In: "path", Type: got.Fields[0].Type, Required: true,
+					Constraints: got.Fields[0].Constraints, Description: got.Fields[0].Description,
+				}, got.Fields[0])
+				s.Equal("fingerprint", got.Fields[1].Field)
+				s.Equal("body", got.Fields[1].In)
+			},
+		},
+		{
+			name: "when the method is under a sub-command, its command has it",
+			in:   endpointdsl.MethodInput{Name: "facts", Method: "list"},
+			validateFunc: func(got endpointdsl.MethodOutput, err error) {
+				s.Require().NoError(err)
+				s.Equal("osapi client facts keys list", got.Command)
+			},
+		},
+		{
+			name: "when a field has no in tag, it is in the body",
+			in:   endpointdsl.MethodInput{Name: "zzbroken", Method: "create"},
+			validateFunc: func(got endpointdsl.MethodOutput, err error) {
+				s.Require().NoError(err)
+				s.Equal("body", got.Fields[0].In)
+			},
+		},
+		{
+			name: "when the input has no schema, it says so",
+			in:   endpointdsl.MethodInput{Name: "zzbroken", Method: "list"},
+			validateFunc: func(_ endpointdsl.MethodOutput, err error) {
+				s.ErrorContains(err, "zzbroken list input")
+			},
+		},
+		{
+			name: "when the output has no schema, it says so",
+			in:   endpointdsl.MethodInput{Name: "zzbroken", Method: "get"},
+			validateFunc: func(_ endpointdsl.MethodOutput, err error) {
+				s.ErrorContains(err, "zzbroken get output")
+			},
+		},
+		{
+			name: "when the group has no such method, it says how to list them",
+			in:   endpointdsl.MethodInput{Name: "agent", Method: "nope"},
+			validateFunc: func(_ endpointdsl.MethodOutput, err error) {
+				s.ErrorContains(err, "osapi controller endpoint get --name agent")
+			},
+		},
+		{
+			name: "when there is no such group, it says how to list them",
+			in:   endpointdsl.MethodInput{Name: "nope", Method: "list"},
+			validateFunc: func(_ endpointdsl.MethodOutput, err error) {
+				s.ErrorContains(err, "osapi controller endpoint list")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.validateFunc(endpointdsl.MethodGet(context.Background(), d, tc.in))
+		})
+	}
+}
+
 func (s *MethodsPublicTestSuite) TestOpenAPIGet() {
 	tests := []struct {
 		name         string

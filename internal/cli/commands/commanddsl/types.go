@@ -21,7 +21,9 @@
 package commanddsl
 
 import (
+	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/cli/command"
+	"github.com/osapi-io/osapi/internal/cli/commands/behaviordsl"
 	"github.com/osapi-io/osapi/internal/guide"
 )
 
@@ -67,6 +69,42 @@ type Command struct {
 	Short   string   `json:"short"           label:"Description"`
 	Fails   []string `json:"fails,omitempty" label:"Refuses"`
 	Flags   []Flag   `json:"flags,omitempty"`
+}
+
+// MethodInput is the local group and the method to show.
+type MethodInput struct {
+	Name   string `json:"name"   validate:"required" doc:"The command path of the local group, such as token"`
+	Method string `json:"method" validate:"required" doc:"The method, such as list or roles get, from osapi cli command get"`
+}
+
+// MethodOutput is one method of a local group in full: its command, its
+// flags with their checks, its output, its examples and what it refuses.
+// It is the shape of osapi behavior method get and osapi controller
+// endpoint method get. --json has the JSON Schema of the output.
+type MethodOutput struct {
+	_          struct{}         `title:"Method"`
+	Command    string           `               json:"command"`
+	Method     string           `               json:"method"`
+	Doc        string           `               json:"doc"                   label:"Description"`
+	Long       string           `               json:"long,omitempty"        label:"Detail"`
+	Process    bool             `               json:"process"`
+	Flags      []Flag           `               json:"flags"                                     empty:"The command has no flags of its own."`
+	ConfigKeys []string         `               json:"config_keys,omitempty" label:"Config keys"`
+	OutputType string           `               json:"output_type,omitempty" label:"Output type"                                              none:"none: it prints a line"`
+	Results    []Result         `               json:"results"               label:"Output"`
+	Says       string           `               json:"says,omitempty"`
+	Examples   []Example        `               json:"examples"                                  empty:"The method has no example."`
+	Refuses    []string         `               json:"refuses,omitempty"`
+	Output     *behavior.Schema `               json:"output,omitempty"                                                                                                     render:"-"`
+}
+
+// Result is one field of the output.
+type Result = behaviordsl.Result
+
+// Example is one example of the command: its flags and what it shows.
+type Example struct {
+	Flags string `json:"flags" none:"(none)"`
+	Doc   string `json:"doc"`
 }
 
 // Flag is one flag of a local command, from a field of its input.

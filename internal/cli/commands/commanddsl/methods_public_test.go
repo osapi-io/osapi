@@ -81,6 +81,19 @@ var (
 		command.Method[struct{}, []widgetOut]("list").Short("List widgets").Handle(widgetList),
 	))
 	root = &cobra.Command{Use: "osapi"}
+
+	// zzmore has a process, a method that says a state, and one under a Sub.
+	_ = command.Register(command.Define("zzmore", "More",
+		command.Uses[struct{}](),
+		command.SubDoc("keys", "The keys"),
+		command.Process("start").Short("Start it").Flag("controller.api.port").
+			Setup(func(context.Context, struct{}) (command.Running, error) { return command.Running{}, nil }),
+		command.Method[widgetIn, struct{}]("drain").Short("Drain it").Says("draining").
+			Example("--name a").Fails("no name", widgetIn{}).
+			Handle(func(context.Context, struct{}, widgetIn) (struct{}, error) { return struct{}{}, nil }),
+		command.Method[struct{}, widgetOut]("get").Sub("keys").Short("Get a key").Example("").
+			Handle(func(context.Context, struct{}, struct{}) (widgetOut, error) { return widgetOut{}, nil }),
+	))
 )
 
 func (s *MethodsPublicTestSuite) SetupSuite() {
@@ -107,6 +120,85 @@ func (s *MethodsPublicTestSuite) deps() commanddsl.Deps {
 	return commanddsl.Deps{
 		Root:       root,
 		IsBehavior: func(name string) bool { return name == "zzbehave" },
+	}
+}
+
+func (s *MethodsPublicTestSuite) TestMethodGet() {
+	tests := []struct {
+		name         string
+		in           commanddsl.MethodInput
+		validateFunc func(commanddsl.MethodOutput, error)
+	}{
+		{
+			name: "when the method has flags, each has its check, with the output and examples",
+			in:   commanddsl.MethodInput{Name: "zzwidget", Method: "get"},
+			validateFunc: func(got commanddsl.MethodOutput, err error) {
+				s.Require().NoError(err)
+				s.Equal("osapi zzwidget get", got.Command)
+				s.Equal("Get a widget", got.Doc)
+				s.Equal("--name", got.Flags[0].Flag)
+				s.Equal("required", got.Flags[0].Validate)
+				s.Equal("widgetOut", got.OutputType)
+				s.Equal("name", got.Results[0].Field)
+				s.Equal([]commanddsl.Example{{Flags: "--name a"}}, got.Examples)
+				s.Equal([]string{"no name"}, got.Refuses)
+				s.NotNil(got.Output)
+			},
+		},
+		{
+			name: "when the method is a process, it has its config keys and no output",
+			in:   commanddsl.MethodInput{Name: "zzmore", Method: "start"},
+			validateFunc: func(got commanddsl.MethodOutput, err error) {
+				s.Require().NoError(err)
+				s.True(got.Process)
+				s.Equal([]string{"controller.api.port"}, got.ConfigKeys)
+				s.Empty(got.OutputType)
+				s.Equal([]commanddsl.Flag{}, got.Flags)
+			},
+		},
+		{
+			name: "when the method says a state, and is under a Sub, both show",
+			in:   commanddsl.MethodInput{Name: "zzmore", Method: "keys get"},
+			validateFunc: func(got commanddsl.MethodOutput, err error) {
+				s.Require().NoError(err)
+				s.Equal("osapi zzmore keys get", got.Command)
+			},
+		},
+		{
+			name: "when the method says a state, it is its line",
+			in:   commanddsl.MethodInput{Name: "zzmore", Method: "drain"},
+			validateFunc: func(got commanddsl.MethodOutput, err error) {
+				s.Require().NoError(err)
+				s.Equal("draining", got.Says)
+			},
+		},
+		{
+			name: "when the group calls the API, it points at its own method get",
+			in:   commanddsl.MethodInput{Name: "zzremote", Method: "get"},
+			validateFunc: func(_ commanddsl.MethodOutput, err error) {
+				s.ErrorContains(err, "osapi controller endpoint method get")
+			},
+		},
+		{
+			name: "when the group has no such method, it says how to list them",
+			in:   commanddsl.MethodInput{Name: "zzwidget", Method: "nope"},
+			validateFunc: func(_ commanddsl.MethodOutput, err error) {
+				s.ErrorContains(err, "osapi cli command get --name zzwidget")
+			},
+		},
+		{
+			name: "when there is no such group, it says how to list them",
+			in:   commanddsl.MethodInput{Name: "nope", Method: "get"},
+			validateFunc: func(_ commanddsl.MethodOutput, err error) {
+				s.ErrorContains(err, "osapi cli command list")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.validateFunc(commanddsl.MethodGet(context.Background(), s.deps(), tc.in))
+		})
 	}
 }
 
@@ -224,6 +316,14 @@ func (s *MethodsPublicTestSuite) TestValidate() {
 			})))
 	got, err = commanddsl.Validate(context.Background(), s.deps(), commanddsl.ValidateInput{})
 	s.ErrorIs(err, command.FailedError{})
+
+	// A method whose output has no schema breaks a rule, and method get
+	// says so too.
+	command.Register(command.Define("zzbadout", "Bad output", command.Uses[struct{}](),
+		command.Method[struct{}, chan int]("list").Short("List them")))
+	_, mErr := commanddsl.MethodGet(context.Background(), s.deps(),
+		commanddsl.MethodInput{Name: "zzbadout", Method: "list"})
+	s.ErrorContains(mErr, "zzbadout list output")
 	s.False(got.Valid)
 	s.NotEmpty(got.Problems)
 	s.Contains(got.Fixes, command.RuleVerb)

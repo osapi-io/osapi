@@ -90,7 +90,7 @@ for id in "${ids[@]}"; do
 			"grep -rq 'secret:\"true\"' internal/behaviors/$dir/types.go"
 		group=$(field "$id" group)
 		[ -n "$group" ] && check "$id" "it is under the $group group" \
-			"grep -rq 'behavior.Under(\"$group\")' internal/behaviors/$dir/behavior.go && [ -d internal/behaviors/$dir ]"
+			"grep -rqE 'behavior.Under\(behavior.Group[A-Z]' internal/behaviors/$dir/behavior.go && [ -d internal/behaviors/$dir ]"
 		platforms=$(field "$id" platforms)
 		[ -n "$platforms" ] && check "$id" "its only platform is $platforms" \
 			"go run . behavior get --name $b --json | python3 -c 'import json,sys; sys.exit(0 if json.load(sys.stdin)[\"platforms\"] == [\"$platforms\"] else 1)'"

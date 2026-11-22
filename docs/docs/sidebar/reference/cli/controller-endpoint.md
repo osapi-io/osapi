@@ -37,6 +37,21 @@ List, describe and validate the controller's own endpoints, and print their DSL.
 | ------ | ------ | -------- | --------------------------------- |
 | --name | string | required | The endpoint group, such as agent |
 
+## [osapi controller endpoint method get](../../usage/cli/controller/endpoint/method/get.md)
+
+|             |                                                                                      |
+| ----------- | ------------------------------------------------------------------------------------ |
+| Method      | method get                                                                           |
+| Description | Show one method of an endpoint group: its route, fields, output, examples and errors |
+| Refuses     | no name, no method                                                                   |
+
+### Flags (2)
+
+| FLAG     | TYPE   | VALIDATE | HELP                                           |
+| -------- | ------ | -------- | ---------------------------------------------- |
+| --name   | string | required | The endpoint group, such as agent              |
+| --method | string | required | The method, from osapi controller endpoint get |
+
 ## [osapi controller endpoint openapi get](../../usage/cli/controller/endpoint/openapi/get.md)
 
 |             |                                                     |

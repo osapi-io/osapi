@@ -1,0 +1,62 @@
+{
+  "skill_name": "build-an-endpoint",
+  "evals": [
+    {
+      "id": "buildinfo",
+      "prompt": "Add an endpoint group to osapi that reports the controller's own build: its version and its commit, one GET. Name the group buildinfo.",
+      "group": "buildinfo",
+      "expected_output": "internal/controller/endpoints/buildinfo with one GET, its input and output types, the tests of its handler, and every check passing.",
+      "assertions": [
+        "controller endpoint validate passes",
+        "the group is registered under its name",
+        "its package tests pass with 100% coverage",
+        "every test in internal/controller/endpoints/all passes",
+        "generated files are current",
+        "lint reports no issues in the group",
+        "nothing outside the group, its registration, its wiring and generated files changed"
+      ],
+      "kind": "build"
+    },
+    {
+      "id": "notes",
+      "prompt": "Add an endpoint group to osapi for notes that operators leave on the controller: list them, add one, and delete one by its ID. The notes live in a store that the group takes as a dependency. Adding and deleting is a write. Name the group notes.",
+      "group": "notes",
+      "permission": "notes:write",
+      "refusals": true,
+      "expected_output": "internal/controller/endpoints/notes with list, a create that answers 201, a delete that answers 204, a Deps with a store interface and its mockgen mock, refusals for a bad ID, and every check passing.",
+      "assertions": [
+        "controller endpoint validate passes",
+        "the group is registered under its name",
+        "its package tests pass with 100% coverage",
+        "every test in internal/controller/endpoints/all passes",
+        "a write needs notes:write",
+        "at least one refusal is declared with Fails",
+        "generated files are current",
+        "lint reports no issues in the group",
+        "nothing outside the group, its registration, its wiring and generated files changed"
+      ],
+      "kind": "build"
+    },
+    {
+      "id": "reports",
+      "prompt": "Add an endpoint for reports.",
+      "expected_output": "No change. The session asks what a report is, where its data comes from and who may read it.",
+      "assertions": [
+        "nothing in the checkout changed",
+        "the answer asks the user at least two questions"
+      ],
+      "kind": "ask"
+    },
+    {
+      "id": "hostkernel",
+      "prompt": "Add an endpoint group to osapi that reads the kernel version of each host in the fleet.",
+      "expects": "behavior",
+      "expected_output": "No change. The session says that work on a host is a behavior, not an endpoint, and names the build-a-behavior skill.",
+      "assertions": [
+        "nothing in the checkout changed",
+        "the answer says that it is a behavior"
+      ],
+      "kind": "refuse"
+    }
+  ]
+}

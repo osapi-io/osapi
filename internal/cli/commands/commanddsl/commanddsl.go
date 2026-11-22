@@ -43,6 +43,7 @@ var Group = command.Register(command.Define(
 		"spec",
 		"Print the command DSL: each option, method, refinement, field tag and check",
 	),
+	command.SubDoc("method", "Show one method of a local group in full"),
 	command.Method[ListInput, ListOutput]("list").
 		Short("List each command of this binary, and the layer that made it").
 		Long("The layer is `command` for a command of a local group, `endpoint` for a\n"+
@@ -61,6 +62,18 @@ var Group = command.Register(command.Define(
 		Example("--name agent --json").
 		Fails("no name", GetInput{}).
 		Handle(Get),
+	command.Method[MethodInput, MethodOutput]("get").
+		Sub("method").
+		Short("Show one method of a local group: its command, flags, output, examples and refusals").
+		Long("Each flag has the validate tag of its field. `--json` has the JSON Schema of\n"+
+			"the output. `osapi behavior method get` and `osapi controller endpoint\n"+
+			"method get` show a method of a behavior and of an endpoint group the same\n"+
+			"way.").
+		Example("--name token --method generate").
+		Example("--name token --method generate --json").
+		Fails("no name", MethodInput{Method: "list"}).
+		Fails("no method", MethodInput{Name: "token"}).
+		Handle(MethodGet),
 	command.Method[CreateInput, CreateOutput]("create").
 		Short("Write a new local group that builds and passes its tests").
 		Long("It writes `internal/cli/commands/<name>/` in the osapi checkout in the\n"+

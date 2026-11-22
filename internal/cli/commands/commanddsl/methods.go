@@ -27,7 +27,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/cli/command"
+	"github.com/osapi-io/osapi/internal/cli/commands/behaviordsl"
 )
 
 // The layers that make a command.
@@ -176,6 +178,69 @@ func describe(
 	}
 
 	return out
+}
+
+// MethodGet is one method of a local group in full: its command, flags,
+// output, examples and refusals. The group of an endpoint or a behavior has
+// its own method get.
+func MethodGet(
+	_ context.Context,
+	_ Deps,
+	in MethodInput,
+) (MethodOutput, error) {
+	g := find(in.Name)
+	if g == nil {
+		return MethodOutput{}, fmt.Errorf(
+			"no group named %q: osapi cli command list shows them",
+			in.Name,
+		)
+	}
+	lg, ok := g.(*command.LocalGroup)
+	if !ok {
+		return MethodOutput{}, fmt.Errorf(
+			"%s is the group of an endpoint or a behavior: osapi controller endpoint method get "+
+				"or osapi behavior method get shows its methods",
+			in.Name,
+		)
+	}
+	var m *command.LocalMethod
+	for _, c := range lg.Methods {
+		if c.MethodName() == in.Method {
+			m = c
+		}
+	}
+	if m == nil {
+		return MethodOutput{}, fmt.Errorf(
+			"group %s has no method %q: osapi cli command get --name %s shows them",
+			in.Name, in.Method, in.Name,
+		)
+	}
+	c := describe(g, m)
+	out := MethodOutput{
+		Command: c.Command, Method: m.MethodName(), Doc: m.CommandShort(),
+		Long: m.CommandLong(), Process: m.IsProcess(), Flags: c.Flags,
+		ConfigKeys: m.ConfigKeys(), Results: []Result{}, Says: m.Saying(),
+		Examples: []Example{}, Refuses: c.Fails,
+	}
+	if out.Flags == nil {
+		out.Flags = []Flag{}
+	}
+	if t := m.Output(); t != nil {
+		schema, err := behavior.SchemaFor(t)
+		if err != nil {
+			return MethodOutput{}, fmt.Errorf("%s %s output: %w", in.Name, in.Method, err)
+		}
+		out.OutputType, out.Results, out.Output = behavior.TypeName(
+			t,
+		), behaviordsl.Results(
+			schema,
+		), schema
+	}
+	for _, e := range m.Examples() {
+		out.Examples = append(out.Examples, Example{Flags: e.Flags, Doc: e.Doc})
+	}
+
+	return out, nil
 }
 
 // Create writes a new local group in the checkout, and is its files and the

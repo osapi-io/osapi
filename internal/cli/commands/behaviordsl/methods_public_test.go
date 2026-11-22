@@ -22,6 +22,7 @@ package behaviordsl_test
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -62,6 +63,13 @@ func (s *MethodsPublicTestSuite) deps() behaviordsl.Deps {
 		Validate:  behavior.Validate,
 		Keys:      config.Keys,
 		Spec:      func() guide.Spec { return behavior.CurrentSpec(job.FactKeys()...) },
+		OpenAPI: func(b *behavior.Behavior) (any, error) {
+			if b.Name == "hostname" {
+				return nil, errors.New("no schema")
+			}
+
+			return map[string]any{"openapi": "3.0.0", "info": map[string]any{"title": b.Name}}, nil
+		},
 	}
 }
 
@@ -210,6 +218,52 @@ func (s *MethodsPublicTestSuite) TestMethodGet() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			tc.validateFunc(behaviordsl.MethodGet(context.Background(), s.deps(), tc.in))
+		})
+	}
+}
+
+func (s *MethodsPublicTestSuite) TestOpenAPIGet() {
+	tests := []struct {
+		name         string
+		in           behaviordsl.GetInput
+		validateFunc func(behaviordsl.OpenAPIOutput, error)
+	}{
+		{
+			name: "when the behavior is served, it is its part of the spec as YAML",
+			in:   behaviordsl.GetInput{Name: "sysctl"},
+			validateFunc: func(got behaviordsl.OpenAPIOutput, err error) {
+				s.Require().NoError(err)
+				s.Equal("sysctl", got.Name)
+				s.Contains(got.YAML, "openapi: 3.0.0")
+				s.Contains(got.YAML, "title: sysctl")
+			},
+		},
+		{
+			name: "when the behavior is internal, it serves no route",
+			in:   behaviordsl.GetInput{Name: "managedfile"},
+			validateFunc: func(_ behaviordsl.OpenAPIOutput, err error) {
+				s.ErrorContains(err, "serves no route")
+			},
+		},
+		{
+			name: "when the spec does not build, it says so",
+			in:   behaviordsl.GetInput{Name: "hostname"},
+			validateFunc: func(_ behaviordsl.OpenAPIOutput, err error) {
+				s.ErrorContains(err, "the spec of hostname does not build: no schema")
+			},
+		},
+		{
+			name: "when there is no such behavior, it says how to list them",
+			in:   behaviordsl.GetInput{Name: "nope"},
+			validateFunc: func(_ behaviordsl.OpenAPIOutput, err error) {
+				s.ErrorContains(err, "osapi behavior list")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.validateFunc(behaviordsl.OpenAPIGet(context.Background(), s.deps(), tc.in))
 		})
 	}
 }

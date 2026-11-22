@@ -48,6 +48,20 @@ var behaviorMethodGetCmd = &cobra.Command{
 	Use:   "get",
 }
 
+var behaviorOpenapiGetCmd = &cobra.Command{
+	Annotations: map[string]string{clicommand.SubKey: "openapi"},
+	Args:        cobra.NoArgs,
+	Example:     "  osapi behavior openapi get --name sysctl",
+	Long:        "It prints the spec as the definition makes it: the part that go generate\nwrites to the behavior's gen/api.yaml, and that the join puts in the spec of\nthe API. An internal behavior serves no route, so it has none.",
+	RunE: func(cmd *cobra.Command, _ []string) error {
+		name, _ := cmd.Flags().GetString("name")
+
+		return clicommand.Run(cmd, behaviordsl.Group, "openapi get", behaviordsl.GetInput{Name: name})
+	},
+	Short: "Print a served behavior's part of the OpenAPI spec, as YAML",
+	Use:   "get",
+}
+
 var behaviorCreateCmd = &cobra.Command{
 	Args:    cobra.NoArgs,
 	Example: "  osapi behavior create --name motd --description \"The message shown at login\"\n  osapi behavior create --name motd --description \"The message shown at login\" --root ~/src/osapi\n  osapi behavior create --group network --name neighbors --description \"The host's ARP neighbors\"",
@@ -95,6 +109,8 @@ func init() {
 	_ = behaviorMethodGetCmd.MarkFlagRequired("name")
 	behaviorMethodGetCmd.Flags().String("method", "", "The method, from osapi behavior get")
 	_ = behaviorMethodGetCmd.MarkFlagRequired("method")
+	behaviorOpenapiGetCmd.Flags().String("name", "", "The behavior, from osapi behavior list")
+	_ = behaviorOpenapiGetCmd.MarkFlagRequired("name")
 	behaviorCreateCmd.Flags().String("name", "", "The behavior's name: lowercase letters and digits")
 	_ = behaviorCreateCmd.MarkFlagRequired("name")
 	behaviorCreateCmd.Flags().String("description", "", "What it manages, in one line")
@@ -102,5 +118,5 @@ func init() {
 	behaviorCreateCmd.Flags().String("group", "", "Nest it under a group, such as network: its routes, commands and directory")
 	behaviorCreateCmd.Flags().String("package", "", "The Go package and directory, when it is not the name: package is a Go keyword, so --name package --package packages")
 	behaviorCreateCmd.Flags().String("root", ".", "The osapi checkout to write into")
-	clicommand.AddCommands(behaviordsl.Group, behaviorListCmd, behaviorGetCmd, behaviorMethodGetCmd, behaviorCreateCmd, behaviorSpecGetCmd, behaviorValidateCmd)
+	clicommand.AddCommands(behaviordsl.Group, behaviorListCmd, behaviorGetCmd, behaviorMethodGetCmd, behaviorOpenapiGetCmd, behaviorCreateCmd, behaviorSpecGetCmd, behaviorValidateCmd)
 }

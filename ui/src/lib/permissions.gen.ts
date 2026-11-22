@@ -26,13 +26,6 @@ export type Permission =
   | "log:read"
   | "certificate:read"
   | "certificate:write"
-  | "admission:read"
-  | "admission:write"
-  | "agent:read"
-  | "agent:write"
-  | "audit:read"
-  | "job:read"
-  | "job:write"
   | "disk:read"
   | "hostname:read"
   | "hostname:write"
@@ -50,7 +43,14 @@ export type Permission =
   | "timezone:write"
   | "updatepackages:read"
   | "updatepackages:write"
-  | "uptime:read";
+  | "uptime:read"
+  | "admission:read"
+  | "admission:write"
+  | "agent:read"
+  | "agent:write"
+  | "audit:read"
+  | "job:read"
+  | "job:write";
 
 export const ALL_PERMISSIONS: Permission[] = [
   "node:read",
@@ -77,13 +77,6 @@ export const ALL_PERMISSIONS: Permission[] = [
   "log:read",
   "certificate:read",
   "certificate:write",
-  "admission:read",
-  "admission:write",
-  "agent:read",
-  "agent:write",
-  "audit:read",
-  "job:read",
-  "job:write",
   "disk:read",
   "hostname:read",
   "hostname:write",
@@ -102,6 +95,13 @@ export const ALL_PERMISSIONS: Permission[] = [
   "updatepackages:read",
   "updatepackages:write",
   "uptime:read",
+  "admission:read",
+  "admission:write",
+  "agent:read",
+  "agent:write",
+  "audit:read",
+  "job:read",
+  "job:write",
 ];
 
 /** The permissions of each built-in role, by its JWT role. */
@@ -131,13 +131,6 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "log:read",
     "certificate:read",
     "certificate:write",
-    "admission:read",
-    "admission:write",
-    "agent:read",
-    "agent:write",
-    "audit:read",
-    "job:read",
-    "job:write",
     "disk:read",
     "hostname:read",
     "hostname:write",
@@ -156,6 +149,13 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "updatepackages:read",
     "updatepackages:write",
     "uptime:read",
+    "admission:read",
+    "admission:write",
+    "agent:read",
+    "agent:write",
+    "audit:read",
+    "job:read",
+    "job:write",
   ],
   write: [
     "node:read",
@@ -177,10 +177,6 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "log:read",
     "certificate:read",
     "certificate:write",
-    "admission:read",
-    "agent:read",
-    "job:read",
-    "job:write",
     "disk:read",
     "hostname:read",
     "hostname:write",
@@ -199,6 +195,10 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "updatepackages:read",
     "updatepackages:write",
     "uptime:read",
+    "admission:read",
+    "agent:read",
+    "job:read",
+    "job:write",
   ],
   read: [
     "node:read",
@@ -213,9 +213,6 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "user:read",
     "log:read",
     "certificate:read",
-    "admission:read",
-    "agent:read",
-    "job:read",
     "disk:read",
     "hostname:read",
     "load:read",
@@ -228,5 +225,8 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "timezone:read",
     "updatepackages:read",
     "uptime:read",
+    "admission:read",
+    "agent:read",
+    "job:read",
   ],
 };
