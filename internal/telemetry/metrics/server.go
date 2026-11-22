@@ -41,6 +41,8 @@ import (
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/osapi-io/osapi/internal/telemetry/httplog"
+
+	"github.com/osapi-io/osapi/internal/telemetry/instruments"
 )
 
 // prometheusNewFn is injectable for testing the exporter creation error path.
@@ -61,7 +63,7 @@ func New(
 
 	exporter, err := prometheusNewFn(
 		prometheusExporter.WithRegisterer(reg),
-		prometheusExporter.WithNamespace("osapi"),
+		prometheusExporter.WithNamespace(instruments.Namespace),
 	)
 	if err != nil {
 		logger.Error(
@@ -83,8 +85,8 @@ func New(
 
 	meter := mp.Meter("osapi")
 	_, _ = meter.Float64ObservableGauge(
-		"component_up",
-		metric.WithDescription("Whether the component is ready (1) or not (0)."),
+		instruments.ComponentUp.Name,
+		metric.WithDescription(instruments.ComponentUp.Doc),
 		metric.WithFloat64Callback(func(_ context.Context, o metric.Float64Observer) error {
 			if srv.readinessFunc == nil {
 				o.Observe(0)
@@ -138,8 +140,8 @@ func (s *Server) RegisterSubsystems(
 ) {
 	meter := s.meterProvider.Meter("osapi")
 	_, _ = meter.Float64ObservableGauge(
-		"subsystem_up",
-		metric.WithDescription("Whether a subsystem is healthy (1) or not (0)."),
+		instruments.SubsystemUp.Name,
+		metric.WithDescription(instruments.SubsystemUp.Doc),
 		metric.WithFloat64Callback(func(_ context.Context, o metric.Float64Observer) error {
 			for _, sub := range subsystems {
 				val := float64(0)
@@ -163,8 +165,9 @@ func (s *Server) RegisterHeartbeatAge(
 ) {
 	meter := s.meterProvider.Meter("osapi")
 	_, _ = meter.Float64ObservableGauge(
-		"heartbeat_age_seconds",
-		metric.WithDescription("Seconds since last successful heartbeat write."),
+		instruments.HeartbeatAge.Name,
+		metric.WithDescription(instruments.HeartbeatAge.Doc),
+		metric.WithUnit(instruments.HeartbeatAge.Unit),
 		metric.WithFloat64Callback(func(_ context.Context, o metric.Float64Observer) error {
 			t := timeFn()
 			if t.IsZero() {

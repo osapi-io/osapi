@@ -24,6 +24,7 @@ import (
 	"context"
 	"encoding/json"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -36,6 +37,8 @@ import (
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 
 	"github.com/osapi-io/osapi/internal/behavior"
+
+	"github.com/osapi-io/osapi/internal/telemetry/instruments"
 )
 
 type TelemetryPublicTestSuite struct {
@@ -99,6 +102,38 @@ func (s *TelemetryPublicTestSuite) metrics() map[string]int64 {
 	return out
 }
 
+// labels are the label names that each metric's values carry, as
+// Prometheus names them: a dot is an underscore.
+func (s *TelemetryPublicTestSuite) labels() map[string][]string {
+	var rm metricdata.ResourceMetrics
+	s.Require().NoError(s.reader.Collect(context.Background(), &rm))
+
+	out := map[string][]string{}
+	add := func(name string, set attribute.Set) {
+		keys := make([]string, 0, set.Len())
+		for _, kv := range set.ToSlice() {
+			keys = append(keys, strings.ReplaceAll(string(kv.Key), ".", "_"))
+		}
+		out[name] = keys
+	}
+	for _, sm := range rm.ScopeMetrics {
+		for _, m := range sm.Metrics {
+			switch d := m.Data.(type) {
+			case metricdata.Sum[int64]:
+				for _, p := range d.DataPoints {
+					add(m.Name, p.Attributes)
+				}
+			case metricdata.Histogram[float64]:
+				for _, p := range d.DataPoints {
+					add(m.Name, p.Attributes)
+				}
+			}
+		}
+	}
+
+	return out
+}
+
 func (s *TelemetryPublicTestSuite) TestInvoke() {
 	b := top()
 	tests := []struct {
@@ -119,9 +154,18 @@ func (s *TelemetryPublicTestSuite) TestInvoke() {
 				s.True(v.AsBool())
 				v, _ = attrs.Value(behavior.AttrOutcome)
 				s.Equal(behavior.OutcomeOK, v.AsString())
-				s.EqualValues(1, metrics[behavior.MetricCalls])
-				s.EqualValues(1, metrics[behavior.MetricDuration])
-				s.EqualValues(1, metrics[behavior.MetricChanges])
+				s.EqualValues(1, metrics[instruments.BehaviorCalls.Name])
+				s.EqualValues(1, metrics[instruments.BehaviorDuration.Name])
+				s.EqualValues(1, metrics[instruments.BehaviorChanges.Name])
+				got := s.labels()
+				for _, i := range []instruments.Instrument{
+					instruments.BehaviorCalls,
+					instruments.BehaviorDuration,
+					instruments.BehaviorChanges,
+				} {
+					s.ElementsMatch(i.Labels, got[i.Name],
+						"the labels that the metrics reference gives for %s", i.Name)
+				}
 			},
 		},
 		{
@@ -134,8 +178,8 @@ func (s *TelemetryPublicTestSuite) TestInvoke() {
 				attrs := attribute.NewSet(spans[0].Attributes()...)
 				_, ok := attrs.Value(behavior.AttrChanged)
 				s.False(ok, "a read records no changed")
-				s.EqualValues(1, metrics[behavior.MetricCalls])
-				s.Zero(metrics[behavior.MetricChanges])
+				s.EqualValues(1, metrics[instruments.BehaviorCalls.Name])
+				s.Zero(metrics[instruments.BehaviorChanges.Name])
 			},
 		},
 		{
@@ -175,7 +219,7 @@ func (s *TelemetryPublicTestSuite) TestCall() {
 		s.Require().Len(spans, 2)
 		s.Equal("behavior.sysctl.list", spans[0].Name(), "the first method declared with get")
 		s.Equal(parent.SpanContext().SpanID(), spans[0].Parent().SpanID())
-		s.EqualValues(1, s.metrics()[behavior.MetricCalls])
+		s.EqualValues(1, s.metrics()[instruments.BehaviorCalls.Name])
 	})
 
 	s.Run("a failed call marks its span", func() {
