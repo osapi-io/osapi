@@ -63,6 +63,37 @@ func (s *ChainPublicTestSuite) TestRecord() {
 		s.Nil(root.Steps[0].Output)
 	})
 
+	s.Run("Wire gives the calls as a job's response carries them", func() {
+		root := &behavior.Step{}
+		ctx := behavior.Record(context.Background(), root)
+		_, err := behavior.Call(ctx, b, get, fakeProvider{prefix: "v-"}, getIn{Key: "k"})
+		s.Require().NoError(err)
+		_, err = behavior.Call(ctx, b, get, fakeProvider{}, getIn{Key: "boom"})
+		s.Require().Error(err)
+		root.Steps[0].Steps = []*behavior.Step{
+			{Behavior: "inner", Method: "update", Output: result{Changed: true}},
+		}
+		root.Steps[1].Output = "not an object"
+		root.Steps = append(
+			root.Steps,
+			&behavior.Step{Behavior: "x", Method: "y", Output: make(chan int)},
+		)
+
+		wire := root.Wire()
+		s.Require().Len(wire, 3)
+		s.Equal("sysctl", wire[0].Behavior)
+		s.Equal("list", wire[0].Method)
+		s.Nil(wire[0].Changed, "an output with no changed field")
+		s.GreaterOrEqual(wire[0].DurationMS, int64(0))
+		s.Require().Len(wire[0].Steps, 1)
+		s.Require().NotNil(wire[0].Steps[0].Changed)
+		s.True(*wire[0].Steps[0].Changed)
+		s.Equal("boom", wire[1].Error)
+		s.Nil(wire[1].Changed, "an output that is not an object")
+		s.Nil(wire[2].Changed, "an output that is not JSON")
+		s.Nil((&behavior.Step{}).Wire(), "a method that called none")
+	})
+
 	s.Run("a call without Record records nothing", func() {
 		_, err := behavior.Call(context.Background(), b, get, fakeProvider{}, getIn{Key: "k"})
 		s.NoError(err)

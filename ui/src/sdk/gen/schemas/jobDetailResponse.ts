@@ -12,6 +12,8 @@ import type { JobDetailResponseTimelineItem } from './jobDetailResponseTimelineI
 export interface JobDetailResponse {
   /** How far each agent got, by hostname. */
   agent_states?: JobDetailResponseAgentStatesItem[];
+  /** The calls of other behaviors that the method made on each host, one line for each host, such as web-01: netplan update (changed) → managedfile update (changed). */
+  chain?: string[];
   /** Whether the operation modified system state. Null for pending/failed jobs; true/false for completed jobs. */
   changed?: boolean;
   /** Creation timestamp. */

@@ -8415,6 +8415,14 @@ components:
               - hostname
             type: object
           type: array
+        chain:
+          description: >-
+            The calls of other behaviors that the method made on each host, one
+            line for each host, such as web-01: netplan update (changed) →
+            managedfile update (changed).
+          items:
+            type: string
+          type: array
         changed:
           description: >-
             Whether the operation modified system state. Null for pending/failed
@@ -8460,6 +8468,13 @@ components:
                 type: string
               status:
                 type: string
+              steps:
+                description: >-
+                  The calls of other behaviors that the method made on the host,
+                  also when one failed.
+                items:
+                  $ref: '#/components/schemas/Step'
+                type: array
             required:
               - hostname
             type: object
@@ -8539,6 +8554,28 @@ components:
           type: string
           x-oapi-codegen-extra-tags:
             validate: omitempty,min=1,valid_target
+      type: object
+    Step:
+      properties:
+        behavior:
+          type: string
+        changed:
+          type: boolean
+        duration_ms:
+          format: int64
+          type: integer
+        error:
+          type: string
+        method:
+          type: string
+        steps:
+          items:
+            $ref: '#/components/schemas/Step'
+          type: array
+      required:
+        - behavior
+        - method
+        - duration_ms
       type: object
     TraceNode:
       properties:

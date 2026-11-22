@@ -128,6 +128,7 @@ func (suite *JobTypesPublicTestSuite) TestJobDetailFromGen() {
 				respStatus := "completed"
 				respError := ""
 				respChanged := true
+				stepError := "disk full"
 				respData := map[string]interface{}{"hostname": "web-01"}
 				responses := []struct {
 					Changed  *bool       `json:"changed,omitempty"`
@@ -135,6 +136,7 @@ func (suite *JobTypesPublicTestSuite) TestJobDetailFromGen() {
 					Error    *string     `json:"error,omitempty"`
 					Hostname string      `json:"hostname"`
 					Status   *string     `json:"status,omitempty"`
+					Steps    *[]gen.Step `json:"steps,omitempty"`
 				}{
 					{
 						Hostname: "web-01",
@@ -142,8 +144,20 @@ func (suite *JobTypesPublicTestSuite) TestJobDetailFromGen() {
 						Error:    &respError,
 						Changed:  &respChanged,
 						Data:     respData,
+						Steps: &[]gen.Step{
+							{
+								Behavior:   "netplan",
+								Method:     "update",
+								Changed:    &respChanged,
+								DurationMs: 12,
+								Steps: &[]gen.Step{
+									{Behavior: "managedfile", Method: "update", Error: &stepError},
+								},
+							},
+						},
 					},
 				}
+				chain := []string{"web-01: netplan update (changed) → managedfile update (failed)"}
 
 				tlTimestamp := "2026-03-04T12:00:00Z"
 				tlEvent := "submitted"
@@ -180,6 +194,7 @@ func (suite *JobTypesPublicTestSuite) TestJobDetailFromGen() {
 					AgentStates: &agentStates,
 					Responses:   &responses,
 					Timeline:    &timeline,
+					Chain:       &chain,
 				}
 			}(),
 			validateFunc: func(j client.JobDetail) {
@@ -213,6 +228,25 @@ func (suite *JobTypesPublicTestSuite) TestJobDetailFromGen() {
 				suite.Equal(
 					map[string]interface{}{"hostname": "web-01"},
 					j.Responses[0].Data,
+				)
+				suite.Equal([]client.Step{
+					{
+						Behavior:   "netplan",
+						Method:     "update",
+						Changed:    j.Responses[0].Changed,
+						DurationMS: 12,
+						Steps: []client.Step{
+							{Behavior: "managedfile", Method: "update", Error: "disk full"},
+						},
+					},
+				}, j.Responses[0].Steps)
+				suite.Equal(
+					"netplan update (changed) → managedfile update (failed)",
+					client.FormatSteps(j.Responses[0].Steps),
+				)
+				suite.Equal(
+					[]string{"web-01: netplan update (changed) → managedfile update (failed)"},
+					j.Chain,
 				)
 
 				suite.Len(j.Timeline, 1)

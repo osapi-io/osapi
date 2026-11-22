@@ -47,6 +47,9 @@ type JobDetail struct {
 	AgentStates []AgentState       `json:"agent_states,omitempty"`
 	Responses   []AgentJobResponse `json:"responses,omitempty"`
 	Timeline    []TimelineEvent    `json:"timeline,omitempty"`
+	// Chain is the calls of other behaviors that the method made on each
+	// host, one line for each host, as FormatSteps writes them.
+	Chain []string `json:"chain,omitempty"`
 }
 
 // JobRequest is what a job asked for: its operation, such as
@@ -71,6 +74,9 @@ type AgentJobResponse struct {
 	Error    string `json:"error,omitempty"`
 	Changed  *bool  `json:"changed,omitempty"`
 	Data     any    `json:"data,omitempty"`
+	// Steps are the calls of other behaviors that the method made on the
+	// host, also when one failed.
+	Steps []Step `json:"steps,omitempty"`
 }
 
 // JobList is a paginated list of jobs.
@@ -181,10 +187,18 @@ func jobDetailFromGen(
 				r.Error = *v.Error
 			}
 
+			if v.Steps != nil {
+				r.Steps = stepsFromGen(*v.Steps)
+			}
+
 			responses = append(responses, r)
 		}
 
 		j.Responses = responses
+	}
+
+	if g.Chain != nil {
+		j.Chain = *g.Chain
 	}
 
 	if g.Timeline != nil {

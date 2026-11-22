@@ -27,6 +27,8 @@ import (
 	"slices"
 	"time"
 
+	sdkclient "github.com/osapi-io/osapi/pkg/sdk/client"
+
 	"github.com/osapi-io/osapi/internal/controller/api/apierr"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/job"
@@ -85,7 +87,11 @@ func Get(
 			Changed:  r.Changed,
 			Error:    r.Error,
 			Data:     decode(r.Data),
+			Steps:    r.Steps,
 		})
+		if len(r.Steps) > 0 {
+			out.Chain = append(out.Chain, hostname+": "+sdkclient.FormatSteps(r.Steps))
+		}
 	}
 	for _, te := range qj.Timeline {
 		out.Timeline = append(out.Timeline, TimelineEvent{

@@ -30,8 +30,10 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/osapi-io/osapi/internal/guide"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // The chain rules, by the name a problem reports. RuleRequires and
@@ -97,8 +99,57 @@ type Step struct {
 	Output   any     `json:"output,omitempty"`
 	Error    string  `json:"error,omitempty"`
 	Steps    []*Step `json:"steps,omitempty"`
+	// Duration is how long the call ran. It is left out of the JSON of a
+	// test, which compares the same chain run after run.
+	Duration time.Duration `json:"-"`
 
 	mu sync.Mutex
+}
+
+// Wire are the calls that s made, as a job's response carries them: each
+// step's behavior, method, whether it changed the host, its error and its
+// duration. The input and the output stay out: an input is redacted only by
+// its top-level secret tags, an output not at all, and the content of a
+// managed file can be large. The job's request and response have the input
+// and the output of the method at the top.
+func (s *Step) Wire() []client.Step {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if len(s.Steps) == 0 {
+		return nil
+	}
+	out := make([]client.Step, 0, len(s.Steps))
+	for _, c := range s.Steps {
+		w := client.Step{
+			Behavior:   c.Behavior,
+			Method:     c.Method,
+			Changed:    changedOf(c.Output),
+			Error:      c.Error,
+			DurationMS: c.Duration.Milliseconds(),
+			Steps:      c.Wire(),
+		}
+		out = append(out, w)
+	}
+
+	return out
+}
+
+// changedOf is the changed field of an output, or nil when it has none.
+func changedOf(
+	out any,
+) *bool {
+	data, err := json.Marshal(out)
+	if err != nil {
+		return nil
+	}
+	var fields struct {
+		Changed *bool `json:"changed"`
+	}
+	if json.Unmarshal(data, &fields) != nil {
+		return nil
+	}
+
+	return fields.Changed
 }
 
 type stepKey struct{}
@@ -329,6 +380,7 @@ func Call[P any, In any, Out any](
 	}
 
 	var out Out
+	start := time.Now()
 	_, err := m.run(ctx, func(ctx context.Context) (any, any, error) {
 		if err := check(ctx, m, in); err != nil {
 			return nil, in, err
@@ -339,6 +391,7 @@ func Call[P any, In any, Out any](
 		return out, in, err
 	})
 	if step != nil {
+		step.Duration = time.Since(start)
 		if err != nil {
 			step.Error = err.Error()
 		} else {
