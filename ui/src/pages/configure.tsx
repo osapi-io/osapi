@@ -5,6 +5,8 @@ import { ContentArea } from "@/components/layout/content-area";
 import { BlockCard } from "@/components/domain/block-card";
 import { BlockStack } from "@/components/domain/block-stack";
 import { ResultCard } from "@/components/domain/result-card";
+import { RunLinks } from "@/components/domain/run-links";
+import { traceIdOf } from "@/lib/trace";
 import { ScheduleBlock } from "@/components/domain/schedule-block";
 import { CommandBlock } from "@/components/domain/command-block";
 import { DockerBlock } from "@/components/domain/docker-block";
@@ -330,7 +332,13 @@ export function Configure() {
         const behaviorDef = BEHAVIOR_BLOCKS[block.type as BehaviorBlockType];
         if (behaviorDef) {
           result = await runBehavior(behaviorDef, t, block.data);
-          setBlockStatus(block.id, "applied", undefined, result.data);
+          setBlockStatus(
+            block.id,
+            "applied",
+            undefined,
+            result.data,
+            traceIdOf(result),
+          );
           await scrollToResult(block.id);
           continue;
         }
@@ -669,12 +677,20 @@ export function Configure() {
             continue;
         }
 
-        setBlockStatus(block.id, "applied", undefined, result.data);
+        setBlockStatus(
+          block.id,
+          "applied",
+          undefined,
+          result.data,
+          traceIdOf(result),
+        );
       } catch (err) {
         setBlockStatus(
           block.id,
           "error",
           err instanceof Error ? err.message : "Unknown error",
+          undefined,
+          (err as { traceId?: string } | undefined)?.traceId,
         );
       }
 
@@ -1191,6 +1207,18 @@ export function Configure() {
         {renderBlockForm(block, i)}
       </BlockCard>,
     );
+    // The job and the trace of the call, also for a call that failed.
+    const jobId = (block.result as { job_id?: unknown } | undefined)?.job_id;
+    if (block.result != null || block.traceId) {
+      stackItems.push(
+        <RunLinks
+          key={`${block.id}-links`}
+          jobId={typeof jobId === "string" ? jobId : undefined}
+          traceId={block.traceId}
+          className="-mt-1 mb-1 px-1"
+        />,
+      );
+    }
     if (block.result != null) {
       stackItems.push(
         <div
