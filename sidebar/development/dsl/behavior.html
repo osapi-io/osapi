@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Behavior DSL | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Behavior DSL | OSAPI"><meta data-rh="true" name="description" content="Each part of a behavior definition: what it makes osapi do, and when to use it."><meta data-rh="true" property="og:description" content="Each part of a behavior definition: what it makes osapi do, and when to use it."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Development","item":"https://osapi-io.github.io/osapi/sidebar/development/"},{"@type":"ListItem","position":2,"name":"DSLs","item":"https://osapi-io.github.io/osapi/sidebar/development/dsl/"},{"@type":"ListItem","position":3,"name":"Behavior DSL","item":"https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.ee2257e7.css">
-<script src="/osapi/assets/js/runtime~main.d9347fde.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.deae984d.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.ef4c57e4.js" defer="defer"></script>
 </head>
 <body>
@@ -119,8 +119,9 @@ Named create, update or delete. Out has Changed bool.</p>
 <p>Use: For each change. fn is func(ctx, p Provider, in In) (Out, error).</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="actionname-fn"><code>Action(&quot;name&quot;, fn)</code><a href="#actionname-fn" class="hash-link" aria-label="Direct link to actionname-fn" title="Direct link to actionname-fn" translate="no">​</a></h3>
 <p>A write named for what it does, such as restart: POST on the method&#x27;s path with
-the name after it, /service/{name}/restart, and &lt;group&gt;:write.
-Named with one of the CLI&#x27;s actions. Out has Changed bool.</p>
+the name after it, /service/{name}/restart, and &lt;group&gt;:execute,
+which the operator role gets and automation does not. Named with one of the
+CLI&#x27;s actions. Out has Changed bool.</p>
 <p>Use: For a change that create, update and delete do not say, such as start,
 stop, restart, enable, signal or reboot.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="refinements-of-a-method">Refinements of a method<a href="#refinements-of-a-method" class="hash-link" aria-label="Direct link to Refinements of a method" title="Direct link to Refinements of a method" translate="no">​</a></h2>
@@ -168,11 +169,14 @@ the job KV.</p>
 step fills before:&quot;set&quot;, and clear the secret in the step.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="adminonly-on-a-method"><code>.AdminOnly() on a method</code><a href="#adminonly-on-a-method" class="hash-link" aria-label="Direct link to adminonly-on-a-method" title="Direct link to adminonly-on-a-method" translate="no">​</a></h3>
 <p>Makes the permission of the method&#x27;s verb, such as &lt;name&gt;:write, one that
-only the admin role grants. With no mark, admin and write get &lt;name&gt;:read
-and &lt;name&gt;:write, and read gets &lt;name&gt;:read. Each method with the
-same verb must agree. osapi token roles get --name write shows what a role gets.</p>
-<p>Use: For a write that is a trust decision, which an operator with the write role
-must not make.</p>
+only the admin role grants. With no mark, admin gets each permission; operator
+each read and each execute permission, and automation each read and each write
+permission, that is not admin only; read each read that is not admin only;
+auditor and observer get their lists. An action&#x27;s permission is
+&lt;name&gt;:execute. Each method with the same verb must agree. osapi token
+roles get --name automation shows what a role gets.</p>
+<p>Use: For a write that is a trust decision or reaches root, which automation must
+not make, such as an account or a cron entry.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="explaintext"><code>.Explain(&quot;text&quot;)</code><a href="#explaintext" class="hash-link" aria-label="Direct link to explaintext" title="Direct link to explaintext" translate="no">​</a></h3>
 <p>The longer description: what the method touches, and what a second call does.</p>
 <p>Use: When one line does not say what the method changes.</p>

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Endpoint DSL | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/development/dsl/endpoint"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Endpoint DSL | OSAPI"><meta data-rh="true" name="description" content="Each part of an endpoint group: a route of the controller, its spec and its"><meta data-rh="true" property="og:description" content="Each part of an endpoint group: a route of the controller, its spec and its"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/development/dsl/endpoint"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/dsl/endpoint" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/dsl/endpoint" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Development","item":"https://osapi-io.github.io/osapi/sidebar/development/"},{"@type":"ListItem","position":2,"name":"DSLs","item":"https://osapi-io.github.io/osapi/sidebar/development/dsl/"},{"@type":"ListItem","position":3,"name":"Endpoint DSL","item":"https://osapi-io.github.io/osapi/sidebar/development/dsl/endpoint"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.ee2257e7.css">
-<script src="/osapi/assets/js/runtime~main.d9347fde.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.deae984d.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.ef4c57e4.js" defer="defer"></script>
 </head>
 <body>
@@ -184,10 +184,11 @@ it.</p>
 trace:read for telemetry.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="adminonly"><code>.AdminOnly()</code><a href="#adminonly" class="hash-link" aria-label="Direct link to adminonly" title="Direct link to adminonly" translate="no">​</a></h3>
 <p>Makes the method&#x27;s permission one that only the admin role grants. By the rule,
-admin gets each permission, write each read and write permission, and read each
-read permission; an execute or shell permission is admin only with no mark. Each
-method with the same permission must agree. osapi token roles get --name write
-shows what a role gets.</p>
+admin gets each permission; operator each read and each execute permission, and
+automation each read and each write permission, that is not admin only; read
+each read that is not admin only; auditor and observer get their lists; a shell
+permission is admin only with no mark. Each method with the same permission must
+agree. osapi token roles get --name automation shows what a role gets.</p>
 <p>Use: For a trust decision or a record of who did what, such as admission:write,
 agent:write or audit:read.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="public"><code>.Public()</code><a href="#public" class="hash-link" aria-label="Direct link to public" title="Direct link to public" translate="no">​</a></h3>
