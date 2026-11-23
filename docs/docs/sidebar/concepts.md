@@ -56,7 +56,7 @@ osapi does not call a host. It puts a job on a queue. The agent on each target
 host takes the job, runs it and writes the result. Thus a slow host does not
 block the others. osapi keeps each job, and the audit log records each request.
 
-Refer to [Job system](features/job-system.md).
+Refer to [Job system](features/platform/job-system.md).
 
 ## Target
 
@@ -79,7 +79,8 @@ host and does the work. `osapi start` runs the queue, the controller and an
 agent in one process, for a test.
 
 Each agent has an identity. With PKI on, the controller signs each job, and an
-agent signs each answer. Refer to [Agent identity](features/agent-identity.md).
+agent signs each answer. Refer to
+[Agent identity](features/platform/agent-identity.md).
 
 ## Skill
 

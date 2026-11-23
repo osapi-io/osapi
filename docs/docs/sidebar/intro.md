@@ -171,8 +171,8 @@ does not run on its platform.
   its definition
 - [Working with an agent](usage/agents.md): `osapi init`, the skills, and the
   prompts
-- [Features](features/node-management.md): what OSAPI can manage and how each
-  feature works
+- [Features](features/features.mdx): what OSAPI can manage and how each feature
+  works
 - [Architecture](architecture/architecture.md): how the three processes (NATS,
   API server, agent) work together
 - [Configuration](usage/configuration.md): full `osapi.yaml` reference
