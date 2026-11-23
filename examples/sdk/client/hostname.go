@@ -59,7 +59,11 @@ func main() {
 	}
 
 	// Update hostname.
-	setResp, err := c.Hostname.Update(ctx, target, "new-hostname")
+	setResp, err := c.Hostname.Update(
+		ctx,
+		target,
+		client.HostnameUpdateInput{Name: "new-hostname"},
+	)
 	if err != nil {
 		log.Fatalf("hostname update: %v", err)
 	}

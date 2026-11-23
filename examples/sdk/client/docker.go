@@ -49,7 +49,11 @@ func main() {
 	target := "_all"
 
 	// Pull an image.
-	pull, err := c.Docker.Pull(ctx, target, "alpine:3.20")
+	pull, err := c.ContainerImage.Pull(
+		ctx,
+		target,
+		client.ContainerImagePullInput{Image: "alpine:3.20"},
+	)
 	if err != nil {
 		log.Fatalf("pull: %v", err)
 	}
@@ -61,7 +65,7 @@ func main() {
 
 	// Create a container, and start it.
 	name := "osapi-example"
-	create, err := c.Docker.Create(ctx, target, client.DockerCreateOpts{
+	create, err := c.ContainerDocker.Create(ctx, target, client.ContainerDockerCreateInput{
 		Name:      name,
 		Image:     "alpine:3.20",
 		Command:   []string{"sleep", "300"},
@@ -76,7 +80,11 @@ func main() {
 	}
 
 	// List the running containers.
-	list, err := c.Docker.List(ctx, target, "running")
+	list, err := c.ContainerDocker.List(
+		ctx,
+		target,
+		client.ContainerDockerListParams{State: "running"},
+	)
 	if err != nil {
 		log.Fatalf("list: %v", err)
 	}
@@ -86,7 +94,7 @@ func main() {
 	}
 
 	// Get the container.
-	get, err := c.Docker.Get(ctx, target, name)
+	get, err := c.ContainerDocker.Get(ctx, target, name)
 	if err != nil {
 		log.Fatalf("get: %v", err)
 	}
@@ -96,7 +104,8 @@ func main() {
 	}
 
 	// Run a command inside the container.
-	exec, err := c.Docker.Exec(ctx, target, name, client.DockerExecOpts{
+	exec, err := c.ContainerDocker.Exec(ctx, target, client.ContainerDockerExecInput{
+		Name:    name,
 		Command: []string{"cat", "/etc/hostname"},
 	})
 	if err != nil {
@@ -108,7 +117,11 @@ func main() {
 	}
 
 	// Stop the container.
-	stop, err := c.Docker.Stop(ctx, target, name, 5)
+	stop, err := c.ContainerDocker.Stop(
+		ctx,
+		target,
+		client.ContainerDockerStopInput{Name: name, Timeout: 5},
+	)
 	if err != nil {
 		log.Fatalf("stop: %v", err)
 	}
@@ -118,7 +131,7 @@ func main() {
 	}
 
 	// Remove the container.
-	remove, err := c.Docker.Remove(ctx, target, name)
+	remove, err := c.ContainerDocker.Delete(ctx, target, name)
 	if err != nil {
 		log.Fatalf("remove: %v", err)
 	}
@@ -128,7 +141,11 @@ func main() {
 	}
 
 	// Remove the image.
-	imgRemove, err := c.Docker.RemoveImage(ctx, target, "alpine:3.20", false)
+	imgRemove, err := c.ContainerImage.Delete(
+		ctx,
+		target,
+		client.ContainerImageDeleteInput{Image: "alpine:3.20"},
+	)
 	if err != nil {
 		log.Fatalf("image remove: %v", err)
 	}

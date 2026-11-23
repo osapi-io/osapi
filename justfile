@@ -168,17 +168,21 @@ go-pkg-check:
     fi
 
 # Compile a client that oapi-codegen writes from the full spec with its
-# default options, as a person outside osapi would. The SDK's own client has
-# its config; this holds the spec to a stranger's generator. The package goes
-# in the module, so it builds with osapi's dependencies, and is removed after.
+# default options, as a person outside osapi would. The SDK does not use
+# oapi-codegen: internal/sdk/gen writes it. This holds the spec to a stranger's
+# generator. The client builds in a module of its own, outside the checkout,
+# with the runtime that go mod tidy picks for it, as a stranger's would.
 spec-client-check:
     #!/usr/bin/env bash
     set -euo pipefail
-    dir=$(mktemp -d internal/zzspecclientXXXXXX)
+    dir=$(mktemp -d)
     trap 'rm -rf "$dir"' EXIT
     go tool oapi-codegen -generate types,client -package specclient \
         internal/controller/api/gen/api.yaml > "$dir/client.go"
-    if ! go build "./$dir"; then
+    cd "$dir"
+    go mod init specclient > /dev/null 2>&1
+    go mod tidy > /dev/null 2>&1
+    if ! go build ./...; then
         echo "a client that oapi-codegen generates from the full spec does not compile" >&2
         exit 1
     fi
@@ -330,8 +334,8 @@ behavior-gen-check:
     fi
 
 # go generate writes the full spec in internal/behaviors/all, which comes
-# before pkg/sdk/client/gen, where the SDK client is generated from it. So one
-# run leaves nothing stale.
+# before pkg/sdk/client, where internal/sdk/gen writes the SDK's typed
+# services from it. So one run leaves nothing stale.
 
 # Generate code
 generate:

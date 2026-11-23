@@ -56,7 +56,7 @@ func powerExample() {
 	// The agent schedules the reboot via systemd and returns immediately.
 	// Returns Collection[PowerResult] with per-host results.
 	fmt.Println("=== Rebooting host ===")
-	rebootResp, err := c.Power.Reboot(ctx, hostname, client.PowerOpts{
+	rebootResp, err := c.Power.Reboot(ctx, hostname, client.PowerRebootInput{
 		Delay:   30,
 		Message: "Scheduled reboot by osapi",
 	})
@@ -80,7 +80,7 @@ func powerExample() {
 
 	// Shutdown the target host immediately (delay=0).
 	fmt.Println("\n=== Shutting down host ===")
-	shutdownResp, err := c.Power.Shutdown(ctx, hostname, client.PowerOpts{
+	shutdownResp, err := c.Power.Shutdown(ctx, hostname, client.PowerShutdownInput{
 		Delay: 0,
 	})
 	if err != nil {

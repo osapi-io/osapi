@@ -8,10 +8,39 @@ System hostname query and update operations.
 
 ## Methods
 
-| Method                      | Description         |
-| --------------------------- | ------------------- |
-| `Get(ctx, target)`          | Get system hostname |
-| `Update(ctx, target, name)` | Set system hostname |
+| Method                                                        | Returns                                | Permission       | Description                  |
+| ------------------------------------------------------------- | -------------------------------------- | ---------------- | ---------------------------- |
+| `c.Hostname.Get(ctx, hostname)`                               | `Response[Collection[HostnameEntry]]`  | `hostname:read`  | Get the hostname of the host |
+| `c.Hostname.Update(ctx, hostname, input HostnameUpdateInput)` | `Response[Collection[HostnameResult]]` | `hostname:write` | Set the hostname of the host |
+
+## Types
+
+The fields of each type are the properties of its schema in the API's spec.
+
+### HostnameEntry
+
+| Field      | Type     | Description                                                                            |
+| ---------- | -------- | -------------------------------------------------------------------------------------- |
+| `Error`    | `string` | Error message if the agent failed.                                                     |
+| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
+| `Name`     | `string` | The hostname of the host.                                                              |
+| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### HostnameUpdateInput
+
+| Field  | Type     | Description                          |
+| ------ | -------- | ------------------------------------ |
+| `Name` | `string` | The hostname to set, such as web-01. |
+
+### HostnameResult
+
+| Field      | Type     | Description                                                                            |
+| ---------- | -------- | -------------------------------------------------------------------------------------- |
+| `Changed`  | `bool`   | Whether the host changed.                                                              |
+| `Error`    | `string` | Error message if the agent failed.                                                     |
+| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
+| `Name`     | `string` | The hostname of the host.                                                              |
+| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
 
 ## Usage
 
@@ -27,7 +56,8 @@ for _, r := range resp.Data.Results {
 }
 
 // Update hostname
-resp, err := c.Hostname.Update(ctx, "web-01", "new-hostname")
+resp, err := c.Hostname.Update(ctx, "web-01",
+    client.HostnameUpdateInput{Name: "new-hostname"})
 for _, r := range resp.Data.Results {
     fmt.Printf("%s: changed=%v\n", r.Name, r.Changed)
 }
@@ -44,4 +74,5 @@ for a complete working example.
 
 ## Permissions
 
-Get requires `hostname:read`. Update requires `hostname:write`.
+The Permission column of [Methods](#methods) gives the permission of each
+method.

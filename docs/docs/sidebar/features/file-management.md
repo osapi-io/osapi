@@ -317,11 +317,8 @@ nats:
 
 ## Permissions
 
-File operations need `file:*` permissions. The upload, update and delete of an
-object, and the deploy and undeploy of a file, need `file:write`, which `admin`
-and `automation` have. A deploy can write each path as root, so `operator` does
-not have `file:write`. List, get, stale and status need `file:read`. Refer to
-the [API reference](/category/api) for the permission of each endpoint.
+The Permission column of [Methods](#methods) gives the permission of each
+method.
 
 ## Related
 

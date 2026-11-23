@@ -65,43 +65,7 @@ typed value goes (osapi-io/osapi#1078).
 
 ## Permissions
 
-A DSL whose definitions serve API routes declares the permission of each method.
-`declarations()` in `internal/authtoken/permissions.go` reads them from
-`dsl.All()`: the `Permissions` that each registered DSL gives. A new DSL with
-API routes gives them when it registers. Then the built-in roles get its
-permissions by the rule:
-
-- `admin` gets each permission.
-- `operator` gets each `read` and each `execute` permission that is not admin
-  only: it acts, such as a restart, a signal or a reboot, but changes no
-  configuration.
-- `automation` gets each `read` and each `write` permission that is not admin
-  only: it changes the configuration, but runs no action.
-- `read` gets each `read` permission that is not admin only. Logs, files and
-  process arguments can hold secrets, and `read` has them.
-- `auditor` gets `audit:read`, `trace:read`, `job:read` and `health:read`.
-- `observer` gets `health:read`, `status:read` and `agent:read`, for a
-  dashboard or a monitor.
-
-A permission with the verb `shell` is admin only, and so are the hand-written
-domains' `command:execute`, `docker:execute`, `user:write` and `schedule:write`. A method that the
-DSL marks `AdminOnly()` is admin only too. Give a new DSL that serves the API an
-`AdminOnly()` option. `authtoken.Check()` fails a permission that a method names
-but nothing declares, and methods that disagree on `AdminOnly`.
-
-Two other places read `dsl.All()`, so a new DSL needs no change in them:
-
-- `internal/authtoken/gen`, which writes the `Perm*` and `Role*` constants of
-  the SDK from the permissions.
-- `Operations` in `internal/authtoken/operations.go`, which gives the
-  permission of each operation of the UI from the `Operations` of each DSL.
-
-Each generator registers the definitions by a blank import of their `all`
-package. A new DSL's `all` package goes in those imports.
-
-A DSL with no API route declares no permission. The command DSL is an example:
-`CommandPermission` of a local group is empty.
-
+The Permission column of [Methods](#methods) gives the permission of each method.
 ## Generation and the scaffold
 
 A generator writes its files through `genfile.Writer`. `Clean`, `Write`, `Go`,

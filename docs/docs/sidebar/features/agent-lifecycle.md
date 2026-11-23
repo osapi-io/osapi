@@ -140,8 +140,8 @@ The two commands return the current state and a confirmation message.
 
 ## Permissions
 
-The standard `agent:read` responses have the node conditions. Drain and undrain
-need the `agent:write` permission. The `admin` role has it by default.
+The Permission column of [Methods](#methods) gives the permission of each
+method.
 
 ## Related
 

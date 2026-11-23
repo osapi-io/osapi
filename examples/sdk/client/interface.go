@@ -53,7 +53,7 @@ func main() {
 
 	// List all interfaces on the host.
 	fmt.Println("=== Listing interfaces ===")
-	listResp, err := c.Interface.List(ctx, target)
+	listResp, err := c.NetworkInterface.List(ctx, target)
 	if err != nil {
 		log.Fatalf("list failed: %v", err)
 	}
@@ -62,31 +62,27 @@ func main() {
 			fmt.Printf("  %s: ERROR %s\n", r.Hostname, r.Error)
 			continue
 		}
-		for _, iface := range r.Interfaces {
-			fmt.Printf("  %s: %s state=%s\n",
-				r.Hostname, iface.Name, iface.State)
-		}
+		fmt.Printf("  %s: %s state=%s\n", r.Hostname, r.Name, r.State)
 	}
 
 	// Get details for a specific interface.
 	fmt.Println("\n=== Getting eth0 ===")
-	getResp, err := c.Interface.Get(ctx, target, "eth0")
+	getResp, err := c.NetworkInterface.Get(ctx, target, "eth0")
 	if err != nil {
 		log.Fatalf("get failed: %v", err)
 	}
 	for _, r := range getResp.Data.Results {
 		if r.Error != "" {
 			fmt.Printf("  %s: ERROR %s\n", r.Hostname, r.Error)
-		} else if r.Interface != nil {
-			iface := r.Interface
+		} else {
 			fmt.Printf("  %s: %s addresses=%v dhcp4=%v primary=%v\n",
-				r.Hostname, iface.Name, iface.Addresses, iface.DHCP4, iface.Primary)
+				r.Hostname, r.Name, r.Addresses, r.DHCP4, r.Primary)
 		}
 	}
 
 	// Create a static interface configuration (idempotent cleanup first).
 	_ = func() {
-		deleteResp, err := c.Interface.Delete(ctx, target, "osapi-example0")
+		deleteResp, err := c.NetworkInterface.Delete(ctx, target, "osapi-example0")
 		if err == nil {
 			for _, r := range deleteResp.Data.Results {
 				fmt.Printf("  cleanup %s: changed=%v\n",
@@ -96,10 +92,9 @@ func main() {
 	}
 
 	fmt.Println("\n=== Creating interface config ===")
-	dhcp4 := false
-	createResp, err := c.Interface.Create(ctx, target, "eth0",
-		client.InterfaceConfigOpts{
-			DHCP4:     &dhcp4,
+	createResp, err := c.NetworkInterface.Create(ctx, target,
+		client.NetworkInterfaceCreateInput{
+			Name:      "eth0",
 			Addresses: []string{"192.168.1.100/24"},
 			Gateway4:  "192.168.1.1",
 		})

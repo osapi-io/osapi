@@ -53,7 +53,7 @@ func timezoneExample() {
 	hostname := "_any"
 
 	// Get the current system timezone from the target host.
-	// Returns Collection[TimezoneResult] with per-host results.
+	// Returns Collection[TimezoneEntry] with per-host results.
 	fmt.Println("=== Getting system timezone ===")
 	getResp, err := c.Timezone.Get(ctx, hostname)
 	if err != nil {
@@ -74,9 +74,9 @@ func timezoneExample() {
 	}
 
 	// Update the timezone on the target host.
-	// Returns Collection[TimezoneMutationResult] with per-host results.
+	// Returns Collection[TimezoneResult] with per-host results.
 	fmt.Println("\n=== Updating system timezone ===")
-	updateResp, err := c.Timezone.Update(ctx, hostname, client.TimezoneUpdateOpts{
+	updateResp, err := c.Timezone.Update(ctx, hostname, client.TimezoneUpdateInput{
 		Timezone: "UTC",
 	})
 	if err != nil {

@@ -10,24 +10,50 @@ send signals to processes on target hosts. Use `client.Process.List()`,
 
 ## Methods
 
-| Method                             | Description                              |
-| ---------------------------------- | ---------------------------------------- |
-| `List(ctx, hostname)`              | List all running processes on the target |
-| `Get(ctx, hostname, pid)`          | Get information about a process by PID   |
-| `Signal(ctx, hostname, pid, opts)` | Send a signal to a process by PID        |
+| Method                                                      | Returns                               | Permission        | Description                    |
+| ----------------------------------------------------------- | ------------------------------------- | ----------------- | ------------------------------ |
+| `c.Process.List(ctx, hostname)`                             | `Response[Collection[ProcessEntry]]`  | `process:read`    | List the processes of the host |
+| `c.Process.Get(ctx, hostname, pid)`                         | `Response[Collection[ProcessEntry]]`  | `process:read`    | Get one process                |
+| `c.Process.Signal(ctx, hostname, input ProcessSignalInput)` | `Response[Collection[ProcessResult]]` | `process:execute` | Send a signal to a process     |
 
-## Request Types
+## Types
 
-| Type                | Fields                             |
-| ------------------- | ---------------------------------- |
-| `ProcessSignalOpts` | `Signal` (string, e.g. TERM, KILL) |
+The fields of each type are the properties of its schema in the API's spec.
 
-## Result Types
+### ProcessEntry
 
-| Type                  | Fields                                                                                                                      |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `ProcessInfoResult`   | `Hostname`, `Status`, `PID`, `Name`, `User`, `State`, `CPUPercent`, `MemPercent`, `MemRSS`, `Command`, `StartTime`, `Error` |
-| `ProcessSignalResult` | `Hostname`, `Status`, `PID`, `Signal`, `Changed`, `Error`                                                                   |
+| Field        | Type      | Description                                                                            |
+| ------------ | --------- | -------------------------------------------------------------------------------------- |
+| `Command`    | `string`  | Its full command line.                                                                 |
+| `CPUPercent` | `float64` | Its CPU time as a percent of the time since it started.                                |
+| `Error`      | `string`  | Error message if the agent failed.                                                     |
+| `Hostname`   | `string`  | Hostname of the agent that produced this result.                                       |
+| `MemPercent` | `float64` | Its resident memory as a percent of the host's memory.                                 |
+| `MemRSS`     | `int64`   | Its resident memory in bytes.                                                          |
+| `Name`       | `string`  | The name of the process.                                                               |
+| `PID`        | `int`     | The process ID.                                                                        |
+| `StartTime`  | `string`  | When it started, in RFC 3339.                                                          |
+| `State`      | `string`  | Its state, such as running or sleep.                                                   |
+| `Status`     | `string`  | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| `User`       | `string`  | The user that runs it.                                                                 |
+
+### ProcessSignalInput
+
+| Field    | Type     | Description                                                                                     |
+| -------- | -------- | ----------------------------------------------------------------------------------------------- |
+| `PID`    | `int`    | The pid of the path: the process ID, such as 1234.                                              |
+| `Signal` | `string` | The signal: TERM, KILL, HUP, INT, USR1 or USR2. It is one of: TERM, KILL, HUP, INT, USR1, USR2. |
+
+### ProcessResult
+
+| Field      | Type     | Description                                                                            |
+| ---------- | -------- | -------------------------------------------------------------------------------------- |
+| `Changed`  | `bool`   | Whether the signal was sent.                                                           |
+| `Error`    | `string` | Error message if the agent failed.                                                     |
+| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
+| `PID`      | `int`    | The process ID.                                                                        |
+| `Signal`   | `string` | The signal that was sent.                                                              |
+| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
 
 ## Usage
 
@@ -51,8 +77,10 @@ for _, p := range resp.Data.Results {
 }
 
 // Send TERM signal to a process
-sigResp, err := c.Process.Signal(ctx, "web-01", 1234,
-    client.ProcessSignalOpts{Signal: "TERM"})
+sigResp, err := c.Process.Signal(ctx, "web-01", client.ProcessSignalInput{
+    PID: 1234,
+    Signal: "TERM",
+})
 for _, r := range sigResp.Data.Results {
     fmt.Printf("PID=%d signal=%s changed=%v\n",
         r.PID, r.Signal, r.Changed)
@@ -68,10 +96,8 @@ resp, err := c.Process.List(ctx, "_all")
 
 ## Permissions
 
-| Operation | Permission        |
-| --------- | ----------------- |
-| List, Get | `process:read`    |
-| Signal    | `process:execute` |
+The Permission column of [Methods](#methods) gives the permission of each
+method.
 
 The process behavior operates on each Linux family and on macOS. The `operator`
 and `admin` roles get `process:execute`.

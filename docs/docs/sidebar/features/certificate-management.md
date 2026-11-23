@@ -123,14 +123,8 @@ on a host.
 
 ## Permissions
 
-| Operation              | Permission          |
-| ---------------------- | ------------------- |
-| List, Get              | `certificate:read`  |
-| Create, Update, Delete | `certificate:write` |
-
-A read requires `certificate:read`, which `admin`, `operator`, `automation` and
-`read` have. A write requires `certificate:write`, which `admin` and
-`automation` have.
+The Permission column of [Methods](#methods) gives the permission of each
+method.
 
 ## Related
 

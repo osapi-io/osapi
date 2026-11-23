@@ -179,6 +179,7 @@ paths:
       summary: Ping an address from the host
       tags:
         - network_connectivity_operations
+      x-osapi-method: ping
 tags:
   - description: Whether the host reaches an address, by ICMP ping
     name: network_connectivity_operations

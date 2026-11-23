@@ -21,7 +21,7 @@
 // Package main demonstrates process management: list running processes and
 // get details for a specific PID.
 //
-// All responses return Collection[ProcessInfoResult] with per-host results
+// All responses return Collection[ProcessEntry] with per-host results
 // when targeting broadcast targets (_all, _any) or a single hostname. Use
 // .Data.Results to iterate over the entries.
 //
@@ -53,7 +53,7 @@ func processExample() {
 	hostname := "_any"
 
 	// List the processes of the target host. Each row of the
-	// Collection[ProcessInfoResult] is one process of one host.
+	// Collection[ProcessEntry] is one process of one host.
 	fmt.Println("=== Listing processes ===")
 	listResp, err := c.Process.List(ctx, hostname)
 	if err != nil {

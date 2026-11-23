@@ -200,6 +200,7 @@ paths:
       summary: Reboot the host
       tags:
         - power_operations
+      x-osapi-method: reboot
   /api/node/{hostname}/power/shutdown:
     post:
       description: Runs shutdown -h -- +N, with N the delay in whole minutes and at least one, so the agent can answer before the host goes down. A message goes to the logged-in users. Each run changes the host.
@@ -261,6 +262,7 @@ paths:
       summary: Shut the host down
       tags:
         - power_operations
+      x-osapi-method: shutdown
 tags:
   - description: Reboot or shut down the host
     name: power_operations

@@ -78,9 +78,9 @@ func main() {
 	fmt.Println("Uploaded: logrotate-script")
 
 	// Create a cron entry referencing the uploaded object.
-	// Returns Collection[ScheduleMutationResult] with per-host results.
+	// Returns Collection[ScheduleResult] with per-host results.
 	fmt.Println("\n=== Creating cron entry ===")
-	createResp, err := c.Schedule.Create(ctx, target, client.ScheduleCreateOpts{
+	createResp, err := c.Schedule.Create(ctx, target, client.ScheduleCreateInput{
 		Name:     "backup-daily",
 		Schedule: "0 2 * * *",
 		Object:   "backup-script",
@@ -95,7 +95,7 @@ func main() {
 
 	// Create a periodic entry (interval-based) referencing an uploaded object.
 	fmt.Println("\n=== Creating periodic cron entry ===")
-	periodicResp, err := c.Schedule.Create(ctx, target, client.ScheduleCreateOpts{
+	periodicResp, err := c.Schedule.Create(ctx, target, client.ScheduleCreateInput{
 		Name:     "logrotate",
 		Interval: "daily",
 		Object:   "logrotate-script",
@@ -108,7 +108,7 @@ func main() {
 	}
 
 	// List all cron entries.
-	// Returns Collection[ScheduleEntryResult] with per-host entries.
+	// Returns Collection[ScheduleEntry] with per-host entries.
 	fmt.Println("\n=== Listing cron entries ===")
 	listResp, err := c.Schedule.List(ctx, target)
 	if err != nil {
@@ -124,7 +124,7 @@ func main() {
 	}
 
 	// Get a specific entry.
-	// Returns Collection[ScheduleEntryResult] — one result per host.
+	// Returns Collection[ScheduleEntry] — one result per host.
 	fmt.Println("\n=== Getting cron entry ===")
 	getResp, err := c.Schedule.Get(ctx, target, "backup-daily")
 	if err != nil {
@@ -149,7 +149,8 @@ func main() {
 	fmt.Println("Uploaded: backup-script-v2")
 
 	fmt.Println("\n=== Updating cron entry ===")
-	updateResp, err := c.Schedule.Update(ctx, target, "backup-daily", client.ScheduleUpdateOpts{
+	updateResp, err := c.Schedule.Update(ctx, target, client.ScheduleUpdateInput{
+		Name:     "backup-daily",
 		Schedule: "0 3 * * *",
 		Object:   "backup-script-v2",
 	})

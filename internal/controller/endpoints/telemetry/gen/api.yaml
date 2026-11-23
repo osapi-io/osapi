@@ -225,6 +225,7 @@ paths:
       summary: Get the spans of a trace
       tags:
         - telemetry
+      x-osapi-method: get
 tags:
   - description: Telemetry endpoints, such as the spans of a trace.
     name: telemetry

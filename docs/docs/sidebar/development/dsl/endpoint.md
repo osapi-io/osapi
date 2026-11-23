@@ -682,7 +682,7 @@ comes from .Command, .Example, .Notes, .Result and each input field's doc.
 Use: Change the definition, then generate. A generated file that is wrong is
 fixed in the definition or in internal/controller/endpoint/gen.
 
-### `internal/controller/api/gen/, pkg/sdk/client/gen/, ui/src/sdk/gen/, docs/docs/gen/`
+### `internal/controller/api/gen/, pkg/sdk/client/*.gen.go, ui/src/sdk/gen/, docs/docs/gen/`
 
 The full spec, the SDK, the UI client and the API pages, from just generate.
 

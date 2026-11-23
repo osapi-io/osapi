@@ -1,0 +1,196 @@
+openapi: 3.0.0
+info:
+  title: test
+  version: 1.0.0
+tags:
+  - name: Dns_API
+    description: The DNS resolvers of each interface of the host
+    x-displayName: Node/Dns
+  - name: File_API
+    description: The files of the Object Store
+    x-displayName: File
+  - name: NodeFile_API
+    description: The files of the host
+    x-displayName: Node/File
+  - name: Job_API
+    description: The job queue
+    x-displayName: Job
+paths:
+  /api/node/{hostname}/network/dns/{interface_name}:
+    get:
+      operationId: GetNodeNetworkDnsByKey
+      x-osapi-method: get
+      summary: Get the DNS resolvers of an interface
+      tags: [Dns_API]
+      security:
+        - BearerAuth: [dns:read]
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - name: interface_name
+          in: path
+          required: true
+          schema: {type: string}
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DnsGetResponse'}
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ErrorResponse'}
+    put:
+      operationId: PutNodeNetworkDns
+      x-osapi-method: update
+      tags: [Dns_API]
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - name: interface_name
+          in: path
+          required: true
+          schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/DnsUpdateRequest'}
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DnsGetResponse'}
+  /api/file:
+    post:
+      operationId: PostFile
+      x-osapi-method: upload
+      tags: [File_API]
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file: {type: string, format: binary}
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/FileUploadResponse'}
+        "201":
+          description: created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/FileUploadResponse'}
+  /api/node/{hostname}/file:
+    get:
+      operationId: GetNodeFile
+      x-osapi-method: status
+      tags: [NodeFile_API]
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - name: path
+          in: query
+          required: true
+          schema: {type: string}
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/FileUploadResponse'}
+  /api/job:
+    get:
+      operationId: GetJobs
+      x-osapi-method: list
+      tags: [Job_API]
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of jobs
+          schema: {type: integer}
+        - name: all
+          in: query
+          schema: {type: boolean}
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/JobList'}
+  /api/job/{id}:
+    delete:
+      operationId: DeleteJobByID
+      x-osapi-method: delete
+      tags: [Job_API]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        "204":
+          description: deleted
+components:
+  parameters:
+    Hostname:
+      name: hostname
+      in: path
+      required: true
+      schema: {type: string}
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error: {type: string}
+    DnsGetResponse:
+      type: object
+      properties:
+        job_id: {type: string, format: uuid}
+        results:
+          type: array
+          items: {$ref: '#/components/schemas/DnsEntry'}
+    DnsEntry:
+      type: object
+      description: The resolvers of one host
+      required: [hostname]
+      properties:
+        hostname: {type: string}
+        servers:
+          type: array
+          items: {type: string}
+        status:
+          type: string
+          enum: [ok, failed]
+    DnsUpdateRequest:
+      type: object
+      properties:
+        override_dhcp: {type: boolean}
+    FileUploadResponse:
+      type: object
+      properties:
+        sha256: {type: string}
+        size: {type: integer, format: int64}
+    JobList:
+      type: object
+      properties:
+        created: {type: string, format: date-time}
+        ratio: {type: number}
+        labels:
+          type: object
+          additionalProperties: {type: string}
+        facts:
+          type: object
+          additionalProperties: true
+        result:
+          description: Any value
+        timeline:
+          type: array
+          items:
+            type: object
+            properties:
+              event: {type: string}
+        1min: {type: number, format: double}

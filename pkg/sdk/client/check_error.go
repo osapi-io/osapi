@@ -22,17 +22,14 @@ package client
 
 import (
 	"fmt"
-
-	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
 // checkError inspects the HTTP status code and returns the appropriate
 // typed error. For success codes (200, 201, 202, 204) it returns nil.
-// The variadic responses are the parsed error body pointers from the
-// generated response struct (e.g., resp.JSON400, resp.JSON401, etc.).
+// body is the error body of the answer, or nil when it has none.
 func checkError(
 	statusCode int,
-	responses ...*gen.ErrorResponse,
+	body *ErrorResponse,
 ) error {
 	switch {
 	case statusCode >= 200 && statusCode < 300:
@@ -41,8 +38,8 @@ func checkError(
 
 	e := APIError{
 		StatusCode: statusCode,
-		Message:    extractErrorMessage(statusCode, responses...),
-		Reason:     extractReason(responses...),
+		Message:    errorMessage(statusCode, body),
+		Reason:     errorReason(body),
 	}
 
 	switch statusCode {
@@ -61,30 +58,26 @@ func checkError(
 	}
 }
 
-// extractErrorMessage finds the first non-nil error message from the
-// response pointers, or falls back to a generic message.
-func extractErrorMessage(
+// errorMessage is the message of body, or a message of the status code
+// when body has none.
+func errorMessage(
 	statusCode int,
-	responses ...*gen.ErrorResponse,
+	body *ErrorResponse,
 ) string {
-	for _, r := range responses {
-		if r != nil && r.Error != nil {
-			return *r.Error
-		}
+	if body != nil && body.Error != "" {
+		return body.Error
 	}
 
 	return fmt.Sprintf("unexpected status %d", statusCode)
 }
 
-// extractReason is the reason of the first error body that has one.
-func extractReason(
-	responses ...*gen.ErrorResponse,
+// errorReason is the reason of body, or "".
+func errorReason(
+	body *ErrorResponse,
 ) string {
-	for _, r := range responses {
-		if r != nil && r.Reason != nil {
-			return string(*r.Reason)
-		}
+	if body == nil {
+		return ""
 	}
 
-	return ""
+	return body.Reason
 }

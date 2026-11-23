@@ -48,7 +48,7 @@ func main() {
 	ctx := context.Background()
 
 	// List recent audit entries.
-	list, err := c.Audit.List(ctx, client.AuditListOpts{Limit: 10})
+	list, err := c.Audit.List(ctx, client.AuditListParams{Limit: 10})
 	if err != nil {
 		log.Fatalf("list audit: %v", err)
 	}
@@ -72,11 +72,11 @@ func main() {
 		log.Fatalf("get audit %s: %v", id, err)
 	}
 
-	fmt.Printf("\nEntry %s:\n", entry.Data.ID)
-	fmt.Printf("  Method:    %s\n", entry.Data.Method)
-	fmt.Printf("  Path:      %s\n", entry.Data.Path)
-	fmt.Printf("  User:      %s\n", entry.Data.User)
-	fmt.Printf("  Duration:  %dms\n", entry.Data.DurationMs)
+	fmt.Printf("\nEntry %s:\n", entry.Data.Entry.ID)
+	fmt.Printf("  Method:    %s\n", entry.Data.Entry.Method)
+	fmt.Printf("  Path:      %s\n", entry.Data.Entry.Path)
+	fmt.Printf("  User:      %s\n", entry.Data.Entry.User)
+	fmt.Printf("  Duration:  %dms\n", entry.Data.Entry.DurationMS)
 
 	// Export all audit entries.
 	export, err := c.Audit.Export(ctx)

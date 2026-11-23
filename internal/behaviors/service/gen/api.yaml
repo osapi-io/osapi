@@ -369,6 +369,7 @@ paths:
       summary: List the services of the host
       tags:
         - service_operations
+      x-osapi-method: list
     post:
       description: 'Gets the object from the object store and writes it as the unit file of the service, such as /etc/systemd/system/osapi-app.service for app, then reloads systemd. A unit file at that path that osapi did not write, such as the agent''s own osapi-agent.service, is refused. A unit file that already has the content does not change. The service does not start: start and enable are their own actions.'
       operationId: PostNodeService
@@ -429,6 +430,7 @@ paths:
       summary: Deploy a service
       tags:
         - service_operations
+      x-osapi-method: create
   /api/node/{hostname}/service/{name}:
     delete:
       description: Stops and disables the service, removes its unit file and reloads systemd. A service with no unit file does not change.
@@ -485,6 +487,7 @@ paths:
       summary: Remove a service that osapi deployed
       tags:
         - service_operations
+      x-osapi-method: delete
     get:
       description: Reads one service from the same list, by its name with .service or without it. A service that osapi deployed reads by the name it was deployed with, such as app, as its writes take it, or by its unit's name, osapi-app. A service that systemd has not loaded is not found.
       operationId: GetNodeServiceByKey
@@ -540,6 +543,7 @@ paths:
       summary: Get one service
       tags:
         - service_operations
+      x-osapi-method: get
     put:
       description: Writes the object as the unit file of a service that osapi deployed, then reloads systemd when the file changed. A service that osapi did not deploy is not found.
       operationId: PutNodeService
@@ -601,6 +605,7 @@ paths:
       summary: Deploy a new unit file for a service
       tags:
         - service_operations
+      x-osapi-method: update
   /api/node/{hostname}/service/{name}/disable:
     post:
       description: Disables the service. A service that is not enabled does not change. A service that osapi did not deploy is not found.
@@ -657,6 +662,7 @@ paths:
       summary: Make a service that osapi deployed not start at boot
       tags:
         - service_operations
+      x-osapi-method: disable
   /api/node/{hostname}/service/{name}/enable:
     post:
       description: 'Enables the service. A service that is enabled does not change, and nor does a unit with no [Install] section, which systemd calls static: it cannot start at boot. A service that osapi did not deploy is not found.'
@@ -713,6 +719,7 @@ paths:
       summary: Make a service that osapi deployed start at boot
       tags:
         - service_operations
+      x-osapi-method: enable
   /api/node/{hostname}/service/{name}/restart:
     post:
       description: Restarts the service. It always changes the host. A service that osapi did not deploy is not found.
@@ -769,6 +776,7 @@ paths:
       summary: Restart a service that osapi deployed
       tags:
         - service_operations
+      x-osapi-method: restart
   /api/node/{hostname}/service/{name}/start:
     post:
       description: Starts the service. A service that runs does not change. A service that osapi did not deploy is not found.
@@ -825,6 +833,7 @@ paths:
       summary: Start a service that osapi deployed
       tags:
         - service_operations
+      x-osapi-method: start
   /api/node/{hostname}/service/{name}/stop:
     post:
       description: Stops the service. A service that does not run does not change. A service that osapi did not deploy is not found.
@@ -881,6 +890,7 @@ paths:
       summary: Stop a service that osapi deployed
       tags:
         - service_operations
+      x-osapi-method: stop
 tags:
   - description: The systemd services of the host
     name: service_operations

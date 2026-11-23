@@ -199,6 +199,7 @@ paths:
       summary: List admission records
       tags:
         - Admission_API_admission
+      x-osapi-method: list
   /api/admission/{machine_id}:
     delete:
       description: Removes a machine's key and each record of it, and keeps none. A machine that asks again is new. Use it for a machine that goes away on purpose, such as a VM that is rebuilt; revoke a machine that is not trusted.
@@ -259,6 +260,7 @@ paths:
       summary: Delete a machine
       tags:
         - Admission_API_admission
+      x-osapi-method: delete
     get:
       description: Returns one machine's admission record by machine ID.
       operationId: GetAdmission
@@ -322,6 +324,7 @@ paths:
       summary: Get a machine's admission record
       tags:
         - Admission_API_admission
+      x-osapi-method: get
   /api/admission/{machine_id}/admit:
     post:
       description: 'Admits a pending machine. The fingerprint must be the one that `osapi agent admission get` prints on the machine: it proves that the request came from the machine the operator is looking at.'
@@ -394,6 +397,7 @@ paths:
       summary: Admit a pending machine
       tags:
         - Admission_API_admission
+      x-osapi-method: admit
   /api/admission/{machine_id}/reject:
     post:
       description: Rejects a pending machine, and keeps a record of the decision, so a machine that asks again is flagged.
@@ -460,6 +464,7 @@ paths:
       summary: Reject a pending machine
       tags:
         - Admission_API_admission
+      x-osapi-method: reject
   /api/admission/{machine_id}/revoke:
     post:
       description: Removes an admitted machine's key, and keeps a record of the decision. Nothing the machine signs verifies afterwards; to return, it asks again.
@@ -520,6 +525,7 @@ paths:
       summary: Revoke an admitted machine
       tags:
         - Admission_API_admission
+      x-osapi-method: revoke
   /api/agent:
     get:
       description: Discover all active agents in the fleet.
@@ -555,6 +561,7 @@ paths:
       summary: List active agents
       tags:
         - Agent_Management_API_agent_operations
+      x-osapi-method: list
   /api/agent/{hostname}:
     get:
       description: Get detailed information about a specific agent by hostname.
@@ -613,6 +620,7 @@ paths:
       summary: Get agent details
       tags:
         - Agent_Management_API_agent_operations
+      x-osapi-method: get
   /api/agent/{hostname}/drain:
     post:
       description: Stop the agent from accepting new jobs. In-flight jobs continue to completion.
@@ -673,6 +681,7 @@ paths:
       summary: Drain an agent
       tags:
         - Agent_Management_API_agent_operations
+      x-osapi-method: drain
   /api/agent/{hostname}/undrain:
     post:
       description: Resume accepting jobs on a drained agent.
@@ -733,6 +742,7 @@ paths:
       summary: Undrain an agent
       tags:
         - Agent_Management_API_agent_operations
+      x-osapi-method: undrain
   /api/agent/status:
     get:
       description: Each agent, with each of its sub-components, from the health status of the controller.
@@ -768,6 +778,7 @@ paths:
       summary: Show the health of each agent
       tags:
         - Agent_Management_API_agent_operations
+      x-osapi-method: status
   /api/audit:
     get:
       description: Returns a paginated list of audit log entries, newest first. A token with a target scope gets only the entries of requests to a target in its scope, and the total includes only those entries.
@@ -867,6 +878,7 @@ paths:
       summary: List audit log entries
       tags:
         - Audit_Log_API_audit
+      x-osapi-method: list
   /api/audit/{id}:
     get:
       description: Returns a single audit log entry by ID. An entry of a request to a target outside the target scope of the token is not found.
@@ -930,6 +942,7 @@ paths:
       summary: Get a single audit log entry
       tags:
         - Audit_Log_API_audit
+      x-osapi-method: get
   /api/audit/export:
     get:
       description: Returns all audit log entries without pagination for export. A token with a target scope gets only the entries of requests to a target in its scope.
@@ -971,6 +984,7 @@ paths:
       summary: Export all audit log entries
       tags:
         - Audit_Log_API_audit
+      x-osapi-method: export
   /api/controller/status:
     get:
       description: Each controller, with each of its sub-components, from the health status of the controller.
@@ -1006,6 +1020,7 @@ paths:
       summary: Show the health of the controller
       tags:
         - Controller_API_controller
+      x-osapi-method: status
   /api/facts/keys:
     get:
       description: Returns the list of fact keys that can be used in @fact. references. Includes built-in keys and any custom keys registered by agents.
@@ -1041,6 +1056,7 @@ paths:
       summary: List available fact keys
       tags:
         - Facts_API_facts
+      x-osapi-method: list
   /api/file:
     get:
       description: List all files stored in the Object Store.
@@ -1082,6 +1098,7 @@ paths:
       summary: List stored files
       tags:
         - File_Management_API_file_operations
+      x-osapi-method: list
     post:
       description: Upload a file to the Object Store.
       operationId: PostFile
@@ -1179,6 +1196,7 @@ paths:
       summary: Upload a file
       tags:
         - File_Management_API_file_operations
+      x-osapi-method: upload
   /api/file/{name}:
     delete:
       description: Delete a file from the Object Store.
@@ -1239,6 +1257,7 @@ paths:
       summary: Delete a file
       tags:
         - File_Management_API_file_operations
+      x-osapi-method: delete
     get:
       description: Get metadata for a specific file in the Object Store.
       operationId: GetFileByName
@@ -1302,6 +1321,7 @@ paths:
       summary: Get file metadata
       tags:
         - File_Management_API_file_operations
+      x-osapi-method: get
     put:
       description: Replace a file in the Object Store, or create it when the name is new.
       operationId: PutFileByName
@@ -1395,6 +1415,7 @@ paths:
       summary: Replace a file
       tags:
         - File_Management_API_file_operations
+      x-osapi-method: update
   /api/file/stale:
     get:
       description: Returns deployments where the source object in the Object Store has been updated since the file was last deployed. Controller-only check that compares state KV SHA-256 hashes against current object content.
@@ -1436,6 +1457,7 @@ paths:
       summary: List stale file deployments
       tags:
         - File_Management_API_file_operations
+      x-osapi-method: stale
   /api/health:
     get:
       description: Returns 200 if the process is alive. No checks performed.
@@ -1457,6 +1479,7 @@ paths:
       summary: Liveness probe
       tags:
         - Health_Check_API_health
+      x-osapi-method: liveness
   /api/health/ready:
     get:
       description: Returns 200 when the service is ready to accept traffic.
@@ -1484,6 +1507,7 @@ paths:
       summary: Readiness probe
       tags:
         - Health_Check_API_health
+      x-osapi-method: ready
   /api/health/status:
     get:
       description: Returns per-component health status with system metrics. Requires authentication.
@@ -1519,6 +1543,7 @@ paths:
       summary: System status and component health
       tags:
         - Health_Check_API_health
+      x-osapi-method: status
   /api/job:
     get:
       description: Retrieve jobs, optionally filtered by status. A token with a target scope gets only the jobs whose target is in its scope, and the counts include only those jobs.
@@ -1593,6 +1618,7 @@ paths:
       summary: List jobs
       tags:
         - Job_Management_API_job_operations
+      x-osapi-method: list
   /api/job/{id}:
     delete:
       description: Delete a specific job by its ID. A job whose target is outside the target scope of the token is not found.
@@ -1646,6 +1672,7 @@ paths:
       summary: Delete a job
       tags:
         - Job_Management_API_job_operations
+      x-osapi-method: delete
     get:
       description: Retrieve details of a specific job by its ID. A job whose target is outside the target scope of the token is not found.
       operationId: GetJobByID
@@ -1702,6 +1729,7 @@ paths:
       summary: Get job detail
       tags:
         - Job_Management_API_job_operations
+      x-osapi-method: get
   /api/job/{id}/retry:
     post:
       description: Create a new job using the same operation data as an existing job. The original job is preserved. Returns the new job ID.
@@ -1769,6 +1797,7 @@ paths:
       summary: Retry a job
       tags:
         - Job_Management_API_job_operations
+      x-osapi-method: retry
   /api/nats/status:
     get:
       description: The NATS server, with each of its sub-components, from the health status of the controller.
@@ -1804,6 +1833,7 @@ paths:
       summary: Show the health of the NATS server
       tags:
         - NATS_API_nats
+      x-osapi-method: status
   /api/telemetry/trace/{id}:
     get:
       description: Returns each span of a trace, read from the tracing backend at telemetry.tracing.url. The backend gets the spans a few seconds after the request, so a trace of a request that just ran can be not found yet. A token with a target scope gets a trace only when each target that the trace records is in its scope.
@@ -1874,6 +1904,7 @@ paths:
       summary: Get the spans of a trace
       tags:
         - Telemetry_API_telemetry
+      x-osapi-method: get
   /api/node/{hostname}/certificate:
     get:
       description: 'Lists each CA of the trust store through gohai: the distribution''s and the local ones on Linux, from the family''s directories, and the system keychains on macOS, each with its subject, fingerprint and expiry. A CA that osapi deployed reads by the name that it was deployed with, not its file''s osapi- name, and is managed.'
@@ -1929,6 +1960,7 @@ paths:
       summary: List the certificate authorities that the host trusts
       tags:
         - Certificate_API_certificate_operations
+      x-osapi-method: list
     post:
       description: 'Writes the PEM of the object as a file with the osapi- prefix, such as osapi-internal-ca.crt for internal-ca, in the family''s local directory: /usr/local/share/ca-certificates on the Debian family, /etc/pki/trust/anchors on SUSE, /etc/pki/ca-trust/source/anchors on RHEL and Fedora. Then it rebuilds the trust store: with update-ca-certificates on the Debian family and SUSE, and with update-ca-trust on the others. Alpine reports skipped. A CA that osapi deployed already with the same content does not change and reports changed: false. A file of that name that osapi did not write is refused. macOS reports skipped.'
       operationId: PostNodeCertificate
@@ -1989,6 +2021,7 @@ paths:
       summary: Add a certificate authority to the trust store
       tags:
         - Certificate_API_certificate_operations
+      x-osapi-method: create
   /api/node/{hostname}/certificate/{name}:
     delete:
       description: 'Removes the file of the CA and rebuilds the trust store: with update-ca-certificates --fresh on the Debian family and SUSE, which removes the links of the CA from /etc/ssl/certs, and update-ca-trust on the RHEL family. A CA that osapi did not deploy does not change and reports changed: false: a system CA is not osapi''s to remove. macOS reports skipped.'
@@ -2045,6 +2078,7 @@ paths:
       summary: Remove a certificate authority that osapi deployed
       tags:
         - Certificate_API_certificate_operations
+      x-osapi-method: delete
     get:
       description: Reads one CA from the same list, by the name that list gives it. A CA that the host does not trust is not found. A name with a slash, such as a system CA of the Debian family, is in list only.
       operationId: GetNodeCertificateByKey
@@ -2100,6 +2134,7 @@ paths:
       summary: Get one certificate authority
       tags:
         - Certificate_API_certificate_operations
+      x-osapi-method: get
     put:
       description: Writes the CA from the object, or from the one that it was deployed from when the object is empty, and rebuilds the trust store when the file changed. A CA that osapi did not deploy is not found. macOS reports skipped.
       operationId: PutNodeCertificate
@@ -2161,6 +2196,7 @@ paths:
       summary: Write a certificate authority that osapi deployed again
       tags:
         - Certificate_API_certificate_operations
+      x-osapi-method: update
   /api/node/{hostname}/command/exec:
     post:
       description: 'Runs the program with its arguments, each one word, with no shell between them: a ; or a | in an argument is that character. It answers with standard output and standard error apart, the exit code and the duration. A program that exits non-zero is a result, not an error. Only the admin role may run it, and the agent runs it only where agent.command.enabled is true.'
@@ -2222,6 +2258,7 @@ paths:
       summary: Run a program with its arguments
       tags:
         - Command_API_command_operations
+      x-osapi-method: exec
   /api/node/{hostname}/command/shell:
     post:
       description: 'Runs the command line through /bin/sh -c, so pipes, redirects and variables work. It answers as exec does. Its permission is command:shell, apart from exec''s command:execute: a token that may run a program may not open a shell. Only the admin role gets it.'
@@ -2283,6 +2320,7 @@ paths:
       summary: Run a command line through /bin/sh -c
       tags:
         - Command_API_command_operations
+      x-osapi-method: shell
   /api/node/{hostname}/container/docker:
     get:
       description: 'Reads each container through gohai''s docker collector, which runs docker ps and docker inspect. state limits the list to the running or the stopped ones. A host whose docker does not answer reports skipped. The environment of a container shows only the names of its variables: osapi never reads their values.'
@@ -2349,6 +2387,7 @@ paths:
       summary: List the containers of the host
       tags:
         - Docker_API_container_docker_operations
+      x-osapi-method: list
     post:
       description: 'Runs docker create, which pulls the image when the host does not have it. The environment goes on docker''s standard input, not in its arguments, which each user of the host can read. auto_start starts the container once it is made. A container of the name that the host has already is not made again, and reports changed: false.'
       operationId: PostNodeContainerDocker
@@ -2409,6 +2448,7 @@ paths:
       summary: Create a container
       tags:
         - Docker_API_container_docker_operations
+      x-osapi-method: create
   /api/node/{hostname}/container/docker/{name}:
     delete:
       description: 'Runs docker rm -f, which also removes a container that runs: a delete leaves no container of the name. A container that the host does not have reports changed: false.'
@@ -2465,6 +2505,7 @@ paths:
       summary: Remove a container
       tags:
         - Docker_API_container_docker_operations
+      x-osapi-method: delete
     get:
       description: Reads one container by its name, its ID or the start of its ID. A container that the host does not have is not found.
       operationId: GetNodeContainerDockerByKey
@@ -2520,6 +2561,7 @@ paths:
       summary: Get one container
       tags:
         - Docker_API_container_docker_operations
+      x-osapi-method: get
   /api/node/{hostname}/container/docker/{name}/exec:
     post:
       description: 'Runs docker exec, and answers what the command wrote to standard output and to standard error, and its exit code. A command that exits with a code other than 0 is an answer, not a failure. It changes what the command changes, which osapi cannot tell, so it reports changed: true. Its permission is docker:exec, which only the admin role gets, apart from the docker:execute of start and stop. An agent with agent.command.enabled false refuses it, as it refuses a command.'
@@ -2582,6 +2624,7 @@ paths:
       summary: Run a command in a container
       tags:
         - Docker_API_container_docker_operations
+      x-osapi-method: exec
   /api/node/{hostname}/container/docker/{name}/start:
     post:
       description: 'Runs docker start. A container that runs already reports changed: false, and one that the host does not have is not found.'
@@ -2638,6 +2681,7 @@ paths:
       summary: Start a container
       tags:
         - Docker_API_container_docker_operations
+      x-osapi-method: start
   /api/node/{hostname}/container/docker/{name}/stop:
     post:
       description: 'Runs docker stop, which waits timeout seconds before docker kills the container, or docker''s default of 10 when it is 0. A container that does not run reports changed: false.'
@@ -2700,6 +2744,7 @@ paths:
       summary: Stop a container
       tags:
         - Docker_API_container_docker_operations
+      x-osapi-method: stop
   /api/node/{hostname}/container/image:
     get:
       description: Reads each image through gohai's docker collector, which runs docker images. A host whose docker does not answer reports skipped.
@@ -2755,6 +2800,7 @@ paths:
       summary: List the images of the host
       tags:
         - Image_API_container_image_operations
+      x-osapi-method: list
   /api/node/{hostname}/container/image/{image}:
     delete:
       description: 'Runs docker rmi, with -f when force is set, which removes an image that a container uses. An image that the host does not have reports changed: false.'
@@ -2817,6 +2863,7 @@ paths:
       summary: Remove an image
       tags:
         - Image_API_container_image_operations
+      x-osapi-method: delete
   /api/node/{hostname}/container/image/pull:
     post:
       description: 'Runs docker pull, and answers the ID and the size of the image that the host has after it. A pull that gets nothing new, because the host had the image of that reference already, reports changed: false.'
@@ -2878,6 +2925,7 @@ paths:
       summary: Pull an image
       tags:
         - Image_API_container_image_operations
+      x-osapi-method: pull
   /api/node/{hostname}/disk:
     get:
       description: 'Reads the size, the used space and the free space of each local filesystem, in bytes: the mounts of /proc/mounts on Linux and of mount on macOS, with their sizes from df. Local is ext4, xfs and btrfs on Linux, and apfs and hfs on macOS. Network and special filesystems are left out.'
@@ -2933,6 +2981,7 @@ paths:
       summary: Get the disk usage of the host
       tags:
         - Disk_API_disk_operations
+      x-osapi-method: get
   /api/node/{hostname}/file:
     delete:
       description: 'Removes the file and keeps its record, marked undeployed, so status reports unmanaged. A path that osapi did not deploy, or deleted already, does not change and reports changed: false. The object stays in the object store.'
@@ -2994,6 +3043,7 @@ paths:
       summary: Remove a file that osapi deployed
       tags:
         - File_API_file_operations
+      x-osapi-method: delete
     get:
       description: 'Compares the file on the host with the record that osapi keeps of what it deployed: in-sync when they agree, drifted when something changed the file, missing when osapi deployed the file and it is gone, and unmanaged when osapi did not deploy the path or undeployed it. A path that is a directory is refused.'
       operationId: GetNodeFile
@@ -3057,6 +3107,7 @@ paths:
       summary: Show whether a deployed file holds what osapi wrote
       tags:
         - File_API_file_operations
+      x-osapi-method: status
     put:
       description: 'Writes the object at the path with its mode and ownership, and keeps a record of it. A template object, or content_type template, is rendered first with .Facts, .Vars and .Hostname. The record keeps the SHA-256 of the object as it was read. A file that holds the content, mode and owner already, from the same object, does not change and reports changed: false. osapi client file stale list compares the object now with that SHA-256, so it shows the deployments whose object changed since.'
       operationId: PutNodeFile
@@ -3117,6 +3168,7 @@ paths:
       summary: Deploy an object of the object store to a path
       tags:
         - File_API_file_operations
+      x-osapi-method: update
   /api/node/{hostname}/group:
     get:
       description: Lists each group with its ID and its members, by name, from /etc/group through gohai, on every platform. The members are the users that /etc/group names; a user whose primary group it is is not listed again.
@@ -3172,6 +3224,7 @@ paths:
       summary: List the groups of the host
       tags:
         - Group_API_group_operations
+      x-osapi-method: list
     post:
       description: 'Adds the group with groupadd, with the ID when one is given. A group that the host has already does not change and reports changed: false, whatever its ID. It runs on the Debian family only, and elsewhere reports skipped.'
       operationId: PostNodeGroup
@@ -3232,6 +3285,7 @@ paths:
       summary: Add a group
       tags:
         - Group_API_group_operations
+      x-osapi-method: create
   /api/node/{hostname}/group/{name}:
     delete:
       description: 'Removes the group with groupdel. A group that the host does not have does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.'
@@ -3288,6 +3342,7 @@ paths:
       summary: Remove a group
       tags:
         - Group_API_group_operations
+      x-osapi-method: delete
     get:
       description: Reads one group from the same list. A group that the host does not have is not found.
       operationId: GetNodeGroupByKey
@@ -3343,6 +3398,7 @@ paths:
       summary: Get one group
       tags:
         - Group_API_group_operations
+      x-osapi-method: get
     put:
       description: 'Sets the members with gpasswd -M, in place of the members that the group has. The same members, in any order, do not change it and report changed: false. A group that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped.'
       operationId: PutNodeGroup
@@ -3404,6 +3460,7 @@ paths:
       summary: Set the members of a group
       tags:
         - Group_API_group_operations
+      x-osapi-method: update
   /api/node/{hostname}/hostname:
     get:
       description: Reads the host's name as the hostname command prints it, on Linux and on macOS. It makes no DNS lookup.
@@ -3459,6 +3516,7 @@ paths:
       summary: Get the hostname of the host
       tags:
         - Hostname_API_hostname_operations
+      x-osapi-method: get
     put:
       description: 'Sets the static hostname with hostnamectl set-hostname, which keeps it after a reboot. A host that already has the name does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped. In a container the runtime owns the hostname, so there it also reports skipped.'
       operationId: PutNodeHostname
@@ -3519,6 +3577,7 @@ paths:
       summary: Set the hostname of the host
       tags:
         - Hostname_API_hostname_operations
+      x-osapi-method: update
   /api/node/{hostname}/load:
     get:
       description: Reads the averages of the run queue over 1, 5 and 15 minutes.
@@ -3574,6 +3633,7 @@ paths:
       summary: Get the load averages of the host
       tags:
         - Load_API_load_operations
+      x-osapi-method: get
   /api/node/{hostname}/log/entry:
     get:
       description: 'Runs journalctl --output=json, the newest entries last: the last 100 unless lines says, of one unit when unit says, since a time when since says, and at a priority or above when priority says. A priority is its name, such as err or info. The hand-written log domain read the Debian family only; this reads each Linux host that has journald.'
@@ -3669,6 +3729,7 @@ paths:
       summary: List the entries of the journal
       tags:
         - Entry_API_log_entry_operations
+      x-osapi-method: list
   /api/node/{hostname}/log/source:
     get:
       description: 'Runs journalctl --field=SYSLOG_IDENTIFIER: each syslog identifier that has an entry, once, sorted. A name here is what log entry list takes as unit when the source is a systemd unit.'
@@ -3724,6 +3785,7 @@ paths:
       summary: List the sources of the journal
       tags:
         - Source_API_log_source_operations
+      x-osapi-method: list
   /api/node/{hostname}/memory:
     get:
       description: Reads the total, the free and the used memory, in bytes. Used is the total less what is available, which includes the cache, as free(1) reports it.
@@ -3779,6 +3841,7 @@ paths:
       summary: Get the memory usage of the host
       tags:
         - Memory_API_memory_operations
+      x-osapi-method: get
   /api/node/{hostname}/network/connectivity/ping:
     post:
       description: 'Sends three ICMP echo requests from the host and reports how many came back, and their round-trip times. A host that does not answer is 100% loss, not an error. It changes nothing, so it reports changed: false. On Linux the agent pings without root when net.ipv4.ping_group_range admits its group.'
@@ -3840,6 +3903,7 @@ paths:
       summary: Ping an address from the host
       tags:
         - Connectivity_API_network_connectivity_operations
+      x-osapi-method: ping
   /api/node/{hostname}/network/dns/{interface_name}:
     delete:
       description: Removes the interface's netplan file and applies what is left. An interface osapi set nothing on does not change.
@@ -3896,6 +3960,7 @@ paths:
       summary: Drop the DNS resolvers osapi set on an interface
       tags:
         - Dns_API_network_dns_operations
+      x-osapi-method: delete
     get:
       description: 'Reads the servers and the search domains of the interface: resolvectl on Linux, with resolv.conf on a host that has no resolvers per interface, such as a container, and scutil on macOS.'
       operationId: GetNodeNetworkDnsByKey
@@ -3951,6 +4016,7 @@ paths:
       summary: Get the DNS resolvers of an interface
       tags:
         - Dns_API_network_dns_operations
+      x-osapi-method: get
     put:
       description: Writes a netplan file of the interface's own, such as /etc/netplan/osapi-dns-eth0.yaml for eth0, under the netplan definition that matches the interface, and applies it. A definition that matches several interfaces, such as cloud-init's all for en*, gives each of them the resolvers. An empty list keeps the interface's servers or domains, and an interface with no resolvers yet starts from none. override_dhcp drops the servers DHCP gives. It runs on the Debian family, and elsewhere, and in a container, reports skipped.
       operationId: PutNodeNetworkDns
@@ -4012,6 +4078,7 @@ paths:
       summary: Set the DNS resolvers of an interface
       tags:
         - Dns_API_network_dns_operations
+      x-osapi-method: update
   /api/node/{hostname}/network/interface:
     get:
       description: 'Reads each interface but the loopback, in the order of its index: /sys/class/net and ip on Linux, ifconfig and netstat on macOS. dhcp4 is true when a route of the interface has proto dhcp, and primary when it has the default route.'
@@ -4067,6 +4134,7 @@ paths:
       summary: List the network interfaces of the host
       tags:
         - Interface_API_network_interface_operations
+      x-osapi-method: list
   /api/node/{hostname}/network/interface/{name}:
     delete:
       description: Removes the interface's netplan file and applies what is left. An interface osapi does not configure does not change.
@@ -4123,6 +4191,7 @@ paths:
       summary: Drop the config osapi has of a network interface
       tags:
         - Interface_API_network_interface_operations
+      x-osapi-method: delete
     get:
       description: Reads the interface as list does.
       operationId: GetNodeNetworkInterfaceByKey
@@ -4178,6 +4247,7 @@ paths:
       summary: Get a network interface of the host
       tags:
         - Interface_API_network_interface_operations
+      x-osapi-method: get
     post:
       description: 'Writes a netplan file of the interface''s own, such as /etc/netplan/osapi-osapi0.yaml for osapi0, under a netplan definition that is the interface''s own, and applies it. An interface the host does not have is not found. dhcp4 and dhcp6 are false unless given, so the interface has only the addresses given. An interface that a match defines, such as cloud-init''s all for en*, is refused, because the config would change each interface the match takes, now and later. An interface osapi already configures does not change: update replaces its config. It runs on the Debian family, and elsewhere, and in a container, reports skipped.'
       operationId: PostNodeNetworkInterface
@@ -4239,6 +4309,7 @@ paths:
       summary: Configure a network interface
       tags:
         - Interface_API_network_interface_operations
+      x-osapi-method: create
     put:
       description: 'Writes the interface''s netplan file over the one osapi has, as create writes it, and applies it. An interface osapi does not configure is not found: create configures it.'
       operationId: PutNodeNetworkInterface
@@ -4300,6 +4371,7 @@ paths:
       summary: Change the config osapi has of a network interface
       tags:
         - Interface_API_network_interface_operations
+      x-osapi-method: update
   /api/node/{hostname}/network/interface/{name}/route:
     delete:
       description: Drops the route from the interface's netplan file and applies what is left; the last route removes the file. A route osapi does not have does not change.
@@ -4362,6 +4434,7 @@ paths:
       summary: Drop a route that osapi wrote
       tags:
         - Route_API_route_operations
+      x-osapi-method: delete
     get:
       description: 'Reads the routes of the main table that go out of the interface: ip route on Linux, netstat on macOS. proto says where a route came from, such as dhcp, kernel or static. An interface with no routes has none; one the host does not have is not found.'
       operationId: GetNodeNetworkInterfaceRoute
@@ -4417,6 +4490,7 @@ paths:
       summary: List the routes of an interface
       tags:
         - Route_API_route_operations
+      x-osapi-method: list
     post:
       description: 'Adds the route to the interface''s netplan file, such as /etc/netplan/osapi-osapi0-routes.yaml for osapi0, under a netplan definition that is the interface''s own, and applies it. A route osapi already has, the same, does not change; one to the same destination by another gateway or metric is refused: update changes it. A default route is refused: the interface behavior sets the gateway. An interface the host does not have is not found. An interface that a match defines, such as cloud-init''s all for en*, is refused, because the route would go on each interface the match takes. It runs on the Debian family, and elsewhere, and in a container, reports skipped.'
       operationId: PostNodeNetworkInterfaceRoute
@@ -4478,6 +4552,7 @@ paths:
       summary: Add a static route to an interface
       tags:
         - Route_API_route_operations
+      x-osapi-method: create
     put:
       description: 'Writes the route over the one osapi has to the same destination, and applies it. A destination osapi has no route to is not found: create adds it.'
       operationId: PutNodeNetworkInterfaceRoute
@@ -4539,6 +4614,7 @@ paths:
       summary: Change the gateway or the metric of a route
       tags:
         - Route_API_route_operations
+      x-osapi-method: update
   /api/node/{hostname}/ntp:
     delete:
       description: 'Removes /etc/chrony/sources.d/osapi-ntp.sources and reloads the sources, so chrony uses its other sources. When osapi set no servers, it reports changed: false.'
@@ -4594,6 +4670,7 @@ paths:
       summary: Remove the NTP servers that osapi set
       tags:
         - Ntp_API_ntp_operations
+      x-osapi-method: delete
     get:
       description: Reads chronyc tracking, for whether chrony is synchronized, its stratum, its offset from NTP time and the source that it follows, and chronyc sources, for each source that it has.
       operationId: GetNodeNtp
@@ -4648,6 +4725,7 @@ paths:
       summary: Get the sync status of chrony and its sources
       tags:
         - Ntp_API_ntp_operations
+      x-osapi-method: get
     post:
       description: 'Writes a server line for each server to /etc/chrony/sources.d/osapi-ntp.sources, and reloads the sources with chronyc reload sources. A file that has the same servers does not change, and reports changed: false.'
       operationId: PostNodeNtp
@@ -4708,6 +4786,7 @@ paths:
       summary: Set the NTP servers that chrony uses
       tags:
         - Ntp_API_ntp_operations
+      x-osapi-method: create
     put:
       description: 'The same as create, for servers that osapi set already. It fails with not found when osapi set none. The servers that the file has already report changed: false.'
       operationId: PutNodeNtp
@@ -4768,6 +4847,7 @@ paths:
       summary: Replace the NTP servers that osapi set
       tags:
         - Ntp_API_ntp_operations
+      x-osapi-method: update
   /api/node/{hostname}/os:
     get:
       description: 'Reads the distribution and its version: the ID and VERSION_ID of /etc/os-release on Linux, and darwin with the ProductVersion of sw_vers on macOS, such as darwin 15.5.'
@@ -4823,6 +4903,7 @@ paths:
       summary: Get the operating system of the host
       tags:
         - Os_API_os_operations
+      x-osapi-method: get
   /api/node/{hostname}/package:
     get:
       description: 'Lists each installed package with its version: dpkg on the Debian family, rpm on the other Linux families, and Homebrew on macOS.'
@@ -4878,6 +4959,7 @@ paths:
       summary: List the packages installed on the host
       tags:
         - Package_API_package_operations
+      x-osapi-method: list
     post:
       description: 'Installs the package with apt-get install, at the version when one is given. A package that is installed, at that version when one is given, does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.'
       operationId: PostNodePackage
@@ -4938,6 +5020,7 @@ paths:
       summary: Install a package
       tags:
         - Package_API_package_operations
+      x-osapi-method: create
   /api/node/{hostname}/package/{name}:
     delete:
       description: 'Removes the package with apt-get remove. A package that is not installed does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.'
@@ -4994,6 +5077,7 @@ paths:
       summary: Remove a package
       tags:
         - Package_API_package_operations
+      x-osapi-method: delete
     get:
       description: Reads one package from the same list. A package that is not installed is not found.
       operationId: GetNodePackageByKey
@@ -5049,6 +5133,7 @@ paths:
       summary: Get one installed package
       tags:
         - Package_API_package_operations
+      x-osapi-method: get
   /api/node/{hostname}/power/reboot:
     post:
       description: Runs shutdown -r -- +N, with N the delay in whole minutes and at least one, so the agent can answer before the host goes down. A message goes to the logged-in users. Each run changes the host.
@@ -5110,6 +5195,7 @@ paths:
       summary: Reboot the host
       tags:
         - Power_API_power_operations
+      x-osapi-method: reboot
   /api/node/{hostname}/power/shutdown:
     post:
       description: Runs shutdown -h -- +N, with N the delay in whole minutes and at least one, so the agent can answer before the host goes down. A message goes to the logged-in users. Each run changes the host.
@@ -5171,6 +5257,7 @@ paths:
       summary: Shut the host down
       tags:
         - Power_API_power_operations
+      x-osapi-method: shutdown
   /api/node/{hostname}/process:
     get:
       description: 'Lists each process with its user, state, CPU and memory, its command line and when it started, through gohai: from /proc on Linux and from ps on macOS. A process that stops while the list is read is not in it.'
@@ -5226,6 +5313,7 @@ paths:
       summary: List the processes of the host
       tags:
         - Process_API_process_operations
+      x-osapi-method: list
   /api/node/{hostname}/process/{pid}:
     get:
       description: Reads one process by its ID, without the others. A process that the host does not have is not found.
@@ -5282,6 +5370,7 @@ paths:
       summary: Get one process
       tags:
         - Process_API_process_operations
+      x-osapi-method: get
   /api/node/{hostname}/process/{pid}/signal:
     post:
       description: 'Sends TERM, KILL, HUP, INT, USR1 or USR2 to one process with kill, and reports changed: true. A process that the host does not have is not found. A process ID below 1 is refused, because kill sends to a group of processes for 0 and for a negative ID.'
@@ -5344,6 +5433,7 @@ paths:
       summary: Send a signal to a process
       tags:
         - Process_API_process_operations
+      x-osapi-method: signal
   /api/node/{hostname}/schedule:
     get:
       description: Lists each file in /etc/cron.d and in /etc/cron.hourly, daily, weekly and monthly that osapi deployed, with its object, its cron expression or interval, and its user. A cron file that osapi did not deploy is not listed.
@@ -5399,6 +5489,7 @@ paths:
       summary: List the cron entries that osapi deployed
       tags:
         - Schedule_API_schedule_operations
+      x-osapi-method: list
     post:
       description: 'Gets the object from the object store and writes it as /etc/cron.d/backup for backup, mode 0644, for a cron expression, or as /etc/cron.daily/backup, mode 0755, for a daily interval. An object of content type template, or content_type template, is rendered with the agent''s facts and the vars. A file that has the content does not change. An entry of the name in a different directory does not change: move it with delete and create. A file at the path that osapi did not deploy is refused. An entry runs as its user, root included, so only admin can deploy one.'
       operationId: PostNodeSchedule
@@ -5459,6 +5550,7 @@ paths:
       summary: Deploy a cron entry
       tags:
         - Schedule_API_schedule_operations
+      x-osapi-method: create
   /api/node/{hostname}/schedule/{name}:
     delete:
       description: Removes the entry's file and its record. An entry that osapi did not deploy does not change, and a cron file that osapi did not deploy stays.
@@ -5515,6 +5607,7 @@ paths:
       summary: Remove a cron entry that osapi deployed
       tags:
         - Schedule_API_schedule_operations
+      x-osapi-method: delete
     get:
       description: Reads the entry from /etc/cron.d, then from each interval directory. An entry that osapi did not deploy is not found.
       operationId: GetNodeScheduleByKey
@@ -5570,6 +5663,7 @@ paths:
       summary: Get one cron entry that osapi deployed
       tags:
         - Schedule_API_schedule_operations
+      x-osapi-method: get
     put:
       description: 'Writes a new object, or the entry''s own, at the entry''s path, with the fields that the request gives and the entry''s own for the rest. A file that has the content does not change. An entry that osapi did not deploy is not found. The entry stays in its directory: an interval does not change with update.'
       operationId: PutNodeSchedule
@@ -5631,6 +5725,7 @@ paths:
       summary: Deploy a cron entry that osapi deployed again
       tags:
         - Schedule_API_schedule_operations
+      x-osapi-method: update
   /api/node/{hostname}/service:
     get:
       description: Lists each service that systemd has loaded, with its state, whether it starts at boot and its description, through gohai. A service that osapi deployed shows by the name it was deployed with, not its unit's osapi- name, and is managed. A Mac has no systemd, and reports skipped.
@@ -5686,6 +5781,7 @@ paths:
       summary: List the services of the host
       tags:
         - Service_API_service_operations
+      x-osapi-method: list
     post:
       description: 'Gets the object from the object store and writes it as the unit file of the service, such as /etc/systemd/system/osapi-app.service for app, then reloads systemd. A unit file at that path that osapi did not write, such as the agent''s own osapi-agent.service, is refused. A unit file that already has the content does not change. The service does not start: start and enable are their own actions.'
       operationId: PostNodeService
@@ -5746,6 +5842,7 @@ paths:
       summary: Deploy a service
       tags:
         - Service_API_service_operations
+      x-osapi-method: create
   /api/node/{hostname}/service/{name}:
     delete:
       description: Stops and disables the service, removes its unit file and reloads systemd. A service with no unit file does not change.
@@ -5802,6 +5899,7 @@ paths:
       summary: Remove a service that osapi deployed
       tags:
         - Service_API_service_operations
+      x-osapi-method: delete
     get:
       description: Reads one service from the same list, by its name with .service or without it. A service that osapi deployed reads by the name it was deployed with, such as app, as its writes take it, or by its unit's name, osapi-app. A service that systemd has not loaded is not found.
       operationId: GetNodeServiceByKey
@@ -5857,6 +5955,7 @@ paths:
       summary: Get one service
       tags:
         - Service_API_service_operations
+      x-osapi-method: get
     put:
       description: Writes the object as the unit file of a service that osapi deployed, then reloads systemd when the file changed. A service that osapi did not deploy is not found.
       operationId: PutNodeService
@@ -5918,6 +6017,7 @@ paths:
       summary: Deploy a new unit file for a service
       tags:
         - Service_API_service_operations
+      x-osapi-method: update
   /api/node/{hostname}/service/{name}/disable:
     post:
       description: Disables the service. A service that is not enabled does not change. A service that osapi did not deploy is not found.
@@ -5974,6 +6074,7 @@ paths:
       summary: Make a service that osapi deployed not start at boot
       tags:
         - Service_API_service_operations
+      x-osapi-method: disable
   /api/node/{hostname}/service/{name}/enable:
     post:
       description: 'Enables the service. A service that is enabled does not change, and nor does a unit with no [Install] section, which systemd calls static: it cannot start at boot. A service that osapi did not deploy is not found.'
@@ -6030,6 +6131,7 @@ paths:
       summary: Make a service that osapi deployed start at boot
       tags:
         - Service_API_service_operations
+      x-osapi-method: enable
   /api/node/{hostname}/service/{name}/restart:
     post:
       description: Restarts the service. It always changes the host. A service that osapi did not deploy is not found.
@@ -6086,6 +6188,7 @@ paths:
       summary: Restart a service that osapi deployed
       tags:
         - Service_API_service_operations
+      x-osapi-method: restart
   /api/node/{hostname}/service/{name}/start:
     post:
       description: Starts the service. A service that runs does not change. A service that osapi did not deploy is not found.
@@ -6142,6 +6245,7 @@ paths:
       summary: Start a service that osapi deployed
       tags:
         - Service_API_service_operations
+      x-osapi-method: start
   /api/node/{hostname}/service/{name}/stop:
     post:
       description: Stops the service. A service that does not run does not change. A service that osapi did not deploy is not found.
@@ -6198,6 +6302,7 @@ paths:
       summary: Stop a service that osapi deployed
       tags:
         - Service_API_service_operations
+      x-osapi-method: stop
   /api/node/{hostname}/user/{name}/sshkey:
     delete:
       description: Removes each line of the key with the fingerprint from ~/.ssh/authorized_keys of the user, and keeps the other lines as they are. A key that the file does not have, a user with no file, or a user that the host does not have, changes nothing. It runs on the Debian family only, and elsewhere reports skipped.
@@ -6260,6 +6365,7 @@ paths:
       summary: Remove an authorized SSH key of a user
       tags:
         - Sshkey_API_sshkey_operations
+      x-osapi-method: delete
     get:
       description: Reads ~/.ssh/authorized_keys of the user through gohai, with the type, the SHA256 fingerprint, the comment and the options of each key. A user with no file has no keys. A user that the host does not have is not found.
       operationId: GetNodeUserSshkey
@@ -6315,6 +6421,7 @@ paths:
       summary: List the authorized SSH keys of a user
       tags:
         - Sshkey_API_sshkey_operations
+      x-osapi-method: list
     post:
       description: Adds the key line to the end of ~/.ssh/authorized_keys of the user, and makes the directory and the file if they are missing, with modes 700 and 600, owned by the user. A key that the file has already, by its fingerprint, does not change it. A line with no public key is refused. A user that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped.
       operationId: PostNodeUserSshkey
@@ -6376,6 +6483,7 @@ paths:
       summary: Add an authorized SSH key to a user
       tags:
         - Sshkey_API_sshkey_operations
+      x-osapi-method: create
   /api/node/{hostname}/status:
     get:
       description: Runs the get of the hostname, uptime, os, load, memory and disk behaviors on the host, and answers with each. A read that fails is in errors, as its name and its error, and the other fields still answer.
@@ -6431,6 +6539,7 @@ paths:
       summary: Get the status summary of the host
       tags:
         - Status_API_status_operations
+      x-osapi-method: get
   /api/node/{hostname}/sysctl:
     get:
       description: Lists every parameter the kernel shows under /proc/sys, with its current value, as sysctl -a does, and marks the ones osapi manages. A prefix, such as net.ipv4, limits the list to that part of the tree. The kernel can lack a parameter that osapi manages, for example when its module is not loaded. Then the list shows the value that osapi wrote.
@@ -6494,6 +6603,7 @@ paths:
       summary: List the kernel's parameters and which osapi manages
       tags:
         - Sysctl_API_sysctl_operations
+      x-osapi-method: list
     post:
       description: 'Writes osapi-net.ipv4.ip_forward.conf for net.ipv4.ip_forward to behaviors.sysctl.dir, /etc/sysctl.d by default, and applies it with sysctl -p. It fails when sysctl -p fails, because the value is not set. A second run with the same value changes nothing and reports changed: false. If the kernel has a different value, for example after a failed apply, it applies the value again.'
       operationId: PostNodeSysctl
@@ -6554,6 +6664,7 @@ paths:
       summary: Manage a kernel parameter and apply it
       tags:
         - Sysctl_API_sysctl_operations
+      x-osapi-method: create
   /api/node/{hostname}/sysctl/{key}:
     delete:
       description: 'Removes the file that osapi wrote for it and reloads with sysctl --system. Then a setting for the key in a different file takes effect. If there is no such setting, the parameter keeps its current value until the next reboot. A delete of a parameter that osapi does not manage reports changed: false.'
@@ -6610,6 +6721,7 @@ paths:
       summary: Stop the management of a kernel parameter
       tags:
         - Sysctl_API_sysctl_operations
+      x-osapi-method: delete
     get:
       operationId: GetNodeSysctlByKey
       parameters:
@@ -6664,6 +6776,7 @@ paths:
       summary: Get a kernel parameter's current value, and whether osapi manages it
       tags:
         - Sysctl_API_sysctl_operations
+      x-osapi-method: get
     put:
       description: 'The same as create, addressed by the parameter: osapi manages the parameter from then on whether it did before or not. Setting the value it already has reports changed: false.'
       operationId: PutNodeSysctl
@@ -6725,6 +6838,7 @@ paths:
       summary: Set a kernel parameter, manage it, and apply it
       tags:
         - Sysctl_API_sysctl_operations
+      x-osapi-method: update
   /api/node/{hostname}/timezone:
     get:
       description: 'Reads the IANA name of the timezone and its offset from UTC now: the zone that /etc/localtime links to, or /etc/timezone on Linux.'
@@ -6780,6 +6894,7 @@ paths:
       summary: Get the timezone of the host
       tags:
         - Timezone_API_timezone_operations
+      x-osapi-method: get
     put:
       description: 'Sets the timezone with timedatectl set-timezone. A host that already has the timezone does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.'
       operationId: PutNodeTimezone
@@ -6840,6 +6955,7 @@ paths:
       summary: Set the timezone of the host
       tags:
         - Timezone_API_timezone_operations
+      x-osapi-method: update
   /api/node/{hostname}/updatepackages:
     get:
       description: 'Runs apt list --upgradable: each package with its installed version and the version the index has. Refresh the index first for what the repositories have now.'
@@ -6895,6 +7011,7 @@ paths:
       summary: List the packages the index has newer versions of
       tags:
         - Updatepackages_API_updatepackages_operations
+      x-osapi-method: list
     put:
       description: 'Runs apt-get update. It reports changed: true when the Release file of a repository under /var/lib/apt/lists changed, and changed: false when each repository was unchanged.'
       operationId: PutNodeUpdatepackages
@@ -6949,6 +7066,7 @@ paths:
       summary: Refresh the package index
       tags:
         - Updatepackages_API_updatepackages_operations
+      x-osapi-method: update
   /api/node/{hostname}/uptime:
     get:
       description: 'Reads how long the host has run since it booted: /proc/uptime on Linux, and the boot time that sysctl gives on macOS. The uptime is in days, hours and minutes, and in seconds.'
@@ -7004,6 +7122,7 @@ paths:
       summary: Get the uptime of the host
       tags:
         - Uptime_API_uptime_operations
+      x-osapi-method: get
   /api/node/{hostname}/user:
     get:
       description: 'Lists each user with its IDs, home, shell, groups and whether it is locked, through gohai: from /etc/passwd, /etc/group and /etc/shadow on Linux, and from the directory service with dscl on macOS. The groups are those that list the user as a member, besides its primary group.'
@@ -7059,6 +7178,7 @@ paths:
       summary: List the users of the host
       tags:
         - User_API_user_operations
+      x-osapi-method: list
     post:
       description: 'Adds the user with useradd, with its home directory, and sets its password with chpasswd when one is given. The controller hashes the password, so the job and NATS have only the hash. A user that the host has already does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.'
       operationId: PostNodeUser
@@ -7119,6 +7239,7 @@ paths:
       summary: Add a user
       tags:
         - User_API_user_operations
+      x-osapi-method: create
   /api/node/{hostname}/user/{name}:
     delete:
       description: 'Removes the user and its home directory with userdel -r. A user that the host does not have does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.'
@@ -7175,6 +7296,7 @@ paths:
       summary: Remove a user
       tags:
         - User_API_user_operations
+      x-osapi-method: delete
     get:
       description: Reads one user from the same list. A user that the host does not have is not found.
       operationId: GetNodeUserByKey
@@ -7230,6 +7352,7 @@ paths:
       summary: Get one user
       tags:
         - User_API_user_operations
+      x-osapi-method: get
     put:
       description: 'Changes what the input gives and the user does not have already, with usermod: its shell, its home, which usermod moves the files to, its groups, which replace the groups it has, and whether it is locked. The same values report changed: false. A user that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped.'
       operationId: PutNodeUser
@@ -7291,6 +7414,7 @@ paths:
       summary: Change a user
       tags:
         - User_API_user_operations
+      x-osapi-method: update
   /api/node/{hostname}/user/{name}/passwd:
     post:
       description: 'Sets the password with chpasswd -e, from its hash on standard input. The controller hashes the password, so the job and NATS have only the hash. Each run makes a new hash, so it always reports changed: true. A user that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped.'
@@ -7353,6 +7477,7 @@ paths:
       summary: Set the password of a user
       tags:
         - User_API_user_operations
+      x-osapi-method: passwd
 components:
   schemas:
     ErrorResponse:

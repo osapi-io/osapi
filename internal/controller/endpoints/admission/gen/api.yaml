@@ -188,6 +188,7 @@ paths:
       summary: List admission records
       tags:
         - admission
+      x-osapi-method: list
   /api/admission/{machine_id}:
     delete:
       description: Removes a machine's key and each record of it, and keeps none. A machine that asks again is new. Use it for a machine that goes away on purpose, such as a VM that is rebuilt; revoke a machine that is not trusted.
@@ -248,6 +249,7 @@ paths:
       summary: Delete a machine
       tags:
         - admission
+      x-osapi-method: delete
     get:
       description: Returns one machine's admission record by machine ID.
       operationId: GetAdmission
@@ -311,6 +313,7 @@ paths:
       summary: Get a machine's admission record
       tags:
         - admission
+      x-osapi-method: get
   /api/admission/{machine_id}/admit:
     post:
       description: 'Admits a pending machine. The fingerprint must be the one that `osapi agent admission get` prints on the machine: it proves that the request came from the machine the operator is looking at.'
@@ -383,6 +386,7 @@ paths:
       summary: Admit a pending machine
       tags:
         - admission
+      x-osapi-method: admit
   /api/admission/{machine_id}/reject:
     post:
       description: Rejects a pending machine, and keeps a record of the decision, so a machine that asks again is flagged.
@@ -449,6 +453,7 @@ paths:
       summary: Reject a pending machine
       tags:
         - admission
+      x-osapi-method: reject
   /api/admission/{machine_id}/revoke:
     post:
       description: Removes an admitted machine's key, and keeps a record of the decision. Nothing the machine signs verifies afterwards; to return, it asks again.
@@ -509,6 +514,7 @@ paths:
       summary: Revoke an admitted machine
       tags:
         - admission
+      x-osapi-method: revoke
 tags:
   - description: Admit, reject and revoke the nodes that ask to join.
     name: admission

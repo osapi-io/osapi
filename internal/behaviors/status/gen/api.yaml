@@ -241,6 +241,7 @@ paths:
       summary: Get the status summary of the host
       tags:
         - status_operations
+      x-osapi-method: get
 tags:
   - description: The status summary of a node
     name: status_operations

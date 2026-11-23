@@ -248,6 +248,7 @@ paths:
       summary: Drop the DNS resolvers osapi set on an interface
       tags:
         - network_dns_operations
+      x-osapi-method: delete
     get:
       description: 'Reads the servers and the search domains of the interface: resolvectl on Linux, with resolv.conf on a host that has no resolvers per interface, such as a container, and scutil on macOS.'
       operationId: GetNodeNetworkDnsByKey
@@ -303,6 +304,7 @@ paths:
       summary: Get the DNS resolvers of an interface
       tags:
         - network_dns_operations
+      x-osapi-method: get
     put:
       description: Writes a netplan file of the interface's own, such as /etc/netplan/osapi-dns-eth0.yaml for eth0, under the netplan definition that matches the interface, and applies it. A definition that matches several interfaces, such as cloud-init's all for en*, gives each of them the resolvers. An empty list keeps the interface's servers or domains, and an interface with no resolvers yet starts from none. override_dhcp drops the servers DHCP gives. It runs on the Debian family, and elsewhere, and in a container, reports skipped.
       operationId: PutNodeNetworkDns
@@ -364,6 +366,7 @@ paths:
       summary: Set the DNS resolvers of an interface
       tags:
         - network_dns_operations
+      x-osapi-method: update
 tags:
   - description: The DNS resolvers of each interface of the host
     name: network_dns_operations

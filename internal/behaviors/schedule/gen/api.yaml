@@ -354,6 +354,7 @@ paths:
       summary: List the cron entries that osapi deployed
       tags:
         - schedule_operations
+      x-osapi-method: list
     post:
       description: 'Gets the object from the object store and writes it as /etc/cron.d/backup for backup, mode 0644, for a cron expression, or as /etc/cron.daily/backup, mode 0755, for a daily interval. An object of content type template, or content_type template, is rendered with the agent''s facts and the vars. A file that has the content does not change. An entry of the name in a different directory does not change: move it with delete and create. A file at the path that osapi did not deploy is refused. An entry runs as its user, root included, so only admin can deploy one.'
       operationId: PostNodeSchedule
@@ -414,6 +415,7 @@ paths:
       summary: Deploy a cron entry
       tags:
         - schedule_operations
+      x-osapi-method: create
   /api/node/{hostname}/schedule/{name}:
     delete:
       description: Removes the entry's file and its record. An entry that osapi did not deploy does not change, and a cron file that osapi did not deploy stays.
@@ -470,6 +472,7 @@ paths:
       summary: Remove a cron entry that osapi deployed
       tags:
         - schedule_operations
+      x-osapi-method: delete
     get:
       description: Reads the entry from /etc/cron.d, then from each interval directory. An entry that osapi did not deploy is not found.
       operationId: GetNodeScheduleByKey
@@ -525,6 +528,7 @@ paths:
       summary: Get one cron entry that osapi deployed
       tags:
         - schedule_operations
+      x-osapi-method: get
     put:
       description: 'Writes a new object, or the entry''s own, at the entry''s path, with the fields that the request gives and the entry''s own for the rest. A file that has the content does not change. An entry that osapi did not deploy is not found. The entry stays in its directory: an interval does not change with update.'
       operationId: PutNodeSchedule
@@ -586,6 +590,7 @@ paths:
       summary: Deploy a cron entry that osapi deployed again
       tags:
         - schedule_operations
+      x-osapi-method: update
 tags:
   - description: The cron entries that osapi deploys
     name: schedule_operations

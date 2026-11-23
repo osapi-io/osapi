@@ -376,6 +376,7 @@ paths:
       summary: List the network interfaces of the host
       tags:
         - network_interface_operations
+      x-osapi-method: list
   /api/node/{hostname}/network/interface/{name}:
     delete:
       description: Removes the interface's netplan file and applies what is left. An interface osapi does not configure does not change.
@@ -432,6 +433,7 @@ paths:
       summary: Drop the config osapi has of a network interface
       tags:
         - network_interface_operations
+      x-osapi-method: delete
     get:
       description: Reads the interface as list does.
       operationId: GetNodeNetworkInterfaceByKey
@@ -487,6 +489,7 @@ paths:
       summary: Get a network interface of the host
       tags:
         - network_interface_operations
+      x-osapi-method: get
     post:
       description: 'Writes a netplan file of the interface''s own, such as /etc/netplan/osapi-osapi0.yaml for osapi0, under a netplan definition that is the interface''s own, and applies it. An interface the host does not have is not found. dhcp4 and dhcp6 are false unless given, so the interface has only the addresses given. An interface that a match defines, such as cloud-init''s all for en*, is refused, because the config would change each interface the match takes, now and later. An interface osapi already configures does not change: update replaces its config. It runs on the Debian family, and elsewhere, and in a container, reports skipped.'
       operationId: PostNodeNetworkInterface
@@ -548,6 +551,7 @@ paths:
       summary: Configure a network interface
       tags:
         - network_interface_operations
+      x-osapi-method: create
     put:
       description: 'Writes the interface''s netplan file over the one osapi has, as create writes it, and applies it. An interface osapi does not configure is not found: create configures it.'
       operationId: PutNodeNetworkInterface
@@ -609,6 +613,7 @@ paths:
       summary: Change the config osapi has of a network interface
       tags:
         - network_interface_operations
+      x-osapi-method: update
 tags:
   - description: The network interfaces of the host
     name: network_interface_operations

@@ -18,142 +18,33 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package client provides a Go SDK for the OSAPI REST API.
+// Package client is the Go SDK of the OSAPI REST API.
 //
-// Create a client with New() and use the domain-specific services
-// to interact with the API:
+// Create a client with New(), then call the typed services, one for each
+// group of the API. internal/sdk/gen writes the services and their types
+// from the API's spec:
 //
-//	client := client.New("http://localhost:8080", "your-jwt-token")
+//	c := client.New("http://localhost:8080", "your-jwt-token")
 //
-//	// Get hostname
-//	resp, err := client.Hostname.Get(ctx, "_any")
+//	// The hostname of each host.
+//	resp, err := c.Hostname.Get(ctx, "_all")
 //
-//	// Execute a command
-//	resp, err := client.Command.Exec(ctx, client.ExecRequest{
+//	// Run a command on one host.
+//	resp, err := c.Command.Exec(ctx, "web-01", client.CommandExecRequest{
 //	    Command: "uptime",
-//	    Target:  "_all",
 //	})
 package client
 
 import (
 	"log/slog"
 	"net/http"
-
-	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
-// Client is the top-level OSAPI SDK client. Use New() to create one.
+// Client is the top-level OSAPI SDK client. Use New() to create one. Each
+// typed service is a field of the embedded services, such as c.NetworkDNS.
 type Client struct {
-	// Agent provides agent discovery and details operations.
-	Agent *AgentService
-	// Admission admits, rejects and revokes the nodes that ask to join.
-	Admission *AdmissionService
+	services
 
-	// Status provides full node status queries (OS, disk, memory, load).
-	Status *StatusService
-
-	// Hostname provides hostname query and update operations.
-	Hostname *HostnameService
-
-	// Disk provides disk usage query operations.
-	Disk *DiskService
-
-	// Memory provides memory usage query operations.
-	Memory *MemoryService
-
-	// Load provides load average query operations.
-	Load *LoadService
-
-	// Uptime provides uptime query operations.
-	Uptime *UptimeService
-
-	// OS provides operating system info query operations.
-	OS *OSService
-
-	// DNS provides DNS configuration query and update operations.
-	DNS *DNSService
-
-	// Connectivity pings an address from the target hosts.
-	Connectivity *ConnectivityService
-
-	// Command provides command execution operations (exec, shell).
-	Command *CommandService
-
-	// FileDeploy provides file deployment operations on target hosts.
-	FileDeploy *FileDeployService
-
-	// Job provides job queue operations (create, get, list, delete, retry).
-	Job *JobService
-
-	// Health provides health check operations (liveness, readiness, status).
-	Health *HealthService
-
-	// Audit provides audit log operations (list, get, export).
-	Audit *AuditService
-
-	// Telemetry reads telemetry through the controller, such as a trace.
-	Telemetry *TelemetryService
-
-	// File provides file management operations (upload, list, get, delete).
-	File *FileService
-
-	// Docker provides Docker container management operations (create, list,
-	// inspect, start, stop, remove, exec, pull).
-	Docker *DockerService
-
-	// Schedule provides scheduled task management operations (list, get,
-	// create, update, delete).
-	Schedule *ScheduleService
-
-	// Sysctl provides sysctl parameter management operations (list, get,
-	// set, delete).
-	Sysctl *SysctlService
-
-	// NTP provides NTP management operations (get, create, update, delete).
-	NTP *NTPService
-
-	// Timezone provides system timezone management operations (get, update).
-	Timezone *TimezoneService
-
-	// Process lists the processes of a host, gets one, and sends a signal
-	// to one.
-	Process *ProcessService
-
-	// Power provides power management operations (reboot, shutdown).
-	Power *PowerService
-
-	// User provides user account management operations (list, get,
-	// create, update, delete, change password).
-	User *UserService
-
-	// Group provides group management operations (list, get, create,
-	// update, delete).
-	Group *GroupService
-
-	// Log reads the systemd journal: its entries and the sources that wrote them.
-	Log *LogService
-
-	// Package provides package management operations (list, get,
-	// install, remove, update, list updates).
-	Package *PackageService
-
-	// Certificate provides CA certificate management operations
-	// (list, create, update, delete).
-	Certificate *CertificateService
-
-	// Service provides systemd service management operations (list, get,
-	// create, update, delete, start, stop, restart, enable, disable).
-	Service *ServiceService
-
-	// Interface provides network interface management operations (list, get,
-	// create, update, delete).
-	Interface *InterfaceService
-
-	// Route provides network route management operations (list, get,
-	// create, update, delete).
-	Route *RouteService
-
-	httpClient    *gen.ClientWithResponses
 	hc            *http.Client
 	baseURL       string
 	logger        *slog.Logger
@@ -219,50 +110,10 @@ func New(
 		logger:     c.logger,
 	}
 
-	hc := &http.Client{
+	c.hc = &http.Client{
 		Transport: transport,
 	}
-
-	// Error is unreachable: the only ClientOption passed (WithHTTPClient) cannot
-	// fail, and NewClientWithResponses only errors when a ClientOption does.
-	// Invalid URLs are caught later at HTTP call time with a clear parse error.
-	httpClient, _ := gen.NewClientWithResponses(baseURL, gen.WithHTTPClient(hc))
-
-	c.httpClient = httpClient
-	c.hc = hc
-	c.Agent = &AgentService{client: httpClient}
-	c.Admission = &AdmissionService{client: httpClient}
-	c.Status = &StatusService{client: httpClient}
-	c.Hostname = &HostnameService{client: httpClient}
-	c.Disk = &DiskService{client: httpClient}
-	c.Memory = &MemoryService{client: httpClient}
-	c.Load = &LoadService{client: httpClient}
-	c.Uptime = &UptimeService{client: httpClient}
-	c.OS = &OSService{client: httpClient}
-	c.DNS = &DNSService{client: httpClient}
-	c.Connectivity = &ConnectivityService{client: httpClient}
-	c.Command = &CommandService{client: httpClient}
-	c.FileDeploy = &FileDeployService{client: httpClient}
-	c.Job = &JobService{client: httpClient}
-	c.Health = &HealthService{client: httpClient}
-	c.Audit = &AuditService{client: httpClient}
-	c.Telemetry = &TelemetryService{client: httpClient}
-	c.File = &FileService{client: httpClient}
-	c.Docker = &DockerService{client: httpClient}
-	c.Schedule = &ScheduleService{client: httpClient}
-	c.Sysctl = &SysctlService{client: httpClient}
-	c.NTP = &NTPService{client: httpClient}
-	c.Timezone = &TimezoneService{client: httpClient}
-	c.Process = &ProcessService{client: httpClient}
-	c.Power = &PowerService{client: httpClient}
-	c.User = &UserService{client: httpClient}
-	c.Group = &GroupService{client: httpClient}
-	c.Log = &LogService{client: httpClient}
-	c.Package = &PackageService{client: httpClient}
-	c.Certificate = &CertificateService{client: httpClient}
-	c.Service = &ServiceService{client: httpClient}
-	c.Interface = &InterfaceService{client: httpClient}
-	c.Route = &RouteService{client: httpClient}
+	c.wire(c)
 
 	return c
 }

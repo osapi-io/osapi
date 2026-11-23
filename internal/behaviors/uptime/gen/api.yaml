@@ -147,6 +147,7 @@ paths:
       summary: Get the uptime of the host
       tags:
         - uptime_operations
+      x-osapi-method: get
 tags:
   - description: Get the uptime of target hosts
     name: uptime_operations

@@ -145,14 +145,8 @@ $ osapi client node user create --target group:web \
 
 ## Permissions
 
-| Operation          | Permission    |
-| ------------------ | ------------- |
-| User list/get      | `user:read`   |
-| User mutations     | `user:write`  |
-| SSH key list       | `user:read`   |
-| SSH key add/remove | `user:write`  |
-| Group list/get     | `group:read`  |
-| Group mutations    | `group:write` |
+The Permission column of [Methods](#methods) gives the permission of each
+method.
 
 ## Supported platforms
 

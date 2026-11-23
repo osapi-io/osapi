@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates the FileDeployService: deploying files from
+// Package main demonstrates the NodeFileService: deploying files from
 // the Object Store to agent hosts and checking deploy status.
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run file_deploy.go
@@ -48,12 +48,11 @@ func main() {
 	ctx := context.Background()
 
 	// Deploy a file to all agents.
-	deploy, err := c.FileDeploy.Deploy(ctx, client.FileDeployOpts{
+	deploy, err := c.NodeFile.Update(ctx, "_all", client.NodeFileUpdateInput{
 		ObjectName:  "app.conf",
 		Path:        "/tmp/app.conf",
-		ContentType: client.ContentRaw,
+		ContentType: string(client.ContentRaw),
 		Mode:        "0644",
-		Target:      "_all",
 	})
 	if err != nil {
 		log.Fatalf("deploy: %v", err)
@@ -65,7 +64,7 @@ func main() {
 	}
 
 	// Check file status on the agents.
-	status, err := c.FileDeploy.Status(ctx, "_all", "/tmp/app.conf")
+	status, err := c.NodeFile.Status(ctx, "_all", "/tmp/app.conf")
 	if err != nil {
 		log.Fatalf("status: %v", err)
 	}

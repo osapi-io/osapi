@@ -8,9 +8,22 @@ Load average query operations.
 
 ## Methods
 
-| Method             | Description       |
-| ------------------ | ----------------- |
-| `Get(ctx, target)` | Get load averages |
+| Method                      | Returns                           | Permission  | Description                       |
+| --------------------------- | --------------------------------- | ----------- | --------------------------------- |
+| `c.Load.Get(ctx, hostname)` | `Response[Collection[LoadEntry]]` | `load:read` | Get the load averages of the host |
+
+## Types
+
+The fields of each type are the properties of its schema in the API's spec.
+
+### LoadEntry
+
+| Field         | Type       | Description                                                                            |
+| ------------- | ---------- | -------------------------------------------------------------------------------------- |
+| `Error`       | `string`   | Error message if the agent failed.                                                     |
+| `Hostname`    | `string`   | Hostname of the agent that produced this result.                                       |
+| `LoadAverage` | `Averages` | LoadAverage is the property load_average.                                              |
+| `Status`      | `string`   | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
 
 ## Usage
 
@@ -24,9 +37,9 @@ resp, err := c.Load.Get(ctx, "_all")
 for _, r := range resp.Data.Results {
     fmt.Printf("Load (%s): %.2f %.2f %.2f\n",
         r.Hostname,
-        r.LoadAverage.OneMin,
-        r.LoadAverage.FiveMin,
-        r.LoadAverage.FifteenMin)
+        r.LoadAverage.Min1,
+        r.LoadAverage.Min5,
+        r.LoadAverage.Min15)
 }
 ```
 
@@ -38,4 +51,5 @@ for a complete working example.
 
 ## Permissions
 
-Requires the `load:read` permission.
+The Permission column of [Methods](#methods) gives the permission of each
+method.

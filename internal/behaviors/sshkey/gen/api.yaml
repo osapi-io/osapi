@@ -253,6 +253,7 @@ paths:
       summary: Remove an authorized SSH key of a user
       tags:
         - sshkey_operations
+      x-osapi-method: delete
     get:
       description: Reads ~/.ssh/authorized_keys of the user through gohai, with the type, the SHA256 fingerprint, the comment and the options of each key. A user with no file has no keys. A user that the host does not have is not found.
       operationId: GetNodeUserSshkey
@@ -308,6 +309,7 @@ paths:
       summary: List the authorized SSH keys of a user
       tags:
         - sshkey_operations
+      x-osapi-method: list
     post:
       description: Adds the key line to the end of ~/.ssh/authorized_keys of the user, and makes the directory and the file if they are missing, with modes 700 and 600, owned by the user. A key that the file has already, by its fingerprint, does not change it. A line with no public key is refused. A user that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped.
       operationId: PostNodeUserSshkey
@@ -369,6 +371,7 @@ paths:
       summary: Add an authorized SSH key to a user
       tags:
         - sshkey_operations
+      x-osapi-method: create
 tags:
   - description: The authorized SSH keys of a user
     name: sshkey_operations

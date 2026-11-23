@@ -27,7 +27,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/pkg/sdk/client"
-	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
 type CheckErrorPublicTestSuite struct {
@@ -142,7 +141,7 @@ func (suite *CheckErrorPublicTestSuite) TestCheckError() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			err := client.ExportCheckError(tc.statusCode)
+			err := client.ExportCheckError(tc.statusCode, nil)
 			tc.validateFunc(err)
 		})
 	}
@@ -152,45 +151,35 @@ func (suite *CheckErrorPublicTestSuite) TestCheckErrorMessages() {
 	tests := []struct {
 		name         string
 		statusCode   int
-		responses    []*gen.ErrorResponse
+		body         *client.ErrorResponse
 		validateFunc func(error)
 	}{
 		{
-			name:       "when error response contains a message",
+			name:       "when the error body has a message and a reason",
 			statusCode: 400,
-			responses: func() []*gen.ErrorResponse {
-				msg := "field 'name' is required"
-				return []*gen.ErrorResponse{{Error: &msg}}
-			}(),
+			body: &client.ErrorResponse{
+				Error:  "field 'name' is required",
+				Reason: "invalid_request",
+			},
 			validateFunc: func(err error) {
-				suite.Error(err)
 				suite.Contains(err.Error(), "field 'name' is required")
+				var apiErr *client.ValidationError
+				suite.Require().ErrorAs(err, &apiErr)
+				suite.Equal("invalid_request", apiErr.Reason)
 			},
 		},
 		{
-			name:       "when all responses are nil",
-			statusCode: 400,
-			responses:  []*gen.ErrorResponse{nil, nil},
-			validateFunc: func(err error) {
-				suite.Error(err)
-				suite.Contains(err.Error(), "unexpected status 400")
-			},
-		},
-		{
-			name:       "when no responses are provided",
+			name:       "when there is no error body",
 			statusCode: 500,
-			responses:  nil,
 			validateFunc: func(err error) {
-				suite.Error(err)
 				suite.Contains(err.Error(), "unexpected status 500")
 			},
 		},
 		{
-			name:       "when response has nil Error field",
+			name:       "when the error body has no message",
 			statusCode: 404,
-			responses:  []*gen.ErrorResponse{{Error: nil}},
+			body:       &client.ErrorResponse{},
 			validateFunc: func(err error) {
-				suite.Error(err)
 				suite.Contains(err.Error(), "unexpected status 404")
 			},
 		},
@@ -198,7 +187,7 @@ func (suite *CheckErrorPublicTestSuite) TestCheckErrorMessages() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			err := client.ExportCheckError(tc.statusCode, tc.responses...)
+			err := client.ExportCheckError(tc.statusCode, tc.body)
 			tc.validateFunc(err)
 		})
 	}

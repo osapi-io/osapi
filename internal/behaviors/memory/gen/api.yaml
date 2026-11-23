@@ -159,6 +159,7 @@ paths:
       summary: Get the memory usage of the host
       tags:
         - memory_operations
+      x-osapi-method: get
 tags:
   - description: Get the memory usage of target hosts
     name: memory_operations

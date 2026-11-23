@@ -54,7 +54,7 @@ func main() {
 	}
 
 	for _, r := range resp.Data.Results {
-		if r.OSInfo != nil {
+		if r.OSInfo.Distribution != "" {
 			fmt.Printf("OS (%s): %s %s\n",
 				r.Hostname, r.OSInfo.Distribution, r.OSInfo.Version)
 		}

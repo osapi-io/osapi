@@ -260,6 +260,7 @@ paths:
       summary: List the processes of the host
       tags:
         - process_operations
+      x-osapi-method: list
   /api/node/{hostname}/process/{pid}:
     get:
       description: Reads one process by its ID, without the others. A process that the host does not have is not found.
@@ -316,6 +317,7 @@ paths:
       summary: Get one process
       tags:
         - process_operations
+      x-osapi-method: get
   /api/node/{hostname}/process/{pid}/signal:
     post:
       description: 'Sends TERM, KILL, HUP, INT, USR1 or USR2 to one process with kill, and reports changed: true. A process that the host does not have is not found. A process ID below 1 is refused, because kill sends to a group of processes for 0 and for a negative ID.'
@@ -378,6 +380,7 @@ paths:
       summary: Send a signal to a process
       tags:
         - process_operations
+      x-osapi-method: signal
 tags:
   - description: The processes of the host
     name: process_operations

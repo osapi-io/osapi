@@ -20,10 +20,6 @@
 
 package client
 
-import (
-	openapi_types "github.com/oapi-codegen/runtime/types"
-)
-
 // Collection is a generic wrapper for collection responses from node queries.
 type Collection[T any] struct {
 	Results []T    `json:"results"`
@@ -40,81 +36,4 @@ func (c Collection[T]) First() (T, bool) {
 	}
 
 	return c.Results[0], true
-}
-
-// derefString safely dereferences a string pointer, returning empty string for nil.
-func derefString(
-	s *string,
-) string {
-	if s == nil {
-		return ""
-	}
-
-	return *s
-}
-
-// derefInt safely dereferences an int pointer, returning zero for nil.
-func derefInt(
-	i *int,
-) int {
-	if i == nil {
-		return 0
-	}
-
-	return *i
-}
-
-// derefInt64 safely dereferences an int64 pointer, returning zero for nil.
-func derefInt64(
-	i *int64,
-) int64 {
-	if i == nil {
-		return 0
-	}
-
-	return *i
-}
-
-// derefFloat64 safely dereferences a float64 pointer, returning zero for nil.
-func derefFloat64(
-	f *float64,
-) float64 {
-	if f == nil {
-		return 0
-	}
-
-	return *f
-}
-
-// derefFloat32 safely dereferences a float32 pointer, returning zero for nil.
-func derefFloat32(
-	f *float32,
-) float32 {
-	if f == nil {
-		return 0
-	}
-
-	return *f
-}
-
-// derefBool safely dereferences a bool pointer, returning false for nil.
-func derefBool(
-	b *bool,
-) bool {
-	if b == nil {
-		return false
-	}
-
-	return *b
-}
-
-// jobIDFromGen extracts a job ID string from an optional UUID pointer.
-func jobIDFromGen(
-	id *openapi_types.UUID,
-) string {
-	if id == nil {
-		return ""
-	}
-
-	return id.String()
 }

@@ -66,7 +66,7 @@ func main() {
 
 	// Create a new group (may fail on non-Debian platforms).
 	fmt.Println("\n=== Creating test group ===")
-	createResp, err := c.Group.Create(ctx, target, client.GroupCreateOpts{
+	createResp, err := c.Group.Create(ctx, target, client.GroupCreateInput{
 		Name: "testgroup",
 	})
 	if err != nil {

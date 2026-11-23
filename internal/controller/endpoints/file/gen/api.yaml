@@ -227,6 +227,7 @@ paths:
       summary: List stored files
       tags:
         - file_operations
+      x-osapi-method: list
     post:
       description: Upload a file to the Object Store.
       operationId: PostFile
@@ -324,6 +325,7 @@ paths:
       summary: Upload a file
       tags:
         - file_operations
+      x-osapi-method: upload
   /api/file/{name}:
     delete:
       description: Delete a file from the Object Store.
@@ -384,6 +386,7 @@ paths:
       summary: Delete a file
       tags:
         - file_operations
+      x-osapi-method: delete
     get:
       description: Get metadata for a specific file in the Object Store.
       operationId: GetFileByName
@@ -447,6 +450,7 @@ paths:
       summary: Get file metadata
       tags:
         - file_operations
+      x-osapi-method: get
     put:
       description: Replace a file in the Object Store, or create it when the name is new.
       operationId: PutFileByName
@@ -540,6 +544,7 @@ paths:
       summary: Replace a file
       tags:
         - file_operations
+      x-osapi-method: update
   /api/file/stale:
     get:
       description: Returns deployments where the source object in the Object Store has been updated since the file was last deployed. Controller-only check that compares state KV SHA-256 hashes against current object content.
@@ -581,6 +586,7 @@ paths:
       summary: List stale file deployments
       tags:
         - file_operations
+      x-osapi-method: stale
 tags:
   - description: Object Store file management operations.
     name: file_operations

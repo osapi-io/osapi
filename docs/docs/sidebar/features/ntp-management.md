@@ -120,13 +120,8 @@ family.
 
 ## Permissions
 
-| Operation              | Permission  |
-| ---------------------- | ----------- |
-| Get                    | `ntp:read`  |
-| Create, Update, Delete | `ntp:write` |
-
-`admin`, `operator`, `automation` and `read` include `ntp:read`. `admin` and
-`automation` also include `ntp:write`.
+The Permission column of [Methods](#methods) gives the permission of each
+method.
 
 ## Related
 

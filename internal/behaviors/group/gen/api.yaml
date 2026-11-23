@@ -290,6 +290,7 @@ paths:
       summary: List the groups of the host
       tags:
         - group_operations
+      x-osapi-method: list
     post:
       description: 'Adds the group with groupadd, with the ID when one is given. A group that the host has already does not change and reports changed: false, whatever its ID. It runs on the Debian family only, and elsewhere reports skipped.'
       operationId: PostNodeGroup
@@ -350,6 +351,7 @@ paths:
       summary: Add a group
       tags:
         - group_operations
+      x-osapi-method: create
   /api/node/{hostname}/group/{name}:
     delete:
       description: 'Removes the group with groupdel. A group that the host does not have does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.'
@@ -406,6 +408,7 @@ paths:
       summary: Remove a group
       tags:
         - group_operations
+      x-osapi-method: delete
     get:
       description: Reads one group from the same list. A group that the host does not have is not found.
       operationId: GetNodeGroupByKey
@@ -461,6 +464,7 @@ paths:
       summary: Get one group
       tags:
         - group_operations
+      x-osapi-method: get
     put:
       description: 'Sets the members with gpasswd -M, in place of the members that the group has. The same members, in any order, do not change it and report changed: false. A group that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped.'
       operationId: PutNodeGroup
@@ -522,6 +526,7 @@ paths:
       summary: Set the members of a group
       tags:
         - group_operations
+      x-osapi-method: update
 tags:
   - description: The groups of the host
     name: group_operations

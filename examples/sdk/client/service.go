@@ -82,7 +82,7 @@ func main() {
 	// osapi client file upload stored, as osapi-app.service (idempotent).
 	fmt.Println("\n=== Deploying app ===")
 	createResp, err := c.Service.Create(ctx, target,
-		client.ServiceCreateOpts{Name: "app", Object: "app.service"})
+		client.ServiceCreateInput{Name: "app", Object: "app.service"})
 	if err != nil {
 		log.Fatalf("create failed: %v", err)
 	}

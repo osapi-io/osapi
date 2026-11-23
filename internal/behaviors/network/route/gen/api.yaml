@@ -316,6 +316,7 @@ paths:
       summary: Drop a route that osapi wrote
       tags:
         - route_operations
+      x-osapi-method: delete
     get:
       description: 'Reads the routes of the main table that go out of the interface: ip route on Linux, netstat on macOS. proto says where a route came from, such as dhcp, kernel or static. An interface with no routes has none; one the host does not have is not found.'
       operationId: GetNodeNetworkInterfaceRoute
@@ -371,6 +372,7 @@ paths:
       summary: List the routes of an interface
       tags:
         - route_operations
+      x-osapi-method: list
     post:
       description: 'Adds the route to the interface''s netplan file, such as /etc/netplan/osapi-osapi0-routes.yaml for osapi0, under a netplan definition that is the interface''s own, and applies it. A route osapi already has, the same, does not change; one to the same destination by another gateway or metric is refused: update changes it. A default route is refused: the interface behavior sets the gateway. An interface the host does not have is not found. An interface that a match defines, such as cloud-init''s all for en*, is refused, because the route would go on each interface the match takes. It runs on the Debian family, and elsewhere, and in a container, reports skipped.'
       operationId: PostNodeNetworkInterfaceRoute
@@ -432,6 +434,7 @@ paths:
       summary: Add a static route to an interface
       tags:
         - route_operations
+      x-osapi-method: create
     put:
       description: 'Writes the route over the one osapi has to the same destination, and applies it. A destination osapi has no route to is not found: create adds it.'
       operationId: PutNodeNetworkInterfaceRoute
@@ -493,6 +496,7 @@ paths:
       summary: Change the gateway or the metric of a route
       tags:
         - route_operations
+      x-osapi-method: update
 tags:
   - description: The routes of an interface
     name: route_operations

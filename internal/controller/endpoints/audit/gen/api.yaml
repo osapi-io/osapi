@@ -277,6 +277,7 @@ paths:
       summary: List audit log entries
       tags:
         - audit
+      x-osapi-method: list
   /api/audit/{id}:
     get:
       description: Returns a single audit log entry by ID. An entry of a request to a target outside the target scope of the token is not found.
@@ -340,6 +341,7 @@ paths:
       summary: Get a single audit log entry
       tags:
         - audit
+      x-osapi-method: get
   /api/audit/export:
     get:
       description: Returns all audit log entries without pagination for export. A token with a target scope gets only the entries of requests to a target in its scope.
@@ -381,6 +383,7 @@ paths:
       summary: Export all audit log entries
       tags:
         - audit
+      x-osapi-method: export
 tags:
   - description: Audit log endpoints for viewing API activity.
     name: audit

@@ -203,6 +203,7 @@ paths:
       summary: Get the timezone of the host
       tags:
         - timezone_operations
+      x-osapi-method: get
     put:
       description: 'Sets the timezone with timedatectl set-timezone. A host that already has the timezone does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.'
       operationId: PutNodeTimezone
@@ -263,6 +264,7 @@ paths:
       summary: Set the timezone of the host
       tags:
         - timezone_operations
+      x-osapi-method: update
 tags:
   - description: The timezone of the host
     name: timezone_operations

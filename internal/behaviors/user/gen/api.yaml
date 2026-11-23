@@ -384,6 +384,7 @@ paths:
       summary: List the users of the host
       tags:
         - user_operations
+      x-osapi-method: list
     post:
       description: 'Adds the user with useradd, with its home directory, and sets its password with chpasswd when one is given. The controller hashes the password, so the job and NATS have only the hash. A user that the host has already does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.'
       operationId: PostNodeUser
@@ -444,6 +445,7 @@ paths:
       summary: Add a user
       tags:
         - user_operations
+      x-osapi-method: create
   /api/node/{hostname}/user/{name}:
     delete:
       description: 'Removes the user and its home directory with userdel -r. A user that the host does not have does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.'
@@ -500,6 +502,7 @@ paths:
       summary: Remove a user
       tags:
         - user_operations
+      x-osapi-method: delete
     get:
       description: Reads one user from the same list. A user that the host does not have is not found.
       operationId: GetNodeUserByKey
@@ -555,6 +558,7 @@ paths:
       summary: Get one user
       tags:
         - user_operations
+      x-osapi-method: get
     put:
       description: 'Changes what the input gives and the user does not have already, with usermod: its shell, its home, which usermod moves the files to, its groups, which replace the groups it has, and whether it is locked. The same values report changed: false. A user that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped.'
       operationId: PutNodeUser
@@ -616,6 +620,7 @@ paths:
       summary: Change a user
       tags:
         - user_operations
+      x-osapi-method: update
   /api/node/{hostname}/user/{name}/passwd:
     post:
       description: 'Sets the password with chpasswd -e, from its hash on standard input. The controller hashes the password, so the job and NATS have only the hash. Each run makes a new hash, so it always reports changed: true. A user that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped.'
@@ -678,6 +683,7 @@ paths:
       summary: Set the password of a user
       tags:
         - user_operations
+      x-osapi-method: passwd
 tags:
   - description: The users of the host
     name: user_operations

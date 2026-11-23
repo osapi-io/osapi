@@ -11,19 +11,50 @@ hosts, through the `ntp` behavior. The servers are in
 
 ## Methods
 
-| Method                        | Description                         |
-| ----------------------------- | ----------------------------------- |
-| `Get(ctx, hostname)`          | Get NTP sync status and server list |
-| `Create(ctx, hostname, opts)` | Create NTP configuration            |
-| `Update(ctx, hostname, opts)` | Replace the servers that osapi set  |
-| `Delete(ctx, hostname)`       | Remove the servers that osapi set   |
+| Method                                              | Returns                           | Permission  | Description                                   |
+| --------------------------------------------------- | --------------------------------- | ----------- | --------------------------------------------- |
+| `c.NTP.Get(ctx, hostname)`                          | `Response[Collection[NtpStatus]]` | `ntp:read`  | Get the sync status of chrony and its sources |
+| `c.NTP.Create(ctx, hostname, input NTPCreateInput)` | `Response[Collection[NtpResult]]` | `ntp:write` | Set the NTP servers that chrony uses          |
+| `c.NTP.Update(ctx, hostname, input NTPUpdateInput)` | `Response[Collection[NtpResult]]` | `ntp:write` | Replace the NTP servers that osapi set        |
+| `c.NTP.Delete(ctx, hostname)`                       | `Response[Collection[NtpResult]]` | `ntp:write` | Remove the NTP servers that osapi set         |
 
-## Request Types
+## Types
 
-| Type            | Fields             |
-| --------------- | ------------------ |
-| `NtpCreateOpts` | Servers (required) |
-| `NtpUpdateOpts` | Servers (required) |
+The fields of each type are the properties of its schema in the API's spec.
+
+### NtpStatus
+
+| Field           | Type       | Description                                                                            |
+| --------------- | ---------- | -------------------------------------------------------------------------------------- |
+| `CurrentSource` | `string`   | The source that chrony follows now.                                                    |
+| `Error`         | `string`   | Error message if the agent failed.                                                     |
+| `Hostname`      | `string`   | Hostname of the agent that produced this result.                                       |
+| `Offset`        | `string`   | The offset of the system clock from NTP time, such as +0.000003422s.                   |
+| `Servers`       | `[]string` | The sources that chrony has.                                                           |
+| `Status`        | `string`   | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| `Stratum`       | `int`      | The NTP stratum of the host.                                                           |
+| `Synchronized`  | `bool`     | Whether chrony is synchronized to a source.                                            |
+
+### NTPCreateInput
+
+| Field     | Type       | Description                                 |
+| --------- | ---------- | ------------------------------------------- |
+| `Servers` | `[]string` | The NTP servers, hostnames or IP addresses. |
+
+### NtpResult
+
+| Field      | Type     | Description                                                                            |
+| ---------- | -------- | -------------------------------------------------------------------------------------- |
+| `Changed`  | `bool`   | Whether the host changed.                                                              |
+| `Error`    | `string` | Error message if the agent failed.                                                     |
+| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
+| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### NTPUpdateInput
+
+| Field     | Type       | Description                                 |
+| --------- | ---------- | ------------------------------------------- |
+| `Servers` | `[]string` | The NTP servers, hostnames or IP addresses. |
 
 ## Usage
 
@@ -40,12 +71,12 @@ for _, r := range resp.Data.Results {
 }
 
 // Create NTP configuration
-resp, err := c.NTP.Create(ctx, "web-01", client.NtpCreateOpts{
+resp, err := c.NTP.Create(ctx, "web-01", client.NTPCreateInput{
     Servers: []string{"0.pool.ntp.org", "1.pool.ntp.org"},
 })
 
 // Update NTP servers
-resp, err := c.NTP.Update(ctx, "web-01", client.NtpUpdateOpts{
+resp, err := c.NTP.Update(ctx, "web-01", client.NTPUpdateInput{
     Servers: []string{"ntp.example.com"},
 })
 
@@ -59,10 +90,8 @@ resp, err := c.NTP.Delete(ctx, "web-01")
 
 ## Permissions
 
-| Operation              | Permission  |
-| ---------------------- | ----------- |
-| Get                    | `ntp:read`  |
-| Create, Update, Delete | `ntp:write` |
+The Permission column of [Methods](#methods) gives the permission of each
+method.
 
 NTP management is supported on the Debian OS family (Ubuntu, Debian, Raspbian).
 On unsupported platforms (Darwin, generic Linux), operations return

@@ -56,8 +56,8 @@ func main() {
 	for _, r := range resp.Data.Results {
 		fmt.Printf("Load (%s): %.2f %.2f %.2f\n",
 			r.Hostname,
-			r.LoadAverage.OneMin,
-			r.LoadAverage.FiveMin,
-			r.LoadAverage.FifteenMin)
+			r.LoadAverage.Min1,
+			r.LoadAverage.Min5,
+			r.LoadAverage.Min15)
 	}
 }

@@ -1,0 +1,139 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+// Command gen writes the typed services of the Go SDK, pkg/sdk/client, from
+// the full spec of the API, internal/controller/api/gen/api.yaml. For each
+// service, <service>.gen.go has its methods, and <service>_types.gen.go the
+// types only it sends and receives; types.gen.go has the types that more
+// than one service has, and services.gen.go puts each service on the
+// Client. A method sends its request through the SDK's Send, and decodes
+// the answer into the SDK's types: the SDK uses nothing that oapi-codegen
+// writes. It runs from the go:generate directive in pkg/sdk/client, after
+// internal/behaviors/all writes the spec.
+package main
+
+import (
+	"flag"
+	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/getkin/kin-openapi/openapi3"
+
+	"github.com/osapi-io/osapi/internal/cli/command/gen/genfile"
+	"github.com/osapi-io/osapi/internal/sdk/gen/sdkmodel"
+)
+
+// spec is the full spec of the API, from the root of the repository.
+const spec = "internal/controller/api/gen/api.yaml"
+
+// dir is the SDK's package, from the root of the repository.
+const dir = "pkg/sdk/client"
+
+func main() {
+	root := flag.String("root", ".", "the root of the repository")
+	flag.Parse()
+	if err := run(*root); err != nil {
+		fmt.Fprintln(os.Stderr, "sdk gen:", err)
+		os.Exit(1)
+	}
+}
+
+func run(
+	root string,
+) error {
+	doc, err := openapi3.NewLoader().LoadFromFile(filepath.Join(root, spec))
+	if err != nil {
+		return err
+	}
+	m, err := sdkmodel.New(doc)
+	if err != nil {
+		return err
+	}
+	w := &genfile.Writer{Root: root}
+	written, err := clean(w, root)
+	if err != nil {
+		return err
+	}
+	for path, f := range files(m, written) {
+		if err := w.Go(filepath.Join(dir, path), f); err != nil {
+			return err
+		}
+	}
+
+	return w.Flush()
+}
+
+// clean removes each file of the SDK that a run of this generator made, by
+// the comment that heads it, so a service that is gone leaves nothing
+// behind. permissions.gen.go, which a different generator makes, stays. It
+// returns the types that the other files of the package declare: a type a
+// person wrote, such as Step, is the SDK's, and the generator does not write
+// it.
+func clean(
+	w *genfile.Writer,
+	root string,
+) (map[string]bool, error) {
+	entries, err := os.ReadDir(filepath.Join(root, dir))
+	if err != nil {
+		return nil, err
+	}
+	written := map[string]bool{}
+	fset := token.NewFileSet()
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".go") {
+			continue
+		}
+		path := filepath.Join(root, dir, e.Name())
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return nil, err
+		}
+		if strings.HasPrefix(string(data), header) {
+			if err := w.Remove(filepath.Join(dir, e.Name())); err != nil {
+				return nil, err
+			}
+
+			continue
+		}
+		if strings.HasSuffix(e.Name(), "_test.go") {
+			continue
+		}
+		f, err := parser.ParseFile(fset, path, data, parser.SkipObjectResolution)
+		if err != nil {
+			return nil, err
+		}
+		for _, decl := range f.Decls {
+			gd, ok := decl.(*ast.GenDecl)
+			if !ok || gd.Tok != token.TYPE {
+				continue
+			}
+			for _, spec := range gd.Specs {
+				written[spec.(*ast.TypeSpec).Name.Name] = true
+			}
+		}
+	}
+
+	return written, nil
+}

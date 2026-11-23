@@ -135,13 +135,8 @@ NATS, agent and authentication settings.
 
 ## Permissions
 
-| Operation | Permission        |
-| --------- | ----------------- |
-| Exec      | `command:execute` |
-| Shell     | `command:shell`   |
-
-Only the `admin` role includes `command:execute` or `command:shell` by default.
-Grant them to other roles or tokens explicitly when needed.
+The Permission column of [Methods](#methods) gives the permission of each
+method.
 
 ## Related
 

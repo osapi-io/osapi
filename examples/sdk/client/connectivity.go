@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates the ConnectivityService: an ICMP ping check
+// Package main demonstrates the NetworkConnectivityService: an ICMP ping check
 // against a target address.
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run ping.go
@@ -48,7 +48,11 @@ func main() {
 	ctx := context.Background()
 	target := "_all"
 
-	resp, err := c.Connectivity.Ping(ctx, target, "8.8.8.8")
+	resp, err := c.NetworkConnectivity.Ping(
+		ctx,
+		target,
+		client.NetworkConnectivityPingInput{Address: "8.8.8.8"},
+	)
 	if err != nil {
 		log.Fatalf("ping: %v", err)
 	}

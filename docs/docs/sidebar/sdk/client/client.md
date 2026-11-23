@@ -12,10 +12,31 @@ client with `New()` and use domain-specific services to interact with the API.
 ```go
 import "github.com/osapi-io/osapi/pkg/sdk/client"
 
-client := client.New("http://localhost:8080", "your-jwt-token")
+c := client.New("http://localhost:8080", "your-jwt-token")
 
-resp, err := client.Hostname.Get(ctx, "_any")
+resp, err := c.Hostname.Get(ctx, "_any")
 ```
+
+## How the services are made
+
+`internal/sdk/gen` writes the services and their types from the spec of the API,
+in `go generate`. Each group of the API is a service, and each operation is a
+method:
+
+- The service has the words of the group's path, such as `NetworkDNS` for
+  `/api/node/{hostname}/network/dns`.
+- The method has the name of the method in the group's definition, such as
+  `Get`. The CLI command has the same name.
+- A type of an answer has the name of its schema, such as `NetworkDnsEntry`. A
+  `{job_id, results}` answer is a `Collection` of its item.
+- A method with a body takes the target, then one input struct, such as
+  `NetworkDNSUpdateInput`: the keys of the path and the fields of the body.
+- A method with no body takes the parameters of the path, then a struct of the
+  parameters of the query that a request can leave out.
+- Each answer outside 2xx is one of the error types of the SDK.
+
+The methods that upload a file, `File.Upload` and `File.Update`, and
+`File.GetChanged` are written by hand.
 
 ## Services
 
@@ -26,9 +47,9 @@ resp, err := client.Hostname.Get(ctx, "_any")
 
 ### Software
 
-| Service                        | Description        |
-| ------------------------------ | ------------------ |
-| [Package](software/package.md) | Package management |
+| Service                                        | Description        |
+| ---------------------------------------------- | ------------------ |
+| [Package, UpdatePackages](software/package.md) | Package management |
 
 ### Config
 
@@ -41,45 +62,45 @@ resp, err := client.Hostname.Get(ctx, "_any")
 
 ### Node
 
-| Service                    | Description                            |
-| -------------------------- | -------------------------------------- |
-| [Power](node/power.md)     | Power management (reboot, shutdown)    |
-| [Process](node/process.md) | Process management (list, get, signal) |
-| [Log](node/log.md)         | Log query (journal entries, by unit)   |
-| [Status](node/status.md)   | Full node status                       |
-| [Load](node/load.md)       | Load averages                          |
-| [Uptime](node/uptime.md)   | System uptime                          |
-| [OS](node/os.md)           | Operating system info                  |
+| Service                            | Description                            |
+| ---------------------------------- | -------------------------------------- |
+| [Power](node/power.md)             | Power management (reboot, shutdown)    |
+| [Process](node/process.md)         | Process management (list, get, signal) |
+| [LogEntry, LogSource](node/log.md) | Log query (journal entries, by unit)   |
+| [Status](node/status.md)           | Full node status                       |
+| [Load](node/load.md)               | Load averages                          |
+| [Uptime](node/uptime.md)           | System uptime                          |
+| [OS](node/os.md)                   | Operating system info                  |
 
 ### Networking
 
-| Service                                    | Description                        |
-| ------------------------------------------ | ---------------------------------- |
-| [DNS](networking/dns.md)                   | DNS configuration query and update |
-| [Connectivity](networking/connectivity.md) | Ping an address from a host        |
-| [Interface](networking/interface.md)       | Network interface configuration    |
-| [Route](networking/route.md)               | Static route configuration         |
+| Service                                           | Description                        |
+| ------------------------------------------------- | ---------------------------------- |
+| [NetworkDNS](networking/dns.md)                   | DNS configuration query and update |
+| [NetworkConnectivity](networking/connectivity.md) | Ping an address from a host        |
+| [NetworkInterface](networking/interface.md)       | Network interface configuration    |
+| [NetworkInterfaceRoute](networking/route.md)      | Static route configuration         |
 
 ### Security
 
 | Service                                | Description               |
 | -------------------------------------- | ------------------------- |
-| [User](security/user.md)               | User account management   |
+| [User, UserSSHKey](security/user.md)   | User account management   |
 | [Group](security/group.md)             | Group management          |
 | [Certificate](security/certificate.md) | CA certificate management |
 
 ### Containers
 
-| Service                        | Description         |
-| ------------------------------ | ------------------- |
-| [Docker](containers/docker.md) | Container lifecycle |
+| Service                                                 | Description         |
+| ------------------------------------------------------- | ------------------- |
+| [ContainerDocker, ContainerImage](containers/docker.md) | Container lifecycle |
 
 ### Files
 
-| Service                            | Description                    |
-| ---------------------------------- | ------------------------------ |
-| [File](files/file.md)              | File management (Object Store) |
-| [FileDeploy](files/file_deploy.md) | File deployment to agents      |
+| Service                          | Description                    |
+| -------------------------------- | ------------------------------ |
+| [File](files/file.md)            | File management (Object Store) |
+| [NodeFile](files/file_deploy.md) | File deployment to agents      |
 
 ### Command
 
@@ -108,15 +129,15 @@ resp, err := client.Hostname.Get(ctx, "_any")
 
 ### Agent
 
-| Service                 | Description                            |
-| ----------------------- | -------------------------------------- |
-| [Agent](agent/agent.md) | Agent discovery, lifecycle, enrollment |
+| Service                        | Description                            |
+| ------------------------------ | -------------------------------------- |
+| [Agent, Facts](agent/agent.md) | Agent discovery, lifecycle, enrollment |
 
 ### Health
 
-| Service                    | Description             |
-| -------------------------- | ----------------------- |
-| [Health](health/health.md) | Health check operations |
+| Service                                      | Description             |
+| -------------------------------------------- | ----------------------- |
+| [Health, Controller, NATS](health/health.md) | Health check operations |
 
 ## Client Options
 

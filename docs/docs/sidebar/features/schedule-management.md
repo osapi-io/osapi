@@ -196,15 +196,8 @@ family.
 
 ## Permissions
 
-| Operation              | Permission       |
-| ---------------------- | ---------------- |
-| List, Get              | `schedule:read`  |
-| Create, Update, Delete | `schedule:write` |
-
-`admin`, `operator`, `automation` and `read` have `schedule:read`. Only `admin`
-has `schedule:write`. A cron entry runs a command as its user, and that user can
-be root. Thus a token that can write an entry can run a command as root, which
-is an admin power.
+The Permission column of [Methods](#methods) gives the permission of each
+method.
 
 ## Naming rules
 

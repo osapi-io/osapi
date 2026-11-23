@@ -196,6 +196,7 @@ paths:
       summary: List the entries of the journal
       tags:
         - log_entry_operations
+      x-osapi-method: list
 tags:
   - description: The entries of the systemd journal
     name: log_entry_operations
