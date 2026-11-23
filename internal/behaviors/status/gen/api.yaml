@@ -251,4 +251,5 @@ tags:
   - description: The status summary of a node
     name: status_operations
     x-displayName: Status
+    x-osapi-area: node
     x-osapi-group: status

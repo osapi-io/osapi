@@ -402,4 +402,5 @@ tags:
   - description: The DNS resolvers of each interface of the host
     name: network_dns_operations
     x-displayName: DNS
+    x-osapi-area: networking
     x-osapi-group: dns

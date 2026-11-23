@@ -12,6 +12,26 @@
 // @ts-check
 import type { SidebarsConfig } from '@docusaurus/plugin-content-docs';
 
+// apiIntro is the page of the API's info, which the OpenAPI generator writes.
+const apiIntro = 'gen/api/osapi';
+
+// apiItems is the generated API sidebar: a category for each area, from the
+// spec's x-tagGroups, with a category for each tag in it. The generator puts
+// the info page at the top of each area, so it goes here once, first.
+function apiItems() {
+  const groups = require('./docs/gen/api/sidebar.js');
+  const isIntro = (item: { type?: string; id?: string }) =>
+    item.type === 'doc' && item.id === apiIntro;
+
+  return [
+    { type: 'doc', id: apiIntro },
+    ...groups.map((group: { items?: { type?: string; id?: string }[] }) => ({
+      ...group,
+      items: (group.items ?? []).filter((item) => !isIntro(item))
+    }))
+  ];
+}
+
 const sidebars: SidebarsConfig = {
   // By default, Docusaurus generates a sidebar from the docs folder structure
   testSidebar: [
@@ -35,8 +55,7 @@ const sidebars: SidebarsConfig = {
         description: 'This is the API documentation for OSAPI.',
         slug: '/category/api'
       },
-      // @ts-ignore
-      items: require('./docs/gen/api/sidebar.js')
+      items: apiItems()
     }
     // {
     //   type: 'category',

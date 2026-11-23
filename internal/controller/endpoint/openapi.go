@@ -79,8 +79,9 @@ func ErrorSchema() *openapi3.Schema {
 // the method in its group, such as get or drain.
 const MethodExtension = "x-osapi-method"
 
-// AreaExtension is the extension of each operation of the spec that names
-// its area, one of area.All, such as fleet.
+// AreaExtension is the extension of each operation and each tag of the spec
+// that names its area, one of area.All, such as fleet. The full spec groups
+// the tags by it in x-tagGroups.
 const AreaExtension = "x-osapi-area"
 
 // AreasExtension is the extension of the full spec that lists the areas,
@@ -106,7 +107,11 @@ func OpenAPI(
 		Tags: openapi3.Tags{{
 			Name:        g.Tag,
 			Description: g.TagDoc,
-			Extensions:  map[string]any{"x-displayName": g.TagDisplay, GroupExtension: g.Name},
+			Extensions: map[string]any{
+				"x-displayName": g.TagDisplay,
+				GroupExtension:  g.Name,
+				AreaExtension:   string(g.Area),
+			},
 		}},
 		Components: &openapi3.Components{
 			SecuritySchemes: openapi3.SecuritySchemes{

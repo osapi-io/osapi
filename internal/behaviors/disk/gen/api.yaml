@@ -176,4 +176,5 @@ tags:
   - description: Get the disk usage of target hosts
     name: disk_operations
     x-displayName: Disk
+    x-osapi-area: hardware
     x-osapi-group: disk

@@ -287,4 +287,5 @@ tags:
   - description: Reboot or shut down the host
     name: power_operations
     x-displayName: Power
+    x-osapi-area: node
     x-osapi-group: power

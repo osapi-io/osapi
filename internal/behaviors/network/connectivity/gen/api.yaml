@@ -194,4 +194,5 @@ tags:
   - description: Whether the host reaches an address, by ICMP ping
     name: network_connectivity_operations
     x-displayName: Connectivity
+    x-osapi-area: networking
     x-osapi-group: connectivity

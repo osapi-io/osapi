@@ -213,4 +213,5 @@ tags:
   - description: The entries of the systemd journal
     name: log_entry_operations
     x-displayName: Log entry
+    x-osapi-area: logs
     x-osapi-group: entry

@@ -472,4 +472,5 @@ tags:
   - description: The packages installed on the host
     name: package_operations
     x-displayName: Package
+    x-osapi-area: software
     x-osapi-group: package

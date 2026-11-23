@@ -478,4 +478,5 @@ tags:
   - description: The NTP servers of chrony, and its sync status
     name: ntp_operations
     x-displayName: NTP
+    x-osapi-area: config
     x-osapi-group: ntp

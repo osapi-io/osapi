@@ -754,4 +754,5 @@ tags:
   - description: The users of the host
     name: user_operations
     x-displayName: User
+    x-osapi-area: security
     x-osapi-group: user

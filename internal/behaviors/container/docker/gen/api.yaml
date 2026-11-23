@@ -887,4 +887,5 @@ tags:
   - description: The Docker containers of the host
     name: container_docker_operations
     x-displayName: Container
+    x-osapi-area: containers
     x-osapi-group: docker
