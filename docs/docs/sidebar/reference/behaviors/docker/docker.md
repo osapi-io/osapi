@@ -17,6 +17,7 @@ The Docker containers of the host. `osapi behavior get --name docker` and
 | Description | The Docker containers of the host |
 | Placement   | node                              |
 | Group       | container                         |
+| Area        | containers                        |
 | Internal    | no                                |
 | API         | yes                               |
 | CLI         | yes                               |

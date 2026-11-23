@@ -17,6 +17,7 @@ The entries of the systemd journal. `osapi behavior get --name entry` and
 | Description | The entries of the systemd journal |
 | Placement   | node                               |
 | Group       | log                                |
+| Area        | node                               |
 | Internal    | no                                 |
 | API         | yes                                |
 | CLI         | yes                                |

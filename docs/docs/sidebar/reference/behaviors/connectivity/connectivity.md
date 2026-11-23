@@ -18,6 +18,7 @@ the same.
 | Description | Whether the host reaches an address, by ICMP ping |
 | Placement   | node                                              |
 | Group       | network                                           |
+| Area        | networking                                        |
 | Internal    | no                                                |
 | API         | yes                                               |
 | CLI         | yes                                               |

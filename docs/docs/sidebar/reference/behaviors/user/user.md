@@ -16,6 +16,7 @@ The users of the host. `osapi behavior get --name user` and
 | Name        | user                          |
 | Description | The users of the host         |
 | Placement   | node                          |
+| Area        | security                      |
 | Internal    | no                            |
 | API         | yes                           |
 | CLI         | yes                           |

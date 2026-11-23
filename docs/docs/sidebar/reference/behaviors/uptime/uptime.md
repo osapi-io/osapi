@@ -16,6 +16,7 @@ Get the uptime of target hosts. `osapi behavior get --name uptime` and
 | Name        | uptime                         |
 | Description | Get the uptime of target hosts |
 | Placement   | node                           |
+| Area        | node                           |
 | Internal    | no                             |
 | API         | yes                            |
 | CLI         | yes                            |

@@ -16,6 +16,7 @@ Get the disk usage of target hosts. `osapi behavior get --name disk` and
 | Name        | disk                               |
 | Description | Get the disk usage of target hosts |
 | Placement   | node                               |
+| Area        | hardware                           |
 | Internal    | no                                 |
 | API         | yes                                |
 | CLI         | yes                                |

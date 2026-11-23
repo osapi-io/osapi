@@ -17,6 +17,7 @@ Files of the object store, deployed to the host.
 | Name        | file                                                                        |
 | Description | Files of the object store, deployed to the host                             |
 | Placement   | node                                                                        |
+| Area        | config                                                                      |
 | Internal    | no                                                                          |
 | API         | yes                                                                         |
 | CLI         | yes                                                                         |

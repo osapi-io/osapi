@@ -16,6 +16,7 @@ The timezone of the host. `osapi behavior get --name timezone` and
 | Name        | timezone                 |
 | Description | The timezone of the host |
 | Placement   | node                     |
+| Area        | config                   |
 | Internal    | no                       |
 | API         | yes                      |
 | CLI         | yes                      |

@@ -17,6 +17,7 @@ shows each call that its examples make.
 | Name        | status                                                                                                                                                                 |
 | Description | The status summary of a node                                                                                                                                           |
 | Placement   | node                                                                                                                                                                   |
+| Area        | node                                                                                                                                                                   |
 | Internal    | no                                                                                                                                                                     |
 | API         | yes                                                                                                                                                                    |
 | CLI         | yes                                                                                                                                                                    |

@@ -18,6 +18,7 @@ same.
 | Description | The sources that write to the systemd journal |
 | Placement   | node                                          |
 | Group       | log                                           |
+| Area        | node                                          |
 | Internal    | no                                            |
 | API         | yes                                           |
 | CLI         | yes                                           |

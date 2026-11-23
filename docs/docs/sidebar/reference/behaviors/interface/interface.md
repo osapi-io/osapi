@@ -18,6 +18,7 @@ The network interfaces of the host. `osapi behavior get --name interface` and
 | Description | The network interfaces of the host |
 | Placement   | node                               |
 | Group       | network                            |
+| Area        | networking                         |
 | Internal    | no                                 |
 | API         | yes                                |
 | CLI         | yes                                |

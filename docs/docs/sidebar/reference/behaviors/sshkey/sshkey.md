@@ -17,6 +17,7 @@ shows each call that its examples make.
 | Name        | sshkey                            |
 | Description | The authorized SSH keys of a user |
 | Placement   | node                              |
+| Area        | security                          |
 | Internal    | no                                |
 | API         | yes                               |
 | CLI         | yes                               |

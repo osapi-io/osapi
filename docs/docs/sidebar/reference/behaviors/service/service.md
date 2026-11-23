@@ -17,6 +17,7 @@ shows each call that its examples make.
 | Name        | service                                                                     |
 | Description | The systemd services of the host                                            |
 | Placement   | node                                                                        |
+| Area        | services                                                                    |
 | Internal    | no                                                                          |
 | API         | yes                                                                         |
 | CLI         | yes                                                                         |

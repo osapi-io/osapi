@@ -17,6 +17,7 @@ shows each call that its examples make.
 | Name        | schedule                                                                                           |
 | Description | The cron entries that osapi deploys                                                                |
 | Placement   | node                                                                                               |
+| Area        | config                                                                                             |
 | Internal    | no                                                                                                 |
 | API         | yes                                                                                                |
 | CLI         | yes                                                                                                |
