@@ -2698,10 +2698,9 @@ paths:
         and to standard error, and its exit code. A command that exits with a
         code other than 0 is an answer, not a failure. It changes what the
         command changes, which osapi cannot tell, so it reports changed: true.
-        Only the admin role may run it, and an agent with agent.command.enabled
-        false refuses it, as it refuses a command. Its permission,
-        container:execute, is also the permission of start, stop and image pull,
-        so only the admin role runs those too.
+        Its permission is container:exec, which only the admin role gets, apart
+        from the container:execute of start, stop and image pull. An agent with
+        agent.command.enabled false refuses it, as it refuses a command.
       operationId: PostNodeContainerDockerExec
       parameters:
         - $ref: '#/components/parameters/Hostname'
@@ -2759,7 +2758,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - container:execute
+            - container:exec
       summary: Run a command in a container
       tags:
         - Docker_API_container_docker_operations

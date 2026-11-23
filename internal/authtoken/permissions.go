@@ -83,8 +83,10 @@ var builtinPermissions = []Permission{
 }
 
 // adminVerbs are the verbs of a permission that only the admin role gets:
-// to open a shell.
-var adminVerbs = []string{"shell"}
+// to open a shell, and to run a command that the caller gives inside
+// something on the host, such as container:exec. They are the verbs that
+// behavior.PermitAs takes.
+var adminVerbs = []string{"shell", "exec"}
 
 // builtinAdminOnly are the permissions of the hand-written domains that only
 // the admin role gets, because each reaches root directly: an arbitrary
@@ -201,7 +203,7 @@ var (
 )
 
 // AdminOnly reports whether only the admin role grants p: its verb is
-// shell, the hand-written domain that needs it says so, or a method that
+// shell or exec, the hand-written domain that needs it says so, or a method that
 // needs it is marked AdminOnly.
 func AdminOnly(
 	p Permission,

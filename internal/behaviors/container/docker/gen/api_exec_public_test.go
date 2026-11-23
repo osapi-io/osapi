@@ -283,7 +283,7 @@ func (s *APIExecPublicTestSuite) TestExecValidationHTTP() {
 	})
 }
 
-// TestExecRBACHTTP sends tokens that do not grant container:execute.
+// TestExecRBACHTTP sends tokens that do not grant container:exec.
 func (s *APIExecPublicTestSuite) TestExecRBACHTTP() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
@@ -297,7 +297,7 @@ func (s *APIExecPublicTestSuite) TestExecRBACHTTP() {
 			WantCode: http.StatusUnauthorized,
 		},
 		{
-			Name: "when the token lacks container:execute, it is a 403",
+			Name: "when the token lacks container:exec, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/container/docker/osapitest/exec",

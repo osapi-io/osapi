@@ -174,7 +174,6 @@ var Behavior = behavior.Register(behavior.Define(
 		).
 		Fails("A name that is an option", DeleteInput{Name: "-f"}, "container_id"),
 	behavior.Action("start", Start).Key("name").
-		AdminOnly().
 		Describe("Start a container").
 		Explain("Runs docker start. A container that runs already reports changed: false, and "+
 			"one that the host does not have is not found.").
@@ -190,7 +189,6 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A container that the host does not have", StartInput{Name: "nothere"}, "not found").
 		Fails("A name that is an option", StartInput{Name: "-f"}, "container_id"),
 	behavior.Action("stop", Stop).Key("name").
-		AdminOnly().
 		Describe("Stop a container").
 		Explain("Runs docker stop, which waits timeout seconds before docker kills the "+
 			"container, or docker's default of 10 when it is 0. A container that does not "+
@@ -209,16 +207,16 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A timeout longer than 300 seconds", StopInput{Name: name, Timeout: 301}, "max").
 		Fails("A negative timeout", StopInput{Name: name, Timeout: -1}, "min"),
 	behavior.Action("exec", Exec).Key("name").
+		PermitAs(behavior.VerbExec).
 		Always().
-		AdminOnly().
 		Describe("Run a command in a container").
 		Explain("Runs docker exec, and answers what the command wrote to standard output and "+
 			"to standard error, and its exit code. A command that exits with a code other "+
 			"than 0 is an answer, not a failure. It changes what the command changes, which "+
-			"osapi cannot tell, so it reports changed: true. Only the admin role may run it, "+
-			"and an agent with agent.command.enabled false refuses it, as it refuses a command. "+
-			"Its permission, container:execute, is also the permission of start, stop and image "+
-			"pull, so only the admin role runs those too.").
+			"osapi cannot tell, so it reports changed: true. Its permission is container:exec, "+
+			"which only the admin role gets, apart from the container:execute of start, stop "+
+			"and image pull. An agent with agent.command.enabled false refuses it, as it "+
+			"refuses a command.").
 		Example("Run a command", ExecInput{Name: name, Command: []string{"echo", "hello"}},
 			ExecResult{Stdout: "hello\n", Changed: true},
 			answers, made, created, started, details,

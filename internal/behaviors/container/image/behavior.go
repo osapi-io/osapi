@@ -68,7 +68,6 @@ var Behavior = behavior.Register(behavior.Define(
 				`{"ID":"91ef0af61f39","Repository":"alpine","Tag":"3.20","Size":"7.8MB"}`+"\n"),
 		),
 	behavior.Action("pull", Pull).
-		AdminOnly().
 		Describe("Pull an image").
 		Explain("Runs docker pull, and answers the ID and the size of the image that the host "+
 			"has after it. A pull that gets nothing new, because the host had the image of "+

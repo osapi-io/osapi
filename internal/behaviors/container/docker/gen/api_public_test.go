@@ -58,7 +58,7 @@ func (s *APIPublicTestSuite) TestRoutes() {
 		{
 			method:     http.MethodPost,
 			path:       "/api/node/:hostname/container/docker/:name/exec",
-			permission: "container:execute",
+			permission: "container:exec",
 		},
 	}
 

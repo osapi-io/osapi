@@ -503,12 +503,17 @@ func ValidateBehavior(
 			add(m.Name, RuleVerb, ".Always is for an action, such as restart; a create, update or "+
 				"delete compares the host with its input and changes nothing when they agree")
 		}
-		if m.UsesShell && !m.Action {
+		if m.PermitVerb != "" && !m.Action {
 			add(
 				m.Name,
 				RuleVerb,
-				".Shell is for an action that runs a shell command line, such as command shell",
+				".PermitAs and .Shell are for an action, such as docker exec or command shell; "+
+					"a read or a write keeps the permission of its verb",
 			)
+		}
+		if m.PermitVerb != "" && !slices.Contains(adminVerbs, m.PermitVerb) {
+			add(m.Name, RuleVerb, ".PermitAs takes a verb that only the admin role gets, "+
+				"behavior.VerbShell or behavior.VerbExec, not %q", m.PermitVerb)
 		}
 		// The examples are the command lines on the CLI page of the method,
 		// and the generated tests send each one. The tests also check each

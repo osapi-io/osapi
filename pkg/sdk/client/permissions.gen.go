@@ -51,6 +51,7 @@ const (
 	PermContainerRead       Permission = "container:read"
 	PermContainerWrite      Permission = "container:write"
 	PermContainerExecute    Permission = "container:execute"
+	PermContainerExec       Permission = "container:exec"
 	PermNetworkExecute      Permission = "network:execute"
 	PermAdmissionRead       Permission = "admission:read"
 	PermAdmissionWrite      Permission = "admission:write"

@@ -217,11 +217,24 @@ fail on each command that does not go through gohai.
 Use: Only when no gohai collector can have the value, because the host does not
 own it. A fact that gohai does not read is a change to gohai first.
 
+### `.PermitAs(verb) on an action`
+
+Makes the action's permission &lt;name&gt;:&lt;verb&gt; in place of
+&lt;name&gt;:execute, such as container:exec with behavior.VerbExec. Thus the
+action does not share a permission with the other actions of its behavior, which
+the operator role gets. Only the admin role gets the verb: behavior.VerbExec or
+behavior.VerbShell. behavior validate refuses it on a method that is not an
+action, and a different verb.
+
+Use: For an action that runs a command that the caller gives, such as docker
+exec, when the other actions of its behavior are for the operator role, such as
+docker start.
+
 ### `.Shell() on an action`
 
-Makes the action's permission &lt;name&gt;:shell in place of
-&lt;name&gt;:execute. Only the admin role gets a shell permission. behavior
-validate refuses it on a method that is not an action.
+Is .PermitAs(behavior.VerbShell): the action's permission is &lt;name&gt;:shell.
+Only the admin role gets a shell permission. behavior validate refuses it on a
+method that is not an action.
 
 Use: For an action that runs a shell command line, such as command shell.
 

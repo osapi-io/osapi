@@ -58,7 +58,16 @@ const (
 	// it runs a shell command line, which reaches anything the host can
 	// do. Only the admin role gets a shell permission.
 	VerbShell Verb = "shell"
+	// VerbExec is the permission verb of an action that runs a command
+	// that the caller gives inside something on the host, such as docker
+	// exec in a container. Only the admin role gets an exec permission.
+	VerbExec Verb = "exec"
 )
+
+// adminVerbs are the permission verbs that only the admin role gets. An
+// action declared with .PermitAs takes one of them, so its permission is
+// apart from the <name>:execute of the other actions of its behavior.
+var adminVerbs = []Verb{VerbShell, VerbExec}
 
 // Behavior is one area of a host that osapi manages, such as kernel
 // parameters or DNS resolver settings.
@@ -351,9 +360,11 @@ type Method struct {
 	Disruptive bool
 	// Disruption is why, as .Disrupts gives it.
 	Disruption string
-	// UsesShell is true for an action declared with .Shell: its permission
-	// is <name>:shell, which only the admin role gets.
-	UsesShell bool
+	// PermitVerb is the permission verb of an action declared with
+	// .PermitAs or .Shell, such as exec: its permission is <name>:exec in
+	// place of <name>:execute, which only the admin role gets. Empty for
+	// each other method.
+	PermitVerb Verb
 	// NonFact is why a read runs a command outside gohai, set with
 	// .NotAFact: what it reads is not a fact of the host.
 	NonFact string
@@ -535,14 +546,25 @@ func (m *Method) Explain(
 	return m
 }
 
-// Shell makes an action's permission <name>:shell, in place of
-// <name>:execute: the action runs a shell command line. Only the admin role
-// gets a shell permission. behavior validate refuses it on a method that is
-// not an action.
-func (m *Method) Shell() *Method {
-	m.UsesShell = true
+// PermitAs makes an action's permission <name>:<verb>, in place of
+// <name>:execute, such as container:exec for docker exec. Thus the action
+// does not share a permission with the other actions of its behavior. The
+// verb is one that only the admin role gets: VerbShell or VerbExec.
+// behavior validate refuses it on a method that is not an action, and a
+// verb that is not one of these.
+func (m *Method) PermitAs(
+	verb Verb,
+) *Method {
+	m.PermitVerb = verb
 
 	return m
+}
+
+// Shell makes an action's permission <name>:shell, in place of
+// <name>:execute: the action runs a shell command line. It is
+// PermitAs(VerbShell).
+func (m *Method) Shell() *Method {
+	return m.PermitAs(VerbShell)
 }
 
 // AdminOnly makes the method's permission one that only the admin role
@@ -554,10 +576,10 @@ func (m *Method) AdminOnly() *Method {
 }
 
 // AdminRole reports whether only the admin role gets the method's
-// permission: it is declared with .AdminOnly, or with .Shell, whose verb
-// only the admin role gets.
+// permission: it is declared with .AdminOnly, or with .PermitAs or .Shell,
+// whose verb only the admin role gets.
 func (m *Method) AdminRole() bool {
-	return m.Admin || m.UsesShell
+	return m.Admin || slices.Contains(adminVerbs, m.PermitVerb)
 }
 
 // Describe sets the method's one-line description.
@@ -693,11 +715,11 @@ func newMethod[P any, In any, Out any](
 	}
 }
 
-// PermissionVerb is the verb of the method's permission: execute for an
-// action, else its verb.
+// PermissionVerb is the verb of the method's permission: the verb of
+// .PermitAs, else execute for an action, else its verb.
 func (m *Method) PermissionVerb() Verb {
-	if m.UsesShell {
-		return VerbShell
+	if m.PermitVerb != "" {
+		return m.PermitVerb
 	}
 	if m.Action {
 		return VerbExecute

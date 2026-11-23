@@ -90,15 +90,16 @@ their permissions. No list of roles is kept by hand:
 - `observer` gets `health:read`, `status:read` and `agent:read`, for a dashboard
   or a monitor.
 
-A permission with the verb `shell` is admin only. So are `command:execute` and
-`docker:execute`, which run any command, and `user:write` and `schedule:write`,
-which reach root through an account or a cron entry. A method that the DSL marks
-`AdminOnly` makes its permission admin only too, such as `admission:write`,
-`agent:write` and `audit:read`. An action of a behavior, such as a service
-restart, has the permission `<name>:execute`. `file:write`, `package:write` and
-`sysctl:write` stay with `automation`, and each of them can reach root: give
-`automation` only to what you trust as root.
-[`token roles get`](../usage/cli/token/roles/get.md) shows the result.
+A permission with the verb `shell` or `exec` is admin only, such as
+`command:shell` and `container:exec`. So is `command:execute`, which runs any
+command, and so are `user:write` and `schedule:write`, which reach root through
+an account or a cron entry. A method that the DSL marks `AdminOnly` makes its
+permission admin only too, such as `admission:write`, `agent:write` and
+`audit:read`. An action of a behavior, such as a service restart, has the
+permission `<name>:execute`. `file:write`, `package:write` and `sysctl:write`
+stay with `automation`, and each of them can reach root: give `automation` only
+to what you trust as root. [`token roles get`](../usage/cli/token/roles/get.md)
+shows the result.
 
 `command:execute` and `command:shell` are two different permissions.
 `command:execute` controls the `exec` endpoint, which takes an argument list.

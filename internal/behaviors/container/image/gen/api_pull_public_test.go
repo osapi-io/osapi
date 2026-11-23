@@ -34,7 +34,7 @@ func (s *APIPullPublicTestSuite) TestPull() {
 				Path:   "/api/node/server1/container/image/pull",
 				Body:   `{"image":"alpine:3.20"}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
 				"image.pull",
@@ -51,7 +51,7 @@ func (s *APIPullPublicTestSuite) TestPull() {
 				Path:   "/api/node/_all/container/image/pull",
 				Body:   `{"image":"alpine:3.20"}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"_all",
 				"image.pull",
@@ -70,7 +70,7 @@ func (s *APIPullPublicTestSuite) TestPull() {
 				Path:   "/api/node/server1/container/image/pull",
 				Body:   `{"image":"alpine:3.20"}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
 				"image.pull",
@@ -87,7 +87,7 @@ func (s *APIPullPublicTestSuite) TestPull() {
 				Path:   "/api/node/server1/container/image/pull",
 				Body:   `{"image":"alpine:3.20"}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
 				"image.pull",
@@ -104,7 +104,7 @@ func (s *APIPullPublicTestSuite) TestPull() {
 				Path:   "/api/node/server1/container/image/pull",
 				Body:   `{"image":"alpine:3.20"}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
 				"image.pull",
@@ -121,7 +121,7 @@ func (s *APIPullPublicTestSuite) TestPull() {
 				Path:   "/api/node/server1/container/image/pull",
 				Body:   `{"image":"alpine:3.20"}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
 				"image.pull",
@@ -136,7 +136,7 @@ func (s *APIPullPublicTestSuite) TestPull() {
 				Path:   "/api/node/_all/container/image/pull",
 				Body:   `{"image":"alpine:3.20"}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"_all",
 				"image.pull",
@@ -158,7 +158,7 @@ func (s *APIPullPublicTestSuite) TestPullValidationHTTP() {
 				Path:   "/api/node/nowhere/container/image/pull",
 				Body:   `{"image":"alpine:3.20"}`,
 			},
-			Token:    servertest.Admin,
+			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -168,7 +168,7 @@ func (s *APIPullPublicTestSuite) TestPullValidationHTTP() {
 				Path:   "/api/node//container/image/pull",
 				Body:   `{"image":"alpine:3.20"}`,
 			},
-			Token:    servertest.Admin,
+			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -178,7 +178,7 @@ func (s *APIPullPublicTestSuite) TestPullValidationHTTP() {
 				Path:   "/api/node/server1/container/image/pull",
 				Body:   `{"image":""}`,
 			},
-			Token:    servertest.Admin,
+			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -188,7 +188,7 @@ func (s *APIPullPublicTestSuite) TestPullValidationHTTP() {
 				Path:   "/api/node/server1/container/image/pull",
 				Body:   `{`,
 			},
-			Token:    servertest.Admin,
+			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -198,7 +198,7 @@ func (s *APIPullPublicTestSuite) TestPullValidationHTTP() {
 				Path:   "/api/node/server1/container/image/pull",
 				Body:   `{"image":[]}`,
 			},
-			Token:    servertest.Admin,
+			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -208,7 +208,7 @@ func (s *APIPullPublicTestSuite) TestPullValidationHTTP() {
 				Path:   "/api/node/server1/container/image/pull",
 				Body:   `{"image":"--all-tags"}`,
 			},
-			Token:    servertest.Admin,
+			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -218,7 +218,7 @@ func (s *APIPullPublicTestSuite) TestPullValidationHTTP() {
 				Path:   "/api/node/server1/container/image/pull",
 				Body:   `{"image":""}`,
 			},
-			Token:    servertest.Admin,
+			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
 		},
 	})
@@ -255,16 +255,6 @@ func (s *APIPullPublicTestSuite) TestPullRBACHTTP() {
 				Body:   `{"image":"alpine:3.20"}`,
 			},
 			Token:    servertest.Read,
-			WantCode: http.StatusForbidden,
-		},
-		{
-			Name: "when the token has the write role, it is a 403: the method is admin only",
-			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/image/pull",
-				Body:   `{"image":"alpine:3.20"}`,
-			},
-			Token:    servertest.Write,
 			WantCode: http.StatusForbidden,
 		},
 		{
