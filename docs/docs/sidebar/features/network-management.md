@@ -68,10 +68,10 @@ group:
 sudo sysctl -w net.ipv4.ping_group_range="0 2147483647"
 ```
 
-`ping` waits two seconds for each reply and four seconds in all. A reply that
-does not come back in that time is loss, in the `LOSS` column. It is not a
-failure of the ping. When the job ends, for example because it is cancelled, the
-ping stops.
+`ping` sends three packets, one a second, and waits two seconds after the last,
+about four seconds in all. A reply that does not come back in that time is loss,
+in the `LOSS` column. It is not a failure of the ping. When the job ends, for
+example because it is cancelled, the ping stops.
 
 If each ping from a host times out, but other traffic from that host works,
 something between the host and the target drops ICMP. An example is a VM behind

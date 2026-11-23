@@ -54,16 +54,17 @@ func newDarwin(
 	return &pinger{exec: h.Exec, args: darwinArgs}, nil
 }
 
-// linuxArgs sends three packets, waits two seconds for each reply and four
-// seconds in all, and prints numbers, not names.
+// linuxArgs sends three packets, one a second, waits two seconds after the
+// last, and prints numbers, not names. It sets no -w: with a deadline,
+// iputils sends until the deadline, not three.
 func linuxArgs(
 	address string,
 ) (string, []string) {
-	return "ping", []string{"-n", "-c", "3", "-W", "2", "-w", "4", address}
+	return "ping", []string{"-n", "-c", "3", "-W", "2", address}
 }
 
-// darwinArgs is the same on macOS, where -t is the time in all and ping6
-// pings an IPv6 address.
+// darwinArgs is the same on macOS, where -t 4 stops the ping after four
+// seconds in all, and ping6 pings an IPv6 address.
 func darwinArgs(
 	address string,
 ) (string, []string) {

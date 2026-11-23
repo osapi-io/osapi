@@ -26,7 +26,7 @@ import "github.com/osapi-io/osapi/internal/behavior"
 
 // The ping commands and what each prints, for the examples.
 const (
-	linuxPing   = "ping -n -c 3 -W 2 -w 4 127.0.0.1"
+	linuxPing   = "ping -n -c 3 -W 2 127.0.0.1"
 	linuxOutput = `PING 127.0.0.1 (127.0.0.1) 56(84) bytes of data.
 64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.045 ms
 64 bytes from 127.0.0.1: icmp_seq=2 ttl=64 time=0.052 ms
@@ -36,7 +36,7 @@ const (
 3 packets transmitted, 3 received, 0% packet loss, time 2003ms
 rtt min/avg/max/mdev = 0.045/0.052/0.060/0.006 ms
 `
-	linuxLost       = "ping -n -c 3 -W 2 -w 4 192.0.2.1"
+	linuxLost       = "ping -n -c 3 -W 2 192.0.2.1"
 	linuxLostOutput = `PING 192.0.2.1 (192.0.2.1) 56(84) bytes of data.
 
 --- 192.0.2.1 ping statistics ---
