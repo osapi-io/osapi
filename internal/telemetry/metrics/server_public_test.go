@@ -21,6 +21,7 @@
 package metrics_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -28,6 +29,8 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -515,4 +518,65 @@ func TestServerPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(ServerPublicTestSuite))
+}
+
+// lockedBuffer is a bytes.Buffer that the goroutine of the server and the
+// test can use at the same time.
+type lockedBuffer struct {
+	mu  sync.Mutex
+	buf bytes.Buffer
+}
+
+func (b *lockedBuffer) Write(
+	p []byte,
+) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	return b.buf.Write(p)
+}
+
+func (b *lockedBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	return b.buf.String()
+}
+
+func (s *ServerPublicTestSuite) TestStartLogsThroughLogger() {
+	tests := []struct {
+		name string
+		want []string
+	}{
+		{
+			name: "writes the server started line through the logger of the server",
+			want: []string{
+				"msg=\"http(s) server started\"",
+				"subsystem=metrics",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			out := &lockedBuffer{}
+			logger := slog.New(slog.NewTextHandler(out, nil))
+
+			srv := metrics.New("127.0.0.1", s.getFreePort(), logger)
+			s.Require().NotNil(srv)
+			srv.Start()
+
+			s.Eventually(func() bool {
+				return strings.Contains(out.String(), "http(s) server started")
+			}, 2*time.Second, 10*time.Millisecond)
+
+			for _, w := range tt.want {
+				s.Contains(out.String(), w)
+			}
+
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			srv.Stop(ctx)
+		})
+	}
 }

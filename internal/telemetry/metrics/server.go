@@ -102,6 +102,10 @@ func New(
 	)
 
 	e := echo.New()
+	// Echo writes its start and shutdown lines, and the errors of the HTTP
+	// server, through e.Logger. Its default is a JSON handler on stdout,
+	// past the handler of the process.
+	e.Logger = srv.logger
 	e.Use(httplog.New(logger))
 	e.Use(middleware.Recover())
 
