@@ -55,6 +55,21 @@
   color: var(--color-heading-5);
 }
 
+/* The UI is dark only. Without this the browser draws its light scroll bars. */
+:root {
+  color-scheme: dark;
+}
+
+/* A thin bar with no track: the thumb shows only where a panel scrolls. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+}
+
+*:hover {
+  scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
+}
+
 body {
   margin: 0;
   background-color: var(--color-background);
