@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Behavior DSL | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Behavior DSL | OSAPI"><meta data-rh="true" name="description" content="Each part of a behavior definition: what it makes osapi do, and when to use it."><meta data-rh="true" property="og:description" content="Each part of a behavior definition: what it makes osapi do, and when to use it."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Development","item":"https://osapi-io.github.io/osapi/sidebar/development/"},{"@type":"ListItem","position":2,"name":"DSLs","item":"https://osapi-io.github.io/osapi/sidebar/development/dsl/"},{"@type":"ListItem","position":3,"name":"Behavior DSL","item":"https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.ee2257e7.css">
-<script src="/osapi/assets/js/runtime~main.1557edaa.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.3bac5854.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.ed3fa410.js" defer="defer"></script>
 </head>
 <body>
@@ -51,10 +51,10 @@ AreaHardware or AreaContainers.</p>
 <p>Use: On each behavior with API. behavior validate refuses a served behavior with
 none.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="undergroupname"><code>Under(GroupName)</code><a href="#undergroupname" class="hash-link" aria-label="Direct link to undergroupname" title="Direct link to undergroupname" translate="no">​</a></h3>
-<p>Nests the behavior in a group: its routes, commands, directory and the prefix of
-its permissions. Use a constant, such as GroupNetwork; behavior validate refuses
-a group outside KnownGroups, because a misspelled group makes a new route,
-command and permission.</p>
+<p>Nests the behavior in a group: its routes, commands and directory. The
+permissions keep the behavior&#x27;s name: dns under network needs dns:read. Use a
+constant, such as GroupNetwork; behavior validate refuses a group outside
+KnownGroups, because a misspelled group makes a new route and command.</p>
 <p>Use: When the behavior belongs to a group, such as network. Add the group&#x27;s
 constant to KnownGroups first.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="internal"><code>Internal</code><a href="#internal" class="hash-link" aria-label="Direct link to internal" title="Direct link to internal" translate="no">​</a></h3>
@@ -147,7 +147,7 @@ fail on each command that does not go through gohai.</p>
 own it. A fact that gohai does not read is a change to gohai first.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="permitasverb-on-an-action"><code>.PermitAs(verb) on an action</code><a href="#permitasverb-on-an-action" class="hash-link" aria-label="Direct link to permitasverb-on-an-action" title="Direct link to permitasverb-on-an-action" translate="no">​</a></h3>
 <p>Makes the action&#x27;s permission &lt;name&gt;:&lt;verb&gt; in place of
-&lt;name&gt;:execute, such as container:exec with behavior.VerbExec. Thus the
+&lt;name&gt;:execute, such as docker:exec with behavior.VerbExec. Thus the
 action does not share a permission with the other actions of its behavior, which
 the operator role gets. Only the admin role gets the verb: behavior.VerbExec or
 behavior.VerbShell. behavior validate refuses it on a method that is not an
