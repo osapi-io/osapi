@@ -25,6 +25,9 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"time"
+
+	"github.com/lmittmann/tint"
 )
 
 // osExit allows tests to override os.Exit.
@@ -42,6 +45,28 @@ func SetJSONOutput(
 	enabled bool,
 ) {
 	jsonOutput = enabled
+}
+
+// LogHandler is the handler that a process logs through, to w. With --json,
+// each line is a JSON object. Else each line is the time, the level, the
+// message and the attributes, with the level in color when color is true,
+// at level or above. The root gives it stderr; the docs generator gives it
+// a buffer with color on, so a page shows the lines that a terminal shows.
+func LogHandler(
+	w io.Writer,
+	level slog.Level,
+	asJSON bool,
+	color bool,
+) slog.Handler {
+	if asJSON {
+		return slog.NewJSONHandler(w, nil)
+	}
+
+	return tint.NewTextHandler(w, &tint.Options{
+		Level:      level,
+		TimeFormat: time.Kitchen,
+		NoColor:    !color,
+	})
 }
 
 // LogFatal logs a fatal error message along with optional structured data

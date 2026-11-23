@@ -21,6 +21,7 @@
 package commandgen_test
 
 import (
+	"log/slog"
 	"regexp"
 	"testing"
 
@@ -129,6 +130,47 @@ func (s *OutputsPublicTestSuite) TestOutputsDoc() {
 	g := endpoint.Define("zzdoc", "Doc",
 		endpoint.Get[noIn, node]("get").Example("").Prints(node{Name: "web-01"}))
 	s.Contains(commandgen.Outputs(g, g.Methods[0], "osapi client zzdoc get"), "The command prints:")
+}
+
+func (s *OutputsPublicTestSuite) TestOutputsLogs() {
+	line := command.LogLine{
+		Level: slog.LevelInfo,
+		Msg:   "server started",
+		Attrs: []slog.Attr{slog.String("component", "nats"), slog.Int("port", 4222)},
+	}
+	tests := []struct {
+		name string
+		doc  []string
+		want []string
+	}{
+		{
+			name: "when the example has no doc, the lines in color, then as JSON",
+			want: []string{
+				"The command prints:\n\n```ansi\n$ osapi zzlogs start --x 1\n" +
+					"\x1b[2m10:00AM\x1b[0m \x1b[92mINF\x1b[0m server started " +
+					"\x1b[2mcomponent=\x1b[0mnats \x1b[2mport=\x1b[0m4222\n```",
+				"With `--json`, the command prints:\n\n```json\n" +
+					`{"time":"2026-01-15T10:00:00Z","level":"INFO","msg":"server started",` +
+					`"component":"nats","port":4222}` + "\n```",
+			},
+		},
+		{
+			name: "when the example has a doc, it heads the lines",
+			doc:  []string{"A start"},
+			want: []string{"A start:\n\n```ansi\n"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			g := command.Define("zzlogs", "Logs",
+				command.Process("start").Example("--x 1", tc.doc...).Logs(line))
+			got := commandgen.Outputs(g, g.Methods[0], "osapi zzlogs start")
+			for _, w := range tc.want {
+				s.Contains(got, w)
+			}
+		})
+	}
 }
 
 func TestOutputsPublicTestSuite(

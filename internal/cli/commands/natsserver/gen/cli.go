@@ -7,12 +7,14 @@ import (
 
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/commands/natsserver"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
 var serverStartCmd = &cobra.Command{
-	Args:    cobra.NoArgs,
-	Example: "  osapi nats server start",
-	Long:    "The server makes the streams, consumers and KV buckets that the job system\nneeds. `osapi start` runs the same server, together with the controller and\nan agent, in one process. Use this command to run the bus as its own\nprocess. The `nats.server` section of the config sets the host, the port and\nthe authentication. Refer to [Configuration](../../../configuration.md).",
+	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi nats server start\n\x1b[2m10:00AM\x1b[0m \x1b[92mINF\x1b[0m nats server started successfully \x1b[2mcomponent=\x1b[0mnats\n\x1b[2m10:00AM\x1b[0m \x1b[92mINF\x1b[0m embedded NATS server running \x1b[2mcomponent=\x1b[0mnats \x1b[2mhost=\x1b[0mlocalhost \x1b[2mport=\x1b[0m4222 \x1b[2mstore_dir=\x1b[0m.nats/jetstream/ \x1b[2mnamespace=\x1b[0mosapi \x1b[2mauth.type=\x1b[0mnone\n\x1b[2m10:00AM\x1b[0m \x1b[92mINF\x1b[0m metrics server started \x1b[2mcomponent=\x1b[0mnats \x1b[2msubsystem=\x1b[0mmetrics \x1b[2maddr=\x1b[0m0.0.0.0:9092\n\x1b[2m10:00AM\x1b[0m \x1b[92mINF\x1b[0m registered in component registry \x1b[2mcomponent=\x1b[0mnats \x1b[2msubsystem=\x1b[0mnats.heartbeat \x1b[2mhostname=\x1b[0mweb-03 \x1b[2mtype=\x1b[0mnats \x1b[2mkey=\x1b[0mnats.web-03\n```\n\nWith `--json`, the command prints:\n\n```json\n{\"time\":\"2026-01-15T10:00:00Z\",\"level\":\"INFO\",\"msg\":\"nats server started successfully\",\"component\":\"nats\"}\n{\"time\":\"2026-01-15T10:00:00Z\",\"level\":\"INFO\",\"msg\":\"embedded NATS server running\",\"component\":\"nats\",\"host\":\"localhost\",\"port\":4222,\"store_dir\":\".nats/jetstream/\",\"namespace\":\"osapi\",\"auth.type\":\"none\"}\n{\"time\":\"2026-01-15T10:00:00Z\",\"level\":\"INFO\",\"msg\":\"metrics server started\",\"component\":\"nats\",\"subsystem\":\"metrics\",\"addr\":\"0.0.0.0:9092\"}\n{\"time\":\"2026-01-15T10:00:00Z\",\"level\":\"INFO\",\"msg\":\"registered in component registry\",\"component\":\"nats\",\"subsystem\":\"nats.heartbeat\",\"hostname\":\"web-03\",\"type\":\"nats\",\"key\":\"nats.web-03\"}\n```"},
+	Args:        cobra.NoArgs,
+	Example:     "  osapi nats server start",
+	Long:        "The server makes the streams, consumers and KV buckets that the job system\nneeds. `osapi start` runs the same server, together with the controller and\nan agent, in one process. Use this command to run the bus as its own\nprocess. The `nats.server` section of the config sets the host, the port and\nthe authentication. Refer to [Configuration](../../../configuration.md).",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		return clicommand.Serve(cmd, natsserver.Group, "start")
 	},

@@ -37,6 +37,7 @@ var Group = command.Register(command.Define(
 		Long("The controller serves the REST API, writes its heartbeat, and watches\n"+
 			"conditions to send notifications.").
 		Example("").
+		Logs(StartLogs...).
 		Example("--controller-api-port 9000").
 		Flag("controller.api.port").
 		Setup(Start),

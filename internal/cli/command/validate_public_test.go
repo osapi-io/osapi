@@ -22,6 +22,7 @@ package command_test
 
 import (
 	"context"
+	"log/slog"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -255,10 +256,40 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 			group: command.Define("zzproc", "Process",
 				command.Uses[localDeps](),
 				command.Process("start").Short("Start it").
+					Example("").
+					Logs(command.LogLine{Level: slog.LevelInfo, Msg: "started"}).
 					Setup(func(context.Context, localDeps) (command.Running, error) {
 						return command.Running{}, nil
 					}),
 			),
+		},
+		{
+			name: "when a process logs before an Example, or logs nothing",
+			group: command.Define("zzproc", "Process",
+				command.Uses[localDeps](),
+				command.Process("start").Short("Start it").
+					Logs(command.LogLine{Level: slog.LevelInfo, Msg: "started"}).
+					Example("").
+					Setup(func(context.Context, localDeps) (command.Running, error) {
+						return command.Running{}, nil
+					}),
+			),
+			want: []string{
+				"Logs comes before any Example; it gives the last Example its log.",
+				"no Example has a log: add .Logs(lines...) after one.",
+			},
+		},
+		{
+			name: "when a method Logs, which only a process does",
+			group: command.Define("zzlogs", "Logs",
+				command.Uses[localDeps](),
+				command.Method[struct{}, greetOut]("get").Short("X").Example("").Prints(greetOut{}).
+					Logs(command.LogLine{Level: slog.LevelInfo, Msg: "started"}).
+					Handle(func(context.Context, localDeps, struct{}) (greetOut, error) {
+						return greetOut{}, nil
+					}),
+			),
+			want: []string{"Logs is for a process: give this method's output with Prints."},
 		},
 		{
 			name: "when a method has a Flag, which only a process has",
@@ -277,6 +308,8 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 			group: command.Define("zzproc", "Process",
 				command.Uses[localDeps](),
 				command.Process("start").Short("Start it").
+					Example("").
+					Logs(command.LogLine{Level: slog.LevelInfo, Msg: "started"}).
 					Fails("an input", struct{}{}).
 					Setup(greet),
 			),

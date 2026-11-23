@@ -88,9 +88,10 @@ controller. Without it, the group is under the root.
 ### `Process("name")`
 
 A command, osapi &lt;group&gt; &lt;name&gt;, that runs a process until the
-command's context ends, such as osapi nats server start. It has no input and
-prints no output; .Setup sets what it runs. The context is the one the root
-makes and cancels on SIGINT or SIGTERM.
+command's context ends, such as osapi nats server start. It has no input and no
+output type; .Setup sets what it runs, and .Logs gives its page the lines that
+it writes when it starts. The context is the one the root makes and cancels on
+SIGINT or SIGTERM.
 
 Use: For a command that starts a component and runs until a signal. Its name is
 an action, such as start.
@@ -179,6 +180,17 @@ flags, with no Prints.
 Use: After the Example that it shows, on each method that prints a body and is
 not a process: validate fails one with no Prints. Put the sample in samples.go
 of the group, with each time in UTC.
+
+### `.Logs(lines...)`
+
+Gives the last Example of a process the lines that it writes when it starts,
+each a command.LogLine: a level, a message and its attributes. The CLI page
+shows them as the log handler of the CLI writes them in a terminal, in color,
+and as JSON for --json.
+
+Use: After the Example of each process: validate fails a process with no Logs,
+and Logs on a method. Put the lines in samples.go of the group, copied from a
+real start at the info level.
 
 ### `.Sub("segment")`
 
@@ -552,6 +564,6 @@ Use: Change the definition, then generate.
 ### `docs/docs/sidebar/usage/cli/`
 
 The CLI pages, from just cli-docs-generate. The page of a local command comes
-from .Short, .Long, .Example, .Prints and each input field's doc.
+from .Short, .Long, .Example, .Prints, .Logs and each input field's doc.
 
 Use: Change the definition, then generate. Do not write a CLI page by hand.

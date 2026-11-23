@@ -37,5 +37,6 @@ var Group = command.Register(command.Define(
 			"process. The `nats.server` section of the config sets the host, the port and\n"+
 			"the authentication. Refer to [Configuration](../../../configuration.md).").
 		Example("").
+		Logs(StartLogs...).
 		Setup(Start),
 ))

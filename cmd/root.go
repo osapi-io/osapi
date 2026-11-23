@@ -28,11 +28,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/osfs"
-	"github.com/lmittmann/tint"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/term"
@@ -163,18 +161,8 @@ func initLogger() {
 		logLevel = slog.LevelDebug
 	}
 
-	var handler slog.Handler
-	if jsonOutput {
-		handler = slog.NewJSONHandler(os.Stderr, nil)
-	} else {
-		handler = tint.NewTextHandler(os.Stderr, &tint.Options{
-			Level:      logLevel,
-			TimeFormat: time.Kitchen,
-			NoColor:    !term.IsTerminal(int(os.Stdout.Fd())),
-		})
-	}
-
-	handler = tracing.NewTraceHandler(handler)
+	handler := tracing.NewTraceHandler(cli.LogHandler(
+		os.Stderr, logLevel, jsonOutput, term.IsTerminal(int(os.Stdout.Fd()))))
 	logger = slog.New(handler)
 	cli.SetJSONOutput(jsonOutput)
 }
