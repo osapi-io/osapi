@@ -62,7 +62,9 @@ var Group = endpoint.Register(endpoint.Define(
 		Handle(List).
 		ID("GetAuditLogs").
 		Describe("List audit log entries").
-		Explain("Returns a paginated list of audit log entries, newest first.").
+		Explain("Returns a paginated list of audit log entries, newest first. A token with a "+
+			"target scope gets only the entries of requests to a target in its scope, and the "+
+			"total includes only those entries.").
 		Returns("List of audit entries.").
 		Command("List audit log entries",
 			"The list shows recent API activity: the user, the HTTP method, the path,\n"+
@@ -82,7 +84,8 @@ var Group = endpoint.Register(endpoint.Define(
 		Sub("export").
 		ID("GetAuditExport").
 		Describe("Export all audit log entries").
-		Explain("Returns all audit log entries without pagination for export.").
+		Explain("Returns all audit log entries without pagination for export. A token with a "+
+			"target scope gets only the entries of requests to a target in its scope.").
 		Returns("All audit entries.").
 		Command("Show all audit log entries, with no pages",
 			"To save them, send the JSON to a file:\n"+
@@ -97,11 +100,15 @@ var Group = endpoint.Register(endpoint.Define(
 		Handle(Get).
 		ID("GetAuditLogByID").
 		Describe("Get a single audit log entry").
-		Explain("Returns a single audit log entry by ID.").
+		Explain("Returns a single audit log entry by ID. An entry of a request to a target "+
+			"outside the target scope of the token is not found.").
 		Returns("Audit entry found.").
 		Command("Get a single audit log entry", "").
 		Example("--id 550e8400-e29b-41d4-a716-446655440000").
 		Prints(sampleGet).
 		Example("--id 550e8400-e29b-41d4-a716-446655440000 --json").
-		Errors(endpoint.NotFound(ErrNotFound, "Audit entry not found."), notConfigured503),
+		Errors(endpoint.NotFound(
+			ErrNotFound,
+			"Audit entry not found, or its target is outside the token's target scope.",
+		), notConfigured503),
 ))

@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	auditstore "github.com/osapi-io/osapi/internal/audit"
+	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
@@ -46,7 +47,9 @@ func List(
 		limit = defaultLimit
 	}
 
-	if !in.filtered() {
+	// A scoped token sees only the entries whose target is in its scope, so
+	// its scope filters the log as a filter of the caller does.
+	if !in.filtered() && len(authtoken.TargetsFrom(ctx)) == 0 {
 		entries, total, err := d.Store.List(ctx, limit, in.Offset)
 		if err != nil {
 			return ListAuditResponse{}, endpoint.Internal("failed to list audit entries", err)
@@ -64,7 +67,7 @@ func List(
 	}
 	matched := make([]auditstore.Entry, 0, len(all))
 	for _, e := range all {
-		if in.matches(e) {
+		if in.matches(e) && authtoken.Sees(ctx, target(e)) {
 			matched = append(matched, e)
 		}
 	}
@@ -111,9 +114,15 @@ func Export(
 		return ListAuditResponse{}, notConfigured()
 	}
 
-	entries, err := d.Store.ListAll(ctx)
+	all, err := d.Store.ListAll(ctx)
 	if err != nil {
 		return ListAuditResponse{}, endpoint.Internal("failed to list all audit entries", err)
+	}
+	entries := make([]auditstore.Entry, 0, len(all))
+	for _, e := range all {
+		if authtoken.Sees(ctx, target(e)) {
+			entries = append(entries, e)
+		}
 	}
 
 	return ListAuditResponse{TotalItems: len(entries), Items: toEntries(entries)}, nil
@@ -129,8 +138,10 @@ func Get(
 		return AuditEntryResponse{}, notConfigured()
 	}
 
+	// An entry outside the scope of the token does not exist for it.
 	entry, err := d.Store.Get(ctx, in.ID)
-	if errors.Is(err, auditstore.ErrNotFound) {
+	if errors.Is(err, auditstore.ErrNotFound) ||
+		(err == nil && !authtoken.Sees(ctx, target(*entry))) {
 		return AuditEntryResponse{}, endpoint.Errorf(ErrNotFound,
 			"audit entry %s not found", in.ID)
 	}
@@ -139,6 +150,25 @@ func Get(
 	}
 
 	return AuditEntryResponse{Entry: toEntry(*entry)}, nil
+}
+
+// nodePrefix is the start of the path of each request that acts on a
+// target.
+const nodePrefix = "/api/node/"
+
+// target is the target of the request that e records: the {hostname} of a
+// /api/node/{hostname}/ path, such as group:web.dev or web-01. It is empty
+// for a request that has no target, such as a read of the jobs.
+func target(
+	e auditstore.Entry,
+) string {
+	rest, ok := strings.CutPrefix(e.Path, nodePrefix)
+	if !ok {
+		return ""
+	}
+	t, _, _ := strings.Cut(rest, "/")
+
+	return t
 }
 
 func notConfigured() error {

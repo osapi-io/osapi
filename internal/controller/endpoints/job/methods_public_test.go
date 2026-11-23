@@ -103,13 +103,14 @@ func (s *MethodsPublicTestSuite) TestList() {
 	tests := []struct {
 		name         string
 		in           jobgroup.ListInput
+		scope        []string
 		setup        func()
 		validateFunc func(jobgroup.ListJobsResponse, error)
 	}{
 		{
 			name: "when the caller gives no limit, it reads the default page and masks secrets",
 			setup: func() {
-				s.jobs.EXPECT().ListJobs(gomock.Any(), "", client.DefaultPageSize, 0).
+				s.jobs.EXPECT().ListJobs(gomock.Any(), "", client.DefaultPageSize, 0, gomock.Nil()).
 					Return(&client.ListJobsResult{
 						Jobs: []*job.QueuedJob{
 							queued(),
@@ -144,7 +145,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 			name: "when the caller gives a status, a limit and an offset, it reads that page",
 			in:   jobgroup.ListInput{Status: "failed", Limit: 3, Offset: 6},
 			setup: func() {
-				s.jobs.EXPECT().ListJobs(gomock.Any(), "failed", 3, 6).
+				s.jobs.EXPECT().ListJobs(gomock.Any(), "failed", 3, 6, gomock.Nil()).
 					Return(&client.ListJobsResult{}, nil)
 			},
 			validateFunc: func(got jobgroup.ListJobsResponse, err error) {
@@ -155,18 +156,43 @@ func (s *MethodsPublicTestSuite) TestList() {
 		{
 			name: "when the job client fails, the caller gets a message without its error",
 			setup: func() {
-				s.jobs.EXPECT().ListJobs(gomock.Any(), "", client.DefaultPageSize, 0).
+				s.jobs.EXPECT().ListJobs(gomock.Any(), "", client.DefaultPageSize, 0, gomock.Nil()).
 					Return(nil, errors.New("nats: timeout"))
 			},
 			validateFunc: func(_ jobgroup.ListJobsResponse, err error) {
 				s.EqualError(err, "failed to list jobs")
 			},
 		},
+		{
+			name:  "when the token is scoped, the job client keeps only the jobs in its scope",
+			scope: []string{"group:web"},
+			setup: func() {
+				s.jobs.EXPECT().
+					ListJobs(gomock.Any(), "", client.DefaultPageSize, 0, gomock.Not(gomock.Nil())).
+					DoAndReturn(func(
+						_ context.Context, _ string, _ int, _ int, keep func(string) bool,
+					) (*client.ListJobsResult, error) {
+						s.True(keep("group:web.dev"))
+						s.True(keep("web-01"), "a host whose agent has a label in the scope")
+						s.False(keep("group:db"))
+						s.False(keep("_all"))
+						s.False(keep("_any"))
+						s.False(keep(""), "a job with no stored target")
+
+						return &client.ListJobsResult{TotalCount: 1}, nil
+					})
+			},
+			validateFunc: func(got jobgroup.ListJobsResponse, err error) {
+				s.Require().NoError(err)
+				s.Equal(1, got.TotalItems)
+			},
+		},
 	}
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			tc.setup()
-			tc.validateFunc(jobgroup.List(context.Background(), s.deps(), tc.in))
+			ctx := authtoken.WithTargets(context.Background(), tc.scope)
+			tc.validateFunc(jobgroup.List(ctx, s.deps(), tc.in))
 		})
 	}
 }
@@ -174,6 +200,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 func (s *MethodsPublicTestSuite) TestGet() {
 	tests := []struct {
 		name         string
+		scope        []string
 		setup        func()
 		validateFunc func(jobgroup.JobDetailResponse, error)
 	}{
@@ -270,12 +297,50 @@ func (s *MethodsPublicTestSuite) TestGet() {
 				s.EqualError(err, "failed to get job")
 			},
 		},
+		{
+			name:  "when a scoped token gets a job in its scope, it is the job",
+			scope: []string{"group:web"},
+			setup: func() {
+				qj := queued()
+				qj.Target = "group:web.dev"
+				s.jobs.EXPECT().GetJobStatus(gomock.Any(), jobID).Return(qj, nil)
+			},
+			validateFunc: func(got jobgroup.JobDetailResponse, err error) {
+				s.Require().NoError(err)
+				s.Equal("group:web.dev", got.Target)
+			},
+		},
+		{
+			name:  "when a scoped token gets a job outside its scope, it is ErrNotFound",
+			scope: []string{"group:web"},
+			setup: func() {
+				qj := queued()
+				qj.Target = "group:db"
+				s.jobs.EXPECT().GetJobStatus(gomock.Any(), jobID).Return(qj, nil)
+			},
+			validateFunc: func(_ jobgroup.JobDetailResponse, err error) {
+				s.ErrorIs(err, jobgroup.ErrNotFound)
+			},
+		},
+		{
+			name:  "when a scoped token gets a job sent to _all, it is ErrNotFound",
+			scope: []string{"group:web"},
+			setup: func() {
+				qj := queued()
+				qj.Target = "_all"
+				s.jobs.EXPECT().GetJobStatus(gomock.Any(), jobID).Return(qj, nil)
+			},
+			validateFunc: func(_ jobgroup.JobDetailResponse, err error) {
+				s.ErrorIs(err, jobgroup.ErrNotFound)
+			},
+		},
 	}
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			tc.setup()
+			ctx := authtoken.WithTargets(context.Background(), tc.scope)
 			tc.validateFunc(
-				jobgroup.Get(context.Background(), s.deps(), jobgroup.GetInput{ID: jobID}),
+				jobgroup.Get(ctx, s.deps(), jobgroup.GetInput{ID: jobID}),
 			)
 		})
 	}
@@ -284,6 +349,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 func (s *MethodsPublicTestSuite) TestDelete() {
 	tests := []struct {
 		name         string
+		scope        []string
 		setup        func()
 		validateFunc func(error)
 	}{
@@ -306,12 +372,51 @@ func (s *MethodsPublicTestSuite) TestDelete() {
 			},
 			validateFunc: func(err error) { s.EqualError(err, "failed to delete job") },
 		},
+		{
+			name:  "when a scoped token deletes a job in its scope, it goes",
+			scope: []string{"group:web"},
+			setup: func() {
+				qj := queued()
+				qj.Target = "group:web"
+				s.jobs.EXPECT().GetJobStatus(gomock.Any(), jobID).Return(qj, nil)
+				s.jobs.EXPECT().DeleteJob(gomock.Any(), jobID).Return(nil)
+			},
+			validateFunc: func(err error) { s.NoError(err) },
+		},
+		{
+			name:  "when a scoped token deletes a job outside its scope, it is ErrNotFound",
+			scope: []string{"group:web"},
+			setup: func() {
+				qj := queued()
+				qj.Target = "_all"
+				s.jobs.EXPECT().GetJobStatus(gomock.Any(), jobID).Return(qj, nil)
+			},
+			validateFunc: func(err error) { s.ErrorIs(err, jobgroup.ErrNotFound) },
+		},
+		{
+			name:  "when a scoped token deletes a job that is not there, it is ErrNotFound",
+			scope: []string{"group:web"},
+			setup: func() {
+				s.jobs.EXPECT().GetJobStatus(gomock.Any(), jobID).Return(nil, job.ErrNotFound)
+			},
+			validateFunc: func(err error) { s.ErrorIs(err, jobgroup.ErrNotFound) },
+		},
+		{
+			name:  "when a scoped token deletes and the job client fails, it is a message without its error",
+			scope: []string{"group:web"},
+			setup: func() {
+				s.jobs.EXPECT().
+					GetJobStatus(gomock.Any(), jobID).
+					Return(nil, errors.New("nats: timeout"))
+			},
+			validateFunc: func(err error) { s.EqualError(err, "failed to get job") },
+		},
 	}
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			tc.setup()
 			_, err := jobgroup.Delete(
-				context.Background(),
+				authtoken.WithTargets(context.Background(), tc.scope),
 				s.deps(),
 				jobgroup.DeleteInput{ID: jobID},
 			)
@@ -351,6 +456,9 @@ func (s *MethodsPublicTestSuite) TestRetry() {
 			target: "group:web.dev",
 			scope:  []string{"group:web"},
 			setup: func() {
+				qj := queued()
+				qj.Target = "group:web"
+				s.jobs.EXPECT().GetJobStatus(gomock.Any(), jobID).Return(qj, nil)
 				s.jobs.EXPECT().
 					RetryJob(gomock.Any(), jobID, "group:web.dev").
 					Return(&client.CreateJobResult{JobID: newJobID}, nil)
@@ -358,6 +466,19 @@ func (s *MethodsPublicTestSuite) TestRetry() {
 			validateFunc: func(got jobgroup.CreateJobResponse, err error) {
 				s.Require().NoError(err)
 				s.Equal(newJobID, got.JobID)
+			},
+		},
+		{
+			name:   "when a scoped token retries a job outside its scope, it is ErrNotFound",
+			target: "group:web.dev",
+			scope:  []string{"group:web"},
+			setup: func() {
+				qj := queued()
+				qj.Target = "group:db"
+				s.jobs.EXPECT().GetJobStatus(gomock.Any(), jobID).Return(qj, nil)
+			},
+			validateFunc: func(_ jobgroup.CreateJobResponse, err error) {
+				s.ErrorIs(err, jobgroup.ErrNotFound)
 			},
 		},
 		{
@@ -466,7 +587,7 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 			path:   "/api/job?status=completed&limit=5&offset=10",
 			token:  token("job:read"),
 			setup: func() {
-				s.jobs.EXPECT().ListJobs(gomock.Any(), "completed", 5, 10).
+				s.jobs.EXPECT().ListJobs(gomock.Any(), "completed", 5, 10, gomock.Nil()).
 					Return(&client.ListJobsResult{TotalCount: 0}, nil)
 			},
 			wantCode: http.StatusOK,

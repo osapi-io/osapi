@@ -180,7 +180,9 @@ The controller reads the trace from the query API of Jaeger at
 setting, the command answers that no tracing backend is configured. The backend
 gets the spans a few seconds after the request, so a trace that ran a moment ago
 can be not found. Run the command again after a few seconds. The command needs
-`trace:read`, which each built-in role has.
+`trace:read`, which each built-in role has. A token with a target scope gets a
+trace only when each target that the trace records is in its scope. Refer to
+[Target scope](authentication.md#target-scope).
 
 ## Read a trace in Jaeger
 

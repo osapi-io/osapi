@@ -107,6 +107,9 @@ The typed domain endpoints make the jobs. Thus the permission to make a job
 comes from the operation. For example, to read a hostname you need
 `hostname:read`. To update DNS you need `dns:write`.
 
+A token with a target scope sees only the jobs whose target is in its scope.
+Refer to [Target scope](authentication.md#target-scope).
+
 ## Related
 
 - [CLI Reference](../usage/cli/client/job/job.mdx): job commands

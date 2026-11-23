@@ -227,7 +227,7 @@ openapi: 3.0.0
 paths:
   /api/job:
     get:
-      description: Retrieve jobs, optionally filtered by status.
+      description: Retrieve jobs, optionally filtered by status. A token with a target scope gets only the jobs whose target is in its scope, and the counts include only those jobs.
       operationId: GetJobs
       parameters:
         - description: Filter jobs by status.
@@ -301,7 +301,7 @@ paths:
         - job_operations
   /api/job/{id}:
     delete:
-      description: Delete a specific job by its ID.
+      description: Delete a specific job by its ID. A job whose target is outside the target scope of the token is not found.
       operationId: DeleteJobByID
       parameters:
         - description: UUID of the job to delete.
@@ -339,7 +339,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: Job not found.
+          description: Job not found, or its target is outside the token's target scope.
         "500":
           content:
             application/json:
@@ -353,7 +353,7 @@ paths:
       tags:
         - job_operations
     get:
-      description: Retrieve details of a specific job by its ID.
+      description: Retrieve details of a specific job by its ID. A job whose target is outside the target scope of the token is not found.
       operationId: GetJobByID
       parameters:
         - description: UUID of the job to retrieve.
@@ -395,7 +395,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: Job not found.
+          description: Job not found, or its target is outside the token's target scope.
         "500":
           content:
             application/json:
@@ -462,7 +462,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: Job not found.
+          description: Job not found, or its target is outside the token's target scope.
         "500":
           content:
             application/json:

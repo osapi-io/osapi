@@ -67,3 +67,18 @@ func InScope(
 ) bool {
 	return validation.InScope(ctx, target, TargetsFrom(ctx))
 }
+
+// Sees reports whether the token of ctx may read a job, a trace or an audit
+// entry whose target is target. A token with no scope sees each one. A scoped
+// token sees one only when its target is in the scope, so a record with no
+// target, or with the target _all or _any, is hidden from it.
+func Sees(
+	ctx context.Context,
+	target string,
+) bool {
+	if len(TargetsFrom(ctx)) == 0 {
+		return true
+	}
+
+	return target != "" && InScope(ctx, target)
+}

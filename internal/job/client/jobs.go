@@ -296,11 +296,16 @@ func (c *Client) jobStatus(
 // Uses a two-pass approach: Pass 1 derives status from key names only (fast),
 // Pass 2 fetches full details for the paginated page only.
 // Jobs are returned newest-first (reverse insertion order).
+//
+// A non-nil keep drops each job whose target it rejects before the jobs are
+// counted and paged, so the totals count only the jobs that keep accepts. It
+// costs a read of each job, which a nil keep does not.
 func (c *Client) listJobs(
 	ctx context.Context,
 	statusFilter string,
 	limit int,
 	offset int,
+	keep func(target string) bool,
 ) (*ListJobsResult, error) {
 	// Cap limit to MaxPageSize
 	if limit <= 0 || limit > MaxPageSize {
@@ -322,6 +327,9 @@ func (c *Client) listJobs(
 
 	// Pass 1: Light — key names only, no kv.Get()
 	orderedJobIDs, jobStatuses := computeStatusFromKeyNames(allKeys)
+	if keep != nil {
+		orderedJobIDs = c.keepJobs(ctx, orderedJobIDs, keep)
+	}
 
 	// Compute status counts from key-name-derived statuses (free — no extra reads)
 	statusCounts := map[string]int{
@@ -331,13 +339,13 @@ func (c *Client) listJobs(
 		string(job.StatusFailed):         0,
 		string(job.StatusPartialFailure): 0,
 	}
-	for _, info := range jobStatuses {
+	for _, id := range orderedJobIDs {
+		// Jobs with no status events are "submitted" but not in jobStatuses
+		info, exists := jobStatuses[id]
+		if !exists {
+			info = lightJobInfo{Status: string(job.StatusSubmitted)}
+		}
 		statusCounts[info.Status]++
-	}
-	// Jobs with no status events are "submitted" but not in jobStatuses
-	submittedOnly := len(orderedJobIDs) - len(jobStatuses)
-	if submittedOnly > 0 {
-		statusCounts[string(job.StatusSubmitted)] += submittedOnly
 	}
 
 	// Filter + count (fast, no reads)
@@ -403,6 +411,31 @@ func (c *Client) listJobs(
 		TotalCount:   totalCount,
 		StatusCounts: statusCounts,
 	}, nil
+}
+
+// keepJobs is the IDs of ids whose job has a target that keep accepts, in
+// the same order. A job that cannot be read is dropped.
+func (c *Client) keepJobs(
+	ctx context.Context,
+	ids []string,
+	keep func(target string) bool,
+) []string {
+	kept := make([]string, 0, len(ids))
+	for _, id := range ids {
+		entry, err := c.natsClient.KVGet(ctx, c.jobsBucket, "jobs."+id)
+		if err != nil {
+			continue
+		}
+		jobData, err := c.jobRecord(entry.Value())
+		if err != nil {
+			continue
+		}
+		if keep(getStringField(jobData, "target")) {
+			kept = append(kept, id)
+		}
+	}
+
+	return kept
 }
 
 // getJobStatusFromKeys builds a QueuedJob using pre-fetched keys (no inner kv.Keys() call).
@@ -980,17 +1013,19 @@ func (c *Client) GetJobStatus(
 }
 
 // ListJobs returns a page of jobs, in a job.list span that records how many
-// jobs the page has.
+// jobs the page has. A non-nil keep drops each job whose target it rejects
+// before the jobs are counted and paged.
 func (c *Client) ListJobs(
 	ctx context.Context,
 	statusFilter string,
 	limit int,
 	offset int,
+	keep func(target string) bool,
 ) (*ListJobsResult, error) {
 	ctx, span := opspan.Start(ctx, tracerName, "job.list",
 		attribute.String("job.status_filter", statusFilter),
 	)
-	result, err := c.listJobs(ctx, statusFilter, limit, offset)
+	result, err := c.listJobs(ctx, statusFilter, limit, offset, keep)
 	if err == nil {
 		span.SetAttributes(attribute.Int("job.count", len(result.Jobs)))
 	}

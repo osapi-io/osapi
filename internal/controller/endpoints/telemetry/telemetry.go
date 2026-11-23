@@ -51,7 +51,8 @@ var Group = endpoint.Register(endpoint.Define(
 		Describe("Get the spans of a trace").
 		Explain("Returns each span of a trace, read from the tracing backend at "+
 			"telemetry.tracing.url. The backend gets the spans a few seconds after the "+
-			"request, so a trace of a request that just ran can be not found yet.").
+			"request, so a trace of a request that just ran can be not found yet. A token with a "+
+			"target scope gets a trace only when each target that the trace records is in its scope.").
 		Returns("The spans of the trace.").
 		Command("Show the span tree of a trace",
 			"Shows each span of a trace as a tree: the request on the controller,\n"+
@@ -69,7 +70,8 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("--id 26e448c9dbe1c4a8d216a98c675079c9 --json").
 		Errors(
 			endpoint.NotFound(ErrNotFound,
-				"The backend has no trace with this ID, or not yet."),
+				"The backend has no trace with this ID, or not yet, or a target of the trace is "+
+					"outside the token's target scope."),
 			endpoint.Unavailable(ErrNoBackend,
 				"No tracing backend is configured on the controller."),
 		),

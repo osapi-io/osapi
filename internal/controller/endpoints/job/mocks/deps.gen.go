@@ -72,18 +72,18 @@ func (mr *MockJobsMockRecorder) GetJobStatus(ctx, jobID any) *gomock.Call {
 }
 
 // ListJobs mocks base method.
-func (m *MockJobs) ListJobs(ctx context.Context, statusFilter string, limit, offset int) (*client.ListJobsResult, error) {
+func (m *MockJobs) ListJobs(ctx context.Context, statusFilter string, limit, offset int, keep func(string) bool) (*client.ListJobsResult, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListJobs", ctx, statusFilter, limit, offset)
+	ret := m.ctrl.Call(m, "ListJobs", ctx, statusFilter, limit, offset, keep)
 	ret0, _ := ret[0].(*client.ListJobsResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListJobs indicates an expected call of ListJobs.
-func (mr *MockJobsMockRecorder) ListJobs(ctx, statusFilter, limit, offset any) *gomock.Call {
+func (mr *MockJobsMockRecorder) ListJobs(ctx, statusFilter, limit, offset, keep any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListJobs", reflect.TypeOf((*MockJobs)(nil).ListJobs), ctx, statusFilter, limit, offset)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListJobs", reflect.TypeOf((*MockJobs)(nil).ListJobs), ctx, statusFilter, limit, offset, keep)
 }
 
 // RetryJob mocks base method.

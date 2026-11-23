@@ -1000,9 +1000,60 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 		statusFilter string
 		limit        int
 		offset       int
+		keep         func(string) bool
 		setupMocks   func()
 		validateFunc func(*client.ListJobsResult, error)
 	}{
+		{
+			name: "when keep rejects a target, the job is not in the page or the counts",
+			keep: func(target string) bool { return target == "group:web" },
+			setupMocks: func() {
+				s.mockNATSClient.EXPECT().KVKeys(gomock.Any(), "jobs").Return(
+					[]string{
+						"jobs.job-1",
+						"jobs.job-2",
+						"status.job-2.failed.db-01.1",
+						"jobs.job-3",
+						"jobs.job-4",
+					},
+					nil,
+				)
+
+				kept := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				kept.EXPECT().Value().Return([]byte(
+					`{"id":"job-1","target":"group:web","created":"2024-01-01T00:00:00Z"}`,
+				)).Times(2)
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-1").
+					Return(kept, nil).Times(2)
+
+				other := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				other.EXPECT().Value().Return([]byte(
+					`{"id":"job-2","target":"_all","created":"2024-01-01T00:00:00Z"}`,
+				))
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-2").
+					Return(other, nil)
+
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-3").
+					Return(nil, errors.New("kv error"))
+
+				bad := jobmocks.NewMockKeyValueEntry(s.mockCtrl)
+				bad.EXPECT().Value().Return([]byte(`not json`))
+				s.mockNATSClient.EXPECT().
+					KVGet(gomock.Any(), "jobs", "jobs.job-4").
+					Return(bad, nil)
+			},
+			validateFunc: func(result *client.ListJobsResult, err error) {
+				s.Require().NoError(err)
+				s.Require().Len(result.Jobs, 1)
+				s.Equal("job-1", result.Jobs[0].ID)
+				s.Equal(1, result.TotalCount)
+				s.Equal(1, result.StatusCounts["submitted"], "job-3 and job-4 are not counted")
+				s.Equal(0, result.StatusCounts["failed"], "job-2 is not counted")
+			},
+		},
 		{
 			name:         "no jobs found",
 			statusFilter: "",
@@ -1408,6 +1459,7 @@ func (s *JobsPublicTestSuite) TestListJobs() {
 				tt.statusFilter,
 				tt.limit,
 				tt.offset,
+				tt.keep,
 			))
 		})
 	}

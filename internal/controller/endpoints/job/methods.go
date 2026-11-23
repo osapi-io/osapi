@@ -48,7 +48,14 @@ func List(
 		limit = client.DefaultPageSize
 	}
 
-	result, err := d.Jobs.ListJobs(ctx, in.Status, limit, in.Offset)
+	// A scoped token sees only the jobs whose target is in its scope, and
+	// the totals count only those.
+	var keep func(string) bool
+	if len(authtoken.TargetsFrom(ctx)) > 0 {
+		keep = func(target string) bool { return authtoken.Sees(ctx, target) }
+	}
+
+	result, err := d.Jobs.ListJobs(ctx, in.Status, limit, in.Offset, keep)
 	if err != nil {
 		return ListJobsResponse{}, endpoint.Internal("failed to list jobs", err)
 	}
@@ -72,7 +79,7 @@ func Get(
 	in GetInput,
 ) (JobDetailResponse, error) {
 	qj, err := d.Jobs.GetJobStatus(ctx, in.ID)
-	if apierr.IsMissing(err) {
+	if apierr.IsMissing(err) || (err == nil && !authtoken.Sees(ctx, qj.Target)) {
 		return JobDetailResponse{}, endpoint.Errorf(ErrNotFound, "job %s not found", in.ID)
 	}
 	if err != nil {
@@ -122,6 +129,13 @@ func Delete(
 	d Deps,
 	in DeleteInput,
 ) (struct{}, error) {
+	// A job outside the scope of the token does not exist for it.
+	if len(authtoken.TargetsFrom(ctx)) > 0 {
+		if err := visible(ctx, d, in.ID); err != nil {
+			return struct{}{}, err
+		}
+	}
+
 	err := d.Jobs.DeleteJob(ctx, in.ID)
 	if apierr.IsMissing(err) {
 		return struct{}{}, endpoint.Errorf(ErrNotFound, "job %s not found", in.ID)
@@ -151,6 +165,13 @@ func Retry(
 			"target %s is outside the token's target scope %v", target, authtoken.TargetsFrom(ctx))
 	}
 
+	// A job outside the scope of the token does not exist for it.
+	if len(authtoken.TargetsFrom(ctx)) > 0 {
+		if err := visible(ctx, d, in.ID); err != nil {
+			return CreateJobResponse{}, err
+		}
+	}
+
 	result, err := d.Jobs.RetryJob(ctx, in.ID, in.Body.TargetHostname)
 	if apierr.IsMissing(err) {
 		return CreateJobResponse{}, endpoint.Errorf(ErrNotFound, "job %s not found", in.ID)
@@ -169,6 +190,24 @@ func Retry(
 		Revision:  int64(result.Revision), //nolint:gosec // a KV revision fits an int64
 		Timestamp: result.Timestamp,
 	}, nil
+}
+
+// visible is nil when job id exists and the token of ctx sees it, and the
+// error that a job that does not exist gets otherwise.
+func visible(
+	ctx context.Context,
+	d Deps,
+	id string,
+) error {
+	qj, err := d.Jobs.GetJobStatus(ctx, id)
+	if apierr.IsMissing(err) || (err == nil && !authtoken.Sees(ctx, qj.Target)) {
+		return endpoint.Errorf(ErrNotFound, "job %s not found", id)
+	}
+	if err != nil {
+		return endpoint.Internal("failed to get job", err)
+	}
+
+	return nil
 }
 
 // summary is the fields of a job that list and get both have, with the

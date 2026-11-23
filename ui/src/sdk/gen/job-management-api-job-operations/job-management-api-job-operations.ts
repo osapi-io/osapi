@@ -85,7 +85,7 @@ export const getGetJobsUrl = (params?: GetJobsParams,) => {
 }
 
 /**
- * Retrieve jobs, optionally filtered by status.
+ * Retrieve jobs, optionally filtered by status. A token with a target scope gets only the jobs whose target is in its scope, and the counts include only those jobs.
  * @summary List jobs
  */
 export const getJobs = async (params?: GetJobsParams, options?: Parameters<typeof apiFetch>[1]): Promise<getJobsResponse> => {
@@ -148,7 +148,7 @@ export const getDeleteJobByIDUrl = (id: string,) => {
 }
 
 /**
- * Delete a specific job by its ID.
+ * Delete a specific job by its ID. A job whose target is outside the target scope of the token is not found.
  * @summary Delete a job
  */
 export const deleteJobByID = async (id: string, options?: Parameters<typeof apiFetch>[1]): Promise<deleteJobByIDResponse> => {
@@ -211,7 +211,7 @@ export const getGetJobByIDUrl = (id: string,) => {
 }
 
 /**
- * Retrieve details of a specific job by its ID.
+ * Retrieve details of a specific job by its ID. A job whose target is outside the target scope of the token is not found.
  * @summary Get job detail
  */
 export const getJobByID = async (id: string, options?: Parameters<typeof apiFetch>[1]): Promise<getJobByIDResponse> => {

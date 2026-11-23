@@ -187,6 +187,7 @@ type JobClient interface {
 		statusFilter string,
 		limit int,
 		offset int,
+		keep func(target string) bool,
 	) (*ListJobsResult, error)
 
 	// Agent discovery

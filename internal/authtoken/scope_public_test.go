@@ -60,6 +60,47 @@ func (s *ScopePublicTestSuite) TestInScope() {
 	}
 }
 
+func (s *ScopePublicTestSuite) TestSees() {
+	tests := []struct {
+		name   string
+		scope  []string
+		target string
+		want   bool
+	}{
+		{name: "when the context has no scope, a record with no target is seen", want: true},
+		{
+			name:   "when the context has no scope, a record for _all is seen",
+			target: "_all",
+			want:   true,
+		},
+		{
+			name:  "when the record's label target is under the scope",
+			scope: []string{"group:web"}, target: "group:web.dev", want: true,
+		},
+		{name: "when a scoped token reads a record with no target", scope: []string{"group:web"}},
+		{
+			name:   "when a scoped token reads a record for _any",
+			scope:  []string{"group:web"},
+			target: "_any",
+		},
+		{
+			name:  "when the record's label target is outside the scope",
+			scope: []string{"group:web"}, target: "group:db",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctx := context.Background()
+			if tt.scope != nil {
+				ctx = authtoken.WithTargets(ctx, tt.scope)
+			}
+
+			s.Equal(tt.want, authtoken.Sees(ctx, tt.target))
+		})
+	}
+}
+
 func TestScopePublicTestSuite(
 	t *testing.T,
 ) {

@@ -64,12 +64,72 @@ func (s *MethodsPublicTestSuite) TearDownSubTest() {
 func (s *MethodsPublicTestSuite) TestGet() {
 	start := time.Date(2026, 11, 17, 8, 0, 0, 0, time.UTC)
 
+	// spans is a trace whose spans record each target of targets.
+	spans := func(targets ...string) *traces.Trace {
+		t := &traces.Trace{ID: traceID, Spans: []traces.Span{
+			{ID: "root", Name: "GET /api/node", Start: start},
+		}}
+		for _, target := range targets {
+			t.Spans = append(t.Spans, traces.Span{
+				ID: target, ParentID: "root", Name: "validate.target", Start: start,
+				Attributes: map[string]string{"osapi.target": target},
+			})
+		}
+
+		return t
+	}
+
 	tests := []struct {
 		name         string
 		noBackend    bool
+		scope        []string
 		setup        func()
 		validateFunc func(telemetry.TraceResponse, error)
 	}{
+		{
+			name:  "when a scoped token reads a trace whose targets are in its scope, it is the trace",
+			scope: []string{"group:web"},
+			setup: func() {
+				s.reader.EXPECT().Trace(gomock.Any(), traceID).
+					Return(spans("group:web.dev", "group:web"), nil)
+			},
+			validateFunc: func(got telemetry.TraceResponse, err error) {
+				s.Require().NoError(err)
+				s.Equal(traceID, got.TraceID)
+			},
+		},
+		{
+			name:  "when a scoped token reads a trace with a target outside its scope, it is ErrNotFound",
+			scope: []string{"group:web"},
+			setup: func() {
+				s.reader.EXPECT().Trace(gomock.Any(), traceID).
+					Return(spans("group:web.dev", "group:db"), nil)
+			},
+			validateFunc: func(_ telemetry.TraceResponse, err error) {
+				s.ErrorIs(err, telemetry.ErrNotFound)
+				s.ErrorContains(err, traceID)
+			},
+		},
+		{
+			name:  "when a scoped token reads a trace that reached _all, it is ErrNotFound",
+			scope: []string{"group:web"},
+			setup: func() {
+				s.reader.EXPECT().Trace(gomock.Any(), traceID).Return(spans("_all"), nil)
+			},
+			validateFunc: func(_ telemetry.TraceResponse, err error) {
+				s.ErrorIs(err, telemetry.ErrNotFound)
+			},
+		},
+		{
+			name:  "when a scoped token reads a trace with no target, it is ErrNotFound",
+			scope: []string{"group:web"},
+			setup: func() {
+				s.reader.EXPECT().Trace(gomock.Any(), traceID).Return(spans(), nil)
+			},
+			validateFunc: func(_ telemetry.TraceResponse, err error) {
+				s.ErrorIs(err, telemetry.ErrNotFound)
+			},
+		},
 		{
 			name: "when the backend has the trace, each span is in the answer",
 			setup: func() {
@@ -146,9 +206,8 @@ func (s *MethodsPublicTestSuite) TestGet() {
 				d.Traces = nil
 			}
 
-			tc.validateFunc(
-				telemetry.Get(context.Background(), d, telemetry.TraceInput{ID: traceID}),
-			)
+			ctx := authtoken.WithTargets(context.Background(), tc.scope)
+			tc.validateFunc(telemetry.Get(ctx, d, telemetry.TraceInput{ID: traceID}))
 		})
 	}
 }
