@@ -25,25 +25,15 @@ package provider
 // Called at execution time so providers always get the latest facts.
 type FactsFunc func() map[string]any
 
-// FactsSetter is satisfied by any provider that embeds FactsAware.
-// Used at wiring time to inject the facts function into all providers.
-type FactsSetter interface {
-	SetFactsFunc(fn FactsFunc)
-}
-
-// FactsAware provides facts access to providers via embedding.
-// Embed this in any provider struct to gain access to agent facts:
-//
-//	type MyProvider struct {
-//	    provider.FactsAware
-//	    // ... other fields
-//	}
+// FactsAware gives the file provider in internal/provider/file the facts
+// that its templates read. A behavior's provider does not embed it: it reads
+// the agent's facts from the host it gets, as h.Facts. The agent does not use
+// the file provider, thus osapi-io/osapi#1151 deletes both.
 type FactsAware struct {
 	factsFn FactsFunc
 }
 
-// SetFactsFunc sets the facts getter. Called after agent initialization
-// to wire the provider to the agent's live facts.
+// SetFactsFunc sets the facts getter.
 func (f *FactsAware) SetFactsFunc(
 	fn FactsFunc,
 ) {
@@ -57,17 +47,4 @@ func (f *FactsAware) Facts() map[string]any {
 	}
 
 	return f.factsFn()
-}
-
-// WireProviderFacts sets the facts function on all providers that support it.
-// Providers that embed FactsAware automatically satisfy FactsSetter.
-func WireProviderFacts(
-	factsFn FactsFunc,
-	providers ...any,
-) {
-	for _, p := range providers {
-		if fs, ok := p.(FactsSetter); ok {
-			fs.SetFactsFunc(factsFn)
-		}
-	}
 }

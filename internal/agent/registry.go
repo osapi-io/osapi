@@ -32,11 +32,9 @@ import (
 // a JSON-encoded result.
 type ProcessorFunc func(context.Context, job.Request) (json.RawMessage, error)
 
-// ProviderRegistry maps job categories to processor functions and
-// tracks all registered providers for lifecycle wiring (e.g., facts).
+// ProviderRegistry maps job categories to processor functions.
 type ProviderRegistry struct {
 	processors map[string]ProcessorFunc
-	providers  []any
 }
 
 // NewProviderRegistry creates an empty ProviderRegistry.
@@ -46,15 +44,12 @@ func NewProviderRegistry() *ProviderRegistry {
 	}
 }
 
-// Register associates a category with a processor function and records
-// any providers for WireProviderFacts.
+// Register associates a category with a processor function.
 func (r *ProviderRegistry) Register(
 	category string,
 	processFn ProcessorFunc,
-	providers ...any,
 ) {
 	r.processors[category] = processFn
-	r.providers = append(r.providers, providers...)
 }
 
 // Dispatch routes a job request to the registered processor for its category.
@@ -68,9 +63,4 @@ func (r *ProviderRegistry) Dispatch(
 	}
 
 	return fn(ctx, req)
-}
-
-// AllProviders returns all providers registered across all categories.
-func (r *ProviderRegistry) AllProviders() []any {
-	return r.providers
 }

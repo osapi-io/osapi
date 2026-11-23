@@ -103,60 +103,6 @@ func (suite *FactsPublicTestSuite) TestFacts() {
 	}
 }
 
-// testFactsProvider is a helper type that embeds FactsAware to test WireProviderFacts.
-type testFactsProvider struct {
-	provider.FactsAware
-}
-
-func (suite *FactsPublicTestSuite) TestWireProviderFacts() {
-	tests := []struct {
-		name         string
-		providers    []any
-		checkIdx     int
-		validateFunc func(map[string]any)
-	}{
-		{
-			name: "when wires facts to implementing providers",
-			providers: []any{
-				&testFactsProvider{},
-			},
-			checkIdx: 0,
-			validateFunc: func(got map[string]any) {
-				suite.Equal(map[string]any{"os": "linux"}, got)
-			},
-		},
-		{
-			name: "when skips non-implementing providers",
-			providers: []any{
-				"not-a-provider",
-				&testFactsProvider{},
-			},
-			checkIdx: 1,
-			validateFunc: func(got map[string]any) {
-				suite.Equal(map[string]any{"os": "linux"}, got)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			factsFn := func() map[string]any {
-				return map[string]any{"os": "linux"}
-			}
-
-			suite.NotPanics(func() {
-				provider.WireProviderFacts(factsFn, tc.providers...)
-			})
-
-			p, ok := tc.providers[tc.checkIdx].(*testFactsProvider)
-			suite.Require().True(ok)
-
-			got := p.Facts()
-			tc.validateFunc(got)
-		})
-	}
-}
-
 // In order for `go test` to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
 func TestFactsPublicTestSuite(

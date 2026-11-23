@@ -156,6 +156,21 @@ func (a *Agent) GetFacts() map[string]any {
 	return result
 }
 
+// agentFacts gives a behavior's host the facts of an agent that is made
+// after the host. Its get returns nil until agent is set.
+type agentFacts struct {
+	agent *Agent
+}
+
+// get returns the facts of the agent, or nil when the agent is not set.
+func (f *agentFacts) get() map[string]any {
+	if f.agent == nil {
+		return nil
+	}
+
+	return f.agent.GetFacts()
+}
+
 // factsKey returns the KV key for an agent's facts entry.
 // Uses machineID as the key component for stable identity across hostname changes.
 func factsKey(

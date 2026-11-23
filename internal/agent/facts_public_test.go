@@ -414,6 +414,41 @@ func (s *FactsPublicTestSuite) TestGetFacts() {
 	}
 }
 
+func (s *FactsPublicTestSuite) TestAgentFacts() {
+	tests := []struct {
+		name         string
+		agent        *agent.Agent
+		validateFunc func(result map[string]any)
+	}{
+		{
+			name:  "when the agent is not made yet returns nil",
+			agent: nil,
+			validateFunc: func(result map[string]any) {
+				s.Nil(result)
+			},
+		},
+		{
+			name:  "when the agent is made returns its facts",
+			agent: s.testAgent,
+			validateFunc: func(result map[string]any) {
+				s.Require().NotNil(result)
+				s.Equal("amd64", result["architecture"])
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			agent.SetAgentCachedFacts(s.testAgent, &job.FactsRegistration{
+				Architecture: "amd64",
+			})
+			defer agent.SetAgentCachedFacts(s.testAgent, nil)
+
+			tt.validateFunc(agent.ExportAgentFacts(tt.agent)())
+		})
+	}
+}
+
 func (s *FactsPublicTestSuite) TestFactsKey() {
 	tests := []struct {
 		name         string

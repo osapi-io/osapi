@@ -34,7 +34,6 @@ import (
 	"github.com/osapi-io/osapi/internal/exec"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
-	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
@@ -81,12 +80,6 @@ func New(
 		heartbeatLogger: logger.With(slog.String("subsystem", "agent.heartbeat")),
 		factsLogger:     logger.With(slog.String("subsystem", "agent.facts")),
 		pkiLogger:       logger.With(slog.String("subsystem", "agent.pki")),
-	}
-
-	// Wire agent facts into all providers so they can access the latest
-	// facts at execution time (e.g., for template rendering).
-	if registry != nil {
-		provider.WireProviderFacts(a.GetFacts, registry.AllProviders()...)
 	}
 
 	return a

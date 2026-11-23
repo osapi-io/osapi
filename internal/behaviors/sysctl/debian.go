@@ -55,11 +55,8 @@ const DefaultDir = "/etc/sysctl.d"
 // -p) when passed as an argument.
 var validKey = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]*$`)
 
-// Compile-time checks.
-var (
-	_ Provider             = (*Debian)(nil)
-	_ provider.FactsSetter = (*Debian)(nil)
-)
+// Compile-time check.
+var _ Provider = (*Debian)(nil)
 
 // Debian implements the Provider interface for Debian-family systems.
 // It writes sysctl conf files directly to its directory, /etc/sysctl.d/ by
@@ -67,7 +64,6 @@ var (
 // cron meta-provider, sysctl generates trivial content inline rather than
 // fetching from the NATS Object Store.
 type Debian struct {
-	provider.FactsAware
 	logger      *slog.Logger
 	fs          avfs.VFS
 	execManager host.Exec
