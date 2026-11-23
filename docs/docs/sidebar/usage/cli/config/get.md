@@ -17,6 +17,44 @@ osapi config get --key controller.api.port
 osapi config get --key agent.labels -f ./osapi.yaml --json
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi config get --key controller.api.port
+[1;38;2;0;213;255mConfig:[0m
+  [38;2;176;48;176mFile:[0m  /etc/osapi/osapi.yaml
+
+[1;38;2;255;0;255mSetting:[0m
+  [38;2;176;48;176mKey:[0m          controller.api.port
+  [38;2;176;48;176mValue:[0m        8080
+  [38;2;176;48;176mSource:[0m       file
+  [38;2;176;48;176mEnv:[0m          OSAPI_CONTROLLER_API_PORT
+  [38;2;176;48;176mType:[0m         int
+  [38;2;176;48;176mDefault:[0m      8080
+  [38;2;176;48;176mValidate:[0m     min=1,max=65535
+  [38;2;176;48;176mDescription:[0m  Port the REST API server listens on.
+```
+
+With `--json`, the command prints:
+
+```json
+{
+  "file": "/etc/osapi/osapi.yaml",
+  "setting": {
+    "name": "controller.api.port",
+    "value": 8080,
+    "source": "file",
+    "env": "OSAPI_CONTROLLER_API_PORT",
+    "type": "int",
+    "default": 8080,
+    "validate": "min=1,max=65535",
+    "doc": "Port the REST API server listens on."
+  }
+}
+```
+
 ## Flags
 
 | Flag    | Description                                                 | Default |

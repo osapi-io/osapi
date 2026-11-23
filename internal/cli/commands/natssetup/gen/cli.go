@@ -7,12 +7,14 @@ import (
 
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/commands/natssetup"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
 var setupSetupCmd = &cobra.Command{
-	Args:    cobra.NoArgs,
-	Example: "  osapi nats setup -f /etc/osapi/osapi.yaml",
-	Long:    "It connects as the controller does, with `controller.nats`: its host,\nport, namespace and auth. Run it one time before you start the controller\nand the agents with that server.\n\nRun it again after you change the settings of a stream or a bucket. Each\nstream and bucket is created or updated to match the config, so running it\nagain changes nothing. `osapi nats server start` does the same for the\nembedded server when the server starts. Thus a deployment that runs the\nNATS server of osapi does not need this command.",
+	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi nats setup -f /etc/osapi/osapi.yaml\n\x1b[1;38;2;0;213;255mNATS:\x1b[0m\n  \x1b[38;2;10;143;176mHost:\x1b[0m       localhost\n  \x1b[38;2;10;143;176mPort:\x1b[0m       4222\n  \x1b[38;2;10;143;176mNamespace:\x1b[0m  osapi\n  \x1b[38;2;10;143;176mAuth:\x1b[0m       none\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"host\": \"localhost\",\n  \"port\": 4222,\n  \"namespace\": \"osapi\",\n  \"auth\": \"none\"\n}\n```"},
+	Args:        cobra.NoArgs,
+	Example:     "  osapi nats setup -f /etc/osapi/osapi.yaml",
+	Long:        "It connects as the controller does, with `controller.nats`: its host,\nport, namespace and auth. Run it one time before you start the controller\nand the agents with that server.\n\nRun it again after you change the settings of a stream or a bucket. Each\nstream and bucket is created or updated to match the config, so running it\nagain changes nothing. `osapi nats server start` does the same for the\nembedded server when the server starts. Thus a deployment that runs the\nNATS server of osapi does not need this command.",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		return clicommand.Run(cmd, natssetup.Group, "setup", natssetup.Input{})
 	},

@@ -37,6 +37,30 @@ osapi config validate
 osapi config validate -f ./osapi.yaml --json
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi config validate
+[1;38;2;0;213;255mConfig:[0m
+  [38;2;10;143;176mFile:[0m   /etc/osapi/osapi.yaml
+  [38;2;10;143;176mValid:[0m  yes
+
+[1;38;2;255;0;255mProblems (0):[0m
+  [38;2;138;138;138mNone.[0m
+```
+
+With `--json`, the command prints:
+
+```json
+{
+  "file": "/etc/osapi/osapi.yaml",
+  "valid": true,
+  "problems": []
+}
+```
+
 ## Global flags
 
 | Flag               | Description                  | Default                 |

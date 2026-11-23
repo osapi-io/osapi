@@ -60,10 +60,13 @@ var agentGetCmd = &cobra.Command{
 }
 
 var agentDrainCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "agent:write"},
-	Args:        cobra.NoArgs,
-	Example:     "  osapi client agent drain --hostname web-01",
-	Long:        "The agent changes from `Ready` to `Draining`. When all its running jobs are\ncomplete, the state is `Cordoned`. The agent continues to run and to send\nheartbeats. It only stops the intake of new work from the job queue. Use\n`agent undrain` to accept jobs again. The jobs that it runs now continue\nuntil they are complete.",
+	Annotations: map[string]string{
+		reference.Permission: "agent:write",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client agent drain --hostname web-01\n[ok] web-01 draining\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the command prints:\n\n```json\n{\"hostname\":\"web-01\",\"result\":\"draining\"}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client agent drain --hostname web-01",
+	Long:    "The agent changes from `Ready` to `Draining`. When all its running jobs are\ncomplete, the state is `Cordoned`. The agent continues to run and to send\nheartbeats. It only stops the intake of new work from the job queue. Use\n`agent undrain` to accept jobs again. The jobs that it runs now continue\nuntil they are complete.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("hostname")
 
@@ -74,10 +77,13 @@ var agentDrainCmd = &cobra.Command{
 }
 
 var agentUndrainCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "agent:write"},
-	Args:        cobra.NoArgs,
-	Example:     "  osapi client agent undrain --hostname web-01",
-	Long:        "The agent subscribes to the NATS JetStream consumers again and changes back\nto `Ready`.",
+	Annotations: map[string]string{
+		reference.Permission: "agent:write",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client agent undrain --hostname web-01\n[ok] web-01 ready\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the command prints:\n\n```json\n{\"hostname\":\"web-01\",\"result\":\"ready\"}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client agent undrain --hostname web-01",
+	Long:    "The agent subscribes to the NATS JetStream consumers again and changes back\nto `Ready`.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		hostname, _ := cmd.Flags().GetString("hostname")
 

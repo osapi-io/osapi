@@ -140,9 +140,16 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 		},
 		{
 			name: "when the methods break the rules of names, verbs and help",
-			group: command.Define("zznames", "Names",
+			group: command.Define(
+				"zznames",
+				"Names",
 				command.Uses[localDeps](),
-				command.Method[struct{}, greetOut]("List").Sub("Bad").Short("X").
+				command.Method[struct{}, greetOut](
+					"List",
+				).Sub("Bad").
+					Short("X").
+					Example("").
+					Prints(greetOut{}).
 					Handle(func(context.Context, localDeps, struct{}) (greetOut, error) {
 						return greetOut{}, nil
 					}),
@@ -169,14 +176,24 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 		},
 		{
 			name: "when a flat group's command is at the root, its word is one of Roots",
-			group: command.Define("zzflatv", "Flat",
+			group: command.Define(
+				"zzflatv",
+				"Flat",
 				command.Uses[localDeps](),
 				command.Flat(),
-				command.Method[struct{}, greetOut]("version").Short("X").
+				command.Method[struct{}, greetOut](
+					"version",
+				).Short("X").
+					Example("").
+					Prints(greetOut{}).
 					Handle(func(context.Context, localDeps, struct{}) (greetOut, error) {
 						return greetOut{}, nil
 					}),
-				command.Method[struct{}, greetOut]("frob").Short("X").
+				command.Method[struct{}, greetOut](
+					"frob",
+				).Short("X").
+					Example("").
+					Prints(greetOut{}).
 					Handle(func(context.Context, localDeps, struct{}) (greetOut, error) {
 						return greetOut{}, nil
 					}),
@@ -185,11 +202,17 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 		},
 		{
 			name: "when a flat group is under a parent, its words are verbs or actions",
-			group: command.Define("zzflatu", "Flat",
+			group: command.Define(
+				"zzflatu",
+				"Flat",
 				command.Uses[localDeps](),
 				command.Flat(),
 				command.Under(command.ParentCLI),
-				command.Method[struct{}, greetOut]("version").Short("X").
+				command.Method[struct{}, greetOut](
+					"version",
+				).Short("X").
+					Example("").
+					Prints(greetOut{}).
 					Handle(func(context.Context, localDeps, struct{}) (greetOut, error) {
 						return greetOut{}, nil
 					}),
@@ -198,10 +221,21 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 		},
 		{
 			name: "when the input breaks the rules of flags, docs and tags",
-			group: command.Define("zzflags", "Flags",
+			group: command.Define(
+				"zzflags",
+				"Flags",
 				command.Uses[localDeps](),
-				command.Method[string, greetOut]("get").Short("X").Handle(greet),
-				command.Method[badFlags, greetOut]("list").Short("X").Example(""),
+				command.Method[string, greetOut](
+					"get",
+				).Short("X").
+					Example("").
+					Prints(greetOut{}).
+					Handle(greet),
+				command.Method[badFlags, greetOut](
+					"list",
+				).Short("X").
+					Example("").
+					Prints(greetOut{}),
 			),
 			want: []string{
 				"the input is string, not a struct.",
@@ -230,7 +264,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 			name: "when a method has a Flag, which only a process has",
 			group: command.Define("zzflag", "Flag",
 				command.Uses[localDeps](),
-				command.Method[struct{}, greetOut]("get").Short("X").
+				command.Method[struct{}, greetOut]("get").Short("X").Example("").Prints(greetOut{}).
 					Flag("agent.max_jobs").
 					Handle(func(context.Context, localDeps, struct{}) (greetOut, error) {
 						return greetOut{}, nil
@@ -257,6 +291,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 			group: command.Define("zzfails", "Fails",
 				command.Uses[localDeps](),
 				command.Method[greetIn, greetOut]("get").Short("X").Example("--name a").
+					Prints(greetOut{}).
 					Fails("not the input", "x").
 					Handle(greet),
 			),
@@ -272,9 +307,30 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 			},
 		},
 		{
+			name: "when Prints comes first, gives another type, or no example prints",
+			group: command.Define("zzprints", "Prints",
+				command.Uses[localDeps](),
+				command.Method[struct{}, greetOut]("get").Short("X").
+					Prints(greetOut{}).
+					Example("").Prints("x").
+					Handle(func(context.Context, localDeps, struct{}) (greetOut, error) {
+						return greetOut{}, nil
+					}),
+				command.Method[struct{}, greetOut]("list").Short("X").Example("").
+					Handle(func(context.Context, localDeps, struct{}) (greetOut, error) {
+						return greetOut{}, nil
+					}),
+			),
+			want: []string{
+				"Prints comes before any Example; it gives the last Example its output.",
+				`Prints gives the example "" a string, not a command_test.greetOut.`,
+				"no Example has an output: add .Prints(sample) after one.",
+			},
+		},
+		{
 			name: "when a method has a handler and the group Uses no type",
 			group: command.Define("zzhandler", "Handler",
-				command.Method[struct{}, greetOut]("get").Short("X").
+				command.Method[struct{}, greetOut]("get").Short("X").Example("").Prints(greetOut{}).
 					Handle(func(context.Context, localDeps, struct{}) (greetOut, error) {
 						return greetOut{}, nil
 					}),

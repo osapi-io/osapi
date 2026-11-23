@@ -18,6 +18,74 @@ osapi cli command create [flags]
 osapi cli command create --name widget --description "The widgets of this host"
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi cli command create --name widget --description "The widgets of this host"
+[1;38;2;0;213;255mLocal group:[0m
+  [38;2;10;143;176mName:[0m  widget
+
+[1;38;2;255;0;255mFiles (6):[0m
+  [38;2;176;48;176mPATH[0m
+  internal/cli/commands/widget/widget.go
+  internal/cli/commands/widget/deps.go
+  internal/cli/commands/widget/methods.go
+  internal/cli/commands/widget/methods_public_test.go
+  internal/cli/commands/widget/types.go
+  internal/cli/commands/all/all.go
+
+[1;38;2;255;209;0mNext (4):[0m
+  [38;2;176;143;0mCOMMAND[0m
+  go generate ./internal/cli/commands/all
+  go test ./internal/cli/commands/widget/...
+  go run . cli command validate
+  mise exec -- just cli-docs-generate
+```
+
+With `--json`, the command prints:
+
+```json
+{
+  "name": "widget",
+  "files": [
+    {
+      "path": "internal/cli/commands/widget/widget.go"
+    },
+    {
+      "path": "internal/cli/commands/widget/deps.go"
+    },
+    {
+      "path": "internal/cli/commands/widget/methods.go"
+    },
+    {
+      "path": "internal/cli/commands/widget/methods_public_test.go"
+    },
+    {
+      "path": "internal/cli/commands/widget/types.go"
+    },
+    {
+      "path": "internal/cli/commands/all/all.go"
+    }
+  ],
+  "next": [
+    {
+      "command": "go generate ./internal/cli/commands/all"
+    },
+    {
+      "command": "go test ./internal/cli/commands/widget/..."
+    },
+    {
+      "command": "go run . cli command validate"
+    },
+    {
+      "command": "mise exec -- just cli-docs-generate"
+    }
+  ]
+}
+```
+
 ## Flags
 
 | Flag            | Description                                          | Default |

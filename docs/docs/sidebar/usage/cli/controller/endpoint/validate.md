@@ -85,6 +85,26 @@ osapi controller endpoint validate
 osapi controller endpoint validate --json
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi controller endpoint validate
+[1;38;2;0;213;255mValidation:[0m
+  [38;2;10;143;176mGroups:[0m  10
+  [38;2;10;143;176mValid:[0m   yes
+```
+
+With `--json`, the command prints:
+
+```json
+{
+  "groups": 10,
+  "valid": true
+}
+```
+
 ## Global flags
 
 | Flag               | Description                  | Default                 |

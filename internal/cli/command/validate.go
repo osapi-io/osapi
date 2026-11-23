@@ -85,6 +85,7 @@ const (
 	RuleTag      = "tag"
 	RuleSays     = "says"
 	RuleSubDoc   = "subdoc"
+	RulePrints   = "prints"
 )
 
 // Checks are the rules Validate applies. osapi cli command validate --help
@@ -156,6 +157,11 @@ var Checks = guide.Checks{
 		Rule:     RuleSays,
 		Requires: "A method that answers with no body says what occurred: its name has a past tense, such as admitted for admit, or .Says gives the text.",
 		Fix:      "Add .Says(\"<state>\") to the method, such as .Says(\"draining\") for drain.",
+	},
+	{
+		Rule:     RulePrints,
+		Requires: "Each method that prints a body, and is not a process, has an Example that Prints gives its output: a value of the method's output type, which its docs page shows as the CLI prints it. Prints follows the Example that it shows.",
+		Fix:      "Add .Prints(sample) after the Example that it shows, with sample a value of the method's output type, in samples.go of the group.",
 	},
 }
 
@@ -290,9 +296,42 @@ func Validate(
 		for _, msg := range refusalProblems(m) {
 			add(m.Name, RuleFails, msg)
 		}
+		for _, msg := range printsProblems(m) {
+			add(m.Name, RulePrints, msg)
+		}
 		if msg := handlerProblem(g, m); msg != "" {
 			add(m.Name, RuleHandler, msg)
 		}
+	}
+
+	return out
+}
+
+// printsProblems says what is wrong with the outputs that Prints gave the
+// examples of m: one before any Example, one of another type than m's
+// output, or none for a method that prints a body. A process prints no
+// output, and a method with no body prints one line, which its page derives
+// from the example's flags.
+func printsProblems(
+	m *LocalMethod,
+) []string {
+	var out []string
+	if m.unprinted {
+		out = append(out, "Prints comes before any Example; it gives the last Example its output.")
+	}
+	printed := false
+	for _, ex := range m.examples {
+		if ex.Output == nil {
+			continue
+		}
+		printed = true
+		if t := reflect.TypeOf(ex.Output); t != m.Out {
+			out = append(out, fmt.Sprintf(
+				"Prints gives the example %q a %s, not a %s.", ex.Flags, t, m.Out))
+		}
+	}
+	if !printed && !m.process && m.Out != nil && !answersNothing(m.Out) {
+		out = append(out, "no Example has an output: add .Prints(sample) after one.")
 	}
 
 	return out

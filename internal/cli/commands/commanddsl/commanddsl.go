@@ -50,6 +50,7 @@ var Group = command.Register(command.Define(
 			"command of an endpoint group, `behavior` for a command of a behavior, and\n"+
 			"`hand-written` for a command in `cmd/` that no definition makes yet.").
 		Example("").
+		Prints(sampleList).
 		Example("--json").
 		Handle(List),
 	command.Method[GetInput, GetOutput]("get").
@@ -59,6 +60,7 @@ var Group = command.Register(command.Define(
 			"local group also has its flags, each with the validate tag of its field,\n"+
 			"and the inputs that its `.Fails` declares, which `TestRefusals` runs.").
 		Example("--name token").
+		Prints(sampleGet).
 		Example("--name agent --json").
 		Fails("no name", GetInput{}).
 		Handle(Get),
@@ -70,6 +72,7 @@ var Group = command.Register(command.Define(
 			"method get` show a method of a behavior and of an endpoint group the same\n"+
 			"way.").
 		Example("--name token --method generate").
+		Prints(sampleMethod).
 		Example("--name token --method generate --json").
 		Fails("no name", MethodInput{Method: "list"}).
 		Fails("no method", MethodInput{Name: "token"}).
@@ -82,6 +85,7 @@ var Group = command.Register(command.Define(
 			"Then run the steps that it prints. While its `Deps` is empty, the CLI\n"+
 			"needs no wiring. `osapi cli command spec get` lists each part of the DSL.").
 		Example(`--name widget --description "The widgets of this host"`).
+		Prints(sampleCreate).
 		Fails("no name", CreateInput{Description: "x"}).
 		Fails("no description", CreateInput{Name: "x"}).
 		Handle(Create),
@@ -93,6 +97,7 @@ var Group = command.Register(command.Define(
 			"you run. Read it before you write a local group, then check the result\n"+
 			"with `osapi cli command validate`.").
 		Example("").
+		Prints(sampleSpec).
 		Example("--json").
 		Handle(Spec),
 	command.Method[ValidateInput, ValidateOutput]("validate").
@@ -102,6 +107,7 @@ var Group = command.Register(command.Define(
 			"get` describes each part of a group.\n\n"+
 			"The rules:\n\n"+command.Checks.Help()).
 		Example("").
+		Prints(sampleValidate).
 		Example("--json").
 		Handle(Validate),
 ))

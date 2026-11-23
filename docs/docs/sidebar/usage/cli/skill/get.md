@@ -16,6 +16,31 @@ osapi skill get --name build-a-behavior
 osapi skill get --name build-a-behavior --reference references/services.md
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi skill get --name build-a-behavior
+---
+name: build-a-behavior
+description: Build or change an osapi behavior.
+---
+
+# Build a behavior
+
+A behavior is the typed definition under internal/behaviors/<name>/.
+```
+
+With `--json`, the command prints:
+
+```json
+{
+  "name": "build-a-behavior",
+  "content": "---\nname: build-a-behavior\ndescription: Build or change an osapi behavior.\n---\n\n# Build a behavior\n\nA behavior is the typed definition under internal/behaviors/\u003cname\u003e/.\n"
+}
+```
+
 ## Flags
 
 | Flag          | Description                                              | Default |

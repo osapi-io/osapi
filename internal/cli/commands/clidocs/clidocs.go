@@ -37,6 +37,7 @@ var Group = command.Register(command.Define(
 			"removes each page there that no command has. `just cli-docs-generate`\n"+
 			"runs it, and `just test` checks that the pages match the binary.").
 		Example("").
+		Prints(sampleGenerate).
 		Example("--dir /tmp/cli").
 		Handle(Generate),
 	command.Method[DSLInput, DSLOutput]("generate").
@@ -49,6 +50,7 @@ var Group = command.Register(command.Define(
 			"`just cli-docs-generate` runs it, and `just test` checks that the pages\n"+
 			"match the binary.").
 		Example("").
+		Prints(sampleDSL).
 		Example("--dir /tmp/dsl").
 		Handle(GenerateDSL),
 	command.Method[ReferenceInput, ReferenceOutput]("generate").
@@ -62,6 +64,7 @@ var Group = command.Register(command.Define(
 			"cli-docs-generate` runs it, and `just test` checks that the pages match the\n"+
 			"binary.").
 		Example("").
+		Prints(sampleReference).
 		Example("--root ~/src/osapi").
 		Handle(GenerateReference),
 ))

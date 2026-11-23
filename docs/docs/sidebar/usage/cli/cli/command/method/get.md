@@ -18,6 +18,88 @@ osapi cli command method get --name token --method generate
 osapi cli command method get --name token --method generate --json
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi cli command method get --name token --method generate
+[1;38;2;0;213;255mMethod:[0m
+  [38;2;10;143;176mCommand:[0m      osapi token generate
+  [38;2;10;143;176mMethod:[0m       generate
+  [38;2;10;143;176mDescription:[0m  Generate a new token
+  [38;2;10;143;176mProcess:[0m      no
+  [38;2;10;143;176mOutput type:[0m  GenerateOutput
+  [38;2;10;143;176mRefuses:[0m      no roles, no subject
+
+[1;38;2;255;0;255mFlags (2):[0m
+  [38;2;176;48;176mFLAG       [0m[38;2;176;48;176mSHORT  [0m[38;2;176;48;176mTYPE      [0m[38;2;176;48;176mVALIDATE  [0m[38;2;176;48;176mHELP[0m
+  --roles    r      [1m[]string[0m  required  Roles for the token: built-in, or a custom role of the config
+  --subject  u      [1mstring[0m    required  Subject for the token (e.g., user ID or unique identifier)
+
+[1;38;2;255;209;0mOutput (3):[0m
+  [38;2;176;143;0mFIELD    [0m[38;2;176;143;0mTYPE[0m
+  token    [1mstring[0m
+  subject  [1mstring[0m
+  roles    [1marray[0m
+
+[1;38;2;69;174;23mExamples (1):[0m
+  [38;2;58;143;20mFLAGS[0m
+  --subject user123 --roles=read
+```
+
+With `--json`, the command prints:
+
+```json
+{
+  "command": "osapi token generate",
+  "method": "generate",
+  "doc": "Generate a new token",
+  "process": false,
+  "flags": [
+    {
+      "flag": "--roles",
+      "short": "r",
+      "type": "[]string",
+      "validate": "required",
+      "doc": "Roles for the token: built-in, or a custom role of the config"
+    },
+    {
+      "flag": "--subject",
+      "short": "u",
+      "type": "string",
+      "validate": "required",
+      "doc": "Subject for the token (e.g., user ID or unique identifier)"
+    }
+  ],
+  "output_type": "GenerateOutput",
+  "results": [
+    {
+      "field": "token",
+      "type": "string",
+      "description": ""
+    },
+    {
+      "field": "subject",
+      "type": "string",
+      "description": ""
+    },
+    {
+      "field": "roles",
+      "type": "array",
+      "description": ""
+    }
+  ],
+  "examples": [
+    {
+      "flags": "--subject user123 --roles=read",
+      "doc": ""
+    }
+  ],
+  "refuses": ["no roles", "no subject"]
+}
+```
+
 ## Flags
 
 | Flag       | Description                                                                  | Default |

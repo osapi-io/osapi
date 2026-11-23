@@ -38,6 +38,7 @@ var Group = command.Register(command.Define(
 		Long("The build of this binary: the version that each component reports, the\n"+
 			"commit and the tree it was built from, and the Go that built it.").
 		Example("").
+		Prints(sampleInfo).
 		Example("--json").
 		Handle(Version),
 ))

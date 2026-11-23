@@ -37,5 +37,6 @@ var Group = command.Register(command.Define(
 			"the machine only when the fingerprint is the one of the key in its\n"+
 			"request. If no key exists, the command makes a new key pair.").
 		Example("").
+		Prints(sampleGet).
 		Handle(Get),
 ))

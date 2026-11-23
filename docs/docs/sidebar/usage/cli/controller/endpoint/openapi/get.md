@@ -15,6 +15,30 @@ osapi controller endpoint openapi get [flags]
 osapi controller endpoint openapi get --name agent
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi controller endpoint openapi get --name agent
+paths:
+  /api/agent/{hostname}/drain:
+    post:
+      operationId: DrainAgent
+      summary: Drain an agent
+      tags:
+        - agent_operations
+```
+
+With `--json`, the command prints:
+
+```json
+{
+  "name": "agent",
+  "yaml": "paths:\n  /api/agent/{hostname}/drain:\n    post:\n      operationId: DrainAgent\n      summary: Drain an agent\n      tags:\n        - agent_operations\n"
+}
+```
+
 ## Flags
 
 | Flag     | Description                                  | Default |

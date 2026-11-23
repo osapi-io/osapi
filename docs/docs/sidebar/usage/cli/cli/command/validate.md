@@ -64,6 +64,11 @@ The rules:
 - `says`: A method that answers with no body says what occurred: its name has a
   past tense, such as admitted for admit, or .Says gives the text. Fix: Add
   .Says("&lt;state&gt;") to the method, such as .Says("draining") for drain.
+- `prints`: Each method that prints a body, and is not a process, has an Example
+  that Prints gives its output: a value of the method's output type, which its
+  docs page shows as the CLI prints it. Prints follows the Example that it
+  shows. Fix: Add .Prints(sample) after the Example that it shows, with sample a
+  value of the method's output type, in samples.go of the group.
 
 ```bash
 osapi cli command validate
@@ -74,6 +79,28 @@ osapi cli command validate
 ```bash
 osapi cli command validate
 osapi cli command validate --json
+```
+
+## Result
+
+The command prints:
+
+```ansi
+$ osapi cli command validate
+[1;38;2;0;213;255mValidation:[0m
+  [38;2;10;143;176mLocal groups:[0m  17
+  [38;2;10;143;176mGroups:[0m        57
+  [38;2;10;143;176mValid:[0m         yes
+```
+
+With `--json`, the command prints:
+
+```json
+{
+  "local": 17,
+  "groups": 57,
+  "valid": true
+}
 ```
 
 ## Global flags

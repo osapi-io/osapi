@@ -43,5 +43,6 @@ var Group = command.Register(command.Define(
 			"embedded server when the server starts. Thus a deployment that runs the\n"+
 			"NATS server of osapi does not need this command.").
 		Example("-f /etc/osapi/osapi.yaml").
+		Prints(sampleSetup).
 		Handle(Setup),
 ))

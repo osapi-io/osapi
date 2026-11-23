@@ -46,10 +46,13 @@ var admissionGetCmd = &cobra.Command{
 }
 
 var admissionAdmitCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "admission:write"},
-	Args:        cobra.NoArgs,
-	Example:     "  osapi client admission admit --machine-id d530664edc1c431eb5ef1e9dfd6617a5 --fingerprint SHA256:1f53dea6...",
-	Long:        "Run `osapi agent admission get` on the machine, and give the fingerprint that it\nprints. The controller admits the machine only when the fingerprint is the\none of the key in its request.",
+	Annotations: map[string]string{
+		reference.Permission: "admission:write",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client admission admit --machine-id d530664edc1c431eb5ef1e9dfd6617a5 --fingerprint SHA256:1f53dea6...\n[ok] d530664edc1c431eb5ef1e9dfd6617a5 admitted\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the command prints:\n\n```json\n{\"machine_id\":\"d530664edc1c431eb5ef1e9dfd6617a5\",\"result\":\"admitted\"}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client admission admit --machine-id d530664edc1c431eb5ef1e9dfd6617a5 --fingerprint SHA256:1f53dea6...",
+	Long:    "Run `osapi agent admission get` on the machine, and give the fingerprint that it\nprints. The controller admits the machine only when the fingerprint is the\none of the key in its request.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		machineID, _ := cmd.Flags().GetString("machine-id")
 		fingerprint, _ := cmd.Flags().GetString("fingerprint")
@@ -61,10 +64,13 @@ var admissionAdmitCmd = &cobra.Command{
 }
 
 var admissionRejectCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "admission:write"},
-	Args:        cobra.NoArgs,
-	Example:     "  osapi client admission reject --machine-id d530664edc1c431eb5ef1e9dfd6617a5 --reason \"unknown host\"",
-	Long:        "Rejects a pending machine, and keeps a record of the decision, so a machine that asks again is flagged.",
+	Annotations: map[string]string{
+		reference.Permission: "admission:write",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client admission reject --machine-id d530664edc1c431eb5ef1e9dfd6617a5 --reason \"unknown host\"\n[ok] d530664edc1c431eb5ef1e9dfd6617a5 rejected\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the command prints:\n\n```json\n{\"machine_id\":\"d530664edc1c431eb5ef1e9dfd6617a5\",\"result\":\"rejected\"}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client admission reject --machine-id d530664edc1c431eb5ef1e9dfd6617a5 --reason \"unknown host\"",
+	Long:    "Rejects a pending machine, and keeps a record of the decision, so a machine that asks again is flagged.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		machineID, _ := cmd.Flags().GetString("machine-id")
 		reason, _ := cmd.Flags().GetString("reason")
@@ -76,10 +82,13 @@ var admissionRejectCmd = &cobra.Command{
 }
 
 var admissionRevokeCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "admission:write"},
-	Args:        cobra.NoArgs,
-	Example:     "  osapi client admission revoke --machine-id d530664edc1c431eb5ef1e9dfd6617a5",
-	Long:        "The controller removes the key of the machine. Its responses and its\nregistration stop verifying at once, so a target does not find it.",
+	Annotations: map[string]string{
+		reference.Permission: "admission:write",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client admission revoke --machine-id d530664edc1c431eb5ef1e9dfd6617a5\n[ok] d530664edc1c431eb5ef1e9dfd6617a5 revoked\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the command prints:\n\n```json\n{\"machine_id\":\"d530664edc1c431eb5ef1e9dfd6617a5\",\"result\":\"revoked\"}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client admission revoke --machine-id d530664edc1c431eb5ef1e9dfd6617a5",
+	Long:    "The controller removes the key of the machine. Its responses and its\nregistration stop verifying at once, so a target does not find it.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		machineID, _ := cmd.Flags().GetString("machine-id")
 
@@ -90,10 +99,13 @@ var admissionRevokeCmd = &cobra.Command{
 }
 
 var admissionDeleteCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Permission: "admission:write"},
-	Args:        cobra.NoArgs,
-	Example:     "  osapi client admission delete --machine-id d530664edc1c431eb5ef1e9dfd6617a5",
-	Long:        "The controller removes the key of the machine and each record of it. Unlike\nrevoke, it keeps no record, so a machine that asks again is new. Use it\nbefore a machine is rebuilt or removed.",
+	Annotations: map[string]string{
+		reference.Permission: "admission:write",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client admission delete --machine-id d530664edc1c431eb5ef1e9dfd6617a5\n[ok] d530664edc1c431eb5ef1e9dfd6617a5 deleted\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the command prints:\n\n```json\n{\"machine_id\":\"d530664edc1c431eb5ef1e9dfd6617a5\",\"result\":\"deleted\"}\n```",
+	},
+	Args:    cobra.NoArgs,
+	Example: "  osapi client admission delete --machine-id d530664edc1c431eb5ef1e9dfd6617a5",
+	Long:    "The controller removes the key of the machine and each record of it. Unlike\nrevoke, it keeps no record, so a machine that asks again is new. Use it\nbefore a machine is rebuilt or removed.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		machineID, _ := cmd.Flags().GetString("machine-id")
 

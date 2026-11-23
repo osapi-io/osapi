@@ -52,6 +52,7 @@ var Group = command.Register(command.Define(
 		Long("An internal behavior has no API or CLI of its own. Only other behaviors\n"+
 			"use it.").
 		Example("").
+		Prints(sampleList).
 		Example("--json").
 		Handle(List),
 	command.Method[GetInput, GetOutput]("get").
@@ -69,6 +70,7 @@ var Group = command.Register(command.Define(
 			"it. `osapi behavior method get` shows one method in full: its fields with\n"+
 			"their constraints, its output and its examples.").
 		Example("--name sysctl").
+		Prints(sampleGet).
 		Example("--name sysctl --json").
 		Fails("no name", GetInput{}).
 		Handle(Get),
@@ -79,6 +81,7 @@ var Group = command.Register(command.Define(
 			"`--json` has the JSON Schema of the input and the output, with each\n"+
 			"constraint that osapi checks before it queues the job.").
 		Example("--name sysctl --method update").
+		Prints(sampleMethod).
 		Example("--name sysctl --method update --json").
 		Fails("no name", MethodInput{Method: "get"}).
 		Fails("no method", MethodInput{Name: "sysctl"}).
@@ -90,6 +93,7 @@ var Group = command.Register(command.Define(
 			"writes to the behavior's gen/api.yaml, and that the join puts in the spec of\n"+
 			"the API. An internal behavior serves no route, so it has none.").
 		Example("--name sysctl").
+		Prints(sampleOpenAPI).
 		Fails("no name", GetInput{}).
 		Handle(OpenAPIGet),
 	command.Method[CreateInput, CreateOutput]("create").
@@ -108,6 +112,7 @@ var Group = command.Register(command.Define(
 			"`behavior.Requires` to each user. `osapi behavior validate` fails an\n"+
 			"internal behavior that no behavior requires.").
 		Example(`--name motd --description "The message shown at login"`).
+		Prints(sampleCreate).
 		Example(`--name motd --description "The message shown at login" --root ~/src/osapi`).
 		Example(`--group network --name neighbors --description "The host's ARP neighbors"`).
 		Fails("no name", CreateInput{Description: "x"}).
@@ -121,6 +126,7 @@ var Group = command.Register(command.Define(
 			"run. Read it before you write a behavior, then check the result with\n"+
 			"`osapi behavior validate`.").
 		Example("").
+		Prints(sampleSpec).
 		Example("--json").
 		Handle(Spec),
 	command.Method[ValidateInput, ValidateOutput]("validate").
@@ -134,6 +140,7 @@ var Group = command.Register(command.Define(
 			"\n`go test` also checks the chain rules that need a run of the examples.\n"+
 			"`osapi behavior chain validate` checks them too:\n\n"+runChainChecks().Help()).
 		Example("").
+		Prints(sampleValidate).
 		Example("--json").
 		Handle(Validate),
 ))

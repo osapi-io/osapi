@@ -15,6 +15,51 @@ osapi behavior list
 osapi behavior list --json
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi behavior list
+[1;38;2;0;213;255mBehaviors (4):[0m
+  [38;2;10;143;176mNAME         [0m[38;2;10;143;176mGROUP    [0m[38;2;10;143;176mMETHODS                            [0m[38;2;10;143;176mDESCRIPTION                                               [0m[38;2;10;143;176mINTERNAL[0m
+  [1mhostname[0m              get, update                        The hostname of the host
+  [1mdns[0m          network  get, update, delete                The DNS resolvers of an interface
+  [1mmanagedfile[0m           get, update, delete                The files that osapi writes and tracks                    yes
+  [1msysctl[0m                list, get, create, update, delete  Kernel parameters, written to sysctl.d files and applied
+```
+
+With `--json`, the command prints:
+
+```json
+{
+  "items": [
+    {
+      "name": "hostname",
+      "methods": ["get", "update"],
+      "doc": "The hostname of the host"
+    },
+    {
+      "name": "dns",
+      "group": "network",
+      "methods": ["get", "update", "delete"],
+      "doc": "The DNS resolvers of an interface"
+    },
+    {
+      "name": "managedfile",
+      "methods": ["get", "update", "delete"],
+      "doc": "The files that osapi writes and tracks",
+      "internal": true
+    },
+    {
+      "name": "sysctl",
+      "methods": ["list", "get", "create", "update", "delete"],
+      "doc": "Kernel parameters, written to sysctl.d files and applied"
+    }
+  ]
+}
+```
+
 ## Global flags
 
 | Flag               | Description                  | Default                 |

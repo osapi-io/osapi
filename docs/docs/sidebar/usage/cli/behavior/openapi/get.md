@@ -16,6 +16,30 @@ osapi behavior openapi get [flags]
 osapi behavior openapi get --name sysctl
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi behavior openapi get --name sysctl
+paths:
+  /api/node/{hostname}/sysctl/{key}:
+    put:
+      operationId: PutNodeSysctl
+      summary: Set a kernel parameter, manage it, and apply it
+      tags:
+        - sysctl_operations
+```
+
+With `--json`, the command prints:
+
+```json
+{
+  "name": "sysctl",
+  "yaml": "paths:\n  /api/node/{hostname}/sysctl/{key}:\n    put:\n      operationId: PutNodeSysctl\n      summary: Set a kernel parameter, manage it, and apply it\n      tags:\n        - sysctl_operations\n"
+}
+```
+
 ## Flags
 
 | Flag     | Description                                       | Default |

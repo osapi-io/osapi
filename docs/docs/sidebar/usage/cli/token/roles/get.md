@@ -12,6 +12,28 @@ osapi token roles get [flags]
 osapi token roles get --name admin
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi token roles get --name admin
+[1;38;2;0;213;255mRole:[0m
+  [38;2;10;143;176mName:[0m         admin
+  [38;2;10;143;176mSource:[0m       built-in
+  [38;2;10;143;176mPermissions:[0m  node:read, file:read, file:write, health:read
+```
+
+With `--json`, the command prints:
+
+```json
+{
+  "name": "admin",
+  "source": "built-in",
+  "permissions": ["node:read", "file:read", "file:write", "health:read"]
+}
+```
+
 ## Flags
 
 | Flag     | Description                                                        | Default |

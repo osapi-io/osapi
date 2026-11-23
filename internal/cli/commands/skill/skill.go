@@ -34,6 +34,7 @@ var Group = command.Register(command.Define(
 	command.Method[ListInput, ListOutput]("list").
 		Short("List the skills that this binary has").
 		Example("").
+		Prints(sampleList).
 		Example("--json").
 		Handle(List),
 	command.Method[GetInput, GetOutput]("get").
@@ -41,6 +42,7 @@ var Group = command.Register(command.Define(
 		Long("It prints the file as it is. `--json` has the name, the reference and the\n"+
 			"content.").
 		Example("--name build-a-behavior").
+		Prints(sampleGet).
 		Example("--name build-a-behavior --reference references/services.md").
 		Fails("no name", GetInput{}).
 		Handle(Get),

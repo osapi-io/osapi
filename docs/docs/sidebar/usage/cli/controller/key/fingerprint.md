@@ -17,6 +17,26 @@ osapi controller key fingerprint
 osapi controller key fingerprint
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi controller key fingerprint
+[1;38;2;0;213;255mController key:[0m
+  [38;2;10;143;176mFingerprint:[0m  SHA256:4b8e2a6c0d9f1e3a5c7b9d2f4a6c8e0b1d3f5a7c9e2b4d6f8a0c2e4b6d8f0a1c
+  [38;2;10;143;176mKey dir:[0m      /etc/osapi/pki
+```
+
+With `--json`, the command prints:
+
+```json
+{
+  "fingerprint": "SHA256:4b8e2a6c0d9f1e3a5c7b9d2f4a6c8e0b1d3f5a7c9e2b4d6f8a0c2e4b6d8f0a1c",
+  "key_dir": "/etc/osapi/pki"
+}
+```
+
 ## Global flags
 
 | Flag               | Description                  | Default                 |

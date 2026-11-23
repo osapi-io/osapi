@@ -17,6 +17,48 @@ osapi behavior chain list
 osapi behavior chain list --json
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi behavior chain list
+[1;38;2;0;213;255mChains (3):[0m
+  [38;2;10;143;176mBEHAVIOR     [0m[38;2;10;143;176mINTERNAL  [0m[38;2;10;143;176mCHAIN                        [0m[38;2;10;143;176mCALLS        [0m[38;2;10;143;176mUSED BY[0m
+  dns                    dns → netplan → managedfile  netplan      none
+  netplan      yes       netplan → managedfile        managedfile  route, dns, interface
+  managedfile  yes       managedfile                  none         certificate, file, netplan
+```
+
+With `--json`, the command prints:
+
+```json
+{
+  "items": [
+    {
+      "behavior": "dns",
+      "chain": "dns → netplan → managedfile",
+      "calls": ["netplan"],
+      "used_by": []
+    },
+    {
+      "behavior": "netplan",
+      "internal": true,
+      "chain": "netplan → managedfile",
+      "calls": ["managedfile"],
+      "used_by": ["route", "dns", "interface"]
+    },
+    {
+      "behavior": "managedfile",
+      "internal": true,
+      "chain": "managedfile",
+      "calls": [],
+      "used_by": ["certificate", "file", "netplan"]
+    }
+  ]
+}
+```
+
 ## Global flags
 
 | Flag               | Description                  | Default                 |

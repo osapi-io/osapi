@@ -20,6 +20,49 @@ osapi token roles list
 osapi token roles list --json
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi token roles list
+[1;38;2;0;213;255mRoles (4):[0m
+  [38;2;10;143;176mNAME     [0m[38;2;10;143;176mSOURCE[0m
+  [1madmin[0m    built-in
+  [1mwrite[0m    built-in
+  [1mread[0m     built-in
+  [1mdns-ops[0m  config
+```
+
+With `--json`, the command prints:
+
+```json
+{
+  "roles": [
+    {
+      "name": "admin",
+      "source": "built-in",
+      "permissions": null
+    },
+    {
+      "name": "write",
+      "source": "built-in",
+      "permissions": null
+    },
+    {
+      "name": "read",
+      "source": "built-in",
+      "permissions": null
+    },
+    {
+      "name": "dns-ops",
+      "source": "config",
+      "permissions": null
+    }
+  ]
+}
+```
+
 ## Global flags
 
 | Flag               | Description                  | Default                 |

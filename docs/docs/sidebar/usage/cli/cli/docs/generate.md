@@ -17,6 +17,26 @@ osapi cli docs generate
 osapi cli docs generate --dir /tmp/cli
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi cli docs generate
+[1;38;2;0;213;255mCLI reference:[0m
+  [38;2;10;143;176mDir:[0m    docs/docs/sidebar/usage/cli
+  [38;2;10;143;176mPages:[0m  171
+```
+
+With `--json`, the command prints:
+
+```json
+{
+  "dir": "docs/docs/sidebar/usage/cli",
+  "pages": 171
+}
+```
+
 ## Flags
 
 | Flag    | Description                          | Default                       |

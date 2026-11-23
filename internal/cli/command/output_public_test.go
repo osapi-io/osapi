@@ -604,6 +604,80 @@ func (s *OutputPublicTestSuite) TestDerive() {
 	s.WithinDuration(time.Now(), command.Now(), time.Minute, "the clock, with no fixed time")
 }
 
+func (s *OutputPublicTestSuite) TestDone() {
+	type keyed struct {
+		Name  string `json:"name"`
+		Force bool   `json:"force"`
+		Count int    `json:"count"`
+	}
+	type named struct {
+		Name string `json:"name"`
+	}
+	drain := command.Method[keyed, struct{}]("drain").Says("draining")
+	g := command.Define("zzdone", "Done",
+		drain,
+		command.Method[keyed, named]("get"),
+		command.Method[keyed, *struct{}]("frob"),
+		command.Method[string, struct{}]("delete"),
+	)
+
+	tests := []struct {
+		name   string
+		method command.Command
+		flags  string
+		wantIn any
+		want   string
+		ok     bool
+	}{
+		{
+			name:   "when the flag and its value are two words, after a bool flag",
+			method: drain,
+			flags:  "--force --name \"web-01\" --count 3",
+			wantIn: keyed{Name: "web-01"},
+			want:   `{"name":"zzdone","result":"draining"}`,
+			ok:     true,
+		},
+		{
+			name:   "when the flag has its value after =",
+			method: drain,
+			flags:  "-j --name=web-02",
+			wantIn: keyed{Name: "web-02"},
+			want:   `{"name":"zzdone","result":"draining"}`,
+			ok:     true,
+		},
+		{
+			name:   "when the last flag has no value",
+			method: drain,
+			flags:  "--name",
+			wantIn: keyed{},
+			want:   `{"name":"zzdone","result":"draining"}`,
+			ok:     true,
+		},
+		{
+			name:   "when the input is not a struct",
+			method: g.Method("delete"),
+			flags:  "--name web-01",
+			wantIn: "",
+			want:   `{"name":"zzdone","result":"deleted"}`,
+			ok:     true,
+		},
+		{name: "when the method answers with a body", method: g.Method("get"), flags: "--name a"},
+		{name: "when the output is a pointer", method: g.Method("frob"), flags: "--name a"},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			in, body, ok := command.Done(g, tc.method, tc.flags)
+			s.Equal(tc.ok, ok)
+			if !tc.ok {
+				return
+			}
+			s.Equal(tc.wantIn, in)
+			s.JSONEq(tc.want, string(body))
+		})
+	}
+}
+
 func (s *OutputPublicTestSuite) TestRender() {
 	r := &recorder{}
 	s.Require().NoError(command.Render(r, "zzrender", &plain{Items: []row{{Name: "web-01"}}}))
