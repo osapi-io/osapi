@@ -21,8 +21,10 @@
 package notify_test
 
 import (
+	"bytes"
 	"context"
 	"log/slog"
+	"strings"
 	"testing"
 	"time"
 
@@ -80,6 +82,46 @@ func (s *LogNotifierPublicTestSuite) TestNotify() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			tt.validateFunc(s.notifier.Notify(context.Background(), tt.event))
+		})
+	}
+}
+
+func (s *LogNotifierPublicTestSuite) TestNotifyKeys() {
+	tests := []struct {
+		name   string
+		active bool
+	}{
+		{
+			name:   "fired event names the component of the condition as source",
+			active: true,
+		},
+		{
+			name:   "resolved event names the component of the condition as source",
+			active: false,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			var out bytes.Buffer
+			// The logger of the controller carries component=controller.
+			logger := slog.New(slog.NewJSONHandler(&out, nil)).
+				With(slog.String("component", "controller"))
+
+			err := notify.NewLogNotifier(logger).Notify(
+				context.Background(),
+				notify.ConditionEvent{
+					ComponentType: "agent",
+					Hostname:      "web-01",
+					Condition:     "DiskPressure",
+					Active:        tt.active,
+				},
+			)
+			s.Require().NoError(err)
+
+			s.Equal(1, strings.Count(out.String(), `"component":`))
+			s.Contains(out.String(), `"component":"controller"`)
+			s.Contains(out.String(), `"source":"agent"`)
 		})
 	}
 }

@@ -47,12 +47,13 @@ backend is available:
 ### Log (default)
 
 Writes condition events to the structured log. Fired conditions log at WARN
-level, resolved conditions at INFO:
+level, resolved conditions at INFO. `component` is the controller, which writes
+the line. `source` is the component that has the condition:
 
 ```
-WRN condition fired   component=agent hostname=web-01 condition=DiskPressure active=true reason="/ 92% used"
-INF condition resolved component=agent hostname=web-01 condition=DiskPressure active=false
-WRN condition fired   component=nats hostname=nats-01 condition=ComponentUnreachable active=true reason="heartbeat expired"
+WRN condition fired component=controller source=agent hostname=web-01 condition=DiskPressure active=true reason="/ 92% used"
+INF condition resolved component=controller source=agent hostname=web-01 condition=DiskPressure active=false
+WRN condition fired component=controller source=nats hostname=nats-01 condition=ComponentUnreachable active=true reason="heartbeat expired"
 ```
 
 ### Future backends
