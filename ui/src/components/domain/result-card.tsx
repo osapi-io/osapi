@@ -707,7 +707,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
   }
 
   // File list
-  if (type === "file-list" && "files" in data) {
+  if (type === "object-list" && "files" in data) {
     const files = (data as { files: FileInfo[] }).files;
     return (
       <ResultShell
@@ -731,7 +731,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
               <IconButton
                 icon={Trash2}
                 variant="danger"
-                onClick={() => onAction("file-delete", f.name)}
+                onClick={() => onAction("object-delete", f.name)}
                 title={`Delete ${f.name}`}
                 className="ml-auto"
               />
@@ -742,7 +742,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
     );
   }
 
-  if (type === "file-upload" && "name" in data && "sha256" in data) {
+  if (type === "object-upload" && "name" in data && "sha256" in data) {
     return <FileUploadResult data={data as unknown as FileUploadResponse} />;
   }
 
@@ -925,7 +925,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
   }
 
   // File stale — list of stale deployments
-  if (type === "file-stale" && Array.isArray(data.stale)) {
+  if (type === "object-stale" && Array.isArray(data.stale)) {
     type StaleEntry = {
       object_name: string;
       hostname: string;

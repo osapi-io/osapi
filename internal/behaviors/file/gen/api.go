@@ -20,16 +20,16 @@ func Routes(
 			Handler:    server.Serve(s, Group, "status", HandleStatus, decodeStatus),
 		},
 		{
-			Method:     http.MethodPost,
-			Path:       "/api/node/:hostname/file/deploy",
-			Permission: "file:execute",
-			Handler:    server.Serve(s, Group, "deploy", HandleDeploy, decodeDeploy),
+			Method:     http.MethodPut,
+			Path:       "/api/node/:hostname/file",
+			Permission: "file:write",
+			Handler:    server.Serve(s, Group, "update", HandleUpdate, decodeUpdate),
 		},
 		{
-			Method:     http.MethodPost,
-			Path:       "/api/node/:hostname/file/undeploy",
-			Permission: "file:execute",
-			Handler:    server.Serve(s, Group, "undeploy", HandleUndeploy, decodeUndeploy),
+			Method:     http.MethodDelete,
+			Path:       "/api/node/:hostname/file",
+			Permission: "file:write",
+			Handler:    server.Serve(s, Group, "delete", HandleDelete, decodeDelete),
 		},
 	}
 }

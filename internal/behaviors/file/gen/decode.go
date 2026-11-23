@@ -26,11 +26,11 @@ func decodeStatus(
 	return in, "", true
 }
 
-// decodeDeploy reads the deploy method's input from the request.
-func decodeDeploy(
+// decodeUpdate reads the update method's input from the request.
+func decodeUpdate(
 	c *echo.Context,
-) (DeployRequest, string, bool) {
-	var in DeployRequest
+) (UpdateRequest, string, bool) {
+	var in UpdateRequest
 	if msg, ok := server.Body(c, &in.Body); !ok {
 		return in, msg, false
 	}
@@ -44,11 +44,11 @@ func decodeDeploy(
 	return in, "", true
 }
 
-// decodeUndeploy reads the undeploy method's input from the request.
-func decodeUndeploy(
+// decodeDelete reads the delete method's input from the request.
+func decodeDelete(
 	c *echo.Context,
-) (UndeployRequest, string, bool) {
-	var in UndeployRequest
+) (DeleteRequest, string, bool) {
+	var in DeleteRequest
 	if msg, ok := server.Body(c, &in.Body); !ok {
 		return in, msg, false
 	}

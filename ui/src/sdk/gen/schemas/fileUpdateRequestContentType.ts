@@ -8,10 +8,10 @@
 /**
  * How the object is written: raw as it is, or template rendered with .Facts, .Vars and .Hostname; the object's own when empty
  */
-export type FileDeployRequestContentType = typeof FileDeployRequestContentType[keyof typeof FileDeployRequestContentType];
+export type FileUpdateRequestContentType = typeof FileUpdateRequestContentType[keyof typeof FileUpdateRequestContentType];
 
 
-export const FileDeployRequestContentType = {
+export const FileUpdateRequestContentType = {
   raw: 'raw',
   template: 'template',
 } as const;

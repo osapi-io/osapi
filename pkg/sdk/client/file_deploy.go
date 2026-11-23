@@ -89,13 +89,13 @@ func (s *FileDeployService) Deploy(
 	ctx context.Context,
 	req FileDeployOpts,
 ) (*Response[Collection[FileDeployResult]], error) {
-	body := gen.FileDeployRequest{
+	body := gen.FileUpdateRequest{
 		ObjectName: req.ObjectName,
 		Path:       req.Path,
 	}
 
 	if req.ContentType != "" {
-		ct := gen.FileDeployRequestContentType(req.ContentType)
+		ct := gen.FileUpdateRequestContentType(req.ContentType)
 		body.ContentType = &ct
 	}
 
@@ -115,7 +115,7 @@ func (s *FileDeployService) Deploy(
 		body.Vars = &req.Vars
 	}
 
-	resp, err := s.client.PostNodeFileDeployWithResponse(ctx, req.Target, body)
+	resp, err := s.client.PutNodeFileWithResponse(ctx, req.Target, body)
 	if err != nil {
 		return nil, fmt.Errorf("file deploy: %w", err)
 	}
@@ -147,11 +147,11 @@ func (s *FileDeployService) Undeploy(
 	ctx context.Context,
 	req FileUndeployOpts,
 ) (*Response[Collection[FileUndeployResult]], error) {
-	body := gen.FileUndeployRequest{
+	body := gen.FileDeleteRequest{
 		Path: req.Path,
 	}
 
-	resp, err := s.client.PostNodeFileUndeployWithResponse(ctx, req.Target, body)
+	resp, err := s.client.DeleteNodeFileWithResponse(ctx, req.Target, body)
 	if err != nil {
 		return nil, fmt.Errorf("file undeploy: %w", err)
 	}

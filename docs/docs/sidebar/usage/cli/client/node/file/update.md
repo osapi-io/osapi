@@ -1,4 +1,4 @@
-# Deploy
+# Update
 
 Deploy an object of the object store to a path.
 
@@ -9,20 +9,20 @@ not change and reports changed: false. osapi client file stale list shows the
 deployments whose object changed since.
 
 ```bash
-osapi client node file deploy [flags]
+osapi client node file update [flags]
 ```
 
 ## Examples
 
 ```bash
 # Deploy a file
-osapi client node file deploy --target web-01 --object-name example.conf --path /etc/osapi/file-example.conf
+osapi client node file update --target web-01 --object-name example.conf --path /etc/osapi/file-example.conf
 
 # Render a template
-osapi client node file deploy --target web-01 --object-name example.conf.tmpl --path /etc/osapi/file-example.conf --vars port=8080
+osapi client node file update --target web-01 --object-name example.conf.tmpl --path /etc/osapi/file-example.conf --vars port=8080
 
 # A file that holds the object
-osapi client node file deploy --target web-01 --object-name example.conf --path /etc/osapi/file-example.conf
+osapi client node file update --target web-01 --object-name example.conf --path /etc/osapi/file-example.conf
 ```
 
 ## Result
@@ -30,7 +30,7 @@ osapi client node file deploy --target web-01 --object-name example.conf --path 
 Deploy a file, on one host:
 
 ```ansi
-$ osapi client node file deploy --target web-01 --object-name example.conf --path /etc/osapi/file-example.conf
+$ osapi client node file update --target web-01 --object-name example.conf --path /etc/osapi/file-example.conf
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mPATH                          [0m[38;2;10;143;176mSHA256[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  /etc/osapi/file-example.conf  0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60
@@ -41,7 +41,7 @@ $ osapi client node file deploy --target web-01 --object-name example.conf --pat
 On each host, where one cannot run it:
 
 ```ansi
-$ osapi client node file deploy --target _all --object-name example.conf --path /etc/osapi/file-example.conf
+$ osapi client node file update --target _all --object-name example.conf --path /etc/osapi/file-example.conf
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mPATH                          [0m[38;2;10;143;176mSHA256[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  /etc/osapi/file-example.conf  0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60
@@ -73,7 +73,7 @@ With `--json`, the API's response:
 Render a template, on one host:
 
 ```ansi
-$ osapi client node file deploy --target web-01 --object-name example.conf.tmpl --path /etc/osapi/file-example.conf --vars port=8080
+$ osapi client node file update --target web-01 --object-name example.conf.tmpl --path /etc/osapi/file-example.conf --vars port=8080
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mPATH                          [0m[38;2;10;143;176mSHA256[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  /etc/osapi/file-example.conf  28ef41e1ff26302a25da25eaa7b2762f2d55d0fdc0631a4f6a8c380d2b8640d4
@@ -84,7 +84,7 @@ $ osapi client node file deploy --target web-01 --object-name example.conf.tmpl 
 On each host, where one cannot run it:
 
 ```ansi
-$ osapi client node file deploy --target _all --object-name example.conf.tmpl --path /etc/osapi/file-example.conf --vars port=8080
+$ osapi client node file update --target _all --object-name example.conf.tmpl --path /etc/osapi/file-example.conf --vars port=8080
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mPATH                          [0m[38;2;10;143;176mSHA256[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  /etc/osapi/file-example.conf  28ef41e1ff26302a25da25eaa7b2762f2d55d0fdc0631a4f6a8c380d2b8640d4
@@ -116,7 +116,7 @@ With `--json`, the API's response:
 A file that holds the object, on one host:
 
 ```ansi
-$ osapi client node file deploy --target web-01 --object-name example.conf --path /etc/osapi/file-example.conf
+$ osapi client node file update --target web-01 --object-name example.conf --path /etc/osapi/file-example.conf
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mPATH                          [0m[38;2;10;143;176mSHA256[0m
   [1mweb-01[0m    [38;2;103;234;147mok[0m      /etc/osapi/file-example.conf  0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60
@@ -127,7 +127,7 @@ $ osapi client node file deploy --target web-01 --object-name example.conf --pat
 On each host, where one cannot run it:
 
 ```ansi
-$ osapi client node file deploy --target _all --object-name example.conf --path /etc/osapi/file-example.conf
+$ osapi client node file update --target _all --object-name example.conf --path /etc/osapi/file-example.conf
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mPATH                          [0m[38;2;10;143;176mSHA256[0m
   [1mweb-01[0m    [38;2;103;234;147mok[0m      /etc/osapi/file-example.conf  0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60
@@ -177,7 +177,7 @@ The command fails in these cases:
 
 ## Permission
 
-It needs the `file:execute` permission. `osapi token roles get --name <role>`
+It needs the `file:write` permission. `osapi token roles get --name <role>`
 shows what a role grants.
 
 ## Flags

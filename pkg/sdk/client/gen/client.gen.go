@@ -325,42 +325,24 @@ func (e ErrorResponseReason) Valid() bool {
 	}
 }
 
-// Defines values for FileDeployRequestContentType.
+// Defines values for FileDeleteResultStatus.
 const (
-	FileDeployRequestContentTypeRaw      FileDeployRequestContentType = "raw"
-	FileDeployRequestContentTypeTemplate FileDeployRequestContentType = "template"
+	FileDeleteResultStatusFailed  FileDeleteResultStatus = "failed"
+	FileDeleteResultStatusOk      FileDeleteResultStatus = "ok"
+	FileDeleteResultStatusSkipped FileDeleteResultStatus = "skipped"
+	FileDeleteResultStatusTimeout FileDeleteResultStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the FileDeployRequestContentType enum.
-func (e FileDeployRequestContentType) Valid() bool {
+// Valid indicates whether the value is a known member of the FileDeleteResultStatus enum.
+func (e FileDeleteResultStatus) Valid() bool {
 	switch e {
-	case FileDeployRequestContentTypeRaw:
+	case FileDeleteResultStatusFailed:
 		return true
-	case FileDeployRequestContentTypeTemplate:
+	case FileDeleteResultStatusOk:
 		return true
-	default:
-		return false
-	}
-}
-
-// Defines values for FileDeployResultStatus.
-const (
-	FileDeployResultStatusFailed  FileDeployResultStatus = "failed"
-	FileDeployResultStatusOk      FileDeployResultStatus = "ok"
-	FileDeployResultStatusSkipped FileDeployResultStatus = "skipped"
-	FileDeployResultStatusTimeout FileDeployResultStatus = "timeout"
-)
-
-// Valid indicates whether the value is a known member of the FileDeployResultStatus enum.
-func (e FileDeployResultStatus) Valid() bool {
-	switch e {
-	case FileDeployResultStatusFailed:
+	case FileDeleteResultStatusSkipped:
 		return true
-	case FileDeployResultStatusOk:
-		return true
-	case FileDeployResultStatusSkipped:
-		return true
-	case FileDeployResultStatusTimeout:
+	case FileDeleteResultStatusTimeout:
 		return true
 	default:
 		return false
@@ -391,24 +373,42 @@ func (e FileStatusStatus) Valid() bool {
 	}
 }
 
-// Defines values for FileUndeployResultStatus.
+// Defines values for FileUpdateRequestContentType.
 const (
-	FileUndeployResultStatusFailed  FileUndeployResultStatus = "failed"
-	FileUndeployResultStatusOk      FileUndeployResultStatus = "ok"
-	FileUndeployResultStatusSkipped FileUndeployResultStatus = "skipped"
-	FileUndeployResultStatusTimeout FileUndeployResultStatus = "timeout"
+	FileUpdateRequestContentTypeRaw      FileUpdateRequestContentType = "raw"
+	FileUpdateRequestContentTypeTemplate FileUpdateRequestContentType = "template"
 )
 
-// Valid indicates whether the value is a known member of the FileUndeployResultStatus enum.
-func (e FileUndeployResultStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the FileUpdateRequestContentType enum.
+func (e FileUpdateRequestContentType) Valid() bool {
 	switch e {
-	case FileUndeployResultStatusFailed:
+	case FileUpdateRequestContentTypeRaw:
 		return true
-	case FileUndeployResultStatusOk:
+	case FileUpdateRequestContentTypeTemplate:
 		return true
-	case FileUndeployResultStatusSkipped:
+	default:
+		return false
+	}
+}
+
+// Defines values for FileUpdateResultStatus.
+const (
+	FileUpdateResultStatusFailed  FileUpdateResultStatus = "failed"
+	FileUpdateResultStatusOk      FileUpdateResultStatus = "ok"
+	FileUpdateResultStatusSkipped FileUpdateResultStatus = "skipped"
+	FileUpdateResultStatusTimeout FileUpdateResultStatus = "timeout"
+)
+
+// Valid indicates whether the value is a known member of the FileUpdateResultStatus enum.
+func (e FileUpdateResultStatus) Valid() bool {
+	switch e {
+	case FileUpdateResultStatusFailed:
 		return true
-	case FileUndeployResultStatusTimeout:
+	case FileUpdateResultStatusOk:
+		return true
+	case FileUpdateResultStatusSkipped:
+		return true
+	case FileUpdateResultStatusTimeout:
 		return true
 	default:
 		return false
@@ -2501,42 +2501,21 @@ type FactKeysResponse struct {
 	TotalItems int `json:"total_items"`
 }
 
-// FileDeployRequest defines model for FileDeployRequest.
-type FileDeployRequest struct {
-	// ContentType How the object is written: raw as it is, or template rendered with .Facts, .Vars and .Hostname; the object's own when empty
-	ContentType *FileDeployRequestContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
-
-	// Group Group that owns the file; left as written when empty
-	Group *string `json:"group,omitempty" validate:"omitempty,account_name"`
-
-	// Mode Permissions in octal, such as 0644; when empty, a file keeps its mode and a new file gets 0644
-	Mode *string `json:"mode,omitempty" validate:"omitempty,file_mode"`
-
-	// ObjectName The object of the object store, from osapi client file list
-	ObjectName string `json:"object_name" validate:"required,min=1,max=255"`
-
-	// Owner User that owns the file; left as written when empty
-	Owner *string `json:"owner,omitempty" validate:"omitempty,account_name"`
-
+// FileDeleteRequest defines model for FileDeleteRequest.
+type FileDeleteRequest struct {
 	// Path Absolute path of the file on the host
 	Path string `json:"path" validate:"required,startswith=/"`
-
-	// Vars Variables of a template, as .Vars, each as key=value
-	Vars *map[string]string `json:"vars,omitempty" validate:"omitempty"`
 }
 
-// FileDeployRequestContentType How the object is written: raw as it is, or template rendered with .Facts, .Vars and .Hostname; the object's own when empty
-type FileDeployRequestContentType string
-
-// FileDeployResponse defines model for FileDeployResponse.
-type FileDeployResponse struct {
+// FileDeleteResponse defines model for FileDeleteResponse.
+type FileDeleteResponse struct {
 	// JobId The job ID used to process this request.
 	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
-	Results []FileDeployResult  `json:"results"`
+	Results []FileDeleteResult  `json:"results"`
 }
 
-// FileDeployResult defines model for FileDeployResult.
-type FileDeployResult struct {
+// FileDeleteResult defines model for FileDeleteResult.
+type FileDeleteResult struct {
 	// Changed Whether the host changed
 	Changed *bool `json:"changed,omitempty"`
 
@@ -2549,15 +2528,12 @@ type FileDeployResult struct {
 	// Path Absolute path of the file
 	Path *string `json:"path,omitempty"`
 
-	// Sha256 SHA-256 of the content that the file holds
-	Sha256 *string `json:"sha256,omitempty"`
-
 	// Status The status of the operation for this host.
-	Status FileDeployResultStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
+	Status FileDeleteResultStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
 }
 
-// FileDeployResultStatus The status of the operation for this host.
-type FileDeployResultStatus string
+// FileDeleteResultStatus The status of the operation for this host.
+type FileDeleteResultStatus string
 
 // FileInfo defines model for FileInfo.
 type FileInfo struct {
@@ -2632,21 +2608,42 @@ type FileStatusResponse struct {
 	Results []FileStatus        `json:"results"`
 }
 
-// FileUndeployRequest defines model for FileUndeployRequest.
-type FileUndeployRequest struct {
+// FileUpdateRequest defines model for FileUpdateRequest.
+type FileUpdateRequest struct {
+	// ContentType How the object is written: raw as it is, or template rendered with .Facts, .Vars and .Hostname; the object's own when empty
+	ContentType *FileUpdateRequestContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
+
+	// Group Group that owns the file; left as written when empty
+	Group *string `json:"group,omitempty" validate:"omitempty,account_name"`
+
+	// Mode Permissions in octal, such as 0644; when empty, a file keeps its mode and a new file gets 0644
+	Mode *string `json:"mode,omitempty" validate:"omitempty,file_mode"`
+
+	// ObjectName The object of the object store, from osapi client file list
+	ObjectName string `json:"object_name" validate:"required,min=1,max=255"`
+
+	// Owner User that owns the file; left as written when empty
+	Owner *string `json:"owner,omitempty" validate:"omitempty,account_name"`
+
 	// Path Absolute path of the file on the host
 	Path string `json:"path" validate:"required,startswith=/"`
+
+	// Vars Variables of a template, as .Vars, each as key=value
+	Vars *map[string]string `json:"vars,omitempty" validate:"omitempty"`
 }
 
-// FileUndeployResponse defines model for FileUndeployResponse.
-type FileUndeployResponse struct {
+// FileUpdateRequestContentType How the object is written: raw as it is, or template rendered with .Facts, .Vars and .Hostname; the object's own when empty
+type FileUpdateRequestContentType string
+
+// FileUpdateResponse defines model for FileUpdateResponse.
+type FileUpdateResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID  `json:"job_id,omitempty" validate:"uuid"`
-	Results []FileUndeployResult `json:"results"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []FileUpdateResult  `json:"results"`
 }
 
-// FileUndeployResult defines model for FileUndeployResult.
-type FileUndeployResult struct {
+// FileUpdateResult defines model for FileUpdateResult.
+type FileUpdateResult struct {
 	// Changed Whether the host changed
 	Changed *bool `json:"changed,omitempty"`
 
@@ -2659,12 +2656,15 @@ type FileUndeployResult struct {
 	// Path Absolute path of the file
 	Path *string `json:"path,omitempty"`
 
+	// Sha256 SHA-256 of the content that the file holds
+	Sha256 *string `json:"sha256,omitempty"`
+
 	// Status The status of the operation for this host.
-	Status FileUndeployResultStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
+	Status FileUpdateResultStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
 }
 
-// FileUndeployResultStatus The status of the operation for this host.
-type FileUndeployResultStatus string
+// FileUpdateResultStatus The status of the operation for this host.
+type FileUpdateResultStatus string
 
 // FileUploadResponse defines model for FileUploadResponse.
 type FileUploadResponse struct {
@@ -5164,11 +5164,11 @@ type PostNodeContainerDockerExecJSONRequestBody = DockerExecRequest
 // PostNodeContainerDockerStopJSONRequestBody defines body for PostNodeContainerDockerStop for application/json ContentType.
 type PostNodeContainerDockerStopJSONRequestBody = DockerStopRequest
 
-// PostNodeFileDeployJSONRequestBody defines body for PostNodeFileDeploy for application/json ContentType.
-type PostNodeFileDeployJSONRequestBody = FileDeployRequest
+// DeleteNodeFileJSONRequestBody defines body for DeleteNodeFile for application/json ContentType.
+type DeleteNodeFileJSONRequestBody = FileDeleteRequest
 
-// PostNodeFileUndeployJSONRequestBody defines body for PostNodeFileUndeploy for application/json ContentType.
-type PostNodeFileUndeployJSONRequestBody = FileUndeployRequest
+// PutNodeFileJSONRequestBody defines body for PutNodeFile for application/json ContentType.
+type PutNodeFileJSONRequestBody = FileUpdateRequest
 
 // PostNodeGroupJSONRequestBody defines body for PostNodeGroup for application/json ContentType.
 type PostNodeGroupJSONRequestBody = GroupCreateRequest
@@ -5487,18 +5487,18 @@ type ClientInterface interface {
 	// GetNodeDisk request
 	GetNodeDisk(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// DeleteNodeFileWithBody request with any body
+	DeleteNodeFileWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	DeleteNodeFile(ctx context.Context, hostname Hostname, body DeleteNodeFileJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetNodeFile request
 	GetNodeFile(ctx context.Context, hostname Hostname, params *GetNodeFileParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostNodeFileDeployWithBody request with any body
-	PostNodeFileDeployWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PutNodeFileWithBody request with any body
+	PutNodeFileWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostNodeFileDeploy(ctx context.Context, hostname Hostname, body PostNodeFileDeployJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PostNodeFileUndeployWithBody request with any body
-	PostNodeFileUndeployWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostNodeFileUndeploy(ctx context.Context, hostname Hostname, body PostNodeFileUndeployJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PutNodeFile(ctx context.Context, hostname Hostname, body PutNodeFileJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNodeGroup request
 	GetNodeGroup(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -6473,6 +6473,30 @@ func (c *Client) GetNodeDisk(ctx context.Context, hostname Hostname, reqEditors 
 	return c.Client.Do(req)
 }
 
+func (c *Client) DeleteNodeFileWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteNodeFileRequestWithBody(c.Server, hostname, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteNodeFile(ctx context.Context, hostname Hostname, body DeleteNodeFileJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteNodeFileRequest(c.Server, hostname, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) GetNodeFile(ctx context.Context, hostname Hostname, params *GetNodeFileParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetNodeFileRequest(c.Server, hostname, params)
 	if err != nil {
@@ -6485,8 +6509,8 @@ func (c *Client) GetNodeFile(ctx context.Context, hostname Hostname, params *Get
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNodeFileDeployWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeFileDeployRequestWithBody(c.Server, hostname, contentType, body)
+func (c *Client) PutNodeFileWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNodeFileRequestWithBody(c.Server, hostname, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -6497,32 +6521,8 @@ func (c *Client) PostNodeFileDeployWithBody(ctx context.Context, hostname Hostna
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNodeFileDeploy(ctx context.Context, hostname Hostname, body PostNodeFileDeployJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeFileDeployRequest(c.Server, hostname, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostNodeFileUndeployWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeFileUndeployRequestWithBody(c.Server, hostname, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostNodeFileUndeploy(ctx context.Context, hostname Hostname, body PostNodeFileUndeployJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeFileUndeployRequest(c.Server, hostname, body)
+func (c *Client) PutNodeFile(ctx context.Context, hostname Hostname, body PutNodeFileJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutNodeFileRequest(c.Server, hostname, body)
 	if err != nil {
 		return nil, err
 	}
@@ -9706,6 +9706,53 @@ func NewGetNodeDiskRequest(server string, hostname Hostname) (*http.Request, err
 	return req, nil
 }
 
+// NewDeleteNodeFileRequest calls the generic DeleteNodeFile builder with application/json body
+func NewDeleteNodeFileRequest(server string, hostname Hostname, body DeleteNodeFileJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewDeleteNodeFileRequestWithBody(server, hostname, "application/json", bodyReader)
+}
+
+// NewDeleteNodeFileRequestWithBody generates requests for DeleteNodeFile with any type of body
+func NewDeleteNodeFileRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/node/%s/file", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetNodeFileRequest generates requests for GetNodeFile
 func NewGetNodeFileRequest(server string, hostname Hostname, params *GetNodeFileParams) (*http.Request, error) {
 	var err error
@@ -9763,19 +9810,19 @@ func NewGetNodeFileRequest(server string, hostname Hostname, params *GetNodeFile
 	return req, nil
 }
 
-// NewPostNodeFileDeployRequest calls the generic PostNodeFileDeploy builder with application/json body
-func NewPostNodeFileDeployRequest(server string, hostname Hostname, body PostNodeFileDeployJSONRequestBody) (*http.Request, error) {
+// NewPutNodeFileRequest calls the generic PutNodeFile builder with application/json body
+func NewPutNodeFileRequest(server string, hostname Hostname, body PutNodeFileJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostNodeFileDeployRequestWithBody(server, hostname, "application/json", bodyReader)
+	return NewPutNodeFileRequestWithBody(server, hostname, "application/json", bodyReader)
 }
 
-// NewPostNodeFileDeployRequestWithBody generates requests for PostNodeFileDeploy with any type of body
-func NewPostNodeFileDeployRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
+// NewPutNodeFileRequestWithBody generates requests for PutNodeFile with any type of body
+func NewPutNodeFileRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -9790,7 +9837,7 @@ func NewPostNodeFileDeployRequestWithBody(server string, hostname Hostname, cont
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/api/node/%s/file/deploy", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/file", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9800,54 +9847,7 @@ func NewPostNodeFileDeployRequestWithBody(server string, hostname Hostname, cont
 		return nil, err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewPostNodeFileUndeployRequest calls the generic PostNodeFileUndeploy builder with application/json body
-func NewPostNodeFileUndeployRequest(server string, hostname Hostname, body PostNodeFileUndeployJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostNodeFileUndeployRequestWithBody(server, hostname, "application/json", bodyReader)
-}
-
-// NewPostNodeFileUndeployRequestWithBody generates requests for PostNodeFileUndeploy with any type of body
-func NewPostNodeFileUndeployRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/node/%s/file/undeploy", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
@@ -13327,18 +13327,18 @@ type ClientWithResponsesInterface interface {
 	// GetNodeDiskWithResponse request
 	GetNodeDiskWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeDiskResponse, error)
 
+	// DeleteNodeFileWithBodyWithResponse request with any body
+	DeleteNodeFileWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteNodeFileResponse, error)
+
+	DeleteNodeFileWithResponse(ctx context.Context, hostname Hostname, body DeleteNodeFileJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteNodeFileResponse, error)
+
 	// GetNodeFileWithResponse request
 	GetNodeFileWithResponse(ctx context.Context, hostname Hostname, params *GetNodeFileParams, reqEditors ...RequestEditorFn) (*GetNodeFileResponse, error)
 
-	// PostNodeFileDeployWithBodyWithResponse request with any body
-	PostNodeFileDeployWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeFileDeployResponse, error)
+	// PutNodeFileWithBodyWithResponse request with any body
+	PutNodeFileWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeFileResponse, error)
 
-	PostNodeFileDeployWithResponse(ctx context.Context, hostname Hostname, body PostNodeFileDeployJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeFileDeployResponse, error)
-
-	// PostNodeFileUndeployWithBodyWithResponse request with any body
-	PostNodeFileUndeployWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeFileUndeployResponse, error)
-
-	PostNodeFileUndeployWithResponse(ctx context.Context, hostname Hostname, body PostNodeFileUndeployJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeFileUndeployResponse, error)
+	PutNodeFileWithResponse(ctx context.Context, hostname Hostname, body PutNodeFileJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeFileResponse, error)
 
 	// GetNodeGroupWithResponse request
 	GetNodeGroupWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeGroupResponse, error)
@@ -15245,6 +15245,42 @@ func (r GetNodeDiskResponse) ContentType() string {
 	return ""
 }
 
+type DeleteNodeFileResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *FileDeleteResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteNodeFileResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteNodeFileResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteNodeFileResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetNodeFileResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -15281,10 +15317,10 @@ func (r GetNodeFileResponse) ContentType() string {
 	return ""
 }
 
-type PostNodeFileDeployResponse struct {
+type PutNodeFileResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *FileDeployResponse
+	JSON200      *FileUpdateResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
@@ -15294,7 +15330,7 @@ type PostNodeFileDeployResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PostNodeFileDeployResponse) Status() string {
+func (r PutNodeFileResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -15302,7 +15338,7 @@ func (r PostNodeFileDeployResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostNodeFileDeployResponse) StatusCode() int {
+func (r PutNodeFileResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -15310,43 +15346,7 @@ func (r PostNodeFileDeployResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r PostNodeFileDeployResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type PostNodeFileUndeployResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *FileUndeployResponse
-	JSON400      *ErrorResponse
-	JSON401      *ErrorResponse
-	JSON403      *ErrorResponse
-	JSON404      *ErrorResponse
-	JSON409      *ErrorResponse
-	JSON500      *ErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r PostNodeFileUndeployResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostNodeFileUndeployResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r PostNodeFileUndeployResponse) ContentType() string {
+func (r PutNodeFileResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -18522,6 +18522,23 @@ func (c *ClientWithResponses) GetNodeDiskWithResponse(ctx context.Context, hostn
 	return ParseGetNodeDiskResponse(rsp)
 }
 
+// DeleteNodeFileWithBodyWithResponse request with arbitrary body returning *DeleteNodeFileResponse
+func (c *ClientWithResponses) DeleteNodeFileWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteNodeFileResponse, error) {
+	rsp, err := c.DeleteNodeFileWithBody(ctx, hostname, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteNodeFileResponse(rsp)
+}
+
+func (c *ClientWithResponses) DeleteNodeFileWithResponse(ctx context.Context, hostname Hostname, body DeleteNodeFileJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteNodeFileResponse, error) {
+	rsp, err := c.DeleteNodeFile(ctx, hostname, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteNodeFileResponse(rsp)
+}
+
 // GetNodeFileWithResponse request returning *GetNodeFileResponse
 func (c *ClientWithResponses) GetNodeFileWithResponse(ctx context.Context, hostname Hostname, params *GetNodeFileParams, reqEditors ...RequestEditorFn) (*GetNodeFileResponse, error) {
 	rsp, err := c.GetNodeFile(ctx, hostname, params, reqEditors...)
@@ -18531,38 +18548,21 @@ func (c *ClientWithResponses) GetNodeFileWithResponse(ctx context.Context, hostn
 	return ParseGetNodeFileResponse(rsp)
 }
 
-// PostNodeFileDeployWithBodyWithResponse request with arbitrary body returning *PostNodeFileDeployResponse
-func (c *ClientWithResponses) PostNodeFileDeployWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeFileDeployResponse, error) {
-	rsp, err := c.PostNodeFileDeployWithBody(ctx, hostname, contentType, body, reqEditors...)
+// PutNodeFileWithBodyWithResponse request with arbitrary body returning *PutNodeFileResponse
+func (c *ClientWithResponses) PutNodeFileWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeFileResponse, error) {
+	rsp, err := c.PutNodeFileWithBody(ctx, hostname, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostNodeFileDeployResponse(rsp)
+	return ParsePutNodeFileResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostNodeFileDeployWithResponse(ctx context.Context, hostname Hostname, body PostNodeFileDeployJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeFileDeployResponse, error) {
-	rsp, err := c.PostNodeFileDeploy(ctx, hostname, body, reqEditors...)
+func (c *ClientWithResponses) PutNodeFileWithResponse(ctx context.Context, hostname Hostname, body PutNodeFileJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeFileResponse, error) {
+	rsp, err := c.PutNodeFile(ctx, hostname, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostNodeFileDeployResponse(rsp)
-}
-
-// PostNodeFileUndeployWithBodyWithResponse request with arbitrary body returning *PostNodeFileUndeployResponse
-func (c *ClientWithResponses) PostNodeFileUndeployWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeFileUndeployResponse, error) {
-	rsp, err := c.PostNodeFileUndeployWithBody(ctx, hostname, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostNodeFileUndeployResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostNodeFileUndeployWithResponse(ctx context.Context, hostname Hostname, body PostNodeFileUndeployJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeFileUndeployResponse, error) {
-	rsp, err := c.PostNodeFileUndeploy(ctx, hostname, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostNodeFileUndeployResponse(rsp)
+	return ParsePutNodeFileResponse(rsp)
 }
 
 // GetNodeGroupWithResponse request returning *GetNodeGroupResponse
@@ -22195,6 +22195,74 @@ func ParseGetNodeDiskResponse(rsp *http.Response) (*GetNodeDiskResponse, error) 
 	return response, nil
 }
 
+// ParseDeleteNodeFileResponse parses an HTTP response from a DeleteNodeFileWithResponse call
+func ParseDeleteNodeFileResponse(rsp *http.Response) (*DeleteNodeFileResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteNodeFileResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest FileDeleteResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetNodeFileResponse parses an HTTP response from a GetNodeFileWithResponse call
 func ParseGetNodeFileResponse(rsp *http.Response) (*GetNodeFileResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -22263,90 +22331,22 @@ func ParseGetNodeFileResponse(rsp *http.Response) (*GetNodeFileResponse, error) 
 	return response, nil
 }
 
-// ParsePostNodeFileDeployResponse parses an HTTP response from a PostNodeFileDeployWithResponse call
-func ParsePostNodeFileDeployResponse(rsp *http.Response) (*PostNodeFileDeployResponse, error) {
+// ParsePutNodeFileResponse parses an HTTP response from a PutNodeFileWithResponse call
+func ParsePutNodeFileResponse(rsp *http.Response) (*PutNodeFileResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostNodeFileDeployResponse{
+	response := &PutNodeFileResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest FileDeployResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON403 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON409 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePostNodeFileUndeployResponse parses an HTTP response from a PostNodeFileUndeployWithResponse call
-func ParsePostNodeFileUndeployResponse(rsp *http.Response) (*PostNodeFileUndeployResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostNodeFileUndeployResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest FileUndeployResponse
+		var dest FileUpdateResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

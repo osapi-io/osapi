@@ -4,9 +4,9 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { FileDeployResultStatus } from './fileDeployResultStatus';
+import type { FileUpdateResultStatus } from './fileUpdateResultStatus';
 
-export interface FileDeployResult {
+export interface FileUpdateResult {
   /** Whether the host changed */
   changed?: boolean;
   /** Error message if the agent failed. */
@@ -18,5 +18,5 @@ export interface FileDeployResult {
   /** SHA-256 of the content that the file holds */
   sha256?: string;
   /** The status of the operation for this host. */
-  status: FileDeployResultStatus;
+  status: FileUpdateResultStatus;
 }

@@ -28,9 +28,11 @@ are synchronous REST calls. They do not use the job system.
 **Deploy** makes an asynchronous job. The job gets the file from the Object
 Store and writes it to the target path on the filesystem of the agent. A deploy
 can set the file permissions (mode, owner, group) and can render a Go template.
-Deploy, undeploy and status are the
-[file behavior](../reference/behaviors/file/file.md). They run on each Linux
-host. A macOS host reports `skipped`.
+Deploy, undeploy and status are the update, delete and status methods of the
+[file behavior](../reference/behaviors/file/file.md):
+`osapi client node file update`, `osapi client node file delete` and
+`osapi client node file status`. They run on each Linux host. A macOS host
+reports `skipped`.
 
 **Undeploy** makes an asynchronous job that removes a deployed file from the
 filesystem of the agent. The file-state KV record stays. Thus you can audit the
@@ -101,7 +103,7 @@ You can target one host, broadcast to all hosts with `_all`, or target a label.
 ### File undeploy flow
 
 ```bash
-osapi client node file undeploy --target HOST --path /etc/app/app.conf
+osapi client node file delete --target HOST --path /etc/app/app.conf
 ```
 
 An undeploy follows the standard [job processing flow](job-system.md). The agent
@@ -161,7 +163,7 @@ arch = {{ .Facts.architecture }}
 Deploy it with template variables:
 
 ```bash
-osapi client node file deploy \
+osapi client node file update \
     --object-name app.conf.tmpl \
     --path /etc/app/app.conf \
     --content-type template \
@@ -276,7 +278,8 @@ osapi client file stale list
 
 The controller does this check, and it does not contact the agents. It compares
 the file-state KV, which records what osapi deployed, with the Object Store,
-which has the current content. Use `file deploy` to update stale deployments.
+which has the current content. Use `osapi client node file update` to update
+stale deployments.
 
 Stale detection includes all providers that use the file provider:
 
@@ -313,11 +316,11 @@ nats:
 
 ## Permissions
 
-File operations need `file:*` permissions. Upload, update and delete of an
-object need `file:write`, which `admin` and `automation` have. Deploy and
-undeploy are actions of the file behavior, and need `file:execute`, which
-`admin` and `operator` have. List, get, stale and status need `file:read`. Refer
-to the [API reference](/category/api) for the permission of each endpoint.
+File operations need `file:*` permissions. The upload, update and delete of an
+object, and the deploy and undeploy of a file, need `file:write`, which `admin`
+and `automation` have. A deploy can write each path as root, so `operator` does
+not have `file:write`. List, get, stale and status need `file:read`. Refer to
+the [API reference](/category/api) for the permission of each endpoint.
 
 ## Related
 

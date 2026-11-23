@@ -31,14 +31,14 @@ func (s *APIPublicTestSuite) TestRoutes() {
 			permission: "file:read",
 		},
 		{
-			method:     http.MethodPost,
-			path:       "/api/node/:hostname/file/deploy",
-			permission: "file:execute",
+			method:     http.MethodPut,
+			path:       "/api/node/:hostname/file",
+			permission: "file:write",
 		},
 		{
-			method:     http.MethodPost,
-			path:       "/api/node/:hostname/file/undeploy",
-			permission: "file:execute",
+			method:     http.MethodDelete,
+			path:       "/api/node/:hostname/file",
+			permission: "file:write",
 		},
 	}
 

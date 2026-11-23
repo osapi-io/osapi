@@ -14,59 +14,18 @@ components:
   schemas:
     ErrorResponse:
       $ref: ../../../controller/api/components/gen/api.yaml#/components/schemas/ErrorResponse
-    FileDeployRequest:
+    FileDeleteRequest:
       properties:
-        content_type:
-          description: 'How the object is written: raw as it is, or template rendered with .Facts, .Vars and .Hostname; the object''s own when empty'
-          enum:
-            - raw
-            - template
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,oneof=raw template
-        group:
-          description: Group that owns the file; left as written when empty
-          pattern: ^[a-z_][a-z0-9_-]*\$?$
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,account_name
-        mode:
-          description: Permissions in octal, such as 0644; when empty, a file keeps its mode and a new file gets 0644
-          pattern: ^[0-7]{3,4}$
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,file_mode
-        object_name:
-          description: The object of the object store, from osapi client file list
-          maxLength: 255
-          minLength: 1
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1,max=255
-        owner:
-          description: User that owns the file; left as written when empty
-          pattern: ^[a-z_][a-z0-9_-]*\$?$
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,account_name
         path:
           description: Absolute path of the file on the host
           pattern: ^/
           type: string
           x-oapi-codegen-extra-tags:
             validate: required,startswith=/
-        vars:
-          additionalProperties:
-            type: string
-          description: Variables of a template, as .Vars, each as key=value
-          type: object
-          x-oapi-codegen-extra-tags:
-            validate: omitempty
       required:
-        - object_name
         - path
       type: object
-    FileDeployResponse:
+    FileDeleteResponse:
       properties:
         job_id:
           description: The job ID used to process this request.
@@ -77,12 +36,12 @@ components:
             validate: uuid
         results:
           items:
-            $ref: '#/components/schemas/FileDeployResult'
+            $ref: '#/components/schemas/FileDeleteResult'
           type: array
       required:
         - results
       type: object
-    FileDeployResult:
+    FileDeleteResult:
       properties:
         changed:
           description: Whether the host changed
@@ -95,9 +54,6 @@ components:
           type: string
         path:
           description: Absolute path of the file
-          type: string
-        sha256:
-          description: SHA-256 of the content that the file holds
           type: string
         status:
           description: The status of the operation for this host.
@@ -160,18 +116,59 @@ components:
       required:
         - results
       type: object
-    FileUndeployRequest:
+    FileUpdateRequest:
       properties:
+        content_type:
+          description: 'How the object is written: raw as it is, or template rendered with .Facts, .Vars and .Hostname; the object''s own when empty'
+          enum:
+            - raw
+            - template
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,oneof=raw template
+        group:
+          description: Group that owns the file; left as written when empty
+          pattern: ^[a-z_][a-z0-9_-]*\$?$
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,account_name
+        mode:
+          description: Permissions in octal, such as 0644; when empty, a file keeps its mode and a new file gets 0644
+          pattern: ^[0-7]{3,4}$
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,file_mode
+        object_name:
+          description: The object of the object store, from osapi client file list
+          maxLength: 255
+          minLength: 1
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+        owner:
+          description: User that owns the file; left as written when empty
+          pattern: ^[a-z_][a-z0-9_-]*\$?$
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,account_name
         path:
           description: Absolute path of the file on the host
           pattern: ^/
           type: string
           x-oapi-codegen-extra-tags:
             validate: required,startswith=/
+        vars:
+          additionalProperties:
+            type: string
+          description: Variables of a template, as .Vars, each as key=value
+          type: object
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
       required:
+        - object_name
         - path
       type: object
-    FileUndeployResponse:
+    FileUpdateResponse:
       properties:
         job_id:
           description: The job ID used to process this request.
@@ -182,12 +179,12 @@ components:
             validate: uuid
         results:
           items:
-            $ref: '#/components/schemas/FileUndeployResult'
+            $ref: '#/components/schemas/FileUpdateResult'
           type: array
       required:
         - results
       type: object
-    FileUndeployResult:
+    FileUpdateResult:
       properties:
         changed:
           description: Whether the host changed
@@ -200,6 +197,9 @@ components:
           type: string
         path:
           description: Absolute path of the file
+          type: string
+        sha256:
+          description: SHA-256 of the content that the file holds
           type: string
         status:
           description: The status of the operation for this host.
@@ -227,6 +227,66 @@ info:
 openapi: 3.0.0
 paths:
   /api/node/{hostname}/file:
+    delete:
+      description: 'Removes the file and keeps its record, marked undeployed, so status reports missing. A path that osapi did not deploy, or deleted already, does not change and reports changed: false. The object stays in the object store.'
+      operationId: DeleteNodeFile
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileDeleteRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileDeleteResponse'
+          description: Each target host's result, with whether it changed.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host does not have what the request names, such as the object of a deploy.
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - file:write
+      summary: Remove a file that osapi deployed
+      tags:
+        - file_operations
     get:
       description: 'Compares the file on the host with the record that osapi keeps of what it deployed: in-sync when they agree, drifted when something changed the file, and missing when osapi did not deploy the path, undeployed it, or the file is gone.'
       operationId: GetNodeFile
@@ -290,24 +350,23 @@ paths:
       summary: Show whether a deployed file holds what osapi wrote
       tags:
         - file_operations
-  /api/node/{hostname}/file/deploy:
-    post:
+    put:
       description: 'Writes the object at the path with its mode and ownership, and keeps a record of it. A template object, or content_type template, is rendered first with .Facts, .Vars and .Hostname. A file that holds the content, mode and owner already does not change and reports changed: false. osapi client file stale list shows the deployments whose object changed since.'
-      operationId: PostNodeFileDeploy
+      operationId: PutNodeFile
       parameters:
         - $ref: '#/components/parameters/Hostname'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/FileDeployRequest'
+              $ref: '#/components/schemas/FileUpdateRequest'
         required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FileDeployResponse'
+                $ref: '#/components/schemas/FileUpdateResponse'
           description: Each target host's result, with whether it changed.
         "400":
           content:
@@ -347,69 +406,8 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - file:execute
+            - file:write
       summary: Deploy an object of the object store to a path
-      tags:
-        - file_operations
-  /api/node/{hostname}/file/undeploy:
-    post:
-      description: 'Removes the file and keeps its record, marked undeployed, so status reports missing. A path that osapi did not deploy, or undeployed already, does not change and reports changed: false. The object stays in the object store.'
-      operationId: PostNodeFileUndeploy
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FileUndeployRequest'
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FileUndeployResponse'
-          description: Each target host's result, with whether it changed.
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: The request is not valid.
-        "401":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Unauthorized - API key required
-        "403":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Forbidden - Insufficient permissions
-        "404":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: The host does not have what the request names, such as the object of a deploy.
-        "409":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: An error on the controller.
-      security:
-        - BearerAuth:
-            - file:execute
-      summary: Remove a file that osapi deployed
       tags:
         - file_operations
 tags:

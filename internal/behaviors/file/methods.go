@@ -22,27 +22,27 @@ package file
 
 import "context"
 
-// Deploy writes an object of the object store to the host.
-func Deploy(
+// Update writes an object of the object store to the host.
+func Update(
 	ctx context.Context,
 	p Provider,
-	in DeployInput,
-) (DeployResult, error) {
+	in UpdateInput,
+) (UpdateResult, error) {
 	return p.Deploy(ctx, in)
 }
 
-// Undeploy removes a file that osapi deployed.
-func Undeploy(
+// Delete removes a file that osapi deployed.
+func Delete(
 	ctx context.Context,
 	p Provider,
-	in UndeployInput,
-) (UndeployResult, error) {
+	in DeleteInput,
+) (DeleteResult, error) {
 	changed, err := p.Undeploy(ctx, in.Path)
 	if err != nil {
-		return UndeployResult{}, err
+		return DeleteResult{}, err
 	}
 
-	return UndeployResult{Path: in.Path, Changed: changed}, nil
+	return DeleteResult{Path: in.Path, Changed: changed}, nil
 }
 
 // GetStatus is the file at the path against what osapi deployed there.

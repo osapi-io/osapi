@@ -22,7 +22,6 @@ const (
 	PermCertificateRead     Permission = "certificate:read"
 	PermCertificateWrite    Permission = "certificate:write"
 	PermDiskRead            Permission = "disk:read"
-	PermFileExecute         Permission = "file:execute"
 	PermGroupRead           Permission = "group:read"
 	PermGroupWrite          Permission = "group:write"
 	PermHostnameRead        Permission = "hostname:read"

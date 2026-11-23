@@ -97,10 +97,10 @@ export function hasAnyPermission(
 // ---------------------------------------------------------------------------
 
 export const BLOCK_OPERATIONS: Record<string, OperationId> = {
-  "file-list": "getFiles",
-  "file-upload": "postFile",
-  "file-delete": "deleteFileByName",
-  "file-stale": "getFileStale",
+  "object-list": "getFiles",
+  "object-upload": "postFile",
+  "object-delete": "deleteFileByName",
+  "object-stale": "getFileStale",
   "docker-create": "postNodeContainerDocker",
   "docker-list": "getNodeContainerDocker",
   "docker-start": "postNodeContainerDockerStart",

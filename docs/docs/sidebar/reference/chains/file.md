@@ -32,40 +32,40 @@ The behaviors that file calls, and each call that its examples make.
 | file status        | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf state=missing  |
 | └─ managedfile get | path=/etc/osapi/file-example.conf | error: /etc/osapi/file-example.conf: not managed |
 
-## Deploy a file (deploy)
+## Deploy a file (update)
 
 | CALL                  | SENDS                                                                  | GETS                                                                   |
 | --------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| file deploy           | object_name=example.conf path=/etc/osapi/file-example.conf             | changed=true path=/etc/osapi/file-example.conf sha256=0083dacc561dfd0… |
+| file update           | object_name=example.conf path=/etc/osapi/file-example.conf             | changed=true path=/etc/osapi/file-example.conf sha256=0083dacc561dfd0… |
 | └─ object get         | name=example.conf                                                      | content="listen 8080\n" content_type=raw name=example.conf sha256=008… |
 | └─ managedfile update | content="listen 8080\n" content_type=raw object=example.conf path=/et… | changed=true path=/etc/osapi/file-example.conf                         |
 
-## Render a template (deploy)
+## Render a template (update)
 
 | CALL                  | SENDS                                                                  | GETS                                                                                                           |
 | --------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| file deploy           | object_name=example.conf.tmpl path=/etc/osapi/file-example.conf vars=… | changed=true path=/etc/osapi/file-example.conf sha256=28ef41e1ff26302…                                         |
+| file update           | object_name=example.conf.tmpl path=/etc/osapi/file-example.conf vars=… | changed=true path=/etc/osapi/file-example.conf sha256=28ef41e1ff26302…                                         |
 | └─ object get         | name=example.conf.tmpl                                                 | content="host &#123;&#123; .Hostname &#125;&#125; port &#123;&#123; .Vars.port &#125;&#125;\n" content_type=t… |
 | └─ managedfile update | content="host test-host port 8080\n" content_type=template object=exa… | changed=true path=/etc/osapi/file-example.conf                                                                 |
 
-## A file that holds the object (deploy)
+## A file that holds the object (update)
 
 | CALL                  | SENDS                                                                  | GETS                                                                   |
 | --------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| file deploy           | object_name=example.conf path=/etc/osapi/file-example.conf             | changed=false path=/etc/osapi/file-example.conf sha256=0083dacc561dfd… |
+| file update           | object_name=example.conf path=/etc/osapi/file-example.conf             | changed=false path=/etc/osapi/file-example.conf sha256=0083dacc561dfd… |
 | └─ object get         | name=example.conf                                                      | content="listen 8080\n" content_type=raw name=example.conf sha256=008… |
 | └─ managedfile update | content="listen 8080\n" content_type=raw object=example.conf path=/et… | changed=false path=/etc/osapi/file-example.conf                        |
 
-## Remove a deployed file (undeploy)
+## Remove a deployed file (delete)
 
 | CALL                  | SENDS                             | GETS                                           |
 | --------------------- | --------------------------------- | ---------------------------------------------- |
-| file undeploy         | path=/etc/osapi/file-example.conf | changed=true path=/etc/osapi/file-example.conf |
+| file delete           | path=/etc/osapi/file-example.conf | changed=true path=/etc/osapi/file-example.conf |
 | └─ managedfile delete | path=/etc/osapi/file-example.conf | changed=true path=/etc/osapi/file-example.conf |
 
-## A path that osapi did not deploy (undeploy)
+## A path that osapi did not deploy (delete)
 
 | CALL                  | SENDS                             | GETS                                            |
 | --------------------- | --------------------------------- | ----------------------------------------------- |
-| file undeploy         | path=/etc/osapi/file-example.conf | changed=false path=/etc/osapi/file-example.conf |
+| file delete           | path=/etc/osapi/file-example.conf | changed=false path=/etc/osapi/file-example.conf |
 | └─ managedfile delete | path=/etc/osapi/file-example.conf | changed=false path=/etc/osapi/file-example.conf |

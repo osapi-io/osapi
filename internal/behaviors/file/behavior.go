@@ -48,7 +48,7 @@ const (
 var (
 	stored   = behavior.Stored("example.conf", raw, client.ContentRaw)
 	template = behavior.Stored("example.conf.tmpl", tmpl, client.ContentTemplate)
-	deployed = DeployInput{ObjectName: "example.conf", Path: path}
+	deployed = UpdateInput{ObjectName: "example.conf", Path: path}
 )
 
 // Behavior is the file definition.
@@ -77,7 +77,7 @@ var Behavior = behavior.Register(behavior.Define(
 			Status{Path: path, State: Missing},
 		).
 		Fails("A relative path", StatusInput{Path: "etc/example.conf"}, "startswith"),
-	behavior.Action("deploy", Deploy).
+	behavior.Write("update", Update).
 		Describe("Deploy an object of the object store to a path").
 		Explain("Writes the object at the path with its mode and ownership, and keeps a record "+
 			"of it. A template object, or content_type template, is rendered first with "+
@@ -85,50 +85,50 @@ var Behavior = behavior.Register(behavior.Define(
 			"already does not change and reports changed: false. osapi client file stale "+
 			"list shows the deployments whose object changed since.").
 		Example("Deploy a file", deployed,
-			DeployResult{Path: path, SHA256: rawSHA, Changed: true},
+			UpdateResult{Path: path, SHA256: rawSHA, Changed: true},
 			stored,
 			behavior.Wrote(path, raw),
 		).
 		Example("Render a template",
-			DeployInput{
+			UpdateInput{
 				ObjectName: "example.conf.tmpl",
 				Path:       path,
 				Vars:       map[string]string{"port": "8080"},
 			},
-			DeployResult{Path: path, SHA256: tmplSHA, Changed: true},
+			UpdateResult{Path: path, SHA256: tmplSHA, Changed: true},
 			template,
 			behavior.Wrote(path, rendered),
 		).
 		Example("A file that holds the object", deployed,
-			DeployResult{Path: path, SHA256: rawSHA},
+			UpdateResult{Path: path, SHA256: rawSHA},
 			stored,
 			behavior.After(deployed),
 		).
-		Fails("A relative path", DeployInput{ObjectName: "example.conf", Path: "etc/x"}, "startswith").
-		Fails("No object", DeployInput{Path: path}, "required").
+		Fails("A relative path", UpdateInput{ObjectName: "example.conf", Path: "etc/x"}, "startswith").
+		Fails("No object", UpdateInput{Path: path}, "required").
 		Fails("A mode that is not octal",
-			DeployInput{ObjectName: "example.conf", Path: path, Mode: "rw-r--r--"}, "file_mode").
+			UpdateInput{ObjectName: "example.conf", Path: path, Mode: "rw-r--r--"}, "file_mode").
 		Fails("An object name longer than 255 characters",
-			DeployInput{ObjectName: strings.Repeat("a", 256), Path: path}, "max").
+			UpdateInput{ObjectName: strings.Repeat("a", 256), Path: path}, "max").
 		Fails("A group that is an option",
-			DeployInput{ObjectName: "example.conf", Path: path, Group: "-r"}, "account_name").
+			UpdateInput{ObjectName: "example.conf", Path: path, Group: "-r"}, "account_name").
 		Fails("An owner that is an option",
-			DeployInput{ObjectName: "example.conf", Path: path, Owner: "-r"}, "account_name").
+			UpdateInput{ObjectName: "example.conf", Path: path, Owner: "-r"}, "account_name").
 		Fails("A content type that is neither",
-			DeployInput{ObjectName: "example.conf", Path: path, ContentType: "binary"}, "oneof"),
-	behavior.Action("undeploy", Undeploy).
+			UpdateInput{ObjectName: "example.conf", Path: path, ContentType: "binary"}, "oneof"),
+	behavior.Write("delete", Delete).
 		Describe("Remove a file that osapi deployed").
 		Explain("Removes the file and keeps its record, marked undeployed, so status reports "+
-			"missing. A path that osapi did not deploy, or undeployed already, does not "+
+			"missing. A path that osapi did not deploy, or deleted already, does not "+
 			"change and reports changed: false. The object stays in the object store.").
-		Example("Remove a deployed file", UndeployInput{Path: path},
-			UndeployResult{Path: path, Changed: true},
+		Example("Remove a deployed file", DeleteInput{Path: path},
+			DeleteResult{Path: path, Changed: true},
 			stored,
 			behavior.After(deployed),
 			behavior.Removed(path),
 		).
-		Example("A path that osapi did not deploy", UndeployInput{Path: path},
-			UndeployResult{Path: path},
+		Example("A path that osapi did not deploy", DeleteInput{Path: path},
+			DeleteResult{Path: path},
 		).
-		Fails("A relative path", UndeployInput{Path: "etc/x"}, "startswith"),
+		Fails("A relative path", DeleteInput{Path: "etc/x"}, "startswith"),
 ))

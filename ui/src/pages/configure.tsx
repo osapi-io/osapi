@@ -130,7 +130,7 @@ const blockIcons: Record<
   // Containers
   "docker-create": Container,
   // Files
-  "file-list": FolderOpen,
+  "object-list": FolderOpen,
   "file-status": FileDown,
   // Command
   command: Terminal,
@@ -236,7 +236,7 @@ export function Configure() {
     const names: string[] = [];
     for (let i = 0; i < blockIndex; i++) {
       const b = blocks[i];
-      if (b.type === "file-upload" && b.data.name) {
+      if (b.type === "object-upload" && b.data.name) {
         names.push(b.data.name as string);
       }
     }
@@ -325,10 +325,10 @@ export function Configure() {
               block.data.container_id as string,
             );
             break;
-          case "file-list":
+          case "object-list":
             result = await getFiles();
             break;
-          case "file-upload": {
+          case "object-upload": {
             const file = block.data._file as globalThis.File;
             result = await postFile({
               name: block.data.name as string,
@@ -338,7 +338,7 @@ export function Configure() {
             });
             break;
           }
-          case "file-delete":
+          case "object-delete":
             result = await deleteFileByName(block.data.name as string);
             break;
           case "docker-exec": {
@@ -367,7 +367,7 @@ export function Configure() {
               block.data.container_id as string,
             );
             break;
-          case "file-stale":
+          case "object-stale":
             result = await getFileStale();
             break;
           case "command-shell":
@@ -539,9 +539,9 @@ export function Configure() {
             action="delete"
           />
         );
-      case "file-list":
+      case "object-list":
         return null;
-      case "file-upload":
+      case "object-upload":
         return (
           <FileUploadBlock
             data={block.data}
@@ -549,7 +549,7 @@ export function Configure() {
             onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
           />
         );
-      case "file-delete":
+      case "object-delete":
         return (
           <FileDeleteBlock
             data={block.data}
@@ -596,7 +596,7 @@ export function Configure() {
             action="inspect"
           />
         );
-      case "file-stale":
+      case "object-stale":
         return null;
       case "command-shell":
         return (
@@ -662,7 +662,7 @@ export function Configure() {
   const handleResultAction = useCallback(
     async (action: string, name: string) => {
       try {
-        if (action === "file-delete") {
+        if (action === "object-delete") {
           await deleteFileByName(name);
         }
       } catch {

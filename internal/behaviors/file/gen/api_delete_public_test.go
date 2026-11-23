@@ -13,32 +13,32 @@ import (
 	"github.com/osapi-io/osapi/internal/behaviors/file/gen"
 )
 
-type APIUndeployPublicTestSuite struct {
+type APIDeletePublicTestSuite struct {
 	suite.Suite
 
 	api *servertest.Harness
 }
 
-func (s *APIUndeployPublicTestSuite) SetupSuite() {
+func (s *APIDeletePublicTestSuite) SetupSuite() {
 	s.api = servertest.New(s.T(), "internal/behaviors/file/gen/api.yaml", gen.Routes)
 }
 
-// TestUndeploy sends POST /api/node/{hostname}/file/undeploy and checks each
-// answer's response.
-func (s *APIUndeployPublicTestSuite) TestUndeploy() {
+// TestDelete sends DELETE /api/node/{hostname}/file and checks each answer's
+// response.
+func (s *APIDeletePublicTestSuite) TestDelete() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when the example \"Remove a deployed file\" is sent, the host's result is returned",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/undeploy",
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
 				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
-				"file.undeploy",
-				file.UndeployInput{Path: "/etc/osapi/file-example.conf"},
+				"file.delete",
+				file.DeleteInput{Path: "/etc/osapi/file-example.conf"},
 				servertest.Completed("server1", `{"path":"/etc/osapi/file-example.conf","changed":true}`),
 			),
 			WantCode: http.StatusOK,
@@ -47,15 +47,15 @@ func (s *APIUndeployPublicTestSuite) TestUndeploy() {
 		{
 			Name: "when the example \"Remove a deployed file\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/_all/file/undeploy",
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/file",
 				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"_all",
-				"file.undeploy",
-				file.UndeployInput{Path: "/etc/osapi/file-example.conf"},
+				"file.delete",
+				file.DeleteInput{Path: "/etc/osapi/file-example.conf"},
 				servertest.Completed("server1", `{"path":"/etc/osapi/file-example.conf","changed":true}`),
 				servertest.Skipped("server2"),
 				servertest.Failed("server3", "boom"),
@@ -66,15 +66,15 @@ func (s *APIUndeployPublicTestSuite) TestUndeploy() {
 		{
 			Name: "when the example \"A path that osapi did not deploy\" is sent, the host's result is returned",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/undeploy",
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
 				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
-				"file.undeploy",
-				file.UndeployInput{Path: "/etc/osapi/file-example.conf"},
+				"file.delete",
+				file.DeleteInput{Path: "/etc/osapi/file-example.conf"},
 				servertest.Completed("server1", `{"path":"/etc/osapi/file-example.conf","changed":false}`),
 			),
 			WantCode: http.StatusOK,
@@ -83,15 +83,15 @@ func (s *APIUndeployPublicTestSuite) TestUndeploy() {
 		{
 			Name: "when the example \"A path that osapi did not deploy\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/_all/file/undeploy",
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/file",
 				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"_all",
-				"file.undeploy",
-				file.UndeployInput{Path: "/etc/osapi/file-example.conf"},
+				"file.delete",
+				file.DeleteInput{Path: "/etc/osapi/file-example.conf"},
 				servertest.Completed("server1", `{"path":"/etc/osapi/file-example.conf","changed":false}`),
 				servertest.Skipped("server2"),
 				servertest.Failed("server3", "boom"),
@@ -102,15 +102,15 @@ func (s *APIUndeployPublicTestSuite) TestUndeploy() {
 		{
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/undeploy",
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
 				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
-				"file.undeploy",
-				file.UndeployInput{Path: "/etc/osapi/file-example.conf"},
+				"file.delete",
+				file.DeleteInput{Path: "/etc/osapi/file-example.conf"},
 				servertest.Skipped("server1"),
 			),
 			WantCode: http.StatusOK,
@@ -119,15 +119,15 @@ func (s *APIUndeployPublicTestSuite) TestUndeploy() {
 		{
 			Name: "when the host fails it, its row says failed",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/undeploy",
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
 				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
-				"file.undeploy",
-				file.UndeployInput{Path: "/etc/osapi/file-example.conf"},
+				"file.delete",
+				file.DeleteInput{Path: "/etc/osapi/file-example.conf"},
 				servertest.Failed("server1", "boom"),
 			),
 			WantCode: http.StatusOK,
@@ -136,15 +136,15 @@ func (s *APIUndeployPublicTestSuite) TestUndeploy() {
 		{
 			Name: "when the host never answers, its row says timeout",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/undeploy",
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
 				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
-				"file.undeploy",
-				file.UndeployInput{Path: "/etc/osapi/file-example.conf"},
+				"file.delete",
+				file.DeleteInput{Path: "/etc/osapi/file-example.conf"},
 				servertest.TimedOut("server1"),
 			),
 			WantCode: http.StatusOK,
@@ -153,45 +153,45 @@ func (s *APIUndeployPublicTestSuite) TestUndeploy() {
 		{
 			Name: "when the job client fails, it is a 500",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/undeploy",
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
 				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
-				"file.undeploy",
-				file.UndeployInput{Path: "/etc/osapi/file-example.conf"},
+				"file.delete",
+				file.DeleteInput{Path: "/etc/osapi/file-example.conf"},
 			).Fails(servertest.ErrUnreachable),
 			WantCode: http.StatusInternalServerError,
 		},
 		{
 			Name: "when broadcast and the job client fails, it is a 500",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/_all/file/undeploy",
+				Method: http.MethodDelete,
+				Path:   "/api/node/_all/file",
 				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"_all",
-				"file.undeploy",
-				file.UndeployInput{Path: "/etc/osapi/file-example.conf"},
+				"file.delete",
+				file.DeleteInput{Path: "/etc/osapi/file-example.conf"},
 			).Fails(servertest.ErrUnreachable),
 			WantCode: http.StatusInternalServerError,
 		},
 	})
 }
 
-// TestUndeployValidationHTTP sends requests the API refuses before any job is
+// TestDeleteValidationHTTP sends requests the API refuses before any job is
 // queued.
-func (s *APIUndeployPublicTestSuite) TestUndeployValidationHTTP() {
+func (s *APIDeletePublicTestSuite) TestDeleteValidationHTTP() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when the target is not an agent, it is a 400",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/nowhere/file/undeploy",
+				Method: http.MethodDelete,
+				Path:   "/api/node/nowhere/file",
 				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token:    servertest.Write,
@@ -200,8 +200,8 @@ func (s *APIUndeployPublicTestSuite) TestUndeployValidationHTTP() {
 		{
 			Name: "when the target is empty, it is a 400",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node//file/undeploy",
+				Method: http.MethodDelete,
+				Path:   "/api/node//file",
 				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token:    servertest.Write,
@@ -210,8 +210,8 @@ func (s *APIUndeployPublicTestSuite) TestUndeployValidationHTTP() {
 		{
 			Name: "when path is missing, it is a 400",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/undeploy",
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
 				Body:   `{"path":""}`,
 			},
 			Token:    servertest.Write,
@@ -220,8 +220,8 @@ func (s *APIUndeployPublicTestSuite) TestUndeployValidationHTTP() {
 		{
 			Name: "when the body is not JSON, it is a 400",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/undeploy",
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
 				Body:   `{`,
 			},
 			Token:    servertest.Write,
@@ -230,8 +230,8 @@ func (s *APIUndeployPublicTestSuite) TestUndeployValidationHTTP() {
 		{
 			Name: "when path has the wrong type, it is a 400",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/undeploy",
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
 				Body:   `{"path":[]}`,
 			},
 			Token:    servertest.Write,
@@ -240,8 +240,8 @@ func (s *APIUndeployPublicTestSuite) TestUndeployValidationHTTP() {
 		{
 			Name: "when sent a relative path, it is a 400",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/undeploy",
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
 				Body:   `{"path":"etc/x"}`,
 			},
 			Token:    servertest.Write,
@@ -250,24 +250,24 @@ func (s *APIUndeployPublicTestSuite) TestUndeployValidationHTTP() {
 	})
 }
 
-// TestUndeployRBACHTTP sends tokens that do not grant file:execute.
-func (s *APIUndeployPublicTestSuite) TestUndeployRBACHTTP() {
+// TestDeleteRBACHTTP sends tokens that do not grant file:write.
+func (s *APIDeletePublicTestSuite) TestDeleteRBACHTTP() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when there is no token, it is a 401",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/undeploy",
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
 				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token:    servertest.NoToken,
 			WantCode: http.StatusUnauthorized,
 		},
 		{
-			Name: "when the token lacks file:execute, it is a 403",
+			Name: "when the token lacks file:write, it is a 403",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/undeploy",
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
 				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token:    servertest.Lacking,
@@ -276,8 +276,8 @@ func (s *APIUndeployPublicTestSuite) TestUndeployRBACHTTP() {
 		{
 			Name: "when the token has only the read role, it is a 403",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/undeploy",
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
 				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token:    servertest.Read,
@@ -286,15 +286,15 @@ func (s *APIUndeployPublicTestSuite) TestUndeployRBACHTTP() {
 		{
 			Name: "when the token has the admin role, the request runs",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/undeploy",
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/file",
 				Body:   `{"path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
-				"file.undeploy",
-				file.UndeployInput{Path: "/etc/osapi/file-example.conf"},
+				"file.delete",
+				file.DeleteInput{Path: "/etc/osapi/file-example.conf"},
 				servertest.Skipped("server1"),
 			),
 			WantCode: http.StatusOK,
@@ -303,8 +303,8 @@ func (s *APIUndeployPublicTestSuite) TestUndeployRBACHTTP() {
 	})
 }
 
-func TestAPIUndeployPublicTestSuite(
+func TestAPIDeletePublicTestSuite(
 	t *testing.T,
 ) {
-	suite.Run(t, new(APIUndeployPublicTestSuite))
+	suite.Run(t, new(APIDeletePublicTestSuite))
 }

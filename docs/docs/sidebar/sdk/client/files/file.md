@@ -141,5 +141,4 @@ for a complete working example.
 ## Permissions
 
 Object Store operations require `file:read` (list, get) or `file:write` (upload,
-delete). Deploy and undeploy require `file:execute`. Status requires
-`file:read`.
+delete). Deploy and undeploy require `file:write`. Status requires `file:read`.

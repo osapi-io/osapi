@@ -64,12 +64,12 @@ func newLinux(
 // through managedfile, which records it.
 func (l *linux) Deploy(
 	ctx context.Context,
-	in DeployInput,
-) (DeployResult, error) {
+	in UpdateInput,
+) (UpdateResult, error) {
 	obj, err := behavior.Call(ctx, object.Behavior, object.Get, l.objects,
 		object.GetInput{Name: in.ObjectName})
 	if err != nil {
-		return DeployResult{}, err
+		return UpdateResult{}, err
 	}
 
 	contentType := in.ContentType
@@ -87,7 +87,7 @@ func (l *linux) Deploy(
 			Hostname: l.hostname,
 		})
 		if err != nil {
-			return DeployResult{}, err
+			return UpdateResult{}, err
 		}
 	}
 
@@ -102,10 +102,10 @@ func (l *linux) Deploy(
 			ContentType: contentType,
 		})
 	if err != nil {
-		return DeployResult{}, err
+		return UpdateResult{}, err
 	}
 
-	return DeployResult{
+	return UpdateResult{
 		Path:    in.Path,
 		SHA256:  checksum([]byte(content)),
 		Changed: result.Changed,

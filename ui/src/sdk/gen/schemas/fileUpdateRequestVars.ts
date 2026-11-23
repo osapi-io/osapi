@@ -8,4 +8,4 @@
 /**
  * Variables of a template, as .Vars, each as key=value
  */
-export type FileDeployRequestVars = {[key: string]: string};
+export type FileUpdateRequestVars = {[key: string]: string};

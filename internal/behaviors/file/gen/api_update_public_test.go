@@ -13,32 +13,32 @@ import (
 	"github.com/osapi-io/osapi/internal/behaviors/file/gen"
 )
 
-type APIDeployPublicTestSuite struct {
+type APIUpdatePublicTestSuite struct {
 	suite.Suite
 
 	api *servertest.Harness
 }
 
-func (s *APIDeployPublicTestSuite) SetupSuite() {
+func (s *APIUpdatePublicTestSuite) SetupSuite() {
 	s.api = servertest.New(s.T(), "internal/behaviors/file/gen/api.yaml", gen.Routes)
 }
 
-// TestDeploy sends POST /api/node/{hostname}/file/deploy and checks each
-// answer's response.
-func (s *APIDeployPublicTestSuite) TestDeploy() {
+// TestUpdate sends PUT /api/node/{hostname}/file and checks each answer's
+// response.
+func (s *APIUpdatePublicTestSuite) TestUpdate() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when the example \"Deploy a file\" is sent, the host's result is returned",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
 				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
-				"file.deploy",
-				file.DeployInput{
+				"file.update",
+				file.UpdateInput{
 					ObjectName: "example.conf",
 					Path:       "/etc/osapi/file-example.conf",
 				},
@@ -50,15 +50,15 @@ func (s *APIDeployPublicTestSuite) TestDeploy() {
 		{
 			Name: "when the example \"Deploy a file\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/_all/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/file",
 				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"_all",
-				"file.deploy",
-				file.DeployInput{
+				"file.update",
+				file.UpdateInput{
 					ObjectName: "example.conf",
 					Path:       "/etc/osapi/file-example.conf",
 				},
@@ -72,15 +72,15 @@ func (s *APIDeployPublicTestSuite) TestDeploy() {
 		{
 			Name: "when the example \"Render a template\" is sent, the host's result is returned",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
 				Body:   `{"object_name":"example.conf.tmpl","path":"/etc/osapi/file-example.conf","vars":{"port":"8080"}}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
-				"file.deploy",
-				file.DeployInput{
+				"file.update",
+				file.UpdateInput{
 					ObjectName: "example.conf.tmpl",
 					Path:       "/etc/osapi/file-example.conf",
 					Vars:       map[string]string{"port": "8080"},
@@ -93,15 +93,15 @@ func (s *APIDeployPublicTestSuite) TestDeploy() {
 		{
 			Name: "when the example \"Render a template\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/_all/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/file",
 				Body:   `{"object_name":"example.conf.tmpl","path":"/etc/osapi/file-example.conf","vars":{"port":"8080"}}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"_all",
-				"file.deploy",
-				file.DeployInput{
+				"file.update",
+				file.UpdateInput{
 					ObjectName: "example.conf.tmpl",
 					Path:       "/etc/osapi/file-example.conf",
 					Vars:       map[string]string{"port": "8080"},
@@ -116,15 +116,15 @@ func (s *APIDeployPublicTestSuite) TestDeploy() {
 		{
 			Name: "when the example \"A file that holds the object\" is sent, the host's result is returned",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
 				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
-				"file.deploy",
-				file.DeployInput{
+				"file.update",
+				file.UpdateInput{
 					ObjectName: "example.conf",
 					Path:       "/etc/osapi/file-example.conf",
 				},
@@ -136,15 +136,15 @@ func (s *APIDeployPublicTestSuite) TestDeploy() {
 		{
 			Name: "when the example \"A file that holds the object\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/_all/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/file",
 				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"_all",
-				"file.deploy",
-				file.DeployInput{
+				"file.update",
+				file.UpdateInput{
 					ObjectName: "example.conf",
 					Path:       "/etc/osapi/file-example.conf",
 				},
@@ -158,15 +158,15 @@ func (s *APIDeployPublicTestSuite) TestDeploy() {
 		{
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
 				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
-				"file.deploy",
-				file.DeployInput{
+				"file.update",
+				file.UpdateInput{
 					ObjectName: "example.conf",
 					Path:       "/etc/osapi/file-example.conf",
 				},
@@ -178,15 +178,15 @@ func (s *APIDeployPublicTestSuite) TestDeploy() {
 		{
 			Name: "when the host fails it, its row says failed",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
 				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
-				"file.deploy",
-				file.DeployInput{
+				"file.update",
+				file.UpdateInput{
 					ObjectName: "example.conf",
 					Path:       "/etc/osapi/file-example.conf",
 				},
@@ -198,15 +198,15 @@ func (s *APIDeployPublicTestSuite) TestDeploy() {
 		{
 			Name: "when the host never answers, its row says timeout",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
 				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
-				"file.deploy",
-				file.DeployInput{
+				"file.update",
+				file.UpdateInput{
 					ObjectName: "example.conf",
 					Path:       "/etc/osapi/file-example.conf",
 				},
@@ -218,15 +218,15 @@ func (s *APIDeployPublicTestSuite) TestDeploy() {
 		{
 			Name: "when the job client fails, it is a 500",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
 				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
-				"file.deploy",
-				file.DeployInput{
+				"file.update",
+				file.UpdateInput{
 					ObjectName: "example.conf",
 					Path:       "/etc/osapi/file-example.conf",
 				},
@@ -236,15 +236,15 @@ func (s *APIDeployPublicTestSuite) TestDeploy() {
 		{
 			Name: "when broadcast and the job client fails, it is a 500",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/_all/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/file",
 				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"_all",
-				"file.deploy",
-				file.DeployInput{
+				"file.update",
+				file.UpdateInput{
 					ObjectName: "example.conf",
 					Path:       "/etc/osapi/file-example.conf",
 				},
@@ -254,15 +254,15 @@ func (s *APIDeployPublicTestSuite) TestDeploy() {
 	})
 }
 
-// TestDeployValidationHTTP sends requests the API refuses before any job is
+// TestUpdateValidationHTTP sends requests the API refuses before any job is
 // queued.
-func (s *APIDeployPublicTestSuite) TestDeployValidationHTTP() {
+func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when the target is not an agent, it is a 400",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/nowhere/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/nowhere/file",
 				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token:    servertest.Write,
@@ -271,8 +271,8 @@ func (s *APIDeployPublicTestSuite) TestDeployValidationHTTP() {
 		{
 			Name: "when the target is empty, it is a 400",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node//file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node//file",
 				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token:    servertest.Write,
@@ -281,8 +281,8 @@ func (s *APIDeployPublicTestSuite) TestDeployValidationHTTP() {
 		{
 			Name: "when object_name is missing, it is a 400",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
 				Body:   `{"object_name":"","path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token:    servertest.Write,
@@ -291,8 +291,8 @@ func (s *APIDeployPublicTestSuite) TestDeployValidationHTTP() {
 		{
 			Name: "when path is missing, it is a 400",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
 				Body:   `{"object_name":"example.conf","path":""}`,
 			},
 			Token:    servertest.Write,
@@ -301,8 +301,8 @@ func (s *APIDeployPublicTestSuite) TestDeployValidationHTTP() {
 		{
 			Name: "when the body is not JSON, it is a 400",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
 				Body:   `{`,
 			},
 			Token:    servertest.Write,
@@ -311,8 +311,8 @@ func (s *APIDeployPublicTestSuite) TestDeployValidationHTTP() {
 		{
 			Name: "when object_name has the wrong type, it is a 400",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
 				Body:   `{"object_name":[]}`,
 			},
 			Token:    servertest.Write,
@@ -321,8 +321,8 @@ func (s *APIDeployPublicTestSuite) TestDeployValidationHTTP() {
 		{
 			Name: "when sent a relative path, it is a 400",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
 				Body:   `{"object_name":"example.conf","path":"etc/x"}`,
 			},
 			Token:    servertest.Write,
@@ -331,8 +331,8 @@ func (s *APIDeployPublicTestSuite) TestDeployValidationHTTP() {
 		{
 			Name: "when sent no object, it is a 400",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
 				Body:   `{"object_name":"","path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token:    servertest.Write,
@@ -341,8 +341,8 @@ func (s *APIDeployPublicTestSuite) TestDeployValidationHTTP() {
 		{
 			Name: "when sent a mode that is not octal, it is a 400",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
 				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf","mode":"rw-r--r--"}`,
 			},
 			Token:    servertest.Write,
@@ -351,8 +351,8 @@ func (s *APIDeployPublicTestSuite) TestDeployValidationHTTP() {
 		{
 			Name: "when sent an object name longer than 255 characters, it is a 400",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
 				Body:   `{"object_name":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token:    servertest.Write,
@@ -361,8 +361,8 @@ func (s *APIDeployPublicTestSuite) TestDeployValidationHTTP() {
 		{
 			Name: "when sent a group that is an option, it is a 400",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
 				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf","group":"-r"}`,
 			},
 			Token:    servertest.Write,
@@ -371,8 +371,8 @@ func (s *APIDeployPublicTestSuite) TestDeployValidationHTTP() {
 		{
 			Name: "when sent an owner that is an option, it is a 400",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
 				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf","owner":"-r"}`,
 			},
 			Token:    servertest.Write,
@@ -381,8 +381,8 @@ func (s *APIDeployPublicTestSuite) TestDeployValidationHTTP() {
 		{
 			Name: "when sent a content type that is neither, it is a 400",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
 				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf","content_type":"binary"}`,
 			},
 			Token:    servertest.Write,
@@ -391,24 +391,24 @@ func (s *APIDeployPublicTestSuite) TestDeployValidationHTTP() {
 	})
 }
 
-// TestDeployRBACHTTP sends tokens that do not grant file:execute.
-func (s *APIDeployPublicTestSuite) TestDeployRBACHTTP() {
+// TestUpdateRBACHTTP sends tokens that do not grant file:write.
+func (s *APIUpdatePublicTestSuite) TestUpdateRBACHTTP() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when there is no token, it is a 401",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
 				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token:    servertest.NoToken,
 			WantCode: http.StatusUnauthorized,
 		},
 		{
-			Name: "when the token lacks file:execute, it is a 403",
+			Name: "when the token lacks file:write, it is a 403",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
 				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token:    servertest.Lacking,
@@ -417,8 +417,8 @@ func (s *APIDeployPublicTestSuite) TestDeployRBACHTTP() {
 		{
 			Name: "when the token has only the read role, it is a 403",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
 				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token:    servertest.Read,
@@ -427,15 +427,15 @@ func (s *APIDeployPublicTestSuite) TestDeployRBACHTTP() {
 		{
 			Name: "when the token has the admin role, the request runs",
 			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/file/deploy",
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/file",
 				Body:   `{"object_name":"example.conf","path":"/etc/osapi/file-example.conf"}`,
 			},
 			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
-				"file.deploy",
-				file.DeployInput{
+				"file.update",
+				file.UpdateInput{
 					ObjectName: "example.conf",
 					Path:       "/etc/osapi/file-example.conf",
 				},
@@ -447,8 +447,8 @@ func (s *APIDeployPublicTestSuite) TestDeployRBACHTTP() {
 	})
 }
 
-func TestAPIDeployPublicTestSuite(
+func TestAPIUpdatePublicTestSuite(
 	t *testing.T,
 ) {
-	suite.Run(t, new(APIDeployPublicTestSuite))
+	suite.Run(t, new(APIUpdatePublicTestSuite))
 }

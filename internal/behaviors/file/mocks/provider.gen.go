@@ -42,10 +42,10 @@ func (m *MockProvider) EXPECT() *MockProviderMockRecorder {
 }
 
 // Deploy mocks base method.
-func (m *MockProvider) Deploy(ctx context.Context, in file.DeployInput) (file.DeployResult, error) {
+func (m *MockProvider) Deploy(ctx context.Context, in file.UpdateInput) (file.UpdateResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Deploy", ctx, in)
-	ret0, _ := ret[0].(file.DeployResult)
+	ret0, _ := ret[0].(file.UpdateResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

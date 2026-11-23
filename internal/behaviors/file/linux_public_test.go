@@ -57,14 +57,14 @@ func (s *LinuxPublicTestSuite) TearDownTest() {
 func (s *LinuxPublicTestSuite) TestDeploy() {
 	tests := []struct {
 		name         string
-		in           file.DeployInput
+		in           file.UpdateInput
 		facts        map[string]any
 		setup        func()
-		validateFunc func(file.DeployResult, error)
+		validateFunc func(file.UpdateResult, error)
 	}{
 		{
 			name: "when the object has no content type it is written as it is",
-			in:   file.DeployInput{ObjectName: "a", Path: "/etc/a"},
+			in:   file.UpdateInput{ObjectName: "a", Path: "/etc/a"},
 			setup: func() {
 				s.objects.EXPECT().
 					Object(gomock.Any(), "a").
@@ -78,14 +78,14 @@ func (s *LinuxPublicTestSuite) TestDeploy() {
 						return true, nil
 					})
 			},
-			validateFunc: func(r file.DeployResult, err error) {
+			validateFunc: func(r file.UpdateResult, err error) {
 				s.Require().NoError(err)
 				s.True(r.Changed)
 			},
 		},
 		{
 			name:  "when a template reads the facts it renders them",
-			in:    file.DeployInput{ObjectName: "t", Path: "/etc/t", ContentType: "template"},
+			in:    file.UpdateInput{ObjectName: "t", Path: "/etc/t", ContentType: "template"},
 			facts: map[string]any{"architecture": "arm64"},
 			setup: func() {
 				s.objects.EXPECT().Object(gomock.Any(), "t").Return(
@@ -97,34 +97,34 @@ func (s *LinuxPublicTestSuite) TestDeploy() {
 						return false, nil
 					})
 			},
-			validateFunc: func(r file.DeployResult, err error) {
+			validateFunc: func(r file.UpdateResult, err error) {
 				s.Require().NoError(err)
 				s.False(r.Changed)
 			},
 		},
 		{
 			name: "when the object is not there it fails",
-			in:   file.DeployInput{ObjectName: "a", Path: "/etc/a"},
+			in:   file.UpdateInput{ObjectName: "a", Path: "/etc/a"},
 			setup: func() {
 				s.objects.EXPECT().
 					Object(gomock.Any(), "a").
 					Return(object.Object{}, errors.New("not found"))
 			},
-			validateFunc: func(_ file.DeployResult, err error) { s.ErrorContains(err, "not found") },
+			validateFunc: func(_ file.UpdateResult, err error) { s.ErrorContains(err, "not found") },
 		},
 		{
 			name: "when the template does not render it fails",
-			in:   file.DeployInput{ObjectName: "t", Path: "/etc/t", ContentType: "template"},
+			in:   file.UpdateInput{ObjectName: "t", Path: "/etc/t", ContentType: "template"},
 			setup: func() {
 				s.objects.EXPECT().
 					Object(gomock.Any(), "t").
 					Return(object.Object{Content: "{{ .Vars.missing }}"}, nil)
 			},
-			validateFunc: func(_ file.DeployResult, err error) { s.ErrorContains(err, "render template") },
+			validateFunc: func(_ file.UpdateResult, err error) { s.ErrorContains(err, "render template") },
 		},
 		{
 			name: "when the write fails it fails",
-			in:   file.DeployInput{ObjectName: "a", Path: "/etc/a"},
+			in:   file.UpdateInput{ObjectName: "a", Path: "/etc/a"},
 			setup: func() {
 				s.objects.EXPECT().
 					Object(gomock.Any(), "a").
@@ -133,7 +133,7 @@ func (s *LinuxPublicTestSuite) TestDeploy() {
 					Write(gomock.Any(), gomock.Any()).
 					Return(false, errors.New("disk full"))
 			},
-			validateFunc: func(_ file.DeployResult, err error) { s.ErrorContains(err, "disk full") },
+			validateFunc: func(_ file.UpdateResult, err error) { s.ErrorContains(err, "disk full") },
 		},
 	}
 

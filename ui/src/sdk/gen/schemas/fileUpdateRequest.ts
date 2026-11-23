@@ -4,12 +4,12 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { FileDeployRequestContentType } from './fileDeployRequestContentType';
-import type { FileDeployRequestVars } from './fileDeployRequestVars';
+import type { FileUpdateRequestContentType } from './fileUpdateRequestContentType';
+import type { FileUpdateRequestVars } from './fileUpdateRequestVars';
 
-export interface FileDeployRequest {
+export interface FileUpdateRequest {
   /** How the object is written: raw as it is, or template rendered with .Facts, .Vars and .Hostname; the object's own when empty */
-  content_type?: FileDeployRequestContentType;
+  content_type?: FileUpdateRequestContentType;
   /**
      * Group that owns the file; left as written when empty
      * @pattern ^[a-z_][a-z0-9_-]*\$?$
@@ -37,5 +37,5 @@ export interface FileDeployRequest {
      */
   path: string;
   /** Variables of a template, as .Vars, each as key=value */
-  vars?: FileDeployRequestVars;
+  vars?: FileUpdateRequestVars;
 }

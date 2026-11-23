@@ -4,9 +4,9 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { FileUndeployResultStatus } from './fileUndeployResultStatus';
+import type { FileDeleteResultStatus } from './fileDeleteResultStatus';
 
-export interface FileUndeployResult {
+export interface FileDeleteResult {
   /** Whether the host changed */
   changed?: boolean;
   /** Error message if the agent failed. */
@@ -16,5 +16,5 @@ export interface FileUndeployResult {
   /** Absolute path of the file */
   path?: string;
   /** The status of the operation for this host. */
-  status: FileUndeployResultStatus;
+  status: FileDeleteResultStatus;
 }

@@ -1,23 +1,23 @@
-# Undeploy
+# Delete
 
 Remove a file that osapi deployed.
 
 Removes the file and keeps its record, marked undeployed, so status reports
-missing. A path that osapi did not deploy, or undeployed already, does not
-change and reports changed: false. The object stays in the object store.
+missing. A path that osapi did not deploy, or deleted already, does not change
+and reports changed: false. The object stays in the object store.
 
 ```bash
-osapi client node file undeploy [flags]
+osapi client node file delete [flags]
 ```
 
 ## Examples
 
 ```bash
 # Remove a deployed file
-osapi client node file undeploy --target web-01 --path /etc/osapi/file-example.conf
+osapi client node file delete --target web-01 --path /etc/osapi/file-example.conf
 
 # A path that osapi did not deploy
-osapi client node file undeploy --target web-01 --path /etc/osapi/file-example.conf
+osapi client node file delete --target web-01 --path /etc/osapi/file-example.conf
 ```
 
 ## Result
@@ -25,7 +25,7 @@ osapi client node file undeploy --target web-01 --path /etc/osapi/file-example.c
 Remove a deployed file, on one host:
 
 ```ansi
-$ osapi client node file undeploy --target web-01 --path /etc/osapi/file-example.conf
+$ osapi client node file delete --target web-01 --path /etc/osapi/file-example.conf
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mPATH[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  /etc/osapi/file-example.conf
@@ -36,7 +36,7 @@ $ osapi client node file undeploy --target web-01 --path /etc/osapi/file-example
 On each host, where one cannot run it:
 
 ```ansi
-$ osapi client node file undeploy --target _all --path /etc/osapi/file-example.conf
+$ osapi client node file delete --target _all --path /etc/osapi/file-example.conf
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mPATH[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  /etc/osapi/file-example.conf
@@ -67,7 +67,7 @@ With `--json`, the API's response:
 A path that osapi did not deploy, on one host:
 
 ```ansi
-$ osapi client node file undeploy --target web-01 --path /etc/osapi/file-example.conf
+$ osapi client node file delete --target web-01 --path /etc/osapi/file-example.conf
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mPATH[0m
   [1mweb-01[0m    [38;2;103;234;147mok[0m      /etc/osapi/file-example.conf
@@ -78,7 +78,7 @@ $ osapi client node file undeploy --target web-01 --path /etc/osapi/file-example
 On each host, where one cannot run it:
 
 ```ansi
-$ osapi client node file undeploy --target _all --path /etc/osapi/file-example.conf
+$ osapi client node file delete --target _all --path /etc/osapi/file-example.conf
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mPATH[0m
   [1mweb-01[0m    [38;2;103;234;147mok[0m      /etc/osapi/file-example.conf
@@ -120,7 +120,7 @@ The command fails in these cases:
 
 ## Permission
 
-It needs the `file:execute` permission. `osapi token roles get --name <role>`
+It needs the `file:write` permission. `osapi token roles get --name <role>`
 shows what a role grants.
 
 ## Flags

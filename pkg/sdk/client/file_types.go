@@ -158,7 +158,7 @@ func fileMetadataFromGen(
 
 // fileDeployCollectionFromGen converts the rows of a deploy.
 func fileDeployCollectionFromGen(
-	g *gen.FileDeployResponse,
+	g *gen.FileUpdateResponse,
 ) Collection[FileDeployResult] {
 	results := make([]FileDeployResult, 0, len(g.Results))
 	for _, r := range g.Results {
@@ -182,7 +182,7 @@ func fileDeployCollectionFromGen(
 
 // fileUndeployCollectionFromGen converts the rows of an undeploy.
 func fileUndeployCollectionFromGen(
-	g *gen.FileUndeployResponse,
+	g *gen.FileDeleteResponse,
 ) Collection[FileUndeployResult] {
 	results := make([]FileUndeployResult, 0, len(g.Results))
 	for _, r := range g.Results {

@@ -8,10 +8,10 @@
 /**
  * The status of the operation for this host.
  */
-export type FileUndeployResultStatus = typeof FileUndeployResultStatus[keyof typeof FileUndeployResultStatus];
+export type FileUpdateResultStatus = typeof FileUpdateResultStatus[keyof typeof FileUpdateResultStatus];
 
 
-export const FileUndeployResultStatus = {
+export const FileUpdateResultStatus = {
   ok: 'ok',
   failed: 'failed',
   skipped: 'skipped',

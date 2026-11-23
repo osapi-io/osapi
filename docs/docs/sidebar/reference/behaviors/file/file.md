@@ -31,19 +31,19 @@ Files of the object store, deployed to the host.
 
 ### Methods (3)
 
-| NAME                         | VERB  | HTTP | ROUTE                                        | PERMISSION | DESCRIPTION                                         |
-| ---------------------------- | ----- | ---- | -------------------------------------------- | ---------- | --------------------------------------------------- |
-| [status](#method-status)     | read  | GET  | /api/node/&#123;hostname&#125;/file          | file:read  | Show whether a deployed file holds what osapi wrote |
-| [deploy](#method-deploy)     | write | POST | /api/node/&#123;hostname&#125;/file/deploy   | file:write | Deploy an object of the object store to a path      |
-| [undeploy](#method-undeploy) | write | POST | /api/node/&#123;hostname&#125;/file/undeploy | file:write | Remove a file that osapi deployed                   |
+| NAME                     | VERB  | HTTP   | ROUTE                               | PERMISSION | DESCRIPTION                                         |
+| ------------------------ | ----- | ------ | ----------------------------------- | ---------- | --------------------------------------------------- |
+| [status](#method-status) | read  | GET    | /api/node/&#123;hostname&#125;/file | file:read  | Show whether a deployed file holds what osapi wrote |
+| [update](#method-update) | write | PUT    | /api/node/&#123;hostname&#125;/file | file:write | Deploy an object of the object store to a path      |
+| [delete](#method-delete) | write | DELETE | /api/node/&#123;hostname&#125;/file | file:write | Remove a file that osapi deployed                   |
 
 ### Types (3)
 
-| NAME                         | INPUT                                                                                 | OUTPUT                                           |
-| ---------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| [status](#method-status)     | StatusInput &#123; path* &#125;                                                       | Status &#123; path, state, sha256 &#125;         |
-| [deploy](#method-deploy)     | DeployInput &#123; object_name*, path*, mode, owner, group, content_type, vars &#125; | DeployResult &#123; path, sha256, changed &#125; |
-| [undeploy](#method-undeploy) | UndeployInput &#123; path* &#125;                                                     | UndeployResult &#123; path, changed &#125;       |
+| NAME                     | INPUT                                                                                 | OUTPUT                                           |
+| ------------------------ | ------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| [status](#method-status) | StatusInput &#123; path* &#125;                                                       | Status &#123; path, state, sha256 &#125;         |
+| [update](#method-update) | UpdateInput &#123; object_name*, path*, mode, owner, group, content_type, vars &#125; | UpdateResult &#123; path, sha256, changed &#125; |
+| [delete](#method-delete) | DeleteInput &#123; path* &#125;                                                       | DeleteResult &#123; path, changed &#125;         |
 
 ### Settings (0)
 
@@ -57,7 +57,7 @@ None. Declare them with behavior.Config.
 | Child spans     | behavior.object.&lt;method&gt;, behavior.managedfile.&lt;method&gt;, exec chown, exec stat, file.write, file.remove, file.chmod, kv.get, kv.put |
 | Metrics         | osapi_behavior_calls_total, osapi_behavior_duration_seconds, osapi_behavior_changes_total                                                       |
 | Attributes      | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed                                 |
-| Recorded inputs | path (deploy, undeploy)                                                                                                                         |
+| Recorded inputs | path (update, delete)                                                                                                                           |
 
 ## Method status
 
@@ -95,20 +95,20 @@ None. Declare them with behavior.Config.
 | A deployed file                  | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf, state=in-sync, sha256=0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60 |
 | A path that osapi did not deploy | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf, state=missing                                                                          |
 
-## Method deploy
+## Method update
 
 |             |                                                                                                                                                                                                                                                                                                                                                                        |
 | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Name        | deploy                                                                                                                                                                                                                                                                                                                                                                 |
+| Name        | update                                                                                                                                                                                                                                                                                                                                                                 |
 | Verb        | write                                                                                                                                                                                                                                                                                                                                                                  |
 | Description | Deploy an object of the object store to a path                                                                                                                                                                                                                                                                                                                         |
 | Detail      | Writes the object at the path with its mode and ownership, and keeps a record of it. A template object, or content_type template, is rendered first with .Facts, .Vars and .Hostname. A file that holds the content, mode and owner already does not change and reports changed: false. osapi client file stale list shows the deployments whose object changed since. |
-| HTTP        | POST                                                                                                                                                                                                                                                                                                                                                                   |
-| Route       | /api/node/&#123;hostname&#125;/file/deploy                                                                                                                                                                                                                                                                                                                             |
-| Permission  | file:execute                                                                                                                                                                                                                                                                                                                                                           |
-| Command     | [osapi client node file deploy](../../../usage/cli/client/node/file/deploy.md)                                                                                                                                                                                                                                                                                         |
-| Input type  | DeployInput                                                                                                                                                                                                                                                                                                                                                            |
-| Output type | DeployResult                                                                                                                                                                                                                                                                                                                                                           |
+| HTTP        | PUT                                                                                                                                                                                                                                                                                                                                                                    |
+| Route       | /api/node/&#123;hostname&#125;/file                                                                                                                                                                                                                                                                                                                                    |
+| Permission  | file:write                                                                                                                                                                                                                                                                                                                                                             |
+| Command     | [osapi client node file update](../../../usage/cli/client/node/file/update.md)                                                                                                                                                                                                                                                                                         |
+| Input type  | UpdateInput                                                                                                                                                                                                                                                                                                                                                            |
+| Output type | UpdateResult                                                                                                                                                                                                                                                                                                                                                           |
 
 ### Input (7)
 
@@ -138,20 +138,20 @@ None. Declare them with behavior.Config.
 | Render a template            | object_name=example.conf.tmpl, path=/etc/osapi/file-example.conf, vars=map\[port:8080] | path=/etc/osapi/file-example.conf, sha256=28ef41e1ff26302a25da25eaa7b2762f2d55d0fdc0631a4f6a8c380d2b8640d4, changed=true  |
 | A file that holds the object | object_name=example.conf, path=/etc/osapi/file-example.conf                            | path=/etc/osapi/file-example.conf, sha256=0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60, changed=false |
 
-## Method undeploy
+## Method delete
 
-|             |                                                                                                                                                                                                                                 |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Name        | undeploy                                                                                                                                                                                                                        |
-| Verb        | write                                                                                                                                                                                                                           |
-| Description | Remove a file that osapi deployed                                                                                                                                                                                               |
-| Detail      | Removes the file and keeps its record, marked undeployed, so status reports missing. A path that osapi did not deploy, or undeployed already, does not change and reports changed: false. The object stays in the object store. |
-| HTTP        | POST                                                                                                                                                                                                                            |
-| Route       | /api/node/&#123;hostname&#125;/file/undeploy                                                                                                                                                                                    |
-| Permission  | file:execute                                                                                                                                                                                                                    |
-| Command     | [osapi client node file undeploy](../../../usage/cli/client/node/file/undeploy.md)                                                                                                                                              |
-| Input type  | UndeployInput                                                                                                                                                                                                                   |
-| Output type | UndeployResult                                                                                                                                                                                                                  |
+|             |                                                                                                                                                                                                                              |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | delete                                                                                                                                                                                                                       |
+| Verb        | write                                                                                                                                                                                                                        |
+| Description | Remove a file that osapi deployed                                                                                                                                                                                            |
+| Detail      | Removes the file and keeps its record, marked undeployed, so status reports missing. A path that osapi did not deploy, or deleted already, does not change and reports changed: false. The object stays in the object store. |
+| HTTP        | DELETE                                                                                                                                                                                                                       |
+| Route       | /api/node/&#123;hostname&#125;/file                                                                                                                                                                                          |
+| Permission  | file:write                                                                                                                                                                                                                   |
+| Command     | [osapi client node file delete](../../../usage/cli/client/node/file/delete.md)                                                                                                                                               |
+| Input type  | DeleteInput                                                                                                                                                                                                                  |
+| Output type | DeleteResult                                                                                                                                                                                                                 |
 
 ### Input (1)
 

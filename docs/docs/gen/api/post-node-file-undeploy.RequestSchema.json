@@ -1,1 +1,0 @@
-{"title":"Body","body":{"content":{"application/json":{"schema":{"properties":{"path":{"description":"Absolute path of the file on the host","pattern":"^/","type":"string","x-oapi-codegen-extra-tags":{"validate":"required,startswith=/"}}},"required":["path"],"type":"object","title":"FileUndeployRequest"}}},"required":true}}

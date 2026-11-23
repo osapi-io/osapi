@@ -6,15 +6,98 @@
  */
 import type {
   ErrorResponse,
-  FileDeployRequest,
-  FileDeployResponse,
+  FileDeleteRequest,
+  FileDeleteResponse,
   FileStatusResponse,
-  FileUndeployRequest,
-  FileUndeployResponse,
+  FileUpdateRequest,
+  FileUpdateResponse,
   GetNodeFileParams
 } from '../schemas';
 
 import { apiFetch } from '../../fetch';
+
+export type deleteNodeFileResponse200 = {
+  data: FileDeleteResponse
+  status: 200
+}
+
+export type deleteNodeFileResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type deleteNodeFileResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type deleteNodeFileResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type deleteNodeFileResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type deleteNodeFileResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type deleteNodeFileResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type deleteNodeFileResponseSuccess = (deleteNodeFileResponse200) & {
+  headers: Headers;
+};
+export type deleteNodeFileResponseError = (deleteNodeFileResponse400 | deleteNodeFileResponse401 | deleteNodeFileResponse403 | deleteNodeFileResponse404 | deleteNodeFileResponse409 | deleteNodeFileResponse500) & {
+  headers: Headers;
+};
+
+export type deleteNodeFileResponse = (deleteNodeFileResponseSuccess | deleteNodeFileResponseError)
+
+export const getDeleteNodeFileUrl = (hostname: string,) => {
+
+
+
+
+  return `/api/node/${hostname}/file`
+}
+
+/**
+ * Removes the file and keeps its record, marked undeployed, so status reports missing. A path that osapi did not deploy, or deleted already, does not change and reports changed: false. The object stays in the object store.
+ * @summary Remove a file that osapi deployed
+ */
+export const deleteNodeFile = async (hostname: string,
+    fileDeleteRequest: FileDeleteRequest, options?: Parameters<typeof apiFetch>[1]): Promise<deleteNodeFileResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<deleteNodeFileResponse>(getDeleteNodeFileUrl(hostname),
+  {
+    ...options,
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(fileDeleteRequest)
+  }
+);}
+
 
 export type getNodeFileResponse200 = {
   data: FileStatusResponse
@@ -93,64 +176,64 @@ export const getNodeFile = async (hostname: string,
 );}
 
 
-export type postNodeFileDeployResponse200 = {
-  data: FileDeployResponse
+export type putNodeFileResponse200 = {
+  data: FileUpdateResponse
   status: 200
 }
 
-export type postNodeFileDeployResponse400 = {
+export type putNodeFileResponse400 = {
   data: ErrorResponse
   status: 400
 }
 
-export type postNodeFileDeployResponse401 = {
+export type putNodeFileResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type postNodeFileDeployResponse403 = {
+export type putNodeFileResponse403 = {
   data: ErrorResponse
   status: 403
 }
 
-export type postNodeFileDeployResponse404 = {
+export type putNodeFileResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type postNodeFileDeployResponse409 = {
+export type putNodeFileResponse409 = {
   data: ErrorResponse
   status: 409
 }
 
-export type postNodeFileDeployResponse500 = {
+export type putNodeFileResponse500 = {
   data: ErrorResponse
   status: 500
 }
 
-export type postNodeFileDeployResponseSuccess = (postNodeFileDeployResponse200) & {
+export type putNodeFileResponseSuccess = (putNodeFileResponse200) & {
   headers: Headers;
 };
-export type postNodeFileDeployResponseError = (postNodeFileDeployResponse400 | postNodeFileDeployResponse401 | postNodeFileDeployResponse403 | postNodeFileDeployResponse404 | postNodeFileDeployResponse409 | postNodeFileDeployResponse500) & {
+export type putNodeFileResponseError = (putNodeFileResponse400 | putNodeFileResponse401 | putNodeFileResponse403 | putNodeFileResponse404 | putNodeFileResponse409 | putNodeFileResponse500) & {
   headers: Headers;
 };
 
-export type postNodeFileDeployResponse = (postNodeFileDeployResponseSuccess | postNodeFileDeployResponseError)
+export type putNodeFileResponse = (putNodeFileResponseSuccess | putNodeFileResponseError)
 
-export const getPostNodeFileDeployUrl = (hostname: string,) => {
-
-
+export const getPutNodeFileUrl = (hostname: string,) => {
 
 
-  return `/api/node/${hostname}/file/deploy`
+
+
+  return `/api/node/${hostname}/file`
 }
 
 /**
  * Writes the object at the path with its mode and ownership, and keeps a record of it. A template object, or content_type template, is rendered first with .Facts, .Vars and .Hostname. A file that holds the content, mode and owner already does not change and reports changed: false. osapi client file stale list shows the deployments whose object changed since.
  * @summary Deploy an object of the object store to a path
  */
-export const postNodeFileDeploy = async (hostname: string,
-    fileDeployRequest: FileDeployRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeFileDeployResponse> => {
+export const putNodeFile = async (hostname: string,
+    fileUpdateRequest: FileUpdateRequest, options?: Parameters<typeof apiFetch>[1]): Promise<putNodeFileResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -166,95 +249,12 @@ export const postNodeFileDeploy = async (hostname: string,
     }
     return headers;
   };
-return apiFetch<postNodeFileDeployResponse>(getPostNodeFileDeployUrl(hostname),
+return apiFetch<putNodeFileResponse>(getPutNodeFileUrl(hostname),
   {
     ...options,
-    method: 'POST',
+    method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(fileDeployRequest)
-  }
-);}
-
-
-export type postNodeFileUndeployResponse200 = {
-  data: FileUndeployResponse
-  status: 200
-}
-
-export type postNodeFileUndeployResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type postNodeFileUndeployResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-
-export type postNodeFileUndeployResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type postNodeFileUndeployResponse404 = {
-  data: ErrorResponse
-  status: 404
-}
-
-export type postNodeFileUndeployResponse409 = {
-  data: ErrorResponse
-  status: 409
-}
-
-export type postNodeFileUndeployResponse500 = {
-  data: ErrorResponse
-  status: 500
-}
-
-export type postNodeFileUndeployResponseSuccess = (postNodeFileUndeployResponse200) & {
-  headers: Headers;
-};
-export type postNodeFileUndeployResponseError = (postNodeFileUndeployResponse400 | postNodeFileUndeployResponse401 | postNodeFileUndeployResponse403 | postNodeFileUndeployResponse404 | postNodeFileUndeployResponse409 | postNodeFileUndeployResponse500) & {
-  headers: Headers;
-};
-
-export type postNodeFileUndeployResponse = (postNodeFileUndeployResponseSuccess | postNodeFileUndeployResponseError)
-
-export const getPostNodeFileUndeployUrl = (hostname: string,) => {
-
-
-
-
-  return `/api/node/${hostname}/file/undeploy`
-}
-
-/**
- * Removes the file and keeps its record, marked undeployed, so status reports missing. A path that osapi did not deploy, or undeployed already, does not change and reports changed: false. The object stays in the object store.
- * @summary Remove a file that osapi deployed
- */
-export const postNodeFileUndeploy = async (hostname: string,
-    fileUndeployRequest: FileUndeployRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeFileUndeployResponse> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<postNodeFileUndeployResponse>(getPostNodeFileUndeployUrl(hostname),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(fileUndeployRequest)
+    body: JSON.stringify(fileUpdateRequest)
   }
 );}
 

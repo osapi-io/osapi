@@ -20,9 +20,9 @@
 
 package file
 
-// DeployInput is what deploy writes: an object of the object store, at a
+// UpdateInput is what update writes: an object of the object store, at a
 // path, with its mode and ownership.
-type DeployInput struct {
+type UpdateInput struct {
 	ObjectName  string            `json:"object_name"            validate:"required,min=1,max=255"       doc:"The object of the object store, from osapi client file list"`
 	Path        string            `json:"path"                   validate:"required,startswith=/"        doc:"Absolute path of the file on the host"                                                                                       telemetry:"attr"`
 	Mode        string            `json:"mode,omitempty"         validate:"omitempty,file_mode"          doc:"Permissions in octal, such as 0644; when empty, a file keeps its mode and a new file gets 0644"`
@@ -32,20 +32,20 @@ type DeployInput struct {
 	Vars        map[string]string `json:"vars,omitempty"         validate:"omitempty"                    doc:"Variables of a template, as .Vars, each as key=value"`
 }
 
-// DeployResult is the file that deploy wrote.
-type DeployResult struct {
+// UpdateResult is the file that update wrote.
+type UpdateResult struct {
 	Path    string `json:"path"    doc:"Absolute path of the file"`
 	SHA256  string `json:"sha256"  doc:"SHA-256 of the content that the file holds"`
 	Changed bool   `json:"changed" doc:"Whether the host changed"`
 }
 
-// UndeployInput names the file that undeploy removes.
-type UndeployInput struct {
+// DeleteInput names the file that delete removes.
+type DeleteInput struct {
 	Path string `json:"path" validate:"required,startswith=/" doc:"Absolute path of the file on the host" telemetry:"attr"`
 }
 
-// UndeployResult is the file that undeploy removed.
-type UndeployResult struct {
+// DeleteResult is the file that delete removed.
+type DeleteResult struct {
 	Path    string `json:"path"    doc:"Absolute path of the file"`
 	Changed bool   `json:"changed" doc:"Whether the host changed"`
 }

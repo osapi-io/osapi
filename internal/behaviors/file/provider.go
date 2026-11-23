@@ -27,7 +27,7 @@ import "context"
 type Provider interface {
 	// Deploy writes the object at the path and records it, and reports
 	// whether the host changed.
-	Deploy(ctx context.Context, in DeployInput) (DeployResult, error)
+	Deploy(ctx context.Context, in UpdateInput) (UpdateResult, error)
 	// Undeploy removes a file that osapi deployed, keeping its record.
 	Undeploy(ctx context.Context, path string) (bool, error)
 	// Status is the file at path against what osapi deployed there.
