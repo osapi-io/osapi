@@ -21,6 +21,7 @@
 package api_test
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -31,6 +32,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/controller/api"
+	"github.com/osapi-io/osapi/internal/validation"
 )
 
 const testSigningKey = "test-signing-key-for-middleware"
@@ -49,7 +51,7 @@ func (s *MiddlewarePublicTestSuite) SetupSuite() {
 func (s *MiddlewarePublicTestSuite) generateToken(
 	roles []string,
 ) string {
-	token, err := s.tokenManager.Generate(testSigningKey, roles, "test-subject", nil)
+	token, err := s.tokenManager.Generate(testSigningKey, roles, "test-subject", nil, nil)
 	s.Require().NoError(err)
 
 	return token
@@ -59,7 +61,7 @@ func (s *MiddlewarePublicTestSuite) generateTokenWithPerms(
 	roles []string,
 	permissions []string,
 ) string {
-	token, err := s.tokenManager.Generate(testSigningKey, roles, "test-subject", permissions)
+	token, err := s.tokenManager.Generate(testSigningKey, roles, "test-subject", permissions, nil)
 	s.Require().NoError(err)
 
 	return token
@@ -252,6 +254,7 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddlewareCustomRoles() {
 				[]string{"admin"},
 				"test-subject",
 				nil,
+				nil,
 			)
 			s.Require().NoError(err)
 
@@ -343,6 +346,131 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddlewareDirectPermissions() {
 			_, _ = wrapped(ctx, nil)
 
 			tt.validateFunc(handlerCalled, rec)
+		})
+	}
+}
+
+func (s *MiddlewarePublicTestSuite) TestScopeMiddlewareTargetScope() {
+	contextKey := "BearerAuthScopes"
+
+	validation.RegisterTargetValidator(
+		func(_ context.Context) ([]validation.AgentTarget, error) {
+			return []validation.AgentTarget{
+				{
+					MachineID: "m-web1", Hostname: "web-01", Verified: true,
+					Labels: map[string]string{"group": "web"},
+				},
+				{MachineID: "m-db1", Hostname: "db-01", Verified: true},
+			}, nil
+		},
+	)
+
+	tests := []struct {
+		name         string
+		targets      []string
+		hostname     string
+		validateFunc func(bool, []string, *httptest.ResponseRecorder)
+	}{
+		{
+			name:     "when the token has no scope, each host runs",
+			hostname: "_all",
+			validateFunc: func(called bool, scope []string, _ *httptest.ResponseRecorder) {
+				s.True(called)
+				s.Nil(scope)
+			},
+		},
+		{
+			name:     "when the host is in the scope, the handler runs with the scope",
+			targets:  []string{"group:web"},
+			hostname: "web-01",
+			validateFunc: func(called bool, scope []string, _ *httptest.ResponseRecorder) {
+				s.True(called)
+				s.Equal([]string{"group:web"}, scope)
+			},
+		},
+		{
+			name:     "when the label target is in the scope, the handler runs",
+			targets:  []string{"group:web"},
+			hostname: "group:web",
+			validateFunc: func(called bool, _ []string, _ *httptest.ResponseRecorder) {
+				s.True(called)
+			},
+		},
+		{
+			name:    "when the route has no host, the handler runs",
+			targets: []string{"group:web"},
+			validateFunc: func(called bool, _ []string, _ *httptest.ResponseRecorder) {
+				s.True(called)
+			},
+		},
+		{
+			name:     "when the host is outside the scope, it is a 403",
+			targets:  []string{"group:web"},
+			hostname: "db-01",
+			validateFunc: func(called bool, _ []string, rec *httptest.ResponseRecorder) {
+				s.False(called)
+				s.Equal(http.StatusForbidden, rec.Code)
+				s.Contains(rec.Body.String(), `outside the token's target scope`)
+			},
+		},
+		{
+			name:     "when a scoped token targets _all, it is a 403",
+			targets:  []string{"group:web"},
+			hostname: "_all",
+			validateFunc: func(called bool, _ []string, rec *httptest.ResponseRecorder) {
+				s.False(called)
+				s.Equal(http.StatusForbidden, rec.Code)
+			},
+		},
+		{
+			name:     "when a scoped token targets _any, it is a 403",
+			targets:  []string{"web-01"},
+			hostname: "_any",
+			validateFunc: func(called bool, _ []string, rec *httptest.ResponseRecorder) {
+				s.False(called)
+				s.Equal(http.StatusForbidden, rec.Code)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			handlerCalled := false
+			var scope []string
+			testHandler := api.StrictHandlerFunc(
+				func(ctx *echo.Context, _ interface{}) (interface{}, error) {
+					handlerCalled = true
+					scope = authtoken.TargetsFrom(ctx.Request().Context())
+					return "ok", nil
+				},
+			)
+
+			token, err := s.tokenManager.Generate(
+				testSigningKey, []string{"admin"}, "test-subject", nil, tt.targets,
+			)
+			s.Require().NoError(err)
+
+			e := echo.New()
+			req := httptest.NewRequest(http.MethodGet, "/test", nil)
+			req.Header.Set("Authorization", "Bearer "+token)
+			rec := httptest.NewRecorder()
+
+			ctx := e.NewContext(req, rec)
+			ctx.Set(contextKey, []string{"trace:read"})
+			if tt.hostname != "" {
+				ctx.SetPathValues(echo.PathValues{{Name: "hostname", Value: tt.hostname}})
+			}
+
+			wrapped := api.ExportScopeMiddleware(
+				testHandler,
+				s.tokenManager,
+				testSigningKey,
+				contextKey,
+				nil,
+			)
+			_, _ = wrapped(ctx, nil)
+
+			tt.validateFunc(handlerCalled, scope, rec)
 		})
 	}
 }

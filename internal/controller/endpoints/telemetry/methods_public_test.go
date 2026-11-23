@@ -156,7 +156,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 func token(
 	perms ...string,
 ) string {
-	t, _ := authtoken.New(slog.Default()).Generate(signingKey, []string{"read"}, "test", perms)
+	t, _ := authtoken.New(slog.Default()).Generate(signingKey, []string{"read"}, "test", perms, nil)
 
 	return t
 }

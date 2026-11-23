@@ -32,6 +32,7 @@ type AuditEntry struct {
 	Timestamp    time.Time `json:"timestamp"`
 	User         string    `json:"user"`
 	Roles        []string  `json:"roles,omitempty"`
+	Targets      []string  `json:"targets,omitempty"`
 	Method       string    `json:"method"`
 	Path         string    `json:"path"`
 	ResponseCode int       `json:"response_code"`
@@ -61,6 +62,10 @@ func auditEntryFromGen(
 		ResponseCode: g.ResponseCode,
 		DurationMs:   g.DurationMs,
 		SourceIP:     g.SourceIp,
+	}
+
+	if g.Targets != nil {
+		a.Targets = *g.Targets
 	}
 
 	if g.OperationId != nil {

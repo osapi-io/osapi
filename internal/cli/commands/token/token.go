@@ -39,10 +39,14 @@ var Group = command.Register(command.Define(
 		Example("--subject user123 --roles=read").
 		Prints(sampleGenerate).
 		Example("--subject svc@example.com --roles=read \\\n    -p status:read -p health:read").
+		Example("--subject team-web --roles=operator \\\n    -t group:web -t web-01").
 		Fails("no roles", GenerateInput{Subject: "ops"}).
 		Fails("no subject", GenerateInput{Roles: []string{"read"}}).
 		Fails("an unknown permission", GenerateInput{
 			Roles: []string{"read"}, Subject: "ops", Permissions: []string{"root:all"},
+		}).
+		Fails("a target scope of _all", GenerateInput{
+			Roles: []string{"read"}, Subject: "ops", Targets: []string{"_all"},
 		}).
 		Handle(Generate),
 	command.Method[RolesInput, RolesOutput]("list").

@@ -116,7 +116,7 @@ func TestMain(
 	}
 
 	t := authtoken.New(nil)
-	token, err = t.Generate(signingKey, []string{"admin"}, "integration@test", nil)
+	token, err = t.Generate(signingKey, []string{"admin"}, "integration@test", nil, nil)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "generate token: %v\n", err)
 		os.Exit(1)

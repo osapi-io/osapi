@@ -12,6 +12,8 @@ export interface AuthState {
   token: string | null;
   /** Roles extracted from JWT */
   tokenRoles: string[];
+  /** Hosts the token may act on, from JWT; empty is each host */
+  tokenTargets: string[];
   /** Check if current role has a permission */
   can: (permission: Permission) => boolean;
   /** Check if current role has all permissions */

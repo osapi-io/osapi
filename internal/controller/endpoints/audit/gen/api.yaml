@@ -48,6 +48,11 @@ components:
           description: Client IP address.
           example: 192.168.1.100
           type: string
+        targets:
+          description: The target scope of the JWT token, absent when the token acts on each host.
+          items:
+            type: string
+          type: array
         timestamp:
           description: When the request was processed.
           example: "2026-02-21T10:30:00Z"

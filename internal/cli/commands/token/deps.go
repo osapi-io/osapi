@@ -38,6 +38,7 @@ type Tokens interface {
 		roles []string,
 		subject string,
 		permissions []string,
+		targets []string,
 	) (string, error)
 	Validate(
 		tokenString string,

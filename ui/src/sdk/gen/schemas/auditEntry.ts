@@ -26,6 +26,8 @@ export interface AuditEntry {
   roles: string[];
   /** Client IP address. */
   source_ip: string;
+  /** The target scope of the JWT token, absent when the token acts on each host. */
+  targets?: string[];
   /** When the request was processed. */
   timestamp: string;
   /** OpenTelemetry trace ID for correlation. */

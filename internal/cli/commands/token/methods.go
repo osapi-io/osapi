@@ -48,7 +48,13 @@ func Generate(
 		}
 	}
 
-	token, err := d.Tokens.Generate(d.Config.SigningKey(), in.Roles, in.Subject, in.Permissions)
+	token, err := d.Tokens.Generate(
+		d.Config.SigningKey(),
+		in.Roles,
+		in.Subject,
+		in.Permissions,
+		in.Targets,
+	)
 	if err != nil {
 		return GenerateOutput{}, fmt.Errorf("failed to generate token: %w", err)
 	}
@@ -58,6 +64,7 @@ func Generate(
 		Subject:     in.Subject,
 		Roles:       in.Roles,
 		Permissions: in.Permissions,
+		Targets:     in.Targets,
 	}, nil
 }
 
@@ -146,6 +153,7 @@ func Validate(
 		Subject:              claims.Subject,
 		Roles:                claims.Roles,
 		Permissions:          claims.Permissions,
+		Targets:              claims.Targets,
 		EffectivePermissions: effective,
 		Audience:             claims.Audience,
 	}

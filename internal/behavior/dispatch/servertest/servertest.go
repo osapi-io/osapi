@@ -410,7 +410,7 @@ func token(
 	case Admin:
 		roles = []string{"admin"}
 	}
-	t, _ := authtoken.New(slog.Default()).Generate(signingKey, roles, "servertest", perms)
+	t, _ := authtoken.New(slog.Default()).Generate(signingKey, roles, "servertest", perms, nil)
 
 	return t
 }

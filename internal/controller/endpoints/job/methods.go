@@ -29,6 +29,7 @@ import (
 
 	sdkclient "github.com/osapi-io/osapi/pkg/sdk/client"
 
+	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/controller/api/apierr"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/job"
@@ -139,6 +140,17 @@ func Retry(
 	d Deps,
 	in RetryInput,
 ) (CreateJobResponse, error) {
+	// A retry without a target goes to _any, which a scoped token cannot
+	// reach.
+	target := in.Body.TargetHostname
+	if target == "" {
+		target = job.AnyHost
+	}
+	if !authtoken.InScope(ctx, target) {
+		return CreateJobResponse{}, endpoint.Errorf(ErrOutOfScope,
+			"target %s is outside the token's target scope %v", target, authtoken.TargetsFrom(ctx))
+	}
+
 	result, err := d.Jobs.RetryJob(ctx, in.ID, in.Body.TargetHostname)
 	if apierr.IsMissing(err) {
 		return CreateJobResponse{}, endpoint.Errorf(ErrNotFound, "job %s not found", in.ID)

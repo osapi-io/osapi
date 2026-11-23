@@ -29,12 +29,14 @@ validation when osapi starts. Make one with `openssl rand -hex 32`.
 
 ### Token structure
 
-A token carries three pieces of authorization data:
+A token carries four pieces of authorization data:
 
 - **Roles** (`roles` claim, required): one or more of `admin`, `write` and
   `read`
 - **Permissions** (`permissions` claim, optional): direct `resource:verb`
   permissions. They replace the permissions of the roles
+- **Targets** (`targets` claim, optional): the hosts that the token can act on,
+  as hostnames and labels. Refer to [Target scope](#target-scope)
 - **Subject** (`sub` claim): the identity of the user, for the audit log
 
 Generate tokens with the CLI. Refer to
@@ -59,6 +61,37 @@ flowchart TD
     G -->|Yes| H[Allow]
     G -->|No| I[403 Forbidden]
 ```
+
+### Target scope
+
+A role applies to each host. To give a team access to its own hosts only, give
+its token a target scope:
+
+```bash
+osapi token generate --subject team-web --roles operator \
+    -t group:web -t web-01
+```
+
+Each target of the scope is a hostname, such as `web-01`, or a label, such as
+`group:web`. `_all`, `_any` and `_local` cannot be in a scope. A token without
+targets acts on each host.
+
+The controller compares the target of each request with the scope:
+
+- A label target is in the scope when the scope has the same label, or a label
+  above it. `group:web` covers `group:web` and `group:web.dev`. It does not
+  cover `group:webapp`.
+- A host target is in the scope when the scope names the host. It is also in the
+  scope when the agent of the host has a label that the scope covers.
+- `_all` and `_any` are never in a scope, because they reach hosts outside it.
+
+A request to a target outside the scope gets `403 Forbidden`, and no job goes to
+a host. A retry of a job must name a target in the scope, because a retry
+without a target goes to `_any`. The audit log records the scope of the token
+with each entry, and the UI shows it on the Roles page and in each audit entry.
+
+The scope limits where a token acts. It does not limit what the token reads from
+the controller, such as the jobs and the audit log.
 
 ## Roles and permissions
 

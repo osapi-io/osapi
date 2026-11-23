@@ -12,6 +12,8 @@ osapi token generate [flags]
 osapi token generate --subject user123 --roles=read
 osapi token generate --subject svc@example.com --roles=read \
   -p status:read -p health:read
+osapi token generate --subject team-web --roles=operator \
+  -t group:web -t web-01
 ```
 
 ## Result
@@ -43,6 +45,7 @@ With `--json`, the command prints:
 | `-p, --permissions` | Direct permissions, which override the roles; osapi token roles get --name admin lists each one |         |
 | `-r, --roles`       | Roles for the token: built-in, or a custom role of the config (required)                        |         |
 | `-u, --subject`     | Subject for the token (e.g., user ID or unique identifier) (required)                           |         |
+| `-t, --targets`     | Hosts the token may act on: hostnames and labels, such as group:web; without it, each host      |         |
 
 ## Global flags
 

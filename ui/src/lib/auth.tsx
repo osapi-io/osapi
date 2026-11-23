@@ -9,29 +9,7 @@ import {
 } from "@/lib/permissions";
 import { setAuthToken as setAuthTokenValue } from "@/lib/auth-token";
 import { AuthContext } from "@/lib/auth-context";
-
-// ---------------------------------------------------------------------------
-// JWT decoding (no verification — that's the server's job)
-// ---------------------------------------------------------------------------
-
-function decodeJwtPayload(token: string): Record<string, unknown> | null {
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return null;
-    const payload = atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"));
-    return JSON.parse(payload);
-  } catch {
-    return null;
-  }
-}
-
-function extractRolesFromJwt(token: string): string[] {
-  const payload = decodeJwtPayload(token);
-  if (!payload) return [];
-  const roles = payload.roles;
-  if (Array.isArray(roles)) return roles.map(String);
-  return [];
-}
+import { jwtClaimStrings } from "@/lib/jwt";
 
 // ---------------------------------------------------------------------------
 // Auth provider
@@ -52,7 +30,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return ENV_TOKEN || localStorage.getItem(STORAGE_KEY_TOKEN) || null;
   });
 
-  const tokenRoles = token ? extractRolesFromJwt(token) : [];
+  const tokenRoles = token ? jwtClaimStrings(token, "roles") : [];
+  const tokenTargets = token ? jwtClaimStrings(token, "targets") : [];
   const isAuthenticated = token !== null && tokenRoles.length > 0;
 
   let role;
@@ -106,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         roleOverride,
         token,
         tokenRoles,
+        tokenTargets,
         can,
         canAll,
         setRoleOverride,

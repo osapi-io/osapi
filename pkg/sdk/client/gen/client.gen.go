@@ -1855,6 +1855,9 @@ type AuditEntry struct {
 	// SourceIp Client IP address.
 	SourceIp string `json:"source_ip"`
 
+	// Targets The target scope of the JWT token, absent when the token acts on each host.
+	Targets *[]string `json:"targets,omitempty"`
+
 	// Timestamp When the request was processed.
 	Timestamp time.Time `json:"timestamp"`
 

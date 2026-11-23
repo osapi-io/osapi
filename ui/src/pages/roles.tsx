@@ -22,7 +22,7 @@ function groupPermissions(perms: string[]) {
 
 export function Roles() {
   useVimScroll();
-  const { role: currentRole, tokenRoles } = useAuth();
+  const { role: currentRole, tokenRoles, tokenTargets } = useAuth();
   const grouped = groupPermissions([...ALL_PERMISSIONS]);
 
   return (
@@ -50,6 +50,14 @@ export function Roles() {
             {tokenRoles.length > 0 && (
               <Text variant="muted" as="p" className="mt-2">
                 Token roles: {tokenRoles.join(", ")}
+              </Text>
+            )}
+            {tokenRoles.length > 0 && (
+              <Text variant="muted" as="p" className="mt-1">
+                Token targets:{" "}
+                {tokenTargets.length > 0
+                  ? tokenTargets.join(", ")
+                  : "each host"}
               </Text>
             )}
           </CardContent>
