@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">File | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/reference/chains/file"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="File | OSAPI"><meta data-rh="true" name="description" content="The behaviors that file calls, and each call that its examples make."><meta data-rh="true" property="og:description" content="The behaviors that file calls, and each call that its examples make."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/reference/chains/file"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/reference/chains/file" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/reference/chains/file" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Reference","item":"https://osapi-io.github.io/osapi/sidebar/reference/"},{"@type":"ListItem","position":2,"name":"Chains","item":"https://osapi-io.github.io/osapi/sidebar/reference/chains/"},{"@type":"ListItem","position":3,"name":"File","item":"https://osapi-io.github.io/osapi/sidebar/reference/chains/file"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.ee2257e7.css">
-<script src="/osapi/assets/js/runtime~main.105392ca.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.5544bb9a.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.ed3fa410.js" defer="defer"></script>
 </head>
 <body>
@@ -84,7 +84,29 @@
 
 
 
-<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>file status</td><td>path=/etc/osapi/file-example.conf</td><td>path=/etc/osapi/file-example.conf state=missing</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/osapi/file-example.conf</td><td>error: /etc/osapi/file-example.conf: not managed</td></tr></tbody></table>
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>file status</td><td>path=/etc/osapi/file-example.conf</td><td>path=/etc/osapi/file-example.conf state=unmanaged</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/osapi/file-example.conf</td><td>error: /etc/osapi/file-example.conf: not managed</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-file-that-osapi-undeployed-status">A file that osapi undeployed (status)<a href="#a-file-that-osapi-undeployed-status" class="hash-link" aria-label="Direct link to A file that osapi undeployed (status)" title="Direct link to A file that osapi undeployed (status)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>file status</td><td>path=/etc/osapi/file-example.conf</td><td>path=/etc/osapi/file-example.conf state=unmanaged</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/osapi/file-example.conf</td><td>path=/etc/osapi/file-example.conf sha256=0083dacc561dfd01081d8554269e…</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="deploy-a-file-update">Deploy a file (update)<a href="#deploy-a-file-update" class="hash-link" aria-label="Direct link to Deploy a file (update)" title="Direct link to Deploy a file (update)" translate="no">​</a></h2>
 
 
@@ -209,6 +231,6 @@
 
 
 
-<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>file delete</td><td>path=/etc/osapi/file-example.conf</td><td>changed=false path=/etc/osapi/file-example.conf</td></tr><tr><td>└─ managedfile delete</td><td>path=/etc/osapi/file-example.conf</td><td>changed=false path=/etc/osapi/file-example.conf</td></tr></tbody></table></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/reference/chains/dns"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">DNS</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/reference/chains/interface"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Interface</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#chain" class="table-of-contents__link toc-highlight">Chain</a></li><li><a href="#a-deployed-file-status" class="table-of-contents__link toc-highlight">A deployed file (status)</a></li><li><a href="#a-path-that-osapi-did-not-deploy-status" class="table-of-contents__link toc-highlight">A path that osapi did not deploy (status)</a></li><li><a href="#deploy-a-file-update" class="table-of-contents__link toc-highlight">Deploy a file (update)</a></li><li><a href="#render-a-template-update" class="table-of-contents__link toc-highlight">Render a template (update)</a></li><li><a href="#a-file-that-holds-the-object-update" class="table-of-contents__link toc-highlight">A file that holds the object (update)</a></li><li><a href="#remove-a-deployed-file-delete" class="table-of-contents__link toc-highlight">Remove a deployed file (delete)</a></li><li><a href="#a-path-that-osapi-did-not-deploy-delete" class="table-of-contents__link toc-highlight">A path that osapi did not deploy (delete)</a></li></ul></div></div></div></div></main></div></div></div></div>
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>file delete</td><td>path=/etc/osapi/file-example.conf</td><td>changed=false path=/etc/osapi/file-example.conf</td></tr><tr><td>└─ managedfile delete</td><td>path=/etc/osapi/file-example.conf</td><td>changed=false path=/etc/osapi/file-example.conf</td></tr></tbody></table></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/reference/chains/dns"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">DNS</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/reference/chains/interface"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Interface</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#chain" class="table-of-contents__link toc-highlight">Chain</a></li><li><a href="#a-deployed-file-status" class="table-of-contents__link toc-highlight">A deployed file (status)</a></li><li><a href="#a-path-that-osapi-did-not-deploy-status" class="table-of-contents__link toc-highlight">A path that osapi did not deploy (status)</a></li><li><a href="#a-file-that-osapi-undeployed-status" class="table-of-contents__link toc-highlight">A file that osapi undeployed (status)</a></li><li><a href="#deploy-a-file-update" class="table-of-contents__link toc-highlight">Deploy a file (update)</a></li><li><a href="#render-a-template-update" class="table-of-contents__link toc-highlight">Render a template (update)</a></li><li><a href="#a-file-that-holds-the-object-update" class="table-of-contents__link toc-highlight">A file that holds the object (update)</a></li><li><a href="#remove-a-deployed-file-delete" class="table-of-contents__link toc-highlight">Remove a deployed file (delete)</a></li><li><a href="#a-path-that-osapi-did-not-deploy-delete" class="table-of-contents__link toc-highlight">A path that osapi did not deploy (delete)</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>

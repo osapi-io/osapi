@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">File management | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/file-management"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="File management | OSAPI"><meta data-rh="true" name="description" content="osapi uploads files to a central Object Store and deploys them to managed hosts."><meta data-rh="true" property="og:description" content="osapi uploads files to a central Object Store and deploys them to managed hosts."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/file-management"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/file-management" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/file-management" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"File management","item":"https://osapi-io.github.io/osapi/sidebar/features/file-management"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.ee2257e7.css">
-<script src="/osapi/assets/js/runtime~main.105392ca.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.5544bb9a.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.ed3fa410.js" defer="defer"></script>
 </head>
 <body>
@@ -64,14 +64,15 @@ can set the file permissions (mode, owner, group) and can render a Go template.
 Deploy, undeploy and status are the update, delete and status methods of the
 <a class="" href="/osapi/sidebar/reference/behaviors/file">file behavior</a>:
 <code>osapi client node file update</code>, <code>osapi client node file delete</code> and
-<code>osapi client node file status</code>. They run on each Linux host. A macOS host
-reports <code>skipped</code>.</p>
+<code>osapi client node file status</code>. They run on each Linux host and on macOS.</p>
 <p><strong>Undeploy</strong> makes an asynchronous job that removes a deployed file from the
 filesystem of the agent. The file-state KV record stays. Thus you can audit the
 undeploy, and a later deploy can find the change.</p>
 <p><strong>Status</strong> makes an asynchronous job. The job compares the file on disk with its
-expected SHA-256 from the file-state KV bucket. It reports one of three states:
-<code>in-sync</code>, <code>drifted</code> or <code>missing</code>.</p>
+expected SHA-256 from the file-state KV bucket. It reports one of four states:
+<code>in-sync</code>, <code>drifted</code>, <code>missing</code> or <code>unmanaged</code>. <code>missing</code> is a file that osapi
+deployed and that is not on the disk. <code>unmanaged</code> is a path that osapi did not
+deploy, or undeployed. Status refuses a path that is a directory with a 400.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-it-works">How it works<a href="#how-it-works" class="hash-link" aria-label="Direct link to How it works" title="Direct link to How it works" translate="no">​</a></h2>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="file-upload-flow">File upload flow<a href="#file-upload-flow" class="hash-link" aria-label="Direct link to File upload flow" title="Direct link to File upload flow" translate="no">​</a></h3>
 <ol>
