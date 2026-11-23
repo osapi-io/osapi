@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">SSH key | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/reference/chains/sshkey"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="SSH key | OSAPI"><meta data-rh="true" name="description" content="The behaviors that sshkey calls, and each call that its examples make."><meta data-rh="true" property="og:description" content="The behaviors that sshkey calls, and each call that its examples make."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/reference/chains/sshkey"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/reference/chains/sshkey" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/reference/chains/sshkey" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Reference","item":"https://osapi-io.github.io/osapi/sidebar/reference/"},{"@type":"ListItem","position":2,"name":"Chains","item":"https://osapi-io.github.io/osapi/sidebar/reference/chains/"},{"@type":"ListItem","position":3,"name":"SSH key","item":"https://osapi-io.github.io/osapi/sidebar/reference/chains/sshkey"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.ee2257e7.css">
-<script src="/osapi/assets/js/runtime~main.5544bb9a.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.7b199efc.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.ed3fa410.js" defer="defer"></script>
 </head>
 <body>
@@ -85,6 +85,28 @@
 
 
 <table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>sshkey list</td><td>name=osapitest</td><td>[]</td></tr><tr><td>└─ user get</td><td>name=osapitest</td><td>gid=1001 home=/home/osapitest locked=true name=osapitest shell=/bin/s…</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-host-key-that-gohai-cannot-read-list">A host key that gohai cannot read (list)<a href="#a-host-key-that-gohai-cannot-read-list" class="hash-link" aria-label="Direct link to A host key that gohai cannot read (list)" title="Direct link to A host key that gohai cannot read (list)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>sshkey list</td><td>name=osapitest</td><td>[{&quot;type&quot;:&quot;ssh-ed25519&quot;,&quot;fingerprint&quot;:&quot;SHA256:mnpIO1El26FsWnOeLzppADcN…</td></tr><tr><td>└─ user get</td><td>name=osapitest</td><td>gid=1001 home=/home/osapitest locked=true name=osapitest shell=/bin/s…</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="add-a-key-create">Add a key (create)<a href="#add-a-key-create" class="hash-link" aria-label="Direct link to Add a key (create)" title="Direct link to Add a key (create)" translate="no">​</a></h2>
 
 
@@ -238,6 +260,6 @@
 
 
 
-<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>sshkey delete</td><td>fingerprint=SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk name=n…</td><td>changed=false fingerprint=SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNP…</td></tr><tr><td>└─ user get</td><td>name=nobody</td><td>error: user &quot;nobody&quot;: not found</td></tr></tbody></table></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/reference/chains/service"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Service</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/reference/chains/status"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Status</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#chain" class="table-of-contents__link toc-highlight">Chain</a></li><li><a href="#a-user-with-keys-list" class="table-of-contents__link toc-highlight">A user with keys (list)</a></li><li><a href="#a-user-with-no-keys-list" class="table-of-contents__link toc-highlight">A user with no keys (list)</a></li><li><a href="#add-a-key-create" class="table-of-contents__link toc-highlight">Add a key (create)</a></li><li><a href="#add-a-second-key-create" class="table-of-contents__link toc-highlight">Add a second key (create)</a></li><li><a href="#a-key-after-a-last-line-with-no-line-break-create" class="table-of-contents__link toc-highlight">A key after a last line with no line break (create)</a></li><li><a href="#a-key-the-user-has-create" class="table-of-contents__link toc-highlight">A key the user has (create)</a></li><li><a href="#remove-a-key-delete" class="table-of-contents__link toc-highlight">Remove a key (delete)</a></li><li><a href="#a-key-the-user-does-not-have-delete" class="table-of-contents__link toc-highlight">A key the user does not have (delete)</a></li><li><a href="#a-user-that-the-host-does-not-have-delete" class="table-of-contents__link toc-highlight">A user that the host does not have (delete)</a></li></ul></div></div></div></div></main></div></div></div></div>
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>sshkey delete</td><td>fingerprint=SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk name=n…</td><td>changed=false fingerprint=SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNP…</td></tr><tr><td>└─ user get</td><td>name=nobody</td><td>error: user &quot;nobody&quot;: not found</td></tr></tbody></table></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/reference/chains/service"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Service</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/reference/chains/status"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Status</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#chain" class="table-of-contents__link toc-highlight">Chain</a></li><li><a href="#a-user-with-keys-list" class="table-of-contents__link toc-highlight">A user with keys (list)</a></li><li><a href="#a-user-with-no-keys-list" class="table-of-contents__link toc-highlight">A user with no keys (list)</a></li><li><a href="#a-host-key-that-gohai-cannot-read-list" class="table-of-contents__link toc-highlight">A host key that gohai cannot read (list)</a></li><li><a href="#add-a-key-create" class="table-of-contents__link toc-highlight">Add a key (create)</a></li><li><a href="#add-a-second-key-create" class="table-of-contents__link toc-highlight">Add a second key (create)</a></li><li><a href="#a-key-after-a-last-line-with-no-line-break-create" class="table-of-contents__link toc-highlight">A key after a last line with no line break (create)</a></li><li><a href="#a-key-the-user-has-create" class="table-of-contents__link toc-highlight">A key the user has (create)</a></li><li><a href="#remove-a-key-delete" class="table-of-contents__link toc-highlight">Remove a key (delete)</a></li><li><a href="#a-key-the-user-does-not-have-delete" class="table-of-contents__link toc-highlight">A key the user does not have (delete)</a></li><li><a href="#a-user-that-the-host-does-not-have-delete" class="table-of-contents__link toc-highlight">A user that the host does not have (delete)</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
