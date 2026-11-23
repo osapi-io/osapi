@@ -12,5 +12,6 @@ export const NodeConditionType = {
   MemoryPressure: 'MemoryPressure',
   HighLoad: 'HighLoad',
   DiskPressure: 'DiskPressure',
+  DrainStuck: 'DrainStuck',
   ConsumersUnavailable: 'ConsumersUnavailable',
 } as const;

@@ -31,6 +31,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
 type StatusPublicTestSuite struct {
@@ -176,6 +177,25 @@ func (suite *StatusPublicTestSuite) TestGet() {
 
 			resp, err := sut.Status.Get(suite.ctx, tc.target)
 			tc.validateFunc(resp, err)
+		})
+	}
+}
+
+func (suite *StatusPublicTestSuite) TestConditionTypesInAPIEnum() {
+	tests := []struct {
+		name      string
+		condition client.ConditionType
+	}{
+		{name: "MemoryPressure", condition: client.ConditionMemoryPressure},
+		{name: "HighLoad", condition: client.ConditionHighLoad},
+		{name: "DiskPressure", condition: client.ConditionDiskPressure},
+		{name: "DrainStuck", condition: client.ConditionDrainStuck},
+		{name: "ConsumersUnavailable", condition: client.ConditionConsumersUnavailable},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			suite.True(gen.NodeConditionType(tc.condition).Valid())
 		})
 	}
 }

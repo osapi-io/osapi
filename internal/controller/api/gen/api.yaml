@@ -8567,10 +8567,13 @@ components:
             - MemoryPressure
             - HighLoad
             - DiskPressure
+            - DrainStuck
             - ConsumersUnavailable
           type: string
           x-oapi-codegen-extra-tags:
-            validate: oneof=MemoryPressure HighLoad DiskPressure ConsumersUnavailable
+            validate: >-
+              oneof=MemoryPressure HighLoad DiskPressure DrainStuck
+              ConsumersUnavailable
       required:
         - type
         - last_transition_time

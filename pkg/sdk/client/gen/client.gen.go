@@ -800,6 +800,7 @@ func (e NetworkInterfaceRouteResultStatus) Valid() bool {
 const (
 	ConsumersUnavailable NodeConditionType = "ConsumersUnavailable"
 	DiskPressure         NodeConditionType = "DiskPressure"
+	DrainStuck           NodeConditionType = "DrainStuck"
 	HighLoad             NodeConditionType = "HighLoad"
 	MemoryPressure       NodeConditionType = "MemoryPressure"
 )
@@ -810,6 +811,8 @@ func (e NodeConditionType) Valid() bool {
 	case ConsumersUnavailable:
 		return true
 	case DiskPressure:
+		return true
+	case DrainStuck:
 		return true
 	case HighLoad:
 		return true
@@ -3572,7 +3575,7 @@ type NetworkInterfaceUpdateResponse struct {
 type NodeCondition struct {
 	LastTransitionTime time.Time         `json:"last_transition_time"`
 	Reason             *string           `json:"reason,omitempty"`
-	Type               NodeConditionType `json:"type" validate:"oneof=MemoryPressure HighLoad DiskPressure ConsumersUnavailable"`
+	Type               NodeConditionType `json:"type" validate:"oneof=MemoryPressure HighLoad DiskPressure DrainStuck ConsumersUnavailable"`
 }
 
 // NodeConditionType defines model for NodeCondition.Type.
