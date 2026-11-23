@@ -7,10 +7,14 @@ import type { BlockStatus } from "@/hooks/use-stack";
 import { Check, X, Loader2, XCircle } from "lucide-react";
 import { TargetPicker } from "@/components/domain/target-picker";
 import { IconButton } from "@/components/ui/icon-button";
+import { BlockKindIcon } from "@/components/domain/block-kind";
+import { blockKindLabels, type BlockKind } from "@/lib/permissions";
 
 interface BlockCardProps {
   label: string;
   description: string;
+  /** Whether the block reads the host, writes it or runs an action on it. */
+  kind?: BlockKind;
   status: BlockStatus;
   focused?: boolean;
   error?: string;
@@ -66,6 +70,7 @@ export const BlockCard = forwardRef<HTMLDivElement, BlockCardProps>(
     {
       label,
       description,
+      kind,
       status,
       focused,
       error,
@@ -100,6 +105,12 @@ export const BlockCard = forwardRef<HTMLDivElement, BlockCardProps>(
               </Text>
             </div>
             <div className="flex items-center gap-2">
+              {kind && (
+                <Badge variant="muted">
+                  <BlockKindIcon kind={kind} className="text-current" />
+                  {blockKindLabels[kind]}
+                </Badge>
+              )}
               <StatusIcon status={status} />
               {badge.label && (
                 <Badge variant={badge.variant}>{badge.label}</Badge>
@@ -117,6 +128,12 @@ export const BlockCard = forwardRef<HTMLDivElement, BlockCardProps>(
               {onTargetChange && (
                 <div className="mb-3">
                   <TargetPicker value={target} onChange={onTargetChange} />
+                  {target === "" && (
+                    <Text variant="muted" size="xs" as="p" className="mt-1">
+                      Pick the hosts that it changes. It does not apply until it
+                      has a target.
+                    </Text>
+                  )}
                 </div>
               )}
               {children}

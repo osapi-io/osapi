@@ -135,3 +135,25 @@ export function blockAllowed(
   const perm = BLOCK_PERMISSIONS[type];
   return perm !== undefined && can(perm);
 }
+
+/**
+ * What a block does to a host: a read changes nothing, a write changes what
+ * the host is configured to be, and an action makes something happen, such
+ * as a restart or a reboot. It is the verb of the block's permission, as the
+ * behavior DSL gives it: read, write, or a verb of an action (execute, shell
+ * or exec).
+ */
+export type BlockKind = "read" | "write" | "action";
+
+export const blockKindLabels: Record<BlockKind, string> = {
+  read: "Read",
+  write: "Write",
+  action: "Action",
+};
+
+export function blockKind(type: string): BlockKind | undefined {
+  const perm = BLOCK_PERMISSIONS[type];
+  if (perm === undefined) return undefined;
+  const verb = perm.slice(perm.indexOf(":") + 1);
+  return verb === "read" ? "read" : verb === "write" ? "write" : "action";
+}
