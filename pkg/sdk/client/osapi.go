@@ -172,13 +172,29 @@ func WithLogger(
 	}
 }
 
-// WithHTTPTransport sets a custom base HTTP transport.
+// WithHTTPTransport sets a custom base HTTP transport. Without it, the
+// client sends through its own clone of http.DefaultTransport, so a caller
+// that closes the idle connections of http.DefaultTransport (for example
+// httptest.Server.Close) does not break a request of this client.
 func WithHTTPTransport(
 	transport http.RoundTripper,
 ) Option {
 	return func(c *Client) {
 		c.baseTransport = transport
 	}
+}
+
+// cloneTransport returns a private copy of base when it is an
+// *http.Transport. Any other RoundTripper is returned as is, because it
+// cannot be cloned.
+func cloneTransport(
+	base http.RoundTripper,
+) http.RoundTripper {
+	if t, ok := base.(*http.Transport); ok {
+		return t.Clone()
+	}
+
+	return base
 }
 
 // New creates an OSAPI SDK client.
@@ -190,7 +206,7 @@ func New(
 	c := &Client{
 		baseURL:       baseURL,
 		logger:        slog.Default(),
-		baseTransport: http.DefaultTransport,
+		baseTransport: cloneTransport(http.DefaultTransport),
 	}
 
 	for _, opt := range opts {

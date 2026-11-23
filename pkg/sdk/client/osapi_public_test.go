@@ -52,6 +52,8 @@ func (suite *ClientPublicTestSuite) TearDownTest() {
 }
 
 func (suite *ClientPublicTestSuite) TestNew() {
+	customTransport := &http.Transport{}
+
 	tests := []struct {
 		name         string
 		opts         func() []client.Option
@@ -94,6 +96,28 @@ func (suite *ClientPublicTestSuite) TestNew() {
 				suite.NotNil(c)
 			},
 		},
+		{
+			name: "when no transport provided uses its own transport",
+			opts: func() []client.Option {
+				return nil
+			},
+			validateFunc: func(c *client.Client) {
+				base := client.ExportBaseTransport(c)
+				suite.IsType(&http.Transport{}, base)
+				suite.NotSame(http.DefaultTransport, base)
+			},
+		},
+		{
+			name: "when custom transport provided uses the caller transport",
+			opts: func() []client.Option {
+				return []client.Option{
+					client.WithHTTPTransport(customTransport),
+				}
+			},
+			validateFunc: func(c *client.Client) {
+				suite.Same(customTransport, client.ExportBaseTransport(c))
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -102,6 +126,53 @@ func (suite *ClientPublicTestSuite) TestNew() {
 			tc.validateFunc(c)
 		})
 	}
+}
+
+func (suite *ClientPublicTestSuite) TestCloneTransport() {
+	tests := []struct {
+		name         string
+		base         func() http.RoundTripper
+		validateFunc func(base, got http.RoundTripper)
+	}{
+		{
+			name: "when base is an http.Transport returns a clone",
+			base: func() http.RoundTripper {
+				return &http.Transport{MaxIdleConns: 7}
+			},
+			validateFunc: func(base, got http.RoundTripper) {
+				suite.NotSame(base, got)
+				suite.Require().IsType(&http.Transport{}, got)
+				suite.Equal(7, got.(*http.Transport).MaxIdleConns)
+			},
+		},
+		{
+			name: "when base is another RoundTripper returns it as is",
+			base: func() http.RoundTripper {
+				return roundTripperFunc(func(*http.Request) (*http.Response, error) {
+					return nil, nil
+				})
+			},
+			validateFunc: func(base, got http.RoundTripper) {
+				suite.NotNil(got)
+				suite.IsType(base, got)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			base := tc.base()
+			tc.validateFunc(base, client.ExportCloneTransport(base))
+		})
+	}
+}
+
+type roundTripperFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripperFunc) RoundTrip(
+	r *http.Request,
+) (*http.Response, error) {
+	return f(r)
 }
 
 func TestClientPublicTestSuite(
