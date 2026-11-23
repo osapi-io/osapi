@@ -254,6 +254,20 @@ func (s *SetupPublicTestSuite) TestInContainer() {
 	}
 }
 
+func (s *SetupPublicTestSuite) TestDefaultContainerFn() {
+	tests := []struct {
+		name string
+	}{
+		{name: "when it reads the real host it agrees with inContainer"},
+	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			want := agent.ExportInContainer(source.Sources{})
+			s.Equal(want, agent.ExportDefaultContainerFn())
+		})
+	}
+}
+
 func (s *SetupPublicTestSuite) TestGohaiFacts() {
 	_, err := agent.ExportGohaiFacts(gohai.WithCollectors("no-such-collector"))
 	s.Error(err, "gohai's error comes back")
