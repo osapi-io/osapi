@@ -105,7 +105,9 @@ permissions each role has.
 - [CLI Reference](../usage/cli/client/node/network/network.mdx): network
   commands
 - [System Facts](system-facts.md): available `@fact.*` references
-- [API Reference](/gen/api/network-management-api-network-operations): REST API
-  documentation
+- API Reference: [DNS](/gen/api/dns-api-network-dns-operations),
+  [interfaces](/gen/api/interface-api-network-interface-operations),
+  [routes](/gen/api/route-api-route-operations) and
+  [connectivity](/gen/api/connectivity-api-network-connectivity-operations)
 - [Job System](job-system.md): how async job processing works
 - [Architecture](../architecture/architecture.md): system design overview
