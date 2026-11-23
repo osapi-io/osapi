@@ -49,6 +49,20 @@ func ExportNewAuthTransport(
 	}
 }
 
+// ExportBaseTransport returns the base transport of the client for testing.
+func ExportBaseTransport(
+	c *Client,
+) http.RoundTripper {
+	return c.baseTransport
+}
+
+// ExportCloneTransport exposes the private cloneTransport for testing.
+func ExportCloneTransport(
+	base http.RoundTripper,
+) http.RoundTripper {
+	return cloneTransport(base)
+}
+
 // ExportLoadAverageFromGen exposes the private loadAverageFromGen for testing.
 func ExportLoadAverageFromGen(
 	input *gen.LoadAverageResponse,
