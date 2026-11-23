@@ -48,13 +48,6 @@ const (
 	OpCommandShell JobOperation = "command.shell.execute"
 )
 
-// File operations — manage file deployments and status.
-const (
-	OpFileDeploy    JobOperation = "file.deploy.execute"
-	OpFileUndeploy  JobOperation = "file.undeploy.execute"
-	OpFileStatusGet JobOperation = "file.status.get"
-)
-
 // Docker operations.
 const (
 	OpDockerCreate      JobOperation = "docker.create.execute"

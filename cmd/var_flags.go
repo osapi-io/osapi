@@ -18,26 +18,25 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package file provides node-targeted file deploy API handlers.
-package file
+package cmd
 
-import (
-	"log/slog"
+import "strings"
 
-	"github.com/osapi-io/osapi/internal/controller/api/node/file/gen"
-	"github.com/osapi-io/osapi/internal/job/client"
-)
-
-// ensure that we've conformed to the `StrictServerInterface` with a compile-time check
-var _ gen.StrictServerInterface = (*File)(nil)
-
-// New factory to create a new instance.
-func New(
-	logger *slog.Logger,
-	jobClient client.JobClient,
-) *File {
-	return &File{
-		JobClient: jobClient,
-		logger:    logger.With(slog.String("subsystem", "controller.node.file")),
+// parseVarFlags converts a slice of "key=value" strings into a map.
+func parseVarFlags(
+	flags []string,
+) map[string]interface{} {
+	if len(flags) == 0 {
+		return nil
 	}
+
+	vars := make(map[string]interface{}, len(flags))
+	for _, f := range flags {
+		parts := strings.SplitN(f, "=", 2)
+		if len(parts) == 2 {
+			vars[parts[0]] = parts[1]
+		}
+	}
+
+	return vars
 }

@@ -72,6 +72,6 @@ func main() {
 
 	fmt.Printf("\nStatus: job=%s\n", status.Data.JobID)
 	for _, r := range status.Data.Results {
-		fmt.Printf("  %s: path=%s status=%s\n", r.Hostname, r.Path, r.Status)
+		fmt.Printf("  %s: path=%s state=%s\n", r.Hostname, r.Path, r.State)
 	}
 }

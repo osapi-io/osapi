@@ -89,9 +89,9 @@ resp, err := client.FileDeploy.Deploy(ctx, client.FileDeployOpts{
     ObjectName:  "app.conf.tmpl",
     Path:        "/etc/app/config.yaml",
     ContentType: "template",
-    Vars: map[string]any{
-        "port":  8080,
-        "debug": false,
+    Vars: map[string]string{
+        "port":  "8080",
+        "debug": "false",
     },
     Target: "_all",
 })

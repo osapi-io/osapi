@@ -28,6 +28,9 @@ are synchronous REST calls. They do not use the job system.
 **Deploy** makes an asynchronous job. The job gets the file from the Object
 Store and writes it to the target path on the filesystem of the agent. A deploy
 can set the file permissions (mode, owner, group) and can render a Go template.
+Deploy, undeploy and status are the
+[file behavior](../reference/behaviors/file/file.md). They run on each Linux
+host. A macOS host reports `skipped`.
 
 **Undeploy** makes an asynchronous job that removes a deployed file from the
 filesystem of the agent. The file-state KV record stays. Thus you can audit the
@@ -78,11 +81,10 @@ reports `changed: true`. The agent compares each one with the file:
 
 - It compares the mode with the permission bits on disk. Thus it corrects a mode
   that something else changed.
-- It compares the owner and the group with the real uid and gid of the file,
-  after it finds the requested names on the host. A name that the host does not
-  know fails the deploy. A numeric id stays as it is. A container image without
-  a `passwd` entry needs that. When they are different, the agent runs `chown`
-  through its privilege escalation.
+- It compares the owner and the group with the names that `stat` reads from the
+  file. The owner and the group are names, not numeric ids. A name that the host
+  does not know fails the deploy. When they are different, the agent runs
+  `chown` through its privilege escalation.
 - A `mode` must have three or four octal digits. A mode that the agent cannot
   parse fails the request. Before, such a mode became 0644, which gave more
   access than requested and still reported success.
@@ -163,7 +165,7 @@ osapi client node file deploy \
     --object-name app.conf.tmpl \
     --path /etc/app/app.conf \
     --content-type template \
-    --var listen_address=0.0.0.0:8080 \
+    --vars listen_address=0.0.0.0:8080 \
     --target _all
 ```
 
@@ -182,16 +184,15 @@ log_level = debug
 {{ end }}
 ```
 
-A loop over a list variable:
+Each value of `.Vars` is a string, from the CLI, the SDK and the API. A key that
+the template reads and the call does not give fails the deploy. A loop goes over
+a list that a fact gives:
 
 ```text
-{{ range .Vars.servers }}
-upstream {{ . }};
+{{ range .Facts.interfaces }}
+# {{ .name }}
 {{ end }}
 ```
-
-The values of `--var` are strings. Thus give a list through the SDK or the
-orchestrator, not through the CLI.
 
 ### Available fact keys
 

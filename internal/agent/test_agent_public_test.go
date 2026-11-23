@@ -34,7 +34,6 @@ import (
 	"github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/provider/command"
 	dockerProv "github.com/osapi-io/osapi/internal/provider/container/docker"
-	fileProv "github.com/osapi-io/osapi/internal/provider/file"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
@@ -55,7 +54,6 @@ type newTestAgentParams struct {
 	memoryProvider  memory.Provider
 	loadProvider    load.Provider
 	commandProvider command.Provider
-	fileProvider    fileProv.Provider
 	dockerProvider  dockerProv.Provider
 	processProvider process.Provider
 	execManager     exec.Manager
@@ -104,12 +102,6 @@ func newTestAgent(
 		"command",
 		agent.NewCommandProcessor(p.commandProvider, true, logger),
 		p.commandProvider,
-	)
-
-	registry.Register(
-		"file",
-		agent.NewFileProcessor(p.fileProvider, logger),
-		p.fileProvider,
 	)
 
 	registry.Register(

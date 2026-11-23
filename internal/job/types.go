@@ -155,13 +155,6 @@ const (
 	OperationCommandShellExecute = client.OpCommandShell
 )
 
-// File operations — manage file deployments and status.
-const (
-	OperationFileDeployExecute   = client.OpFileDeploy
-	OperationFileUndeployExecute = client.OpFileUndeploy
-	OperationFileStatusGet       = client.OpFileStatusGet
-)
-
 // Docker operations.
 const (
 	OperationDockerCreate      = client.OpDockerCreate

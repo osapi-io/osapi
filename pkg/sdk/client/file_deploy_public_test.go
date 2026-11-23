@@ -86,7 +86,7 @@ func (suite *FileDeployPublicTestSuite) TestDeploy() {
 				Mode:        "0644",
 				Owner:       "root",
 				Group:       "root",
-				Vars:        map[string]any{"port": 8080},
+				Vars:        map[string]string{"port": "8080"},
 				Target:      "web-01",
 			},
 			handler: func(w http.ResponseWriter, _ *http.Request) {
@@ -229,7 +229,7 @@ func (suite *FileDeployPublicTestSuite) TestStatus() {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"hostname":"web-01","path":"/etc/nginx/nginx.conf","status":"in-sync","sha256":"abc123"}]}`,
+						`{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"hostname":"web-01","status":"ok","path":"/etc/nginx/nginx.conf","state":"in-sync","sha256":"abc123"}]}`,
 					),
 				)
 			},
@@ -241,7 +241,7 @@ func (suite *FileDeployPublicTestSuite) TestStatus() {
 				r := resp.Data.Results[0]
 				suite.Equal("web-01", r.Hostname)
 				suite.Equal("/etc/nginx/nginx.conf", r.Path)
-				suite.Equal("in-sync", r.Status)
+				suite.Equal("in-sync", r.State)
 				suite.Equal("abc123", r.SHA256)
 			},
 		},

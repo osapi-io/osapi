@@ -17,16 +17,20 @@ agents, check the status and undeploy.
 
 ## FileDeployOpts
 
-| Field         | Type           | Required | Description                          |
-| ------------- | -------------- | -------- | ------------------------------------ |
-| `ObjectName`  | string         | Yes      | Name of the file in Object Store     |
-| `Path`        | string         | Yes      | Destination path on the target host  |
-| `ContentType` | string         | Yes      | `"raw"` or `"template"`              |
-| `Mode`        | string         | No       | File permission mode (e.g. `"0644"`) |
-| `Owner`       | string         | No       | File owner user                      |
-| `Group`       | string         | No       | File owner group                     |
-| `Vars`        | map[string]any | No       | Template variables for `"template"`  |
-| `Target`      | string         | Yes      | Host target (see Targeting below)    |
+| Field         | Type              | Required | Description                                                    |
+| ------------- | ----------------- | -------- | -------------------------------------------------------------- |
+| `ObjectName`  | string            | Yes      | Name of the file in Object Store                               |
+| `Path`        | string            | Yes      | Absolute destination path on the target host                   |
+| `ContentType` | `ContentType`     | No       | `ContentRaw` or `ContentTemplate`; the object's own when empty |
+| `Mode`        | string            | No       | File permission mode (e.g. `"0644"`)                           |
+| `Owner`       | string            | No       | File owner user                                                |
+| `Group`       | string            | No       | File owner group                                               |
+| `Vars`        | map[string]string | No       | Template variables, as `.Vars`                                 |
+| `Target`      | string            | Yes      | Host target (see Targeting below)                              |
+
+`Status` returns a `FileStatusResult` for each host. Its `State` is `in-sync`,
+`drifted` or `missing`. Its `Status` is the status of the job on the host: `ok`,
+`failed` or `skipped`.
 
 ## Usage
 
@@ -49,9 +53,9 @@ resp, err := c.FileDeploy.Deploy(ctx, client.FileDeployOpts{
     ObjectName:  "app.conf.tmpl",
     Path:        "/etc/app/config.yaml",
     ContentType: "template",
-    Vars: map[string]any{
-        "port":  8080,
-        "debug": false,
+    Vars: map[string]string{
+        "port":  "8080",
+        "debug": "false",
     },
     Target: "_all",
 })
@@ -70,4 +74,5 @@ for Object Store operations (upload, list, get, delete).
 
 ## Permissions
 
-Deploy and undeploy require `file:write`. Status requires `file:read`.
+Deploy and undeploy require `file:write`. Status requires `file:read`. They run
+on each Linux host. A macOS host reports `skipped`.
