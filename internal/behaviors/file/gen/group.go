@@ -142,7 +142,7 @@ var Group = endpoint.Define(
 		Handle(HandleDeploy).
 		ID("PostNodeFileDeploy").
 		Describe("Deploy an object of the object store to a path").
-		Permission("file:write").
+		Permission("file:execute").
 		Returns("Each target host's result, with whether it changed.").
 		Action("deploy").
 		Explain("Writes the object at the path with its mode and ownership, and keeps a record of it. A template object, or content_type template, is rendered first with .Facts, .Vars and .Hostname. A file that holds the content, mode and owner already does not change and reports changed: false. osapi client file stale list shows the deployments whose object changed since.").
@@ -155,7 +155,7 @@ var Group = endpoint.Define(
 		Handle(HandleUndeploy).
 		ID("PostNodeFileUndeploy").
 		Describe("Remove a file that osapi deployed").
-		Permission("file:write").
+		Permission("file:execute").
 		Returns("Each target host's result, with whether it changed.").
 		Action("undeploy").
 		Explain("Removes the file and keeps its record, marked undeployed, so status reports missing. A path that osapi did not deploy, or undeployed already, does not change and reports changed: false. The object stays in the object store.").

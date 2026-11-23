@@ -74,5 +74,5 @@ for Object Store operations (upload, list, get, delete).
 
 ## Permissions
 
-Deploy and undeploy require `file:write`. Status requires `file:read`. They run
-on each Linux host. A macOS host reports `skipped`.
+Deploy and undeploy are actions, and require `file:execute`. Status requires
+`file:read`. They run on each Linux host. A macOS host reports `skipped`.

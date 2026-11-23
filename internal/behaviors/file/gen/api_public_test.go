@@ -33,12 +33,12 @@ func (s *APIPublicTestSuite) TestRoutes() {
 		{
 			method:     http.MethodPost,
 			path:       "/api/node/:hostname/file/deploy",
-			permission: "file:write",
+			permission: "file:execute",
 		},
 		{
 			method:     http.MethodPost,
 			path:       "/api/node/:hostname/file/undeploy",
-			permission: "file:write",
+			permission: "file:execute",
 		},
 	}
 

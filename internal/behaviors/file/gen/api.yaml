@@ -347,7 +347,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - file:write
+            - file:execute
       summary: Deploy an object of the object store to a path
       tags:
         - file_operations
@@ -408,7 +408,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - file:write
+            - file:execute
       summary: Remove a file that osapi deployed
       tags:
         - file_operations

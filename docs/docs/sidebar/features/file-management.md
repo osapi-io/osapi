@@ -313,9 +313,11 @@ nats:
 
 ## Permissions
 
-File operations need `file:*` permissions. The `admin` and `automation` roles
-have `file:read` and `file:write`. `operator` and `read` have only `file:read`.
-Refer to the [API reference](/category/api) for the permission of each endpoint.
+File operations need `file:*` permissions. Upload, update and delete of an
+object need `file:write`, which `admin` and `automation` have. Deploy and
+undeploy are actions of the file behavior, and need `file:execute`, which
+`admin` and `operator` have. List, get, stale and status need `file:read`. Refer
+to the [API reference](/category/api) for the permission of each endpoint.
 
 ## Related
 

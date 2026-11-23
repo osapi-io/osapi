@@ -250,7 +250,7 @@ func (s *APIUndeployPublicTestSuite) TestUndeployValidationHTTP() {
 	})
 }
 
-// TestUndeployRBACHTTP sends tokens that do not grant file:write.
+// TestUndeployRBACHTTP sends tokens that do not grant file:execute.
 func (s *APIUndeployPublicTestSuite) TestUndeployRBACHTTP() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
@@ -264,7 +264,7 @@ func (s *APIUndeployPublicTestSuite) TestUndeployRBACHTTP() {
 			WantCode: http.StatusUnauthorized,
 		},
 		{
-			Name: "when the token lacks file:write, it is a 403",
+			Name: "when the token lacks file:execute, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/file/undeploy",

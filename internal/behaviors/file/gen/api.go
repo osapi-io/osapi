@@ -22,13 +22,13 @@ func Routes(
 		{
 			Method:     http.MethodPost,
 			Path:       "/api/node/:hostname/file/deploy",
-			Permission: "file:write",
+			Permission: "file:execute",
 			Handler:    server.Serve(s, Group, "deploy", HandleDeploy, decodeDeploy),
 		},
 		{
 			Method:     http.MethodPost,
 			Path:       "/api/node/:hostname/file/undeploy",
-			Permission: "file:write",
+			Permission: "file:execute",
 			Handler:    server.Serve(s, Group, "undeploy", HandleUndeploy, decodeUndeploy),
 		},
 	}
