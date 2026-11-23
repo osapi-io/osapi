@@ -4,8 +4,8 @@ docs/gen/
 node_modules/
 # Generated from behavior definitions by go generate; just behavior-gen-check
 # keeps them current, so Prettier must not rewrite them.
-docs/sidebar/behaviors/*/
-docs/sidebar/behaviors/_catalog.mdx
+docs/sidebar/reference/behaviors/*/
+docs/sidebar/reference/behaviors/_catalog.mdx
 # The palette, generated from internal/cli/theme.go by go generate.
 src/palette.gen.ts
 src/css/palette.gen.css

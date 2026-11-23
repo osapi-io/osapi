@@ -143,7 +143,7 @@ setup, the conventions and the PR workflow.
 The [MIT] License.
 
 [api]: https://osapi-io.github.io/osapi/category/api
-[behaviors]: https://osapi-io.github.io/osapi/sidebar/behaviors/
+[behaviors]: https://osapi-io.github.io/osapi/sidebar/reference/behaviors
 [cockpit]: https://cockpit-project.org/
 [concepts]: https://osapi-io.github.io/osapi/sidebar/concepts
 [getting started]: https://osapi-io.github.io/osapi/
