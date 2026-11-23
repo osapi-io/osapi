@@ -55,7 +55,6 @@ func (s *ProcessorUserPublicTestSuite) newProcessor(
 ) agent.ProcessorFunc {
 	return agent.NewNodeProcessor(
 		nil,
-		nil,
 		userProvider,
 		slog.Default(),
 	)

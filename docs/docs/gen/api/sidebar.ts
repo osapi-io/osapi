@@ -462,40 +462,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/NTP",
-      link: {
-        type: "doc",
-        id: "gen/api/ntp-management-api-ntp-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/get-node-ntp",
-          label: "Get NTP status",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-node-ntp",
-          label: "Create NTP configuration",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "gen/api/put-node-ntp",
-          label: "Update NTP configuration",
-          className: "api-method put",
-        },
-        {
-          type: "doc",
-          id: "gen/api/delete-node-ntp",
-          label: "Delete NTP configuration",
-          className: "api-method delete",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Node/Process",
       link: {
         type: "doc",
@@ -882,6 +848,40 @@ const sidebar: SidebarsConfig = {
           type: "doc",
           id: "gen/api/put-node-network-interface-route",
           label: "Change the gateway or the metric of a route",
+          className: "api-method put",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Ntp",
+      link: {
+        type: "doc",
+        id: "gen/api/ntp-api-ntp-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/delete-node-ntp",
+          label: "Remove the NTP servers that osapi set",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-ntp",
+          label: "Get the sync status of chrony and its sources",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-ntp",
+          label: "Set the NTP servers that chrony uses",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-ntp",
+          label: "Replace the NTP servers that osapi set",
           className: "api-method put",
         },
       ],

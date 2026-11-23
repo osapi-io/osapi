@@ -77,14 +77,6 @@ const (
 	OpScheduleDelete JobOperation = "schedule.cron.delete"
 )
 
-// NTP operations.
-const (
-	OpNtpGet    JobOperation = "node.ntp.get"
-	OpNtpCreate JobOperation = "node.ntp.create"
-	OpNtpUpdate JobOperation = "node.ntp.update"
-	OpNtpDelete JobOperation = "node.ntp.delete"
-)
-
 // Process operations.
 const (
 	OpProcessList   JobOperation = "node.process.list"

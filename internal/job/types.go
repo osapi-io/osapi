@@ -184,14 +184,6 @@ const (
 	OperationCronDelete = client.OpScheduleDelete
 )
 
-// NTP operations.
-const (
-	OperationNtpGet    = client.OpNtpGet
-	OperationNtpCreate = client.OpNtpCreate
-	OperationNtpUpdate = client.OpNtpUpdate
-	OperationNtpDelete = client.OpNtpDelete
-)
-
 // Process operations.
 const (
 	OperationProcessList   = client.OpProcessList

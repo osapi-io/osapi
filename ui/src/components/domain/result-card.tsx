@@ -1290,17 +1290,13 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
     );
   }
 
-  // Config operations (sysctl, ntp, timezone, hostname)
+  // Config operations (sysctl, timezone, hostname)
   if (
     [
       "sysctl-get",
       "sysctl-set",
       "sysctl-update",
       "sysctl-delete",
-      "ntp-get",
-      "ntp-set",
-      "ntp-update",
-      "ntp-delete",
       "timezone-get",
       "timezone-set",
       "hostname-get",

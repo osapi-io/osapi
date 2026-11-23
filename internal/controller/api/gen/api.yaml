@@ -65,9 +65,6 @@ tags:
   - name: Node_File_Operations_API_node_file_operations
     x-displayName: Node/File
     description: File deploy, undeploy, and status operations on a target node.
-  - name: NTP_Management_API_ntp_operations
-    x-displayName: Node/NTP
-    description: NTP server configuration management on a target node.
   - name: Process_Management_API_process_operations
     x-displayName: Node/Process
     description: Process management operations on a target node.
@@ -110,6 +107,9 @@ tags:
   - description: The routes of an interface
     name: Route_API_route_operations
     x-displayName: Node/Route
+  - description: The NTP servers of chrony, and its sync status
+    name: Ntp_API_ntp_operations
+    x-displayName: Node/Ntp
   - description: Get the operating system of target hosts
     name: Os_API_os_operations
     x-displayName: Node/Os
@@ -2928,202 +2928,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/ntp:
-    servers: []
-    get:
-      summary: Get NTP status
-      description: |
-        Get NTP sync status and configured servers on the target node.
-      tags:
-        - NTP_Management_API_ntp_operations
-      operationId: GetNodeNtp
-      security:
-        - BearerAuth:
-            - ntp:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      responses:
-        '200':
-          description: NTP status.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NtpCollectionResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error retrieving NTP status.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    post:
-      summary: Create NTP configuration
-      description: >
-        Deploy a managed NTP server configuration on the target node.
-        Idempotent: returns changed=false if already managed.
-      tags:
-        - NTP_Management_API_ntp_operations
-      operationId: PostNodeNtp
-      security:
-        - BearerAuth:
-            - ntp:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      requestBody:
-        description: NTP create parameters.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/NtpCreateRequest'
-      responses:
-        '200':
-          description: NTP configuration created.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NtpCreateResponse'
-        '400':
-          description: Invalid request payload.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error creating NTP configuration.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    put:
-      summary: Update NTP configuration
-      description: >
-        Replace the managed NTP server configuration on the target node. Fails
-        if not currently managed.
-      tags:
-        - NTP_Management_API_ntp_operations
-      operationId: PutNodeNtp
-      security:
-        - BearerAuth:
-            - ntp:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      requestBody:
-        description: NTP update parameters.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/NtpUpdateRequest'
-      responses:
-        '200':
-          description: NTP configuration updated.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NtpUpdateResponse'
-        '400':
-          description: Invalid request payload.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: NTP configuration not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error updating NTP configuration.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    delete:
-      summary: Delete NTP configuration
-      description: |
-        Remove the managed NTP server configuration from the target node.
-      tags:
-        - NTP_Management_API_ntp_operations
-      operationId: DeleteNodeNtp
-      security:
-        - BearerAuth:
-            - ntp:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      responses:
-        '200':
-          description: NTP configuration deleted.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NtpDeleteResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error deleting NTP configuration.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /api/node/{hostname}/process:
     servers: []
     get:
@@ -5684,6 +5488,265 @@ paths:
       summary: Change the gateway or the metric of a route
       tags:
         - Route_API_route_operations
+  /api/node/{hostname}/ntp:
+    servers: []
+    delete:
+      description: >-
+        Removes /etc/chrony/sources.d/osapi-ntp.sources and reloads the sources,
+        so chrony uses its other sources. When osapi set no servers, it reports
+        changed: false.
+      operationId: DeleteNodeNtp
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NtpDeleteResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            The host does not have what the request names, such as the object of
+            a deploy.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - ntp:write
+      summary: Remove the NTP servers that osapi set
+      tags:
+        - Ntp_API_ntp_operations
+    get:
+      description: >-
+        Reads chronyc tracking, for whether chrony is synchronized, its stratum,
+        its offset from NTP time and the source that it follows, and chronyc
+        sources, for each source that it has.
+      operationId: GetNodeNtp
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NtpGetResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            The host does not have what the request names, such as the object of
+            a deploy.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - ntp:read
+      summary: Get the sync status of chrony and its sources
+      tags:
+        - Ntp_API_ntp_operations
+    post:
+      description: >-
+        Writes a server line for each server to
+        /etc/chrony/sources.d/osapi-ntp.sources, and reloads the sources with
+        chronyc reload sources. A file that has the same servers does not
+        change, and reports changed: false.
+      operationId: PostNodeNtp
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NtpCreateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NtpCreateResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            The host does not have what the request names, such as the object of
+            a deploy.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - ntp:write
+      summary: Set the NTP servers that chrony uses
+      tags:
+        - Ntp_API_ntp_operations
+    put:
+      description: >-
+        The same as create, for servers that osapi set already. It fails with
+        not found when osapi set none. The servers that the file has already
+        report changed: false.
+      operationId: PutNodeNtp
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NtpUpdateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NtpUpdateResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            The host does not have what the request names, such as the object of
+            a deploy.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - ntp:write
+      summary: Replace the NTP servers that osapi set
+      tags:
+        - Ntp_API_ntp_operations
   /api/node/{hostname}/os:
     servers: []
     get:
@@ -9697,150 +9760,6 @@ components:
             $ref: '#/components/schemas/FileUndeployResult'
       required:
         - results
-    NtpCreateRequest:
-      type: object
-      required:
-        - servers
-      properties:
-        servers:
-          type: array
-          items:
-            type: string
-          description: |
-            List of NTP server addresses to configure.
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1
-    NtpUpdateRequest:
-      type: object
-      required:
-        - servers
-      properties:
-        servers:
-          type: array
-          items:
-            type: string
-          description: |
-            List of NTP server addresses to configure.
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1
-    NtpStatusEntry:
-      type: object
-      description: NTP status for a single host.
-      properties:
-        hostname:
-          type: string
-          description: Hostname of the agent that reported this entry.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        synchronized:
-          type: boolean
-          description: Whether the system clock is synchronized.
-        stratum:
-          type: integer
-          description: NTP stratum level.
-        offset:
-          type: string
-          description: Clock offset from the NTP source.
-        current_source:
-          type: string
-          description: The currently selected NTP source.
-        servers:
-          type: array
-          items:
-            type: string
-          description: Configured NTP server addresses.
-        error:
-          type: string
-          description: Error message if the agent failed to retrieve NTP status.
-      required:
-        - hostname
-        - status
-    NtpCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/NtpStatusEntry'
-      required:
-        - results
-    NtpMutationResult:
-      type: object
-      description: Result of an NTP create, update, or delete operation for one host.
-      properties:
-        hostname:
-          type: string
-          description: Hostname of the agent that processed this operation.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        changed:
-          type: boolean
-          description: Whether the operation modified system state.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    NtpCreateResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/NtpMutationResult'
-      required:
-        - results
-    NtpUpdateResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/NtpMutationResult'
-      required:
-        - results
-    NtpDeleteResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/NtpMutationResult'
-      required:
-        - results
     ProcessSignalRequest:
       type: object
       properties:
@@ -11800,6 +11719,164 @@ components:
       required:
         - results
       type: object
+    NtpCreateRequest:
+      properties:
+        servers:
+          description: The NTP servers, hostnames or IP addresses
+          items:
+            pattern: ^[A-Za-z0-9][A-Za-z0-9.:-]{0,252}$
+            type: string
+          maxItems: 16
+          minItems: 1
+          type: array
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=16,dive,ntp_server
+      required:
+        - servers
+      type: object
+    NtpCreateResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/NtpResult'
+          type: array
+      required:
+        - results
+      type: object
+    NtpDeleteResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/NtpResult'
+          type: array
+      required:
+        - results
+      type: object
+    NtpGetResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/NtpStatus'
+          type: array
+      required:
+        - results
+      type: object
+    NtpResult:
+      properties:
+        changed:
+          description: Whether the host changed
+          type: boolean
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
+      type: object
+    NtpStatus:
+      properties:
+        current_source:
+          description: The source that chrony follows now
+          type: string
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        offset:
+          description: The offset of the system clock from NTP time, such as +0.000003422s
+          type: string
+        servers:
+          description: The sources that chrony has
+          items:
+            type: string
+          type: array
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+        stratum:
+          description: The NTP stratum of the host
+          type: integer
+        synchronized:
+          description: Whether chrony is synchronized to a source
+          type: boolean
+      required:
+        - hostname
+        - status
+      type: object
+    NtpUpdateRequest:
+      properties:
+        servers:
+          description: The NTP servers, hostnames or IP addresses
+          items:
+            pattern: ^[A-Za-z0-9][A-Za-z0-9.:-]{0,252}$
+            type: string
+          maxItems: 16
+          minItems: 1
+          type: array
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=16,dive,ntp_server
+      required:
+        - servers
+      type: object
+    NtpUpdateResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/NtpResult'
+          type: array
+      required:
+        - results
+      type: object
     OsEntry:
       properties:
         error:
@@ -13043,9 +13120,6 @@ x-tagGroups:
   - name: Node File Operations API
     tags:
       - Node_File_Operations_API_node_file_operations
-  - name: NTP Management API
-    tags:
-      - NTP_Management_API_ntp_operations
   - name: Process Management API
     tags:
       - Process_Management_API_process_operations
@@ -13088,6 +13162,9 @@ x-tagGroups:
   - name: Route API
     tags:
       - Route_API_route_operations
+  - name: Ntp API
+    tags:
+      - Ntp_API_ntp_operations
   - name: Os API
     tags:
       - Os_API_os_operations

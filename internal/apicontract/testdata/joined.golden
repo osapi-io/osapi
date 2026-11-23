@@ -8,7 +8,7 @@ op DELETE /api/node/{hostname}/group/{name} id=DeleteNodeGroup tags=[Group_API_g
 op DELETE /api/node/{hostname}/network/dns/{interface_name} id=DeleteNodeNetworkDns tags=[Dns_API_network_dns_operations] auth=BearerAuth:network:write params=[path:hostname!:string path:interface_name!:string] body= responses=[200=application/json:NetworkDnsDeleteResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op DELETE /api/node/{hostname}/network/interface/{name} id=DeleteNodeNetworkInterface tags=[Interface_API_network_interface_operations] auth=BearerAuth:network:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:NetworkInterfaceDeleteResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op DELETE /api/node/{hostname}/network/interface/{name}/route id=DeleteNodeNetworkInterfaceRoute tags=[Route_API_route_operations] auth=BearerAuth:network:write params=[path:hostname!:string path:name!:string] body=application/json:NetworkInterfaceRouteDeleteRequest! responses=[200=application/json:NetworkInterfaceRouteDeleteResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op DELETE /api/node/{hostname}/ntp id=DeleteNodeNtp tags=[NTP_Management_API_ntp_operations] auth=BearerAuth:ntp:write params=[path:hostname!:string] body= responses=[200=application/json:NtpDeleteResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op DELETE /api/node/{hostname}/ntp id=DeleteNodeNtp tags=[Ntp_API_ntp_operations] auth=BearerAuth:ntp:write params=[path:hostname!:string] body= responses=[200=application/json:NtpDeleteResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op DELETE /api/node/{hostname}/package/{name} id=DeleteNodePackage tags=[Package_API_package_operations] auth=BearerAuth:package:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:PackageDeleteResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op DELETE /api/node/{hostname}/schedule/{name} id=DeleteNodeSchedule tags=[Schedule_Management_API_schedule_operations] auth=BearerAuth:schedule:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:ScheduleDeleteResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op DELETE /api/node/{hostname}/service/{name} id=DeleteNodeService tags=[Service_API_service_operations] auth=BearerAuth:service:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:ServiceDeleteResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -50,7 +50,7 @@ op GET /api/node/{hostname}/network/dns/{interface_name} id=GetNodeNetworkDnsByK
 op GET /api/node/{hostname}/network/interface id=GetNodeNetworkInterface tags=[Interface_API_network_interface_operations] auth=BearerAuth:network:read params=[path:hostname!:string] body= responses=[200=application/json:NetworkInterfaceCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/network/interface/{name} id=GetNodeNetworkInterfaceByKey tags=[Interface_API_network_interface_operations] auth=BearerAuth:network:read params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:NetworkInterfaceGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/network/interface/{name}/route id=GetNodeNetworkInterfaceRoute tags=[Route_API_route_operations] auth=BearerAuth:network:read params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:NetworkInterfaceRouteCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op GET /api/node/{hostname}/ntp id=GetNodeNtp tags=[NTP_Management_API_ntp_operations] auth=BearerAuth:ntp:read params=[path:hostname!:string] body= responses=[200=application/json:NtpCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op GET /api/node/{hostname}/ntp id=GetNodeNtp tags=[Ntp_API_ntp_operations] auth=BearerAuth:ntp:read params=[path:hostname!:string] body= responses=[200=application/json:NtpGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/os id=GetNodeOs tags=[Os_API_os_operations] auth=BearerAuth:os:read params=[path:hostname!:string] body= responses=[200=application/json:OsGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/package id=GetNodePackage tags=[Package_API_package_operations] auth=BearerAuth:package:read params=[path:hostname!:string] body= responses=[200=application/json:PackageCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/package/{name} id=GetNodePackageByKey tags=[Package_API_package_operations] auth=BearerAuth:package:read params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:PackageGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -91,7 +91,7 @@ op POST /api/node/{hostname}/group id=PostNodeGroup tags=[Group_API_group_operat
 op POST /api/node/{hostname}/network/connectivity/ping id=PostNodeNetworkConnectivityPing tags=[Connectivity_API_network_connectivity_operations] auth=BearerAuth:network:execute params=[path:hostname!:string] body=application/json:NetworkConnectivityPingRequest! responses=[200=application/json:NetworkConnectivityPingResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op POST /api/node/{hostname}/network/interface/{name} id=PostNodeNetworkInterface tags=[Interface_API_network_interface_operations] auth=BearerAuth:network:write params=[path:hostname!:string path:name!:string] body=application/json:NetworkInterfaceCreateRequest! responses=[200=application/json:NetworkInterfaceCreateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op POST /api/node/{hostname}/network/interface/{name}/route id=PostNodeNetworkInterfaceRoute tags=[Route_API_route_operations] auth=BearerAuth:network:write params=[path:hostname!:string path:name!:string] body=application/json:NetworkInterfaceRouteCreateRequest! responses=[200=application/json:NetworkInterfaceRouteCreateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op POST /api/node/{hostname}/ntp id=PostNodeNtp tags=[NTP_Management_API_ntp_operations] auth=BearerAuth:ntp:write params=[path:hostname!:string] body=application/json:NtpCreateRequest! responses=[200=application/json:NtpCreateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op POST /api/node/{hostname}/ntp id=PostNodeNtp tags=[Ntp_API_ntp_operations] auth=BearerAuth:ntp:write params=[path:hostname!:string] body=application/json:NtpCreateRequest! responses=[200=application/json:NtpCreateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op POST /api/node/{hostname}/package id=PostNodePackage tags=[Package_API_package_operations] auth=BearerAuth:package:write params=[path:hostname!:string] body=application/json:PackageCreateRequest! responses=[200=application/json:PackageCreateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op POST /api/node/{hostname}/power/reboot id=PostNodePowerReboot tags=[Power_API_power_operations] auth=BearerAuth:power:execute params=[path:hostname!:string] body=application/json:PowerRebootRequest! responses=[200=application/json:PowerRebootResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op POST /api/node/{hostname}/power/shutdown id=PostNodePowerShutdown tags=[Power_API_power_operations] auth=BearerAuth:power:execute params=[path:hostname!:string] body=application/json:PowerShutdownRequest! responses=[200=application/json:PowerShutdownResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -114,7 +114,7 @@ op PUT /api/node/{hostname}/hostname id=PutNodeHostname tags=[Hostname_API_hostn
 op PUT /api/node/{hostname}/network/dns/{interface_name} id=PutNodeNetworkDns tags=[Dns_API_network_dns_operations] auth=BearerAuth:network:write params=[path:hostname!:string path:interface_name!:string] body=application/json:NetworkDnsUpdateRequest! responses=[200=application/json:NetworkDnsUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op PUT /api/node/{hostname}/network/interface/{name} id=PutNodeNetworkInterface tags=[Interface_API_network_interface_operations] auth=BearerAuth:network:write params=[path:hostname!:string path:name!:string] body=application/json:NetworkInterfaceUpdateRequest! responses=[200=application/json:NetworkInterfaceUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op PUT /api/node/{hostname}/network/interface/{name}/route id=PutNodeNetworkInterfaceRoute tags=[Route_API_route_operations] auth=BearerAuth:network:write params=[path:hostname!:string path:name!:string] body=application/json:NetworkInterfaceRouteUpdateRequest! responses=[200=application/json:NetworkInterfaceRouteUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op PUT /api/node/{hostname}/ntp id=PutNodeNtp tags=[NTP_Management_API_ntp_operations] auth=BearerAuth:ntp:write params=[path:hostname!:string] body=application/json:NtpUpdateRequest! responses=[200=application/json:NtpUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op PUT /api/node/{hostname}/ntp id=PutNodeNtp tags=[Ntp_API_ntp_operations] auth=BearerAuth:ntp:write params=[path:hostname!:string] body=application/json:NtpUpdateRequest! responses=[200=application/json:NtpUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op PUT /api/node/{hostname}/schedule/{name} id=PutNodeSchedule tags=[Schedule_Management_API_schedule_operations] auth=BearerAuth:schedule:write params=[path:hostname!:string path:name!:string] body=application/json:ScheduleUpdateRequest! responses=[200=application/json:ScheduleUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op PUT /api/node/{hostname}/service/{name} id=PutNodeService tags=[Service_API_service_operations] auth=BearerAuth:service:write params=[path:hostname!:string path:name!:string] body=application/json:ServiceUpdateRequest! responses=[200=application/json:ServiceUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op PUT /api/node/{hostname}/sysctl/{key} id=PutNodeSysctl tags=[Sysctl_API_sysctl_operations] auth=BearerAuth:sysctl:write params=[path:hostname!:string path:key!:string] body=application/json:SysctlUpdateRequest! responses=[200=application/json:SysctlUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -603,28 +603,28 @@ schema NetworkInterfaceUpdateResponse.results! = [NetworkInterfaceResult]
 schema NodeCondition.last_transition_time! = string/date-time
 schema NodeCondition.reason = string
 schema NodeCondition.type! = string(MemoryPressure|HighLoad|DiskPressure)
-schema NtpCollectionResponse.job_id = string/uuid
-schema NtpCollectionResponse.results! = [NtpStatusEntry]
 schema NtpCreateRequest.servers! = [string]
 schema NtpCreateResponse.job_id = string/uuid
-schema NtpCreateResponse.results! = [NtpMutationResult]
+schema NtpCreateResponse.results! = [NtpResult]
 schema NtpDeleteResponse.job_id = string/uuid
-schema NtpDeleteResponse.results! = [NtpMutationResult]
-schema NtpMutationResult.changed = boolean
-schema NtpMutationResult.error = string
-schema NtpMutationResult.hostname! = string
-schema NtpMutationResult.status! = string(ok|failed|skipped|timeout)
-schema NtpStatusEntry.current_source = string
-schema NtpStatusEntry.error = string
-schema NtpStatusEntry.hostname! = string
-schema NtpStatusEntry.offset = string
-schema NtpStatusEntry.servers = [string]
-schema NtpStatusEntry.status! = string(ok|failed|skipped|timeout)
-schema NtpStatusEntry.stratum = integer
-schema NtpStatusEntry.synchronized = boolean
+schema NtpDeleteResponse.results! = [NtpResult]
+schema NtpGetResponse.job_id = string/uuid
+schema NtpGetResponse.results! = [NtpStatus]
+schema NtpResult.changed = boolean
+schema NtpResult.error = string
+schema NtpResult.hostname! = string
+schema NtpResult.status! = string(ok|failed|skipped|timeout)
+schema NtpStatus.current_source = string
+schema NtpStatus.error = string
+schema NtpStatus.hostname! = string
+schema NtpStatus.offset = string
+schema NtpStatus.servers = [string]
+schema NtpStatus.status! = string(ok|failed|skipped|timeout)
+schema NtpStatus.stratum = integer
+schema NtpStatus.synchronized = boolean
 schema NtpUpdateRequest.servers! = [string]
 schema NtpUpdateResponse.job_id = string/uuid
-schema NtpUpdateResponse.results! = [NtpMutationResult]
+schema NtpUpdateResponse.results! = [NtpResult]
 schema OSInfoResponse.distribution! = string
 schema OSInfoResponse.version! = string
 schema ObjectStoreInfo.name! = string
@@ -995,8 +995,8 @@ tag Job_Management_API_job_operations
 tag Load_API_load_operations
 tag Memory_API_memory_operations
 tag NATS_API_nats
-tag NTP_Management_API_ntp_operations
 tag Node_File_Operations_API_node_file_operations
+tag Ntp_API_ntp_operations
 tag Os_API_os_operations
 tag Package_API_package_operations
 tag Power_API_power_operations

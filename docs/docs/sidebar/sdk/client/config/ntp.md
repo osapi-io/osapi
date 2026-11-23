@@ -4,9 +4,10 @@ sidebar_position: 2
 
 # NTP
 
-The `NTP` service has methods that manage NTP configuration on target hosts
-through chrony drop-in files. Use `client.NTP.Get()` and `client.NTP.Create()`,
-for example.
+The `NTP` service has methods that manage the NTP servers of chrony on target
+hosts, through the `ntp` behavior. The servers are in
+`/etc/chrony/sources.d/osapi-ntp.sources`. Use `client.NTP.Get()` and
+`client.NTP.Create()`, for example.
 
 ## Methods
 
@@ -14,8 +15,8 @@ for example.
 | ----------------------------- | ----------------------------------- |
 | `Get(ctx, hostname)`          | Get NTP sync status and server list |
 | `Create(ctx, hostname, opts)` | Create NTP configuration            |
-| `Update(ctx, hostname, opts)` | Update NTP configuration            |
-| `Delete(ctx, hostname)`       | Delete NTP configuration            |
+| `Update(ctx, hostname, opts)` | Replace the servers that osapi set  |
+| `Delete(ctx, hostname)`       | Remove the servers that osapi set   |
 
 ## Request Types
 
