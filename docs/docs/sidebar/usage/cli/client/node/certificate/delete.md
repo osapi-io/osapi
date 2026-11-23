@@ -2,9 +2,11 @@
 
 Remove a certificate authority that osapi deployed.
 
-Removes the file of the CA and rebuilds the trust store. A CA that osapi did not
-deploy does not change and reports changed: false: a system CA is not osapi's to
-remove. macOS reports skipped.
+Removes the file of the CA and rebuilds the trust store: with
+update-ca-certificates --fresh on the Debian family, which removes the links of
+the CA from /etc/ssl/certs, and update-ca-trust on the RHEL family. A CA that
+osapi did not deploy does not change and reports changed: false: a system CA is
+not osapi's to remove. macOS reports skipped.
 
 ```bash
 osapi client node certificate delete [flags]
@@ -153,10 +155,10 @@ With `--json`, the API's response:
 
 With the default settings, each example does this on the host:
 
-| Example                        | On the host                                                                                     |
-| ------------------------------ | ----------------------------------------------------------------------------------------------- |
-| Remove a CA                    | removes `/usr/local/share/ca-certificates/osapi-internal-ca.crt`; runs `update-ca-certificates` |
-| Remove a CA on the RHEL family | removes `/etc/pki/ca-trust/source/anchors/osapi-internal-ca.crt`; runs `update-ca-trust`        |
+| Example                        | On the host                                                                                             |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| Remove a CA                    | removes `/usr/local/share/ca-certificates/osapi-internal-ca.crt`; runs `update-ca-certificates --fresh` |
+| Remove a CA on the RHEL family | removes `/etc/pki/ca-trust/source/anchors/osapi-internal-ca.crt`; runs `update-ca-trust`                |
 
 The command fails in these cases:
 

@@ -222,7 +222,7 @@ export const getDeleteNodeCertificateUrl = (hostname: string,
 }
 
 /**
- * Removes the file of the CA and rebuilds the trust store. A CA that osapi did not deploy does not change and reports changed: false: a system CA is not osapi's to remove. macOS reports skipped.
+ * Removes the file of the CA and rebuilds the trust store: with update-ca-certificates --fresh on the Debian family, which removes the links of the CA from /etc/ssl/certs, and update-ca-trust on the RHEL family. A CA that osapi did not deploy does not change and reports changed: false: a system CA is not osapi's to remove. macOS reports skipped.
  * @summary Remove a certificate authority that osapi deployed
  */
 export const deleteNodeCertificate = async (hostname: string,

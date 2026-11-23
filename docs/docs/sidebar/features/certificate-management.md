@@ -50,7 +50,7 @@ the Debian system CA `mozilla/ISRG_Root_X1`, is in `list` only.
 ```bash
 # Upload a CA certificate PEM to the Object Store
 osapi client file upload --name internal-ca \
-  --type raw --file /path/to/internal-ca.pem
+  --content-type raw --file /path/to/internal-ca.pem
 
 # Deploy the certificate to a host
 osapi client node certificate create --target web-01 \

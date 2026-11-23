@@ -190,7 +190,7 @@ func (w *writer) Deploy(
 		return false, err
 	}
 
-	return true, w.rebuild(ctx)
+	return true, w.rebuild(ctx, nil)
 }
 
 // Remove drops the file of a CA that osapi deployed, and rebuilds the trust
@@ -210,8 +210,15 @@ func (w *writer) Remove(
 		managedfile.DeleteInput{Path: path}); err != nil {
 		return false, err
 	}
+	// update-ca-certificates without --fresh keeps the links in
+	// /etc/ssl/certs of a local CA that is gone: it cleans them only when a
+	// CA was added or a system one turned off.
+	var args []string
+	if w.update == "update-ca-certificates" {
+		args = []string{"--fresh"}
+	}
 
-	return true, w.rebuild(ctx)
+	return true, w.rebuild(ctx, args)
 }
 
 // owned is the record of path, and whether osapi deployed it: managedfile
@@ -229,11 +236,13 @@ func (w *writer) owned(
 	return rec, err == nil && !rec.Undeployed, err
 }
 
-// rebuild runs the family's program that rebuilds the trust store, as root.
+// rebuild runs the family's program that rebuilds the trust store, as root,
+// with args.
 func (w *writer) rebuild(
 	ctx context.Context,
+	args []string,
 ) error {
-	if _, err := w.exec.RunPrivilegedCmd(ctx, w.update, nil); err != nil {
+	if _, err := w.exec.RunPrivilegedCmd(ctx, w.update, args); err != nil {
 		return fmt.Errorf("%s: %w", w.update, err)
 	}
 

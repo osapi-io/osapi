@@ -258,7 +258,9 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Write("delete", Delete).Key("name").
 		On(behavior.PlatformDebian, behavior.PlatformLinux).
 		Describe("Remove a certificate authority that osapi deployed").
-		Explain("Removes the file of the CA and rebuilds the trust store. A CA that osapi "+
+		Explain("Removes the file of the CA and rebuilds the trust store: with "+
+			"update-ca-certificates --fresh on the Debian family, which removes the links "+
+			"of the CA from /etc/ssl/certs, and update-ca-trust on the RHEL family. A CA that osapi "+
 			"did not deploy does not change and reports changed: false: a system CA is "+
 			"not osapi's to remove. macOS reports skipped.").
 		Example("Remove a CA", DeleteInput{Name: "internal-ca"},
@@ -266,7 +268,7 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.OnPlatform(behavior.PlatformDebian),
 			stored, deployed,
 			behavior.Removed(debPath),
-			behavior.Ran("update-ca-certificates"),
+			behavior.Ran("update-ca-certificates --fresh"),
 		).
 		Example("Remove a CA on the RHEL family", DeleteInput{Name: "internal-ca"},
 			Result{Name: "internal-ca", Changed: true},
