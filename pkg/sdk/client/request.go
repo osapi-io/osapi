@@ -28,9 +28,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
-
-	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
 // Request sends one request to an API path, such as
@@ -88,7 +87,7 @@ func (c *Client) Send(
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		var e gen.ErrorResponse
+		var e ErrorResponse
 		_ = json.Unmarshal(raw, &e)
 		err := checkError(resp.StatusCode, &e)
 		var withBody interface{ setBody([]byte) }
@@ -100,4 +99,78 @@ func (c *Client) Send(
 	}
 
 	return newResponse(json.RawMessage(raw), raw, resp), nil
+}
+
+// send is how each typed method sends its request: to path, with query when
+// it has parameters, and body as JSON when it is not nil. It decodes the
+// answer's body into T. An answer outside 2xx is the SDK's error types, from
+// Send.
+func send[T any](
+	ctx context.Context,
+	c *Client,
+	method string,
+	path string,
+	query url.Values,
+	body any,
+) (*Response[T], error) {
+	resp, err := sendJSON(ctx, c, method, path, query, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return decode[T](method, path, resp)
+}
+
+// decode is the answer resp of method and path, with its body decoded
+// into T.
+func decode[T any](
+	method string,
+	path string,
+	resp *Response[json.RawMessage],
+) (*Response[T], error) {
+	var data T
+	if err := json.Unmarshal(resp.rawJSON, &data); err != nil {
+		return nil, fmt.Errorf("%s %s: decode response: %w", method, path, err)
+	}
+	out := NewResponse(data, resp.rawJSON)
+	out.traceID = resp.traceID
+
+	return out, nil
+}
+
+// sendEmpty is send for a method whose answer has no body, such as a 204.
+func sendEmpty(
+	ctx context.Context,
+	c *Client,
+	method string,
+	path string,
+	query url.Values,
+	body any,
+) error {
+	_, err := sendJSON(ctx, c, method, path, query, body)
+
+	return err
+}
+
+// sendJSON is Send with query on the path and body encoded as JSON.
+func sendJSON(
+	ctx context.Context,
+	c *Client,
+	method string,
+	path string,
+	query url.Values,
+	body any,
+) (*Response[json.RawMessage], error) {
+	if len(query) > 0 {
+		path += "?" + query.Encode()
+	}
+	var data []byte
+	if body != nil {
+		var err error
+		if data, err = json.Marshal(body); err != nil {
+			return nil, fmt.Errorf("%s %s: encode request: %w", method, path, err)
+		}
+	}
+
+	return c.Send(ctx, method, path, "application/json", data)
 }

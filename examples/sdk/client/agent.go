@@ -80,26 +80,24 @@ func main() {
 	fmt.Printf("  Architecture: %s\n", a.Architecture)
 	fmt.Printf("  Kernel:       %s\n", a.KernelVersion)
 	fmt.Printf("  CPUs:         %d\n", a.CPUCount)
-	fmt.Printf("  FQDN:         %s\n", a.Fqdn)
+	fmt.Printf("  FQDN:         %s\n", a.FQDN)
 	fmt.Printf("  Package Mgr:  %s\n", a.PackageMgr)
 	fmt.Printf("  Service Mgr:  %s\n", a.ServiceMgr)
 	fmt.Printf("  Uptime:       %s\n", a.Uptime)
 	fmt.Printf("  Started:      %s\n", a.StartedAt.Format("2006-01-02 15:04:05"))
 	fmt.Printf("  Registered:   %s\n", a.RegisteredAt.Format("2006-01-02 15:04:05"))
 
-	if a.OSInfo != nil {
+	if a.OSInfo.Distribution != "" {
 		fmt.Printf("  OS:           %s %s\n",
 			a.OSInfo.Distribution, a.OSInfo.Version)
 	}
 
-	if a.LoadAverage != nil {
-		fmt.Printf("  Load:         %.2f %.2f %.2f\n",
-			a.LoadAverage.OneMin,
-			a.LoadAverage.FiveMin,
-			a.LoadAverage.FifteenMin)
-	}
+	fmt.Printf("  Load:         %.2f %.2f %.2f\n",
+		a.LoadAverage.Min1,
+		a.LoadAverage.Min5,
+		a.LoadAverage.Min15)
 
-	if a.Memory != nil {
+	if a.Memory.Total > 0 {
 		fmt.Printf("  Memory:       total=%d  used=%d  free=%d\n",
 			a.Memory.Total, a.Memory.Used, a.Memory.Free)
 	}

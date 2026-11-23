@@ -100,5 +100,5 @@ a `Notifier` implementation.
 
 ## Permissions
 
-Notifications need no permissions of their own. The watcher reads the same
-registry KV bucket as the health status endpoint.
+The Permission column of [Methods](#methods) gives the permission of each
+method.

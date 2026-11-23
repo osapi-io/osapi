@@ -8,15 +8,39 @@ Telemetry that the controller reads for you, such as the spans of a trace.
 
 ## Methods
 
-| Method                | Description                                                                           |
-| --------------------- | ------------------------------------------------------------------------------------- |
-| `Trace(ctx, id, all)` | Retrieve a trace by its ID: its summary and its span tree. `all` keeps the NATS calls |
+| Method                                                | Returns                   | Permission   | Description              |
+| ----------------------------------------------------- | ------------------------- | ------------ | ------------------------ |
+| `c.Telemetry.Get(ctx, id, params TelemetryGetParams)` | `Response[TraceResponse]` | `trace:read` | Get the spans of a trace |
+
+## Types
+
+The fields of each type are the properties of its schema in the API's spec.
+
+### TelemetryGetParams
+
+| Field | Type   | Description                                                     |
+| ----- | ------ | --------------------------------------------------------------- |
+| `All` | `bool` | Show the NATS calls too, the reads and writes of the job queue. |
+
+### TraceResponse
+
+| Field         | Type          | Description                                                                          |
+| ------------- | ------------- | ------------------------------------------------------------------------------------ |
+| `Duration`    | `string`      | From the start of the first span to the end of the last, as a Go duration.           |
+| `FailedSpans` | `int`         | The number of spans that failed.                                                     |
+| `NATSCalls`   | `int`         | The number of NATS calls left out, the bookkeeping of the job queue. all shows them. |
+| `NATSTime`    | `string`      | The time that the NATS calls left out took, as a Go duration.                        |
+| `Services`    | `[]string`    | The services that made the spans, in the order each first appears.                   |
+| `Spans`       | `[]TraceNode` | The spans that have no parent in the trace, each with its children, in start order.  |
+| `Started`     | `time.Time`   | When the first span started.                                                         |
+| `TraceID`     | `string`      | The trace ID.                                                                        |
 
 ## Usage
 
 ```go
 // The trace ID that a command prints after its job ID, or resp.TraceID()
-resp, err := client.Telemetry.Trace(ctx, "26e448c9dbe1c4a8d216a98c675079c9", false)
+resp, err := c.Telemetry.Get(ctx, "26e448c9dbe1c4a8d216a98c675079c9",
+    client.TelemetryGetParams{})
 fmt.Println(resp.Data.Duration, resp.Data.NATSCalls, "NATS calls left out")
 for _, root := range resp.Data.Spans {
     // Each span has its children, in start order.
@@ -38,4 +62,5 @@ for a complete working example.
 
 ## Permissions
 
-Requires `trace:read` permission.
+The Permission column of [Methods](#methods) gives the permission of each
+method.

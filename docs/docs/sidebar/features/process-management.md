@@ -62,14 +62,8 @@ names its host. A host that failed or that was skipped shows its error.
 
 ## Permissions
 
-| Operation | Permission        |
-| --------- | ----------------- |
-| List, Get | `process:read`    |
-| Signal    | `process:execute` |
-
-Each built-in role that reads gets `process:read`. The `admin` and `operator`
-roles get `process:execute`. The `automation` role does not, because a signal is
-an action and not a change to the configuration.
+The Permission column of [Methods](#methods) gives the permission of each
+method.
 
 ## Related
 

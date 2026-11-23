@@ -68,20 +68,11 @@ func (suite *ClientPublicTestSuite) TestNew() {
 				suite.NotNil(c)
 				suite.NotNil(c.Status)
 				suite.NotNil(c.Hostname)
-				suite.NotNil(c.Disk)
-				suite.NotNil(c.Memory)
-				suite.NotNil(c.Load)
-				suite.NotNil(c.Uptime)
-				suite.NotNil(c.OS)
-				suite.NotNil(c.DNS)
-				suite.NotNil(c.Connectivity)
-				suite.NotNil(c.Command)
-				suite.NotNil(c.FileDeploy)
+				suite.NotNil(c.NetworkDNS)
+				suite.NotNil(c.NodeFile)
+				suite.NotNil(c.File)
 				suite.NotNil(c.Job)
 				suite.NotNil(c.Health)
-				suite.NotNil(c.Audit)
-				suite.NotNil(c.File)
-				suite.NotNil(c.Schedule)
 			},
 		},
 		{

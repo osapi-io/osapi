@@ -277,6 +277,7 @@ paths:
       summary: List the images of the host
       tags:
         - container_image_operations
+      x-osapi-method: list
   /api/node/{hostname}/container/image/{image}:
     delete:
       description: 'Runs docker rmi, with -f when force is set, which removes an image that a container uses. An image that the host does not have reports changed: false.'
@@ -339,6 +340,7 @@ paths:
       summary: Remove an image
       tags:
         - container_image_operations
+      x-osapi-method: delete
   /api/node/{hostname}/container/image/pull:
     post:
       description: 'Runs docker pull, and answers the ID and the size of the image that the host has after it. A pull that gets nothing new, because the host had the image of that reference already, reports changed: false.'
@@ -400,6 +402,7 @@ paths:
       summary: Pull an image
       tags:
         - container_image_operations
+      x-osapi-method: pull
 tags:
   - description: The Docker images of the host
     name: container_image_operations

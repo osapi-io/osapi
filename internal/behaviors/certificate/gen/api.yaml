@@ -297,6 +297,7 @@ paths:
       summary: List the certificate authorities that the host trusts
       tags:
         - certificate_operations
+      x-osapi-method: list
     post:
       description: 'Writes the PEM of the object as a file with the osapi- prefix, such as osapi-internal-ca.crt for internal-ca, in the family''s local directory: /usr/local/share/ca-certificates on the Debian family, /etc/pki/trust/anchors on SUSE, /etc/pki/ca-trust/source/anchors on RHEL and Fedora. Then it rebuilds the trust store: with update-ca-certificates on the Debian family and SUSE, and with update-ca-trust on the others. Alpine reports skipped. A CA that osapi deployed already with the same content does not change and reports changed: false. A file of that name that osapi did not write is refused. macOS reports skipped.'
       operationId: PostNodeCertificate
@@ -357,6 +358,7 @@ paths:
       summary: Add a certificate authority to the trust store
       tags:
         - certificate_operations
+      x-osapi-method: create
   /api/node/{hostname}/certificate/{name}:
     delete:
       description: 'Removes the file of the CA and rebuilds the trust store: with update-ca-certificates --fresh on the Debian family and SUSE, which removes the links of the CA from /etc/ssl/certs, and update-ca-trust on the RHEL family. A CA that osapi did not deploy does not change and reports changed: false: a system CA is not osapi''s to remove. macOS reports skipped.'
@@ -413,6 +415,7 @@ paths:
       summary: Remove a certificate authority that osapi deployed
       tags:
         - certificate_operations
+      x-osapi-method: delete
     get:
       description: Reads one CA from the same list, by the name that list gives it. A CA that the host does not trust is not found. A name with a slash, such as a system CA of the Debian family, is in list only.
       operationId: GetNodeCertificateByKey
@@ -468,6 +471,7 @@ paths:
       summary: Get one certificate authority
       tags:
         - certificate_operations
+      x-osapi-method: get
     put:
       description: Writes the CA from the object, or from the one that it was deployed from when the object is empty, and rebuilds the trust store when the file changed. A CA that osapi did not deploy is not found. macOS reports skipped.
       operationId: PutNodeCertificate
@@ -529,6 +533,7 @@ paths:
       summary: Write a certificate authority that osapi deployed again
       tags:
         - certificate_operations
+      x-osapi-method: update
 tags:
   - description: The certificate authorities that the host trusts
     name: certificate_operations

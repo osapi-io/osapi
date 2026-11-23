@@ -131,13 +131,8 @@ or the [API Reference](/gen/api/health-check-api-health) for the REST endpoints.
 
 ## Permissions
 
-| Endpoint         | Permission    |
-| ---------------- | ------------- |
-| `/health`        | None          |
-| `/health/ready`  | None          |
-| `/health/status` | `health:read` |
-
-Each built-in role includes `health:read`.
+The Permission column of [Methods](#methods) gives the permission of each
+method.
 
 ## Related
 

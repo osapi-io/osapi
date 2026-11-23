@@ -8,9 +8,22 @@ Disk usage query operations.
 
 ## Methods
 
-| Method             | Description    |
-| ------------------ | -------------- |
-| `Get(ctx, target)` | Get disk usage |
+| Method                      | Returns                           | Permission  | Description                    |
+| --------------------------- | --------------------------------- | ----------- | ------------------------------ |
+| `c.Disk.Get(ctx, hostname)` | `Response[Collection[DiskEntry]]` | `disk:read` | Get the disk usage of the host |
+
+## Types
+
+The fields of each type are the properties of its schema in the API's spec.
+
+### DiskEntry
+
+| Field      | Type     | Description                                                                            |
+| ---------- | -------- | -------------------------------------------------------------------------------------- |
+| `Disks`    | `[]Disk` | Each local filesystem.                                                                 |
+| `Error`    | `string` | Error message if the agent failed.                                                     |
+| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
+| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
 
 ## Usage
 
@@ -38,4 +51,5 @@ for a complete working example.
 
 ## Permissions
 
-Requires the `disk:read` permission.
+The Permission column of [Methods](#methods) gives the permission of each
+method.

@@ -340,6 +340,7 @@ paths:
       summary: Liveness probe
       tags:
         - health
+      x-osapi-method: liveness
   /api/health/ready:
     get:
       description: Returns 200 when the service is ready to accept traffic.
@@ -367,6 +368,7 @@ paths:
       summary: Readiness probe
       tags:
         - health
+      x-osapi-method: ready
   /api/health/status:
     get:
       description: Returns per-component health status with system metrics. Requires authentication.
@@ -402,6 +404,7 @@ paths:
       summary: System status and component health
       tags:
         - health
+      x-osapi-method: status
 tags:
   - description: Health check endpoints for liveness, readiness, and detailed status.
     name: health

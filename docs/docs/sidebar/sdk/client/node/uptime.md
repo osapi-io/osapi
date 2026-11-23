@@ -8,9 +8,23 @@ System uptime query operations.
 
 ## Methods
 
-| Method             | Description |
-| ------------------ | ----------- |
-| `Get(ctx, target)` | Get uptime  |
+| Method                        | Returns                             | Permission    | Description                |
+| ----------------------------- | ----------------------------------- | ------------- | -------------------------- |
+| `c.Uptime.Get(ctx, hostname)` | `Response[Collection[UptimeEntry]]` | `uptime:read` | Get the uptime of the host |
+
+## Types
+
+The fields of each type are the properties of its schema in the API's spec.
+
+### UptimeEntry
+
+| Field      | Type     | Description                                                                            |
+| ---------- | -------- | -------------------------------------------------------------------------------------- |
+| `Error`    | `string` | Error message if the agent failed.                                                     |
+| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
+| `Seconds`  | `int`    | How long the host has run, in seconds.                                                 |
+| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| `Uptime`   | `string` | How long the host has run, in days, hours and minutes.                                 |
 
 ## Usage
 
@@ -34,4 +48,5 @@ for a complete working example.
 
 ## Permissions
 
-Requires the `uptime:read` permission.
+The Permission column of [Methods](#methods) gives the permission of each
+method.

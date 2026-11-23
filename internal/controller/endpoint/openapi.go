@@ -75,6 +75,10 @@ func ErrorSchema() *openapi3.Schema {
 	return s
 }
 
+// MethodExtension is the extension of each operation of the spec that names
+// the method in its group, such as get or drain.
+const MethodExtension = "x-osapi-method"
+
 // OpenAPI is the group's part of the spec. It has the shared ErrorResponse
 // schema, so the spec stands alone.
 func OpenAPI(
@@ -141,6 +145,9 @@ func (b *builder) operation(
 		Description: m.explain,
 		Tags:        []string{g.Tag},
 		Responses:   openapi3.NewResponses(),
+		// The method's name in its group, such as get or drain. The SDK's
+		// generator names each typed method from it.
+		Extensions: map[string]any{MethodExtension: m.Name},
 	}
 	if perm := g.Permission(m); perm != "" {
 		op.Security = &openapi3.SecurityRequirements{{bearer: []string{string(perm)}}}

@@ -93,14 +93,8 @@ for how osapi finds the OS family.
 
 ## Permissions
 
-| Operation        | Permission      |
-| ---------------- | --------------- |
-| Reboot, Shutdown | `power:execute` |
-
-Reboot and shutdown are actions, so they need `power:execute`. The `admin` and
-`operator` roles have it; `automation`, `read` and `observer` do not. Do not
-grant it to untrusted tokens. The integration test never runs these actions on a
-live host, because the host would go down under it.
+The Permission column of [Methods](#methods) gives the permission of each
+method.
 
 ## Related
 

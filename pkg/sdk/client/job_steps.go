@@ -22,8 +22,6 @@ package client
 
 import (
 	"strings"
-
-	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
 // Step is one call of a behavior method that a job made on a host, with the
@@ -80,28 +78,4 @@ func formatStep(
 	}
 
 	return line
-}
-
-// stepsFromGen is steps as the SDK gives them.
-func stepsFromGen(
-	steps []gen.Step,
-) []Step {
-	out := make([]Step, 0, len(steps))
-	for _, g := range steps {
-		s := Step{
-			Behavior:   g.Behavior,
-			Method:     g.Method,
-			Changed:    g.Changed,
-			DurationMS: g.DurationMs,
-		}
-		if g.Error != nil {
-			s.Error = *g.Error
-		}
-		if g.Steps != nil {
-			s.Steps = stepsFromGen(*g.Steps)
-		}
-		out = append(out, s)
-	}
-
-	return out
 }

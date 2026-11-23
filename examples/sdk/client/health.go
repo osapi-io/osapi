@@ -49,7 +49,7 @@ func main() {
 	ctx := context.Background()
 
 	// Liveness — is the API process running?
-	live, err := c.Health.GetLiveness(ctx)
+	live, err := c.Health.Liveness(ctx)
 	if err != nil {
 		log.Fatalf("liveness: %v", err)
 	}
@@ -57,7 +57,7 @@ func main() {
 	fmt.Printf("Liveness: %s\n", live.Data.Status)
 
 	// Readiness — is the API ready to serve requests?
-	ready, err := c.Health.GetReady(ctx)
+	ready, err := c.Health.Ready(ctx)
 	if err != nil {
 		log.Fatalf("readiness: %v", err)
 	}
@@ -65,7 +65,7 @@ func main() {
 	fmt.Printf("Readiness: %s\n", ready.Data.Status)
 
 	// Status — detailed system info (requires auth).
-	status, err := c.Health.GetStatus(ctx)
+	status, err := c.Health.Status(ctx)
 	if err != nil {
 		log.Fatalf("status: %v", err)
 	}
@@ -88,12 +88,12 @@ func main() {
 	}
 
 	// NATS connection info.
-	if s.NATS != nil {
+	if s.NATS.URL != "" {
 		fmt.Printf("\nNATS: url=%s version=%s\n", s.NATS.URL, s.NATS.Version)
 	}
 
 	// Agent stats.
-	if s.Agents != nil {
+	if s.Agents.Total > 0 {
 		fmt.Printf("\nAgents: %d total, %d ready\n", s.Agents.Total, s.Agents.Ready)
 		for _, a := range s.Agents.Agents {
 			fmt.Printf("  %s  registered=%s  labels=%s\n",
@@ -102,10 +102,10 @@ func main() {
 	}
 
 	// Job stats.
-	if s.Jobs != nil {
+	if s.Jobs.Total > 0 {
 		fmt.Printf("\nJobs: total=%d completed=%d failed=%d processing=%d unprocessed=%d dlq=%d\n",
 			s.Jobs.Total, s.Jobs.Completed, s.Jobs.Failed,
-			s.Jobs.Processing, s.Jobs.Unprocessed, s.Jobs.Dlq)
+			s.Jobs.Processing, s.Jobs.Unprocessed, s.Jobs.DLQ)
 	}
 
 	// The count of JetStream consumers.

@@ -291,6 +291,7 @@ paths:
       summary: List the kernel's parameters and which osapi manages
       tags:
         - sysctl_operations
+      x-osapi-method: list
     post:
       description: 'Writes osapi-net.ipv4.ip_forward.conf for net.ipv4.ip_forward to behaviors.sysctl.dir, /etc/sysctl.d by default, and applies it with sysctl -p. It fails when sysctl -p fails, because the value is not set. A second run with the same value changes nothing and reports changed: false. If the kernel has a different value, for example after a failed apply, it applies the value again.'
       operationId: PostNodeSysctl
@@ -351,6 +352,7 @@ paths:
       summary: Manage a kernel parameter and apply it
       tags:
         - sysctl_operations
+      x-osapi-method: create
   /api/node/{hostname}/sysctl/{key}:
     delete:
       description: 'Removes the file that osapi wrote for it and reloads with sysctl --system. Then a setting for the key in a different file takes effect. If there is no such setting, the parameter keeps its current value until the next reboot. A delete of a parameter that osapi does not manage reports changed: false.'
@@ -407,6 +409,7 @@ paths:
       summary: Stop the management of a kernel parameter
       tags:
         - sysctl_operations
+      x-osapi-method: delete
     get:
       operationId: GetNodeSysctlByKey
       parameters:
@@ -461,6 +464,7 @@ paths:
       summary: Get a kernel parameter's current value, and whether osapi manages it
       tags:
         - sysctl_operations
+      x-osapi-method: get
     put:
       description: 'The same as create, addressed by the parameter: osapi manages the parameter from then on whether it did before or not. Setting the value it already has reports changed: false.'
       operationId: PutNodeSysctl
@@ -522,6 +526,7 @@ paths:
       summary: Set a kernel parameter, manage it, and apply it
       tags:
         - sysctl_operations
+      x-osapi-method: update
 tags:
   - description: Kernel parameters, written to sysctl.d files and applied
     name: sysctl_operations

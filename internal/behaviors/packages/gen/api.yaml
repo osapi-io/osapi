@@ -266,6 +266,7 @@ paths:
       summary: List the packages installed on the host
       tags:
         - package_operations
+      x-osapi-method: list
     post:
       description: 'Installs the package with apt-get install, at the version when one is given. A package that is installed, at that version when one is given, does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.'
       operationId: PostNodePackage
@@ -326,6 +327,7 @@ paths:
       summary: Install a package
       tags:
         - package_operations
+      x-osapi-method: create
   /api/node/{hostname}/package/{name}:
     delete:
       description: 'Removes the package with apt-get remove. A package that is not installed does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.'
@@ -382,6 +384,7 @@ paths:
       summary: Remove a package
       tags:
         - package_operations
+      x-osapi-method: delete
     get:
       description: Reads one package from the same list. A package that is not installed is not found.
       operationId: GetNodePackageByKey
@@ -437,6 +440,7 @@ paths:
       summary: Get one installed package
       tags:
         - package_operations
+      x-osapi-method: get
 tags:
   - description: The packages installed on the host
     name: package_operations

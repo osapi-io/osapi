@@ -53,9 +53,9 @@ func sysctlExample() {
 	hostname := "_any"
 
 	// List all sysctl parameters on the target host.
-	// Returns Collection[SysctlEntryResult] with per-host results.
+	// Returns Collection[SysctlEntry] with per-host results.
 	fmt.Println("=== Listing sysctl parameters ===")
-	listResp, err := c.Sysctl.List(ctx, hostname, client.SysctlListOpts{})
+	listResp, err := c.Sysctl.List(ctx, hostname, client.SysctlListParams{})
 	if err != nil {
 		log.Fatalf("list failed: %v", err)
 	}
@@ -79,7 +79,7 @@ func sysctlExample() {
 	// Create a sysctl parameter.
 	// Returns Collection[SysctlMutationResult] with per-host results.
 	fmt.Println("\n=== Creating sysctl parameter ===")
-	setResp, err := c.Sysctl.Create(ctx, hostname, client.SysctlCreateOpts{
+	setResp, err := c.Sysctl.Create(ctx, hostname, client.SysctlCreateInput{
 		Key:   "net.ipv4.ip_forward",
 		Value: "1",
 	})

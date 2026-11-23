@@ -84,7 +84,7 @@ func main() {
 
 	// Create a new user account (may fail on non-Debian platforms).
 	fmt.Println("\n=== Creating test user ===")
-	createResp, err := c.User.Create(ctx, target, client.UserCreateOpts{
+	createResp, err := c.User.Create(ctx, target, client.UserCreateInput{
 		Name:   "testuser",
 		Shell:  "/bin/bash",
 		Groups: []string{"users"},
@@ -100,7 +100,7 @@ func main() {
 
 	// List SSH authorized keys for root.
 	fmt.Println("\n=== Listing SSH keys for root ===")
-	keysResp, err := c.User.ListKeys(ctx, target, "root")
+	keysResp, err := c.UserSSHKey.List(ctx, target, "root")
 	if err != nil {
 		log.Fatalf("list keys failed: %v", err)
 	}
@@ -116,8 +116,9 @@ func main() {
 
 	// Add an SSH key (may fail on non-Debian platforms).
 	fmt.Println("\n=== Adding SSH key for testuser ===")
-	addResp, err := c.User.AddKey(ctx, target, "testuser", client.SSHKeyAddOpts{
-		Key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExample test@example",
+	addResp, err := c.UserSSHKey.Create(ctx, target, client.UserSSHKeyCreateInput{
+		Name: "testuser",
+		Key:  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExample test@example",
 	})
 	if err != nil {
 		fmt.Printf("add key failed (may be unsupported on this platform): %v\n", err)

@@ -53,7 +53,7 @@ func ntpExample() {
 	hostname := "_any"
 
 	// Get NTP status and configuration from the target host.
-	// Returns Collection[NtpStatusResult] with per-host results.
+	// Returns Collection[NtpStatus] with per-host results.
 	fmt.Println("=== Getting NTP status ===")
 	getResp, err := c.NTP.Get(ctx, hostname)
 	if err != nil {
@@ -75,9 +75,9 @@ func ntpExample() {
 	}
 
 	// Create NTP configuration on the target host.
-	// Returns Collection[NtpMutationResult] with per-host results.
+	// Returns Collection[NtpResult] with per-host results.
 	fmt.Println("\n=== Creating NTP configuration ===")
-	createResp, err := c.NTP.Create(ctx, hostname, client.NtpCreateOpts{
+	createResp, err := c.NTP.Create(ctx, hostname, client.NTPCreateInput{
 		Servers: []string{"0.pool.ntp.org", "1.pool.ntp.org"},
 	})
 	if err != nil {

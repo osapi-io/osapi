@@ -8,9 +8,22 @@ Memory statistics query operations.
 
 ## Methods
 
-| Method             | Description           |
-| ------------------ | --------------------- |
-| `Get(ctx, target)` | Get memory statistics |
+| Method                        | Returns                             | Permission    | Description                      |
+| ----------------------------- | ----------------------------------- | ------------- | -------------------------------- |
+| `c.Memory.Get(ctx, hostname)` | `Response[Collection[MemoryEntry]]` | `memory:read` | Get the memory usage of the host |
+
+## Types
+
+The fields of each type are the properties of its schema in the API's spec.
+
+### MemoryEntry
+
+| Field      | Type     | Description                                                                            |
+| ---------- | -------- | -------------------------------------------------------------------------------------- |
+| `Error`    | `string` | Error message if the agent failed.                                                     |
+| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
+| `Memory`   | `Usage`  | Memory is the property memory.                                                         |
+| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
 
 ## Usage
 
@@ -35,4 +48,5 @@ for a complete working example.
 
 ## Permissions
 
-Requires the `memory:read` permission.
+The Permission column of [Methods](#methods) gives the permission of each
+method.

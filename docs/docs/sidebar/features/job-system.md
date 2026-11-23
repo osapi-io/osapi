@@ -96,19 +96,8 @@ the NATS stream, consumer and DLQ settings.
 
 ## Permissions
 
-| Operation     | Permission                                           |
-| ------------- | ---------------------------------------------------- |
-| Create job    | Domain-specific (e.g., `hostname:read`, `dns:write`) |
-| List/get jobs | `job:read`                                           |
-| Delete job    | `job:write`                                          |
-| Retry job     | `job:write`                                          |
-
-The typed domain endpoints make the jobs. Thus the permission to make a job
-comes from the operation. For example, to read a hostname you need
-`hostname:read`. To update DNS you need `dns:write`.
-
-A token with a target scope sees only the jobs whose target is in its scope.
-Refer to [Target scope](authentication.md#target-scope).
+The Permission column of [Methods](#methods) gives the permission of each
+method.
 
 ## Related
 

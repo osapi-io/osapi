@@ -107,12 +107,11 @@ func main() {
 		meta.Data.Name, meta.Data.SHA256, meta.Data.Size)
 
 	// Deploy the file to an agent.
-	deploy, err := c.FileDeploy.Deploy(ctx, client.FileDeployOpts{
+	deploy, err := c.NodeFile.Update(ctx, "_all", client.NodeFileUpdateInput{
 		ObjectName:  "app.conf",
 		Path:        "/tmp/app.conf",
-		ContentType: client.ContentRaw,
+		ContentType: string(client.ContentRaw),
 		Mode:        "0644",
-		Target:      "_all",
 	})
 	if err != nil {
 		log.Fatalf("deploy: %v", err)
@@ -124,7 +123,7 @@ func main() {
 	}
 
 	// Check file status on the agent.
-	status, err := c.FileDeploy.Status(ctx, "_all", "/tmp/app.conf")
+	status, err := c.NodeFile.Status(ctx, "_all", "/tmp/app.conf")
 	if err != nil {
 		log.Fatalf("status: %v", err)
 	}
@@ -135,7 +134,7 @@ func main() {
 	}
 
 	// Check for stale deployments (objects updated since deploy).
-	stale, err := c.File.ListStale(ctx)
+	stale, err := c.File.Stale(ctx)
 	if err != nil {
 		log.Fatalf("stale: %v", err)
 	}

@@ -154,58 +154,8 @@ the controller's connection.
 
 ## Permissions
 
-OSAPI uses fine-grained `resource:verb` permissions for access control. Each API
-endpoint requires a specific permission. Built-in roles expand to a default set
-of permissions:
-
-<!-- osapi:roles -->
-
-| Role         | Permissions                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `admin`      | `health:read`, `trace:read`, `certificate:read`, `certificate:write`, `command:execute`, `command:shell`, `disk:read`, `file:read`, `file:write`, `group:read`, `group:write`, `hostname:read`, `hostname:write`, `load:read`, `memory:read`, `ntp:read`, `ntp:write`, `os:read`, `package:read`, `package:write`, `power:execute`, `process:read`, `process:execute`, `interface:read`, `interface:write`, `schedule:read`, `schedule:write`, `service:read`, `service:write`, `service:execute`, `user:read`, `user:write`, `status:read`, `sysctl:read`, `sysctl:write`, `timezone:read`, `timezone:write`, `updatepackages:read`, `updatepackages:write`, `uptime:read`, `user:execute`, `docker:read`, `docker:write`, `docker:execute`, `docker:exec`, `image:read`, `image:execute`, `image:write`, `entry:read`, `source:read`, `connectivity:execute`, `dns:read`, `dns:write`, `admission:read`, `admission:write`, `agent:read`, `agent:write`, `audit:read`, `job:read`, `job:write` |
-| `operator`   | `health:read`, `trace:read`, `certificate:read`, `disk:read`, `file:read`, `group:read`, `hostname:read`, `load:read`, `memory:read`, `ntp:read`, `os:read`, `package:read`, `power:execute`, `process:read`, `process:execute`, `interface:read`, `schedule:read`, `service:read`, `service:execute`, `user:read`, `status:read`, `sysctl:read`, `timezone:read`, `updatepackages:read`, `uptime:read`, `docker:read`, `docker:execute`, `image:read`, `image:execute`, `entry:read`, `source:read`, `connectivity:execute`, `dns:read`, `admission:read`, `agent:read`, `job:read`                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `automation` | `health:read`, `trace:read`, `certificate:read`, `certificate:write`, `disk:read`, `file:read`, `file:write`, `group:read`, `group:write`, `hostname:read`, `hostname:write`, `load:read`, `memory:read`, `ntp:read`, `ntp:write`, `os:read`, `package:read`, `package:write`, `process:read`, `interface:read`, `interface:write`, `schedule:read`, `service:read`, `service:write`, `user:read`, `status:read`, `sysctl:read`, `sysctl:write`, `timezone:read`, `timezone:write`, `updatepackages:read`, `updatepackages:write`, `uptime:read`, `docker:read`, `docker:write`, `image:read`, `image:write`, `entry:read`, `source:read`, `dns:read`, `dns:write`, `admission:read`, `agent:read`, `job:read`, `job:write`                                                                                                                                                                                                                                                                      |
-| `auditor`    | `health:read`, `trace:read`, `audit:read`, `job:read`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `read`       | `health:read`, `trace:read`, `certificate:read`, `disk:read`, `file:read`, `group:read`, `hostname:read`, `load:read`, `memory:read`, `ntp:read`, `os:read`, `package:read`, `process:read`, `interface:read`, `schedule:read`, `service:read`, `user:read`, `status:read`, `sysctl:read`, `timezone:read`, `updatepackages:read`, `uptime:read`, `docker:read`, `image:read`, `entry:read`, `source:read`, `dns:read`, `admission:read`, `agent:read`, `job:read`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `observer`   | `health:read`, `status:read`, `agent:read`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-
-<!-- /osapi:roles -->
-
-### Custom Roles
-
-You can define custom roles in the `controller.api.security.roles` section.
-Custom roles override the default permission mapping for the same name, or
-define entirely new role names:
-
-```yaml
-controller:
-  api:
-    security:
-      roles:
-        ops:
-          permissions:
-            - status:read
-            - health:read
-        netadmin:
-          permissions:
-            - dns:read
-            - dns:write
-            - interface:read
-            - interface:write
-            - connectivity:execute
-            - health:read
-```
-
-### Direct Permissions
-
-A token can have a `permissions` claim. It replaces the permissions of the
-roles. When the token has the claim, it gets only the listed permissions,
-whatever its roles are. Make a token with direct permissions:
-
-```bash
-osapi token generate -r admin -u user@example.com \
-  -p status:read -p health:read
-```
+The Permission column of [Methods](#methods) gives the permission of each
+method.
 
 ## Namespace
 

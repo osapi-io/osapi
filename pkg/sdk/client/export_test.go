@@ -23,16 +23,14 @@ package client
 import (
 	"log/slog"
 	"net/http"
-
-	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
 // ExportCheckError exposes the private checkError function for testing.
 func ExportCheckError(
 	statusCode int,
-	responses ...*gen.ErrorResponse,
+	body *ErrorResponse,
 ) error {
-	return checkError(statusCode, responses...)
+	return checkError(statusCode, body)
 }
 
 // ExportNewAuthTransport exposes the private authTransport constructor for
@@ -63,211 +61,6 @@ func ExportCloneTransport(
 	return cloneTransport(base)
 }
 
-// ExportLoadAverageFromGen exposes the private loadAverageFromGen for testing.
-func ExportLoadAverageFromGen(
-	input *gen.LoadAverageResponse,
-) *LoadAverage {
-	return loadAverageFromGen(input)
-}
-
-// ExportMemoryFromGen exposes the private memoryFromGen for testing.
-func ExportMemoryFromGen(
-	input *gen.MemoryResponse,
-) *Memory {
-	return memoryFromGen(input)
-}
-
-// ExportOSInfoFromGen exposes the private osInfoFromGen for testing.
-func ExportOSInfoFromGen(
-	input *gen.OSInfoResponse,
-) *OSInfo {
-	return osInfoFromGen(input)
-}
-
-func ExportHostnameCollectionFromGen(
-	input *gen.HostnameGetResponse,
-) Collection[HostnameResult] {
-	return hostnameCollectionFromGen(input)
-}
-
-func ExportAuditEntryFromGen(
-	input gen.AuditEntry,
-) AuditEntry {
-	return auditEntryFromGen(input)
-}
-
-// ExportAuditListFromGen exposes the private auditListFromGen for testing.
-func ExportAuditListFromGen(
-	input *gen.ListAuditResponse,
-) AuditList {
-	return auditListFromGen(input)
-}
-
-// ExportJobCreatedFromGen exposes the private jobCreatedFromGen for testing.
-func ExportJobCreatedFromGen(
-	input *gen.CreateJobResponse,
-) JobCreated {
-	return jobCreatedFromGen(input)
-}
-
-// ExportJobDetailFromGen exposes the private jobDetailFromGen for testing.
-func ExportJobDetailFromGen(
-	input *gen.JobDetailResponse,
-) JobDetail {
-	return jobDetailFromGen(input)
-}
-
-// ExportJobListFromGen exposes the private jobListFromGen for testing.
-func ExportJobListFromGen(
-	input *gen.ListJobsResponse,
-) JobList {
-	return jobListFromGen(input)
-}
-
-func ExportSystemStatusFromGen(
-	input *gen.StatusResponse,
-) SystemStatus {
-	return systemStatusFromGen(input)
-}
-
-// ExportAgentFromGen exposes the private agentFromGen for testing.
-func ExportAgentFromGen(
-	input *gen.AgentInfo,
-) Agent {
-	return agentFromGen(input)
-}
-
-// ExportAgentListFromGen exposes the private agentListFromGen for testing.
-func ExportAgentListFromGen(
-	input *gen.ListAgentsResponse,
-) AgentList {
-	return agentListFromGen(input)
-}
-
-func SysctlEntryCollectionFromGen(
-	input *gen.SysctlCollectionResponse,
-) Collection[SysctlEntryResult] {
-	return sysctlEntryCollectionFromGen(input)
-}
-
-// SysctlEntryCollectionFromGet exposes the private
-// sysctlEntryCollectionFromGet for testing.
-func SysctlEntryCollectionFromGet(
-	input *gen.SysctlGetResponse,
-) Collection[SysctlEntryResult] {
-	return sysctlEntryCollectionFromGet(input)
-}
-
-// SysctlMutationCollectionFromCreate exposes the private
-// sysctlMutationCollectionFromCreate for testing.
-func SysctlMutationCollectionFromCreate(
-	input *gen.SysctlCreateResponse,
-) Collection[SysctlMutationResult] {
-	return sysctlMutationCollectionFromCreate(input)
-}
-
-// SysctlMutationCollectionFromUpdate exposes the private
-// sysctlMutationCollectionFromUpdate for testing.
-func SysctlMutationCollectionFromUpdate(
-	input *gen.SysctlUpdateResponse,
-) Collection[SysctlMutationResult] {
-	return sysctlMutationCollectionFromUpdate(input)
-}
-
-// SysctlMutationCollectionFromDelete exposes the private
-// sysctlMutationCollectionFromDelete for testing.
-func SysctlMutationCollectionFromDelete(
-	input *gen.SysctlDeleteResponse,
-) Collection[SysctlMutationResult] {
-	return sysctlMutationCollectionFromDelete(input)
-}
-
-// NtpStatusCollectionFromGen exposes the private
-// ntpStatusCollectionFromGen for testing.
-func NtpStatusCollectionFromGen(
-	input *gen.NtpGetResponse,
-) Collection[NtpStatusResult] {
-	return ntpStatusCollectionFromGen(input)
-}
-
-// NtpMutationCollectionFromCreate exposes the private
-// ntpMutationCollectionFromCreate for testing.
-func NtpMutationCollectionFromCreate(
-	input *gen.NtpCreateResponse,
-) Collection[NtpMutationResult] {
-	return ntpMutationCollectionFromCreate(input)
-}
-
-// NtpMutationCollectionFromUpdate exposes the private
-// ntpMutationCollectionFromUpdate for testing.
-func NtpMutationCollectionFromUpdate(
-	input *gen.NtpUpdateResponse,
-) Collection[NtpMutationResult] {
-	return ntpMutationCollectionFromUpdate(input)
-}
-
-// NtpMutationCollectionFromDelete exposes the private
-// ntpMutationCollectionFromDelete for testing.
-func NtpMutationCollectionFromDelete(
-	input *gen.NtpDeleteResponse,
-) Collection[NtpMutationResult] {
-	return ntpMutationCollectionFromDelete(input)
-}
-
-func PowerCollectionFromReboot(
-	input *gen.PowerRebootResponse,
-) Collection[PowerResult] {
-	return powerCollectionFromReboot(input)
-}
-
-// PowerCollectionFromShutdown exposes the private
-// powerCollectionFromShutdown for testing.
-func PowerCollectionFromShutdown(
-	input *gen.PowerShutdownResponse,
-) Collection[PowerResult] {
-	return powerCollectionFromShutdown(input)
-}
-
-// ProcessInfoCollectionFromGen exposes the private
-// processInfoCollectionFromGen for testing.
-var ProcessInfoCollectionFromGen = processInfoCollectionFromGen
-
-// ProcessSignalCollectionFromGen exposes the private
-// processSignalCollectionFromGen for testing.
-var ProcessSignalCollectionFromGen = processSignalCollectionFromGen
-
-// UserInfoCollectionFromGen exposes the private
-// userInfoCollectionFromGen for testing.
-var UserInfoCollectionFromGen = userInfoCollectionFromGen
-
-// UserMutationCollectionFromGen exposes the private
-// userMutationCollectionFromGen for testing.
-var UserMutationCollectionFromGen = userMutationCollectionFromGen
-
-// SSHKeyCollectionFromGen exposes the private
-// sshKeyCollectionFromGen for testing.
-var SSHKeyCollectionFromGen = sshKeyCollectionFromGen
-
-// SSHKeyMutationCollectionFromGen exposes the private
-// sshKeyMutationCollectionFromGen for testing.
-var SSHKeyMutationCollectionFromGen = sshKeyMutationCollectionFromGen
-
-// GroupInfoCollectionFromGen exposes the private
-// groupInfoCollectionFromGen for testing.
-var GroupInfoCollectionFromGen = groupInfoCollectionFromGen
-
-// GroupMutationCollectionFromGen exposes the private
-// groupMutationCollectionFromGen for testing.
-var GroupMutationCollectionFromGen = groupMutationCollectionFromGen
-
-// CertificateInfoCollectionFromGen exposes the private
-// certificateInfoCollectionFromGen for testing.
-var CertificateInfoCollectionFromGen = certificateInfoCollectionFromGen
-
-// CertificateMutationCollectionFromGen exposes the private
-// certificateMutationCollectionFromGen for testing.
-var CertificateMutationCollectionFromGen = certificateMutationCollectionFromGen
-
 // ExportNewResponse exposes newResponse for testing.
 func ExportNewResponse[T any](
 	data T,
@@ -277,30 +70,5 @@ func ExportNewResponse[T any](
 	return newResponse(data, rawJSON, httpResp)
 }
 
-// ExportDiskListFromGen exposes the private diskListFromGen for testing.
-func ExportDiskListFromGen(
-	input *[]gen.Disk,
-) []Disk {
-	return diskListFromGen(input)
-}
-
-// ExportLoadAveragesFromGen exposes the private loadAveragesFromGen for testing.
-func ExportLoadAveragesFromGen(
-	input *gen.Averages,
-) *LoadAverage {
-	return loadAveragesFromGen(input)
-}
-
-// ExportMemoryUsageFromGen exposes the private memoryUsageFromGen for testing.
-func ExportMemoryUsageFromGen(
-	input *gen.Usage,
-) *Memory {
-	return memoryUsageFromGen(input)
-}
-
-// ExportOSReleaseFromGen exposes the private osReleaseFromGen for testing.
-func ExportOSReleaseFromGen(
-	input *gen.Release,
-) *OSInfo {
-	return osReleaseFromGen(input)
-}
+// ExportSendJSON exposes the private sendJSON for testing.
+var ExportSendJSON = sendJSON

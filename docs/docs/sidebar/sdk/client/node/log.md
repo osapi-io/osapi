@@ -9,21 +9,45 @@ sources that wrote them. It calls the `log entry` and `log source` behaviors.
 
 ## Methods
 
-| Method                         | What it does                             |
-| ------------------------------ | ---------------------------------------- |
-| `Entries(ctx, hostname, opts)` | The journal entries that `opts` selects  |
-| `Sources(ctx, hostname)`       | Each syslog identifier that has an entry |
-
-Each method returns a `Collection` with one row for each entry, or source, of
-each host. A host that skipped or failed has one row with its error.
+| Method                                                      | Returns                                 | Permission    | Description                     |
+| ----------------------------------------------------------- | --------------------------------------- | ------------- | ------------------------------- |
+| `c.LogEntry.List(ctx, hostname, params LogEntryListParams)` | `Response[Collection[LogEntryEntry]]`   | `entry:read`  | List the entries of the journal |
+| `c.LogSource.List(ctx, hostname)`                           | `Response[Collection[LogSourceSource]]` | `source:read` | List the sources of the journal |
 
 ## Types
 
-| Type              | Fields                                                                           |
-| ----------------- | -------------------------------------------------------------------------------- |
-| `LogEntryOpts`    | `Unit`, `Lines` (100 when zero), `Since`, `Priority`; each is optional           |
-| `LogEntryResult`  | `Hostname`, `Status`, `Timestamp`, `Unit`, `Priority`, `Message`, `PID`, `Error` |
-| `LogSourceResult` | `Hostname`, `Status`, `Name`, `Error`                                            |
+The fields of each type are the properties of its schema in the API's spec.
+
+### LogEntryListParams
+
+| Field      | Type     | Description                                                                                      |
+| ---------- | -------- | ------------------------------------------------------------------------------------------------ |
+| `Unit`     | `string` | Only the entries of this systemd unit, such as nginx.service.                                    |
+| `Lines`    | `int`    | How many of the newest entries; 100 when it is not set.                                          |
+| `Since`    | `string` | Only the entries since this time, in any form that journalctl --since takes, such as 1 hour ago. |
+| `Priority` | `string` | Only the entries at this priority or above.                                                      |
+
+### LogEntryEntry
+
+| Field       | Type     | Description                                                                            |
+| ----------- | -------- | -------------------------------------------------------------------------------------- |
+| `Error`     | `string` | Error message if the agent failed.                                                     |
+| `Hostname`  | `string` | Hostname of the agent that produced this result.                                       |
+| `Message`   | `string` | The message.                                                                           |
+| `PID`       | `int`    | The process that wrote it.                                                             |
+| `Priority`  | `string` | Its priority, by name.                                                                 |
+| `Status`    | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| `Timestamp` | `string` | When journald recorded it, in RFC 3339.                                                |
+| `Unit`      | `string` | The syslog identifier that wrote it.                                                   |
+
+### LogSourceSource
+
+| Field      | Type     | Description                                                                            |
+| ---------- | -------- | -------------------------------------------------------------------------------------- |
+| `Error`    | `string` | Error message if the agent failed.                                                     |
+| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
+| `Name`     | `string` | The syslog identifier, such as sshd.                                                   |
+| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
 
 ## Usage
 
@@ -33,20 +57,20 @@ import "github.com/osapi-io/osapi/pkg/sdk/client"
 c := client.New("http://localhost:8080", token)
 
 // The 50 newest entries of web-01.
-resp, err := c.Log.Entries(ctx, "web-01", client.LogEntryOpts{Lines: 50})
+resp, err := c.LogEntry.List(ctx, "web-01", client.LogEntryListParams{Lines: 50})
 for _, r := range resp.Data.Results {
     fmt.Printf("[%s] %s %s: %s\n", r.Timestamp, r.Priority, r.Unit, r.Message)
 }
 
 // The errors of sshd.service in the last hour, on each host.
-resp, err = c.Log.Entries(ctx, "_all", client.LogEntryOpts{
+resp, err = c.LogEntry.List(ctx, "_all", client.LogEntryListParams{
     Unit:     "sshd.service",
     Since:    "1 hour ago",
     Priority: "err",
 })
 
 // The sources of the journal.
-sources, err := c.Log.Sources(ctx, "web-01")
+sources, err := c.LogSource.List(ctx, "web-01")
 for _, r := range sources.Data.Results {
     fmt.Println(r.Name)
 }
@@ -60,4 +84,5 @@ for a complete program.
 
 ## Permissions
 
-The entries need `entry:read`. The sources need `source:read`.
+The Permission column of [Methods](#methods) gives the permission of each
+method.

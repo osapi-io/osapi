@@ -234,6 +234,7 @@ paths:
       summary: Run a program with its arguments
       tags:
         - command_operations
+      x-osapi-method: exec
   /api/node/{hostname}/command/shell:
     post:
       description: 'Runs the command line through /bin/sh -c, so pipes, redirects and variables work. It answers as exec does. Its permission is command:shell, apart from exec''s command:execute: a token that may run a program may not open a shell. Only the admin role gets it.'
@@ -295,6 +296,7 @@ paths:
       summary: Run a command line through /bin/sh -c
       tags:
         - command_operations
+      x-osapi-method: shell
 tags:
   - description: Run a command on target hosts
     name: command_operations

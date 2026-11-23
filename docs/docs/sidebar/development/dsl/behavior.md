@@ -779,7 +779,7 @@ from .Describe, .Explain, .Example and .Fails.
 Use: Change the definition, then generate. A generated test that fails is fixed
 in the definition or in internal/behavior/gen.
 
-### `internal/controller/api/gen/, pkg/sdk/client/gen/, ui/src/sdk/gen/, docs/docs/gen/`
+### `internal/controller/api/gen/, pkg/sdk/client/*.gen.go, ui/src/sdk/gen/, docs/docs/gen/`
 
 The full spec, the SDK, the UI client and the API pages, from just generate.
 

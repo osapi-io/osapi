@@ -8,23 +8,51 @@ Audit log operations.
 
 ## Methods
 
-| Method                     | Description                      |
-| -------------------------- | -------------------------------- |
-| `List(ctx, limit, offset)` | Retrieve entries with pagination |
-| `Get(ctx, id)`             | Retrieve a single entry by UUID  |
-| `Export(ctx)`              | Retrieve all entries for export  |
+| Method                                      | Returns                        | Permission   | Description                  |
+| ------------------------------------------- | ------------------------------ | ------------ | ---------------------------- |
+| `c.Audit.List(ctx, params AuditListParams)` | `Response[ListAuditResponse]`  | `audit:read` | List audit log entries       |
+| `c.Audit.Export(ctx)`                       | `Response[ListAuditResponse]`  | `audit:read` | Export all audit log entries |
+| `c.Audit.Get(ctx, id)`                      | `Response[AuditEntryResponse]` | `audit:read` | Get a single audit log entry |
+
+## Types
+
+The fields of each type are the properties of its schema in the API's spec.
+
+### AuditListParams
+
+| Field       | Type     | Description                                                                  |
+| ----------- | -------- | ---------------------------------------------------------------------------- |
+| `Limit`     | `int`    | Maximum number of entries to return.                                         |
+| `Offset`    | `int`    | Number of entries to skip.                                                   |
+| `Writes`    | `bool`   | Only the requests that change something: each method but GET.                |
+| `User`      | `string` | Only the entries of this user, the subject of the token.                     |
+| `Operation` | `string` | Only the entries whose operation ID or path has this text, such as hostname. |
+| `Status`    | `int`    | Only the entries with this response status, such as 403.                     |
+
+### ListAuditResponse
+
+| Field        | Type           | Description                      |
+| ------------ | -------------- | -------------------------------- |
+| `Items`      | `[]AuditEntry` | The audit entries for this page. |
+| `TotalItems` | `int`          | Total number of audit entries.   |
+
+### AuditEntryResponse
+
+| Field   | Type         | Description                  |
+| ------- | ------------ | ---------------------------- |
+| `Entry` | `AuditEntry` | Entry is the property entry. |
 
 ## Usage
 
 ```go
 // List recent entries
-resp, err := client.Audit.List(ctx, 20, 0)
+resp, err := c.Audit.List(ctx, client.AuditListParams{Limit: 20})
 
 // Get a specific entry
-resp, err := client.Audit.Get(ctx, "uuid-string")
+resp, err := c.Audit.Get(ctx, "uuid-string")
 
 // Export all entries
-resp, err := client.Audit.Export(ctx)
+resp, err := c.Audit.Export(ctx)
 ```
 
 ## Example
@@ -35,4 +63,5 @@ for a complete working example.
 
 ## Permissions
 
-Requires `audit:read` permission.
+The Permission column of [Methods](#methods) gives the permission of each
+method.

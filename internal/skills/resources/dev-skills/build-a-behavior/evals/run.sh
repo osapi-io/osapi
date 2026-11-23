@@ -77,7 +77,7 @@ for id in "${ids[@]}"; do
 		check "$id" "generated files are current" "before=\$(git status --porcelain); go generate ./internal/behaviors/all && mise exec -- just cli-docs-generate && [ \"\$before\" = \"\$(git status --porcelain)\" ]"
 		check "$id" "lint reports no issues in the behavior" "go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --config .golangci.yml ./internal/behaviors/$dir/..."
 		check "$id" "nothing outside the behavior, its registration and generated files changed" \
-			"! git status --porcelain --untracked-files=all | awk '{print \$2}' | grep -vE '^(internal/behaviors/$dir/|internal/behaviors/all/(all.go|gen/gen.go)|docs/docs/sidebar/reference/|docs/docs/sidebar/usage/cli/|docs/docs/gen/api/|internal/controller/api/gen/|pkg/sdk/client/gen/|ui/src/sdk/gen/|justfile)'"
+			"! git status --porcelain --untracked-files=all | awk '{print \$2}' | grep -vE '^(internal/behaviors/$dir/|internal/behaviors/all/(all.go|gen/gen.go)|docs/docs/sidebar/reference/|docs/docs/sidebar/usage/cli/|docs/docs/gen/api/|internal/controller/api/gen/|pkg/sdk/client/[a-z_]+\\.gen\\.go|ui/src/sdk/gen/|justfile)'"
 		sudo=$(field "$id" sudo)
 		[ -n "$sudo" ] && check "$id" "$sudo is declared with behavior.Sudo" "grep -rq 'behavior.Sudo(\"$sudo\"' internal/behaviors/$dir/"
 		[ "$(field "$id" refusals)" = "True" ] && check "$id" "at least one refusal is declared with Fails" "grep -rqE '(^|[.[:space:]])Fails\\(' internal/behaviors/$dir/"

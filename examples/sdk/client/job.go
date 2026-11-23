@@ -22,7 +22,7 @@
 // a specific job's details, and viewing timeline events.
 //
 // Jobs are created implicitly by domain operations (e.g. Node.Hostname,
-// Docker.Create). This example shows how to inspect them after the fact.
+// ContainerDocker.Create). This example shows how to inspect them after the fact.
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run job.go
 package main
@@ -85,7 +85,7 @@ func main() {
 	}
 
 	// List recent jobs with status counts.
-	list, err := c.Job.List(ctx, client.ListParams{Limit: 10})
+	list, err := c.Job.List(ctx, client.JobListParams{Limit: 10})
 	if err != nil {
 		log.Fatalf("list jobs: %v", err)
 	}

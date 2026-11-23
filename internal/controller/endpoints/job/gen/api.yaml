@@ -299,6 +299,7 @@ paths:
       summary: List jobs
       tags:
         - job_operations
+      x-osapi-method: list
   /api/job/{id}:
     delete:
       description: Delete a specific job by its ID. A job whose target is outside the target scope of the token is not found.
@@ -352,6 +353,7 @@ paths:
       summary: Delete a job
       tags:
         - job_operations
+      x-osapi-method: delete
     get:
       description: Retrieve details of a specific job by its ID. A job whose target is outside the target scope of the token is not found.
       operationId: GetJobByID
@@ -408,6 +410,7 @@ paths:
       summary: Get job detail
       tags:
         - job_operations
+      x-osapi-method: get
   /api/job/{id}/retry:
     post:
       description: Create a new job using the same operation data as an existing job. The original job is preserved. Returns the new job ID.
@@ -475,6 +478,7 @@ paths:
       summary: Retry a job
       tags:
         - job_operations
+      x-osapi-method: retry
 tags:
   - description: Operations related to the job queue.
     name: job_operations

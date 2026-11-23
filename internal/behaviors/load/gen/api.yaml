@@ -162,6 +162,7 @@ paths:
       summary: Get the load averages of the host
       tags:
         - load_operations
+      x-osapi-method: get
 tags:
   - description: Get the load averages of target hosts
     name: load_operations

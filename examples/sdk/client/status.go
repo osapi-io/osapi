@@ -55,15 +55,13 @@ func main() {
 
 	for _, r := range resp.Data.Results {
 		fmt.Printf("Status (%s):\n", r.Hostname)
-		fmt.Printf("  Uptime: %s\n", r.Uptime)
+		fmt.Printf("  Uptime: %s\n", r.Uptime.Uptime)
 
-		if r.OSInfo != nil {
+		if r.OSInfo.Distribution != "" {
 			fmt.Printf("  OS:     %s %s\n", r.OSInfo.Distribution, r.OSInfo.Version)
 		}
 
-		if r.LoadAverage != nil {
-			fmt.Printf("  Load:   %.2f %.2f %.2f\n",
-				r.LoadAverage.OneMin, r.LoadAverage.FiveMin, r.LoadAverage.FifteenMin)
-		}
+		fmt.Printf("  Load:   %.2f %.2f %.2f\n",
+			r.LoadAverage.Min1, r.LoadAverage.Min5, r.LoadAverage.Min15)
 	}
 }

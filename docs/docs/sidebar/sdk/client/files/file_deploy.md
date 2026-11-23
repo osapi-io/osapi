@@ -2,35 +2,72 @@
 sidebar_position: 2
 ---
 
-# FileDeploy
+# NodeFile
 
 File deploy operations on target hosts: deploy files from the Object Store to
 agents, check the status and undeploy.
 
 ## Methods
 
-| Method                      | Description                         |
-| --------------------------- | ----------------------------------- |
-| `Deploy(ctx, opts)`         | Deploy file to agent with SHA check |
-| `Undeploy(ctx, opts)`       | Remove a deployed file              |
-| `Status(ctx, target, path)` | Check deployed file status          |
+| Method                                                        | Returns                                  | Permission   | Description                                         |
+| ------------------------------------------------------------- | ---------------------------------------- | ------------ | --------------------------------------------------- |
+| `c.NodeFile.Status(ctx, hostname, path)`                      | `Response[Collection[FileStatus]]`       | `file:read`  | Show whether a deployed file holds what osapi wrote |
+| `c.NodeFile.Update(ctx, hostname, input NodeFileUpdateInput)` | `Response[Collection[FileUpdateResult]]` | `file:write` | Deploy an object of the object store to a path      |
+| `c.NodeFile.Delete(ctx, hostname, input NodeFileDeleteInput)` | `Response[Collection[FileDeleteResult]]` | `file:write` | Remove a file that osapi deployed                   |
 
-## FileDeployOpts
+## Types
 
-| Field         | Type              | Required | Description                                                    |
-| ------------- | ----------------- | -------- | -------------------------------------------------------------- |
-| `ObjectName`  | string            | Yes      | Name of the file in Object Store                               |
-| `Path`        | string            | Yes      | Absolute destination path on the target host                   |
-| `ContentType` | `ContentType`     | No       | `ContentRaw` or `ContentTemplate`; the object's own when empty |
-| `Mode`        | string            | No       | File permission mode (e.g. `"0644"`)                           |
-| `Owner`       | string            | No       | File owner user                                                |
-| `Group`       | string            | No       | File owner group                                               |
-| `Vars`        | map[string]string | No       | Template variables, as `.Vars`                                 |
-| `Target`      | string            | Yes      | Host target (see Targeting below)                              |
+The fields of each type are the properties of its schema in the API's spec.
 
-`Status` returns a `FileStatusResult` for each host. Its `State` is `in-sync`,
-`drifted`, `missing` or `unmanaged`. Its `Status` is the status of the job on
-the host: `ok`, `failed` or `skipped`.
+### FileStatus
+
+| Field      | Type     | Description                                                                            |
+| ---------- | -------- | -------------------------------------------------------------------------------------- |
+| `Error`    | `string` | Error message if the agent failed.                                                     |
+| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
+| `Path`     | `string` | Absolute path of the file.                                                             |
+| `SHA256`   | `string` | SHA-256 of the file on the host, when it is there.                                     |
+| `State`    | `string` | In-sync, drifted, missing or unmanaged.                                                |
+| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### NodeFileUpdateInput
+
+| Field         | Type                | Description                                                                                                                                               |
+| ------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ContentType` | `string`            | How the object is written: raw as it is, or template rendered with .Facts, .Vars and .Hostname; the object's own when empty. It is one of: raw, template. |
+| `Group`       | `string`            | Group that owns the file; left as written when empty.                                                                                                     |
+| `Mode`        | `string`            | Permissions in octal, such as 0644; when empty, a file keeps its mode and a new file gets 0644.                                                           |
+| `ObjectName`  | `string`            | The object of the object store, from osapi client file list.                                                                                              |
+| `Owner`       | `string`            | User that owns the file; left as written when empty.                                                                                                      |
+| `Path`        | `string`            | Absolute path of the file on the host.                                                                                                                    |
+| `Vars`        | `map[string]string` | Variables of a template, as .Vars, each as key=value.                                                                                                     |
+
+### FileUpdateResult
+
+| Field      | Type     | Description                                                                            |
+| ---------- | -------- | -------------------------------------------------------------------------------------- |
+| `Changed`  | `bool`   | Whether the host changed.                                                              |
+| `Error`    | `string` | Error message if the agent failed.                                                     |
+| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
+| `Path`     | `string` | Absolute path of the file.                                                             |
+| `SHA256`   | `string` | SHA-256 of the content that the file holds.                                            |
+| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+
+### NodeFileDeleteInput
+
+| Field  | Type     | Description                            |
+| ------ | -------- | -------------------------------------- |
+| `Path` | `string` | Absolute path of the file on the host. |
+
+### FileDeleteResult
+
+| Field      | Type     | Description                                                                            |
+| ---------- | -------- | -------------------------------------------------------------------------------------- |
+| `Changed`  | `bool`   | Whether the host changed.                                                              |
+| `Error`    | `string` | Error message if the agent failed.                                                     |
+| `Hostname` | `string` | Hostname of the agent that produced this result.                                       |
+| `Path`     | `string` | Absolute path of the file.                                                             |
+| `Status`   | `string` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
 
 ## Usage
 
@@ -40,16 +77,15 @@ import "github.com/osapi-io/osapi/pkg/sdk/client"
 c := client.New("http://localhost:8080", token)
 
 // Deploy a raw file to a specific host
-resp, err := c.FileDeploy.Deploy(ctx, client.FileDeployOpts{
+resp, err := c.NodeFile.Update(ctx, "web-01", client.NodeFileUpdateInput{
     ObjectName:  "nginx.conf",
     Path:        "/etc/nginx/nginx.conf",
     ContentType: "raw",
     Mode:        "0644",
-    Target:      "web-01",
 })
 
 // Deploy a template with variables
-resp, err := c.FileDeploy.Deploy(ctx, client.FileDeployOpts{
+resp, err := c.NodeFile.Update(ctx, "_all", client.NodeFileUpdateInput{
     ObjectName:  "app.conf.tmpl",
     Path:        "/etc/app/config.yaml",
     ContentType: "template",
@@ -57,11 +93,10 @@ resp, err := c.FileDeploy.Deploy(ctx, client.FileDeployOpts{
         "port":  "8080",
         "debug": "false",
     },
-    Target: "_all",
 })
 
 // Check file status on a host
-resp, err := c.FileDeploy.Status(ctx, "web-01", "/etc/nginx/nginx.conf")
+resp, err := c.NodeFile.Status(ctx, "web-01", "/etc/nginx/nginx.conf")
 ```
 
 ## Example
@@ -74,5 +109,5 @@ for Object Store operations (upload, list, get, delete).
 
 ## Permissions
 
-Deploy and undeploy require `file:write`. Status requires `file:read`. They run
-on each Linux host and on macOS.
+The Permission column of [Methods](#methods) gives the permission of each
+method. The methods run on each Linux host and on macOS.

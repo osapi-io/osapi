@@ -55,7 +55,7 @@ func main() {
 
 	// List the routes of the interface: one row per route per host.
 	fmt.Printf("=== Listing the routes of %s ===\n", iface)
-	listResp, err := c.Route.List(ctx, target, iface)
+	listResp, err := c.NetworkInterfaceRoute.List(ctx, target, iface)
 	if err != nil {
 		log.Fatalf("list failed: %v", err)
 	}
@@ -69,9 +69,13 @@ func main() {
 	}
 
 	// Add a static route (idempotent).
-	route := client.RouteOpts{Destination: "10.0.0.0/8", Via: "192.168.1.1"}
+	route := client.NetworkInterfaceRouteCreateInput{
+		Name:        iface,
+		Destination: "10.0.0.0/8",
+		Via:         "192.168.1.1",
+	}
 	fmt.Println("\n=== Adding 10.0.0.0/8 ===")
-	createResp, err := c.Route.Create(ctx, target, iface, route)
+	createResp, err := c.NetworkInterfaceRoute.Create(ctx, target, route)
 	if err != nil {
 		log.Fatalf("create failed: %v", err)
 	}
@@ -82,13 +86,21 @@ func main() {
 	// Change its metric.
 	route.Metric = 100
 	fmt.Println("\n=== Changing its metric to 100 ===")
-	if _, err := c.Route.Update(ctx, target, iface, route); err != nil {
+	if _, err := c.NetworkInterfaceRoute.Update(
+		ctx,
+		target,
+		client.NetworkInterfaceRouteUpdateInput(route),
+	); err != nil {
 		log.Fatalf("update failed: %v", err)
 	}
 
 	// Drop it.
 	fmt.Println("\n=== Dropping it ===")
-	deleteResp, err := c.Route.Delete(ctx, target, iface, route.Destination)
+	deleteResp, err := c.NetworkInterfaceRoute.Delete(
+		ctx,
+		target,
+		client.NetworkInterfaceRouteDeleteInput{Name: iface, Destination: route.Destination},
+	)
 	if err != nil {
 		log.Fatalf("delete failed: %v", err)
 	}

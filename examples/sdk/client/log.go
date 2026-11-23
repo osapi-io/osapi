@@ -53,7 +53,7 @@ func logExample() {
 
 	// The 10 newest entries of each host's journal.
 	fmt.Println("=== The newest entries ===")
-	entries, err := c.Log.Entries(ctx, hostname, client.LogEntryOpts{Lines: 10})
+	entries, err := c.LogEntry.List(ctx, hostname, client.LogEntryListParams{Lines: 10})
 	if err != nil {
 		log.Fatalf("log entries failed: %v", err)
 	}
@@ -68,7 +68,7 @@ func logExample() {
 
 	// Each source that wrote to the journal.
 	fmt.Println("\n=== The sources ===")
-	sources, err := c.Log.Sources(ctx, hostname)
+	sources, err := c.LogSource.List(ctx, hostname)
 	if err != nil {
 		log.Fatalf("log sources failed: %v", err)
 	}
@@ -82,7 +82,7 @@ func logExample() {
 
 	// The errors of one systemd unit in the last hour.
 	fmt.Println("\n=== The errors of sshd.service in the last hour ===")
-	unit, err := c.Log.Entries(ctx, hostname, client.LogEntryOpts{
+	unit, err := c.LogEntry.List(ctx, hostname, client.LogEntryListParams{
 		Unit:     "sshd.service",
 		Since:    "1 hour ago",
 		Priority: "err",

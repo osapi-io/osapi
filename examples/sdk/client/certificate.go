@@ -66,7 +66,7 @@ func main() {
 
 	// Deploy the certificate to the host.
 	fmt.Println("\n=== Creating CA certificate ===")
-	createResp, err := c.Certificate.Create(ctx, target, client.CertificateCreateOpts{
+	createResp, err := c.Certificate.Create(ctx, target, client.CertificateCreateInput{
 		Name:   "internal-ca",
 		Object: "internal-ca",
 	})

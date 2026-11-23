@@ -547,7 +547,7 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindGenerated,
-			Name: "internal/controller/api/gen/, pkg/sdk/client/gen/, ui/src/sdk/gen/, docs/docs/gen/",
+			Name: "internal/controller/api/gen/, pkg/sdk/client/*.gen.go, ui/src/sdk/gen/, docs/docs/gen/",
 			Does: "The full spec, the SDK, the UI client and the API pages, from just generate.",
 			When: "Change the definition, then generate. A generated file that is wrong is fixed in the definition or in internal/controller/endpoint/gen.",
 		},

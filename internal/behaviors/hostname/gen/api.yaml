@@ -200,6 +200,7 @@ paths:
       summary: Get the hostname of the host
       tags:
         - hostname_operations
+      x-osapi-method: get
     put:
       description: 'Sets the static hostname with hostnamectl set-hostname, which keeps it after a reboot. A host that already has the name does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped. In a container the runtime owns the hostname, so there it also reports skipped.'
       operationId: PutNodeHostname
@@ -260,6 +261,7 @@ paths:
       summary: Set the hostname of the host
       tags:
         - hostname_operations
+      x-osapi-method: update
 tags:
   - description: Get or set the hostname of target hosts
     name: hostname_operations

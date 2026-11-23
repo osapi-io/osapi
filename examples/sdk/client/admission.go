@@ -52,7 +52,7 @@ func main() {
 	ctx := context.Background()
 
 	// List the machines that wait for a decision.
-	pending, err := c.Admission.List(ctx, "pending")
+	pending, err := c.Admission.List(ctx, client.AdmissionListParams{State: "pending"})
 	if err != nil {
 		log.Fatalf("list pending: %v", err)
 	}
@@ -70,7 +70,10 @@ func main() {
 
 	// Admit the machine, with the fingerprint read on the machine.
 	machineID, fingerprint := os.Args[1], os.Args[2]
-	if err := c.Admission.Admit(ctx, machineID, fingerprint); err != nil {
+	if err := c.Admission.Admit(ctx, client.AdmissionAdmitInput{
+		MachineID:   machineID,
+		Fingerprint: fingerprint,
+	}); err != nil {
 		log.Fatalf("admit %s: %v", machineID, err)
 	}
 
