@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Behavior chains | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/behavior-chains"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Behavior chains | OSAPI"><meta data-rh="true" name="description" content="Some behaviors use other behaviors to do their work. For example, dns update"><meta data-rh="true" property="og:description" content="Some behaviors use other behaviors to do their work. For example, dns update"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/behavior-chains"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/behavior-chains" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/behavior-chains" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Behavior chains","item":"https://osapi-io.github.io/osapi/sidebar/features/behavior-chains"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.ee2257e7.css">
-<script src="/osapi/assets/js/runtime~main.62e7ccc4.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.665872af.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.e5743117.js" defer="defer"></script>
 </head>
 <body>
@@ -107,19 +107,27 @@ fails, so the failed step and the writes before it are in the job.</p>
 
 
 
-<table><thead><tr><th>Failure</th><th>The host after the failure</th><th>The job error</th></tr></thead><tbody><tr><td><code>managedfile update</code> cannot write</td><td>No change. The write is atomic.</td><td><code>write file: ...</code></td></tr><tr><td><code>netplan generate</code> refuses the new file</td><td>No change. <code>netplan</code> puts back the content that the file had, or removes a new file, with a <code>managedfile</code> call.</td><td><code>netplan generate refused &lt;path&gt;, so its content was put back: ...</code>, or <code>..., so it was removed: ...</code></td></tr><tr><td><code>netplan apply</code> fails</td><td>The new file stays in <code>/etc/netplan</code>. netplan did not apply it.</td><td><code>netplan apply: ...</code></td></tr></tbody></table>
+<table><thead><tr><th>Failure</th><th>The host after the failure</th><th>The job error</th></tr></thead><tbody><tr><td><code>managedfile update</code> cannot write</td><td>No change. The write is atomic.</td><td><code>write file: ...</code></td></tr><tr><td><code>netplan generate</code> refuses the new file</td><td>No change. <code>netplan</code> puts back the content that the file had, or removes a new file, with a <code>managedfile</code> call.</td><td><code>netplan generate refused &lt;path&gt;, so its content was put back: ...</code>, or <code>..., so it was removed: ...</code></td></tr><tr><td><code>netplan apply</code> fails</td><td>The new file stays in <code>/etc/netplan</code>. netplan did not apply it. Its record has a mark, so a retry applies it.</td><td><code>netplan apply: ...</code></td></tr></tbody></table>
 <p>Only a building block undoes its own change, as <code>netplan</code> does when
 <code>netplan generate</code> refuses a file. The caller of a step does not undo the work
 of the step.</p>
 <p>For the last failure, the chain line of the job is:</p>
-<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">  Chain:     web-01: (netplan get, netplan update (failed) → managedfile update (changed))</span><br></div></code></pre></div></div>
-<p><code>netplan update (failed)</code> is the step that failed.
-<code>managedfile update (changed)</code> under it is the write that stayed on the host.</p>
-<p>A retry with the same input does not apply the file now. <code>managedfile update</code>
-finds the same content on disk and reports no change, so <code>netplan</code> does not run
-<code>netplan apply</code> again, and the job reports unchanged.
-<a href="https://github.com/osapi-io/osapi/issues/1194" target="_blank" rel="noopener noreferrer" class="">osapi#1194</a> tracks this. Until
-it is fixed, correct the cause and run <code>netplan apply</code> on the host.</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">  Chain:     web-01: (netplan get, netplan update (failed) → (managedfile update (changed), managedfile update (changed)))</span><br></div></code></pre></div></div>
+<p><code>netplan update (failed)</code> is the step that failed. The first
+<code>managedfile update (changed)</code> under it is the write that stayed on the host.
+The second one puts a mark in the record of the file. The mark tells that the
+step after the write did not finish.</p>
+<p>A retry with the same input applies the file. The record of the file does not
+agree with the input, because of the mark. Thus <code>managedfile update</code> reports a
+change and removes the mark, and <code>netplan</code> runs <code>netplan generate</code> and
+<code>netplan apply</code> again. After an apply that succeeds, a call with the same input
+reports unchanged.</p>
+<p><code>certificate</code> and <code>service</code> operate in the same way. When
+<code>update-ca-certificates</code>, <code>update-ca-trust</code> or <code>systemctl daemon-reload</code> fails
+after a write, the file stays with the mark in its record. When the command
+fails after a delete, the file comes back with the mark in its record. A retry
+then removes the file and runs the command again. <code>netplan delete</code> puts back the
+file in the same way when <code>netplan apply</code> fails.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-a-chain-is-not">What a chain is not<a href="#what-a-chain-is-not" class="hash-link" aria-label="Direct link to What a chain is not" title="Direct link to What a chain is not" translate="no">​</a></h2>
 <p>A chain is for work on one host, in one job. Work across hosts, or work in steps
 where you look at the result of one step before you start the next, is a

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Service management | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/service-management"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Service management | OSAPI"><meta data-rh="true" name="description" content="osapi reads the systemd services of each host. It deploys, removes, starts,"><meta data-rh="true" property="og:description" content="osapi reads the systemd services of each host. It deploys, removes, starts,"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/service-management"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/service-management" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/service-management" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Service management","item":"https://osapi-io.github.io/osapi/sidebar/features/service-management"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.ee2257e7.css">
-<script src="/osapi/assets/js/runtime~main.62e7ccc4.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.665872af.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.e5743117.js" defer="defer"></script>
 </head>
 <body>
@@ -48,6 +48,11 @@ osapi deployed.</li>
 <li class=""><strong>Delete</strong> runs <code>systemctl disable --now</code>, removes the unit file and reloads
 systemd. A service with no unit file reports <code>changed: false</code>.</li>
 </ul>
+<p>When <code>systemctl daemon-reload</code> fails, a retry with the same input reloads
+systemd again. After a create or an update, the unit file stays, and its record
+has a mark that tells that the reload did not finish. After a delete, the unit
+file comes back with the mark. The next write of the service reports a change
+and removes the mark.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="actions">Actions<a href="#actions" class="hash-link" aria-label="Direct link to Actions" title="Direct link to Actions" translate="no">​</a></h3>
 <p>Each action runs <code>systemctl &lt;action&gt; osapi-&lt;name&gt;.service</code> on the Debian family.</p>
 
