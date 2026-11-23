@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Validate | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/command/validate"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Validate | OSAPI"><meta data-rh="true" name="description" content="Check every local group against the rules of a definition, and the output of"><meta data-rh="true" property="og:description" content="Check every local group against the rules of a definition, and the output of"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/command/validate"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/command/validate" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/command/validate" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Usage","item":"https://osapi-io.github.io/osapi/sidebar/usage/"},{"@type":"ListItem","position":2,"name":"CLI","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/"},{"@type":"ListItem","position":3,"name":"CLI","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/"},{"@type":"ListItem","position":4,"name":"Command","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/command/"},{"@type":"ListItem","position":5,"name":"Validate","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/cli/command/validate"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.ee2257e7.css">
-<script src="/osapi/assets/js/runtime~main.1be5dd4f.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.6532a130.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.36d32b8e.js" defer="defer"></script>
 </head>
 <body>
@@ -76,9 +76,12 @@ past tense, such as admitted for admit, or .Says gives the text. Fix: Add
 .Says(&quot;&lt;state&gt;&quot;) to the method, such as .Says(&quot;draining&quot;) for drain.</li>
 <li class=""><code>prints</code>: Each method that prints a body, and is not a process, has an Example
 that Prints gives its output: a value of the method&#x27;s output type, which its
-docs page shows as the CLI prints it. Prints follows the Example that it
-shows. Fix: Add .Prints(sample) after the Example that it shows, with sample a
-value of the method&#x27;s output type, in samples.go of the group.</li>
+docs page shows as the CLI prints it. Each process has an Example that Logs
+gives the lines it writes when it starts, which its docs page shows as its log
+handler writes them. Prints and Logs follow the Example that they show. Fix:
+Add .Prints(sample) after the Example that it shows, with sample a value of
+the method&#x27;s output type, in samples.go of the group. For a process, add
+.Logs(lines...) after its Example, with the lines in samples.go of the group.</li>
 </ul>
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi cli </span><span class="token builtin class-name" style="color:#00d5ff">command</span><span class="token plain"> validate</span><br></div></code></pre></div></div>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="examples">Examples<a href="#examples" class="hash-link" aria-label="Direct link to Examples" title="Direct link to Examples" translate="no">​</a></h2>
