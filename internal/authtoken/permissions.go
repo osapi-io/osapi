@@ -66,20 +66,13 @@ func PermissionsOf(
 	return out
 }
 
-// builtinPermissions are the permissions of the hand-written domains under
-// internal/controller/api, which go as each becomes a behavior, and
-// health:read and trace:read, which several endpoint groups name with
-// Permission. A hand-written domain lists each permission it needs, also one
-// that a group or a behavior declares too, so it keeps it when they change. An endpoint group's own permissions and a behavior's
-// come from their definitions.
+// builtinPermissions are the permissions that endpoint groups name with
+// Permission, and that no method declares: health:read and trace:read. An
+// endpoint group's own permissions and a behavior's come from their
+// definitions.
 var builtinPermissions = []Permission{
-	"node:read",
-	"file:read",
-	"file:write",
 	"health:read",
 	"trace:read",
-	"power:execute",
-	"log:read",
 }
 
 // adminVerbs are the verbs of a permission that only the admin role gets:
@@ -88,16 +81,7 @@ var builtinPermissions = []Permission{
 // behavior.PermitAs takes.
 var adminVerbs = []string{"shell", "exec"}
 
-// builtinAdminOnly are the permissions of the hand-written domains that only
-// the admin role gets, because each reaches root directly: an arbitrary
-// command. None is left: each domain that reaches root is a behavior, and
-// marks its methods AdminOnly, such as command exec (command:execute) and the
-// writes of user and sshkey (user:write). A behavior or a group that takes
-// over a hand-written domain marks its methods AdminOnly, and Check fails
-// until it does.
-var builtinAdminOnly = []Permission{}
-
-// declared is a permission that something needs: a hand-written domain, a
+// declared is a permission that something needs: a built-in permission, a
 // method of an endpoint group, or a method of a behavior.
 type declared struct {
 	permission Permission
@@ -109,18 +93,14 @@ type declared struct {
 	where string
 }
 
-// declarations are the permissions of the hand-written domains, then those
-// of each registered DSL whose definitions serve the API, from dsl.All. They are
-// made on each call, not once, because a group or a behavior registers in
-// the init of its own package, which can run after this package's.
+// declarations are the built-in permissions, then those of each registered
+// DSL whose definitions serve the API, from dsl.All. They are made on each
+// call, not once, because a group or a behavior registers in the init of its
+// own package, which can run after this package's.
 func declarations() []declared {
 	out := make([]declared, 0, len(builtinPermissions))
 	for _, p := range builtinPermissions {
-		out = append(out, declared{
-			permission: p,
-			adminOnly:  slices.Contains(builtinAdminOnly, p),
-			where:      "authtoken",
-		})
+		out = append(out, declared{permission: p, where: "authtoken"})
 	}
 	for _, d := range dsl.All() {
 		if !d.ServesAPI() {
@@ -139,8 +119,8 @@ func declarations() []declared {
 	return out
 }
 
-// AllPermissions is every permission osapi knows: each one that the
-// hand-written domains, an endpoint group or a behavior declares, once. A
+// AllPermissions is every permission osapi knows: each built-in one, and
+// each one that an endpoint group or a behavior declares, once. A
 // permission that an endpoint method only names is not one.
 func AllPermissions() []Permission {
 	var all []Permission
@@ -203,8 +183,7 @@ var (
 )
 
 // AdminOnly reports whether only the admin role grants p: its verb is
-// shell or exec, the hand-written domain that needs it says so, or a method that
-// needs it is marked AdminOnly.
+// shell or exec, or a method that needs it is marked AdminOnly.
 func AdminOnly(
 	p Permission,
 ) bool {

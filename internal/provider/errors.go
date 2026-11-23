@@ -31,8 +31,8 @@ import "github.com/osapi-io/osapi/internal/behavior"
 // Anything else is a failure with no further meaning, which the API answers with
 // 500. Adding a sentinel is how a new distinction reaches an HTTP status; it is
 // never reached by matching on words. The values are internal/behavior's, which
-// behaviors return, so a hand-written provider and a behavior report the same
-// error.
+// behaviors return, so the agent's fact providers under internal/provider/node
+// and a behavior report the same error.
 var (
 	// ErrUnsupported means the operation is not supported on the current OS
 	// family. The agent maps this to StatusSkipped instead of StatusFailed.

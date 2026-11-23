@@ -121,7 +121,7 @@ controller:
       roles:
         ops:
           permissions:
-            - node:read
+            - status:read
             - health:read
         netadmin:
           permissions:

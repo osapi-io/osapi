@@ -56,7 +56,7 @@ func motd(
 }
 
 // A behavior registered in this test binary only, so its permissions are
-// not among the hand-written domains'.
+// not among the real behaviors'.
 // hiddenperm is not served, so a token can never call it and it adds no
 // permission.
 var _ = behavior.Register(behavior.Define("hiddenperm", "Used by other behaviors", behavior.Node,
@@ -131,7 +131,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 			roles: []string{"automation"},
 			validateFunc: func(resolved map[string]bool) {
 				for _, p := range []string{
-					string(client.PermNodeRead),
+					string(client.PermHostnameRead),
 					string(client.PermNetworkRead),
 					string(client.PermNetworkWrite),
 					string(client.PermJobRead),
@@ -156,7 +156,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 			roles: []string{"read"},
 			validateFunc: func(resolved map[string]bool) {
 				for _, p := range []string{
-					string(client.PermNodeRead),
+					string(client.PermHostnameRead),
 					string(client.PermNetworkRead),
 					string(client.PermJobRead),
 					string(client.PermHealthRead),
@@ -206,9 +206,9 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 		{
 			name:              "direct permissions override roles",
 			roles:             []string{"admin"},
-			directPermissions: []string{string(client.PermNodeRead)},
+			directPermissions: []string{string(client.PermHostnameRead)},
 			validateFunc: func(resolved map[string]bool) {
-				for _, p := range []string{string(client.PermNodeRead)} {
+				for _, p := range []string{string(client.PermHostnameRead)} {
 					s.True(resolved[string(p)], "expected permission %s to be present", p)
 				}
 				for _, p := range []string{
@@ -227,11 +227,11 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 			name:  "custom role overrides default",
 			roles: []string{"ops"},
 			customRoles: map[string][]string{
-				"ops": {string(client.PermNodeRead), string(client.PermHealthRead)},
+				"ops": {string(client.PermHostnameRead), string(client.PermHealthRead)},
 			},
 			validateFunc: func(resolved map[string]bool) {
 				for _, p := range []string{
-					string(client.PermNodeRead),
+					string(client.PermHostnameRead),
 					string(client.PermHealthRead),
 				} {
 					s.True(resolved[string(p)], "expected permission %s to be present", p)
@@ -257,7 +257,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 					s.True(resolved[string(p)], "expected permission %s to be present", p)
 				}
 				for _, p := range []string{
-					string(client.PermNodeRead),
+					string(client.PermHostnameRead),
 					string(client.PermNetworkRead),
 				} {
 					s.False(resolved[string(p)], "expected permission %s to be absent", p)
@@ -277,7 +277,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 			roles: []string{"read", "automation"},
 			validateFunc: func(resolved map[string]bool) {
 				for _, p := range []string{
-					string(client.PermNodeRead),
+					string(client.PermHostnameRead),
 					string(client.PermNetworkRead),
 					string(client.PermNetworkWrite),
 					string(client.PermJobRead),
@@ -309,7 +309,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 func (s *PermissionsPublicTestSuite) TestAllPermissions() {
 	all := authtoken.AllPermissions()
 
-	s.Contains(all, client.PermCommandShell, "the hand-written domains' permissions")
+	s.Contains(all, client.PermCommandShell, "a behavior's, from its methods")
 	s.Contains(all, client.PermAuditRead, "an endpoint group's, from its methods")
 	s.Contains(all, authtoken.Permission("zzsplit:write"))
 	s.NotContains(
@@ -469,7 +469,7 @@ func (s *PermissionsPublicTestSuite) TestRoles() {
 func (s *PermissionsPublicTestSuite) TestAdminOnly() {
 	s.True(authtoken.AdminOnly(client.PermCommandShell), "by its verb")
 	s.True(authtoken.AdminOnly(client.PermContainerExec), "by its verb")
-	s.True(authtoken.AdminOnly(client.PermCommandExecute), "a hand-written domain says so")
+	s.True(authtoken.AdminOnly(client.PermCommandExecute), "by its mark")
 	s.False(authtoken.AdminOnly(client.PermPowerExecute), "an execute verb is not admin only")
 	s.True(authtoken.AdminOnly(client.PermAgentWrite), "by its mark")
 	s.False(authtoken.AdminOnly(client.PermAgentRead))
@@ -564,15 +564,15 @@ func (s *PermissionsPublicTestSuite) TestHasPermission() {
 	}{
 		{
 			name:     "present permission returns true",
-			resolved: map[authtoken.Permission]bool{client.PermNodeRead: true},
-			required: client.PermNodeRead,
+			resolved: map[authtoken.Permission]bool{client.PermHostnameRead: true},
+			required: client.PermHostnameRead,
 			validateFunc: func(got bool) {
 				s.Equal(true, got)
 			},
 		},
 		{
 			name:     "absent permission returns false",
-			resolved: map[authtoken.Permission]bool{client.PermNodeRead: true},
+			resolved: map[authtoken.Permission]bool{client.PermHostnameRead: true},
 			required: client.PermJobWrite,
 			validateFunc: func(got bool) {
 				s.Equal(false, got)
@@ -581,7 +581,7 @@ func (s *PermissionsPublicTestSuite) TestHasPermission() {
 		{
 			name:     "empty resolved set returns false",
 			resolved: map[authtoken.Permission]bool{},
-			required: client.PermNodeRead,
+			required: client.PermHostnameRead,
 			validateFunc: func(got bool) {
 				s.Equal(false, got)
 			},
@@ -589,7 +589,7 @@ func (s *PermissionsPublicTestSuite) TestHasPermission() {
 		{
 			name:     "nil resolved set returns false",
 			resolved: nil,
-			required: client.PermNodeRead,
+			required: client.PermHostnameRead,
 			validateFunc: func(got bool) {
 				s.Equal(false, got)
 			},
@@ -618,8 +618,8 @@ func (s *PermissionsPublicTestSuite) TestStrings() {
 	}{
 		{
 			name:  "when there are permissions, each is its text",
-			perms: []authtoken.Permission{client.PermNodeRead, client.PermJobWrite},
-			want:  []string{"node:read", "job:write"},
+			perms: []authtoken.Permission{client.PermHostnameRead, client.PermJobWrite},
+			want:  []string{"hostname:read", "job:write"},
 		},
 		{
 			name:  "when there are none, it is empty",

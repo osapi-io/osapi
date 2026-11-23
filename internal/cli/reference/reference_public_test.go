@@ -57,7 +57,7 @@ func tree() *cobra.Command {
 	}
 	group.PersistentFlags().String("target", "_all", "Target: <host> or {label}")
 	group.Annotations = map[string]string{
-		reference.Permission: "node:read",
+		reference.Permission: "status:read",
 		reference.Notes:      "Each command sends a job.",
 	}
 
@@ -135,7 +135,7 @@ func (s *ReferencePublicTestSuite) TestWrite() {
 		s.Contains(group, "```bash\nosapi node status\n\nosapi node status --target web\n```")
 		s.Contains(group, "Target: &lt;host&gt; or &#123;label&#125;")
 		s.Contains(group, "`_all`")
-		s.Contains(group, "## Permission\n\nEach command needs the `node:read` permission.")
+		s.Contains(group, "## Permission\n\nEach command needs the `status:read` permission.")
 		s.Contains(group, "## Notes\n\nEach command sends a job.")
 
 		leaf := s.read(dir, "node/ssh-key.md")

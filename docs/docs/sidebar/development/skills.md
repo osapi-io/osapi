@@ -17,7 +17,6 @@ internal/skills/resources/
     osapi/
     osapi-operations/
   dev-skills/              the skills for a person who changes osapi
-    add-a-domain/          a hand-written domain, until it moves to a behavior
     build-a-behavior/
       SKILL.md             the frontmatter and the procedure
       references/          files that the procedure sends the agent to

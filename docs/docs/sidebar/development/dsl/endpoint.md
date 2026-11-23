@@ -550,9 +550,9 @@ The rules the server checks before the method runs: a value that breaks one is a
 gives an enum, min, max and len the length of a string, the items of an array or
 the bounds of a number, startswith a pattern, and uuid, email, hostname, ip,
 ipv4, ipv6, cidr, url and uri a format. The spec carries these, and the whole
-tag in x-oapi-codegen-extra-tags. A custom rule, such as sysctl_key, needs its
-schema from rule.Register; a rule with none fails the spec. In an endpoint, the
-generated route checks them before the handler runs, and a handler runs only
+tag in x-oapi-codegen-extra-tags. A custom rule, such as resource_name, needs
+its schema from rule.Register; a rule with none fails the spec. In an endpoint,
+the generated route checks them before the handler runs, and a handler runs only
 from its route: TestHandlersRunFromRoutes, in internal/controller/endpoints/all,
 fails a call of it from other code. The author writes no check.
 

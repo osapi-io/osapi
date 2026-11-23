@@ -271,20 +271,3 @@ One directory, one import line, and a behavior with:
 
 Next: [Building a behavior](behaviors.md) has every option and tag, and
 [Behaviors](../reference/behaviors/behaviors.mdx) shows the ones osapi ships.
-
-## Changing a hand-written domain
-
-The domains that are not behaviors yet still need maintenance. Their rules are
-in the specifications repository, stated one time. The `add-a-domain` skill
-there gives the build order and links to the rules:
-
-| Subject                                                         | Document                                                                                     |
-| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| What a domain consists of, and how to tell one is half-finished | [Building a domain](https://github.com/osapi-io/specs/blob/main/components/osapi/domains.md) |
-| What a provider returns, and the three idempotency outcomes     | [Providers](https://github.com/osapi-io/specs/blob/main/components/osapi/providers.md)       |
-| Broadcast targeting, and the shape every result returns         | [The job system](https://github.com/osapi-io/specs/blob/main/components/osapi/job-system.md) |
-| What a new SDK service owes                                     | [The Go SDK](https://github.com/osapi-io/specs/blob/main/components/osapi/sdk.md)            |
-| Where a new permission goes                                     | [Permissions](https://github.com/osapi-io/specs/blob/main/components/osapi/permissions.md)   |
-| Running a command safely                                        | [Running commands](https://github.com/osapi-io/specs/blob/main/components/osapi/exec.md)     |
-
-A new area of a host is a behavior, not a new hand-written domain.

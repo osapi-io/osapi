@@ -88,7 +88,7 @@ func (s *ServerPublicTestSuite) TestNew() {
 							SigningKey: "test-key",
 							Roles: map[client.Role]config.CustomRole{
 								"ops": {
-									Permissions: []client.Permission{"node:read", "health:read"},
+									Permissions: []client.Permission{"status:read", "health:read"},
 								},
 							},
 						},

@@ -21,7 +21,7 @@
 package client
 
 // Permission represents a fine-grained resource:verb permission.
-// Permissions use the format "resource:verb" (e.g., "node:read",
+// Permissions use the format "resource:verb" (e.g., "status:read",
 // "command:execute").
 type Permission string
 

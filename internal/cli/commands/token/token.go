@@ -37,7 +37,7 @@ var Group = command.Register(command.Define(
 	command.Method[GenerateInput, GenerateOutput]("generate").
 		Short("Generate a new token").
 		Example("--subject user123 --roles=read").
-		Example("--subject svc@example.com --roles=read \\\n    -p node:read -p health:read").
+		Example("--subject svc@example.com --roles=read \\\n    -p status:read -p health:read").
 		Fails("no roles", GenerateInput{Subject: "ops"}).
 		Fails("no subject", GenerateInput{Roles: []string{"read"}}).
 		Fails("an unknown permission", GenerateInput{

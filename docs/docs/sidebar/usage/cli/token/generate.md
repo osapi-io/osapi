@@ -11,7 +11,7 @@ osapi token generate [flags]
 ```bash
 osapi token generate --subject user123 --roles=read
 osapi token generate --subject svc@example.com --roles=read \
-  -p node:read -p health:read
+  -p status:read -p health:read
 ```
 
 ## Flags

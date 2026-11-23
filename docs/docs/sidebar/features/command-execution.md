@@ -108,7 +108,7 @@ controller:
           permissions:
             - command:execute
             - command:shell
-            - node:read
+            - status:read
             - health:read
 ```
 

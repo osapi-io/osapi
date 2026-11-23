@@ -64,7 +64,7 @@ var (
 // validator is a Go function, and nothing can read a schema out of it, so its
 // schema is registered beside it:
 //
-//	rule.Register("sysctl_key", rule.Pattern(`^[a-zA-Z0-9][a-zA-Z0-9._-]*$`))
+//	rule.Register("resource_name", rule.Pattern(`^[a-zA-Z0-9_-]+$`))
 //
 // A rule that the spec cannot show more of than its type registers
 // rule.None. Apply refuses a tag that is neither standard nor registered.
@@ -233,7 +233,7 @@ const (
 		"len the length of a string, the items of an array or the bounds of a number, startswith a " +
 		"pattern, and uuid, email, hostname, ip, ipv4, ipv6, cidr, url and uri a format. The spec " +
 		"carries these, and the whole tag in x-oapi-codegen-extra-tags. A custom rule, such as " +
-		"sysctl_key, needs its schema from rule.Register; a rule with none fails the spec."
+		"resource_name, needs its schema from rule.Register; a rule with none fails the spec."
 	TagWhen = `On each input field. A field with no limit is validate:"omitempty"; validate refuses ` +
 		"an input field with no tag."
 
@@ -259,7 +259,7 @@ const (
 // runs, what the tag means in the spec, and what a caller is told when a
 // value fails it.
 type Custom struct {
-	// Tag is the name used in validate tags, such as sysctl_key.
+	// Tag is the name used in validate tags, such as resource_name.
 	Tag string
 	// Check reports whether a field's value, as a string, passes.
 	Check func(value string) bool

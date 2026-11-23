@@ -28,11 +28,21 @@
 package sysctl
 
 import (
+	"regexp"
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
+	"github.com/osapi-io/osapi/internal/validation/rule"
 )
+
+// keyPattern is a sysctl parameter name: letters, digits, dots, underscores
+// and hyphens. A slash or a space is refused, so a key cannot leave the
+// directory in a file name. The first character is a letter or a digit, so
+// sysctl does not read the key as an option, such as -p.
+const keyPattern = `^[a-zA-Z0-9][a-zA-Z0-9._-]*$`
+
+var keyRE = regexp.MustCompile(keyPattern)
 
 // Behavior is the sysctl definition. Everything else, the routes, the agent's
 // dispatch, the CLI commands, the spec and the docs, is built from it.
@@ -49,6 +59,10 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.API,
 	behavior.Area(behavior.AreaConfig),
 	behavior.CLI,
+	behavior.Validator("sysctl_key", keyRE.MatchString,
+		func(t rule.Target) { t.Pattern(keyPattern) },
+		"is not a valid sysctl key: it starts with a letter or a digit, "+
+			"and has only letters, digits, dots, underscores and hyphens"),
 	behavior.Read("list", List).
 		Describe("List the kernel's parameters and which osapi manages").
 		Explain("Lists every parameter the kernel shows under /proc/sys, with its current "+

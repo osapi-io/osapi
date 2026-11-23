@@ -46,14 +46,6 @@ var instance = validator.New()
 // makes brute-forcing the HS256 secret and forging tokens practical.
 const MinSigningKeyLen = 32
 
-// sysctlKeyPattern matches dot-separated sysctl parameter names: letters,
-// digits, dots, underscores, and hyphens. Slashes, spaces, and other
-// characters are rejected so the key cannot be used for path traversal.
-// The first character must be a letter or digit so the key cannot be
-// mistaken for a `sysctl` command-line option (e.g. -p) when passed as
-// an argument.
-var sysctlKeyPattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]*$`)
-
 // interfaceNamePattern is a Linux interface name: up to 15 characters, such
 // as eth0, br-lan or eth0.100. A name never starts with a dot or a dash, so it
 // never leaves a directory in a file name.
@@ -207,13 +199,6 @@ func init() {
 		return err == nil
 	})
 
-	// sysctl_key validates a sysctl parameter key: dot-separated names only,
-	// which rejects path traversal and other injection characters when the
-	// key is used to build a file path.
-	_ = instance.RegisterValidation("sysctl_key", func(fl validator.FieldLevel) bool {
-		return sysctlKeyPattern.MatchString(fl.Field().String())
-	})
-
 	// package_version validates a package version; PackageVersionPattern
 	// says what it permits.
 	_ = instance.RegisterValidation("package_version", func(fl validator.FieldLevel) bool {
@@ -285,7 +270,6 @@ func init() {
 	// The JSON Schema each custom validator means, so a behavior's generated
 	// spec validates what the server does. A tag without one fails schema
 	// generation rather than being dropped.
-	rule.Register("sysctl_key", rule.Pattern(sysctlKeyPattern.String()))
 	// required_without and excluded_with tie one field to another, which the
 	// schema of one field cannot say. The server checks them, and an example's
 	// .Fails proves each.
@@ -391,13 +375,6 @@ var customHints = map[string]func(ctx context.Context, fe validator.FieldError) 
 		return fmt.Sprintf(
 			"%q is not a valid timezone name, such as UTC or America/New_York",
 			fe.Value(),
-		)
-	},
-	"sysctl_key": func(_ context.Context, fe validator.FieldError) string {
-		return fmt.Sprintf(
-			"%q is not a valid sysctl key (expected: %s)",
-			fe.Value(),
-			sysctlKeyPattern.String(),
 		)
 	},
 	"resource_name": func(_ context.Context, fe validator.FieldError) string {

@@ -67,20 +67,20 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 		{
 			name: "when the token is signed, it is the answer with what it carries",
 			in: token.GenerateInput{
-				Roles: []string{"read"}, Subject: "ops", Permissions: []string{"node:read"},
+				Roles: []string{"read"}, Subject: "ops", Permissions: []string{"trace:read"},
 			},
 			setup: func() {
 				s.config.EXPECT().CustomRoles().Return(nil, nil)
 				s.config.EXPECT().SigningKey().Return(key)
 				s.tokens.EXPECT().
-					Generate(key, []string{"read"}, "ops", []string{"node:read"}).
+					Generate(key, []string{"read"}, "ops", []string{"trace:read"}).
 					Return("signed", nil)
 			},
 			validateFunc: func(got token.GenerateOutput, err error) {
 				s.Require().NoError(err)
 				s.Equal(token.GenerateOutput{
 					Token: "signed", Subject: "ops",
-					Roles: []string{"read"}, Permissions: []string{"node:read"},
+					Roles: []string{"read"}, Permissions: []string{"trace:read"},
 				}, got)
 			},
 		},
@@ -156,7 +156,7 @@ func (s *MethodsPublicTestSuite) TestRoles() {
 			name: "when the config has custom roles, they follow the built-in ones by name",
 			setup: func() {
 				s.config.EXPECT().CustomRoles().Return(authtoken.CustomRoles{
-					"ops":      {"node:read"},
+					"ops":      {"trace:read"},
 					"security": {"audit:read"},
 				}, nil)
 			},
@@ -171,7 +171,7 @@ func (s *MethodsPublicTestSuite) TestRoles() {
 					"auditor/built-in", "read/built-in", "observer/built-in",
 					"ops/config", "security/config",
 				}, names)
-				s.Equal([]string{"node:read"}, got.Roles[6].Permissions)
+				s.Equal([]string{"trace:read"}, got.Roles[6].Permissions)
 				perms, _ := authtoken.RolePermissions("read")
 				s.Equal(authtoken.Strings(perms), got.Roles[4].Permissions)
 			},
@@ -221,12 +221,12 @@ func (s *MethodsPublicTestSuite) TestRoleGet() {
 			setup: func() {
 				s.config.EXPECT().
 					CustomRoles().
-					Return(authtoken.CustomRoles{"ops": {"node:read"}}, nil)
+					Return(authtoken.CustomRoles{"ops": {"trace:read"}}, nil)
 			},
 			validateFunc: func(got token.Role, err error) {
 				s.Require().NoError(err)
 				s.Equal(
-					token.Role{Name: "ops", Source: "config", Permissions: []string{"node:read"}},
+					token.Role{Name: "ops", Source: "config", Permissions: []string{"trace:read"}},
 					got,
 				)
 			},
@@ -276,7 +276,7 @@ func (s *MethodsPublicTestSuite) TestValidate() {
 				s.config.EXPECT().SigningKey().Return(key)
 				s.tokens.EXPECT().Validate("jwt", key).Return(&authtoken.CustomClaims{
 					Roles:       []string{"read"},
-					Permissions: []string{"node:read", "audit:read"},
+					Permissions: []string{"trace:read", "audit:read"},
 					RegisteredClaims: jwt.RegisteredClaims{
 						Subject:   "ops",
 						Audience:  jwt.ClaimStrings{"osapi"},
@@ -290,8 +290,8 @@ func (s *MethodsPublicTestSuite) TestValidate() {
 				s.Equal(token.Claims{
 					Subject:              "ops",
 					Roles:                []string{"read"},
-					Permissions:          []string{"node:read", "audit:read"},
-					EffectivePermissions: []string{"audit:read", "node:read"},
+					Permissions:          []string{"trace:read", "audit:read"},
+					EffectivePermissions: []string{"audit:read", "trace:read"},
 					Audience:             []string{"osapi"},
 					IssuedAt:             issued,
 					ExpiresAt:            expires,
@@ -349,11 +349,11 @@ func (s *MethodsPublicTestSuite) TestPermissionRule() {
 	}{
 		{
 			name:  "when each permission is one of the binary's, it passes",
-			perms: []string{"node:read", "audit:read"},
+			perms: []string{"trace:read", "audit:read"},
 		},
 		{
 			name:    "when a permission is not one, it is a usage error",
-			perms:   []string{"node:read", "root:all"},
+			perms:   []string{"trace:read", "root:all"},
 			wantErr: `--permissions: "root:all" is not a permission`,
 		},
 	}

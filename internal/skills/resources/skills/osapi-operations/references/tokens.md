@@ -6,7 +6,7 @@ install does not work on another.
 
 ```sh
 osapi token generate --roles admin --subject ops@example.com --json
-osapi token generate --roles read --subject ci --permissions node:read --json
+osapi token generate --roles read --subject ci --permissions status:read --json
 osapi token validate --token <jwt> --json
 ```
 
