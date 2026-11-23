@@ -24,7 +24,7 @@ shows each call that its examples make.
 | Platforms   | debian, linux, darwin             |
 | Sudo        | none                              |
 | Runs        | none                              |
-| Writes      | /home/*/.ssh/authorized_keys      |
+| Writes      | /home/\*/.ssh/authorized_keys     |
 | Keeps state | no                                |
 | Uses        | [user](../user/user.md)           |
 | Used by     | none                              |
@@ -39,11 +39,11 @@ shows each call that its examples make.
 
 ### Types (3)
 
-| NAME                     | INPUT                                         | OUTPUT                                                   |
-| ------------------------ | --------------------------------------------- | -------------------------------------------------------- |
-| [list](#method-list)     | ListInput &#123; name* &#125;                 | \[]Key &#123; type, fingerprint, comment, options &#125; |
-| [create](#method-create) | CreateInput &#123; name*, key* &#125;         | Result &#123; fingerprint, changed &#125;                |
-| [delete](#method-delete) | DeleteInput &#123; name*, fingerprint* &#125; | Result &#123; fingerprint, changed &#125;                |
+| NAME                     | INPUT                                           | OUTPUT                                                   |
+| ------------------------ | ----------------------------------------------- | -------------------------------------------------------- |
+| [list](#method-list)     | ListInput &#123; name\* &#125;                  | \[]Key &#123; type, fingerprint, comment, options &#125; |
+| [create](#method-create) | CreateInput &#123; name\*, key\* &#125;         | Result &#123; fingerprint, changed &#125;                |
+| [delete](#method-delete) | DeleteInput &#123; name\*, fingerprint\* &#125; | Result &#123; fingerprint, changed &#125;                |
 
 ### Settings (0)
 
@@ -76,9 +76,9 @@ None. Declare them with behavior.Config.
 
 ### Input (1)
 
-| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                     | DESCRIPTION             |
-| ----- | ------ | -------- | ----------------------------------------------- | ----------------------- |
-| name  | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]*\$?$, max length 32 | The user, such as alice |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                      | DESCRIPTION             |
+| ----- | ------ | -------- | ------------------------------------------------ | ----------------------- |
+| name  | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user, such as alice |
 
 ### Output (4)
 
@@ -113,10 +113,10 @@ None. Declare them with behavior.Config.
 
 ### Input (2)
 
-| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                     | DESCRIPTION                                                                                  |
-| ----- | ------ | -------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| name  | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]*\$?$, max length 32 | The user, such as alice                                                                      |
-| key   | string | yes      | pattern ^\[^\r\n]*$                             | The public key line, such as ssh-ed25519 AAAA... alice@laptop, with options before it if any |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                      | DESCRIPTION                                                                                  |
+| ----- | ------ | -------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| name  | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user, such as alice                                                                      |
+| key   | string | yes      | pattern ^\[^\r\n]\*$                             | The public key line, such as ssh-ed25519 AAAA... alice@laptop, with options before it if any |
 
 ### Output (2)
 
@@ -151,10 +151,10 @@ None. Declare them with behavior.Config.
 
 ### Input (2)
 
-| FIELD       | TYPE   | REQUIRED | CONSTRAINTS                                     | DESCRIPTION                                         |
-| ----------- | ------ | -------- | ----------------------------------------------- | --------------------------------------------------- |
-| name        | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]*\$?$, max length 32 | The user, such as alice                             |
-| fingerprint | string | yes      | pattern ^\[^\r\n]*$                             | The SHA256 fingerprint of the key, as list shows it |
+| FIELD       | TYPE   | REQUIRED | CONSTRAINTS                                      | DESCRIPTION                                         |
+| ----------- | ------ | -------- | ------------------------------------------------ | --------------------------------------------------- |
+| name        | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user, such as alice                             |
+| fingerprint | string | yes      | pattern ^\[^\r\n]\*$                             | The SHA256 fingerprint of the key, as list shows it |
 
 ### Output (2)
 

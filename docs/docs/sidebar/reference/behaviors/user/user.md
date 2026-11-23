@@ -41,14 +41,14 @@ The users of the host. `osapi behavior get --name user` and
 
 ### Types (6)
 
-| NAME                     | INPUT                                                                                           | OUTPUT                                                               |
-| ------------------------ | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| [list](#method-list)     | ListInput                                                                                       | \[]Account &#123; name, uid, gid, home, shell, groups, locked &#125; |
-| [get](#method-get)       | GetInput &#123; name* &#125;                                                                    | Account &#123; name, uid, gid, home, shell, groups, locked &#125;    |
-| [create](#method-create) | CreateInput &#123; name*, uid, gid, home, shell, groups, system, password, password_hash &#125; | Result &#123; name, changed &#125;                                   |
-| [update](#method-update) | UpdateInput &#123; name*, shell, home, groups, lock &#125;                                      | Result &#123; name, changed &#125;                                   |
-| [delete](#method-delete) | DeleteInput &#123; name* &#125;                                                                 | Result &#123; name, changed &#125;                                   |
-| [passwd](#method-passwd) | PasswordInput &#123; name*, password, password_hash &#125;                                      | Result &#123; name, changed &#125;                                   |
+| NAME                     | INPUT                                                                                            | OUTPUT                                                               |
+| ------------------------ | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| [list](#method-list)     | ListInput                                                                                        | \[]Account &#123; name, uid, gid, home, shell, groups, locked &#125; |
+| [get](#method-get)       | GetInput &#123; name\* &#125;                                                                    | Account &#123; name, uid, gid, home, shell, groups, locked &#125;    |
+| [create](#method-create) | CreateInput &#123; name\*, uid, gid, home, shell, groups, system, password, password_hash &#125; | Result &#123; name, changed &#125;                                   |
+| [update](#method-update) | UpdateInput &#123; name\*, shell, home, groups, lock &#125;                                      | Result &#123; name, changed &#125;                                   |
+| [delete](#method-delete) | DeleteInput &#123; name\* &#125;                                                                 | Result &#123; name, changed &#125;                                   |
+| [passwd](#method-passwd) | PasswordInput &#123; name\*, password, password_hash &#125;                                      | Result &#123; name, changed &#125;                                   |
 
 ### Settings (0)
 
@@ -118,9 +118,9 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (1)
 
-| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                     | DESCRIPTION             |
-| ----- | ------ | -------- | ----------------------------------------------- | ----------------------- |
-| name  | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]*\$?$, max length 32 | The user, such as alice |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                      | DESCRIPTION             |
+| ----- | ------ | -------- | ------------------------------------------------ | ----------------------- |
+| name  | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user, such as alice |
 
 ### Output (7)
 
@@ -157,17 +157,17 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (9)
 
-| FIELD         | TYPE    | REQUIRED | CONSTRAINTS                                     | DESCRIPTION                                                         |
-| ------------- | ------- | -------- | ----------------------------------------------- | ------------------------------------------------------------------- |
-| name          | string  | yes      | pattern ^\[a-z_]\[a-z0-9_-]*\$?$, max length 32 | The user to add, such as alice                                      |
-| uid           | integer | no       | min 0                                           | Its numeric user ID; the system assigns one when it is 0            |
-| gid           | integer | no       | min 0                                           | Its primary group ID; a group of its own when it is 0               |
-| home          | string  | no       | pattern ^\[^\r\n]*$                             | Its home directory; /home/&lt;name&gt; when empty                   |
-| shell         | string  | no       | pattern ^\[^\r\n]*$                             | Its login shell, such as /bin/bash; the system's default when empty |
-| groups        | array   | no       |                                                 | The groups it is a member of, besides its primary group             |
-| system        | boolean | no       |                                                 | Add it as a system user, with an ID from the system range           |
-| password      | string  | no       | pattern ^\[^\r\n]*$, format password            | Its password, which osapi hashes on the controller; none when empty |
-| password_hash | string  | no       |                                                 | The sha512-crypt hash of the password, which the controller sets    |
+| FIELD         | TYPE    | REQUIRED | CONSTRAINTS                                      | DESCRIPTION                                                         |
+| ------------- | ------- | -------- | ------------------------------------------------ | ------------------------------------------------------------------- |
+| name          | string  | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user to add, such as alice                                      |
+| uid           | integer | no       | min 0                                            | Its numeric user ID; the system assigns one when it is 0            |
+| gid           | integer | no       | min 0                                            | Its primary group ID; a group of its own when it is 0               |
+| home          | string  | no       | pattern ^\[^\r\n]\*$                             | Its home directory; /home/&lt;name&gt; when empty                   |
+| shell         | string  | no       | pattern ^\[^\r\n]\*$                             | Its login shell, such as /bin/bash; the system's default when empty |
+| groups        | array   | no       |                                                  | The groups it is a member of, besides its primary group             |
+| system        | boolean | no       |                                                  | Add it as a system user, with an ID from the system range           |
+| password      | string  | no       | pattern ^\[^\r\n]\*$, format password            | Its password, which osapi hashes on the controller; none when empty |
+| password_hash | string  | no       |                                                  | The sha512-crypt hash of the password, which the controller sets    |
 
 ### Output (2)
 
@@ -202,13 +202,13 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (5)
 
-| FIELD  | TYPE   | REQUIRED | CONSTRAINTS                                     | DESCRIPTION                                                                           |
-| ------ | ------ | -------- | ----------------------------------------------- | ------------------------------------------------------------------------------------- |
-| name   | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]*\$?$, max length 32 | The user, such as alice                                                               |
-| shell  | string | no       | pattern ^\[^\r\n]*$                             | Its login shell, such as /bin/bash                                                    |
-| home   | string | no       | pattern ^\[^\r\n]*$                             | Its home directory, which usermod moves the files to                                  |
-| groups | array  | no       |                                                 | The groups it is a member of, which replace the groups it has                         |
-| lock   | string | no       | one of locked unlocked                          | Whether to refuse logins with its password: locked refuses them, unlocked allows them |
+| FIELD  | TYPE   | REQUIRED | CONSTRAINTS                                      | DESCRIPTION                                                                           |
+| ------ | ------ | -------- | ------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| name   | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user, such as alice                                                               |
+| shell  | string | no       | pattern ^\[^\r\n]\*$                             | Its login shell, such as /bin/bash                                                    |
+| home   | string | no       | pattern ^\[^\r\n]\*$                             | Its home directory, which usermod moves the files to                                  |
+| groups | array  | no       |                                                  | The groups it is a member of, which replace the groups it has                         |
+| lock   | string | no       | one of locked unlocked                           | Whether to refuse logins with its password: locked refuses them, unlocked allows them |
 
 ### Output (2)
 
@@ -243,9 +243,9 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (1)
 
-| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                     | DESCRIPTION                                                |
-| ----- | ------ | -------- | ----------------------------------------------- | ---------------------------------------------------------- |
-| name  | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]*\$?$, max length 32 | The user to remove, with its home directory, such as alice |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                      | DESCRIPTION                                                |
+| ----- | ------ | -------- | ------------------------------------------------ | ---------------------------------------------------------- |
+| name  | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user to remove, with its home directory, such as alice |
 
 ### Output (2)
 
@@ -278,11 +278,11 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (3)
 
-| FIELD         | TYPE   | REQUIRED | CONSTRAINTS                                     | DESCRIPTION                                                      |
-| ------------- | ------ | -------- | ----------------------------------------------- | ---------------------------------------------------------------- |
-| name          | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]*\$?$, max length 32 | The user, such as alice                                          |
-| password      | string | no       | pattern ^\[^\r\n]*$, format password            | The new password, which osapi hashes on the controller           |
-| password_hash | string | no       |                                                 | The sha512-crypt hash of the password, which the controller sets |
+| FIELD         | TYPE   | REQUIRED | CONSTRAINTS                                      | DESCRIPTION                                                      |
+| ------------- | ------ | -------- | ------------------------------------------------ | ---------------------------------------------------------------- |
+| name          | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user, such as alice                                          |
+| password      | string | no       | pattern ^\[^\r\n]\*$, format password            | The new password, which osapi hashes on the controller           |
+| password_hash | string | no       |                                                  | The sha512-crypt hash of the password, which the controller sets |
 
 ### Output (2)
 

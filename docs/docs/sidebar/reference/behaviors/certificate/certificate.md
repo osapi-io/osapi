@@ -13,22 +13,22 @@ make.
 
 ## Behavior
 
-|             |                                                                                                                                                   |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Name        | certificate                                                                                                                                       |
-| Description | The certificate authorities that the host trusts                                                                                                  |
-| Placement   | node                                                                                                                                              |
-| Internal    | no                                                                                                                                                |
-| API         | yes                                                                                                                                               |
-| CLI         | yes                                                                                                                                               |
-| Next        | no                                                                                                                                                |
-| Platforms   | debian, linux, darwin                                                                                                                             |
-| Sudo        | update-ca-certificates, update-ca-trust                                                                                                           |
-| Runs        | none                                                                                                                                              |
-| Writes      | /usr/local/share/ca-certificates/osapi-_.crt, /etc/pki/ca-trust/source/anchors/osapi-_.crt, /etc/ca-certificates/trust-source/anchors/osapi-*.crt |
-| Keeps state | no                                                                                                                                                |
-| Uses        | [object](../object/object.md), [managedfile](../managedfile/managedfile.md)                                                                       |
-| Used by     | none                                                                                                                                              |
+|             |                                                                                                                                                      |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | certificate                                                                                                                                          |
+| Description | The certificate authorities that the host trusts                                                                                                     |
+| Placement   | node                                                                                                                                                 |
+| Internal    | no                                                                                                                                                   |
+| API         | yes                                                                                                                                                  |
+| CLI         | yes                                                                                                                                                  |
+| Next        | no                                                                                                                                                   |
+| Platforms   | debian, linux, darwin                                                                                                                                |
+| Sudo        | update-ca-certificates, update-ca-trust                                                                                                              |
+| Runs        | none                                                                                                                                                 |
+| Writes      | /usr/local/share/ca-certificates/osapi-\*.crt, /etc/pki/ca-trust/source/anchors/osapi-\*.crt, /etc/ca-certificates/trust-source/anchors/osapi-\*.crt |
+| Keeps state | no                                                                                                                                                   |
+| Uses        | [object](../object/object.md), [managedfile](../managedfile/managedfile.md)                                                                          |
+| Used by     | none                                                                                                                                                 |
 
 ### Methods (5)
 
@@ -42,13 +42,13 @@ make.
 
 ### Types (5)
 
-| NAME                     | INPUT                                    | OUTPUT                                                                                               |
-| ------------------------ | ---------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| [list](#method-list)     | ListInput                                | \[]Entry &#123; name, path, source, enabled, subject, fingerprint, not_after, managed, object &#125; |
-| [get](#method-get)       | GetInput &#123; name* &#125;             | Entry &#123; name, path, source, enabled, subject, fingerprint, not_after, managed, object &#125;    |
-| [create](#method-create) | CreateInput &#123; name*, object* &#125; | Result &#123; name, changed &#125;                                                                   |
-| [update](#method-update) | UpdateInput &#123; name*, object &#125;  | Result &#123; name, changed &#125;                                                                   |
-| [delete](#method-delete) | DeleteInput &#123; name* &#125;          | Result &#123; name, changed &#125;                                                                   |
+| NAME                     | INPUT                                      | OUTPUT                                                                                               |
+| ------------------------ | ------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| [list](#method-list)     | ListInput                                  | \[]Entry &#123; name, path, source, enabled, subject, fingerprint, not_after, managed, object &#125; |
+| [get](#method-get)       | GetInput &#123; name\* &#125;              | Entry &#123; name, path, source, enabled, subject, fingerprint, not_after, managed, object &#125;    |
+| [create](#method-create) | CreateInput &#123; name\*, object\* &#125; | Result &#123; name, changed &#125;                                                                   |
+| [update](#method-update) | UpdateInput &#123; name\*, object &#125;   | Result &#123; name, changed &#125;                                                                   |
+| [delete](#method-delete) | DeleteInput &#123; name\* &#125;           | Result &#123; name, changed &#125;                                                                   |
 
 ### Settings (0)
 

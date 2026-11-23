@@ -22,7 +22,7 @@ Run a command on target hosts. `osapi behavior get --name command` and
 | Next        | no                            |
 | Platforms   | linux, darwin                 |
 | Sudo        | none                          |
-| Runs        | *                             |
+| Runs        | \*                            |
 | Writes      | none                          |
 | Keeps state | no                            |
 | Uses        | none                          |
@@ -37,10 +37,10 @@ Run a command on target hosts. `osapi behavior get --name command` and
 
 ### Types (2)
 
-| NAME                   | INPUT                                                | OUTPUT                                                               |
-| ---------------------- | ---------------------------------------------------- | -------------------------------------------------------------------- |
-| [exec](#method-exec)   | ExecInput &#123; command*, args, cwd, timeout &#125; | Result &#123; stdout, stderr, exit_code, duration_ms, changed &#125; |
-| [shell](#method-shell) | ShellInput &#123; command*, cwd, timeout &#125;      | Result &#123; stdout, stderr, exit_code, duration_ms, changed &#125; |
+| NAME                   | INPUT                                                 | OUTPUT                                                               |
+| ---------------------- | ----------------------------------------------------- | -------------------------------------------------------------------- |
+| [exec](#method-exec)   | ExecInput &#123; command\*, args, cwd, timeout &#125; | Result &#123; stdout, stderr, exit_code, duration_ms, changed &#125; |
+| [shell](#method-shell) | ShellInput &#123; command\*, cwd, timeout &#125;      | Result &#123; stdout, stderr, exit_code, duration_ms, changed &#125; |
 
 ### Settings (0)
 
@@ -51,7 +51,7 @@ None. Declare them with behavior.Config.
 |                 |                                                                                                                 |
 | --------------- | --------------------------------------------------------------------------------------------------------------- |
 | Span            | behavior.command.&lt;method&gt;                                                                                 |
-| Child spans     | exec *                                                                                                          |
+| Child spans     | exec \*                                                                                                         |
 | Metrics         | osapi_behavior_calls_total, osapi_behavior_duration_seconds, osapi_behavior_changes_total                       |
 | Attributes      | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed |
 | Recorded inputs | command (exec, shell)                                                                                           |

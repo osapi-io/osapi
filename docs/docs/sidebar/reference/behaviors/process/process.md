@@ -38,11 +38,11 @@ The processes of the host. `osapi behavior get --name process` and
 
 ### Types (3)
 
-| NAME                     | INPUT                                   | OUTPUT                                                                                                |
-| ------------------------ | --------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| [list](#method-list)     | ListInput                               | \[]Entry &#123; pid, name, user, state, cpu_percent, mem_percent, mem_rss, command, start_time &#125; |
-| [get](#method-get)       | GetInput &#123; pid* &#125;             | Entry &#123; pid, name, user, state, cpu_percent, mem_percent, mem_rss, command, start_time &#125;    |
-| [signal](#method-signal) | SignalInput &#123; pid*, signal* &#125; | Result &#123; pid, signal, changed &#125;                                                             |
+| NAME                     | INPUT                                     | OUTPUT                                                                                                |
+| ------------------------ | ----------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| [list](#method-list)     | ListInput                                 | \[]Entry &#123; pid, name, user, state, cpu_percent, mem_percent, mem_rss, command, start_time &#125; |
+| [get](#method-get)       | GetInput &#123; pid\* &#125;              | Entry &#123; pid, name, user, state, cpu_percent, mem_percent, mem_rss, command, start_time &#125;    |
+| [signal](#method-signal) | SignalInput &#123; pid\*, signal\* &#125; | Result &#123; pid, signal, changed &#125;                                                             |
 
 ### Settings (0)
 

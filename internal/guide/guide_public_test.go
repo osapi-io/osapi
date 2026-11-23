@@ -123,9 +123,43 @@ func (s *GuidePublicTestSuite) TestChecks() {
 }
 
 func (s *GuidePublicTestSuite) TestMDX() {
-	s.Equal("osapi-&lt;key&gt;.conf and &#123;k&#125;", guide.MDX("osapi-<key>.conf and {k}"))
-	s.Equal("a `<b>` c &lt;d&gt;", guide.MDX("a `<b>` c <d>"), "text in a code span stays")
-	s.Equal(`Uses\[Deps]()`, guide.MDX("Uses[Deps]()"), "a bracket does not start a link")
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{
+			name: "when the text has a tag or an expression",
+			in:   "osapi-<key>.conf and {k}",
+			want: "osapi-&lt;key&gt;.conf and &#123;k&#125;",
+		},
+		{
+			name: "when the text has a code span",
+			in:   "a `<b>` c <d>",
+			want: "a `<b>` c &lt;d&gt;",
+		},
+		{
+			name: "when the text has a bracket",
+			in:   "Uses[Deps]()",
+			want: `Uses\[Deps]()`,
+		},
+		{
+			name: "when the text has two asterisks",
+			in:   "/etc/a/osapi-*.crt, /etc/b/osapi-*.crt",
+			want: `/etc/a/osapi-\*.crt, /etc/b/osapi-\*.crt`,
+		},
+		{
+			name: "when the text has an asterisk in a code span",
+			in:   "`*slog.Logger` and *",
+			want: "`*slog.Logger` and \\*",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, guide.MDX(tc.in))
+		})
+	}
 }
 
 func (s *GuidePublicTestSuite) TestMarkdown() {

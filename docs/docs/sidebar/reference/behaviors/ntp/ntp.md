@@ -40,12 +40,12 @@ shows each call that its examples make.
 
 ### Types (4)
 
-| NAME                     | INPUT                              | OUTPUT                                                                      |
-| ------------------------ | ---------------------------------- | --------------------------------------------------------------------------- |
-| [get](#method-get)       | GetInput                           | Status &#123; synchronized, stratum, offset, current_source, servers &#125; |
-| [create](#method-create) | CreateInput &#123; servers* &#125; | Result &#123; changed &#125;                                                |
-| [update](#method-update) | UpdateInput &#123; servers* &#125; | Result &#123; changed &#125;                                                |
-| [delete](#method-delete) | DeleteInput                        | Result &#123; changed &#125;                                                |
+| NAME                     | INPUT                               | OUTPUT                                                                      |
+| ------------------------ | ----------------------------------- | --------------------------------------------------------------------------- |
+| [get](#method-get)       | GetInput                            | Status &#123; synchronized, stratum, offset, current_source, servers &#125; |
+| [create](#method-create) | CreateInput &#123; servers\* &#125; | Result &#123; changed &#125;                                                |
+| [update](#method-update) | UpdateInput &#123; servers\* &#125; | Result &#123; changed &#125;                                                |
+| [delete](#method-delete) | DeleteInput                         | Result &#123; changed &#125;                                                |
 
 ### Settings (0)
 

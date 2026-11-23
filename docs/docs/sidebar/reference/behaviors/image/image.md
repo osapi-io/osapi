@@ -39,11 +39,11 @@ The Docker images of the host. `osapi behavior get --name image` and
 
 ### Types (3)
 
-| NAME                     | INPUT                                   | OUTPUT                                                  |
-| ------------------------ | --------------------------------------- | ------------------------------------------------------- |
-| [list](#method-list)     | ListInput                               | \[]Entry &#123; id, repository, tag, size &#125;        |
-| [pull](#method-pull)     | PullInput &#123; image* &#125;          | PullResult &#123; image, image_id, size, changed &#125; |
-| [delete](#method-delete) | DeleteInput &#123; image*, force &#125; | Result &#123; image, changed &#125;                     |
+| NAME                     | INPUT                                    | OUTPUT                                                  |
+| ------------------------ | ---------------------------------------- | ------------------------------------------------------- |
+| [list](#method-list)     | ListInput                                | \[]Entry &#123; id, repository, tag, size &#125;        |
+| [pull](#method-pull)     | PullInput &#123; image\* &#125;          | PullResult &#123; image, image_id, size, changed &#125; |
+| [delete](#method-delete) | DeleteInput &#123; image\*, force &#125; | Result &#123; image, changed &#125;                     |
 
 ### Settings (0)
 
@@ -110,9 +110,9 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (1)
 
-| FIELD | TYPE   | REQUIRED | CONSTRAINTS                               | DESCRIPTION                    |
-| ----- | ------ | -------- | ----------------------------------------- | ------------------------------ |
-| image | string | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9._/:@-]*$ | The image, such as alpine:3.20 |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                | DESCRIPTION                    |
+| ----- | ------ | -------- | ------------------------------------------ | ------------------------------ |
+| image | string | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9._/:@-]\*$ | The image, such as alpine:3.20 |
 
 ### Output (4)
 
@@ -146,10 +146,10 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (2)
 
-| FIELD | TYPE    | REQUIRED | CONSTRAINTS                               | DESCRIPTION                             |
-| ----- | ------- | -------- | ----------------------------------------- | --------------------------------------- |
-| image | string  | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9._/:@-]*$ | The image, by its reference or its ID   |
-| force | boolean | no       |                                           | Remove it also when a container uses it |
+| FIELD | TYPE    | REQUIRED | CONSTRAINTS                                | DESCRIPTION                             |
+| ----- | ------- | -------- | ------------------------------------------ | --------------------------------------- |
+| image | string  | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9._/:@-]\*$ | The image, by its reference or its ID   |
+| force | boolean | no       |                                            | Remove it also when a container uses it |
 
 ### Output (2)
 

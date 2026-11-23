@@ -39,12 +39,12 @@ The packages installed on the host. `osapi behavior get --name package` and
 
 ### Types (4)
 
-| NAME                     | INPUT                                    | OUTPUT                                                                             |
-| ------------------------ | ---------------------------------------- | ---------------------------------------------------------------------------------- |
-| [list](#method-list)     | ListInput                                | \[]Installed &#123; name, version, architecture, manager, description, size &#125; |
-| [get](#method-get)       | GetInput &#123; name* &#125;             | Installed &#123; name, version, architecture, manager, description, size &#125;    |
-| [create](#method-create) | CreateInput &#123; name*, version &#125; | Result &#123; name, changed &#125;                                                 |
-| [delete](#method-delete) | DeleteInput &#123; name* &#125;          | Result &#123; name, changed &#125;                                                 |
+| NAME                     | INPUT                                     | OUTPUT                                                                             |
+| ------------------------ | ----------------------------------------- | ---------------------------------------------------------------------------------- |
+| [list](#method-list)     | ListInput                                 | \[]Installed &#123; name, version, architecture, manager, description, size &#125; |
+| [get](#method-get)       | GetInput &#123; name\* &#125;             | Installed &#123; name, version, architecture, manager, description, size &#125;    |
+| [create](#method-create) | CreateInput &#123; name\*, version &#125; | Result &#123; name, changed &#125;                                                 |
+| [delete](#method-delete) | DeleteInput &#123; name\* &#125;          | Result &#123; name, changed &#125;                                                 |
 
 ### Settings (0)
 
@@ -115,9 +115,9 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (1)
 
-| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                                | DESCRIPTION               |
-| ----- | ------ | -------- | ---------------------------------------------------------- | ------------------------- |
-| name  | string | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9.+_:~=-]*$, max length 255 | The package, such as curl |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                                 | DESCRIPTION               |
+| ----- | ------ | -------- | ----------------------------------------------------------- | ------------------------- |
+| name  | string | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9.+_:~=-]\*$, max length 255 | The package, such as curl |
 
 ### Output (6)
 
@@ -155,10 +155,10 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (2)
 
-| FIELD   | TYPE   | REQUIRED | CONSTRAINTS                                                | DESCRIPTION                                                            |
-| ------- | ------ | -------- | ---------------------------------------------------------- | ---------------------------------------------------------------------- |
-| name    | string | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9.+_:~=-]*$, max length 255 | The package to install, such as curl                                   |
-| version | string | no       | pattern ^\[0-9]\[A-Za-z0-9.+~:-]*$, max length 255         | The version to install, such as 8.5.0-2ubuntu10; the newest when empty |
+| FIELD   | TYPE   | REQUIRED | CONSTRAINTS                                                 | DESCRIPTION                                                            |
+| ------- | ------ | -------- | ----------------------------------------------------------- | ---------------------------------------------------------------------- |
+| name    | string | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9.+_:~=-]\*$, max length 255 | The package to install, such as curl                                   |
+| version | string | no       | pattern ^\[0-9]\[A-Za-z0-9.+~:-]\*$, max length 255         | The version to install, such as 8.5.0-2ubuntu10; the newest when empty |
 
 ### Output (2)
 
@@ -190,9 +190,9 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (1)
 
-| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                                | DESCRIPTION                         |
-| ----- | ------ | -------- | ---------------------------------------------------------- | ----------------------------------- |
-| name  | string | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9.+_:~=-]*$, max length 255 | The package to remove, such as curl |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                                 | DESCRIPTION                         |
+| ----- | ------ | -------- | ----------------------------------------------------------- | ----------------------------------- |
+| name  | string | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9.+_:~=-]\*$, max length 255 | The package to remove, such as curl |
 
 ### Output (2)
 

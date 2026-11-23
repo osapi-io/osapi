@@ -7,10 +7,10 @@ Writes a netplan file of the interface's own, such as
 the interface's own, and applies it. An interface the host does not have is not
 found. dhcp4 and dhcp6 are false unless given, so the interface has only the
 addresses given. An interface that a match defines, such as cloud-init's all for
-en*, is refused, because the config would change each interface the match takes,
-now and later. An interface osapi already configures does not change: update
-replaces its config. It runs on the Debian family, and elsewhere, and in a
-container, reports skipped.
+en\*, is refused, because the config would change each interface the match
+takes, now and later. An interface osapi already configures does not change:
+update replaces its config. It runs on the Debian family, and elsewhere, and in
+a container, reports skipped.
 
 ```bash
 osapi client node network interface create [flags]

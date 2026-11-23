@@ -2,9 +2,9 @@
 
 List each behavior in a chain: what it calls, and what calls it.
 
-**Chain** is the tree of the behaviors that a behavior calls, down to the last
-one. A building block, with `Internal`, is in the list for the behaviors that
-call it.
+\*\*Chain\*\* is the tree of the behaviors that a behavior calls, down to the
+last one. A building block, with `Internal`, is in the list for the behaviors
+that call it.
 
 ```bash
 osapi behavior chain list

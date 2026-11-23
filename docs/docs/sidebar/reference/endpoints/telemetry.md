@@ -24,6 +24,6 @@ Read telemetry through the controller.
 
 ### Types (1)
 
-| NAME | INPUT                             | OUTPUT                                                                                                        |
-| ---- | --------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| get  | TraceInput &#123; id*, all &#125; | TraceResponse &#123; trace_id, started, duration, services, failed_spans, nats_calls, nats_time, spans &#125; |
+| NAME | INPUT                              | OUTPUT                                                                                                        |
+| ---- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| get  | TraceInput &#123; id\*, all &#125; | TraceResponse &#123; trace_id, started, duration, services, failed_spans, nats_calls, nats_time, spans &#125; |

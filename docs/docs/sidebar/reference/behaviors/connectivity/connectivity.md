@@ -38,9 +38,9 @@ the same.
 
 ### Types (1)
 
-| NAME                 | INPUT                            | OUTPUT                                                                                                   |
-| -------------------- | -------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| [ping](#method-ping) | PingInput &#123; address* &#125; | PingResult &#123; packets_sent, packets_received, packet_loss, min_rtt, avg_rtt, max_rtt, changed &#125; |
+| NAME                 | INPUT                             | OUTPUT                                                                                                   |
+| -------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| [ping](#method-ping) | PingInput &#123; address\* &#125; | PingResult &#123; packets_sent, packets_received, packet_loss, min_rtt, avg_rtt, max_rtt, changed &#125; |
 
 ### Settings (0)
 
