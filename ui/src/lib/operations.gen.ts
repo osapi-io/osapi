@@ -45,7 +45,7 @@ export const OPERATION_PERMISSIONS = {
   getNodeContainerDocker: "docker:read",
   getNodeContainerDockerByID: "docker:read",
   getNodeDisk: "disk:read",
-  getNodeFileStatus: "file:read",
+  getNodeFile: "file:read",
   getNodeGroup: "group:read",
   getNodeGroupByKey: "group:read",
   getNodeHostname: "hostname:read",

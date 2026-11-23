@@ -149,27 +149,6 @@ const HAND_BLOCK_TYPES: BlockType[] = [
     group: "files",
   },
   {
-    type: "file-deploy",
-    label: "Deploy",
-    description: "Deploy file to hosts",
-    category: "file-deploy",
-    group: "files",
-  },
-  {
-    type: "file-undeploy",
-    label: "Undeploy",
-    description: "Remove deployed file",
-    category: "file-deploy",
-    group: "files",
-  },
-  {
-    type: "file-status",
-    label: "Status",
-    description: "Check deploy status",
-    category: "file-deploy",
-    group: "files",
-  },
-  {
     type: "file-delete",
     label: "Delete",
     description: "Delete file from object store",

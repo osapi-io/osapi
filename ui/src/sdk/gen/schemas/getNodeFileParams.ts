@@ -5,7 +5,10 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type GetNodeFileStatusParams = {
-  /** Filesystem path to check. */
+export type GetNodeFileParams = {
+  /**
+   * Absolute path of the file on the host
+   * @pattern ^/
+   */
   path: string;
 };

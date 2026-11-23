@@ -6,6 +6,6 @@
  */
 
 /**
- * Template variables when content_type is "template".
+ * Variables of a template, as .Vars, each as key=value
  */
-export type FileDeployRequestVars = { [key: string]: unknown };
+export type FileDeployRequestVars = {[key: string]: string};

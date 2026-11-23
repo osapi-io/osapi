@@ -6,6 +6,9 @@
  */
 
 export interface FileUndeployRequest {
-  /** Filesystem path to undeploy. */
+  /**
+     * Absolute path of the file on the host
+     * @pattern ^/
+     */
   path: string;
 }

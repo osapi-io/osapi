@@ -6,7 +6,7 @@
  */
 
 /**
- * Content type — "raw" or "template".
+ * How the object is written: raw as it is, or template rendered with .Facts, .Vars and .Hostname; the object's own when empty
  */
 export type FileDeployRequestContentType = typeof FileDeployRequestContentType[keyof typeof FileDeployRequestContentType];
 

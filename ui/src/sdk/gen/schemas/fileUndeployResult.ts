@@ -7,12 +7,14 @@
 import type { FileUndeployResultStatus } from './fileUndeployResultStatus';
 
 export interface FileUndeployResult {
-  /** The agent that processed the job. */
-  hostname: string;
-  /** The status of the operation for this host. */
-  status: FileUndeployResultStatus;
-  /** Whether the file was actually removed. */
+  /** Whether the host changed */
   changed?: boolean;
   /** Error message if the agent failed. */
   error?: string;
+  /** Hostname of the agent that produced this result. */
+  hostname: string;
+  /** Absolute path of the file */
+  path?: string;
+  /** The status of the operation for this host. */
+  status: FileUndeployResultStatus;
 }

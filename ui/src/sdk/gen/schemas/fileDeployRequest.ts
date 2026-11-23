@@ -8,21 +8,34 @@ import type { FileDeployRequestContentType } from './fileDeployRequestContentTyp
 import type { FileDeployRequestVars } from './fileDeployRequestVars';
 
 export interface FileDeployRequest {
-  /** Name of the file in the Object Store. */
-  object_name: string;
-  /** Destination path on the target filesystem. */
-  path: string;
+  /** How the object is written: raw as it is, or template rendered with .Facts, .Vars and .Hostname; the object's own when empty */
+  content_type?: FileDeployRequestContentType;
   /**
-     * File permission mode as three or four octal digits (e.g., "0644").
+     * Group that owns the file; left as written when empty
+     * @pattern ^[a-z_][a-z0-9_-]*\$?$
+     */
+  group?: string;
+  /**
+     * Permissions in octal, such as 0644; when empty, a file keeps its mode and a new file gets 0644
      * @pattern ^[0-7]{3,4}$
      */
   mode?: string;
-  /** File owner user. */
+  /**
+     * The object of the object store, from osapi client file list
+     * @minLength 1
+     * @maxLength 255
+     */
+  object_name: string;
+  /**
+     * User that owns the file; left as written when empty
+     * @pattern ^[a-z_][a-z0-9_-]*\$?$
+     */
   owner?: string;
-  /** File owner group. */
-  group?: string;
-  /** Content type — "raw" or "template". */
-  content_type: FileDeployRequestContentType;
-  /** Template variables when content_type is "template". */
+  /**
+     * Absolute path of the file on the host
+     * @pattern ^/
+     */
+  path: string;
+  /** Variables of a template, as .Vars, each as key=value */
   vars?: FileDeployRequestVars;
 }

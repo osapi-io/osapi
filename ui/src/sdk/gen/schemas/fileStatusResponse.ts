@@ -4,10 +4,10 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { FileDeployResult } from './fileDeployResult';
+import type { FileStatus } from './fileStatus';
 
-export interface FileDeployCollectionResponse {
+export interface FileStatusResponse {
   /** The job ID used to process this request. */
   job_id?: string;
-  results: FileDeployResult[];
+  results: FileStatus[];
 }

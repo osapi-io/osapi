@@ -11,7 +11,6 @@ import { SearchBox } from "@/components/ui/search-box";
 import type {
   CommandResultItem,
   DockerResponse,
-  FileDeployResult,
   FileInfo,
   FileUploadResponse,
 } from "@/sdk/gen/schemas";
@@ -228,7 +227,7 @@ function CommandResult({
 }
 
 // ---------------------------------------------------------------------------
-// Host-level results (file-deploy, docker)
+// Host-level results (docker)
 // ---------------------------------------------------------------------------
 
 function HostResultRow({
@@ -787,29 +786,6 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
   // Docker list — expanded with search
   if (type === "docker-list" && Array.isArray(data.results)) {
     return <DockerListResult data={data} />;
-  }
-
-  // File deploy/undeploy/status
-  if (
-    (type === "file-deploy" ||
-      type === "file-undeploy" ||
-      type === "file-status") &&
-    Array.isArray(data.results)
-  ) {
-    const results = data.results as FileDeployResult[];
-    return (
-      <CollectionResult
-        jobId={data.job_id as string | undefined}
-        label={type.replace("file-", "")}
-        results={results.map((r) => ({
-          hostname: r.hostname,
-          status: hostStatus(r),
-          changed: r.changed,
-          error: r.error,
-        }))}
-        data={data}
-      />
-    );
   }
 
   // DNS delete / interface CRUD / route CRUD — generic collection results

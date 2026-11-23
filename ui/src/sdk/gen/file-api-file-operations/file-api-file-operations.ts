@@ -6,18 +6,95 @@
  */
 import type {
   ErrorResponse,
-  FileDeployCollectionResponse,
   FileDeployRequest,
-  FileStatusCollectionResponse,
-  FileUndeployCollectionResponse,
+  FileDeployResponse,
+  FileStatusResponse,
   FileUndeployRequest,
-  GetNodeFileStatusParams
+  FileUndeployResponse,
+  GetNodeFileParams
 } from '../schemas';
 
 import { apiFetch } from '../../fetch';
 
+export type getNodeFileResponse200 = {
+  data: FileStatusResponse
+  status: 200
+}
+
+export type getNodeFileResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type getNodeFileResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type getNodeFileResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type getNodeFileResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getNodeFileResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type getNodeFileResponse500 = {
+  data: ErrorResponse
+  status: 500
+}
+
+export type getNodeFileResponseSuccess = (getNodeFileResponse200) & {
+  headers: Headers;
+};
+export type getNodeFileResponseError = (getNodeFileResponse400 | getNodeFileResponse401 | getNodeFileResponse403 | getNodeFileResponse404 | getNodeFileResponse409 | getNodeFileResponse500) & {
+  headers: Headers;
+};
+
+export type getNodeFileResponse = (getNodeFileResponseSuccess | getNodeFileResponseError)
+
+export const getGetNodeFileUrl = (hostname: string,
+    params: GetNodeFileParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/node/${hostname}/file?${stringifiedParams}` : `/api/node/${hostname}/file`
+}
+
+/**
+ * Compares the file on the host with the record that osapi keeps of what it deployed: in-sync when they agree, drifted when something changed the file, and missing when osapi did not deploy the path, undeployed it, or the file is gone.
+ * @summary Show whether a deployed file holds what osapi wrote
+ */
+export const getNodeFile = async (hostname: string,
+    params: GetNodeFileParams, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeFileResponse> => {
+
+  return apiFetch<getNodeFileResponse>(getGetNodeFileUrl(hostname,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
 export type postNodeFileDeployResponse200 = {
-  data: FileDeployCollectionResponse
+  data: FileDeployResponse
   status: 200
 }
 
@@ -36,6 +113,16 @@ export type postNodeFileDeployResponse403 = {
   status: 403
 }
 
+export type postNodeFileDeployResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type postNodeFileDeployResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type postNodeFileDeployResponse500 = {
   data: ErrorResponse
   status: 500
@@ -44,7 +131,7 @@ export type postNodeFileDeployResponse500 = {
 export type postNodeFileDeployResponseSuccess = (postNodeFileDeployResponse200) & {
   headers: Headers;
 };
-export type postNodeFileDeployResponseError = (postNodeFileDeployResponse400 | postNodeFileDeployResponse401 | postNodeFileDeployResponse403 | postNodeFileDeployResponse500) & {
+export type postNodeFileDeployResponseError = (postNodeFileDeployResponse400 | postNodeFileDeployResponse401 | postNodeFileDeployResponse403 | postNodeFileDeployResponse404 | postNodeFileDeployResponse409 | postNodeFileDeployResponse500) & {
   headers: Headers;
 };
 
@@ -59,7 +146,8 @@ export const getPostNodeFileDeployUrl = (hostname: string,) => {
 }
 
 /**
- * @summary Deploy a file from Object Store to the host
+ * Writes the object at the path with its mode and ownership, and keeps a record of it. A template object, or content_type template, is rendered first with .Facts, .Vars and .Hostname. A file that holds the content, mode and owner already does not change and reports changed: false. osapi client file stale list shows the deployments whose object changed since.
+ * @summary Deploy an object of the object store to a path
  */
 export const postNodeFileDeploy = async (hostname: string,
     fileDeployRequest: FileDeployRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeFileDeployResponse> => {
@@ -89,7 +177,7 @@ return apiFetch<postNodeFileDeployResponse>(getPostNodeFileDeployUrl(hostname),
 
 
 export type postNodeFileUndeployResponse200 = {
-  data: FileUndeployCollectionResponse
+  data: FileUndeployResponse
   status: 200
 }
 
@@ -108,6 +196,16 @@ export type postNodeFileUndeployResponse403 = {
   status: 403
 }
 
+export type postNodeFileUndeployResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type postNodeFileUndeployResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
 export type postNodeFileUndeployResponse500 = {
   data: ErrorResponse
   status: 500
@@ -116,7 +214,7 @@ export type postNodeFileUndeployResponse500 = {
 export type postNodeFileUndeployResponseSuccess = (postNodeFileUndeployResponse200) & {
   headers: Headers;
 };
-export type postNodeFileUndeployResponseError = (postNodeFileUndeployResponse400 | postNodeFileUndeployResponse401 | postNodeFileUndeployResponse403 | postNodeFileUndeployResponse500) & {
+export type postNodeFileUndeployResponseError = (postNodeFileUndeployResponse400 | postNodeFileUndeployResponse401 | postNodeFileUndeployResponse403 | postNodeFileUndeployResponse404 | postNodeFileUndeployResponse409 | postNodeFileUndeployResponse500) & {
   headers: Headers;
 };
 
@@ -131,7 +229,8 @@ export const getPostNodeFileUndeployUrl = (hostname: string,) => {
 }
 
 /**
- * @summary Remove a deployed file from the host filesystem
+ * Removes the file and keeps its record, marked undeployed, so status reports missing. A path that osapi did not deploy, or undeployed already, does not change and reports changed: false. The object stays in the object store.
+ * @summary Remove a file that osapi deployed
  */
 export const postNodeFileUndeploy = async (hostname: string,
     fileUndeployRequest: FileUndeployRequest, options?: Parameters<typeof apiFetch>[1]): Promise<postNodeFileUndeployResponse> => {
@@ -156,72 +255,6 @@ return apiFetch<postNodeFileUndeployResponse>(getPostNodeFileUndeployUrl(hostnam
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(fileUndeployRequest)
-  }
-);}
-
-
-export type getNodeFileStatusResponse200 = {
-  data: FileStatusCollectionResponse
-  status: 200
-}
-
-export type getNodeFileStatusResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type getNodeFileStatusResponse401 = {
-  data: ErrorResponse
-  status: 401
-}
-
-export type getNodeFileStatusResponse403 = {
-  data: ErrorResponse
-  status: 403
-}
-
-export type getNodeFileStatusResponse500 = {
-  data: ErrorResponse
-  status: 500
-}
-
-export type getNodeFileStatusResponseSuccess = (getNodeFileStatusResponse200) & {
-  headers: Headers;
-};
-export type getNodeFileStatusResponseError = (getNodeFileStatusResponse400 | getNodeFileStatusResponse401 | getNodeFileStatusResponse403 | getNodeFileStatusResponse500) & {
-  headers: Headers;
-};
-
-export type getNodeFileStatusResponse = (getNodeFileStatusResponseSuccess | getNodeFileStatusResponseError)
-
-export const getGetNodeFileStatusUrl = (hostname: string,
-    params: GetNodeFileStatusParams,) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0 ? `/api/node/${hostname}/file/status?${stringifiedParams}` : `/api/node/${hostname}/file/status`
-}
-
-/**
- * @summary Check deployment status of a file on the host
- */
-export const getNodeFileStatus = async (hostname: string,
-    params: GetNodeFileStatusParams, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeFileStatusResponse> => {
-
-  return apiFetch<getNodeFileStatusResponse>(getGetNodeFileStatusUrl(hostname,params),
-  {
-    ...options,
-    method: 'GET'
-
-
   }
 );}
 
