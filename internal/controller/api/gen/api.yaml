@@ -1188,7 +1188,7 @@ paths:
       summary: List stored files
       tags:
         - File_Management_API_file_operations
-      x-osapi-area: files
+      x-osapi-area: objectstore
       x-osapi-examples:
         - doc: List stored files
           input: {}
@@ -1290,7 +1290,7 @@ paths:
       summary: Upload a file
       tags:
         - File_Management_API_file_operations
-      x-osapi-area: files
+      x-osapi-area: objectstore
       x-osapi-method: upload
   /api/file/{name}:
     delete:
@@ -1352,7 +1352,7 @@ paths:
       summary: Delete a file
       tags:
         - File_Management_API_file_operations
-      x-osapi-area: files
+      x-osapi-area: objectstore
       x-osapi-examples:
         - doc: Delete a file
           input:
@@ -1421,7 +1421,7 @@ paths:
       summary: Get file metadata
       tags:
         - File_Management_API_file_operations
-      x-osapi-area: files
+      x-osapi-area: objectstore
       x-osapi-examples:
         - doc: Get file metadata
           input:
@@ -1520,7 +1520,7 @@ paths:
       summary: Replace a file
       tags:
         - File_Management_API_file_operations
-      x-osapi-area: files
+      x-osapi-area: objectstore
       x-osapi-method: update
   /api/file/stale:
     get:
@@ -1563,7 +1563,7 @@ paths:
       summary: List stale file deployments
       tags:
         - File_Management_API_file_operations
-      x-osapi-area: files
+      x-osapi-area: objectstore
       x-osapi-examples:
         - doc: List stale file deployments
           input: {}
@@ -4112,7 +4112,7 @@ paths:
       summary: List the entries of the journal
       tags:
         - Entry_API_log_entry_operations
-      x-osapi-area: node
+      x-osapi-area: logs
       x-osapi-examples:
         - doc: The newest entries
           input:
@@ -4180,7 +4180,7 @@ paths:
       summary: List the sources of the journal
       tags:
         - Source_API_log_source_operations
-      x-osapi-area: node
+      x-osapi-area: logs
       x-osapi-examples:
         - doc: The sources
           input:
@@ -14238,14 +14238,16 @@ x-osapi-areas:
     label: Config
   - name: node
     label: Node
+  - name: logs
+    label: Logs
   - name: networking
     label: Networking
   - name: security
     label: Security
   - name: containers
     label: Containers
-  - name: files
-    label: Files
+  - name: objectstore
+    label: Object Store
   - name: command
     label: Command
   - name: hardware

@@ -144,7 +144,7 @@ paths:
       summary: List the sources of the journal
       tags:
         - log_source_operations
-      x-osapi-area: node
+      x-osapi-area: logs
       x-osapi-examples:
         - doc: The sources
           input:

@@ -6,43 +6,46 @@ title: SSH key
 
 # SSH key
 
-The authorized SSH keys of a user. `osapi behavior get --name sshkey` and `osapi behavior method get` show the same. [Its chain](../../../chains/sshkey.md) shows each call that its examples make.
+The authorized SSH keys of a user. `osapi behavior get --name sshkey` and
+`osapi behavior method get` show the same.
+[Its chain](../../../chains/security/sshkey.md) shows each call that its
+examples make.
 
 ## Behavior
 
-| | |
-| --- | --- |
-| Name | sshkey |
-| Description | The authorized SSH keys of a user |
-| Placement | node |
-| Area | security |
-| Internal | no |
-| API | yes |
-| CLI | yes |
-| Next | no |
-| Platforms | debian, linux, darwin |
-| Sudo | none |
-| Runs | none |
-| Writes | /home/\*/.ssh/authorized_keys |
-| Keeps state | no |
-| Uses | [user](../../security/user/user.md) |
-| Used by | none |
+|             |                                     |
+| ----------- | ----------------------------------- |
+| Name        | sshkey                              |
+| Description | The authorized SSH keys of a user   |
+| Placement   | node                                |
+| Area        | security                            |
+| Internal    | no                                  |
+| API         | yes                                 |
+| CLI         | yes                                 |
+| Next        | no                                  |
+| Platforms   | debian, linux, darwin               |
+| Sudo        | none                                |
+| Runs        | none                                |
+| Writes      | /home/\*/.ssh/authorized_keys       |
+| Keeps state | no                                  |
+| Uses        | [user](../../security/user/user.md) |
+| Used by     | none                                |
 
 ### Methods (3)
 
-| NAME | VERB | HTTP | ROUTE | PERMISSION | DESCRIPTION |
-| --- | --- | --- | --- | --- | --- |
-| [list](#method-list) | read | GET | /api/node/&#123;hostname&#125;/user/&#123;name&#125;/sshkey | user:read | List the authorized SSH keys of a user |
-| [create](#method-create) | write | POST | /api/node/&#123;hostname&#125;/user/&#123;name&#125;/sshkey | user:write | Add an authorized SSH key to a user |
+| NAME                     | VERB  | HTTP   | ROUTE                                                       | PERMISSION | DESCRIPTION                            |
+| ------------------------ | ----- | ------ | ----------------------------------------------------------- | ---------- | -------------------------------------- |
+| [list](#method-list)     | read  | GET    | /api/node/&#123;hostname&#125;/user/&#123;name&#125;/sshkey | user:read  | List the authorized SSH keys of a user |
+| [create](#method-create) | write | POST   | /api/node/&#123;hostname&#125;/user/&#123;name&#125;/sshkey | user:write | Add an authorized SSH key to a user    |
 | [delete](#method-delete) | write | DELETE | /api/node/&#123;hostname&#125;/user/&#123;name&#125;/sshkey | user:write | Remove an authorized SSH key of a user |
 
 ### Types (3)
 
-| NAME | INPUT | OUTPUT |
-| --- | --- | --- |
-| [list](#method-list) | ListInput &#123; name\* &#125; | \[]Key &#123; type, fingerprint, comment, options &#125; |
-| [create](#method-create) | CreateInput &#123; name\*, key\* &#125; | Result &#123; fingerprint, changed &#125; |
-| [delete](#method-delete) | DeleteInput &#123; name\*, fingerprint\* &#125; | Result &#123; fingerprint, changed &#125; |
+| NAME                     | INPUT                                           | OUTPUT                                                   |
+| ------------------------ | ----------------------------------------------- | -------------------------------------------------------- |
+| [list](#method-list)     | ListInput &#123; name\* &#125;                  | \[]Key &#123; type, fingerprint, comment, options &#125; |
+| [create](#method-create) | CreateInput &#123; name\*, key\* &#125;         | Result &#123; fingerprint, changed &#125;                |
+| [delete](#method-delete) | DeleteInput &#123; name\*, fingerprint\* &#125; | Result &#123; fingerprint, changed &#125;                |
 
 ### Settings (0)
 
@@ -50,123 +53,123 @@ None. Declare them with behavior.Config.
 
 ## Telemetry
 
-| | |
-| --- | --- |
-| Span | behavior.sshkey.&lt;method&gt; |
-| Child spans | behavior.user.&lt;method&gt;, exec chown, exec dscl, exec useradd, exec chpasswd, exec usermod, exec userdel, exec id, file.write, file.remove, file.chmod |
-| Metrics | osapi_behavior_calls_total, osapi_behavior_duration_seconds, osapi_behavior_changes_total |
-| Attributes | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed |
-| Recorded inputs | name (list, create, delete), fingerprint (delete) |
+|                 |                                                                                                                                                            |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Span            | behavior.sshkey.&lt;method&gt;                                                                                                                             |
+| Child spans     | behavior.user.&lt;method&gt;, exec chown, exec dscl, exec useradd, exec chpasswd, exec usermod, exec userdel, exec id, file.write, file.remove, file.chmod |
+| Metrics         | osapi_behavior_calls_total, osapi_behavior_duration_seconds, osapi_behavior_changes_total                                                                  |
+| Attributes      | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed                                            |
+| Recorded inputs | name (list, create, delete), fingerprint (delete)                                                                                                          |
 
 ## Method list
 
-| | |
-| --- | --- |
-| Name | list |
-| Verb | read |
-| Description | List the authorized SSH keys of a user |
-| Detail | Reads ~/.ssh/authorized_keys of the user through gohai, with the type, the SHA256 fingerprint, the comment and the options of each key. A user with no file has no keys. A user that the host does not have is not found. |
-| HTTP | GET |
-| Route | /api/node/&#123;hostname&#125;/user/&#123;name&#125;/sshkey |
-| Permission | user:read |
-| Command | [osapi client node user sshkey list](../../../../usage/cli/client/node/user/sshkey/list.md) |
-| Input type | ListInput |
-| Output type | \[]Key |
+|             |                                                                                                                                                                                                                           |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | list                                                                                                                                                                                                                      |
+| Verb        | read                                                                                                                                                                                                                      |
+| Description | List the authorized SSH keys of a user                                                                                                                                                                                    |
+| Detail      | Reads ~/.ssh/authorized_keys of the user through gohai, with the type, the SHA256 fingerprint, the comment and the options of each key. A user with no file has no keys. A user that the host does not have is not found. |
+| HTTP        | GET                                                                                                                                                                                                                       |
+| Route       | /api/node/&#123;hostname&#125;/user/&#123;name&#125;/sshkey                                                                                                                                                               |
+| Permission  | user:read                                                                                                                                                                                                                 |
+| Command     | [osapi client node user sshkey list](../../../../usage/cli/client/node/user/sshkey/list.md)                                                                                                                               |
+| Input type  | ListInput                                                                                                                                                                                                                 |
+| Output type | \[]Key                                                                                                                                                                                                                    |
 
 ### Input (1)
 
-| FIELD | TYPE | REQUIRED | CONSTRAINTS | DESCRIPTION |
-| --- | --- | --- | --- | --- |
-| name | string | yes | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user, such as alice |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                      | DESCRIPTION             |
+| ----- | ------ | -------- | ------------------------------------------------ | ----------------------- |
+| name  | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user, such as alice |
 
 ### Output (4)
 
-| FIELD | TYPE | DESCRIPTION |
-| --- | --- | --- |
-| type | string | The key type, such as ssh-ed25519 |
-| fingerprint | string | The SHA256 fingerprint of the key |
-| comment | string | The comment after the key, such as alice@laptop |
-| options | string | The options before the key, such as from="10.0.0.0/8" |
+| FIELD       | TYPE   | DESCRIPTION                                           |
+| ----------- | ------ | ----------------------------------------------------- |
+| type        | string | The key type, such as ssh-ed25519                     |
+| fingerprint | string | The SHA256 fingerprint of the key                     |
+| comment     | string | The comment after the key, such as alice@laptop       |
+| options     | string | The options before the key, such as from="10.0.0.0/8" |
 
 ### Examples (3)
 
-| EXAMPLE | INPUT | OUTPUT |
-| --- | --- | --- |
-| A user with keys | name=osapitest | \[comment=osapitest@example, fingerprint=SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk, type=ssh-ed25519] \[comment=other@example, fingerprint=SHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE, options=from="10.0.0.0/8", type=ssh-ed25519] |
-| A user with no keys | name=osapitest |  |
-| A host key that gohai cannot read | name=osapitest | \[comment=osapitest@example, fingerprint=SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk, type=ssh-ed25519] |
+| EXAMPLE                           | INPUT          | OUTPUT                                                                                                                                                                                                                                               |
+| --------------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A user with keys                  | name=osapitest | \[comment=osapitest@example, fingerprint=SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk, type=ssh-ed25519] \[comment=other@example, fingerprint=SHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE, options=from="10.0.0.0/8", type=ssh-ed25519] |
+| A user with no keys               | name=osapitest |                                                                                                                                                                                                                                                      |
+| A host key that gohai cannot read | name=osapitest | \[comment=osapitest@example, fingerprint=SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk, type=ssh-ed25519]                                                                                                                                       |
 
 ## Method create
 
-| | |
-| --- | --- |
-| Name | create |
-| Verb | write |
-| Description | Add an authorized SSH key to a user |
-| Detail | Adds the key line to the end of ~/.ssh/authorized_keys of the user, and makes the directory and the file if they are missing, with modes 700 and 600, owned by the user. A key that the file has already, by its fingerprint, does not change it. A line with no public key is refused. A user that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped. |
-| HTTP | POST |
-| Route | /api/node/&#123;hostname&#125;/user/&#123;name&#125;/sshkey |
-| Permission | user:write |
-| Command | [osapi client node user sshkey create](../../../../usage/cli/client/node/user/sshkey/create.md) |
-| Input type | CreateInput |
-| Output type | Result |
+|             |                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | create                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Verb        | write                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Description | Add an authorized SSH key to a user                                                                                                                                                                                                                                                                                                                                                                        |
+| Detail      | Adds the key line to the end of ~/.ssh/authorized_keys of the user, and makes the directory and the file if they are missing, with modes 700 and 600, owned by the user. A key that the file has already, by its fingerprint, does not change it. A line with no public key is refused. A user that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped. |
+| HTTP        | POST                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Route       | /api/node/&#123;hostname&#125;/user/&#123;name&#125;/sshkey                                                                                                                                                                                                                                                                                                                                                |
+| Permission  | user:write                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Command     | [osapi client node user sshkey create](../../../../usage/cli/client/node/user/sshkey/create.md)                                                                                                                                                                                                                                                                                                            |
+| Input type  | CreateInput                                                                                                                                                                                                                                                                                                                                                                                                |
+| Output type | Result                                                                                                                                                                                                                                                                                                                                                                                                     |
 
 ### Input (2)
 
-| FIELD | TYPE | REQUIRED | CONSTRAINTS | DESCRIPTION |
-| --- | --- | --- | --- | --- |
-| name | string | yes | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user, such as alice |
-| key | string | yes | pattern ^\[^\r\n]\*$ | The public key line, such as ssh-ed25519 AAAA... alice@laptop, with options before it if any |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                      | DESCRIPTION                                                                                  |
+| ----- | ------ | -------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| name  | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user, such as alice                                                                      |
+| key   | string | yes      | pattern ^\[^\r\n]\*$                             | The public key line, such as ssh-ed25519 AAAA... alice@laptop, with options before it if any |
 
 ### Output (2)
 
-| FIELD | TYPE | DESCRIPTION |
-| --- | --- | --- |
-| fingerprint | string | The SHA256 fingerprint of the key |
-| changed | boolean | Whether the host changed |
+| FIELD       | TYPE    | DESCRIPTION                       |
+| ----------- | ------- | --------------------------------- |
+| fingerprint | string  | The SHA256 fingerprint of the key |
+| changed     | boolean | Whether the host changed          |
 
 ### Examples (4)
 
-| EXAMPLE | INPUT | OUTPUT |
-| --- | --- | --- |
-| Add a key | name=osapitest, key=ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example | fingerprint=SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk, changed=true |
-| Add a second key | name=osapitest, key=ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example | fingerprint=SHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE, changed=true |
-| A key after a last line with no line break | name=osapitest, key=ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example | fingerprint=SHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE, changed=true |
-| A key the user has | name=osapitest, key=ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example | fingerprint=SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk, changed=false |
+| EXAMPLE                                    | INPUT                                                                                                                  | OUTPUT                                                                        |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Add a key                                  | name=osapitest, key=ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example | fingerprint=SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk, changed=true  |
+| Add a second key                           | name=osapitest, key=ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example     | fingerprint=SHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE, changed=true  |
+| A key after a last line with no line break | name=osapitest, key=ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example     | fingerprint=SHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE, changed=true  |
+| A key the user has                         | name=osapitest, key=ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example | fingerprint=SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk, changed=false |
 
 ## Method delete
 
-| | |
-| --- | --- |
-| Name | delete |
-| Verb | write |
-| Description | Remove an authorized SSH key of a user |
-| Detail | Removes each line of the key with the fingerprint from ~/.ssh/authorized_keys of the user, and keeps the other lines as they are. A key that the file does not have, a user with no file, or a user that the host does not have, changes nothing. It runs on the Debian family only, and elsewhere reports skipped. |
-| HTTP | DELETE |
-| Route | /api/node/&#123;hostname&#125;/user/&#123;name&#125;/sshkey |
-| Permission | user:write |
-| Command | [osapi client node user sshkey delete](../../../../usage/cli/client/node/user/sshkey/delete.md) |
-| Input type | DeleteInput |
-| Output type | Result |
+|             |                                                                                                                                                                                                                                                                                                                     |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | delete                                                                                                                                                                                                                                                                                                              |
+| Verb        | write                                                                                                                                                                                                                                                                                                               |
+| Description | Remove an authorized SSH key of a user                                                                                                                                                                                                                                                                              |
+| Detail      | Removes each line of the key with the fingerprint from ~/.ssh/authorized_keys of the user, and keeps the other lines as they are. A key that the file does not have, a user with no file, or a user that the host does not have, changes nothing. It runs on the Debian family only, and elsewhere reports skipped. |
+| HTTP        | DELETE                                                                                                                                                                                                                                                                                                              |
+| Route       | /api/node/&#123;hostname&#125;/user/&#123;name&#125;/sshkey                                                                                                                                                                                                                                                         |
+| Permission  | user:write                                                                                                                                                                                                                                                                                                          |
+| Command     | [osapi client node user sshkey delete](../../../../usage/cli/client/node/user/sshkey/delete.md)                                                                                                                                                                                                                     |
+| Input type  | DeleteInput                                                                                                                                                                                                                                                                                                         |
+| Output type | Result                                                                                                                                                                                                                                                                                                              |
 
 ### Input (2)
 
-| FIELD | TYPE | REQUIRED | CONSTRAINTS | DESCRIPTION |
-| --- | --- | --- | --- | --- |
-| name | string | yes | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user, such as alice |
-| fingerprint | string | yes | pattern ^\[^\r\n]\*$ | The SHA256 fingerprint of the key, as list shows it |
+| FIELD       | TYPE   | REQUIRED | CONSTRAINTS                                      | DESCRIPTION                                         |
+| ----------- | ------ | -------- | ------------------------------------------------ | --------------------------------------------------- |
+| name        | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user, such as alice                             |
+| fingerprint | string | yes      | pattern ^\[^\r\n]\*$                             | The SHA256 fingerprint of the key, as list shows it |
 
 ### Output (2)
 
-| FIELD | TYPE | DESCRIPTION |
-| --- | --- | --- |
-| fingerprint | string | The SHA256 fingerprint of the key |
-| changed | boolean | Whether the host changed |
+| FIELD       | TYPE    | DESCRIPTION                       |
+| ----------- | ------- | --------------------------------- |
+| fingerprint | string  | The SHA256 fingerprint of the key |
+| changed     | boolean | Whether the host changed          |
 
 ### Examples (3)
 
-| EXAMPLE | INPUT | OUTPUT |
-| --- | --- | --- |
-| Remove a key | name=osapitest, fingerprint=SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk | fingerprint=SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk, changed=true |
-| A key the user does not have | name=osapitest, fingerprint=SHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE | fingerprint=SHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE, changed=false |
-| A user that the host does not have | name=nobody, fingerprint=SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk | fingerprint=SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk, changed=false |
+| EXAMPLE                            | INPUT                                                                          | OUTPUT                                                                        |
+| ---------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| Remove a key                       | name=osapitest, fingerprint=SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk | fingerprint=SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk, changed=true  |
+| A key the user does not have       | name=osapitest, fingerprint=SHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE | fingerprint=SHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE, changed=false |
+| A user that the host does not have | name=nobody, fingerprint=SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk    | fingerprint=SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk, changed=false |

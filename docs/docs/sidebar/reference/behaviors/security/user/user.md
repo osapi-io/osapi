@@ -6,49 +6,50 @@ title: User
 
 # User
 
-The users of the host. `osapi behavior get --name user` and `osapi behavior method get` show the same.
+The users of the host. `osapi behavior get --name user` and
+`osapi behavior method get` show the same.
 
 ## Behavior
 
-| | |
-| --- | --- |
-| Name | user |
-| Description | The users of the host |
-| Placement | node |
-| Area | security |
-| Internal | no |
-| API | yes |
-| CLI | yes |
-| Next | no |
-| Platforms | debian, linux, darwin |
-| Sudo | none |
-| Runs | none |
-| Writes | none |
-| Keeps state | no |
-| Uses | none |
-| Used by | [sshkey](../../security/sshkey/sshkey.md) |
+|             |                                           |
+| ----------- | ----------------------------------------- |
+| Name        | user                                      |
+| Description | The users of the host                     |
+| Placement   | node                                      |
+| Area        | security                                  |
+| Internal    | no                                        |
+| API         | yes                                       |
+| CLI         | yes                                       |
+| Next        | no                                        |
+| Platforms   | debian, linux, darwin                     |
+| Sudo        | none                                      |
+| Runs        | none                                      |
+| Writes      | none                                      |
+| Keeps state | no                                        |
+| Uses        | none                                      |
+| Used by     | [sshkey](../../security/sshkey/sshkey.md) |
 
 ### Methods (6)
 
-| NAME | VERB | HTTP | ROUTE | PERMISSION | DESCRIPTION |
-| --- | --- | --- | --- | --- | --- |
-| [list](#method-list) | read | GET | /api/node/&#123;hostname&#125;/user | user:read | List the users of the host |
-| [get](#method-get) | read | GET | /api/node/&#123;hostname&#125;/user/&#123;name&#125; | user:read | Get one user |
-| [create](#method-create) | write | POST | /api/node/&#123;hostname&#125;/user | user:write | Add a user |
-| [update](#method-update) | write | PUT | /api/node/&#123;hostname&#125;/user/&#123;name&#125; | user:write | Change a user |
-| [delete](#method-delete) | write | DELETE | /api/node/&#123;hostname&#125;/user/&#123;name&#125; | user:write | Remove a user |
-| [passwd](#method-passwd) | write | POST | /api/node/&#123;hostname&#125;/user/&#123;name&#125;/passwd | user:write | Set the password of a user |
+| NAME                     | VERB  | HTTP   | ROUTE                                                       | PERMISSION | DESCRIPTION                |
+| ------------------------ | ----- | ------ | ----------------------------------------------------------- | ---------- | -------------------------- |
+| [list](#method-list)     | read  | GET    | /api/node/&#123;hostname&#125;/user                         | user:read  | List the users of the host |
+| [get](#method-get)       | read  | GET    | /api/node/&#123;hostname&#125;/user/&#123;name&#125;        | user:read  | Get one user               |
+| [create](#method-create) | write | POST   | /api/node/&#123;hostname&#125;/user                         | user:write | Add a user                 |
+| [update](#method-update) | write | PUT    | /api/node/&#123;hostname&#125;/user/&#123;name&#125;        | user:write | Change a user              |
+| [delete](#method-delete) | write | DELETE | /api/node/&#123;hostname&#125;/user/&#123;name&#125;        | user:write | Remove a user              |
+| [passwd](#method-passwd) | write | POST   | /api/node/&#123;hostname&#125;/user/&#123;name&#125;/passwd | user:write | Set the password of a user |
 
 ### Types (6)
 
-| NAME | INPUT | OUTPUT |
-| --- | --- | --- |
-| [list](#method-list) | ListInput | \[]Account &#123; name, uid, gid, home, shell, groups, locked &#125; |
-| [get](#method-get) | GetInput &#123; name\* &#125; | Account &#123; name, uid, gid, home, shell, groups, locked &#125; |
-| [create](#method-create) | CreateInput &#123; name\*, uid, gid, home, shell, groups, system, password, password_hash &#125; | Result &#123; name, changed &#125; |
-| [update](#method-update) | UpdateInput &#123; name\*, shell, home, groups, lock &#125; | Result &#123; name, changed &#125; |
-| [delete](#method-delete) | DeleteInput &#123; name\* &#125; | Result &#123; name, changed &#125; |
-| [passwd](#method-passwd) | PasswordInput &#123; name\*, password, password_hash &#125; | Result &#123; name, changed &#125; |
+| NAME                     | INPUT                                                                                            | OUTPUT                                                               |
+| ------------------------ | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| [list](#method-list)     | ListInput                                                                                        | \[]Account &#123; name, uid, gid, home, shell, groups, locked &#125; |
+| [get](#method-get)       | GetInput &#123; name\* &#125;                                                                    | Account &#123; name, uid, gid, home, shell, groups, locked &#125;    |
+| [create](#method-create) | CreateInput &#123; name\*, uid, gid, home, shell, groups, system, password, password_hash &#125; | Result &#123; name, changed &#125;                                   |
+| [update](#method-update) | UpdateInput &#123; name\*, shell, home, groups, lock &#125;                                      | Result &#123; name, changed &#125;                                   |
+| [delete](#method-delete) | DeleteInput &#123; name\* &#125;                                                                 | Result &#123; name, changed &#125;                                   |
+| [passwd](#method-passwd) | PasswordInput &#123; name\*, password, password_hash &#125;                                      | Result &#123; name, changed &#125;                                   |
 
 ### Settings (0)
 
@@ -56,28 +57,28 @@ None. Declare them with behavior.Config.
 
 ## Telemetry
 
-| | |
-| --- | --- |
-| Span | behavior.user.&lt;method&gt; |
-| Child spans | exec useradd, exec chpasswd, exec usermod, exec userdel, exec id, exec dscl |
-| Metrics | osapi_behavior_calls_total, osapi_behavior_duration_seconds, osapi_behavior_changes_total |
-| Attributes | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed |
-| Recorded inputs | name (get, create, update, delete, passwd) |
+|                 |                                                                                                                 |
+| --------------- | --------------------------------------------------------------------------------------------------------------- |
+| Span            | behavior.user.&lt;method&gt;                                                                                    |
+| Child spans     | exec useradd, exec chpasswd, exec usermod, exec userdel, exec id, exec dscl                                     |
+| Metrics         | osapi_behavior_calls_total, osapi_behavior_duration_seconds, osapi_behavior_changes_total                       |
+| Attributes      | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed |
+| Recorded inputs | name (get, create, update, delete, passwd)                                                                      |
 
 ## Method list
 
-| | |
-| --- | --- |
-| Name | list |
-| Verb | read |
-| Description | List the users of the host |
-| Detail | Lists each user with its IDs, home, shell, groups and whether it is locked, through gohai: from /etc/passwd, /etc/group and /etc/shadow on Linux, and from the directory service with dscl on macOS. The groups are those that list the user as a member, besides its primary group. |
-| HTTP | GET |
-| Route | /api/node/&#123;hostname&#125;/user |
-| Permission | user:read |
-| Command | [osapi client node user list](../../../../usage/cli/client/node/user/list.md) |
-| Input type | ListInput |
-| Output type | \[]Account |
+|             |                                                                                                                                                                                                                                                                                      |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Name        | list                                                                                                                                                                                                                                                                                 |
+| Verb        | read                                                                                                                                                                                                                                                                                 |
+| Description | List the users of the host                                                                                                                                                                                                                                                           |
+| Detail      | Lists each user with its IDs, home, shell, groups and whether it is locked, through gohai: from /etc/passwd, /etc/group and /etc/shadow on Linux, and from the directory service with dscl on macOS. The groups are those that list the user as a member, besides its primary group. |
+| HTTP        | GET                                                                                                                                                                                                                                                                                  |
+| Route       | /api/node/&#123;hostname&#125;/user                                                                                                                                                                                                                                                  |
+| Permission  | user:read                                                                                                                                                                                                                                                                            |
+| Command     | [osapi client node user list](../../../../usage/cli/client/node/user/list.md)                                                                                                                                                                                                        |
+| Input type  | ListInput                                                                                                                                                                                                                                                                            |
+| Output type | \[]Account                                                                                                                                                                                                                                                                           |
 
 ### Input (0)
 
@@ -85,214 +86,214 @@ None. The method takes no input; its command needs only --target.
 
 ### Output (7)
 
-| FIELD | TYPE | DESCRIPTION |
-| --- | --- | --- |
-| name | string | The user |
-| uid | integer | Its numeric user ID |
-| gid | integer | Its primary group ID |
-| home | string | Its home directory |
-| shell | string | Its login shell |
-| groups | array | The groups it is a member of, besides its primary group |
-| locked | boolean | Whether a login with its password is refused |
+| FIELD  | TYPE    | DESCRIPTION                                             |
+| ------ | ------- | ------------------------------------------------------- |
+| name   | string  | The user                                                |
+| uid    | integer | Its numeric user ID                                     |
+| gid    | integer | Its primary group ID                                    |
+| home   | string  | Its home directory                                      |
+| shell  | string  | Its login shell                                         |
+| groups | array   | The groups it is a member of, besides its primary group |
+| locked | boolean | Whether a login with its password is refused            |
 
 ### Examples (1)
 
-| EXAMPLE | INPUT | OUTPUT |
-| --- | --- | --- |
+| EXAMPLE           | INPUT  | OUTPUT                                                                                                                                                                        |
+| ----------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A host with users | (none) | \[gid=1000, groups=\[developers], home=/home/alice, locked=false, name=alice, shell=/bin/bash, uid=1000] \[gid=0, home=/root, locked=true, name=root, shell=/bin/bash, uid=0] |
 
 ## Method get
 
-| | |
-| --- | --- |
-| Name | get |
-| Verb | read |
-| Description | Get one user |
-| Detail | Reads one user from the same list. A user that the host does not have is not found. |
-| HTTP | GET |
-| Route | /api/node/&#123;hostname&#125;/user/&#123;name&#125; |
-| Permission | user:read |
-| Command | [osapi client node user get](../../../../usage/cli/client/node/user/get.md) |
-| Input type | GetInput |
-| Output type | Account |
+|             |                                                                                     |
+| ----------- | ----------------------------------------------------------------------------------- |
+| Name        | get                                                                                 |
+| Verb        | read                                                                                |
+| Description | Get one user                                                                        |
+| Detail      | Reads one user from the same list. A user that the host does not have is not found. |
+| HTTP        | GET                                                                                 |
+| Route       | /api/node/&#123;hostname&#125;/user/&#123;name&#125;                                |
+| Permission  | user:read                                                                           |
+| Command     | [osapi client node user get](../../../../usage/cli/client/node/user/get.md)         |
+| Input type  | GetInput                                                                            |
+| Output type | Account                                                                             |
 
 ### Input (1)
 
-| FIELD | TYPE | REQUIRED | CONSTRAINTS | DESCRIPTION |
-| --- | --- | --- | --- | --- |
-| name | string | yes | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user, such as alice |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                      | DESCRIPTION             |
+| ----- | ------ | -------- | ------------------------------------------------ | ----------------------- |
+| name  | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user, such as alice |
 
 ### Output (7)
 
-| FIELD | TYPE | DESCRIPTION |
-| --- | --- | --- |
-| name | string | The user |
-| uid | integer | Its numeric user ID |
-| gid | integer | Its primary group ID |
-| home | string | Its home directory |
-| shell | string | Its login shell |
-| groups | array | The groups it is a member of, besides its primary group |
-| locked | boolean | Whether a login with its password is refused |
+| FIELD  | TYPE    | DESCRIPTION                                             |
+| ------ | ------- | ------------------------------------------------------- |
+| name   | string  | The user                                                |
+| uid    | integer | Its numeric user ID                                     |
+| gid    | integer | Its primary group ID                                    |
+| home   | string  | Its home directory                                      |
+| shell  | string  | Its login shell                                         |
+| groups | array   | The groups it is a member of, besides its primary group |
+| locked | boolean | Whether a login with its password is refused            |
 
 ### Examples (1)
 
-| EXAMPLE | INPUT | OUTPUT |
-| --- | --- | --- |
-| A user | name=alice | name=alice, uid=1000, gid=1000, home=/home/alice, shell=/bin/bash, groups=\[developers], locked=false |
+| EXAMPLE | INPUT      | OUTPUT                                                                                                |
+| ------- | ---------- | ----------------------------------------------------------------------------------------------------- |
+| A user  | name=alice | name=alice, uid=1000, gid=1000, home=/home/alice, shell=/bin/bash, groups=\[developers], locked=false |
 
 ## Method create
 
-| | |
-| --- | --- |
-| Name | create |
-| Verb | write |
-| Description | Add a user |
-| Detail | Adds the user with useradd, with its home directory, and sets its password with chpasswd when one is given. The controller hashes the password, so the job and NATS have only the hash. A user that the host has already does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped. |
-| HTTP | POST |
-| Route | /api/node/&#123;hostname&#125;/user |
-| Permission | user:write |
-| Command | [osapi client node user create](../../../../usage/cli/client/node/user/create.md) |
-| Input type | CreateInput |
-| Output type | Result |
+|             |                                                                                                                                                                                                                                                                                                                                        |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | create                                                                                                                                                                                                                                                                                                                                 |
+| Verb        | write                                                                                                                                                                                                                                                                                                                                  |
+| Description | Add a user                                                                                                                                                                                                                                                                                                                             |
+| Detail      | Adds the user with useradd, with its home directory, and sets its password with chpasswd when one is given. The controller hashes the password, so the job and NATS have only the hash. A user that the host has already does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped. |
+| HTTP        | POST                                                                                                                                                                                                                                                                                                                                   |
+| Route       | /api/node/&#123;hostname&#125;/user                                                                                                                                                                                                                                                                                                    |
+| Permission  | user:write                                                                                                                                                                                                                                                                                                                             |
+| Command     | [osapi client node user create](../../../../usage/cli/client/node/user/create.md)                                                                                                                                                                                                                                                      |
+| Input type  | CreateInput                                                                                                                                                                                                                                                                                                                            |
+| Output type | Result                                                                                                                                                                                                                                                                                                                                 |
 
 ### Input (9)
 
-| FIELD | TYPE | REQUIRED | CONSTRAINTS | DESCRIPTION |
-| --- | --- | --- | --- | --- |
-| name | string | yes | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user to add, such as alice |
-| uid | integer | no | min 0 | Its numeric user ID; the system assigns one when it is 0 |
-| gid | integer | no | min 0 | Its primary group ID; a group of its own when it is 0 |
-| home | string | no | pattern ^\[^\r\n]\*$ | Its home directory; /home/&lt;name&gt; when empty |
-| shell | string | no | pattern ^\[^\r\n]\*$ | Its login shell, such as /bin/bash; the system's default when empty |
-| groups | array | no |  | The groups it is a member of, besides its primary group |
-| system | boolean | no |  | Add it as a system user, with an ID from the system range |
-| password | string | no | pattern ^\[^\r\n]\*$, format password | Its password, which osapi hashes on the controller; none when empty |
-| password_hash | string | no |  | The sha512-crypt hash of the password, which the controller sets |
+| FIELD         | TYPE    | REQUIRED | CONSTRAINTS                                      | DESCRIPTION                                                         |
+| ------------- | ------- | -------- | ------------------------------------------------ | ------------------------------------------------------------------- |
+| name          | string  | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user to add, such as alice                                      |
+| uid           | integer | no       | min 0                                            | Its numeric user ID; the system assigns one when it is 0            |
+| gid           | integer | no       | min 0                                            | Its primary group ID; a group of its own when it is 0               |
+| home          | string  | no       | pattern ^\[^\r\n]\*$                             | Its home directory; /home/&lt;name&gt; when empty                   |
+| shell         | string  | no       | pattern ^\[^\r\n]\*$                             | Its login shell, such as /bin/bash; the system's default when empty |
+| groups        | array   | no       |                                                  | The groups it is a member of, besides its primary group             |
+| system        | boolean | no       |                                                  | Add it as a system user, with an ID from the system range           |
+| password      | string  | no       | pattern ^\[^\r\n]\*$, format password            | Its password, which osapi hashes on the controller; none when empty |
+| password_hash | string  | no       |                                                  | The sha512-crypt hash of the password, which the controller sets    |
 
 ### Output (2)
 
-| FIELD | TYPE | DESCRIPTION |
-| --- | --- | --- |
-| name | string | The user |
+| FIELD   | TYPE    | DESCRIPTION              |
+| ------- | ------- | ------------------------ |
+| name    | string  | The user                 |
 | changed | boolean | Whether the host changed |
 
 ### Examples (4)
 
-| EXAMPLE | INPUT | OUTPUT |
-| --- | --- | --- |
-| Add a user | name=osapitest | name=osapitest, changed=true |
-| Add a user with a shell, groups and a password | name=osapitest, shell=/bin/sh, groups=\[root], password=osapi-test-password, password_hash=$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1 | name=osapitest, changed=true |
-| Add a system user with its IDs and its home | name=osapitest, uid=1999, gid=100, home=/home/osapitest, system=true | name=osapitest, changed=true |
-| A user that the host has | name=osapitest | name=osapitest, changed=false |
+| EXAMPLE                                        | INPUT                                                                                                                                                                                          | OUTPUT                        |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| Add a user                                     | name=osapitest                                                                                                                                                                                 | name=osapitest, changed=true  |
+| Add a user with a shell, groups and a password | name=osapitest, shell=/bin/sh, groups=\[root], password=osapi-test-password, password_hash=$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1 | name=osapitest, changed=true  |
+| Add a system user with its IDs and its home    | name=osapitest, uid=1999, gid=100, home=/home/osapitest, system=true                                                                                                                           | name=osapitest, changed=true  |
+| A user that the host has                       | name=osapitest                                                                                                                                                                                 | name=osapitest, changed=false |
 
 ## Method update
 
-| | |
-| --- | --- |
-| Name | update |
-| Verb | write |
-| Description | Change a user |
-| Detail | Changes what the input gives and the user does not have already, with usermod: its shell, its home, which usermod moves the files to, its groups, which replace the groups it has, and whether it is locked. The same values report changed: false. A user that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped. |
-| HTTP | PUT |
-| Route | /api/node/&#123;hostname&#125;/user/&#123;name&#125; |
-| Permission | user:write |
-| Command | [osapi client node user update](../../../../usage/cli/client/node/user/update.md) |
-| Input type | UpdateInput |
-| Output type | Result |
+|             |                                                                                                                                                                                                                                                                                                                                                                        |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | update                                                                                                                                                                                                                                                                                                                                                                 |
+| Verb        | write                                                                                                                                                                                                                                                                                                                                                                  |
+| Description | Change a user                                                                                                                                                                                                                                                                                                                                                          |
+| Detail      | Changes what the input gives and the user does not have already, with usermod: its shell, its home, which usermod moves the files to, its groups, which replace the groups it has, and whether it is locked. The same values report changed: false. A user that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped. |
+| HTTP        | PUT                                                                                                                                                                                                                                                                                                                                                                    |
+| Route       | /api/node/&#123;hostname&#125;/user/&#123;name&#125;                                                                                                                                                                                                                                                                                                                   |
+| Permission  | user:write                                                                                                                                                                                                                                                                                                                                                             |
+| Command     | [osapi client node user update](../../../../usage/cli/client/node/user/update.md)                                                                                                                                                                                                                                                                                      |
+| Input type  | UpdateInput                                                                                                                                                                                                                                                                                                                                                            |
+| Output type | Result                                                                                                                                                                                                                                                                                                                                                                 |
 
 ### Input (5)
 
-| FIELD | TYPE | REQUIRED | CONSTRAINTS | DESCRIPTION |
-| --- | --- | --- | --- | --- |
-| name | string | yes | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user, such as alice |
-| shell | string | no | pattern ^\[^\r\n]\*$ | Its login shell, such as /bin/bash |
-| home | string | no | pattern ^\[^\r\n]\*$ | Its home directory, which usermod moves the files to |
-| groups | array | no |  | The groups it is a member of, which replace the groups it has |
-| lock | string | no | one of locked unlocked | Whether to refuse logins with its password: locked refuses them, unlocked allows them |
+| FIELD  | TYPE   | REQUIRED | CONSTRAINTS                                      | DESCRIPTION                                                                           |
+| ------ | ------ | -------- | ------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| name   | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user, such as alice                                                               |
+| shell  | string | no       | pattern ^\[^\r\n]\*$                             | Its login shell, such as /bin/bash                                                    |
+| home   | string | no       | pattern ^\[^\r\n]\*$                             | Its home directory, which usermod moves the files to                                  |
+| groups | array  | no       |                                                  | The groups it is a member of, which replace the groups it has                         |
+| lock   | string | no       | one of locked unlocked                           | Whether to refuse logins with its password: locked refuses them, unlocked allows them |
 
 ### Output (2)
 
-| FIELD | TYPE | DESCRIPTION |
-| --- | --- | --- |
-| name | string | The user |
+| FIELD   | TYPE    | DESCRIPTION              |
+| ------- | ------- | ------------------------ |
+| name    | string  | The user                 |
 | changed | boolean | Whether the host changed |
 
 ### Examples (4)
 
-| EXAMPLE | INPUT | OUTPUT |
-| --- | --- | --- |
-| Set the shell | name=osapitest, shell=/bin/bash | name=osapitest, changed=true |
-| The shell it has | name=osapitest, shell=/bin/bash | name=osapitest, changed=false |
-| Move the home, set the groups and lock it | name=osapitest, home=/home/osapitest2, groups=\[root], lock=locked | name=osapitest, changed=true |
-| Unlock it | name=osapitest, lock=unlocked | name=osapitest, changed=true |
+| EXAMPLE                                   | INPUT                                                              | OUTPUT                        |
+| ----------------------------------------- | ------------------------------------------------------------------ | ----------------------------- |
+| Set the shell                             | name=osapitest, shell=/bin/bash                                    | name=osapitest, changed=true  |
+| The shell it has                          | name=osapitest, shell=/bin/bash                                    | name=osapitest, changed=false |
+| Move the home, set the groups and lock it | name=osapitest, home=/home/osapitest2, groups=\[root], lock=locked | name=osapitest, changed=true  |
+| Unlock it                                 | name=osapitest, lock=unlocked                                      | name=osapitest, changed=true  |
 
 ## Method delete
 
-| | |
-| --- | --- |
-| Name | delete |
-| Verb | write |
-| Description | Remove a user |
-| Detail | Removes the user and its home directory with userdel -r. A user that the host does not have does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped. |
-| HTTP | DELETE |
-| Route | /api/node/&#123;hostname&#125;/user/&#123;name&#125; |
-| Permission | user:write |
-| Command | [osapi client node user delete](../../../../usage/cli/client/node/user/delete.md) |
-| Input type | DeleteInput |
-| Output type | Result |
+|             |                                                                                                                                                                                                           |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | delete                                                                                                                                                                                                    |
+| Verb        | write                                                                                                                                                                                                     |
+| Description | Remove a user                                                                                                                                                                                             |
+| Detail      | Removes the user and its home directory with userdel -r. A user that the host does not have does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped. |
+| HTTP        | DELETE                                                                                                                                                                                                    |
+| Route       | /api/node/&#123;hostname&#125;/user/&#123;name&#125;                                                                                                                                                      |
+| Permission  | user:write                                                                                                                                                                                                |
+| Command     | [osapi client node user delete](../../../../usage/cli/client/node/user/delete.md)                                                                                                                         |
+| Input type  | DeleteInput                                                                                                                                                                                               |
+| Output type | Result                                                                                                                                                                                                    |
 
 ### Input (1)
 
-| FIELD | TYPE | REQUIRED | CONSTRAINTS | DESCRIPTION |
-| --- | --- | --- | --- | --- |
-| name | string | yes | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user to remove, with its home directory, such as alice |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                      | DESCRIPTION                                                |
+| ----- | ------ | -------- | ------------------------------------------------ | ---------------------------------------------------------- |
+| name  | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user to remove, with its home directory, such as alice |
 
 ### Output (2)
 
-| FIELD | TYPE | DESCRIPTION |
-| --- | --- | --- |
-| name | string | The user |
+| FIELD   | TYPE    | DESCRIPTION              |
+| ------- | ------- | ------------------------ |
+| name    | string  | The user                 |
 | changed | boolean | Whether the host changed |
 
 ### Examples (2)
 
-| EXAMPLE | INPUT | OUTPUT |
-| --- | --- | --- |
-| Remove a user | name=osapitest | name=osapitest, changed=true |
+| EXAMPLE                            | INPUT          | OUTPUT                        |
+| ---------------------------------- | -------------- | ----------------------------- |
+| Remove a user                      | name=osapitest | name=osapitest, changed=true  |
 | A user that the host does not have | name=osapitest | name=osapitest, changed=false |
 
 ## Method passwd
 
-| | |
-| --- | --- |
-| Name | passwd |
-| Verb | write |
-| Description | Set the password of a user |
-| Detail | Sets the password with chpasswd -e, from its hash on standard input. The controller hashes the password, so the job and NATS have only the hash. Each run makes a new hash, so it always reports changed: true. A user that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped. |
-| HTTP | POST |
-| Route | /api/node/&#123;hostname&#125;/user/&#123;name&#125;/passwd |
-| Permission | user:execute |
-| Command | [osapi client node user passwd](../../../../usage/cli/client/node/user/passwd.md) |
-| Input type | PasswordInput |
-| Output type | Result |
+|             |                                                                                                                                                                                                                                                                                                                                    |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | passwd                                                                                                                                                                                                                                                                                                                             |
+| Verb        | write                                                                                                                                                                                                                                                                                                                              |
+| Description | Set the password of a user                                                                                                                                                                                                                                                                                                         |
+| Detail      | Sets the password with chpasswd -e, from its hash on standard input. The controller hashes the password, so the job and NATS have only the hash. Each run makes a new hash, so it always reports changed: true. A user that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped. |
+| HTTP        | POST                                                                                                                                                                                                                                                                                                                               |
+| Route       | /api/node/&#123;hostname&#125;/user/&#123;name&#125;/passwd                                                                                                                                                                                                                                                                        |
+| Permission  | user:execute                                                                                                                                                                                                                                                                                                                       |
+| Command     | [osapi client node user passwd](../../../../usage/cli/client/node/user/passwd.md)                                                                                                                                                                                                                                                  |
+| Input type  | PasswordInput                                                                                                                                                                                                                                                                                                                      |
+| Output type | Result                                                                                                                                                                                                                                                                                                                             |
 
 ### Input (3)
 
-| FIELD | TYPE | REQUIRED | CONSTRAINTS | DESCRIPTION |
-| --- | --- | --- | --- | --- |
-| name | string | yes | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user, such as alice |
-| password | string | no | pattern ^\[^\r\n]\*$, format password | The new password, which osapi hashes on the controller |
-| password_hash | string | no |  | The sha512-crypt hash of the password, which the controller sets |
+| FIELD         | TYPE   | REQUIRED | CONSTRAINTS                                      | DESCRIPTION                                                      |
+| ------------- | ------ | -------- | ------------------------------------------------ | ---------------------------------------------------------------- |
+| name          | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user, such as alice                                          |
+| password      | string | no       | pattern ^\[^\r\n]\*$, format password            | The new password, which osapi hashes on the controller           |
+| password_hash | string | no       |                                                  | The sha512-crypt hash of the password, which the controller sets |
 
 ### Output (2)
 
-| FIELD | TYPE | DESCRIPTION |
-| --- | --- | --- |
-| name | string | The user |
+| FIELD   | TYPE    | DESCRIPTION              |
+| ------- | ------- | ------------------------ |
+| name    | string  | The user                 |
 | changed | boolean | Whether the host changed |
 
 ### Examples (1)
 
-| EXAMPLE | INPUT | OUTPUT |
-| --- | --- | --- |
+| EXAMPLE        | INPUT                                                                                                                                                           | OUTPUT                       |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
 | Set a password | name=osapitest, password=osapi-test-password, password_hash=$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1 | name=osapitest, changed=true |

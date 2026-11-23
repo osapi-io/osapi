@@ -65,7 +65,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindOption,
 			Name: `Area(area.Name)`,
-			Does: "Puts the group's operations in an area, one of area.All: the tab of the UI's Configure page, the folder of the SDK's page and its section of the docs site's SDK menu. The spec gives each operation its area as x-osapi-area. Use a constant of package area, such as area.Fleet. area.All has the label and the order of each area.",
+			Does: "Puts the group's operations in an area, one of area.All: the tab of the UI's Configure page, the folder of the SDK's page and of the group's reference page, and its section of the docs site's SDK menu. An area with no block in the UI, such as fleet, has no tab. The spec gives each operation its area as x-osapi-area. Use a constant of package area, such as area.Fleet. area.All has the label and the order of each area.",
 			When: "In each group. endpoint validate refuses a group with none.",
 		},
 		{

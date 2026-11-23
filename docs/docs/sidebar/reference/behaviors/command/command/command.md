@@ -6,41 +6,42 @@ title: Command
 
 # Command
 
-Run a command on target hosts. `osapi behavior get --name command` and `osapi behavior method get` show the same.
+Run a command on target hosts. `osapi behavior get --name command` and
+`osapi behavior method get` show the same.
 
 ## Behavior
 
-| | |
-| --- | --- |
-| Name | command |
+|             |                               |
+| ----------- | ----------------------------- |
+| Name        | command                       |
 | Description | Run a command on target hosts |
-| Placement | node |
-| Area | command |
-| Internal | no |
-| API | yes |
-| CLI | yes |
-| Next | no |
-| Platforms | linux, darwin |
-| Sudo | none |
-| Runs | \* |
-| Writes | none |
-| Keeps state | no |
-| Uses | none |
-| Used by | none |
+| Placement   | node                          |
+| Area        | command                       |
+| Internal    | no                            |
+| API         | yes                           |
+| CLI         | yes                           |
+| Next        | no                            |
+| Platforms   | linux, darwin                 |
+| Sudo        | none                          |
+| Runs        | \*                            |
+| Writes      | none                          |
+| Keeps state | no                            |
+| Uses        | none                          |
+| Used by     | none                          |
 
 ### Methods (2)
 
-| NAME | VERB | HTTP | ROUTE | PERMISSION | DESCRIPTION |
-| --- | --- | --- | --- | --- | --- |
-| [exec](#method-exec) | write | POST | /api/node/&#123;hostname&#125;/command/exec | command:write | Run a program with its arguments |
+| NAME                   | VERB  | HTTP | ROUTE                                        | PERMISSION    | DESCRIPTION                           |
+| ---------------------- | ----- | ---- | -------------------------------------------- | ------------- | ------------------------------------- |
+| [exec](#method-exec)   | write | POST | /api/node/&#123;hostname&#125;/command/exec  | command:write | Run a program with its arguments      |
 | [shell](#method-shell) | write | POST | /api/node/&#123;hostname&#125;/command/shell | command:write | Run a command line through /bin/sh -c |
 
 ### Types (2)
 
-| NAME | INPUT | OUTPUT |
-| --- | --- | --- |
-| [exec](#method-exec) | ExecInput &#123; command\*, args, cwd, timeout &#125; | Result &#123; stdout, stderr, exit_code, duration_ms, changed &#125; |
-| [shell](#method-shell) | ShellInput &#123; command\*, cwd, timeout &#125; | Result &#123; stdout, stderr, exit_code, duration_ms, changed &#125; |
+| NAME                   | INPUT                                                 | OUTPUT                                                               |
+| ---------------------- | ----------------------------------------------------- | -------------------------------------------------------------------- |
+| [exec](#method-exec)   | ExecInput &#123; command\*, args, cwd, timeout &#125; | Result &#123; stdout, stderr, exit_code, duration_ms, changed &#125; |
+| [shell](#method-shell) | ShellInput &#123; command\*, cwd, timeout &#125;      | Result &#123; stdout, stderr, exit_code, duration_ms, changed &#125; |
 
 ### Settings (0)
 
@@ -48,92 +49,92 @@ None. Declare them with behavior.Config.
 
 ## Telemetry
 
-| | |
-| --- | --- |
-| Span | behavior.command.&lt;method&gt; |
-| Child spans | exec \* |
-| Metrics | osapi_behavior_calls_total, osapi_behavior_duration_seconds, osapi_behavior_changes_total |
-| Attributes | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed |
-| Recorded inputs | command (exec, shell) |
+|                 |                                                                                                                 |
+| --------------- | --------------------------------------------------------------------------------------------------------------- |
+| Span            | behavior.command.&lt;method&gt;                                                                                 |
+| Child spans     | exec \*                                                                                                         |
+| Metrics         | osapi_behavior_calls_total, osapi_behavior_duration_seconds, osapi_behavior_changes_total                       |
+| Attributes      | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed |
+| Recorded inputs | command (exec, shell)                                                                                           |
 
 ## Method exec
 
-| | |
-| --- | --- |
-| Name | exec |
-| Verb | write |
-| Description | Run a program with its arguments |
-| Detail | Runs the program with its arguments, each one word, with no shell between them: a ; or a \| in an argument is that character. It answers with standard output and standard error apart, the exit code and the duration. A program that exits non-zero is a result, not an error. Only the admin role may run it, and the agent runs it only where agent.command.enabled is true. |
-| HTTP | POST |
-| Route | /api/node/&#123;hostname&#125;/command/exec |
-| Permission | command:execute |
-| Command | [osapi client node command exec](../../../../usage/cli/client/node/command/exec.md) |
-| Input type | ExecInput |
-| Output type | Result |
+|             |                                                                                                                                                                                                                                                                                                                                                                                  |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | exec                                                                                                                                                                                                                                                                                                                                                                             |
+| Verb        | write                                                                                                                                                                                                                                                                                                                                                                            |
+| Description | Run a program with its arguments                                                                                                                                                                                                                                                                                                                                                 |
+| Detail      | Runs the program with its arguments, each one word, with no shell between them: a ; or a \| in an argument is that character. It answers with standard output and standard error apart, the exit code and the duration. A program that exits non-zero is a result, not an error. Only the admin role may run it, and the agent runs it only where agent.command.enabled is true. |
+| HTTP        | POST                                                                                                                                                                                                                                                                                                                                                                             |
+| Route       | /api/node/&#123;hostname&#125;/command/exec                                                                                                                                                                                                                                                                                                                                      |
+| Permission  | command:execute                                                                                                                                                                                                                                                                                                                                                                  |
+| Command     | [osapi client node command exec](../../../../usage/cli/client/node/command/exec.md)                                                                                                                                                                                                                                                                                              |
+| Input type  | ExecInput                                                                                                                                                                                                                                                                                                                                                                        |
+| Output type | Result                                                                                                                                                                                                                                                                                                                                                                           |
 
 ### Input (4)
 
-| FIELD | TYPE | REQUIRED | CONSTRAINTS | DESCRIPTION |
-| --- | --- | --- | --- | --- |
-| command | string | yes | pattern ^\[^-], min length 1 | The program, a name on the agent's PATH or a path, such as ls |
-| args | array | no |  | Its arguments, each one word, such as -la /tmp |
-| cwd | string | no |  | The directory to run it in; the agent's own when empty |
-| timeout | integer | no | min 1, max 300 | Seconds to let it run before it is stopped, up to 300; 30 when 0 |
+| FIELD   | TYPE    | REQUIRED | CONSTRAINTS                  | DESCRIPTION                                                      |
+| ------- | ------- | -------- | ---------------------------- | ---------------------------------------------------------------- |
+| command | string  | yes      | pattern ^\[^-], min length 1 | The program, a name on the agent's PATH or a path, such as ls    |
+| args    | array   | no       |                              | Its arguments, each one word, such as -la /tmp                   |
+| cwd     | string  | no       |                              | The directory to run it in; the agent's own when empty           |
+| timeout | integer | no       | min 1, max 300               | Seconds to let it run before it is stopped, up to 300; 30 when 0 |
 
 ### Output (5)
 
-| FIELD | TYPE | DESCRIPTION |
-| --- | --- | --- |
-| stdout | string | What it wrote to standard output |
-| stderr | string | What it wrote to standard error |
-| exit_code | integer | Its exit code |
-| duration_ms | integer | How long it ran, in milliseconds |
-| changed | boolean | Whether the host changed: true, since a command can change anything |
+| FIELD       | TYPE    | DESCRIPTION                                                         |
+| ----------- | ------- | ------------------------------------------------------------------- |
+| stdout      | string  | What it wrote to standard output                                    |
+| stderr      | string  | What it wrote to standard error                                     |
+| exit_code   | integer | Its exit code                                                       |
+| duration_ms | integer | How long it ran, in milliseconds                                    |
+| changed     | boolean | Whether the host changed: true, since a command can change anything |
 
 ### Examples (3)
 
-| EXAMPLE | INPUT | OUTPUT |
-| --- | --- | --- |
-| Print a word | command=echo, args=\[hello] | stdout=hello , stderr=, exit_code=0, duration_ms=0, changed=true |
-| A program that exits non-zero | command=false | stdout=, stderr=, exit_code=1, duration_ms=0, changed=true |
-| In a directory, for at most 5 seconds | command=true, cwd=/tmp, timeout=5 | stdout=, stderr=, exit_code=0, duration_ms=0, changed=true |
+| EXAMPLE                               | INPUT                             | OUTPUT                                                           |
+| ------------------------------------- | --------------------------------- | ---------------------------------------------------------------- |
+| Print a word                          | command=echo, args=\[hello]       | stdout=hello , stderr=, exit_code=0, duration_ms=0, changed=true |
+| A program that exits non-zero         | command=false                     | stdout=, stderr=, exit_code=1, duration_ms=0, changed=true       |
+| In a directory, for at most 5 seconds | command=true, cwd=/tmp, timeout=5 | stdout=, stderr=, exit_code=0, duration_ms=0, changed=true       |
 
 ## Method shell
 
-| | |
-| --- | --- |
-| Name | shell |
-| Verb | write |
-| Description | Run a command line through /bin/sh -c |
-| Detail | Runs the command line through /bin/sh -c, so pipes, redirects and variables work. It answers as exec does. Its permission is command:shell, apart from exec's command:execute: a token that may run a program may not open a shell. Only the admin role gets it. |
-| HTTP | POST |
-| Route | /api/node/&#123;hostname&#125;/command/shell |
-| Permission | command:shell |
-| Command | [osapi client node command shell](../../../../usage/cli/client/node/command/shell.md) |
-| Input type | ShellInput |
-| Output type | Result |
+|             |                                                                                                                                                                                                                                                                  |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | shell                                                                                                                                                                                                                                                            |
+| Verb        | write                                                                                                                                                                                                                                                            |
+| Description | Run a command line through /bin/sh -c                                                                                                                                                                                                                            |
+| Detail      | Runs the command line through /bin/sh -c, so pipes, redirects and variables work. It answers as exec does. Its permission is command:shell, apart from exec's command:execute: a token that may run a program may not open a shell. Only the admin role gets it. |
+| HTTP        | POST                                                                                                                                                                                                                                                             |
+| Route       | /api/node/&#123;hostname&#125;/command/shell                                                                                                                                                                                                                     |
+| Permission  | command:shell                                                                                                                                                                                                                                                    |
+| Command     | [osapi client node command shell](../../../../usage/cli/client/node/command/shell.md)                                                                                                                                                                            |
+| Input type  | ShellInput                                                                                                                                                                                                                                                       |
+| Output type | Result                                                                                                                                                                                                                                                           |
 
 ### Input (3)
 
-| FIELD | TYPE | REQUIRED | CONSTRAINTS | DESCRIPTION |
-| --- | --- | --- | --- | --- |
-| command | string | yes | pattern ^\[^-], min length 1 | The command line, which /bin/sh -c reads, such as ls -la /tmp \| grep log |
-| cwd | string | no |  | The directory to run it in; the agent's own when empty |
-| timeout | integer | no | min 1, max 300 | Seconds to let it run before it is stopped, up to 300; 30 when 0 |
+| FIELD   | TYPE    | REQUIRED | CONSTRAINTS                  | DESCRIPTION                                                               |
+| ------- | ------- | -------- | ---------------------------- | ------------------------------------------------------------------------- |
+| command | string  | yes      | pattern ^\[^-], min length 1 | The command line, which /bin/sh -c reads, such as ls -la /tmp \| grep log |
+| cwd     | string  | no       |                              | The directory to run it in; the agent's own when empty                    |
+| timeout | integer | no       | min 1, max 300               | Seconds to let it run before it is stopped, up to 300; 30 when 0          |
 
 ### Output (5)
 
-| FIELD | TYPE | DESCRIPTION |
-| --- | --- | --- |
-| stdout | string | What it wrote to standard output |
-| stderr | string | What it wrote to standard error |
-| exit_code | integer | Its exit code |
-| duration_ms | integer | How long it ran, in milliseconds |
-| changed | boolean | Whether the host changed: true, since a command can change anything |
+| FIELD       | TYPE    | DESCRIPTION                                                         |
+| ----------- | ------- | ------------------------------------------------------------------- |
+| stdout      | string  | What it wrote to standard output                                    |
+| stderr      | string  | What it wrote to standard error                                     |
+| exit_code   | integer | Its exit code                                                       |
+| duration_ms | integer | How long it ran, in milliseconds                                    |
+| changed     | boolean | Whether the host changed: true, since a command can change anything |
 
 ### Examples (2)
 
-| EXAMPLE | INPUT | OUTPUT |
-| --- | --- | --- |
-| A pipe | command=echo hello \| tr a-z A-Z | stdout=HELLO , stderr=, exit_code=0, duration_ms=0, changed=true |
-| A command line that exits non-zero | command=exit 3 | stdout=, stderr=, exit_code=3, duration_ms=0, changed=true |
+| EXAMPLE                            | INPUT                            | OUTPUT                                                           |
+| ---------------------------------- | -------------------------------- | ---------------------------------------------------------------- |
+| A pipe                             | command=echo hello \| tr a-z A-Z | stdout=HELLO , stderr=, exit_code=0, duration_ms=0, changed=true |
+| A command line that exits non-zero | command=exit 3                   | stdout=, stderr=, exit_code=3, duration_ms=0, changed=true       |

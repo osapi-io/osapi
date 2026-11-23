@@ -6,43 +6,46 @@ title: File
 
 # File
 
-Files of the object store, deployed to the host. `osapi behavior get --name file` and `osapi behavior method get` show the same. [Its chain](../../../chains/file.md) shows each call that its examples make.
+Files of the object store, deployed to the host.
+`osapi behavior get --name file` and `osapi behavior method get` show the same.
+[Its chain](../../../chains/config/file.md) shows each call that its examples
+make.
 
 ## Behavior
 
-| | |
-| --- | --- |
-| Name | file |
-| Description | Files of the object store, deployed to the host |
-| Placement | node |
-| Area | config |
-| Internal | no |
-| API | yes |
-| CLI | yes |
-| Next | no |
-| Platforms | linux, darwin |
-| Sudo | none |
-| Runs | none |
-| Writes | \* |
-| Keeps state | no |
-| Uses | [object](../../internal/object/object.md), [managedfile](../../internal/managedfile/managedfile.md) |
-| Used by | none |
+|             |                                                                                                     |
+| ----------- | --------------------------------------------------------------------------------------------------- |
+| Name        | file                                                                                                |
+| Description | Files of the object store, deployed to the host                                                     |
+| Placement   | node                                                                                                |
+| Area        | config                                                                                              |
+| Internal    | no                                                                                                  |
+| API         | yes                                                                                                 |
+| CLI         | yes                                                                                                 |
+| Next        | no                                                                                                  |
+| Platforms   | linux, darwin                                                                                       |
+| Sudo        | none                                                                                                |
+| Runs        | none                                                                                                |
+| Writes      | \*                                                                                                  |
+| Keeps state | no                                                                                                  |
+| Uses        | [object](../../internal/object/object.md), [managedfile](../../internal/managedfile/managedfile.md) |
+| Used by     | none                                                                                                |
 
 ### Methods (3)
 
-| NAME | VERB | HTTP | ROUTE | PERMISSION | DESCRIPTION |
-| --- | --- | --- | --- | --- | --- |
-| [status](#method-status) | read | GET | /api/node/&#123;hostname&#125;/file | file:read | Show whether a deployed file holds what osapi wrote |
-| [update](#method-update) | write | PUT | /api/node/&#123;hostname&#125;/file | file:write | Deploy an object of the object store to a path |
-| [delete](#method-delete) | write | DELETE | /api/node/&#123;hostname&#125;/file | file:write | Remove a file that osapi deployed |
+| NAME                     | VERB  | HTTP   | ROUTE                               | PERMISSION | DESCRIPTION                                         |
+| ------------------------ | ----- | ------ | ----------------------------------- | ---------- | --------------------------------------------------- |
+| [status](#method-status) | read  | GET    | /api/node/&#123;hostname&#125;/file | file:read  | Show whether a deployed file holds what osapi wrote |
+| [update](#method-update) | write | PUT    | /api/node/&#123;hostname&#125;/file | file:write | Deploy an object of the object store to a path      |
+| [delete](#method-delete) | write | DELETE | /api/node/&#123;hostname&#125;/file | file:write | Remove a file that osapi deployed                   |
 
 ### Types (3)
 
-| NAME | INPUT | OUTPUT |
-| --- | --- | --- |
-| [status](#method-status) | StatusInput &#123; path\* &#125; | Status &#123; path, state, sha256 &#125; |
+| NAME                     | INPUT                                                                                   | OUTPUT                                           |
+| ------------------------ | --------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| [status](#method-status) | StatusInput &#123; path\* &#125;                                                        | Status &#123; path, state, sha256 &#125;         |
 | [update](#method-update) | UpdateInput &#123; object_name\*, path\*, mode, owner, group, content_type, vars &#125; | UpdateResult &#123; path, sha256, changed &#125; |
-| [delete](#method-delete) | DeleteInput &#123; path\* &#125; | DeleteResult &#123; path, changed &#125; |
+| [delete](#method-delete) | DeleteInput &#123; path\* &#125;                                                        | DeleteResult &#123; path, changed &#125;         |
 
 ### Settings (0)
 
@@ -50,125 +53,125 @@ None. Declare them with behavior.Config.
 
 ## Telemetry
 
-| | |
-| --- | --- |
-| Span | behavior.file.&lt;method&gt; |
-| Child spans | behavior.object.&lt;method&gt;, behavior.managedfile.&lt;method&gt;, exec chown, exec stat, file.write, file.remove, file.chmod, kv.get, kv.put |
-| Metrics | osapi_behavior_calls_total, osapi_behavior_duration_seconds, osapi_behavior_changes_total |
-| Attributes | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed |
-| Recorded inputs | path (update, delete) |
+|                 |                                                                                                                                                 |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Span            | behavior.file.&lt;method&gt;                                                                                                                    |
+| Child spans     | behavior.object.&lt;method&gt;, behavior.managedfile.&lt;method&gt;, exec chown, exec stat, file.write, file.remove, file.chmod, kv.get, kv.put |
+| Metrics         | osapi_behavior_calls_total, osapi_behavior_duration_seconds, osapi_behavior_changes_total                                                       |
+| Attributes      | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed                                 |
+| Recorded inputs | path (update, delete)                                                                                                                           |
 
 ## Method status
 
-| | |
-| --- | --- |
-| Name | status |
-| Verb | read |
-| Description | Show whether a deployed file holds what osapi wrote |
-| Detail | Compares the file on the host with the record that osapi keeps of what it deployed: in-sync when they agree, drifted when something changed the file, missing when osapi deployed the file and it is gone, and unmanaged when osapi did not deploy the path or undeployed it. A path that is a directory is refused. |
-| HTTP | GET |
-| Route | /api/node/&#123;hostname&#125;/file |
-| Permission | file:read |
-| Command | [osapi client node file status](../../../../usage/cli/client/node/file/status.md) |
-| Input type | StatusInput |
-| Output type | Status |
+|             |                                                                                                                                                                                                                                                                                                                      |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | status                                                                                                                                                                                                                                                                                                               |
+| Verb        | read                                                                                                                                                                                                                                                                                                                 |
+| Description | Show whether a deployed file holds what osapi wrote                                                                                                                                                                                                                                                                  |
+| Detail      | Compares the file on the host with the record that osapi keeps of what it deployed: in-sync when they agree, drifted when something changed the file, missing when osapi deployed the file and it is gone, and unmanaged when osapi did not deploy the path or undeployed it. A path that is a directory is refused. |
+| HTTP        | GET                                                                                                                                                                                                                                                                                                                  |
+| Route       | /api/node/&#123;hostname&#125;/file                                                                                                                                                                                                                                                                                  |
+| Permission  | file:read                                                                                                                                                                                                                                                                                                            |
+| Command     | [osapi client node file status](../../../../usage/cli/client/node/file/status.md)                                                                                                                                                                                                                                    |
+| Input type  | StatusInput                                                                                                                                                                                                                                                                                                          |
+| Output type | Status                                                                                                                                                                                                                                                                                                               |
 
 ### Input (1)
 
-| FIELD | TYPE | REQUIRED | CONSTRAINTS | DESCRIPTION |
-| --- | --- | --- | --- | --- |
-| path | string | yes | pattern ^/ | Absolute path of the file on the host |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS | DESCRIPTION                           |
+| ----- | ------ | -------- | ----------- | ------------------------------------- |
+| path  | string | yes      | pattern ^/  | Absolute path of the file on the host |
 
 ### Output (3)
 
-| FIELD | TYPE | DESCRIPTION |
-| --- | --- | --- |
-| path | string | Absolute path of the file |
-| state | string | in-sync, drifted, missing or unmanaged |
+| FIELD  | TYPE   | DESCRIPTION                                       |
+| ------ | ------ | ------------------------------------------------- |
+| path   | string | Absolute path of the file                         |
+| state  | string | in-sync, drifted, missing or unmanaged            |
 | sha256 | string | SHA-256 of the file on the host, when it is there |
 
 ### Examples (3)
 
-| EXAMPLE | INPUT | OUTPUT |
-| --- | --- | --- |
-| A deployed file | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf, state=in-sync, sha256=0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60 |
-| A path that osapi did not deploy | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf, state=unmanaged |
-| A file that osapi undeployed | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf, state=unmanaged |
+| EXAMPLE                          | INPUT                             | OUTPUT                                                                                                                    |
+| -------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| A deployed file                  | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf, state=in-sync, sha256=0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60 |
+| A path that osapi did not deploy | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf, state=unmanaged                                                                        |
+| A file that osapi undeployed     | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf, state=unmanaged                                                                        |
 
 ## Method update
 
-| | |
-| --- | --- |
-| Name | update |
-| Verb | write |
-| Description | Deploy an object of the object store to a path |
-| Detail | Writes the object at the path with its mode and ownership, and keeps a record of it. A template object, or content_type template, is rendered first with .Facts, .Vars and .Hostname. The record keeps the SHA-256 of the object as it was read. A file that holds the content, mode and owner already, from the same object, does not change and reports changed: false. osapi client file stale list compares the object now with that SHA-256, so it shows the deployments whose object changed since. |
-| HTTP | PUT |
-| Route | /api/node/&#123;hostname&#125;/file |
-| Permission | file:write |
-| Command | [osapi client node file update](../../../../usage/cli/client/node/file/update.md) |
-| Input type | UpdateInput |
-| Output type | UpdateResult |
+|             |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | update                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Verb        | write                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Description | Deploy an object of the object store to a path                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Detail      | Writes the object at the path with its mode and ownership, and keeps a record of it. A template object, or content_type template, is rendered first with .Facts, .Vars and .Hostname. The record keeps the SHA-256 of the object as it was read. A file that holds the content, mode and owner already, from the same object, does not change and reports changed: false. osapi client file stale list compares the object now with that SHA-256, so it shows the deployments whose object changed since. |
+| HTTP        | PUT                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Route       | /api/node/&#123;hostname&#125;/file                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Permission  | file:write                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Command     | [osapi client node file update](../../../../usage/cli/client/node/file/update.md)                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Input type  | UpdateInput                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Output type | UpdateResult                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 
 ### Input (7)
 
-| FIELD | TYPE | REQUIRED | CONSTRAINTS | DESCRIPTION |
-| --- | --- | --- | --- | --- |
-| object_name | string | yes | min length 1, max length 255 | The object of the object store, from osapi client file list |
-| path | string | yes | pattern ^/ | Absolute path of the file on the host |
-| mode | string | no | pattern ^\[0-7]&#123;3,4&#125;$ | Permissions in octal, such as 0644; when empty, a file keeps its mode and a new file gets 0644 |
-| owner | string | no | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$ | User that owns the file; left as written when empty |
-| group | string | no | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$ | Group that owns the file; left as written when empty |
-| content_type | string | no | one of raw template | How the object is written: raw as it is, or template rendered with .Facts, .Vars and .Hostname; the object's own when empty |
-| vars | object | no |  | Variables of a template, as .Vars, each as key=value |
+| FIELD        | TYPE   | REQUIRED | CONSTRAINTS                       | DESCRIPTION                                                                                                                 |
+| ------------ | ------ | -------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| object_name  | string | yes      | min length 1, max length 255      | The object of the object store, from osapi client file list                                                                 |
+| path         | string | yes      | pattern ^/                        | Absolute path of the file on the host                                                                                       |
+| mode         | string | no       | pattern ^\[0-7]&#123;3,4&#125;$   | Permissions in octal, such as 0644; when empty, a file keeps its mode and a new file gets 0644                              |
+| owner        | string | no       | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$ | User that owns the file; left as written when empty                                                                         |
+| group        | string | no       | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$ | Group that owns the file; left as written when empty                                                                        |
+| content_type | string | no       | one of raw template               | How the object is written: raw as it is, or template rendered with .Facts, .Vars and .Hostname; the object's own when empty |
+| vars         | object | no       |                                   | Variables of a template, as .Vars, each as key=value                                                                        |
 
 ### Output (3)
 
-| FIELD | TYPE | DESCRIPTION |
-| --- | --- | --- |
-| path | string | Absolute path of the file |
-| sha256 | string | SHA-256 of the content that the file holds |
-| changed | boolean | Whether the host changed |
+| FIELD   | TYPE    | DESCRIPTION                                |
+| ------- | ------- | ------------------------------------------ |
+| path    | string  | Absolute path of the file                  |
+| sha256  | string  | SHA-256 of the content that the file holds |
+| changed | boolean | Whether the host changed                   |
 
 ### Examples (3)
 
-| EXAMPLE | INPUT | OUTPUT |
-| --- | --- | --- |
-| Deploy a file | object_name=example.conf, path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf, sha256=0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60, changed=true |
-| Render a template | object_name=example.conf.tmpl, path=/etc/osapi/file-example.conf, vars=map\[port:8080] | path=/etc/osapi/file-example.conf, sha256=28ef41e1ff26302a25da25eaa7b2762f2d55d0fdc0631a4f6a8c380d2b8640d4, changed=true |
-| A file that holds the object | object_name=example.conf, path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf, sha256=0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60, changed=false |
+| EXAMPLE                      | INPUT                                                                                  | OUTPUT                                                                                                                    |
+| ---------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Deploy a file                | object_name=example.conf, path=/etc/osapi/file-example.conf                            | path=/etc/osapi/file-example.conf, sha256=0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60, changed=true  |
+| Render a template            | object_name=example.conf.tmpl, path=/etc/osapi/file-example.conf, vars=map\[port:8080] | path=/etc/osapi/file-example.conf, sha256=28ef41e1ff26302a25da25eaa7b2762f2d55d0fdc0631a4f6a8c380d2b8640d4, changed=true  |
+| A file that holds the object | object_name=example.conf, path=/etc/osapi/file-example.conf                            | path=/etc/osapi/file-example.conf, sha256=0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60, changed=false |
 
 ## Method delete
 
-| | |
-| --- | --- |
-| Name | delete |
-| Verb | write |
-| Description | Remove a file that osapi deployed |
-| Detail | Removes the file and keeps its record, marked undeployed, so status reports unmanaged. A path that osapi did not deploy, or deleted already, does not change and reports changed: false. The object stays in the object store. |
-| HTTP | DELETE |
-| Route | /api/node/&#123;hostname&#125;/file |
-| Permission | file:write |
-| Command | [osapi client node file delete](../../../../usage/cli/client/node/file/delete.md) |
-| Input type | DeleteInput |
-| Output type | DeleteResult |
+|             |                                                                                                                                                                                                                                |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Name        | delete                                                                                                                                                                                                                         |
+| Verb        | write                                                                                                                                                                                                                          |
+| Description | Remove a file that osapi deployed                                                                                                                                                                                              |
+| Detail      | Removes the file and keeps its record, marked undeployed, so status reports unmanaged. A path that osapi did not deploy, or deleted already, does not change and reports changed: false. The object stays in the object store. |
+| HTTP        | DELETE                                                                                                                                                                                                                         |
+| Route       | /api/node/&#123;hostname&#125;/file                                                                                                                                                                                            |
+| Permission  | file:write                                                                                                                                                                                                                     |
+| Command     | [osapi client node file delete](../../../../usage/cli/client/node/file/delete.md)                                                                                                                                              |
+| Input type  | DeleteInput                                                                                                                                                                                                                    |
+| Output type | DeleteResult                                                                                                                                                                                                                   |
 
 ### Input (1)
 
-| FIELD | TYPE | REQUIRED | CONSTRAINTS | DESCRIPTION |
-| --- | --- | --- | --- | --- |
-| path | string | yes | pattern ^/ | Absolute path of the file on the host |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS | DESCRIPTION                           |
+| ----- | ------ | -------- | ----------- | ------------------------------------- |
+| path  | string | yes      | pattern ^/  | Absolute path of the file on the host |
 
 ### Output (2)
 
-| FIELD | TYPE | DESCRIPTION |
-| --- | --- | --- |
-| path | string | Absolute path of the file |
-| changed | boolean | Whether the host changed |
+| FIELD   | TYPE    | DESCRIPTION               |
+| ------- | ------- | ------------------------- |
+| path    | string  | Absolute path of the file |
+| changed | boolean | Whether the host changed  |
 
 ### Examples (2)
 
-| EXAMPLE | INPUT | OUTPUT |
-| --- | --- | --- |
-| Remove a deployed file | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf, changed=true |
+| EXAMPLE                          | INPUT                             | OUTPUT                                           |
+| -------------------------------- | --------------------------------- | ------------------------------------------------ |
+| Remove a deployed file           | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf, changed=true  |
 | A path that osapi did not deploy | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf, changed=false |

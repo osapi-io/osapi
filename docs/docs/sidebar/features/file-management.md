@@ -317,7 +317,7 @@ nats:
 
 ## Permissions
 
-The [file](../reference/endpoints/files/file.md) and
+The [file](../reference/endpoints/objectstore/file.md) and
 [node file](../reference/behaviors/config/file/file.md) reference pages give the
 permission of each method.
 

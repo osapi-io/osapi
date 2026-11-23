@@ -51,7 +51,7 @@ var noStore503 = endpoint.Unavailable(ErrNoStore,
 // Group is the file group's definition.
 var Group = endpoint.Register(endpoint.Define(
 	"file", "Manage the files in the Object Store",
-	endpoint.Area(area.Files),
+	endpoint.Area(area.ObjectStore),
 	endpoint.SubDoc("stale", "Read the deployments whose file changed since"),
 	endpoint.Title("File Management API"),
 	endpoint.Tag("file_operations", "File", "Object Store file management operations."),

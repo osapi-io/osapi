@@ -11,12 +11,12 @@ The behaviors that ntp calls, and each call that its examples make.
 
 ## Chain
 
-|          |                                                                 |
-| -------- | --------------------------------------------------------------- |
-| Behavior | [ntp](../behaviors/config/ntp/ntp.md)                           |
-| Chain    | ntp → managedfile                                               |
-| Calls    | [managedfile](../behaviors/internal/managedfile/managedfile.md) |
-| Used by  | none                                                            |
+|          |                                                                    |
+| -------- | ------------------------------------------------------------------ |
+| Behavior | [ntp](../../behaviors/config/ntp/ntp.md)                           |
+| Chain    | ntp → managedfile                                                  |
+| Calls    | [managedfile](../../behaviors/internal/managedfile/managedfile.md) |
+| Used by  | none                                                               |
 
 ## Set two servers (create)
 

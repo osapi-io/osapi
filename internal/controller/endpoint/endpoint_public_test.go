@@ -923,8 +923,8 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 			group: endpoint.Define("node", "The nodes", endpoint.Area("kitchen"),
 				endpoint.Get[noInput, Node]("list")),
 			want: []string{
-				`area "kitchen" is not one of services, software, config, node, networking, ` +
-					`security, containers, files, command, hardware, audit, fleet.`,
+				`area "kitchen" is not one of services, software, config, node, logs, ` +
+					`networking, security, containers, objectstore, command, hardware, audit, fleet.`,
 			},
 		},
 		{

@@ -8,7 +8,6 @@ import { ResultCard } from "@/components/domain/result-card";
 import { RunLinks } from "@/components/domain/run-links";
 import { traceIdOf } from "@/lib/trace";
 import { FileUploadBlock } from "@/components/domain/file-upload-block";
-import { SingleInputBlock } from "@/components/domain/single-input-block";
 import { FileDeleteBlock } from "@/components/domain/file-delete-block";
 import { ApplyButton } from "@/components/domain/apply-button";
 import {
@@ -25,11 +24,6 @@ import {
   deleteFileByName,
   getFileStale,
 } from "@/sdk/gen/file-management-api-file-operations/file-management-api-file-operations";
-import {
-  getAuditLogs,
-  getAuditLogByID,
-  getAuditExport,
-} from "@/sdk/gen/audit-log-api-audit/audit-log-api-audit";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { SectionLabel } from "@/components/ui/section-label";
@@ -69,7 +63,6 @@ import {
   Monitor,
   HardDrive,
   MemoryStick,
-  ClipboardList,
   FileDown,
   Gauge,
   Timer,
@@ -114,10 +107,8 @@ const blockIcons: Record<
   // Hardware
   "disk-get": HardDrive,
   "memory-get": MemoryStick,
-  // Files
+  // Object Store
   "object-list": FolderOpen,
-  // Audit
-  "audit-list": ClipboardList,
 };
 
 export function Configure() {
@@ -237,15 +228,6 @@ export function Configure() {
           case "object-stale":
             result = await getFileStale();
             break;
-          case "audit-list":
-            result = await getAuditLogs();
-            break;
-          case "audit-get":
-            result = await getAuditLogByID(block.data.id as string);
-            break;
-          case "audit-export":
-            result = await getAuditExport();
-            break;
           default:
             continue;
         }
@@ -359,20 +341,6 @@ export function Configure() {
         );
       case "object-stale":
         return null;
-      case "audit-list":
-      case "audit-export":
-        return null;
-      case "audit-get":
-        return (
-          <SingleInputBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            field="id"
-            label="Audit Entry ID"
-            placeholder="abc123"
-          />
-        );
       default:
         return (
           <Text variant="muted" size="sm" className="block py-4 text-center">

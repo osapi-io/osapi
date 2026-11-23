@@ -11,12 +11,12 @@ The behaviors that sshkey calls, and each call that its examples make.
 
 ## Chain
 
-|          |                                                  |
-| -------- | ------------------------------------------------ |
-| Behavior | [sshkey](../behaviors/security/sshkey/sshkey.md) |
-| Chain    | sshkey → user                                    |
-| Calls    | [user](../behaviors/security/user/user.md)       |
-| Used by  | none                                             |
+|          |                                                     |
+| -------- | --------------------------------------------------- |
+| Behavior | [sshkey](../../behaviors/security/sshkey/sshkey.md) |
+| Chain    | sshkey → user                                       |
+| Calls    | [user](../../behaviors/security/user/user.md)       |
+| Used by  | none                                                |
 
 ## A user with keys (list)
 

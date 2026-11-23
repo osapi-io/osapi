@@ -11,12 +11,12 @@ The behaviors that schedule calls, and each call that its examples make.
 
 ## Chain
 
-|          |                                                                                                                   |
-| -------- | ----------------------------------------------------------------------------------------------------------------- |
-| Behavior | [schedule](../behaviors/config/schedule/schedule.md)                                                              |
-| Chain    | schedule → (object, managedfile)                                                                                  |
-| Calls    | [object](../behaviors/internal/object/object.md), [managedfile](../behaviors/internal/managedfile/managedfile.md) |
-| Used by  | none                                                                                                              |
+|          |                                                                                                                         |
+| -------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Behavior | [schedule](../../behaviors/config/schedule/schedule.md)                                                                 |
+| Chain    | schedule → (object, managedfile)                                                                                        |
+| Calls    | [object](../../behaviors/internal/object/object.md), [managedfile](../../behaviors/internal/managedfile/managedfile.md) |
+| Used by  | none                                                                                                                    |
 
 ## An entry that osapi deployed (list)
 

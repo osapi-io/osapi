@@ -6,38 +6,39 @@ title: Load
 
 # Load
 
-Get the load averages of target hosts. `osapi behavior get --name load` and `osapi behavior method get` show the same.
+Get the load averages of target hosts. `osapi behavior get --name load` and
+`osapi behavior method get` show the same.
 
 ## Behavior
 
-| | |
-| --- | --- |
-| Name | load |
+|             |                                       |
+| ----------- | ------------------------------------- |
+| Name        | load                                  |
 | Description | Get the load averages of target hosts |
-| Placement | node |
-| Area | node |
-| Internal | no |
-| API | yes |
-| CLI | yes |
-| Next | no |
-| Platforms | linux, darwin |
-| Sudo | none |
-| Runs | none |
-| Writes | none |
-| Keeps state | no |
-| Uses | none |
-| Used by | [status](../../node/status/status.md) |
+| Placement   | node                                  |
+| Area        | node                                  |
+| Internal    | no                                    |
+| API         | yes                                   |
+| CLI         | yes                                   |
+| Next        | no                                    |
+| Platforms   | linux, darwin                         |
+| Sudo        | none                                  |
+| Runs        | none                                  |
+| Writes      | none                                  |
+| Keeps state | no                                    |
+| Uses        | none                                  |
+| Used by     | [status](../../node/status/status.md) |
 
 ### Methods (1)
 
-| NAME | VERB | HTTP | ROUTE | PERMISSION | DESCRIPTION |
-| --- | --- | --- | --- | --- | --- |
-| [get](#method-get) | read | GET | /api/node/&#123;hostname&#125;/load | load:read | Get the load averages of the host |
+| NAME               | VERB | HTTP | ROUTE                               | PERMISSION | DESCRIPTION                       |
+| ------------------ | ---- | ---- | ----------------------------------- | ---------- | --------------------------------- |
+| [get](#method-get) | read | GET  | /api/node/&#123;hostname&#125;/load | load:read  | Get the load averages of the host |
 
 ### Types (1)
 
-| NAME | INPUT | OUTPUT |
-| --- | --- | --- |
+| NAME               | INPUT    | OUTPUT                           |
+| ------------------ | -------- | -------------------------------- |
 | [get](#method-get) | GetInput | Entry &#123; load_average &#125; |
 
 ### Settings (0)
@@ -46,28 +47,28 @@ None. Declare them with behavior.Config.
 
 ## Telemetry
 
-| | |
-| --- | --- |
-| Span | behavior.load.&lt;method&gt; |
-| Child spans | exec sysctl |
-| Metrics | osapi_behavior_calls_total, osapi_behavior_duration_seconds, osapi_behavior_changes_total |
-| Attributes | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed |
-| Recorded inputs | none |
+|                 |                                                                                                                 |
+| --------------- | --------------------------------------------------------------------------------------------------------------- |
+| Span            | behavior.load.&lt;method&gt;                                                                                    |
+| Child spans     | exec sysctl                                                                                                     |
+| Metrics         | osapi_behavior_calls_total, osapi_behavior_duration_seconds, osapi_behavior_changes_total                       |
+| Attributes      | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed |
+| Recorded inputs | none                                                                                                            |
 
 ## Method get
 
-| | |
-| --- | --- |
-| Name | get |
-| Verb | read |
-| Description | Get the load averages of the host |
-| Detail | Reads the averages of the run queue over 1, 5 and 15 minutes. |
-| HTTP | GET |
-| Route | /api/node/&#123;hostname&#125;/load |
-| Permission | load:read |
-| Command | [osapi client node load get](../../../../usage/cli/client/node/load/get.md) |
-| Input type | GetInput |
-| Output type | Entry |
+|             |                                                                             |
+| ----------- | --------------------------------------------------------------------------- |
+| Name        | get                                                                         |
+| Verb        | read                                                                        |
+| Description | Get the load averages of the host                                           |
+| Detail      | Reads the averages of the run queue over 1, 5 and 15 minutes.               |
+| HTTP        | GET                                                                         |
+| Route       | /api/node/&#123;hostname&#125;/load                                         |
+| Permission  | load:read                                                                   |
+| Command     | [osapi client node load get](../../../../usage/cli/client/node/load/get.md) |
+| Input type  | GetInput                                                                    |
+| Output type | Entry                                                                       |
 
 ### Input (0)
 
@@ -75,12 +76,12 @@ None. The method takes no input; its command needs only --target.
 
 ### Output (1)
 
-| FIELD | TYPE | DESCRIPTION |
-| --- | --- | --- |
+| FIELD        | TYPE   | DESCRIPTION                   |
+| ------------ | ------ | ----------------------------- |
 | load_average | object | The load averages of the host |
 
 ### Examples (1)
 
-| EXAMPLE | INPUT | OUTPUT |
-| --- | --- | --- |
+| EXAMPLE                   | INPUT  | OUTPUT                                            |
+| ------------------------- | ------ | ------------------------------------------------- |
 | A host under a light load | (none) | load_average=map\[15min:0.25 1min:0.32 5min:0.28] |

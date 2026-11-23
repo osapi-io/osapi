@@ -85,16 +85,21 @@ the spec.
 
 ### Node
 
+| Service                    | Description                               |
+| -------------------------- | ----------------------------------------- |
+| [Load](node/load.md)       | Get the load averages of target hosts.    |
+| [OS](node/os.md)           | Get the operating system of target hosts. |
+| [Power](node/power.md)     | Reboot or shut down the host.             |
+| [Process](node/process.md) | The processes of the host.                |
+| [Status](node/status.md)   | The status summary of a node.             |
+| [Uptime](node/uptime.md)   | Get the uptime of target hosts.           |
+
+### Logs
+
 | Service                         | Description                                    |
 | ------------------------------- | ---------------------------------------------- |
-| [Load](node/load.md)            | Get the load averages of target hosts.         |
-| [LogEntry](node/log_entry.md)   | The entries of the systemd journal.            |
-| [LogSource](node/log_source.md) | The sources that write to the systemd journal. |
-| [OS](node/os.md)                | Get the operating system of target hosts.      |
-| [Power](node/power.md)          | Reboot or shut down the host.                  |
-| [Process](node/process.md)      | The processes of the host.                     |
-| [Status](node/status.md)        | The status summary of a node.                  |
-| [Uptime](node/uptime.md)        | Get the uptime of target hosts.                |
+| [LogEntry](logs/log_entry.md)   | The entries of the systemd journal.            |
+| [LogSource](logs/log_source.md) | The sources that write to the systemd journal. |
 
 ### Networking
 
@@ -121,11 +126,11 @@ the spec.
 | [ContainerDocker](containers/container_docker.md) | The Docker containers of the host. |
 | [ContainerImage](containers/container_image.md)   | The Docker images of the host.     |
 
-### Files
+### Object Store
 
-| Service               | Description                              |
-| --------------------- | ---------------------------------------- |
-| [File](files/file.md) | Object Store file management operations. |
+| Service                     | Description                              |
+| --------------------------- | ---------------------------------------- |
+| [File](objectstore/file.md) | Object Store file management operations. |
 
 ### Command
 

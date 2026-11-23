@@ -77,8 +77,12 @@ describe("the areas of the panel", () => {
     );
   });
 
-  test("leave out an area with no block, such as fleet", () => {
+  test("leave out an area with no block, such as fleet and audit", () => {
     expect(BLOCK_AREAS.some((a) => a.name === "fleet")).toBe(false);
-    expect(BLOCK_AREAS.find((a) => a.name === "files")?.label).toBe("Files");
+    expect(BLOCK_AREAS.some((a) => a.name === "audit")).toBe(false);
+    expect(BLOCK_AREAS.find((a) => a.name === "objectstore")?.label).toBe(
+      "Object Store",
+    );
+    expect(BLOCK_AREAS.find((a) => a.name === "logs")?.label).toBe("Logs");
   });
 });

@@ -32,13 +32,13 @@ export interface BlockArea {
 // BLOCK_OPERATIONS, which gives its permission: a type with none fails the
 // type check here.
 const HAND_BLOCK_TYPES: (BlockType & { type: HandBlockType })[] = [
-  // ── Files ──────────────────────────────────────────────────────────────────
+  // ── Object Store ──────────────────────────────────────────────────────────────────
   {
     type: "object-list",
     label: "List",
     description: "List files in object store",
     category: "file",
-    area: "files",
+    area: "objectstore",
     readyOnAdd: true,
   },
   {
@@ -46,46 +46,21 @@ const HAND_BLOCK_TYPES: (BlockType & { type: HandBlockType })[] = [
     label: "Upload",
     description: "Upload to object store",
     category: "file",
-    area: "files",
+    area: "objectstore",
   },
   {
     type: "object-delete",
     label: "Delete",
     description: "Delete file from object store",
     category: "file",
-    area: "files",
+    area: "objectstore",
   },
   {
     type: "object-stale",
     label: "Stale",
     description: "Check for stale deployments",
     category: "file-deploy",
-    area: "files",
-    readyOnAdd: true,
-  },
-
-  // ── Audit ──────────────────────────────────────────────────────────────────
-  {
-    type: "audit-list",
-    label: "List",
-    description: "List audit log entries",
-    category: "audit",
-    area: "audit",
-    readyOnAdd: true,
-  },
-  {
-    type: "audit-get",
-    label: "Get",
-    description: "Get audit entry details",
-    category: "audit",
-    area: "audit",
-  },
-  {
-    type: "audit-export",
-    label: "Export",
-    description: "Export audit log",
-    category: "audit",
-    area: "audit",
+    area: "objectstore",
     readyOnAdd: true,
   },
 ];
@@ -114,7 +89,6 @@ const categoryNames: Record<string, string> = {
   updatepackages: "Package Index",
   file: "File",
   "file-deploy": "File Deploy",
-  audit: "Audit",
 };
 
 const behaviorTitles: Record<string, string> = Object.fromEntries(

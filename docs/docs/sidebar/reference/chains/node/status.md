@@ -11,12 +11,12 @@ The behaviors that status calls, and each call that its examples make.
 
 ## Chain
 
-|          |                                                                                                                                                                                                                                                                            |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Behavior | [status](../behaviors/node/status/status.md)                                                                                                                                                                                                                               |
-| Chain    | status → (hostname, uptime, os, load, memory, disk)                                                                                                                                                                                                                        |
-| Calls    | [hostname](../behaviors/config/hostname/hostname.md), [uptime](../behaviors/node/uptime/uptime.md), [os](../behaviors/node/os/os.md), [load](../behaviors/node/load/load.md), [memory](../behaviors/hardware/memory/memory.md), [disk](../behaviors/hardware/disk/disk.md) |
-| Used by  | none                                                                                                                                                                                                                                                                       |
+|          |                                                                                                                                                                                                                                                                                              |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Behavior | [status](../../behaviors/node/status/status.md)                                                                                                                                                                                                                                              |
+| Chain    | status → (hostname, uptime, os, load, memory, disk)                                                                                                                                                                                                                                          |
+| Calls    | [hostname](../../behaviors/config/hostname/hostname.md), [uptime](../../behaviors/node/uptime/uptime.md), [os](../../behaviors/node/os/os.md), [load](../../behaviors/node/load/load.md), [memory](../../behaviors/hardware/memory/memory.md), [disk](../../behaviors/hardware/disk/disk.md) |
+| Used by  | none                                                                                                                                                                                                                                                                                         |
 
 ## An Ubuntu host (get)
 

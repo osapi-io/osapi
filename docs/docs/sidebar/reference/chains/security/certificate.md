@@ -11,12 +11,12 @@ The behaviors that certificate calls, and each call that its examples make.
 
 ## Chain
 
-|          |                                                                                                                   |
-| -------- | ----------------------------------------------------------------------------------------------------------------- |
-| Behavior | [certificate](../behaviors/security/certificate/certificate.md)                                                   |
-| Chain    | certificate → (object, managedfile)                                                                               |
-| Calls    | [object](../behaviors/internal/object/object.md), [managedfile](../behaviors/internal/managedfile/managedfile.md) |
-| Used by  | none                                                                                                              |
+|          |                                                                                                                         |
+| -------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Behavior | [certificate](../../behaviors/security/certificate/certificate.md)                                                      |
+| Chain    | certificate → (object, managedfile)                                                                                     |
+| Calls    | [object](../../behaviors/internal/object/object.md), [managedfile](../../behaviors/internal/managedfile/managedfile.md) |
+| Used by  | none                                                                                                                    |
 
 ## A CA that osapi deployed reads by its name (list)
 

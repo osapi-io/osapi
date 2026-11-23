@@ -55,7 +55,7 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Node,
 	behavior.Under(behavior.GroupLog),
 	behavior.API,
-	behavior.Area(area.Node),
+	behavior.Area(area.Logs),
 	behavior.CLI,
 	behavior.Platform(behavior.PlatformLinux, newLinux),
 	behavior.Read("list", List).

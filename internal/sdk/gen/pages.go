@@ -117,7 +117,26 @@ func runPages(
 		return serviceTables(m)
 	})))
 
-	return w.Flush()
+	if err := w.Flush(); err != nil {
+		return err
+	}
+	removeEmpty(root)
+
+	return nil
+}
+
+// removeEmpty removes each folder of pageDir that is empty, such as the
+// folder of an area that has no service now, so the docs site does not show
+// it as a section with no pages. A folder that is not empty stays.
+func removeEmpty(
+	root string,
+) {
+	entries, _ := os.ReadDir(filepath.Join(root, pageDir))
+	for _, e := range entries {
+		if e.IsDir() {
+			_ = os.Remove(filepath.Join(root, pageDir, e.Name()))
+		}
+	}
 }
 
 // removeOld records the removal of each page that a run wrote before, in

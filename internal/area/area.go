@@ -19,8 +19,9 @@
 // DEALINGS IN THE SOFTWARE.
 
 // Package area is the areas that group the operations of osapi: the tabs of
-// the UI's Configure page, the folders of the SDK's reference pages and the
-// sections of the docs site's SDK menu. Each behavior and each endpoint
+// the UI's Configure page, the folders of the SDK's pages and of the
+// reference pages of the behaviors, the chains and the endpoints, and the
+// sections of the docs site's SDK and Behaviors menus. Each behavior and each endpoint
 // group declares one. The spec carries the area of each operation and the
 // list of areas, so a change here changes each of them together.
 package area
@@ -32,18 +33,19 @@ type Name string
 
 // The areas.
 const (
-	Services   Name = "services"
-	Software   Name = "software"
-	Config     Name = "config"
-	Node       Name = "node"
-	Networking Name = "networking"
-	Security   Name = "security"
-	Containers Name = "containers"
-	Files      Name = "files"
-	Command    Name = "command"
-	Hardware   Name = "hardware"
-	Audit      Name = "audit"
-	Fleet      Name = "fleet"
+	Services    Name = "services"
+	Software    Name = "software"
+	Config      Name = "config"
+	Node        Name = "node"
+	Logs        Name = "logs"
+	Networking  Name = "networking"
+	Security    Name = "security"
+	Containers  Name = "containers"
+	ObjectStore Name = "objectstore"
+	Command     Name = "command"
+	Hardware    Name = "hardware"
+	Audit       Name = "audit"
+	Fleet       Name = "fleet"
 )
 
 // Area is one area: its name, and the label that a reader sees.
@@ -59,10 +61,11 @@ var All = []Area{
 	{Software, "Software"},
 	{Config, "Config"},
 	{Node, "Node"},
+	{Logs, "Logs"},
 	{Networking, "Networking"},
 	{Security, "Security"},
 	{Containers, "Containers"},
-	{Files, "Files"},
+	{ObjectStore, "Object Store"},
 	{Command, "Command"},
 	{Hardware, "Hardware"},
 	{Audit, "Audit"},

@@ -2,38 +2,38 @@
 
 ### Behaviors (33)
 
-| NAME | GROUP | AREA | METHODS | DESCRIPTION | INTERNAL |
-| --- | --- | --- | --- | --- | --- |
-| [certificate](security/certificate/certificate.md) |  | security | list, get, create, update, delete | The certificate authorities that the host trusts |  |
-| [command](command/command/command.md) |  | command | exec, shell | Run a command on target hosts |  |
-| [disk](hardware/disk/disk.md) |  | hardware | get | Get the disk usage of target hosts |  |
-| [file](config/file/file.md) |  | config | status, update, delete | Files of the object store, deployed to the host |  |
-| [group](security/group/group.md) |  | security | list, get, create, update, delete | The groups of the host |  |
-| [hostname](config/hostname/hostname.md) |  | config | get, update | Get or set the hostname of target hosts |  |
-| [load](node/load/load.md) |  | node | get | Get the load averages of target hosts |  |
-| [managedfile](internal/managedfile/managedfile.md) |  |  | get, update, delete | Files osapi writes on a host and keeps a record of | yes |
-| [memory](hardware/memory/memory.md) |  | hardware | get | Get the memory usage of target hosts |  |
-| [netplan](internal/netplan/netplan.md) |  |  | update, delete, get | The netplan files osapi writes, validated and applied | yes |
-| [ntp](config/ntp/ntp.md) |  | config | get, create, update, delete | The NTP servers of chrony, and its sync status |  |
-| [object](internal/object/object.md) |  |  | get | The objects of the object store of the fleet, such as a file uploaded with osapi client file upload | yes |
-| [os](node/os/os.md) |  | node | get | Get the operating system of target hosts |  |
-| [package](software/package/package.md) |  | software | list, get, create, delete | The packages installed on the host |  |
-| [power](node/power/power.md) |  | node | reboot, shutdown | Reboot or shut down the host |  |
-| [process](node/process/process.md) |  | node | list, get, signal | The processes of the host |  |
-| [route](networking/route/route.md) |  | networking | list, create, update, delete | The routes of an interface |  |
-| [schedule](config/schedule/schedule.md) |  | config | list, get, create, update, delete | The cron entries that osapi deploys |  |
-| [service](services/service/service.md) |  | services | list, get, create, update, delete, start, stop, restart, enable, disable | The systemd services of the host |  |
-| [sshkey](security/sshkey/sshkey.md) |  | security | list, create, delete | The authorized SSH keys of a user |  |
-| [status](node/status/status.md) |  | node | get | The status summary of a node |  |
-| [sysctl](config/sysctl/sysctl.md) |  | config | list, get, create, update, delete | Kernel parameters, written to sysctl.d files and applied |  |
-| [timezone](config/timezone/timezone.md) |  | config | get, update | The timezone of the host |  |
-| [updatepackages](software/updatepackages/updatepackages.md) |  | software | list, update | The updates the package index has for the host |  |
-| [uptime](node/uptime/uptime.md) |  | node | get | Get the uptime of target hosts |  |
-| [user](security/user/user.md) |  | security | list, get, create, update, delete, passwd | The users of the host |  |
-| [docker](containers/docker/docker.md) | container | containers | list, get, create, delete, start, stop, exec | The Docker containers of the host |  |
-| [image](containers/image/image.md) | container | containers | list, pull, delete | The Docker images of the host |  |
-| [entry](node/entry/entry.md) | log | node | list | The entries of the systemd journal |  |
-| [source](node/source/source.md) | log | node | list | The sources that write to the systemd journal |  |
-| [connectivity](networking/connectivity/connectivity.md) | network | networking | ping | Whether the host reaches an address, by ICMP ping |  |
-| [dns](networking/dns/dns.md) | network | networking | get, update, delete | The DNS resolvers of each interface of the host |  |
-| [interface](networking/interface/interface.md) | network | networking | list, get, create, update, delete | The network interfaces of the host |  |
+| NAME                                                        | GROUP     | AREA       | METHODS                                                                  | DESCRIPTION                                                                                         | INTERNAL |
+| ----------------------------------------------------------- | --------- | ---------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- | -------- |
+| [certificate](security/certificate/certificate.md)          |           | security   | list, get, create, update, delete                                        | The certificate authorities that the host trusts                                                    |          |
+| [command](command/command/command.md)                       |           | command    | exec, shell                                                              | Run a command on target hosts                                                                       |          |
+| [disk](hardware/disk/disk.md)                               |           | hardware   | get                                                                      | Get the disk usage of target hosts                                                                  |          |
+| [file](config/file/file.md)                                 |           | config     | status, update, delete                                                   | Files of the object store, deployed to the host                                                     |          |
+| [group](security/group/group.md)                            |           | security   | list, get, create, update, delete                                        | The groups of the host                                                                              |          |
+| [hostname](config/hostname/hostname.md)                     |           | config     | get, update                                                              | Get or set the hostname of target hosts                                                             |          |
+| [load](node/load/load.md)                                   |           | node       | get                                                                      | Get the load averages of target hosts                                                               |          |
+| [managedfile](internal/managedfile/managedfile.md)          |           |            | get, update, delete                                                      | Files osapi writes on a host and keeps a record of                                                  | yes      |
+| [memory](hardware/memory/memory.md)                         |           | hardware   | get                                                                      | Get the memory usage of target hosts                                                                |          |
+| [netplan](internal/netplan/netplan.md)                      |           |            | update, delete, get                                                      | The netplan files osapi writes, validated and applied                                               | yes      |
+| [ntp](config/ntp/ntp.md)                                    |           | config     | get, create, update, delete                                              | The NTP servers of chrony, and its sync status                                                      |          |
+| [object](internal/object/object.md)                         |           |            | get                                                                      | The objects of the object store of the fleet, such as a file uploaded with osapi client file upload | yes      |
+| [os](node/os/os.md)                                         |           | node       | get                                                                      | Get the operating system of target hosts                                                            |          |
+| [package](software/package/package.md)                      |           | software   | list, get, create, delete                                                | The packages installed on the host                                                                  |          |
+| [power](node/power/power.md)                                |           | node       | reboot, shutdown                                                         | Reboot or shut down the host                                                                        |          |
+| [process](node/process/process.md)                          |           | node       | list, get, signal                                                        | The processes of the host                                                                           |          |
+| [route](networking/route/route.md)                          |           | networking | list, create, update, delete                                             | The routes of an interface                                                                          |          |
+| [schedule](config/schedule/schedule.md)                     |           | config     | list, get, create, update, delete                                        | The cron entries that osapi deploys                                                                 |          |
+| [service](services/service/service.md)                      |           | services   | list, get, create, update, delete, start, stop, restart, enable, disable | The systemd services of the host                                                                    |          |
+| [sshkey](security/sshkey/sshkey.md)                         |           | security   | list, create, delete                                                     | The authorized SSH keys of a user                                                                   |          |
+| [status](node/status/status.md)                             |           | node       | get                                                                      | The status summary of a node                                                                        |          |
+| [sysctl](config/sysctl/sysctl.md)                           |           | config     | list, get, create, update, delete                                        | Kernel parameters, written to sysctl.d files and applied                                            |          |
+| [timezone](config/timezone/timezone.md)                     |           | config     | get, update                                                              | The timezone of the host                                                                            |          |
+| [updatepackages](software/updatepackages/updatepackages.md) |           | software   | list, update                                                             | The updates the package index has for the host                                                      |          |
+| [uptime](node/uptime/uptime.md)                             |           | node       | get                                                                      | Get the uptime of target hosts                                                                      |          |
+| [user](security/user/user.md)                               |           | security   | list, get, create, update, delete, passwd                                | The users of the host                                                                               |          |
+| [docker](containers/docker/docker.md)                       | container | containers | list, get, create, delete, start, stop, exec                             | The Docker containers of the host                                                                   |          |
+| [image](containers/image/image.md)                          | container | containers | list, pull, delete                                                       | The Docker images of the host                                                                       |          |
+| [entry](logs/entry/entry.md)                                | log       | logs       | list                                                                     | The entries of the systemd journal                                                                  |          |
+| [source](logs/source/source.md)                             | log       | logs       | list                                                                     | The sources that write to the systemd journal                                                       |          |
+| [connectivity](networking/connectivity/connectivity.md)     | network   | networking | ping                                                                     | Whether the host reaches an address, by ICMP ping                                                   |          |
+| [dns](networking/dns/dns.md)                                | network   | networking | get, update, delete                                                      | The DNS resolvers of each interface of the host                                                     |          |
+| [interface](networking/interface/interface.md)              | network   | networking | list, get, create, update, delete                                        | The network interfaces of the host                                                                  |          |

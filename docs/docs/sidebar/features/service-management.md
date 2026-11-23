@@ -14,7 +14,8 @@ gets the object from the Object Store with the
 [object](../reference/behaviors/internal/object/object.md) building block, and
 writes it with
 [managedfile](../reference/behaviors/internal/managedfile/managedfile.md). The
-[chain](../reference/chains/service.md) of the behavior shows these calls.
+[chain](../reference/chains/services/service.md) of the behavior shows these
+calls.
 
 ## How it works
 

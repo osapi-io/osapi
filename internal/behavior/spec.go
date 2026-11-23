@@ -102,7 +102,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindOption,
 			Name: `Area(area.Name)`,
-			Does: "Puts a served behavior in an area, one of area.All: the tab of the Configure page's Add Block panel that its blocks sit in, the folder of its SDK page and its section of the docs site's SDK menu. Use a constant of package area, such as area.Config or area.Hardware. area.All has the label and the order of each area.",
+			Does: "Puts a served behavior in an area, one of area.All: the tab of the Configure page's Add Block panel that its blocks sit in, the folder of its SDK page, of its reference page and of its chain's page, and its section of the docs site's SDK and Behaviors menus. Use a constant of package area, such as area.Config or area.Hardware. area.All has the label and the order of each area.",
 			When: "On each behavior with API. behavior validate refuses a served behavior with none.",
 		},
 		{

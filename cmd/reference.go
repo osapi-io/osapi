@@ -66,7 +66,9 @@ func referencePages() ([]clidocs.Page, error) {
 			{Group: "behavior", Out: bl, Link: column("NAME", behaviorPage)},
 		},
 	})
-	pages = append(pages, behaviorFolders()...)
+	pages = append(pages, behaviorFolders("behaviors/", func(*behavior.Behavior) bool {
+		return true
+	})...)
 	for _, b := range behavior.All() {
 		got, err := behaviordsl.Get(ctx, bd, behaviordsl.GetInput{Name: b.Name})
 		if err != nil {
@@ -122,7 +124,7 @@ func referencePages() ([]clidocs.Page, error) {
 				switch header {
 				case "BEHAVIOR":
 					if b := behavior.Lookup(cell); b != nil && len(b.Requires) > 0 {
-						return cell + ".md"
+						return chainPage(b)
 					}
 
 					return "../behaviors/" + behaviorPage(cell)
@@ -136,6 +138,9 @@ func referencePages() ([]clidocs.Page, error) {
 			}},
 		},
 	})
+	pages = append(pages, behaviorFolders("chains/", func(b *behavior.Behavior) bool {
+		return len(b.Requires) > 0
+	})...)
 	for _, b := range behavior.All() {
 		if len(b.Requires) == 0 {
 			continue
@@ -145,13 +150,13 @@ func referencePages() ([]clidocs.Page, error) {
 			return nil, err
 		}
 		pages = append(pages, clidocs.Page{
-			Path:  referenceDir + "chains/" + b.Name + ".md",
+			Path:  referenceDir + "chains/" + chainPage(b),
 			Title: behaviorcommand.Title(b),
 			Intro: "The behaviors that " + b.Name + " calls, and each call that its examples make. " +
 				"`osapi behavior chain get --name " + b.Name + "` shows the same.",
 			Parts: []clidocs.Part{
 				{Group: "chain", Out: got, Link: columns(func(name string) string {
-					return "../behaviors/" + behaviorPage(name)
+					return "../../behaviors/" + behaviorPage(name)
 				}, "Behavior", "Calls", "Used by")},
 			},
 		})
@@ -295,7 +300,17 @@ func chainLink(
 		return ""
 	}
 
-	return " [Its chain](../../../chains/" + b.Name + ".md) shows each call that its examples make."
+	return " [Its chain](../../../chains/" + chainPage(b) +
+		") shows each call that its examples make."
+}
+
+// chainPage is the chain page of b, from reference/chains: the page is in
+// the folder of the area of b, the behavior at the top of the chain, such
+// as config/sysctl.md.
+func chainPage(
+	b *behavior.Behavior,
+) string {
+	return behaviorcommand.ReferenceFolder(b) + "/" + b.Name + ".md"
 }
 
 // behaviorPage is the reference page of the behavior name, from
@@ -327,17 +342,23 @@ func endpointPage(
 	return ""
 }
 
-// behaviorFolders are the _category_.json of each folder of an area that
-// has a behavior's page, and of the folder of the internal behaviors, last.
-func behaviorFolders() []clidocs.Page {
+// behaviorFolders are the _category_.json of each folder under dir, of the
+// reference, that has the page of a behavior that has: the folder of each
+// area, and of the internal behaviors, last.
+func behaviorFolders(
+	dir string,
+	has func(*behavior.Behavior) bool,
+) []clidocs.Page {
 	used := map[string]bool{}
 	for _, b := range behavior.All() {
-		used[behaviorcommand.ReferenceFolder(b)] = true
+		if has(b) {
+			used[behaviorcommand.ReferenceFolder(b)] = true
+		}
 	}
-	folders := areaFolders("behaviors/", used)
+	folders := areaFolders(dir, used)
 	if used[behaviorcommand.InternalFolder] {
 		folders = append(folders, categoryPage(
-			referenceDir+"behaviors/"+behaviorcommand.InternalFolder,
+			referenceDir+dir+behaviorcommand.InternalFolder,
 			behaviorcommand.InternalLabel,
 			len(area.All)+2,
 		))

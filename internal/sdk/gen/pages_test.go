@@ -71,6 +71,8 @@ func (s *PagesTestSuite) SetupTest() {
 	s.write(pageDir+"/kitchen/"+categoryFile, "{}\n")
 	s.write(pageDir+"/kitchen/sink.md", pageHeader+"\na page of an area that is gone\n")
 	s.write(pageDir+"/kitchen/notes.md", "a page that a person wrote\n")
+	s.write(pageDir+"/pantry/"+categoryFile, "{}\n")
+	s.write(pageDir+"/pantry/jar.md", pageHeader+"\na page of an area that is gone\n")
 	s.write(
 		exampleDir+"/file_upload.go",
 		"package main\n\nc.File.Upload(ctx)\nc.File.GetChanged(ctx)\n",
@@ -195,6 +197,8 @@ func (s *PagesTestSuite) TestRunPages() {
 				s.NoFileExists(filepath.Join(s.root, pageDir, "kitchen", "sink.md"))
 				s.NoFileExists(filepath.Join(s.root, pageDir, "kitchen", categoryFile))
 				s.FileExists(filepath.Join(s.root, pageDir, "kitchen", "notes.md"))
+				s.NoDirExists(filepath.Join(s.root, pageDir, "pantry"),
+					"the folder of an area that has no page now is removed")
 			},
 		},
 	}
@@ -242,6 +246,14 @@ func (s *PagesTestSuite) TestRunPagesErrors() {
 				s.Require().NoError(os.Remove(filepath.Join(s.root, pageDir, "client.md")))
 			},
 			wantErr: "client.md",
+		},
+		{
+			name: "when the folder of an area is a file",
+			setup: func() {
+				s.Require().NoError(os.RemoveAll(filepath.Join(s.root, pageDir, "fleet")))
+				s.write(pageDir+"/fleet", "a file that a person wrote\n")
+			},
+			wantErr: "fleet",
 		},
 	}
 
