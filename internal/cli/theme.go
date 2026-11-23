@@ -402,6 +402,11 @@ var clashes = map[string]lipgloss.Color{
 // pipe makes the pipe Capture reads through; a test swaps it to fail.
 var pipe = os.Pipe
 
+// capturing is set while Capture runs. Then each renderer has color, also one
+// that rendererFor binds to a file, because the file is Capture's pipe, which
+// is not a terminal.
+var capturing bool
+
 // Capture runs fn with stdout redirected and color forced on, and returns what
 // it printed with the theme's escape codes intact. The heading colors start
 // from the palette's own order rather than the run's shuffle, so the same
@@ -414,7 +419,9 @@ func Capture(
 	SetHeadingOrder(append([]lipgloss.Color(nil), headingColors...))
 	lipgloss.SetColorProfile(termenv.TrueColor)
 	lipgloss.SetHasDarkBackground(true)
+	capturing = true
 	defer func() {
+		capturing = false
 		lipgloss.SetColorProfile(termenv.ColorProfile())
 		headingOrder, headingNext = prevOrder, prevNext
 	}()
@@ -464,7 +471,7 @@ func labelStyle() lipgloss.Style {
 func rendererFor(
 	w io.Writer,
 ) *lipgloss.Renderer {
-	if f, ok := w.(*os.File); ok {
+	if f, ok := w.(*os.File); ok && !capturing {
 		return lipgloss.NewRenderer(f)
 	}
 

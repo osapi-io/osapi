@@ -62,7 +62,7 @@ var agentGetCmd = &cobra.Command{
 var agentDrainCmd = &cobra.Command{
 	Annotations: map[string]string{
 		reference.Permission: "agent:write",
-		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client agent drain --hostname web-01\n[ok] web-01 draining\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the command prints:\n\n```json\n{\"hostname\":\"web-01\",\"result\":\"draining\"}\n```",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client agent drain --hostname web-01\n\x1b[38;2;103;234;147m✓\x1b[0m web-01 draining\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the command prints:\n\n```json\n{\"hostname\":\"web-01\",\"result\":\"draining\"}\n```",
 	},
 	Args:    cobra.NoArgs,
 	Example: "  osapi client agent drain --hostname web-01",
@@ -79,7 +79,7 @@ var agentDrainCmd = &cobra.Command{
 var agentUndrainCmd = &cobra.Command{
 	Annotations: map[string]string{
 		reference.Permission: "agent:write",
-		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client agent undrain --hostname web-01\n[ok] web-01 ready\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the command prints:\n\n```json\n{\"hostname\":\"web-01\",\"result\":\"ready\"}\n```",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client agent undrain --hostname web-01\n\x1b[38;2;103;234;147m✓\x1b[0m web-01 ready\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the command prints:\n\n```json\n{\"hostname\":\"web-01\",\"result\":\"ready\"}\n```",
 	},
 	Args:    cobra.NoArgs,
 	Example: "  osapi client agent undrain --hostname web-01",

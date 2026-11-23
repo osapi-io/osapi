@@ -25,13 +25,13 @@ The command prints:
 ```ansi
 $ osapi controller endpoint spec get
 [1;38;2;0;213;255mDefinition:[0m
-  Register(Define(name, doc, options...))
+  [1mRegister(Define(name, doc, options...))[0m
     Declares the group and adds it to the registry. The commands and the
     tests read the registry. Each path of the group starts /api/<name>.
-    Use: One time, in <group>.go under
-    internal/controller/endpoints/<group>: var Group =
-    endpoint.Register(endpoint.Define(...)). Add its import to
-    internal/controller/endpoints/all.
+    [38;2;138;138;138mUse: One time, in <group>.go under[0m
+    [38;2;138;138;138minternal/controller/endpoints/<group>: var Group =[0m
+    [38;2;138;138;138mendpoint.Register(endpoint.Define(...)). Add its import to[0m
+    [38;2;138;138;138minternal/controller/endpoints/all.[0m
 ```
 
 With `--json`, the command prints:

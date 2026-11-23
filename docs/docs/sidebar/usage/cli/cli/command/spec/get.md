@@ -25,14 +25,14 @@ The command prints:
 ```ansi
 $ osapi cli command spec get
 [1;38;2;0;213;255mDefinition:[0m
-  Register(Define(name, doc, options...))
+  [1mRegister(Define(name, doc, options...))[0m
     Declares a group of local commands and adds it to the registry. A local
     command runs in the CLI process and calls no API, such as osapi token
     generate. Its command is osapi <name>, and doc is its help.
-    Use: One time, in <group>.go under internal/cli/commands/<group>: var
-    Group = command.Register(command.Define(...)). Add its import to
-    internal/cli/commands/all. A command that calls the API is an endpoint
-    or a behavior, not a local command.
+    [38;2;138;138;138mUse: One time, in <group>.go under internal/cli/commands/<group>: var[0m
+    [38;2;138;138;138mGroup = command.Register(command.Define(...)). Add its import to[0m
+    [38;2;138;138;138minternal/cli/commands/all. A command that calls the API is an endpoint[0m
+    [38;2;138;138;138mor a behavior, not a local command.[0m
 ```
 
 With `--json`, the command prints:

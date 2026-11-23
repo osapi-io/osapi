@@ -23,6 +23,7 @@ package cli_test
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -333,6 +334,16 @@ func (suite *ThemePublicTestSuite) TestCapture() {
 	defer cli.ResetPipe()
 
 	suite.Empty(cli.Capture(func() {}))
+}
+
+func (suite *ThemePublicTestSuite) TestCaptureColorsWhatIsPrintedToStdout() {
+	out := cli.Capture(func() {
+		fmt.Fprintln(os.Stdout, cli.Success(os.Stdout, "web-01 deleted"))
+	})
+
+	suite.Contains(out, "\x1b[", "a status line printed to stdout has color in a capture")
+	suite.Contains(out, "✓\x1b[0m web-01 deleted", "a green check, then the message")
+	suite.NotContains(out, "[ok]")
 }
 
 func (suite *ThemePublicTestSuite) TestStatusCellStyledInParts() {

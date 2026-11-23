@@ -25,13 +25,13 @@ The command prints:
 ```ansi
 $ osapi behavior chain spec get
 [1;38;2;0;213;255mWhat a chain is:[0m
-  A chain
+  [1mA chain[0m
     The behaviors that a behavior calls, and the ones that they call: dns
     calls netplan, and netplan calls managedfile. The chain has the name of
     the behavior at its top. It is not declared on its own: Requires on each
     behavior makes it.
-    Use: osapi behavior chain list shows each chain; osapi behavior chain
-    get --name <behavior> shows its tree.
+    [38;2;138;138;138mUse: osapi behavior chain list shows each chain; osapi behavior chain[0m
+    [38;2;138;138;138mget --name <behavior> shows its tree.[0m
 ```
 
 With `--json`, the command prints:

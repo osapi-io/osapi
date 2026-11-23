@@ -92,7 +92,7 @@ var fileUpdateCmd = &cobra.Command{
 var fileDeleteCmd = &cobra.Command{
 	Annotations: map[string]string{
 		reference.Permission: "file:write",
-		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client file delete --name app.conf\n[ok] app.conf deleted\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the command prints:\n\n```json\n{\"name\":\"app.conf\",\"result\":\"deleted\"}\n```",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client file delete --name app.conf\n\x1b[38;2;103;234;147m✓\x1b[0m app.conf deleted\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the command prints:\n\n```json\n{\"name\":\"app.conf\",\"result\":\"deleted\"}\n```",
 	},
 	Args:    cobra.NoArgs,
 	Example: "  osapi client file delete --name app.conf\n  osapi client file delete --name app.conf --json",

@@ -50,7 +50,7 @@ var jobGetCmd = &cobra.Command{
 var jobDeleteCmd = &cobra.Command{
 	Annotations: map[string]string{
 		reference.Permission: "job:write",
-		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client job delete --id 550e8400-e29b-41d4-a716-446655440000\n[ok] 550e8400-e29b-41d4-a716-446655440000 deleted\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the command prints:\n\n```json\n{\"id\":\"550e8400-e29b-41d4-a716-446655440000\",\"result\":\"deleted\"}\n```",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client job delete --id 550e8400-e29b-41d4-a716-446655440000\n\x1b[38;2;103;234;147m✓\x1b[0m 550e8400-e29b-41d4-a716-446655440000 deleted\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the command prints:\n\n```json\n{\"id\":\"550e8400-e29b-41d4-a716-446655440000\",\"result\":\"deleted\"}\n```",
 	},
 	Args:    cobra.NoArgs,
 	Example: "  osapi client job delete --id 550e8400-e29b-41d4-a716-446655440000",
