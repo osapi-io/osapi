@@ -26,14 +26,9 @@ import (
 
 	"github.com/osapi-io/gohai/pkg/gohai/collectors/filesystem"
 	"github.com/osapi-io/gohai/pkg/gohai/source"
-
-	"github.com/osapi-io/osapi/internal/provider"
 )
 
-var (
-	_ Provider             = (*Gohai)(nil)
-	_ provider.FactsSetter = (*Gohai)(nil)
-)
+var _ Provider = (*Gohai)(nil)
 
 // localTypes are the filesystem types of local disks. Network, virtual
 // and container mounts, such as nfs, tmpfs and overlay, are left out.
@@ -44,8 +39,6 @@ var localTypes = map[string]bool{
 // Gohai reads the usage of the host's local disks with gohai's filesystem
 // collector, on every Linux family and on macOS.
 type Gohai struct {
-	provider.FactsAware
-
 	// Sources are what the collector reads. A zero field is the real
 	// host's.
 	Sources source.Sources

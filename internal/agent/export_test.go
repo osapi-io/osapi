@@ -591,6 +591,14 @@ func SetAgentCachedFacts(
 	a.cachedFacts.Store(facts)
 }
 
+// ExportAgentFacts returns the facts that a behavior's host reads, for the
+// agent a. A nil a is an agent that is not made yet.
+func ExportAgentFacts(
+	a *Agent,
+) func() map[string]any {
+	return (&agentFacts{agent: a}).get
+}
+
 // GetAgentState returns the agent's state field for testing.
 func GetAgentState(
 	a *Agent,

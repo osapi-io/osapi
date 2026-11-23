@@ -29,20 +29,13 @@ import (
 	"github.com/osapi-io/gohai/pkg/gohai/collectors/platform"
 	"github.com/osapi-io/gohai/pkg/gohai/collectors/uptime"
 	"github.com/osapi-io/gohai/pkg/gohai/source"
-
-	"github.com/osapi-io/osapi/internal/provider"
 )
 
-var (
-	_ Provider             = (*Gohai)(nil)
-	_ provider.FactsSetter = (*Gohai)(nil)
-)
+var _ Provider = (*Gohai)(nil)
 
 // Gohai reads the host's name, OS and uptime with gohai's collectors, on
 // every Linux family and on macOS.
 type Gohai struct {
-	provider.FactsAware
-
 	// Sources are what the collectors read. A zero field is the real
 	// host's.
 	Sources source.Sources

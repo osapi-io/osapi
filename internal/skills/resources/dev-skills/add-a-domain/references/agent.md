@@ -72,13 +72,10 @@ file-state KV that the file provider already owns.
 
 ```go
 // A new category, in buildRegistry
-r.Register("{domain}",
-    New{Domain}Processor({domain}Provider, e.log),
-    {domain}Provider)
+r.Register("{domain}", New{Domain}Processor({domain}Provider, e.log))
 
 // An existing category: pass the provider into that category's
-// processor factory, and include it in the providers list so
-// WireProviderFacts reaches it. Read the current parameter list.
+// processor factory. Read the current parameter list.
 ```
 
 Platform selection happens in `internal/agent/providers.go`, not in the
@@ -130,10 +127,10 @@ Two consequences for a new operation, which are yours rather than the system's:
 
 ## Facts
 
-`provider.WireProviderFacts(a.GetFacts, registry.AllProviders()...)` injects
-facts into every registered provider, one call, in `internal/agent/agent.go`. A
-provider registered through the registry is covered; one constructed and passed
-somewhere else is not. What a provider does with facts is
+A behavior's provider reads the agent's facts from the host it gets, as
+`h.Facts()`. `buildRegistry` in `internal/agent/setup.go` sets `h.Facts` to the
+facts of the agent. The provider does not embed a facts holder, and the registry
+does not inject facts. What a provider does with facts is
 [facts](https://github.com/osapi-io/specs/blob/main/components/osapi/providers.md#facts).
 
 ## Tests

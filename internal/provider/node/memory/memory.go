@@ -26,20 +26,13 @@ import (
 
 	"github.com/osapi-io/gohai/pkg/gohai/collectors/memory"
 	"github.com/osapi-io/gohai/pkg/gohai/source"
-
-	"github.com/osapi-io/osapi/internal/provider"
 )
 
-var (
-	_ Provider             = (*Gohai)(nil)
-	_ provider.FactsSetter = (*Gohai)(nil)
-)
+var _ Provider = (*Gohai)(nil)
 
 // Gohai reads the host's memory with gohai's memory collector, on every
 // Linux family and on macOS.
 type Gohai struct {
-	provider.FactsAware
-
 	// Sources are what the collector reads. A zero field is the real
 	// host's.
 	Sources source.Sources

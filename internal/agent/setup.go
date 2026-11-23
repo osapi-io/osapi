@@ -43,12 +43,7 @@ import (
 	"github.com/osapi-io/osapi/internal/exec"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
-	"github.com/osapi-io/osapi/internal/provider"
 	fileProv "github.com/osapi-io/osapi/internal/provider/file"
-	"github.com/osapi-io/osapi/internal/provider/node/disk"
-	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
-	"github.com/osapi-io/osapi/internal/provider/node/load"
-	"github.com/osapi-io/osapi/internal/provider/node/memory"
 	"github.com/osapi-io/osapi/internal/telemetry/process"
 	"github.com/osapi-io/osapi/internal/validation"
 	sdkclient "github.com/osapi-io/osapi/pkg/sdk/client"
@@ -147,6 +142,10 @@ func Setup(
 	memoryProvider := e.memory()
 	loadProvider := e.load()
 
+	// A behavior's provider reads the agent's facts through h.Facts. The
+	// registry is made before the agent, thus facts reads the agent when it
+	// is set below.
+	facts := &agentFacts{}
 	a := New(
 		fs,
 		cfg,
@@ -158,19 +157,13 @@ func Setup(
 		memoryProvider,
 		loadProvider,
 		process.New(),
-		buildRegistry(
-			e,
-			cfg,
-			hostProvider,
-			diskProvider,
-			memoryProvider,
-			loadProvider,
-		),
+		buildRegistry(e, cfg, facts.get),
 		conn.RegistryBucket,
 		conn.FactsBucket,
 		execManager,
 		conn.NATS,
 	)
+	facts.agent = a
 	a.SetSubComponents(subComponents(cfg))
 
 	return a, conn, nil
@@ -302,28 +295,15 @@ func subComponents(
 func buildRegistry(
 	e hostEnv,
 	cfg config.Config,
-	hostProvider nodeHost.Provider,
-	diskProvider disk.Provider,
-	memoryProvider memory.Provider,
-	loadProvider load.Provider,
+	facts func() map[string]any,
 ) *ProviderRegistry {
 	r := NewProviderRegistry()
 
-	r.Register(
-		"node",
-		NewNodeProcessor(e.log),
-		hostProvider,
-		diskProvider,
-		memoryProvider,
-		loadProvider,
-	)
+	r.Register("node", NewNodeProcessor(e.log))
 
 	// Behaviors run beside the categories above.
 	// Each builds its own provider for this platform from what it declares.
-	// The agent's facts reach a behavior's provider through facts, which
-	// WireProviderFacts sets when the agent is made, as for the providers
-	// above.
-	facts := &provider.FactsAware{}
+	// A behavior's provider reads the agent's facts as h.Facts.
 	behaviorProviders := BuildBehaviorProviders(host.Host{
 		Platform:  behavior.PlatformName(e.platform),
 		Container: e.container,
@@ -337,14 +317,10 @@ func buildRegistry(
 		FileState:       e.fileState,
 		FileStateBucket: e.fileStateBucket,
 		Objects:         e.objects,
-		Facts:           facts.Facts,
+		Facts:           facts,
 		Now:             time.Now,
 	}, e.log)
-	r.Register(
-		job.CategoryBehavior,
-		NewBehaviorProcessor(behaviorProviders, e.log),
-		append(behaviorProviders.All(), facts)...,
-	)
+	r.Register(job.CategoryBehavior, NewBehaviorProcessor(behaviorProviders, e.log))
 
 	return r
 }

@@ -85,10 +85,9 @@ type Provider interface {
 }
 
 var _ Provider = (*Debian)(nil)
-var _ provider.FactsSetter = (*Debian)(nil)
 
+// A template reads the agent's facts from the host, as h.Facts().
 type Debian struct {
-    provider.FactsAware
     logger *slog.Logger
     fs     avfs.VFS
 }

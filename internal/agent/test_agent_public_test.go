@@ -76,11 +76,7 @@ func newTestAgent(
 
 	registry := agent.NewProviderRegistry()
 
-	registry.Register(
-		"node",
-		agent.NewNodeProcessor(logger),
-		p.hostProvider, p.diskProvider, p.memoryProvider, p.loadProvider,
-	)
+	registry.Register("node", agent.NewNodeProcessor(logger))
 
 	// The handler tests send network.ping.do as a sample job. The network
 	// domain is a behavior now, so a test processor answers it.

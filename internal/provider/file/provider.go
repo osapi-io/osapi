@@ -36,9 +36,6 @@ import (
 // Compile-time interface check.
 var _ Provider = (*Service)(nil)
 
-// Compile-time check: Service must satisfy FactsSetter.
-var _ provider.FactsSetter = (*Service)(nil)
-
 // Service implements the Provider interface for file deploy and status
 // operations using NATS Object Store for content and KV for state tracking.
 type Service struct {
@@ -62,8 +59,7 @@ type Objects interface {
 }
 
 // New creates a new Service with the given dependencies.
-// Facts are not available at construction time; call SetFactsFunc after
-// the agent is initialized to wire template rendering to live facts.
+// Its templates read no facts until SetFactsFunc sets them.
 func New(
 	logger *slog.Logger,
 	fs avfs.VFS,
