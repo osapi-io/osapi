@@ -29,7 +29,7 @@ A host with a container, on one host:
 $ osapi client node container docker list --target web-01
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mID                                                                [0m[38;2;10;143;176mNAME       [0m[38;2;10;143;176mIMAGE        [0m[38;2;10;143;176mSTATE    [0m[38;2;10;143;176mSUMMARY       [0m[38;2;10;143;176mCREATED              [0m[38;2;10;143;176mHEALTH  [0m[38;2;10;143;176mPORTS                 [0m[38;2;10;143;176mMOUNTS              [0m[38;2;10;143;176mNETWORKS                          [0m[38;2;10;143;176mENV NAMES[0m
-  [1mweb-01[0m    [38;2;103;234;147mok[0m      [38;2;138;138;138m3f4e8a1b2c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7[0m  [1mosapitest[0m  alpine:3.20  [38;2;103;234;147mrunning[0m  Up 2 minutes  [38;2;138;138;138m2026-11-22 02:00:00[0m          0.0.0.0:8080->80/tcp  /srv/data:/data:ro  bridge 172.17.0.2 via 172.17.0.1  PATH, APP_TOKEN
+  [1mweb-01[0m    [38;2;103;234;147mok[0m      [38;2;138;138;138m3f4e8a1b2c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7[0m  [1mosapitest[0m  alpine:3.20  [38;2;103;234;147mrunning[0m  Up 2 minutes  [38;2;138;138;138m2026-11-22 10:00:00[0m          0.0.0.0:8080->80/tcp  /srv/data:/data:ro  bridge 172.17.0.2 via 172.17.0.1  PATH, APP_TOKEN
 
   1 host: [38;2;103;234;147m1 ok[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
 ```
@@ -40,8 +40,8 @@ On each host, where one cannot run it:
 $ osapi client node container docker list --target _all
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mID                                                                [0m[38;2;10;143;176mNAME       [0m[38;2;10;143;176mIMAGE        [0m[38;2;10;143;176mSTATE    [0m[38;2;10;143;176mSUMMARY       [0m[38;2;10;143;176mCREATED              [0m[38;2;10;143;176mHEALTH  [0m[38;2;10;143;176mPORTS                 [0m[38;2;10;143;176mMOUNTS              [0m[38;2;10;143;176mNETWORKS                          [0m[38;2;10;143;176mENV NAMES[0m
-  [1mweb-01[0m    [38;2;103;234;147mok[0m      [38;2;138;138;138m3f4e8a1b2c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7[0m  [1mosapitest[0m  alpine:3.20  [38;2;103;234;147mrunning[0m  Up 2 minutes  [38;2;138;138;138m2026-11-22 02:00:00[0m          0.0.0.0:8080->80/tcp  /srv/data:/data:ro  bridge 172.17.0.2 via 172.17.0.1  PATH, APP_TOKEN
-  [1mweb-02[0m    [38;2;103;234;147mok[0m      [38;2;138;138;138m3f4e8a1b2c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7[0m  [1mosapitest[0m  alpine:3.20  [38;2;103;234;147mrunning[0m  Up 2 minutes  [38;2;138;138;138m2026-11-22 02:00:00[0m          0.0.0.0:8080->80/tcp  /srv/data:/data:ro  bridge 172.17.0.2 via 172.17.0.1  PATH, APP_TOKEN
+  [1mweb-01[0m    [38;2;103;234;147mok[0m      [38;2;138;138;138m3f4e8a1b2c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7[0m  [1mosapitest[0m  alpine:3.20  [38;2;103;234;147mrunning[0m  Up 2 minutes  [38;2;138;138;138m2026-11-22 10:00:00[0m          0.0.0.0:8080->80/tcp  /srv/data:/data:ro  bridge 172.17.0.2 via 172.17.0.1  PATH, APP_TOKEN
+  [1mweb-02[0m    [38;2;103;234;147mok[0m      [38;2;138;138;138m3f4e8a1b2c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7[0m  [1mosapitest[0m  alpine:3.20  [38;2;103;234;147mrunning[0m  Up 2 minutes  [38;2;138;138;138m2026-11-22 10:00:00[0m          0.0.0.0:8080->80/tcp  /srv/data:/data:ro  bridge 172.17.0.2 via 172.17.0.1  PATH, APP_TOKEN
 
   3 hosts: [38;2;103;234;147m2 ok[0m, [38;5;222m1 skipped[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
 

@@ -33,6 +33,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/osapi-io/osapi/internal/cli/command/gen/genfile"
 
@@ -67,6 +68,10 @@ func init() {
 }
 
 func main() {
+	// A generated page shows each time in UTC, so it does not change
+	// with the time zone of the machine that writes it.
+	time.Local = time.UTC
+
 	if err := genCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "behavior gen:", err)
 		os.Exit(1)
