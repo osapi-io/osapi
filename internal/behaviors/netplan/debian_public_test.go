@@ -29,11 +29,13 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	hostmocks "github.com/osapi-io/osapi/internal/behavior/host/mocks"
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	managedfilemocks "github.com/osapi-io/osapi/internal/behaviors/managedfile/mocks"
 	"github.com/osapi-io/osapi/internal/behaviors/netplan"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // DebianPublicTestSuite covers what no example can: netplan generate
@@ -94,6 +96,79 @@ func (s *DebianPublicTestSuite) TestRefusedFileIsRolledBack() {
 
 			s.ErrorContains(err, tc.wantError)
 			s.ErrorContains(err, "bad yaml")
+		})
+	}
+}
+
+// TestFailedStepIsInTheTree is a chain that fails after a step changed the
+// host, as a job records it: the step tree marks the call that failed, and
+// the write under it that changed the host. Nothing undoes a write that
+// netplan generate accepted, so a failed netplan apply leaves the new file.
+func (s *DebianPublicTestSuite) TestFailedStepIsInTheTree() {
+	const path = netplan.Dir + "/osapi-dns-eth1.yaml"
+	tests := []struct {
+		name      string
+		previous  string
+		expect    func(files *managedfilemocks.MockProvider, exec *hostmocks.MockExec)
+		wantError string
+		wantSteps string
+	}{
+		{
+			name: "when netplan apply fails, the file stays written",
+			expect: func(files *managedfilemocks.MockProvider, exec *hostmocks.MockExec) {
+				files.EXPECT().Write(gomock.Any(), gomock.Any()).Return(true, nil)
+				exec.EXPECT().RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
+					Return("", nil)
+				exec.EXPECT().RunPrivilegedCmd(gomock.Any(), "netplan", []string{"apply"}).
+					Return("", errors.New("link down"))
+			},
+			wantError: "netplan apply: link down",
+			wantSteps: "netplan update (failed) → managedfile update (changed)",
+		},
+		{
+			name:     "when netplan generate refuses the file, the put back is a step",
+			previous: "network:\n  version: 2\n",
+			expect: func(files *managedfilemocks.MockProvider, exec *hostmocks.MockExec) {
+				files.EXPECT().Write(gomock.Any(), gomock.Any()).Return(true, nil).Times(2)
+				exec.EXPECT().RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
+					Return("", errors.New("bad yaml"))
+			},
+			wantError: "so its content was put back",
+			wantSteps: "netplan update (failed) → (managedfile update (changed), managedfile update (changed))",
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			ctrl := gomock.NewController(s.T())
+			fs := memfs.New()
+			s.Require().NoError(fs.MkdirAll(netplan.Dir, 0o755))
+			if tc.previous != "" {
+				s.Require().NoError(fs.WriteFile(path, []byte(tc.previous), 0o600))
+			}
+			files := managedfilemocks.NewMockProvider(ctrl)
+			exec := hostmocks.NewMockExec(ctrl)
+			tc.expect(files, exec)
+			p, err := netplan.ExportNewDebian(host.Host{
+				FS:       fs,
+				Exec:     exec,
+				Required: map[string]any{managedfile.Behavior.Name: files},
+			})
+			s.Require().NoError(err)
+			root := &behavior.Step{}
+
+			_, err = behavior.Call(
+				behavior.Record(context.Background(), root),
+				netplan.Behavior,
+				netplan.Update,
+				p,
+				netplan.UpdateInput{
+					Path:    path,
+					Content: "network:\n  version: 2\n  ethernets: {}\n",
+				},
+			)
+
+			s.ErrorContains(err, tc.wantError)
+			s.Equal(tc.wantSteps, client.FormatSteps(root.Wire()))
 		})
 	}
 }

@@ -38,6 +38,7 @@ osapi has these features to manage Linux systems.
 | 🔒  | [Certificate Management](certificate-management.md) | CA certificate trust store management                                                    |
 | 🔧  | [Service Management](service-management.md)  | Systemd service lifecycle and unit file management                                            |
 | 🔑  | [Agent Identity & PKI](agent-identity.md)        | Machine-ID identity, PKI enrollment, job signing                                          |
+| 🔗  | [Behavior Chains](behavior-chains.md)          | One job on one host that calls other behaviors: the step tree, spans and failures            |
 | 🖥️  | [Management Dashboard](management-dashboard.md) | Embedded React UI for fleet health, operations, and admin                                 |
 
 <!-- prettier-ignore-end -->

@@ -28,6 +28,7 @@ $ osapi client job get --id 550e8400-e29b-41d4-a716-446655440000
   [38;2;176;48;176mHostname:[0m  web-01
   [38;2;176;48;176mUpdated:[0m   2026-01-15 09:58:13
   [38;2;176;48;176mChanged:[0m   yes
+  [38;2;176;48;176mChain:[0m     web-01: managedfile update (changed)
 
 [1;38;2;255;0;255mOperation:[0m
   [38;2;176;143;0mType:[0m  node.sysctl.update
@@ -37,8 +38,8 @@ $ osapi client job get --id 550e8400-e29b-41d4-a716-446655440000
   [38;2;176;143;0mvalue:[0m  1
 
 [1;38;2;69;174;23mResponses (1):[0m
-  [38;2;58;143;20mHOSTNAME  [0m[38;2;58;143;20mSTATUS     [0m[38;2;58;143;20mCHANGED  [0m[38;2;58;143;20mDATA[0m
-  [1mweb-01[0m    [38;2;103;234;147mcompleted[0m  yes      changed:yes, key:net.ipv4.ip_forward
+  [38;2;58;143;20mHOSTNAME  [0m[38;2;58;143;20mSTATUS     [0m[38;2;58;143;20mCHANGED  [0m[38;2;58;143;20mDATA                                  [0m[38;2;58;143;20mSTEPS[0m
+  [1mweb-01[0m    [38;2;103;234;147mcompleted[0m  yes      changed:yes, key:net.ipv4.ip_forward  managedfile
 
 [1;38;2;107;92;255mAgent states (1):[0m
   [38;2;89;76;216mHOSTNAME  [0m[38;2;89;76;216mSTATUS     [0m[38;2;89;76;216mDURATION[0m
@@ -79,9 +80,18 @@ With `--json`, the API's response:
       "data": {
         "changed": true,
         "key": "net.ipv4.ip_forward"
-      }
+      },
+      "steps": [
+        {
+          "behavior": "managedfile",
+          "method": "update",
+          "changed": true,
+          "duration_ms": 1
+        }
+      ]
     }
   ],
+  "chain": ["web-01: managedfile update (changed)"],
   "agent_states": [
     {
       "hostname": "web-01",

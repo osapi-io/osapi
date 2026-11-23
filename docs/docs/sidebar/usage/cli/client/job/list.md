@@ -22,8 +22,8 @@ The command prints:
 ```ansi
 $ osapi client job list
 [1;38;2;0;213;255mJobs (2):[0m
-  [38;2;10;143;176mJOB ID                                [0m[38;2;10;143;176mSTATUS     [0m[38;2;10;143;176mCREATED              [0m[38;2;10;143;176mTARGET  [0m[38;2;10;143;176mOPERATION[0m
-  [38;2;138;138;138m550e8400-e29b-41d4-a716-446655440000[0m  [38;2;103;234;147mcompleted[0m  [38;2;138;138;138m2026-01-15 09:58:12[0m  web-01  node.sysctl.update
+  [38;2;10;143;176mJOB ID                                [0m[38;2;10;143;176mSTATUS     [0m[38;2;10;143;176mCREATED              [0m[38;2;10;143;176mTARGET  [0m[38;2;10;143;176mOPERATION            [0m[38;2;10;143;176mCHAIN[0m
+  [38;2;138;138;138m550e8400-e29b-41d4-a716-446655440000[0m  [38;2;103;234;147mcompleted[0m  [38;2;138;138;138m2026-01-15 09:58:12[0m  web-01  node.sysctl.update   web-01: managedfile update (changed)
   [38;2;138;138;138m7c9e6679-7425-40de-944b-e07fc1f90ae7[0m  [38;2;239;68;68mfailed[0m     [38;2;138;138;138m2026-01-15 09:41:03[0m  _all    node.package.update
 
   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
@@ -63,9 +63,18 @@ With `--json`, the API's response:
           "data": {
             "changed": true,
             "key": "net.ipv4.ip_forward"
-          }
+          },
+          "steps": [
+            {
+              "behavior": "managedfile",
+              "method": "update",
+              "changed": true,
+              "duration_ms": 1
+            }
+          ]
         }
       ],
+      "chain": ["web-01: managedfile update (changed)"],
       "agent_states": [
         {
           "hostname": "web-01",
