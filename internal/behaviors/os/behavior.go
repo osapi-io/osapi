@@ -30,6 +30,7 @@ import (
 // Behavior is the os definition.
 var Behavior = behavior.Register(behavior.Define(
 	"os", "Get the operating system of target hosts",
+	behavior.Title("OS"),
 	behavior.Node,
 	behavior.API,
 	behavior.Area(area.Node),

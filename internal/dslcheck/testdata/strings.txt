@@ -11,6 +11,7 @@ behavior.Behavior.Runs []string	program	a program name, which preflight and the 
 behavior.Behavior.RunsIfPresent []string	program	a program name, which preflight and the fake host check
 behavior.Behavior.SettingFlag(path string)	identity	a settings key, such as path
 behavior.Behavior.Sudo []string	program	a program name, which preflight and the fake host check
+behavior.Behavior.Title string	free text	prose for a page or a message
 behavior.Behavior.Writes []string	path pattern	a path or a path.Match pattern
 behavior.CurrentSpec(factKeys []string)	boundary	the fact keys that the agent reports
 behavior.Define(doc string)	free text	prose for a page or a message
@@ -104,6 +105,7 @@ behavior.TemplateField.Field string	checked	an input field that the template rul
 behavior.TemplateField.Vars string	checked	an input field that the template rule checks
 behavior.TestFailure(message string)	free text	prose for a page or a message
 behavior.TestFailure(rule string)	checked	a rule name; the tests fail on a rule with no check
+behavior.Title(title string)	free text	prose for a page or a message
 behavior.Validator(message string)	free text	prose for a page or a message
 behavior.Validator(tag string)	checked	a validate tag that package rule declares and checks
 behavior.Write(name string)	identity	a name that the registry, the route or the command path holds

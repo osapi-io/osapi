@@ -127,7 +127,7 @@ var Group = endpoint.Define(
 	endpoint.Area(area.Config),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
-	endpoint.Tag("file_operations", "Node/File", "Files of the object store, deployed to the host"),
+	endpoint.Tag("file_operations", "File", "Files of the object store, deployed to the host"),
 	endpoint.CommandNotes("The [file behavior](../../../../../reference/behaviors/config/file/file.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[StatusRequest, FileStatusResponse]("status").
 		Handle(HandleStatus).

@@ -168,4 +168,5 @@ paths:
 tags:
   - description: Get the memory usage of target hosts
     name: memory_operations
-    x-displayName: Node/Memory
+    x-displayName: Memory
+    x-osapi-group: memory

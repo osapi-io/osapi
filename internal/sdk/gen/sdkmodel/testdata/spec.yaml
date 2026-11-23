@@ -5,16 +5,20 @@ info:
 tags:
   - name: Dns_API
     description: The DNS resolvers of each interface of the host
-    x-displayName: Node/Dns
+    x-displayName: DNS
+    x-osapi-group: dns
   - name: File_API
     description: The files of the Object Store
     x-displayName: File
+    x-osapi-group: file
   - name: NodeFile_API
     description: The files of the host
-    x-displayName: Node/File
+    x-displayName: File
+    x-osapi-group: file
   - name: Job_API
     description: The job queue
     x-displayName: Job
+    x-osapi-group: job
 x-osapi-areas:
   - name: config
     label: Config

@@ -35,21 +35,32 @@ var (
 			Doc:     "The hostname of the host",
 		},
 		{
-			Name:    "dns",
-			Group:   "network",
-			Methods: []string{"get", "update", "delete"},
-			Doc:     "The DNS resolvers of an interface",
-		},
-		{
 			Name:     "managedfile",
 			Methods:  []string{"get", "update", "delete"},
 			Doc:      "The files that osapi writes and tracks",
 			Internal: true,
 		},
 		{
+			Name:    "dns",
+			Group:   "network",
+			Methods: []string{"get", "update", "delete"},
+			Doc:     "The DNS resolvers of an interface",
+		},
+		{
 			Name:    "sysctl",
 			Methods: []string{"list", "get", "create", "update", "delete"},
 			Doc:     "Kernel parameters, written to sysctl.d files and applied",
+		},
+		{
+			Name:    "user",
+			Methods: []string{"list", "get", "create", "update", "delete", "passwd"},
+			Doc:     "The users of the host",
+		},
+		{
+			Name:    "sshkey",
+			Of:      "user",
+			Methods: []string{"list", "create", "delete"},
+			Doc:     "The authorized SSH keys of a user",
 		},
 	}}
 

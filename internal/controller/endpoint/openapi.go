@@ -88,6 +88,12 @@ const AreaExtension = "x-osapi-area"
 // that reads the spec, such as the SDK's pages, takes the areas from it.
 const AreasExtension = "x-osapi-areas"
 
+// GroupExtension is the extension of each tag of the spec that names its
+// group, such as dns or agent: the segment of its paths that the group's own
+// operations start at. The SDK names its services from it, as the tag's
+// x-displayName is a title for a person, such as Package updates.
+const GroupExtension = "x-osapi-group"
+
 // OpenAPI is the group's part of the spec. It has the shared ErrorResponse
 // schema, so the spec stands alone.
 func OpenAPI(
@@ -100,7 +106,7 @@ func OpenAPI(
 		Tags: openapi3.Tags{{
 			Name:        g.Tag,
 			Description: g.TagDoc,
-			Extensions:  map[string]any{"x-displayName": g.TagDisplay},
+			Extensions:  map[string]any{"x-displayName": g.TagDisplay, GroupExtension: g.Name},
 		}},
 		Components: &openapi3.Components{
 			SecuritySchemes: openapi3.SecuritySchemes{

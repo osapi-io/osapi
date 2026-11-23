@@ -193,4 +193,5 @@ paths:
 tags:
   - description: Whether the host reaches an address, by ICMP ping
     name: network_connectivity_operations
-    x-displayName: Node/Connectivity
+    x-displayName: Connectivity
+    x-osapi-group: connectivity

@@ -286,4 +286,5 @@ paths:
 tags:
   - description: Reboot or shut down the host
     name: power_operations
-    x-displayName: Node/Power
+    x-displayName: Power
+    x-osapi-group: power

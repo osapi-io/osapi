@@ -21,123 +21,163 @@ tags:
   - description: Admit, reject and revoke the nodes that ask to join.
     name: Admission_API_admission
     x-displayName: Admission
+    x-osapi-group: admission
   - description: Operations related to agent discovery and details.
     name: Agent_Management_API_agent_operations
     x-displayName: Agent
+    x-osapi-group: agent
   - description: Audit log endpoints for viewing API activity.
     name: Audit_Log_API_audit
     x-displayName: Audit
+    x-osapi-group: audit
   - description: The controller of the fleet.
     name: Controller_API_controller
     x-displayName: Controller
+    x-osapi-group: controller
   - description: Fact key discovery for @fact. references.
     name: Facts_API_facts
     x-displayName: Facts
+    x-osapi-group: facts
   - description: Object Store file management operations.
     name: File_Management_API_file_operations
     x-displayName: File
+    x-osapi-group: file
   - description: Health check endpoints for liveness, readiness, and detailed status.
     name: Health_Check_API_health
     x-displayName: Health
+    x-osapi-group: health
   - description: Operations related to the job queue.
     name: Job_Management_API_job_operations
     x-displayName: Job
+    x-osapi-group: job
   - description: The NATS server of the fleet.
     name: NATS_API_nats
     x-displayName: NATS
+    x-osapi-group: nats
   - description: Telemetry endpoints, such as the spans of a trace.
     name: Telemetry_API_telemetry
     x-displayName: Telemetry
+    x-osapi-group: telemetry
   - description: The certificate authorities that the host trusts
     name: Certificate_API_certificate_operations
-    x-displayName: Node/Certificate
+    x-displayName: Certificate
+    x-osapi-group: certificate
   - description: Run a command on target hosts
     name: Command_API_command_operations
-    x-displayName: Node/Command
+    x-displayName: Command
+    x-osapi-group: command
   - description: The Docker containers of the host
     name: Docker_API_container_docker_operations
-    x-displayName: Node/Docker
+    x-displayName: Container
+    x-osapi-group: docker
   - description: The Docker images of the host
     name: Image_API_container_image_operations
-    x-displayName: Node/Image
+    x-displayName: Container image
+    x-osapi-group: image
   - description: Get the disk usage of target hosts
     name: Disk_API_disk_operations
-    x-displayName: Node/Disk
+    x-displayName: Disk
+    x-osapi-group: disk
   - description: Files of the object store, deployed to the host
     name: File_API_file_operations
-    x-displayName: Node/File
+    x-displayName: File
+    x-osapi-group: file
   - description: The groups of the host
     name: Group_API_group_operations
-    x-displayName: Node/Group
+    x-displayName: Group
+    x-osapi-group: group
   - description: Get or set the hostname of target hosts
     name: Hostname_API_hostname_operations
-    x-displayName: Node/Hostname
+    x-displayName: Hostname
+    x-osapi-group: hostname
   - description: Get the load averages of target hosts
     name: Load_API_load_operations
-    x-displayName: Node/Load
+    x-displayName: Load
+    x-osapi-group: load
   - description: The entries of the systemd journal
     name: Entry_API_log_entry_operations
-    x-displayName: Node/Entry
+    x-displayName: Log entry
+    x-osapi-group: entry
   - description: The sources that write to the systemd journal
     name: Source_API_log_source_operations
-    x-displayName: Node/Source
+    x-displayName: Log source
+    x-osapi-group: source
   - description: Get the memory usage of target hosts
     name: Memory_API_memory_operations
-    x-displayName: Node/Memory
+    x-displayName: Memory
+    x-osapi-group: memory
   - description: Whether the host reaches an address, by ICMP ping
     name: Connectivity_API_network_connectivity_operations
-    x-displayName: Node/Connectivity
+    x-displayName: Connectivity
+    x-osapi-group: connectivity
   - description: The DNS resolvers of each interface of the host
     name: Dns_API_network_dns_operations
-    x-displayName: Node/Dns
+    x-displayName: DNS
+    x-osapi-group: dns
   - description: The network interfaces of the host
     name: Interface_API_network_interface_operations
-    x-displayName: Node/Interface
+    x-displayName: Interface
+    x-osapi-group: interface
   - description: The routes of an interface
     name: Route_API_route_operations
-    x-displayName: Node/Route
+    x-displayName: Interface route
+    x-osapi-group: route
   - description: The NTP servers of chrony, and its sync status
     name: Ntp_API_ntp_operations
-    x-displayName: Node/Ntp
+    x-displayName: NTP
+    x-osapi-group: ntp
   - description: Get the operating system of target hosts
     name: Os_API_os_operations
-    x-displayName: Node/Os
+    x-displayName: OS
+    x-osapi-group: os
   - description: The packages installed on the host
     name: Package_API_package_operations
-    x-displayName: Node/Package
+    x-displayName: Package
+    x-osapi-group: package
   - description: Reboot or shut down the host
     name: Power_API_power_operations
-    x-displayName: Node/Power
+    x-displayName: Power
+    x-osapi-group: power
   - description: The processes of the host
     name: Process_API_process_operations
-    x-displayName: Node/Process
+    x-displayName: Process
+    x-osapi-group: process
   - description: The cron entries that osapi deploys
     name: Schedule_API_schedule_operations
-    x-displayName: Node/Schedule
+    x-displayName: Schedule
+    x-osapi-group: schedule
   - description: The systemd services of the host
     name: Service_API_service_operations
-    x-displayName: Node/Service
-  - description: The authorized SSH keys of a user
-    name: Sshkey_API_sshkey_operations
-    x-displayName: Node/Sshkey
+    x-displayName: Service
+    x-osapi-group: service
   - description: The status summary of a node
     name: Status_API_status_operations
-    x-displayName: Node/Status
+    x-displayName: Status
+    x-osapi-group: status
   - description: Kernel parameters, written to sysctl.d files and applied
     name: Sysctl_API_sysctl_operations
-    x-displayName: Node/Sysctl
+    x-displayName: Sysctl
+    x-osapi-group: sysctl
   - description: The timezone of the host
     name: Timezone_API_timezone_operations
-    x-displayName: Node/Timezone
+    x-displayName: Timezone
+    x-osapi-group: timezone
   - description: The updates the package index has for the host
     name: Updatepackages_API_updatepackages_operations
-    x-displayName: Node/Updatepackages
+    x-displayName: Package updates
+    x-osapi-group: updatepackages
   - description: Get the uptime of target hosts
     name: Uptime_API_uptime_operations
-    x-displayName: Node/Uptime
+    x-displayName: Uptime
+    x-osapi-group: uptime
   - description: The users of the host
     name: User_API_user_operations
-    x-displayName: Node/User
+    x-displayName: User
+    x-osapi-group: user
+  - description: The authorized SSH keys of a user
+    name: Sshkey_API_sshkey_operations
+    x-displayName: User SSH key
+    x-osapi-group: sshkey
 paths:
   /api/admission:
     get:
@@ -7091,222 +7131,6 @@ paths:
             hostname: web-01
             name: app
       x-osapi-method: stop
-  /api/node/{hostname}/user/{name}/sshkey:
-    delete:
-      description: Removes each line of the key with the fingerprint from ~/.ssh/authorized_keys of the user, and keeps the other lines as they are. A key that the file does not have, a user with no file, or a user that the host does not have, changes nothing. It runs on the Debian family only, and elsewhere reports skipped.
-      operationId: DeleteNodeUserSshkey
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/UserSshkeyName'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserSshkeyDeleteRequest'
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserSshkeyDeleteResponse'
-          description: Each target host's result, with whether it changed.
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: The request is not valid, or the host refuses the input, such as a path that is a directory.
-        "401":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Unauthorized - API key required
-        "403":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Forbidden - Insufficient permissions
-        "404":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: The host does not have what the request names, such as the object of a deploy.
-        "409":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: An error on the controller.
-      security:
-        - BearerAuth:
-            - user:write
-      summary: Remove an authorized SSH key of a user
-      tags:
-        - Sshkey_API_sshkey_operations
-      x-osapi-area: security
-      x-osapi-examples:
-        - doc: Remove a key
-          input:
-            fingerprint: SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk
-            hostname: web-01
-            name: osapitest
-        - doc: A key the user does not have
-          input:
-            fingerprint: SHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE
-            hostname: web-01
-            name: osapitest
-        - doc: A user that the host does not have
-          input:
-            fingerprint: SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk
-            hostname: web-01
-            name: nobody
-      x-osapi-method: delete
-    get:
-      description: Reads ~/.ssh/authorized_keys of the user through gohai, with the type, the SHA256 fingerprint, the comment and the options of each key. A user with no file has no keys. A user that the host does not have is not found.
-      operationId: GetNodeUserSshkey
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/UserSshkeyName'
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserSshkeyCollectionResponse'
-          description: Each target host's result.
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: The request is not valid, or the host refuses the input, such as a path that is a directory.
-        "401":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Unauthorized - API key required
-        "403":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Forbidden - Insufficient permissions
-        "404":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: The host does not have what the request names, such as the object of a deploy.
-        "409":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: An error on the controller.
-      security:
-        - BearerAuth:
-            - user:read
-      summary: List the authorized SSH keys of a user
-      tags:
-        - Sshkey_API_sshkey_operations
-      x-osapi-area: security
-      x-osapi-examples:
-        - doc: A user with keys
-          input:
-            hostname: web-01
-            name: osapitest
-      x-osapi-method: list
-    post:
-      description: Adds the key line to the end of ~/.ssh/authorized_keys of the user, and makes the directory and the file if they are missing, with modes 700 and 600, owned by the user. A key that the file has already, by its fingerprint, does not change it. A line with no public key is refused. A user that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped.
-      operationId: PostNodeUserSshkey
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/UserSshkeyName'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserSshkeyCreateRequest'
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserSshkeyCreateResponse'
-          description: Each target host's result, with whether it changed.
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: The request is not valid, or the host refuses the input, such as a path that is a directory.
-        "401":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Unauthorized - API key required
-        "403":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: Forbidden - Insufficient permissions
-        "404":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: The host does not have what the request names, such as the object of a deploy.
-        "409":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-          description: An error on the controller.
-      security:
-        - BearerAuth:
-            - user:write
-      summary: Add an authorized SSH key to a user
-      tags:
-        - Sshkey_API_sshkey_operations
-      x-osapi-area: security
-      x-osapi-examples:
-        - doc: Add a key
-          input:
-            hostname: web-01
-            key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example
-            name: osapitest
-        - doc: Add a second key
-          input:
-            hostname: web-01
-            key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example
-            name: osapitest
-      x-osapi-method: create
   /api/node/{hostname}/status:
     get:
       description: Runs the get of the hostname, uptime, os, load, memory and disk behaviors on the host, and answers with each. A read that fails is in errors, as its name and its error, and the other fields still answer.
@@ -8449,6 +8273,222 @@ paths:
             name: osapitest
             password: osapi-test-password
       x-osapi-method: passwd
+  /api/node/{hostname}/user/{name}/sshkey:
+    delete:
+      description: Removes each line of the key with the fingerprint from ~/.ssh/authorized_keys of the user, and keeps the other lines as they are. A key that the file does not have, a user with no file, or a user that the host does not have, changes nothing. It runs on the Debian family only, and elsewhere reports skipped.
+      operationId: DeleteNodeUserSshkey
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/UserSshkeyName'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSshkeyDeleteRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSshkeyDeleteResponse'
+          description: Each target host's result, with whether it changed.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid, or the host refuses the input, such as a path that is a directory.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host does not have what the request names, such as the object of a deploy.
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - user:write
+      summary: Remove an authorized SSH key of a user
+      tags:
+        - Sshkey_API_sshkey_operations
+      x-osapi-area: security
+      x-osapi-examples:
+        - doc: Remove a key
+          input:
+            fingerprint: SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk
+            hostname: web-01
+            name: osapitest
+        - doc: A key the user does not have
+          input:
+            fingerprint: SHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE
+            hostname: web-01
+            name: osapitest
+        - doc: A user that the host does not have
+          input:
+            fingerprint: SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk
+            hostname: web-01
+            name: nobody
+      x-osapi-method: delete
+    get:
+      description: Reads ~/.ssh/authorized_keys of the user through gohai, with the type, the SHA256 fingerprint, the comment and the options of each key. A user with no file has no keys. A user that the host does not have is not found.
+      operationId: GetNodeUserSshkey
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/UserSshkeyName'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSshkeyCollectionResponse'
+          description: Each target host's result.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid, or the host refuses the input, such as a path that is a directory.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host does not have what the request names, such as the object of a deploy.
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - user:read
+      summary: List the authorized SSH keys of a user
+      tags:
+        - Sshkey_API_sshkey_operations
+      x-osapi-area: security
+      x-osapi-examples:
+        - doc: A user with keys
+          input:
+            hostname: web-01
+            name: osapitest
+      x-osapi-method: list
+    post:
+      description: Adds the key line to the end of ~/.ssh/authorized_keys of the user, and makes the directory and the file if they are missing, with modes 700 and 600, owned by the user. A key that the file has already, by its fingerprint, does not change it. A line with no public key is refused. A user that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped.
+      operationId: PostNodeUserSshkey
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/UserSshkeyName'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSshkeyCreateRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSshkeyCreateResponse'
+          description: Each target host's result, with whether it changed.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid, or the host refuses the input, such as a path that is a directory.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host does not have what the request names, such as the object of a deploy.
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - user:write
+      summary: Add an authorized SSH key to a user
+      tags:
+        - Sshkey_API_sshkey_operations
+      x-osapi-area: security
+      x-osapi-examples:
+        - doc: Add a key
+          input:
+            hostname: web-01
+            key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example
+            name: osapitest
+        - doc: Add a second key
+          input:
+            hostname: web-01
+            key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example
+            name: osapitest
+      x-osapi-method: create
 components:
   schemas:
     ErrorResponse:
@@ -13072,138 +13112,6 @@ components:
       required:
         - results
       type: object
-    UserSshkeyCollectionResponse:
-      properties:
-        job_id:
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-          format: uuid
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: uuid
-        results:
-          items:
-            $ref: '#/components/schemas/UserSshkeyKey'
-          type: array
-      required:
-        - results
-      type: object
-    UserSshkeyCreateRequest:
-      properties:
-        key:
-          description: The public key line, such as ssh-ed25519 AAAA... alice@laptop, with options before it if any
-          pattern: ^[^\r\n]*$
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: required,no_linebreak
-      required:
-        - key
-      type: object
-    UserSshkeyCreateResponse:
-      properties:
-        job_id:
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-          format: uuid
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: uuid
-        results:
-          items:
-            $ref: '#/components/schemas/UserSshkeyResult'
-          type: array
-      required:
-        - results
-      type: object
-    UserSshkeyDeleteRequest:
-      properties:
-        fingerprint:
-          description: The SHA256 fingerprint of the key, as list shows it
-          pattern: ^[^\r\n]*$
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: required,startswith=SHA256:,no_linebreak
-      required:
-        - fingerprint
-      type: object
-    UserSshkeyDeleteResponse:
-      properties:
-        job_id:
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-          format: uuid
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: uuid
-        results:
-          items:
-            $ref: '#/components/schemas/UserSshkeyResult'
-          type: array
-      required:
-        - results
-      type: object
-    UserSshkeyKey:
-      properties:
-        comment:
-          description: The comment after the key, such as alice@laptop
-          type: string
-        error:
-          description: Error message if the agent failed.
-          type: string
-        fingerprint:
-          description: The SHA256 fingerprint of the key
-          type: string
-        hostname:
-          description: Hostname of the agent that produced this result.
-          type: string
-        options:
-          description: The options before the key, such as from="10.0.0.0/8"
-          type: string
-        status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
-        type:
-          description: The key type, such as ssh-ed25519
-          type: string
-      required:
-        - hostname
-        - status
-      type: object
-    UserSshkeyResult:
-      properties:
-        changed:
-          description: Whether the host changed
-          type: boolean
-        error:
-          description: Error message if the agent failed.
-          type: string
-        fingerprint:
-          description: The SHA256 fingerprint of the key
-          type: string
-        hostname:
-          description: Hostname of the agent that produced this result.
-          type: string
-        status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
-      required:
-        - hostname
-        - status
-      type: object
     Entry:
       properties:
         seconds:
@@ -13946,6 +13854,138 @@ components:
       required:
         - results
       type: object
+    UserSshkeyCollectionResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/UserSshkeyKey'
+          type: array
+      required:
+        - results
+      type: object
+    UserSshkeyCreateRequest:
+      properties:
+        key:
+          description: The public key line, such as ssh-ed25519 AAAA... alice@laptop, with options before it if any
+          pattern: ^[^\r\n]*$
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,no_linebreak
+      required:
+        - key
+      type: object
+    UserSshkeyCreateResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/UserSshkeyResult'
+          type: array
+      required:
+        - results
+      type: object
+    UserSshkeyDeleteRequest:
+      properties:
+        fingerprint:
+          description: The SHA256 fingerprint of the key, as list shows it
+          pattern: ^[^\r\n]*$
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,startswith=SHA256:,no_linebreak
+      required:
+        - fingerprint
+      type: object
+    UserSshkeyDeleteResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/UserSshkeyResult'
+          type: array
+      required:
+        - results
+      type: object
+    UserSshkeyKey:
+      properties:
+        comment:
+          description: The comment after the key, such as alice@laptop
+          type: string
+        error:
+          description: Error message if the agent failed.
+          type: string
+        fingerprint:
+          description: The SHA256 fingerprint of the key
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        options:
+          description: The options before the key, such as from="10.0.0.0/8"
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+        type:
+          description: The key type, such as ssh-ed25519
+          type: string
+      required:
+        - hostname
+        - status
+      type: object
+    UserSshkeyResult:
+      properties:
+        changed:
+          description: Whether the host changed
+          type: boolean
+        error:
+          description: Error message if the agent failed.
+          type: string
+        fingerprint:
+          description: The SHA256 fingerprint of the key
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
+      type: object
   securitySchemes:
     BearerAuth:
       bearerFormat: JWT
@@ -14075,17 +14115,6 @@ components:
         type: string
       x-oapi-codegen-extra-tags:
         validate: required,service_name
-    UserSshkeyName:
-      description: The user, such as alice
-      in: path
-      name: name
-      required: true
-      schema:
-        maxLength: 32
-        pattern: ^[a-z_][a-z0-9_-]*\$?$
-        type: string
-      x-oapi-codegen-extra-tags:
-        validate: required,max=32,account_name
     SysctlKey:
       description: Parameter name, such as net.ipv4.ip_forward
       in: path
@@ -14098,6 +14127,17 @@ components:
       x-oapi-codegen-extra-tags:
         validate: required,min=1,sysctl_key
     UserName:
+      description: The user, such as alice
+      in: path
+      name: name
+      required: true
+      schema:
+        maxLength: 32
+        pattern: ^[a-z_][a-z0-9_-]*\$?$
+        type: string
+      x-oapi-codegen-extra-tags:
+        validate: required,max=32,account_name
+    UserSshkeyName:
       description: The user, such as alice
       in: path
       name: name
@@ -14208,9 +14248,6 @@ x-tagGroups:
   - name: Service API
     tags:
       - Service_API_service_operations
-  - name: Sshkey API
-    tags:
-      - Sshkey_API_sshkey_operations
   - name: Status API
     tags:
       - Status_API_status_operations
@@ -14229,6 +14266,9 @@ x-tagGroups:
   - name: User API
     tags:
       - User_API_user_operations
+  - name: Sshkey API
+    tags:
+      - Sshkey_API_sshkey_operations
 x-osapi-areas:
   - name: services
     label: Services

@@ -753,4 +753,5 @@ paths:
 tags:
   - description: The users of the host
     name: user_operations
-    x-displayName: Node/User
+    x-displayName: User
+    x-osapi-group: user

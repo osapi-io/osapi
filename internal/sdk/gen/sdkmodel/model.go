@@ -51,6 +51,11 @@ const ExamplesExtension = "x-osapi-examples"
 // its area, such as fleet. The endpoint layer writes it.
 const AreaExtension = "x-osapi-area"
 
+// GroupExtension is the extension of each tag of the spec that names its
+// group, such as dns: the segment of the paths that the service's name ends
+// at. The endpoint layer writes it.
+const GroupExtension = "x-osapi-group"
+
 // AreasExtension is the extension of the spec that lists the areas in their
 // order, each with its name and its label. The endpoint layer writes it.
 const AreasExtension = "x-osapi-areas"
@@ -452,17 +457,15 @@ func (b *builder) services() ([]*Service, error) {
 }
 
 // serviceName is the Go name of the service of a tag: the words of the path
-// up to the group's own, which the last part of the tag's display name
-// names, such as NetworkDNS for /api/node/{hostname}/network/dns.
+// up to the group's own, which the tag's x-osapi-group names, such as
+// NetworkDNS for /api/node/{hostname}/network/dns.
 func serviceName(
 	tag *openapi3.Tag,
 	path string,
 ) (string, error) {
-	display, _ := tag.Extensions["x-displayName"].(string)
-	parts := strings.Split(display, "/")
-	group := strings.ToLower(parts[len(parts)-1])
+	group, _ := tag.Extensions[GroupExtension].(string)
 	if group == "" {
-		return "", fmt.Errorf("tag %s has no x-displayName", tag.Name)
+		return "", fmt.Errorf("tag %s has no %s", tag.Name, GroupExtension)
 	}
 	var words []string
 	for _, seg := range strings.Split(strings.Trim(path, "/"), "/") {

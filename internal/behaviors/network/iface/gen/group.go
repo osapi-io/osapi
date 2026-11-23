@@ -174,7 +174,7 @@ var Group = endpoint.Define(
 	endpoint.Area(area.Networking),
 	endpoint.Prefix("node/{hostname}/network"),
 	endpoint.Uses[dispatch.Deps](),
-	endpoint.Tag("network_interface_operations", "Node/Interface", "The network interfaces of the host"),
+	endpoint.Tag("network_interface_operations", "Interface", "The network interfaces of the host"),
 	endpoint.CommandNotes("The [interface behavior](../../../../../../reference/behaviors/networking/interface/interface.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[ListRequest, NetworkInterfaceCollectionResponse]("list").
 		Handle(HandleList).

@@ -108,7 +108,7 @@ var Group = endpoint.Define(
 	endpoint.Area(area.Networking),
 	endpoint.Prefix("node/{hostname}/network"),
 	endpoint.Uses[dispatch.Deps](),
-	endpoint.Tag("network_dns_operations", "Node/Dns", "The DNS resolvers of each interface of the host"),
+	endpoint.Tag("network_dns_operations", "DNS", "The DNS resolvers of each interface of the host"),
 	endpoint.CommandNotes("The [dns behavior](../../../../../../reference/behaviors/networking/dns/dns.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[GetRequest, NetworkDnsGetResponse]("get").
 		Handle(HandleGet).

@@ -56,7 +56,10 @@ func Register(
 // duplicates records names registered more than once, for Validate.
 var duplicates []string
 
-// All returns every registered behavior, sorted by group and name.
+// All returns every registered behavior, in the order of the words of its
+// command: a group's behaviors are with each other, and a behavior that Of
+// nests, such as sshkey, is after its parent, as osapi client node lists
+// them.
 func All() []*Behavior {
 	mu.RLock()
 	defer mu.RUnlock()
@@ -66,11 +69,7 @@ func All() []*Behavior {
 		out = append(out, b)
 	}
 	sort.Slice(out, func(i, j int) bool {
-		if out[i].Group != out[j].Group {
-			return out[i].Group < out[j].Group
-		}
-
-		return out[i].Name < out[j].Name
+		return out[i].words() < out[j].words()
 	})
 
 	return out

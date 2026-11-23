@@ -46,12 +46,24 @@ func List(
 			names = append(names, m.Name)
 		}
 		out.Items = append(out.Items, Summary{
-			Name: b.Name, Group: b.Group, Area: b.Area, Methods: names,
+			Name: b.Name, Group: b.Group, Of: parentName(b), Area: b.Area, Methods: names,
 			Doc: b.Doc, Internal: b.Internal,
 		})
 	}
 
 	return out, nil
+}
+
+// parentName is the name of the behavior that Of nests b under, such as
+// user for sshkey, or empty.
+func parentName(
+	b *behavior.Behavior,
+) string {
+	if b.Parent == nil {
+		return ""
+	}
+
+	return b.Parent.Name
 }
 
 // find is the behavior with the name, or an error that says to list them.
@@ -79,7 +91,8 @@ func Get(
 		return GetOutput{}, err
 	}
 	out := GetOutput{
-		Name: b.Name, Doc: b.Doc, Placement: b.Placement, Group: b.Group, Area: b.Area,
+		Name: b.Name, Doc: b.Doc, Placement: b.Placement, Group: b.Group, Of: parentName(b),
+		Area:     b.Area,
 		Internal: b.Internal, API: b.API, CLI: b.CLI,
 		Platforms:  platformNames(b),
 		Sudo:       sudoOf(b),

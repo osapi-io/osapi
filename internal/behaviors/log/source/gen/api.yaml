@@ -153,4 +153,5 @@ paths:
 tags:
   - description: The sources that write to the systemd journal
     name: log_source_operations
-    x-displayName: Node/Source
+    x-displayName: Log source
+    x-osapi-group: source

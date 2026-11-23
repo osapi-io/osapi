@@ -465,4 +465,5 @@ paths:
 tags:
   - description: Files of the object store, deployed to the host
     name: file_operations
-    x-displayName: Node/File
+    x-displayName: File
+    x-osapi-group: file

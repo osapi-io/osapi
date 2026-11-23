@@ -250,4 +250,5 @@ paths:
 tags:
   - description: The status summary of a node
     name: status_operations
-    x-displayName: Node/Status
+    x-displayName: Status
+    x-osapi-group: status

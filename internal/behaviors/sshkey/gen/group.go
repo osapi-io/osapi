@@ -114,8 +114,8 @@ var Group = endpoint.Define(
 	endpoint.Area(area.Security),
 	endpoint.Prefix("node/{hostname}/user/{name}"),
 	endpoint.Uses[dispatch.Deps](),
-	endpoint.Tag("sshkey_operations", "Node/Sshkey", "The authorized SSH keys of a user"),
-	endpoint.CommandNotes("The [sshkey behavior](../../../../../../reference/behaviors/security/sshkey/sshkey.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Tag("sshkey_operations", "User SSH key", "The authorized SSH keys of a user"),
+	endpoint.CommandNotes("The [sshkey behavior](../../../../../../reference/behaviors/security/user/sshkey/sshkey.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[ListRequest, UserSshkeyCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeUserSshkey").

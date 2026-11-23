@@ -659,4 +659,5 @@ paths:
 tags:
   - description: The cron entries that osapi deploys
     name: schedule_operations
-    x-displayName: Node/Schedule
+    x-displayName: Schedule
+    x-osapi-group: schedule

@@ -8,6 +8,13 @@ export type Permission =
   | "certificate:write"
   | "command:execute"
   | "command:shell"
+  | "docker:read"
+  | "docker:write"
+  | "docker:execute"
+  | "docker:exec"
+  | "image:read"
+  | "image:execute"
+  | "image:write"
   | "disk:read"
   | "file:read"
   | "file:write"
@@ -16,7 +23,14 @@ export type Permission =
   | "hostname:read"
   | "hostname:write"
   | "load:read"
+  | "entry:read"
+  | "source:read"
   | "memory:read"
+  | "connectivity:execute"
+  | "dns:read"
+  | "dns:write"
+  | "interface:read"
+  | "interface:write"
   | "ntp:read"
   | "ntp:write"
   | "os:read"
@@ -25,15 +39,11 @@ export type Permission =
   | "power:execute"
   | "process:read"
   | "process:execute"
-  | "interface:read"
-  | "interface:write"
   | "schedule:read"
   | "schedule:write"
   | "service:read"
   | "service:write"
   | "service:execute"
-  | "user:read"
-  | "user:write"
   | "status:read"
   | "sysctl:read"
   | "sysctl:write"
@@ -42,19 +52,9 @@ export type Permission =
   | "updatepackages:read"
   | "updatepackages:write"
   | "uptime:read"
+  | "user:read"
+  | "user:write"
   | "user:execute"
-  | "docker:read"
-  | "docker:write"
-  | "docker:execute"
-  | "docker:exec"
-  | "image:read"
-  | "image:execute"
-  | "image:write"
-  | "entry:read"
-  | "source:read"
-  | "connectivity:execute"
-  | "dns:read"
-  | "dns:write"
   | "admission:read"
   | "admission:write"
   | "agent:read"
@@ -70,6 +70,13 @@ export const ALL_PERMISSIONS: Permission[] = [
   "certificate:write",
   "command:execute",
   "command:shell",
+  "docker:read",
+  "docker:write",
+  "docker:execute",
+  "docker:exec",
+  "image:read",
+  "image:execute",
+  "image:write",
   "disk:read",
   "file:read",
   "file:write",
@@ -78,7 +85,14 @@ export const ALL_PERMISSIONS: Permission[] = [
   "hostname:read",
   "hostname:write",
   "load:read",
+  "entry:read",
+  "source:read",
   "memory:read",
+  "connectivity:execute",
+  "dns:read",
+  "dns:write",
+  "interface:read",
+  "interface:write",
   "ntp:read",
   "ntp:write",
   "os:read",
@@ -87,15 +101,11 @@ export const ALL_PERMISSIONS: Permission[] = [
   "power:execute",
   "process:read",
   "process:execute",
-  "interface:read",
-  "interface:write",
   "schedule:read",
   "schedule:write",
   "service:read",
   "service:write",
   "service:execute",
-  "user:read",
-  "user:write",
   "status:read",
   "sysctl:read",
   "sysctl:write",
@@ -104,19 +114,9 @@ export const ALL_PERMISSIONS: Permission[] = [
   "updatepackages:read",
   "updatepackages:write",
   "uptime:read",
+  "user:read",
+  "user:write",
   "user:execute",
-  "docker:read",
-  "docker:write",
-  "docker:execute",
-  "docker:exec",
-  "image:read",
-  "image:execute",
-  "image:write",
-  "entry:read",
-  "source:read",
-  "connectivity:execute",
-  "dns:read",
-  "dns:write",
   "admission:read",
   "admission:write",
   "agent:read",
@@ -135,6 +135,13 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "certificate:write",
     "command:execute",
     "command:shell",
+    "docker:read",
+    "docker:write",
+    "docker:execute",
+    "docker:exec",
+    "image:read",
+    "image:execute",
+    "image:write",
     "disk:read",
     "file:read",
     "file:write",
@@ -143,7 +150,14 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "hostname:read",
     "hostname:write",
     "load:read",
+    "entry:read",
+    "source:read",
     "memory:read",
+    "connectivity:execute",
+    "dns:read",
+    "dns:write",
+    "interface:read",
+    "interface:write",
     "ntp:read",
     "ntp:write",
     "os:read",
@@ -152,15 +166,11 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "power:execute",
     "process:read",
     "process:execute",
-    "interface:read",
-    "interface:write",
     "schedule:read",
     "schedule:write",
     "service:read",
     "service:write",
     "service:execute",
-    "user:read",
-    "user:write",
     "status:read",
     "sysctl:read",
     "sysctl:write",
@@ -169,19 +179,9 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "updatepackages:read",
     "updatepackages:write",
     "uptime:read",
+    "user:read",
+    "user:write",
     "user:execute",
-    "docker:read",
-    "docker:write",
-    "docker:execute",
-    "docker:exec",
-    "image:read",
-    "image:execute",
-    "image:write",
-    "entry:read",
-    "source:read",
-    "connectivity:execute",
-    "dns:read",
-    "dns:write",
     "admission:read",
     "admission:write",
     "agent:read",
@@ -194,36 +194,36 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "health:read",
     "trace:read",
     "certificate:read",
+    "docker:read",
+    "docker:execute",
+    "image:read",
+    "image:execute",
     "disk:read",
     "file:read",
     "group:read",
     "hostname:read",
     "load:read",
+    "entry:read",
+    "source:read",
     "memory:read",
+    "connectivity:execute",
+    "dns:read",
+    "interface:read",
     "ntp:read",
     "os:read",
     "package:read",
     "power:execute",
     "process:read",
     "process:execute",
-    "interface:read",
     "schedule:read",
     "service:read",
     "service:execute",
-    "user:read",
     "status:read",
     "sysctl:read",
     "timezone:read",
     "updatepackages:read",
     "uptime:read",
-    "docker:read",
-    "docker:execute",
-    "image:read",
-    "image:execute",
-    "entry:read",
-    "source:read",
-    "connectivity:execute",
-    "dns:read",
+    "user:read",
     "admission:read",
     "agent:read",
     "job:read",
@@ -233,6 +233,10 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "trace:read",
     "certificate:read",
     "certificate:write",
+    "docker:read",
+    "docker:write",
+    "image:read",
+    "image:write",
     "disk:read",
     "file:read",
     "file:write",
@@ -241,19 +245,22 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "hostname:read",
     "hostname:write",
     "load:read",
+    "entry:read",
+    "source:read",
     "memory:read",
+    "dns:read",
+    "dns:write",
+    "interface:read",
+    "interface:write",
     "ntp:read",
     "ntp:write",
     "os:read",
     "package:read",
     "package:write",
     "process:read",
-    "interface:read",
-    "interface:write",
     "schedule:read",
     "service:read",
     "service:write",
-    "user:read",
     "status:read",
     "sysctl:read",
     "sysctl:write",
@@ -262,14 +269,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "updatepackages:read",
     "updatepackages:write",
     "uptime:read",
-    "docker:read",
-    "docker:write",
-    "image:read",
-    "image:write",
-    "entry:read",
-    "source:read",
-    "dns:read",
-    "dns:write",
+    "user:read",
     "admission:read",
     "agent:read",
     "job:read",
@@ -280,30 +280,30 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "health:read",
     "trace:read",
     "certificate:read",
+    "docker:read",
+    "image:read",
     "disk:read",
     "file:read",
     "group:read",
     "hostname:read",
     "load:read",
+    "entry:read",
+    "source:read",
     "memory:read",
+    "dns:read",
+    "interface:read",
     "ntp:read",
     "os:read",
     "package:read",
     "process:read",
-    "interface:read",
     "schedule:read",
     "service:read",
-    "user:read",
     "status:read",
     "sysctl:read",
     "timezone:read",
     "updatepackages:read",
     "uptime:read",
-    "docker:read",
-    "image:read",
-    "entry:read",
-    "source:read",
-    "dns:read",
+    "user:read",
     "admission:read",
     "agent:read",
     "job:read",

@@ -123,7 +123,7 @@ var Group = endpoint.Define(
 	endpoint.Area(area.Containers),
 	endpoint.Prefix("node/{hostname}/container"),
 	endpoint.Uses[dispatch.Deps](),
-	endpoint.Tag("container_image_operations", "Node/Image", "The Docker images of the host"),
+	endpoint.Tag("container_image_operations", "Container image", "The Docker images of the host"),
 	endpoint.CommandNotes("The [image behavior](../../../../../../reference/behaviors/containers/image/image.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[ListRequest, ContainerImageCollectionResponse]("list").
 		Handle(HandleList).

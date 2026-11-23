@@ -75,15 +75,17 @@ func referencePages() ([]clidocs.Page, error) {
 			return nil, err
 		}
 		// A behavior's page is in a folder of its own, in the folder of its
-		// area.
-		uses := columns(func(name string) string { return "../../" + behaviorPage(name) },
+		// area, or of its parent when Of nests it: up is the path from there
+		// to reference/behaviors.
+		up := behaviorcommand.ReferenceUp(b)
+		uses := columns(func(name string) string { return up + behaviorPage(name) },
 			"Uses", "Used by")
 		toBehavior := func(h string, cell string) string {
 			switch {
 			case h == "NAME" && b.Method(cell) != nil:
 				return "#method-" + cell
 			case h == "Command":
-				return cliPageFrom("../../../../", cell)
+				return cliPageFrom(up+"../../", cell)
 			}
 
 			return uses(h, cell)
@@ -104,9 +106,9 @@ func referencePages() ([]clidocs.Page, error) {
 		}
 		pages = append(pages, clidocs.Page{
 			Path:  referenceDir + "behaviors/" + behaviorcommand.ReferencePage(b),
-			Title: behaviorcommand.Title(b),
+			Title: b.Title,
 			Intro: b.Doc + ". `osapi behavior get --name " + b.Name +
-				"` and `osapi behavior method get` show the same." + chainLink(b),
+				"` and `osapi behavior method get` show the same." + chainLink(b, up),
 			Parts: parts,
 		})
 	}
@@ -151,7 +153,7 @@ func referencePages() ([]clidocs.Page, error) {
 		}
 		pages = append(pages, clidocs.Page{
 			Path:  referenceDir + "chains/" + chainPage(b),
-			Title: behaviorcommand.Title(b),
+			Title: b.Title,
 			Intro: "The behaviors that " + b.Name + " calls, and each call that its examples make. " +
 				"`osapi behavior chain get --name " + b.Name + "` shows the same.",
 			Parts: []clidocs.Part{
@@ -292,15 +294,16 @@ func columns(
 }
 
 // chainLink is a sentence that links to the chain page of b, for a behavior
-// that calls others.
+// that calls others, from the folder of b's page, which up leads out of.
 func chainLink(
 	b *behavior.Behavior,
+	up string,
 ) string {
 	if len(b.Requires) == 0 {
 		return ""
 	}
 
-	return " [Its chain](../../../chains/" + chainPage(b) +
+	return " [Its chain](" + up + "../chains/" + chainPage(b) +
 		") shows each call that its examples make."
 }
 

@@ -33,7 +33,6 @@ import (
 
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
-	"github.com/osapi-io/osapi/internal/behavior/command"
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 )
 
@@ -96,7 +95,7 @@ func Blocks(
 				Type:        b.Name + "-" + m.Name,
 				Behavior:    b.Name,
 				Area:        string(b.Area),
-				Title:       command.Title(b),
+				Title:       b.Title,
 				Method:      m.Name,
 				Label:       strings.ToUpper(m.Name[:1]) + m.Name[1:],
 				Description: m.Doc,

@@ -260,11 +260,33 @@ func ReferenceFolder(
 
 // ReferencePage is b's reference page from reference/behaviors, such as
 // hardware/disk/disk.md: each behavior's page is in a folder of its own, in
-// the folder of its area.
+// the folder of its area. A behavior that Of nests has its folder in the
+// folder of its parent, as its command is under the parent's, such as
+// security/user/sshkey/sshkey.md.
 func ReferencePage(
 	b *behavior.Behavior,
 ) string {
-	return ReferenceFolder(b) + "/" + b.Name + "/" + b.Name + ".md"
+	return ReferenceFolder(b) + "/" + pageFolder(b) + "/" + b.Name + ".md"
+}
+
+// pageFolder is the folder of b's page in the folder of its area: its name,
+// in the folder of its parent's page when Of nests it.
+func pageFolder(
+	b *behavior.Behavior,
+) string {
+	if b.Parent != nil {
+		return pageFolder(b.Parent) + "/" + b.Name
+	}
+
+	return b.Name
+}
+
+// ReferenceUp is the path from the folder of b's reference page up to
+// reference/behaviors, such as ../../ for hardware/disk/disk.md.
+func ReferenceUp(
+	b *behavior.Behavior,
+) string {
+	return strings.Repeat("../", strings.Count(ReferencePage(b), "/"))
 }
 
 // GroupAnnotations are the docs annotations of a behavior's own command: a
@@ -320,21 +342,6 @@ func commandLine(
 	}
 
 	return strings.Join(quoted, " ")
-}
-
-// initialisms are the behavior names that a title keeps in capitals.
-var initialisms = map[string]string{"dns": "DNS", "os": "OS", "ntp": "NTP", "sshkey": "SSH key"}
-
-// Title is the name of b as the title of its page and its sidebar entry:
-// capitalized, with an initialism such as DNS in capitals.
-func Title(
-	b *behavior.Behavior,
-) string {
-	if t, ok := initialisms[b.Name]; ok {
-		return t
-	}
-
-	return strings.ToUpper(b.Name[:1]) + b.Name[1:]
 }
 
 // effectLine says what one effect does, for a docs page.

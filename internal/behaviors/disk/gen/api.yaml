@@ -175,4 +175,5 @@ paths:
 tags:
   - description: Get the disk usage of target hosts
     name: disk_operations
-    x-displayName: Node/Disk
+    x-displayName: Disk
+    x-osapi-group: disk

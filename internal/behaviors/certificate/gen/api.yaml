@@ -576,4 +576,5 @@ paths:
 tags:
   - description: The certificate authorities that the host trusts
     name: certificate_operations
-    x-displayName: Node/Certificate
+    x-displayName: Certificate
+    x-osapi-group: certificate

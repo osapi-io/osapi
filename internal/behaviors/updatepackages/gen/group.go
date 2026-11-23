@@ -77,7 +77,7 @@ var Group = endpoint.Define(
 	endpoint.Area(area.Software),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
-	endpoint.Tag("updatepackages_operations", "Node/Updatepackages", "The updates the package index has for the host"),
+	endpoint.Tag("updatepackages_operations", "Package updates", "The updates the package index has for the host"),
 	endpoint.CommandNotes("The [updatepackages behavior](../../../../../reference/behaviors/software/updatepackages/updatepackages.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[ListRequest, UpdatepackagesCollectionResponse]("list").
 		Handle(HandleList).

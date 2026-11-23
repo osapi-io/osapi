@@ -83,7 +83,7 @@ var Group = endpoint.Define(
 	endpoint.Area(area.Config),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
-	endpoint.Tag("timezone_operations", "Node/Timezone", "The timezone of the host"),
+	endpoint.Tag("timezone_operations", "Timezone", "The timezone of the host"),
 	endpoint.CommandNotes("The [timezone behavior](../../../../../reference/behaviors/config/timezone/timezone.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[GetRequest, TimezoneGetResponse]("get").
 		Handle(HandleGet).

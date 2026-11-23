@@ -10,6 +10,8 @@ export interface BlockType {
   label: string;
   description: string;
   category: string;
+  /** The name of the category as the panel shows it. */
+  categoryLabel: string;
   /** The area of the Add Block panel that the block goes in. */
   area: AreaName;
   /** Blocks that need no input are ready immediately */
@@ -38,6 +40,7 @@ const HAND_BLOCK_TYPES: (BlockType & { type: HandBlockType })[] = [
     label: "List",
     description: "List files in object store",
     category: "file",
+    categoryLabel: "File",
     area: "objectstore",
     readyOnAdd: true,
   },
@@ -46,6 +49,7 @@ const HAND_BLOCK_TYPES: (BlockType & { type: HandBlockType })[] = [
     label: "Upload",
     description: "Upload to object store",
     category: "file",
+    categoryLabel: "File",
     area: "objectstore",
   },
   {
@@ -53,6 +57,7 @@ const HAND_BLOCK_TYPES: (BlockType & { type: HandBlockType })[] = [
     label: "Delete",
     description: "Delete file from object store",
     category: "file",
+    categoryLabel: "File",
     area: "objectstore",
   },
   {
@@ -60,6 +65,7 @@ const HAND_BLOCK_TYPES: (BlockType & { type: HandBlockType })[] = [
     label: "Stale",
     description: "Check for stale deployments",
     category: "file-deploy",
+    categoryLabel: "File deploy",
     area: "objectstore",
     readyOnAdd: true,
   },
@@ -72,6 +78,7 @@ const BEHAVIOR_BLOCK_TYPES: BlockType[] = Object.values(BEHAVIOR_BLOCKS).map(
     label: def.label,
     description: def.description,
     category: def.behavior,
+    categoryLabel: def.title,
     area: def.area,
     readyOnAdd: !def.fields.some((f) => f.required),
   }),
@@ -82,25 +89,14 @@ export const ALL_BLOCK_TYPES: BlockType[] = [
   ...BEHAVIOR_BLOCK_TYPES,
 ];
 
-// The names of the categories of the hand-written blocks. A behavior's
-// category is named by its title, from blocks.gen.ts, or here when the
-// title does not read well.
-const categoryNames: Record<string, string> = {
-  updatepackages: "Package Index",
-  file: "File",
-  "file-deploy": "File Deploy",
-};
-
-const behaviorTitles: Record<string, string> = Object.fromEntries(
-  Object.values(BEHAVIOR_BLOCKS).map((def) => [def.behavior, def.title]),
-);
-
+// A category is labeled by its blocks: a behavior's by its title, from
+// the behavior's definition through blocks.gen.ts.
 function buildCategories(area: AreaName): BlockCategory[] {
   const types = ALL_BLOCK_TYPES.filter((b) => b.area === area);
   const cats = [...new Set(types.map((b) => b.category))];
   return cats.map((cat) => ({
     name: cat,
-    label: categoryNames[cat] || behaviorTitles[cat] || cat,
+    label: types.find((b) => b.category === cat)?.categoryLabel ?? cat,
     types: types.filter((b) => b.category === cat),
   }));
 }

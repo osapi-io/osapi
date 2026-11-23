@@ -156,4 +156,5 @@ paths:
 tags:
   - description: Get the uptime of target hosts
     name: uptime_operations
-    x-displayName: Node/Uptime
+    x-displayName: Uptime
+    x-osapi-group: uptime

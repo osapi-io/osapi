@@ -126,8 +126,9 @@ type spec struct {
 
 // full writes the spec of the API, fullSpec, from each endpoint group that
 // the controller serves and each behavior's spec, behaviors. The endpoint
-// groups come first, then the behaviors, each in the order of its
-// directory.
+// groups come first, in the order of their directories, then the
+// behaviors, in the order of behavior.All: the order of their commands, so
+// sshkey is after user.
 func full(
 	w *genfile.Writer,
 	behaviors []spec,
@@ -144,12 +145,10 @@ func full(
 		dir := filepath.Join(strings.TrimPrefix(g.Deps.PkgPath(), module+"/"), "gen")
 		groups = append(groups, spec{dir: dir, doc: doc})
 	}
+	slices.SortFunc(groups, func(a, b spec) int { return strings.Compare(a.dir, b.dir) })
 	var docs []*openapi3.T
-	for _, specs := range [][]spec{groups, behaviors} {
-		slices.SortFunc(specs, func(a, b spec) int { return strings.Compare(a.dir, b.dir) })
-		for _, s := range specs {
-			docs = append(docs, s.doc)
-		}
+	for _, s := range append(groups, behaviors...) {
+		docs = append(docs, s.doc)
 	}
 	text, err := specgen.Full(docs, generated)
 	if err != nil {

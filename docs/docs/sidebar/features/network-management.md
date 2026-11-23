@@ -95,7 +95,7 @@ authentication settings.
 The generated page of each behavior gives the permission, the platforms and the
 route of each method: [dns](../reference/behaviors/networking/dns/dns.md),
 [interface](../reference/behaviors/networking/interface/interface.md),
-[route](../reference/behaviors/networking/route/route.md) and
+[route](../reference/behaviors/networking/interface/route/route.md) and
 [connectivity](../reference/behaviors/networking/connectivity/connectivity.md).
 The pages come from the definitions, so they stay true when a method changes,
 and this page does not copy them. [Authentication](authentication.md) tells

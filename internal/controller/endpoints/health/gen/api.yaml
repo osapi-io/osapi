@@ -421,3 +421,4 @@ tags:
   - description: Health check endpoints for liveness, readiness, and detailed status.
     name: health
     x-displayName: Health
+    x-osapi-group: health

@@ -232,7 +232,7 @@ var Group = endpoint.Define(
 	endpoint.Area(area.Containers),
 	endpoint.Prefix("node/{hostname}/container"),
 	endpoint.Uses[dispatch.Deps](),
-	endpoint.Tag("container_docker_operations", "Node/Docker", "The Docker containers of the host"),
+	endpoint.Tag("container_docker_operations", "Container", "The Docker containers of the host"),
 	endpoint.CommandNotes("The [docker behavior](../../../../../../reference/behaviors/containers/docker/docker.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[ListRequest, ContainerDockerCollectionResponse]("list").
 		Handle(HandleList).

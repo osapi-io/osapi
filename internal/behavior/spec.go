@@ -95,6 +95,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindOption,
+			Name: `Title("Package updates")`,
+			Does: "Gives the behavior the title that a person reads: the title of its reference and chain pages, the name of its API tag and of its category of blocks in the UI. Without it, the title is the name with a capital letter, such as Sysctl.",
+			When: "When the name does not read well with a capital letter: an initialism such as DNS, two words such as Package updates, a group such as Container image, or a behavior that Of nests, which names its parent, such as User SSH key.",
+		},
+		{
+			Kind: KindOption,
 			Name: "Of(parent.Behavior)",
 			Does: "Puts the behavior's items under an item of another behavior: Of(user.Behavior) puts sshkey at /api/node/{hostname}/user/{name}/sshkey and osapi client node user sshkey. Each input has the parent's key, such as name, which goes in the path before the method's own key. The permissions are the parent's: the keys of a user need user:read and user:write. The parent's provider is not required: a child that needs it declares Requires too.",
 			When: "For a resource that exists only inside another, such as the SSH keys of a user. Not with Under: the parent's path is the group.",

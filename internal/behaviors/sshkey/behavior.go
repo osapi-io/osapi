@@ -69,6 +69,7 @@ var chown = behavior.Ran("chown", "-R", "1001:1001", "/home/osapitest/.ssh")
 // Behavior is the authorized SSH keys of a user.
 var Behavior = behavior.Register(behavior.Define(
 	"sshkey", "The authorized SSH keys of a user",
+	behavior.Title("User SSH key"),
 	behavior.Node,
 	behavior.API,
 	behavior.Area(area.Security),

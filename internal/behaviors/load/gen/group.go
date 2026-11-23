@@ -47,7 +47,7 @@ var Group = endpoint.Define(
 	endpoint.Area(area.Node),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
-	endpoint.Tag("load_operations", "Node/Load", "Get the load averages of target hosts"),
+	endpoint.Tag("load_operations", "Load", "Get the load averages of target hosts"),
 	endpoint.CommandNotes("The [load behavior](../../../../../reference/behaviors/node/load/load.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[GetRequest, LoadGetResponse]("get").
 		Handle(HandleGet).

@@ -593,6 +593,7 @@ func (s *EndpointPublicTestSuite) TestPrefix() {
 	s.Equal("#/components/parameters/Hostname", get.Parameters[0].Ref)
 	s.Equal("#/components/parameters/NodeKey", get.Parameters[1].Ref)
 	s.Equal("config", get.Extensions[endpoint.AreaExtension], "the operation has its group's area")
+	s.Equal("sysctl", doc.Tags[0].Extensions[endpoint.GroupExtension], "the tag names its group")
 
 	missing := endpoint.Define(
 		"sysctl",

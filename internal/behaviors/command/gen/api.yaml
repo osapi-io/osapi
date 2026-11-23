@@ -328,4 +328,5 @@ paths:
 tags:
   - description: Run a command on target hosts
     name: command_operations
-    x-displayName: Node/Command
+    x-displayName: Command
+    x-osapi-group: command

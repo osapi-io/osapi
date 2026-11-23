@@ -160,7 +160,7 @@ var Group = endpoint.Define(
 	endpoint.Area(area.Security),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
-	endpoint.Tag("certificate_operations", "Node/Certificate", "The certificate authorities that the host trusts"),
+	endpoint.Tag("certificate_operations", "Certificate", "The certificate authorities that the host trusts"),
 	endpoint.CommandNotes("The [certificate behavior](../../../../../reference/behaviors/security/certificate/certificate.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[ListRequest, CertificateCollectionResponse]("list").
 		Handle(HandleList).

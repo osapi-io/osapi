@@ -90,9 +90,20 @@ func (s *RegistryPublicTestSuite) TestRegister() {
 	}
 }
 
+// TestAll lists the behaviors in the order of the words of their commands:
+// a group's behaviors with each other, and a behavior that Of nests after
+// its parent.
 func (s *RegistryPublicTestSuite) TestAll() {
+	user := behavior.Define(
+		"user",
+		"x",
+		behavior.Node,
+		behavior.Read("get", readSecret).Key("name"),
+	)
 	behavior.Register(behavior.Define("sysctl", "x", behavior.Node))
+	behavior.Register(behavior.Define("sshkey", "x", behavior.Node, behavior.Of(user)))
 	behavior.Register(behavior.Define("dns", "x", behavior.Node, behavior.Under("network")))
+	behavior.Register(user)
 	behavior.Register(behavior.Define("apt", "x", behavior.Node))
 	behavior.Register(behavior.Define("route", "x", behavior.Node, behavior.Under("network")))
 
@@ -102,7 +113,11 @@ func (s *RegistryPublicTestSuite) TestAll() {
 		names = append(names, b.Group+"/"+b.Name)
 	}
 
-	assert.Equal(s.T(), []string{"/apt", "/sysctl", "network/dns", "network/route"}, names)
+	assert.Equal(
+		s.T(),
+		[]string{"/apt", "network/dns", "network/route", "/sysctl", "/user", "/sshkey"},
+		names,
+	)
 }
 
 func (s *RegistryPublicTestSuite) TestSecretFields() {

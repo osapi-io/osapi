@@ -59,7 +59,7 @@ var Group = endpoint.Define(
 	endpoint.Area(area.Networking),
 	endpoint.Prefix("node/{hostname}/network"),
 	endpoint.Uses[dispatch.Deps](),
-	endpoint.Tag("network_connectivity_operations", "Node/Connectivity", "Whether the host reaches an address, by ICMP ping"),
+	endpoint.Tag("network_connectivity_operations", "Connectivity", "Whether the host reaches an address, by ICMP ping"),
 	endpoint.CommandNotes("The [connectivity behavior](../../../../../../reference/behaviors/networking/connectivity/connectivity.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Post[PingRequest, NetworkConnectivityPingResponse]("ping").
 		Handle(HandlePing).
