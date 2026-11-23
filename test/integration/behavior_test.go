@@ -105,7 +105,7 @@ func (s *BehaviorSmokeSuite) TestReads() {
 		for _, m := range b.Methods {
 			// A read that names an item, or the item of a parent such as an
 			// interface's routes, has no input that every host has.
-			if m.Verb != behavior.VerbRead || len(m.PathKeys()) > 0 {
+			if m.Verb != behavior.VerbRead || len(m.PathKeys()) > 0 || needsInput(m) {
 				continue
 			}
 			s.Run(b.Name+" "+m.Name, func() {
@@ -113,6 +113,24 @@ func (s *BehaviorSmokeSuite) TestReads() {
 			})
 		}
 	}
+}
+
+// needsInput reports whether a read has a required field, such as the path
+// of a file's status: no input names it on every host, and its examples run
+// with the writes.
+func needsInput(
+	m *behavior.Method,
+) bool {
+	if m.In == nil {
+		return false
+	}
+	for i := range m.In.NumField() {
+		if strings.Contains(m.In.Field(i).Tag.Get("validate"), "required") {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (s *BehaviorSmokeSuite) TestWrites() {
