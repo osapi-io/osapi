@@ -208,6 +208,32 @@ func ExportDrainCondition(
 	return a.drainCondition()
 }
 
+// SetConsumerRetryInterval sets how long the agent waits before it tries
+// again to create or bind a failed job consumer, and returns a func that
+// restores it.
+func SetConsumerRetryInterval(
+	d time.Duration,
+) func() {
+	prev := consumerRetryInterval
+	consumerRetryInterval = d
+
+	return func() { consumerRetryInterval = prev }
+}
+
+// ExportConsumersCondition exposes consumersCondition for testing.
+func ExportConsumersCondition(
+	a *Agent,
+) job.Condition {
+	return a.consumersCondition()
+}
+
+// ExportWaitConsumers waits for each consumer goroutine of the agent.
+func ExportWaitConsumers(
+	a *Agent,
+) {
+	a.consumerWg.Wait()
+}
+
 // ExportWriteSeen exposes writeSeen for testing.
 func ExportWriteSeen(
 	ctx context.Context,

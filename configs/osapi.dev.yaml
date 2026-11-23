@@ -43,6 +43,7 @@ agent:
       - 5m
       - 15m
       - 30m
+    inactive_threshold: 24h
   queue_group: job-agents
   hostname: ""
   max_jobs: 10

@@ -23,16 +23,20 @@ package agent_test
 import (
 	"context"
 	"errors"
+	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
+	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/agent"
 	agentmocks "github.com/osapi-io/osapi/internal/agent/mocks"
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/mocks"
 	diskMocks "github.com/osapi-io/osapi/internal/provider/node/disk/mocks"
 	hostMocks "github.com/osapi-io/osapi/internal/provider/node/host/mocks"
@@ -52,7 +56,14 @@ type ConsumerPublicTestSuite struct {
 func (s *ConsumerPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
+	s.testAgent = s.newAgent(s.mockCtrl, s.mockJobClient)
+}
 
+// newAgent is an agent of the suite's configuration on jobClient.
+func (s *ConsumerPublicTestSuite) newAgent(
+	ctrl *gomock.Controller,
+	jobClient *mocks.MockJobClient,
+) *agent.Agent {
 	appConfig := config.Config{
 		NATS: config.NATS{
 			Stream: config.NATSStream{
@@ -73,15 +84,15 @@ func (s *ConsumerPublicTestSuite) SetupTest() {
 		},
 	}
 
-	s.testAgent = newTestAgent(newTestAgentParams{
+	return newTestAgent(newTestAgentParams{
 		appConfig:       appConfig,
-		jobClient:       s.mockJobClient,
+		jobClient:       jobClient,
 		streamName:      "test-stream",
-		hostProvider:    hostMocks.NewDefaultMockProvider(s.mockCtrl),
-		diskProvider:    diskMocks.NewDefaultMockProvider(s.mockCtrl),
-		memoryProvider:  memoryMocks.NewDefaultMockProvider(s.mockCtrl),
-		loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
-		processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
+		hostProvider:    hostMocks.NewDefaultMockProvider(ctrl),
+		diskProvider:    diskMocks.NewDefaultMockProvider(ctrl),
+		memoryProvider:  memoryMocks.NewDefaultMockProvider(ctrl),
+		loadProvider:    loadMocks.NewDefaultMockProvider(ctrl),
+		processProvider: processMocks.NewDefaultMockProvider(ctrl),
 	})
 }
 
@@ -480,16 +491,18 @@ func (s *ConsumerPublicTestSuite) TestCreateConsumer() {
 			consumerName:  "test-consumer",
 			filterSubject: "jobs.query._any",
 			agentConsumer: config.AgentConsumer{
-				AckWait:       "30s",
-				BackOff:       []string{"1s", "2s", "5s"},
-				MaxDeliver:    3,
-				MaxAckPending: 10,
-				ReplayPolicy:  "instant",
+				AckWait:           "30s",
+				BackOff:           []string{"1s", "2s", "5s"},
+				MaxDeliver:        3,
+				MaxAckPending:     10,
+				ReplayPolicy:      "instant",
+				InactiveThreshold: "24h",
 			},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
 					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
 					Do(func(_ context.Context, _ string, cfg jetstream.ConsumerConfig) {
+						s.Equal(24*time.Hour, cfg.InactiveThreshold)
 						s.Equal("test-consumer", cfg.Durable)
 						s.Equal("jobs.query._any", cfg.FilterSubject)
 						s.Equal(jetstream.AckExplicitPolicy, cfg.AckPolicy)
@@ -559,16 +572,38 @@ func (s *ConsumerPublicTestSuite) TestCreateConsumer() {
 			},
 		},
 		{
+			name:          "when inactive_threshold is empty the consumer has no threshold",
+			streamName:    "test-stream",
+			consumerName:  "test-consumer",
+			filterSubject: "jobs.query._all",
+			agentConsumer: config.AgentConsumer{
+				AckWait:      "30s",
+				ReplayPolicy: "instant",
+			},
+			setupMocks: func() {
+				s.mockJobClient.EXPECT().
+					CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
+					Do(func(_ context.Context, _ string, cfg jetstream.ConsumerConfig) {
+						s.Equal(time.Duration(0), cfg.InactiveThreshold)
+					}).
+					Return(nil)
+			},
+			validateFunc: func(err error) {
+				s.NoError(err)
+			},
+		},
+		{
 			name:          "invalid duration in config",
 			streamName:    "test-stream",
 			consumerName:  "test-consumer",
 			filterSubject: "jobs.query._any",
 			agentConsumer: config.AgentConsumer{
-				AckWait:       "invalid-duration",
-				BackOff:       []string{"invalid", "2s"},
-				MaxDeliver:    3,
-				MaxAckPending: 10,
-				ReplayPolicy:  "instant",
+				AckWait:           "invalid-duration",
+				BackOff:           []string{"invalid", "2s"},
+				MaxDeliver:        3,
+				MaxAckPending:     10,
+				ReplayPolicy:      "instant",
+				InactiveThreshold: "invalid",
 			},
 			setupMocks: func() {
 				s.mockJobClient.EXPECT().
@@ -576,6 +611,7 @@ func (s *ConsumerPublicTestSuite) TestCreateConsumer() {
 					Do(func(_ context.Context, _ string, cfg jetstream.ConsumerConfig) {
 						// Should have default AckWait (0) and only valid BackOff durations
 						s.Equal(time.Duration(0), cfg.AckWait)
+						s.Equal(time.Duration(0), cfg.InactiveThreshold)
 						s.Len(cfg.BackOff, 1) // Only valid "2s" should be included
 					}).
 					Return(nil)
@@ -706,6 +742,140 @@ func (s *ConsumerPublicTestSuite) TestHandleJobMessageJS() {
 			mockMsg.EXPECT().TermWithReason(gomock.Any()).Return(nil).AnyTimes()
 
 			tt.validateFunc(agent.ExportHandleJobMessageJS(s.testAgent, mockMsg))
+		})
+	}
+}
+
+// TestConsumersCondition checks that an agent whose job consumers cannot be
+// created or bound reports the ConsumersUnavailable condition, tries again,
+// and clears the condition once each consumer runs.
+func (s *ConsumerPublicTestSuite) TestConsumersCondition() {
+	createFailed := errors.New(
+		"nats: API error: code=400 err_code=10026 description=maximum consumers limit reached",
+	)
+	bindFailed := errors.New("failed to get consumer: nats: consumer not found")
+
+	tests := []struct {
+		name string
+		// create and consume answer the n-th call, from 0, to the mocks.
+		create func(n int32) error
+		// consume blocks until ctx ends when it returns nil.
+		consume      func(n int32) error
+		wantHolds    bool
+		wantReason   []string
+		wantRecovers bool
+	}{
+		{
+			name:    "when each consumer is created and bound the condition does not hold",
+			create:  func(int32) error { return nil },
+			consume: func(int32) error { return nil },
+		},
+		{
+			name:       "when a consumer cannot be created the condition holds with the error",
+			create:     func(int32) error { return createFailed },
+			consume:    func(int32) error { return nil },
+			wantHolds:  true,
+			wantReason: []string{"3 job consumers do not run", "maximum consumers limit reached"},
+		},
+		{
+			name:       "when a consumer cannot be bound the condition holds with the error",
+			create:     func(int32) error { return nil },
+			consume:    func(int32) error { return bindFailed },
+			wantHolds:  true,
+			wantReason: []string{"3 job consumers do not run", "consumer not found"},
+		},
+		{
+			name: "when a failed consumer is created on a retry the condition clears",
+			create: func(n int32) error {
+				if n < 3 {
+					return createFailed
+				}
+
+				return nil
+			},
+			consume:      func(int32) error { return nil },
+			wantRecovers: true,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			defer agent.SetConsumerRetryInterval(20 * time.Millisecond)()
+			ctx, cancel := context.WithCancel(context.Background())
+
+			// Each case has its own mocks: the AnyTimes of one case would
+			// answer the next.
+			ctrl := gomock.NewController(s.T())
+			jobClient := mocks.NewMockJobClient(ctrl)
+			a := s.newAgent(ctrl, jobClient)
+
+			var creates, consumes, running atomic.Int32
+			jobClient.EXPECT().
+				CreateOrUpdateConsumer(gomock.Any(), "test-stream", gomock.Any()).
+				DoAndReturn(func(context.Context, string, jetstream.ConsumerConfig) error {
+					return tt.create(creates.Add(1) - 1)
+				}).
+				AnyTimes()
+			jobClient.EXPECT().
+				ConsumeJobs(gomock.Any(), "test-stream", gomock.Any(), gomock.Any(), gomock.Any()).
+				DoAndReturn(func(
+					ctx context.Context,
+					_, _ string,
+					_ natsclient.JetStreamMessageHandler,
+					_ *natsclient.ConsumeOptions,
+				) error {
+					if err := tt.consume(consumes.Add(1) - 1); err != nil {
+						return err
+					}
+					running.Add(1)
+					<-ctx.Done()
+
+					return ctx.Err()
+				}).
+				AnyTimes()
+
+			s.NoError(agent.ExportConsumeQueryJobs(ctx, a, "test-agent"))
+
+			switch {
+			case tt.wantRecovers:
+				s.Eventually(func() bool { return running.Load() == 3 },
+					2*time.Second, 10*time.Millisecond, "each consumer runs after a retry")
+				s.False(agent.ExportConsumersCondition(a).Status)
+			case tt.wantHolds:
+				// The goroutines record a failed bind one by one, so the
+				// reason settles once each has.
+				s.Eventually(func() bool {
+					c := agent.ExportConsumersCondition(a)
+					if !c.Status || c.Type != job.ConditionConsumersUnavailable {
+						return false
+					}
+					for _, want := range tt.wantReason {
+						if !strings.Contains(c.Reason, want) {
+							return false
+						}
+					}
+
+					return true
+				}, 2*time.Second, 10*time.Millisecond, "the condition holds with the error")
+				// The agent tries again.
+				before := creates.Load()
+				s.Eventually(func() bool { return creates.Load() > before },
+					2*time.Second, 10*time.Millisecond, "the agent tries again")
+			default:
+				s.Eventually(func() bool { return running.Load() == 3 },
+					2*time.Second, 10*time.Millisecond)
+				c := agent.ExportConsumersCondition(a)
+				s.False(c.Status)
+				s.Empty(c.Reason)
+			}
+
+			// A cancel, such as a drain, stops the retries and clears the
+			// condition: a stopped consumer is not a failed one.
+			cancel()
+			s.Eventually(func() bool {
+				return !agent.ExportConsumersCondition(a).Status
+			}, 2*time.Second, 10*time.Millisecond, "the condition clears on cancel")
+			agent.ExportWaitConsumers(a)
 		})
 	}
 }

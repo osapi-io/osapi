@@ -182,6 +182,7 @@ func (a *Agent) writeRegistration(
 			a.prevConditions,
 		),
 		a.drainCondition(),
+		a.consumersCondition(),
 	}
 	a.prevConditions = conditions
 

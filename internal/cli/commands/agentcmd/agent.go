@@ -51,6 +51,7 @@ var Group = command.Register(command.Define(
 			"agent.consumer.max_ack_pending",
 			"agent.consumer.replay_policy",
 			"agent.consumer.back_off",
+			"agent.consumer.inactive_threshold",
 		).
 		Setup(Start),
 ))

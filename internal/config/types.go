@@ -381,6 +381,9 @@ type AgentConsumer struct {
 	ReplayPolicy string `mapstructure:"replay_policy" doc:"Replay policy: 'instant' or 'original'."`
 	// BackOff durations between redelivery attempts.
 	BackOff []string `mapstructure:"back_off" doc:"Backoff durations between redelivery attempts."` // e.g. ["30s", "2m", "5m"]
+	// InactiveThreshold is how long a consumer can be idle before NATS
+	// removes it.
+	InactiveThreshold string `mapstructure:"inactive_threshold" doc:"How long a job consumer can be idle before NATS removes it (Go duration). Empty keeps it." validate:"omitempty,go_duration"` // e.g. "24h"
 }
 
 // AgentFacts configuration for the agent's facts collection settings.

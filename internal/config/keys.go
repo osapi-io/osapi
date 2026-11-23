@@ -71,6 +71,7 @@ var Defaults = map[string]any{
 	"agent.consumer.max_ack_pending":             1000,
 	"agent.consumer.replay_policy":               "instant",
 	"agent.consumer.back_off":                    []string{"30s", "2m", "5m", "15m", "30m"},
+	"agent.consumer.inactive_threshold":          "24h",
 	"agent.nats.client_name":                     "osapi-agent",
 	"agent.command.enabled":                      false,
 	"agent.pki.enabled":                          false,

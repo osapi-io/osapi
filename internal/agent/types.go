@@ -153,6 +153,11 @@ type Agent struct {
 	// drainStuckAfter; the heartbeat reports it as the DrainStuck condition.
 	// Guarded by lifecycleMu.
 	drainStuck bool
+	// consumerErrs maps each job consumer of the running set that cannot
+	// be created or bound to its last error; the heartbeat reports it as
+	// the ConsumersUnavailable condition. Guarded by consumerErrMu.
+	consumerErrs  map[string]string
+	consumerErrMu sync.Mutex
 
 	// missingPrograms are the behaviors' programs that this host lacks,
 	// found at start. The heartbeat reports them.

@@ -22,6 +22,6 @@ var agentStartCmd = &cobra.Command{
 }
 
 func init() {
-	config.BindFlags(agentStartCmd.Flags(), "agent.nats.host", "agent.nats.port", "agent.nats.client_name", "agent.queue_group", "agent.hostname", "agent.max_jobs", "agent.consumer.max_deliver", "agent.consumer.ack_wait", "agent.consumer.max_ack_pending", "agent.consumer.replay_policy", "agent.consumer.back_off")
+	config.BindFlags(agentStartCmd.Flags(), "agent.nats.host", "agent.nats.port", "agent.nats.client_name", "agent.queue_group", "agent.hostname", "agent.max_jobs", "agent.consumer.max_deliver", "agent.consumer.ack_wait", "agent.consumer.max_ack_pending", "agent.consumer.replay_policy", "agent.consumer.back_off", "agent.consumer.inactive_threshold")
 	clicommand.AddCommands(agentcmd.Group, agentStartCmd)
 }

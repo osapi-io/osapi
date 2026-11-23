@@ -23,8 +23,10 @@ package agent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -50,11 +52,7 @@ func (a *Agent) consumeQueryJobs(
 
 	// Create consumers for different query patterns.
 	// Direct targeting uses machine ID (permanent), not hostname (mutable).
-	consumers := []struct {
-		name       string
-		filter     string
-		queueGroup string
-	}{
+	consumers := []consumerSpec{
 		{
 			name:       consumerPrefix + "query_any_" + sanitizedMachineID,
 			filter:     job.JobsQueryPrefix + "._any",
@@ -80,11 +78,7 @@ func (a *Agent) consumeQueryJobs(
 		for i := range segments {
 			prefix := strings.Join(segments[:i+1], ".")
 			sanitizedPrefix := job.SanitizeHostname(prefix)
-			consumers = append(consumers, struct {
-				name       string
-				filter     string
-				queueGroup string
-			}{
+			consumers = append(consumers, consumerSpec{
 				name: fmt.Sprintf(
 					"%squery_label_%s_%s_%s",
 					consumerPrefix,
@@ -98,46 +92,7 @@ func (a *Agent) consumeQueryJobs(
 	}
 
 	for _, consumer := range consumers {
-		// Create the consumer first
-		if err := a.createConsumer(ctx, streamName, consumer.name, consumer.filter); err != nil {
-			a.logger.Error(
-				"failed to create query consumer",
-				slog.String("consumer", consumer.name),
-				slog.String("error", err.Error()),
-			)
-			continue
-		}
-
-		a.consumerWg.Add(1)
-		set := a.consumerSetWg
-		if set != nil {
-			set.Add(1)
-		}
-		go func(c struct {
-			name       string
-			filter     string
-			queueGroup string
-		},
-		) {
-			defer a.consumerWg.Done()
-			if set != nil {
-				defer set.Done()
-			}
-
-			opts := &natsclient.ConsumeOptions{
-				QueueGroup:  c.queueGroup,
-				MaxInFlight: a.appConfig.Agent.MaxJobs,
-			}
-
-			err := a.jobClient.ConsumeJobs(ctx, streamName, c.name, a.handleJobMessageJS, opts)
-			if err != nil && err != context.Canceled {
-				a.logger.Error(
-					"error consuming query messages",
-					slog.String("consumer", c.name),
-					slog.String("error", err.Error()),
-				)
-			}
-		}(consumer)
+		a.startConsumer(ctx, streamName, consumer, "query")
 	}
 
 	return nil
@@ -158,11 +113,7 @@ func (a *Agent) consumeModifyJobs(
 
 	// Create consumers for different modify patterns.
 	// Direct targeting uses machine ID (permanent), not hostname (mutable).
-	consumers := []struct {
-		name       string
-		filter     string
-		queueGroup string
-	}{
+	consumers := []consumerSpec{
 		{
 			name:       consumerPrefix + "modify_any_" + sanitizedMachineID,
 			filter:     job.JobsModifyPrefix + "._any",
@@ -184,11 +135,7 @@ func (a *Agent) consumeModifyJobs(
 		for i := range segments {
 			prefix := strings.Join(segments[:i+1], ".")
 			sanitizedPrefix := job.SanitizeHostname(prefix)
-			consumers = append(consumers, struct {
-				name       string
-				filter     string
-				queueGroup string
-			}{
+			consumers = append(consumers, consumerSpec{
 				name: fmt.Sprintf(
 					"%smodify_label_%s_%s_%s",
 					consumerPrefix,
@@ -202,49 +149,147 @@ func (a *Agent) consumeModifyJobs(
 	}
 
 	for _, consumer := range consumers {
-		// Create the consumer first
-		if err := a.createConsumer(ctx, streamName, consumer.name, consumer.filter); err != nil {
-			a.logger.Error(
-				"failed to create modify consumer",
-				slog.String("consumer", consumer.name),
-				slog.String("error", err.Error()),
-			)
-			continue
-		}
-
-		a.consumerWg.Add(1)
-		set := a.consumerSetWg
-		if set != nil {
-			set.Add(1)
-		}
-		go func(c struct {
-			name       string
-			filter     string
-			queueGroup string
-		},
-		) {
-			defer a.consumerWg.Done()
-			if set != nil {
-				defer set.Done()
-			}
-
-			opts := &natsclient.ConsumeOptions{
-				QueueGroup:  c.queueGroup,
-				MaxInFlight: a.appConfig.Agent.MaxJobs,
-			}
-
-			err := a.jobClient.ConsumeJobs(ctx, streamName, c.name, a.handleJobMessageJS, opts)
-			if err != nil && err != context.Canceled {
-				a.logger.Error(
-					"error consuming modify messages",
-					slog.String("consumer", c.name),
-					slog.String("error", err.Error()),
-				)
-			}
-		}(consumer)
+		a.startConsumer(ctx, streamName, consumer, "modify")
 	}
 
 	return nil
+}
+
+// consumerSpec is one durable job consumer of the agent: its name, the
+// subject it filters on, and the queue group of an _any consumer.
+type consumerSpec struct {
+	name       string
+	filter     string
+	queueGroup string
+}
+
+// consumerRetryInterval is how long the agent waits before it tries again
+// to create or bind a job consumer that failed.
+var consumerRetryInterval = 10 * time.Second
+
+// startConsumer creates the consumer c and consumes its jobs in a goroutine
+// of the running set. A consumer that cannot be created or bound, such as
+// when the stream has reached its limit of consumers, is recorded for the
+// ConsumersUnavailable condition, and the goroutine tries again each
+// consumerRetryInterval until it runs or ctx ends. The first try is not in
+// the goroutine, so a caller sees each consumer created that can be.
+func (a *Agent) startConsumer(
+	ctx context.Context,
+	streamName string,
+	c consumerSpec,
+	kind string,
+) {
+	err := a.createConsumer(ctx, streamName, c.name, c.filter)
+	if err != nil {
+		a.consumerFailed(c.name, "failed to create "+kind+" consumer", err)
+	}
+
+	opts := &natsclient.ConsumeOptions{
+		QueueGroup:  c.queueGroup,
+		MaxInFlight: a.appConfig.Agent.MaxJobs,
+	}
+	retry := consumerRetryInterval
+
+	a.consumerWg.Add(1)
+	set := a.consumerSetWg
+	if set != nil {
+		set.Add(1)
+	}
+	go func() {
+		defer a.consumerWg.Done()
+		if set != nil {
+			defer set.Done()
+		}
+		// A consumer that stops is not a failed one: a drain or a stop
+		// clears it from the condition.
+		defer a.consumerRecovered(c.name)
+
+		for {
+			if err == nil {
+				err = a.jobClient.ConsumeJobs(ctx, streamName, c.name, a.handleJobMessageJS, opts)
+				if err == nil || errors.Is(err, context.Canceled) {
+					return
+				}
+				a.consumerFailed(c.name, "error consuming "+kind+" messages", err)
+			}
+
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(retry):
+			}
+
+			err = a.createConsumer(ctx, streamName, c.name, c.filter)
+			if err != nil {
+				a.consumerFailed(c.name, "failed to create "+kind+" consumer", err)
+
+				continue
+			}
+			a.consumerRecovered(c.name)
+		}
+	}()
+}
+
+// consumerFailed logs the failure of the consumer name and records it for
+// the ConsumersUnavailable condition.
+func (a *Agent) consumerFailed(
+	name string,
+	msg string,
+	err error,
+) {
+	a.logger.Error(
+		msg,
+		slog.String("consumer", name),
+		slog.String("error", err.Error()),
+	)
+
+	a.consumerErrMu.Lock()
+	defer a.consumerErrMu.Unlock()
+	if a.consumerErrs == nil {
+		a.consumerErrs = make(map[string]string)
+	}
+	a.consumerErrs[name] = err.Error()
+}
+
+// consumerRecovered removes the consumer name from the failed consumers.
+func (a *Agent) consumerRecovered(
+	name string,
+) {
+	a.consumerErrMu.Lock()
+	defer a.consumerErrMu.Unlock()
+	delete(a.consumerErrs, name)
+}
+
+// consumersCondition is the ConsumersUnavailable condition of the agent,
+// for the heartbeat. It holds while a job consumer of the running set
+// cannot be created or bound, so that the agent can miss jobs for it. The
+// scheduling state stays as it is: it is the drain state that an operator
+// sets, and the condition is what says the agent is not ready.
+func (a *Agent) consumersCondition() job.Condition {
+	a.consumerErrMu.Lock()
+	failed := len(a.consumerErrs)
+	names := make([]string, 0, failed)
+	for name := range a.consumerErrs {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	var reason string
+	if failed > 0 {
+		reason = fmt.Sprintf(
+			"%d job consumers do not run; %s: %s",
+			failed, names[0], a.consumerErrs[names[0]],
+		)
+	}
+	a.consumerErrMu.Unlock()
+
+	return job.Condition{
+		Type:   job.ConditionConsumersUnavailable,
+		Status: failed > 0,
+		Reason: reason,
+		LastTransitionTime: transitionTime(
+			job.ConditionConsumersUnavailable, failed > 0, a.prevConditions,
+		),
+	}
 }
 
 // State returns the agent's scheduling state. Read by the heartbeat on its own
@@ -355,6 +400,10 @@ func (a *Agent) createConsumer(
 		}
 	}
 
+	// An idle consumer, such as one of a host that has a new machine ID,
+	// is removed by NATS after this time. Empty keeps it.
+	inactiveThreshold, _ := time.ParseDuration(a.appConfig.Agent.Consumer.InactiveThreshold)
+
 	// Parse replay policy
 	var replayPolicy jetstream.ReplayPolicy
 	if a.appConfig.Agent.Consumer.ReplayPolicy == "original" {
@@ -364,15 +413,16 @@ func (a *Agent) createConsumer(
 	}
 
 	consumerConfig := jetstream.ConsumerConfig{
-		Durable:       consumerName,
-		FilterSubject: filterSubject,
-		AckPolicy:     jetstream.AckExplicitPolicy,
-		DeliverPolicy: jetstream.DeliverAllPolicy,
-		MaxDeliver:    a.appConfig.Agent.Consumer.MaxDeliver,
-		AckWait:       ackWait,
-		BackOff:       backOff,
-		MaxAckPending: a.appConfig.Agent.Consumer.MaxAckPending,
-		ReplayPolicy:  replayPolicy,
+		Durable:           consumerName,
+		FilterSubject:     filterSubject,
+		AckPolicy:         jetstream.AckExplicitPolicy,
+		DeliverPolicy:     jetstream.DeliverAllPolicy,
+		MaxDeliver:        a.appConfig.Agent.Consumer.MaxDeliver,
+		AckWait:           ackWait,
+		BackOff:           backOff,
+		MaxAckPending:     a.appConfig.Agent.Consumer.MaxAckPending,
+		ReplayPolicy:      replayPolicy,
+		InactiveThreshold: inactiveThreshold,
 	}
 
 	return a.jobClient.CreateOrUpdateConsumer(ctx, streamName, consumerConfig)

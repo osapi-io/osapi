@@ -90,6 +90,10 @@ const (
 	// ConditionDrainStuck is set when a drain's consumers have not stopped
 	// within the agent's limit, so the agent cannot reach Cordoned.
 	ConditionDrainStuck ConditionType = "DrainStuck"
+	// ConditionConsumersUnavailable is set while a job consumer of the
+	// agent cannot be created or bound, so the agent does not get all of
+	// its jobs.
+	ConditionConsumersUnavailable ConditionType = "ConsumersUnavailable"
 )
 
 // StatusService provides node status operations.

@@ -116,9 +116,9 @@ type NetworkInterfaceResponse struct {
 
 // NodeCondition is a condition the controller evaluated for the host.
 type NodeCondition struct {
-	Type               string    `json:"type"                 validate:"oneof=MemoryPressure HighLoad DiskPressure"`
+	Type               string    `json:"type"                 validate:"oneof=MemoryPressure HighLoad DiskPressure ConsumersUnavailable"`
 	Reason             string    `json:"reason,omitempty"`
-	LastTransitionTime time.Time `json:"last_transition_time"                                                       label:"Since" render:"age"`
+	LastTransitionTime time.Time `json:"last_transition_time"                                                                            label:"Since" render:"age"`
 }
 
 // RouteResponse is one entry of the host's routing table.
