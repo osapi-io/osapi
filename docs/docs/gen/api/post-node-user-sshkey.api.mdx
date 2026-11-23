@@ -1,0 +1,69 @@
+---
+id: post-node-user-sshkey
+title: "Add an authorized SSH key to a user"
+description: "Adds the key line to the end of ~/.ssh/authorized_keys of the user, and makes the directory and the file if they are missing, with modes 700 and 600, owned by the user. A key that the file has already, by its fingerprint, does not change it. A line with no public key is refused. A user that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped."
+sidebar_label: "Add an authorized SSH key to a user"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "post api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Add an authorized SSH key to a user"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/api/node/{hostname}/user/{name}/sshkey"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Adds the key line to the end of ~/.ssh/authorized_keys of the user, and makes the directory and the file if they are missing, with modes 700 and 600, owned by the user. A key that the file has already, by its fingerprint, does not change it. A line with no public key is refused. A user that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./post-node-user-sshkey.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./post-node-user-sshkey.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./post-node-user-sshkey.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

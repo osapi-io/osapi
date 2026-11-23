@@ -37,7 +37,6 @@ import (
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
 	"github.com/osapi-io/osapi/internal/provider/node/memory"
-	userProv "github.com/osapi-io/osapi/internal/provider/node/user"
 )
 
 // dockerNewFn makes the Docker client (injectable for testing). docker checks
@@ -100,15 +99,4 @@ func (e hostEnv) docker(
 	}
 
 	return c
-}
-
-func (e hostEnv) user() userProv.Provider {
-	switch e.platform {
-	case "debian":
-		return userProv.NewDebianProvider(e.log, e.fs, e.exec)
-	case "darwin":
-		return userProv.NewDarwinProvider()
-	default:
-		return userProv.NewLinuxProvider()
-	}
 }

@@ -232,43 +232,11 @@ var UserMutationCollectionFromGen = userMutationCollectionFromGen
 
 // SSHKeyCollectionFromGen exposes the private
 // sshKeyCollectionFromGen for testing.
-func SSHKeyCollectionFromGen(
-	input *gen.SSHKeyCollectionResponse,
-) Collection[SSHKeyInfoResult] {
-	return sshKeyCollectionFromGen(input)
-}
-
-// SSHKeyInfoResultFromGen exposes the private
-// sshKeyInfoResultFromGen for testing.
-func SSHKeyInfoResultFromGen(
-	input gen.SSHKeyEntry,
-) SSHKeyInfoResult {
-	return sshKeyInfoResultFromGen(input)
-}
-
-// SSHKeyInfoFromGen exposes the private
-// sshKeyInfoFromGen for testing.
-func SSHKeyInfoFromGen(
-	input gen.SSHKeyInfo,
-) SSHKeyInfo {
-	return sshKeyInfoFromGen(input)
-}
+var SSHKeyCollectionFromGen = sshKeyCollectionFromGen
 
 // SSHKeyMutationCollectionFromGen exposes the private
 // sshKeyMutationCollectionFromGen for testing.
-func SSHKeyMutationCollectionFromGen(
-	input *gen.SSHKeyMutationResponse,
-) Collection[SSHKeyMutationResult] {
-	return sshKeyMutationCollectionFromGen(input)
-}
-
-// SSHKeyMutationResultFromGen exposes the private
-// sshKeyMutationResultFromGen for testing.
-func SSHKeyMutationResultFromGen(
-	input gen.SSHKeyMutationEntry,
-) SSHKeyMutationResult {
-	return sshKeyMutationResultFromGen(input)
-}
+var SSHKeyMutationCollectionFromGen = sshKeyMutationCollectionFromGen
 
 // GroupInfoCollectionFromGen exposes the private
 // groupInfoCollectionFromGen for testing.

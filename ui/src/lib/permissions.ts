@@ -114,9 +114,6 @@ export const BLOCK_OPERATIONS: Record<string, OperationId> = {
   "audit-list": "getAuditLogs",
   "audit-get": "getAuditLogByID",
   "audit-export": "getAuditExport",
-  "user-list-keys": "getNodeUserSSHKey",
-  "user-add-key": "postNodeUserSSHKey",
-  "user-remove-key": "deleteNodeUserSSHKey",
 };
 
 export const BLOCK_PERMISSIONS: Record<string, Permission> = Object.fromEntries(

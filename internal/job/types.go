@@ -172,11 +172,7 @@ const (
 const ()
 
 // SSH Key operations.
-const (
-	OperationSSHKeyList   = client.OpSSHKeyList
-	OperationSSHKeyAdd    = client.OpSSHKeyAdd
-	OperationSSHKeyRemove = client.OpSSHKeyRemove
-)
+const ()
 
 // Network interface operations.
 const (

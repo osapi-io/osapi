@@ -138,6 +138,32 @@ func rawRead(
 	return noteOut{Text: out}, err
 }
 
+// shelfIn is the input of a parent's method, which a child's After names.
+type shelfIn struct {
+	Name string `json:"name"`
+}
+
+// addShelf is the parent's method: it fails for the name "fail".
+func addShelf(
+	_ context.Context,
+	_ note,
+	in shelfIn,
+) (noteOut, error) {
+	if in.Name == "fail" {
+		return noteOut{}, errors.New("no shelf")
+	}
+
+	return noteOut{Text: in.Name, Changed: true}, nil
+}
+
+// shelf is a parent behavior, whose provider fails to build with err.
+func shelf(
+	err error,
+) *behavior.Behavior {
+	return behavior.Define("shelf", "A shelf", behavior.Node, onDebian(err),
+		behavior.Write("add", addShelf))
+}
+
 func onDebian(
 	err error,
 ) behavior.Option {
@@ -381,6 +407,37 @@ func (s *CheckPublicTestSuite) TestCheck() {
 					Example("The note", getIn{}, noteOut{}, behavior.After(42)),
 			},
 			want: []string{"no method takes int"},
+		},
+		{
+			name:     "when After names a method of the parent",
+			platform: onDebian(nil),
+			methods: []behavior.Option{
+				behavior.Of(shelf(nil)),
+				behavior.Read("get", getNote).
+					Example("The note", getIn{}, noteOut{Text: "hello"},
+						behavior.After(shelfIn{Name: "top"}),
+						behavior.Prints("cat /etc/note", "hello")),
+			},
+		},
+		{
+			name:     "when the parent's method that After names fails",
+			platform: onDebian(nil),
+			methods: []behavior.Option{
+				behavior.Of(shelf(nil)),
+				behavior.Read("get", getNote).
+					Example("The note", getIn{}, noteOut{}, behavior.After(shelfIn{Name: "fail"})),
+			},
+			want: []string{"After add failed: no shelf"},
+		},
+		{
+			name:     "when the parent's provider cannot be built",
+			platform: onDebian(nil),
+			methods: []behavior.Option{
+				behavior.Of(shelf(errors.New("no socket"))),
+				behavior.Read("get", getNote).
+					Example("The note", getIn{}, noteOut{}, behavior.After(shelfIn{Name: "top"})),
+			},
+			want: []string{"no provider of shelf on the fake host"},
 		},
 		{
 			name:     "when After fails",

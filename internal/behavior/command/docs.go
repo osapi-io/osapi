@@ -295,7 +295,7 @@ func commandLine(
 }
 
 // initialisms are the behavior names that a title keeps in capitals.
-var initialisms = map[string]string{"dns": "DNS", "os": "OS", "ntp": "NTP"}
+var initialisms = map[string]string{"dns": "DNS", "os": "OS", "ntp": "NTP", "sshkey": "SSH key"}
 
 // Title is the name of b as the title of its page and its sidebar entry:
 // capitalized, with an initialism such as DNS in capitals.

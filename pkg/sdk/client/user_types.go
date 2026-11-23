@@ -83,110 +83,73 @@ type UserUpdateOpts struct {
 	Lock *bool
 }
 
-// SSHKeyInfoResult represents SSH key list result for one host.
+// SSHKeyInfoResult is one authorized key of a user on one host.
 type SSHKeyInfoResult struct {
-	Hostname string       `json:"hostname"`
-	Status   string       `json:"status"`
-	Keys     []SSHKeyInfo `json:"keys,omitempty"`
-	Error    string       `json:"error,omitempty"`
-}
-
-// SSHKeyInfo represents a single SSH authorized key.
-type SSHKeyInfo struct {
+	Hostname    string `json:"hostname"`
+	Status      string `json:"status"`
 	Type        string `json:"type,omitempty"`
 	Fingerprint string `json:"fingerprint,omitempty"`
 	Comment     string `json:"comment,omitempty"`
+	Options     string `json:"options,omitempty"`
+	Error       string `json:"error,omitempty"`
 }
 
-// SSHKeyMutationResult represents SSH key add/remove result for one host.
+// SSHKeyMutationResult is what an add or a remove of a key did on one host.
 type SSHKeyMutationResult struct {
-	Hostname string `json:"hostname"`
-	Status   string `json:"status"`
-	Changed  bool   `json:"changed"`
-	Error    string `json:"error,omitempty"`
+	Hostname    string `json:"hostname"`
+	Status      string `json:"status"`
+	Fingerprint string `json:"fingerprint,omitempty"`
+	Changed     bool   `json:"changed"`
+	Error       string `json:"error,omitempty"`
 }
 
 // SSHKeyAddOpts contains options for adding an SSH key.
 type SSHKeyAddOpts struct {
-	// Key is the full SSH public key line (e.g., "ssh-ed25519 AAAA... user@host").
+	// Key is the full public key line, such as ssh-ed25519 AAAA... alice@laptop.
 	Key string
 }
 
-// sshKeyCollectionFromGen converts a gen.SSHKeyCollectionResponse
-// to a Collection[SSHKeyInfoResult].
 func sshKeyCollectionFromGen(
-	g *gen.SSHKeyCollectionResponse,
+	rows []gen.UserSshkeyKey,
+	jobID *openapi_types.UUID,
 ) Collection[SSHKeyInfoResult] {
-	results := make([]SSHKeyInfoResult, 0, len(g.Results))
-	for _, r := range g.Results {
-		results = append(results, sshKeyInfoResultFromGen(r))
+	results := make([]SSHKeyInfoResult, 0, len(rows))
+	for _, r := range rows {
+		results = append(results, SSHKeyInfoResult{
+			Hostname:    r.Hostname,
+			Status:      string(r.Status),
+			Type:        derefString(r.Type),
+			Fingerprint: derefString(r.Fingerprint),
+			Comment:     derefString(r.Comment),
+			Options:     derefString(r.Options),
+			Error:       derefString(r.Error),
+		})
 	}
 
 	return Collection[SSHKeyInfoResult]{
 		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
+		JobID:   jobIDFromGen(jobID),
 	}
 }
 
-// sshKeyInfoResultFromGen converts a gen.SSHKeyEntry to an SSHKeyInfoResult.
-func sshKeyInfoResultFromGen(
-	r gen.SSHKeyEntry,
-) SSHKeyInfoResult {
-	result := SSHKeyInfoResult{
-		Hostname: r.Hostname,
-		Status:   string(r.Status),
-		Error:    derefString(r.Error),
-	}
-
-	if r.Keys != nil {
-		keys := make([]SSHKeyInfo, 0, len(*r.Keys))
-		for _, k := range *r.Keys {
-			keys = append(keys, sshKeyInfoFromGen(k))
-		}
-
-		result.Keys = keys
-	}
-
-	return result
-}
-
-// sshKeyInfoFromGen converts a gen.SSHKeyInfo to an SSHKeyInfo.
-func sshKeyInfoFromGen(
-	k gen.SSHKeyInfo,
-) SSHKeyInfo {
-	return SSHKeyInfo{
-		Type:        derefString(k.Type),
-		Fingerprint: derefString(k.Fingerprint),
-		Comment:     derefString(k.Comment),
-	}
-}
-
-// sshKeyMutationCollectionFromGen converts a gen.SSHKeyMutationResponse
-// to a Collection[SSHKeyMutationResult].
 func sshKeyMutationCollectionFromGen(
-	g *gen.SSHKeyMutationResponse,
+	rows []gen.UserSshkeyResult,
+	jobID *openapi_types.UUID,
 ) Collection[SSHKeyMutationResult] {
-	results := make([]SSHKeyMutationResult, 0, len(g.Results))
-	for _, r := range g.Results {
-		results = append(results, sshKeyMutationResultFromGen(r))
+	results := make([]SSHKeyMutationResult, 0, len(rows))
+	for _, r := range rows {
+		results = append(results, SSHKeyMutationResult{
+			Hostname:    r.Hostname,
+			Status:      string(r.Status),
+			Fingerprint: derefString(r.Fingerprint),
+			Changed:     derefBool(r.Changed),
+			Error:       derefString(r.Error),
+		})
 	}
 
 	return Collection[SSHKeyMutationResult]{
 		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
-	}
-}
-
-// sshKeyMutationResultFromGen converts a gen.SSHKeyMutationEntry
-// to an SSHKeyMutationResult.
-func sshKeyMutationResultFromGen(
-	r gen.SSHKeyMutationEntry,
-) SSHKeyMutationResult {
-	return SSHKeyMutationResult{
-		Hostname: r.Hostname,
-		Status:   string(r.Status),
-		Changed:  derefBool(r.Changed),
-		Error:    derefString(r.Error),
+		JobID:   jobIDFromGen(jobID),
 	}
 }
 

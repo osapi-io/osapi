@@ -47,6 +47,7 @@ import (
 	_ "github.com/osapi-io/osapi/internal/behaviors/process"
 	_ "github.com/osapi-io/osapi/internal/behaviors/schedule"
 	_ "github.com/osapi-io/osapi/internal/behaviors/service"
+	_ "github.com/osapi-io/osapi/internal/behaviors/sshkey"
 	_ "github.com/osapi-io/osapi/internal/behaviors/status"
 	_ "github.com/osapi-io/osapi/internal/behaviors/sysctl"
 	_ "github.com/osapi-io/osapi/internal/behaviors/timezone"

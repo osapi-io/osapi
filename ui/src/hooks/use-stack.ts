@@ -44,27 +44,6 @@ const HAND_BLOCK_TYPES: BlockType[] = [
   },
 
   // ── Networking ─────────────────────────────────────────────────────────────
-  {
-    type: "user-list-keys",
-    label: "List Keys",
-    description: "List SSH keys for a user",
-    category: "user",
-    group: "security",
-  },
-  {
-    type: "user-add-key",
-    label: "Add Key",
-    description: "Add an SSH key to a user",
-    category: "user",
-    group: "security",
-  },
-  {
-    type: "user-remove-key",
-    label: "Remove Key",
-    description: "Remove an SSH key from a user",
-    category: "user",
-    group: "security",
-  },
 
   // ── Containers ─────────────────────────────────────────────────────────────
   {

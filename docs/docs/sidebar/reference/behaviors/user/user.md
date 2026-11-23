@@ -11,22 +11,22 @@ The users of the host. `osapi behavior get --name user` and
 
 ## Behavior
 
-|             |                       |
-| ----------- | --------------------- |
-| Name        | user                  |
-| Description | The users of the host |
-| Placement   | node                  |
-| Internal    | no                    |
-| API         | yes                   |
-| CLI         | yes                   |
-| Next        | no                    |
-| Platforms   | debian, linux, darwin |
-| Sudo        | none                  |
-| Runs        | none                  |
-| Writes      | none                  |
-| Keeps state | no                    |
-| Uses        | none                  |
-| Used by     | none                  |
+|             |                               |
+| ----------- | ----------------------------- |
+| Name        | user                          |
+| Description | The users of the host         |
+| Placement   | node                          |
+| Internal    | no                            |
+| API         | yes                           |
+| CLI         | yes                           |
+| Next        | no                            |
+| Platforms   | debian, linux, darwin         |
+| Sudo        | none                          |
+| Runs        | none                          |
+| Writes      | none                          |
+| Keeps state | no                            |
+| Uses        | none                          |
+| Used by     | [sshkey](../sshkey/sshkey.md) |
 
 ### Methods (6)
 

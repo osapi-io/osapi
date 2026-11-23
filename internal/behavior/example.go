@@ -226,7 +226,9 @@ func (f Effect) applyExample(
 
 // After runs another of the behavior's methods with input before the
 // example: the method whose input type input is. Use it for the state a read
-// or a change needs, such as a parameter that must already be managed.
+// or a change needs, such as a parameter that must already be managed. The
+// method can be the parent's, for a behavior that is Of one: the keys of a
+// user need the user.
 func After(
 	input any,
 ) Given {

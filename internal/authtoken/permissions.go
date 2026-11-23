@@ -84,8 +84,6 @@ var builtinPermissions = []Permission{
 	"docker:write",
 	"docker:execute",
 	"power:execute",
-	"user:read",
-	"user:write",
 	"log:read",
 }
 
@@ -95,14 +93,13 @@ var adminVerbs = []string{"shell"}
 
 // builtinAdminOnly are the permissions of the hand-written domains that only
 // the admin role gets, because each reaches root directly: an arbitrary
-// command (command:execute, docker:execute), and an account or an SSH key
-// (user:write).
+// command (command:execute, docker:execute). The user and sshkey behaviors
+// mark their writes AdminOnly, for an account or an SSH key (user:write).
 // A behavior or a group that takes one over marks its methods AdminOnly,
 // and Check fails until it does.
 var builtinAdminOnly = []Permission{
 	"command:execute",
 	"docker:execute",
-	"user:write",
 }
 
 // declared is a permission that something needs: a hand-written domain, a

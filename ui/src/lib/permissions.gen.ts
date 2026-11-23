@@ -13,8 +13,6 @@ export type Permission =
   | "docker:write"
   | "docker:execute"
   | "power:execute"
-  | "user:read"
-  | "user:write"
   | "log:read"
   | "certificate:read"
   | "certificate:write"
@@ -39,6 +37,8 @@ export type Permission =
   | "service:read"
   | "service:write"
   | "service:execute"
+  | "user:read"
+  | "user:write"
   | "status:read"
   | "sysctl:read"
   | "sysctl:write"
@@ -69,8 +69,6 @@ export const ALL_PERMISSIONS: Permission[] = [
   "docker:write",
   "docker:execute",
   "power:execute",
-  "user:read",
-  "user:write",
   "log:read",
   "certificate:read",
   "certificate:write",
@@ -95,6 +93,8 @@ export const ALL_PERMISSIONS: Permission[] = [
   "service:read",
   "service:write",
   "service:execute",
+  "user:read",
+  "user:write",
   "status:read",
   "sysctl:read",
   "sysctl:write",
@@ -128,8 +128,6 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "docker:write",
     "docker:execute",
     "power:execute",
-    "user:read",
-    "user:write",
     "log:read",
     "certificate:read",
     "certificate:write",
@@ -154,6 +152,8 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "service:read",
     "service:write",
     "service:execute",
+    "user:read",
+    "user:write",
     "status:read",
     "sysctl:read",
     "sysctl:write",
@@ -179,7 +179,6 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "trace:read",
     "docker:read",
     "power:execute",
-    "user:read",
     "log:read",
     "certificate:read",
     "disk:read",
@@ -196,6 +195,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "schedule:read",
     "service:read",
     "service:execute",
+    "user:read",
     "status:read",
     "sysctl:read",
     "timezone:read",
@@ -214,7 +214,6 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "trace:read",
     "docker:read",
     "docker:write",
-    "user:read",
     "log:read",
     "certificate:read",
     "certificate:write",
@@ -236,6 +235,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "schedule:read",
     "service:read",
     "service:write",
+    "user:read",
     "status:read",
     "sysctl:read",
     "sysctl:write",
@@ -256,7 +256,6 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "health:read",
     "trace:read",
     "docker:read",
-    "user:read",
     "log:read",
     "certificate:read",
     "disk:read",
@@ -271,6 +270,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "network:read",
     "schedule:read",
     "service:read",
+    "user:read",
     "status:read",
     "sysctl:read",
     "timezone:read",

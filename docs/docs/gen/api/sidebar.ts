@@ -400,34 +400,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/User",
-      link: {
-        type: "doc",
-        id: "gen/api/user-ssh-key-management-api-user-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/get-node-user-ssh-key",
-          label: "List SSH authorized keys",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-node-user-ssh-key",
-          label: "Add SSH authorized key",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "gen/api/delete-node-user-ssh-key",
-          label: "Remove SSH authorized key",
-          className: "api-method delete",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Node/Certificate",
       link: {
         type: "doc",
@@ -994,6 +966,34 @@ const sidebar: SidebarsConfig = {
           type: "doc",
           id: "gen/api/post-node-service-stop",
           label: "Stop a service that osapi deployed",
+          className: "api-method post",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Sshkey",
+      link: {
+        type: "doc",
+        id: "gen/api/sshkey-api-sshkey-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/delete-node-user-sshkey",
+          label: "Remove an authorized SSH key of a user",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-user-sshkey",
+          label: "List the authorized SSH keys of a user",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-user-sshkey",
+          label: "Add an authorized SSH key to a user",
           className: "api-method post",
         },
       ],

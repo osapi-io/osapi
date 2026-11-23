@@ -65,11 +65,7 @@ const (
 const ()
 
 // SSH Key operations.
-const (
-	OpSSHKeyList   JobOperation = "node.sshKey.list"
-	OpSSHKeyAdd    JobOperation = "node.sshKey.add"
-	OpSSHKeyRemove JobOperation = "node.sshKey.remove"
-)
+const ()
 
 // Network interface operations.
 const (

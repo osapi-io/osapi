@@ -38,16 +38,20 @@ and the agent have only the hash, never the password.
 
 ### SSH keys
 
-SSH key operations manage the `~/.ssh/authorized_keys` file for a given user:
+The [SSH key behavior](../reference/behaviors/sshkey/sshkey.md) manages the
+`~/.ssh/authorized_keys` file of a user. Its commands are under
+`osapi client node user sshkey`. It reads the keys through gohai on each
+platform, and it changes them on the Debian family only.
 
-- **ListKeys**: list all authorized keys, with the type, fingerprint and comment
-- **AddKey**: add a public key to the end of the authorized_keys file. It is
-  idempotent: the agent does not add a key that is already there
-- **RemoveKey**: remove a key by its SHA256 fingerprint
+- **List**: list each authorized key, with its type, its SHA256 fingerprint, its
+  comment and its options
+- **Create**: add a public key to the end of the file. A key that the file has
+  already, by its fingerprint, does not change it
+- **Delete**: remove a key by its SHA256 fingerprint. A key that the file does
+  not have reports `changed: false`
 
-The provider reads and writes the user's `~/.ssh/authorized_keys` file directly.
-It creates the `~/.ssh` directory and `authorized_keys` file with correct
-permissions (`700` and `600`) if they do not exist.
+A write makes the `~/.ssh` directory and the `authorized_keys` file if they are
+missing, with modes `700` and `600`, and gives them to the user with `chown`.
 
 ### Groups
 
@@ -95,14 +99,14 @@ $ osapi client node user delete --target web-01 --name deploy
 
 ```bash
 # List SSH keys for a user
-$ osapi client node user ssh-key list --target web-01 --name deploy
+$ osapi client node user sshkey list --target web-01 --name deploy
 
 # Add an SSH key
-$ osapi client node user ssh-key create --target web-01 \
+$ osapi client node user sshkey create --target web-01 \
     --name deploy --key 'ssh-ed25519 AAAA... user@laptop'
 
 # Remove an SSH key by fingerprint
-$ osapi client node user ssh-key delete --target web-01 \
+$ osapi client node user sshkey delete --target web-01 \
     --name deploy --fingerprint 'SHA256:abc123...'
 ```
 
@@ -159,12 +163,12 @@ $ osapi client node user create --target group:web \
 | Linux     | Yes  | Skipped |
 
 On a platform that is not supported, a change returns `status: skipped`. It does
-not fail. SSH key operations run on the Debian family only.
+not fail.
 
 ## Related
 
 - [CLI Reference: User](../usage/cli/client/node/user/user.mdx)
-- [CLI Reference: SSH Key](../usage/cli/client/node/user/ssh-key/ssh-key.mdx)
+- [CLI Reference: SSH Key](../usage/cli/client/node/user/sshkey/sshkey.mdx)
 - [CLI Reference: Group](../usage/cli/client/node/group/group.mdx)
 - [SDK: User](../sdk/client/security/user.md)
 - [SDK: Group](../sdk/client/security/group.md)

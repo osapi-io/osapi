@@ -109,14 +109,9 @@ func main() {
 			fmt.Printf("  %s: ERROR %s\n", r.Hostname, r.Error)
 			continue
 		}
-		if len(r.Keys) == 0 {
-			fmt.Printf("  %s: no authorized keys\n", r.Hostname)
-			continue
-		}
-		for _, k := range r.Keys {
-			fmt.Printf("  %s: type=%s fingerprint=%s comment=%s\n",
-				r.Hostname, k.Type, k.Fingerprint, k.Comment)
-		}
+		// Each result is one key of the user on one host.
+		fmt.Printf("  %s: type=%s fingerprint=%s comment=%s\n",
+			r.Hostname, r.Type, r.Fingerprint, r.Comment)
 	}
 
 	// Add an SSH key (may fail on non-Debian platforms).
@@ -128,8 +123,8 @@ func main() {
 		fmt.Printf("add key failed (may be unsupported on this platform): %v\n", err)
 	} else {
 		for _, r := range addResp.Data.Results {
-			fmt.Printf("  %s: changed=%v error=%s\n",
-				r.Hostname, r.Changed, r.Error)
+			fmt.Printf("  %s: fingerprint=%s changed=%v error=%s\n",
+				r.Hostname, r.Fingerprint, r.Changed, r.Error)
 		}
 	}
 }
