@@ -42,12 +42,12 @@
 | [osapi client audit list](../../usage/cli/client/audit/list.md)                                                   | endpoint     | List audit log entries                                                                   |
 | [osapi client controller status](../../usage/cli/client/controller/status.md)                                     | endpoint     | Show the health of the controller                                                        |
 | [osapi client facts keys list](../../usage/cli/client/facts/keys/list.md)                                         | endpoint     | List the fact keys                                                                       |
-| [osapi client file delete](../../usage/cli/client/file/delete.md)                                                 | endpoint     | Delete a file from the Object Store                                                      |
-| [osapi client file get](../../usage/cli/client/file/get.md)                                                       | endpoint     | Get file metadata                                                                        |
-| [osapi client file list](../../usage/cli/client/file/list.md)                                                     | endpoint     | List stored files                                                                        |
-| [osapi client file stale list](../../usage/cli/client/file/stale/list.md)                                         | endpoint     | List stale file deployments                                                              |
-| [osapi client file update](../../usage/cli/client/file/update.md)                                                 | endpoint     | Replace a file in the Object Store                                                       |
-| [osapi client file upload](../../usage/cli/client/file/upload.md)                                                 | endpoint     | Upload a file to the Object Store                                                        |
+| [osapi client file delete](../../usage/cli/client/file/delete.md)                                                 | behavior     | Delete a file from the Object Store                                                      |
+| [osapi client file get](../../usage/cli/client/file/get.md)                                                       | behavior     | Get file metadata                                                                        |
+| [osapi client file list](../../usage/cli/client/file/list.md)                                                     | behavior     | List stored files                                                                        |
+| [osapi client file stale list](../../usage/cli/client/file/stale/list.md)                                         | behavior     | List stale file deployments                                                              |
+| [osapi client file update](../../usage/cli/client/file/update.md)                                                 | behavior     | Replace a file in the Object Store                                                       |
+| [osapi client file upload](../../usage/cli/client/file/upload.md)                                                 | behavior     | Upload a file to the Object Store                                                        |
 | [osapi client health liveness](../../usage/cli/client/health/liveness.md)                                         | endpoint     | Liveness probe                                                                           |
 | [osapi client health ready](../../usage/cli/client/health/ready.md)                                               | endpoint     | Readiness probe                                                                          |
 | [osapi client health status](../../usage/cli/client/health/status.md)                                             | endpoint     | System status and component health                                                       |
@@ -73,9 +73,9 @@
 | [osapi client node container docker start](../../usage/cli/client/node/container/docker/start.md)                 | hand-written | Start a stopped container                                                                |
 | [osapi client node container docker stop](../../usage/cli/client/node/container/docker/stop.md)                   | hand-written | Stop a running container                                                                 |
 | [osapi client node disk get](../../usage/cli/client/node/disk/get.md)                                             | behavior     | Get the disk usage of the host                                                           |
-| [osapi client node file deploy](../../usage/cli/client/node/file/deploy.md)                                       | hand-written | Deploy a file from Object Store to a host                                                |
-| [osapi client node file status](../../usage/cli/client/node/file/status.md)                                       | hand-written | Check deployment status of a file on a host                                              |
-| [osapi client node file undeploy](../../usage/cli/client/node/file/undeploy.md)                                   | hand-written | Remove a deployed file from a host                                                       |
+| [osapi client node file delete](../../usage/cli/client/node/file/delete.md)                                       | behavior     | Remove a file that osapi deployed                                                        |
+| [osapi client node file status](../../usage/cli/client/node/file/status.md)                                       | behavior     | Show whether a deployed file holds what osapi wrote                                      |
+| [osapi client node file update](../../usage/cli/client/node/file/update.md)                                       | behavior     | Deploy an object of the object store to a path                                           |
 | [osapi client node group create](../../usage/cli/client/node/group/create.md)                                     | behavior     | Add a group                                                                              |
 | [osapi client node group delete](../../usage/cli/client/node/group/delete.md)                                     | behavior     | Remove a group                                                                           |
 | [osapi client node group get](../../usage/cli/client/node/group/get.md)                                           | behavior     | Get one group                                                                            |
@@ -177,6 +177,6 @@
 |              |     |
 | ------------ | --- |
 | Command      | 45  |
-| Endpoint     | 31  |
-| Behavior     | 76  |
-| Hand written | 17  |
+| Endpoint     | 25  |
+| Behavior     | 85  |
+| Hand written | 14  |
