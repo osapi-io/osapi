@@ -39,6 +39,9 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Node,
 	behavior.Internal,
 	behavior.Platform(behavior.PlatformDebian, newDebian),
+	// The file writes are the same on each Linux family, so certificate can
+	// write a CA on RHEL and Fedora too.
+	behavior.Platform(behavior.PlatformLinux, newDebian),
 	behavior.Sudo("chown"),
 	behavior.Runs("stat"),
 	// It writes the path its caller names. Each behavior that requires it
