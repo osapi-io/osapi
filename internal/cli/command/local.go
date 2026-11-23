@@ -316,6 +316,7 @@ type LocalMethod struct {
 	says             string
 	process          bool
 	unprinted        bool
+	unlogged         bool
 	keys             []string
 	examples         []Example
 	refusals         []Refusal
@@ -421,6 +422,24 @@ func (m *LocalMethod) Prints(
 		return m
 	}
 	m.examples[len(m.examples)-1].Output = out
+
+	return m
+}
+
+// Logs gives the last Example the lines that a process writes when it
+// starts, at the info level or above. The docs page of the command shows
+// them as its log handler writes them in a terminal, and as JSON for
+// --json. validate refuses Logs before an Example, Logs on a method that is
+// not a process, and a process that no example Logs.
+func (m *LocalMethod) Logs(
+	lines ...LogLine,
+) *LocalMethod {
+	if len(m.examples) == 0 {
+		m.unlogged = true
+
+		return m
+	}
+	m.examples[len(m.examples)-1].Logs = lines
 
 	return m
 }

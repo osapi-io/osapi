@@ -22,11 +22,13 @@ package cli_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -119,6 +121,53 @@ func (suite *LogPublicTestSuite) TestLogFatal() {
 			tc.validateFunc(errBuf.String())
 			assert.True(suite.T(), strings.HasPrefix(errBuf.String(), "[err] "+tc.message))
 			assert.Empty(suite.T(), buf.String())
+		})
+	}
+}
+
+func (suite *LogPublicTestSuite) TestLogHandler() {
+	at := time.Date(2026, time.January, 15, 10, 0, 0, 0, time.UTC)
+	tests := []struct {
+		name   string
+		level  slog.Level
+		asJSON bool
+		color  bool
+		want   string
+	}{
+		{
+			name:  "when color is on, the time and keys are faint and the level is green",
+			level: slog.LevelInfo,
+			color: true,
+			want:  "\x1b[2m10:00AM\x1b[0m \x1b[92mINF\x1b[0m started \x1b[2mport=\x1b[0m4222\n",
+		},
+		{
+			name:  "when color is off, plain text",
+			level: slog.LevelInfo,
+			want:  "10:00AM INF started port=4222\n",
+		},
+		{
+			name:  "when the level is above the line's, nothing",
+			level: slog.LevelWarn,
+			want:  "",
+		},
+		{
+			name:   "when --json is set, a JSON object",
+			level:  slog.LevelInfo,
+			asJSON: true,
+			want:   `{"time":"2026-01-15T10:00:00Z","level":"INFO","msg":"started","port":4222}` + "\n",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			var buf bytes.Buffer
+			h := cli.LogHandler(&buf, tc.level, tc.asJSON, tc.color)
+			r := slog.NewRecord(at, slog.LevelInfo, "started", 0)
+			r.AddAttrs(slog.Int("port", 4222))
+			if h.Enabled(context.Background(), r.Level) {
+				suite.Require().NoError(h.Handle(context.Background(), r))
+			}
+			suite.Equal(tc.want, buf.String())
 		})
 	}
 }

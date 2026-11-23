@@ -66,9 +66,12 @@ The rules:
   .Says("&lt;state&gt;") to the method, such as .Says("draining") for drain.
 - `prints`: Each method that prints a body, and is not a process, has an Example
   that Prints gives its output: a value of the method's output type, which its
-  docs page shows as the CLI prints it. Prints follows the Example that it
-  shows. Fix: Add .Prints(sample) after the Example that it shows, with sample a
-  value of the method's output type, in samples.go of the group.
+  docs page shows as the CLI prints it. Each process has an Example that Logs
+  gives the lines it writes when it starts, which its docs page shows as its log
+  handler writes them. Prints and Logs follow the Example that they show. Fix:
+  Add .Prints(sample) after the Example that it shows, with sample a value of
+  the method's output type, in samples.go of the group. For a process, add
+  .Logs(lines...) after its Example, with the lines in samples.go of the group.
 
 ```bash
 osapi cli command validate

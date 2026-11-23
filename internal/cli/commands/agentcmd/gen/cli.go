@@ -7,13 +7,15 @@ import (
 
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/commands/agentcmd"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 	config "github.com/osapi-io/osapi/internal/config"
 )
 
 var agentStartCmd = &cobra.Command{
-	Args:    cobra.NoArgs,
-	Example: "  osapi agent start\n  osapi agent start --agent-max-jobs 20",
-	Long:    "The agent connects to NATS and subscribes to the job streams. It processes\neach job when the job arrives. It uses a provider for its platform to run\neach operation, for example node status, DNS queries and ping.",
+	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi agent start\n\x1b[2m10:00AM\x1b[0m \x1b[92mINF\x1b[0m starting node agent \x1b[2mcomponent=\x1b[0magent \x1b[2msubsystem=\x1b[0magent\n\x1b[2m10:00AM\x1b[0m \x1b[92mINF\x1b[0m agent configuration \x1b[2mcomponent=\x1b[0magent \x1b[2msubsystem=\x1b[0magent \x1b[2mmachine_id=\x1b[0md530664edc1c431eb5ef1e9dfd6617a5 \x1b[2mhostname=\x1b[0mweb-03 \x1b[2mqueue_group=\x1b[0mjob-agents \x1b[2mmax_jobs=\x1b[0m10 \x1b[2mlabels=\x1b[0mmap[group:web.dev.us-east]\n\x1b[2m10:00AM\x1b[0m \x1b[92mINF\x1b[0m registered in agent registry \x1b[2mcomponent=\x1b[0magent \x1b[2msubsystem=\x1b[0magent.heartbeat \x1b[2mmachine_id=\x1b[0md530664edc1c431eb5ef1e9dfd6617a5 \x1b[2mhostname=\x1b[0mweb-03 \x1b[2mkey=\x1b[0magents.d530664edc1c431eb5ef1e9dfd6617a5 \x1b[2mttl=\x1b[0m30s\n\x1b[2m10:00AM\x1b[0m \x1b[92mINF\x1b[0m node agent started successfully \x1b[2mcomponent=\x1b[0magent \x1b[2msubsystem=\x1b[0magent\n\x1b[2m10:00AM\x1b[0m \x1b[92mINF\x1b[0m metrics server started \x1b[2mcomponent=\x1b[0magent \x1b[2msubsystem=\x1b[0mmetrics \x1b[2maddr=\x1b[0m0.0.0.0:9091\n```\n\nWith `--json`, the command prints:\n\n```json\n{\"time\":\"2026-01-15T10:00:00Z\",\"level\":\"INFO\",\"msg\":\"starting node agent\",\"component\":\"agent\",\"subsystem\":\"agent\"}\n{\"time\":\"2026-01-15T10:00:00Z\",\"level\":\"INFO\",\"msg\":\"agent configuration\",\"component\":\"agent\",\"subsystem\":\"agent\",\"machine_id\":\"d530664edc1c431eb5ef1e9dfd6617a5\",\"hostname\":\"web-03\",\"queue_group\":\"job-agents\",\"max_jobs\":10,\"labels\":{\"group\":\"web.dev.us-east\"}}\n{\"time\":\"2026-01-15T10:00:00Z\",\"level\":\"INFO\",\"msg\":\"registered in agent registry\",\"component\":\"agent\",\"subsystem\":\"agent.heartbeat\",\"machine_id\":\"d530664edc1c431eb5ef1e9dfd6617a5\",\"hostname\":\"web-03\",\"key\":\"agents.d530664edc1c431eb5ef1e9dfd6617a5\",\"ttl\":\"30s\"}\n{\"time\":\"2026-01-15T10:00:00Z\",\"level\":\"INFO\",\"msg\":\"node agent started successfully\",\"component\":\"agent\",\"subsystem\":\"agent\"}\n{\"time\":\"2026-01-15T10:00:00Z\",\"level\":\"INFO\",\"msg\":\"metrics server started\",\"component\":\"agent\",\"subsystem\":\"metrics\",\"addr\":\"0.0.0.0:9091\"}\n```"},
+	Args:        cobra.NoArgs,
+	Example:     "  osapi agent start\n  osapi agent start --agent-max-jobs 20",
+	Long:        "The agent connects to NATS and subscribes to the job streams. It processes\neach job when the job arrives. It uses a provider for its platform to run\neach operation, for example node status, DNS queries and ping.",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		return clicommand.Serve(cmd, agentcmd.Group, "start")
 	},

@@ -38,6 +38,7 @@ var Group = command.Register(command.Define(
 			"each job when the job arrives. It uses a provider for its platform to run\n"+
 			"each operation, for example node status, DNS queries and ping.").
 		Example("").
+		Logs(StartLogs...).
 		Example("--agent-max-jobs 20").
 		Flag(
 			"agent.nats.host",

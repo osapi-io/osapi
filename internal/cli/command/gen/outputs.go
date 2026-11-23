@@ -21,7 +21,9 @@
 package commandgen
 
 import (
+	"context"
 	"encoding/json"
+	"log/slog"
 	"slices"
 	"strings"
 	"time"
@@ -68,6 +70,11 @@ func Outputs(
 	}
 	sections := make([]string, 0, len(m.Examples()))
 	for _, ex := range m.Examples() {
+		if len(ex.Logs) > 0 {
+			sections = append(sections, logSection(ex, strings.TrimRight(line+" "+ex.Flags, " ")))
+
+			continue
+		}
 		var in any
 		var answer, body []byte
 		switch {
@@ -100,6 +107,40 @@ func Outputs(
 	}
 
 	return strings.Join(sections, "\n\n")
+}
+
+// logSection is the section of a process's example: the command line and
+// the lines it writes when it starts, as its log handler writes them in a
+// terminal, then as JSON for --json.
+func logSection(
+	ex command.Example,
+	cmd string,
+) string {
+	doc := ex.Doc
+	if doc == "" {
+		doc = "The command prints"
+	}
+
+	return doc + ":\n\n```ansi\n$ " + cmd + "\n" + logged(ex.Logs, false) + "\n```\n\n" +
+		"With `--json`, the command prints:\n\n```json\n" + logged(ex.Logs, true) + "\n```"
+}
+
+// logged is lines as the CLI's log handler writes them, each at ExampleNow:
+// in color, or as JSON.
+func logged(
+	lines []command.LogLine,
+	asJSON bool,
+) string {
+	var buf strings.Builder
+	h := cli.LogHandler(&buf, slog.LevelInfo, asJSON, true)
+	for _, l := range lines {
+		r := slog.NewRecord(ExampleNow, l.Level, l.Msg, 0)
+		r.AddAttrs(l.Attrs...)
+		// A handler that writes to a strings.Builder does not fail.
+		_ = h.Handle(context.Background(), r)
+	}
+
+	return strings.TrimRight(buf.String(), "\n")
 }
 
 // screen is what the CLI prints for answer, the JSON of m's output, to the

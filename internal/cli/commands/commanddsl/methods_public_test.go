@@ -22,6 +22,7 @@ package commanddsl_test
 
 import (
 	"context"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"testing"
@@ -88,6 +89,7 @@ var (
 		command.Uses[struct{}](),
 		command.SubDoc("keys", "The keys"),
 		command.Process("start").Short("Start it").Flag("controller.api.port").
+			Example("").Logs(command.LogLine{Level: slog.LevelInfo, Msg: "started"}).
 			Setup(func(context.Context, struct{}) (command.Running, error) { return command.Running{}, nil }),
 		command.Method[widgetIn, struct{}]("drain").Short("Drain it").Says("draining").
 			Example("--name a").Fails("no name", widgetIn{}).

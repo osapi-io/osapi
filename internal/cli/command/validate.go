@@ -160,8 +160,8 @@ var Checks = guide.Checks{
 	},
 	{
 		Rule:     RulePrints,
-		Requires: "Each method that prints a body, and is not a process, has an Example that Prints gives its output: a value of the method's output type, which its docs page shows as the CLI prints it. Prints follows the Example that it shows.",
-		Fix:      "Add .Prints(sample) after the Example that it shows, with sample a value of the method's output type, in samples.go of the group.",
+		Requires: "Each method that prints a body, and is not a process, has an Example that Prints gives its output: a value of the method's output type, which its docs page shows as the CLI prints it. Each process has an Example that Logs gives the lines it writes when it starts, which its docs page shows as its log handler writes them. Prints and Logs follow the Example that they show.",
+		Fix:      "Add .Prints(sample) after the Example that it shows, with sample a value of the method's output type, in samples.go of the group. For a process, add .Logs(lines...) after its Example, with the lines in samples.go of the group.",
 	},
 }
 
@@ -307,17 +307,32 @@ func Validate(
 	return out
 }
 
-// printsProblems says what is wrong with the outputs that Prints gave the
-// examples of m: one before any Example, one of another type than m's
-// output, or none for a method that prints a body. A process prints no
-// output, and a method with no body prints one line, which its page derives
-// from the example's flags.
+// printsProblems says what is wrong with the outputs that Prints and Logs
+// gave the examples of m: one before any Example, one of another type than
+// m's output, none for a method that prints a body, a log on a method that
+// is not a process, or none for a process. A method with no body prints one
+// line, which its page derives from the example's flags.
 func printsProblems(
 	m *LocalMethod,
 ) []string {
 	var out []string
 	if m.unprinted {
 		out = append(out, "Prints comes before any Example; it gives the last Example its output.")
+	}
+	if m.unlogged {
+		out = append(out, "Logs comes before any Example; it gives the last Example its log.")
+	}
+	logged := false
+	for _, ex := range m.examples {
+		if len(ex.Logs) > 0 {
+			logged = true
+		}
+	}
+	if logged && !m.process {
+		out = append(out, "Logs is for a process: give this method's output with Prints.")
+	}
+	if !logged && m.process {
+		out = append(out, "no Example has a log: add .Logs(lines...) after one.")
 	}
 	printed := false
 	for _, ex := range m.examples {
@@ -467,7 +482,7 @@ func ValidateOutput() []Problem {
 			})
 		}
 		for _, m := range g.Commands() {
-			// A process prints no output.
+			// A process has no output type: its page shows its log.
 			if lm, ok := m.(*LocalMethod); ok && lm.process {
 				continue
 			}

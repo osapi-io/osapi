@@ -33,6 +33,7 @@ package command
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"reflect"
 	"strings"
@@ -109,6 +110,18 @@ type Example struct {
 	// method's output type, which Prints sets. The docs page of the command
 	// shows it as the CLI prints it. Nil shows no output.
 	Output any
+	// Logs are the lines that a process writes when it starts, which Logs
+	// sets. The docs page of the command shows them as its log handler
+	// writes them.
+	Logs []LogLine
+}
+
+// LogLine is a line that a process writes to its log: its level, its
+// message, and its attributes in order, such as component=nats.
+type LogLine struct {
+	Level slog.Level
+	Msg   string
+	Attrs []slog.Attr
 }
 
 // Deps is what the commands need from the CLI.

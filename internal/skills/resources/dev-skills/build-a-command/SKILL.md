@@ -119,8 +119,11 @@ The design is `components/osapi/commands.md` in osapi-io/specs. Read it first.
   it shows: a value of its output type, in `samples.go` of the group, with each
   time in UTC. The CLI page shows the sample as the CLI prints it, and as JSON
   for `--json`. validate fails a method with no `.Prints`. A method with no body
-  needs none: its page shows its one line for each example. A process prints no
-  output, so it needs none.
+  needs none: its page shows its one line for each example. A process needs a
+  `.Logs(lines...)` after its example in place of `.Prints`: the lines that it
+  writes at the info level when it starts, each a `command.LogLine`, copied from
+  a real start. The CLI page shows them as the log handler writes them in a
+  terminal, and as JSON for `--json`. validate fails a process with no `.Logs`.
 - A command that runs until a signal, such as `nats server start`, is
   `command.Process("start").Setup(fn)`. `internal/cli/commands/controllercmd` is
   a complete one:

@@ -104,7 +104,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindMethod,
 			Name: `Process("name")`,
-			Does: "A command, osapi <group> <name>, that runs a process until the command's context ends, such as osapi nats server start. It has no input and prints no output; .Setup sets what it runs. The context is the one the root makes and cancels on SIGINT or SIGTERM.",
+			Does: "A command, osapi <group> <name>, that runs a process until the command's context ends, such as osapi nats server start. It has no input and no output type; .Setup sets what it runs, and .Logs gives its page the lines that it writes when it starts. The context is the one the root makes and cancels on SIGINT or SIGTERM.",
 			When: "For a command that starts a component and runs until a signal. Its name is an action, such as start.",
 		},
 		{
@@ -161,6 +161,12 @@ var Spec = guide.Spec{
 			Name: `.Prints(sample)`,
 			Does: "Gives the last Example its output: a value of the method's output type, which the CLI page shows as the CLI prints it, and as JSON for --json. The page of a method with no output shows its one line for each example, from the example's flags, with no Prints.",
 			When: "After the Example that it shows, on each method that prints a body and is not a process: validate fails one with no Prints. Put the sample in samples.go of the group, with each time in UTC.",
+		},
+		{
+			Kind: KindRefine,
+			Name: `.Logs(lines...)`,
+			Does: "Gives the last Example of a process the lines that it writes when it starts, each a command.LogLine: a level, a message and its attributes. The CLI page shows them as the log handler of the CLI writes them in a terminal, in color, and as JSON for --json.",
+			When: "After the Example of each process: validate fails a process with no Logs, and Logs on a method. Put the lines in samples.go of the group, copied from a real start at the info level.",
 		},
 		{
 			Kind: KindRefine,
@@ -422,7 +428,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindGenerated,
 			Name: "docs/docs/sidebar/usage/cli/",
-			Does: "The CLI pages, from just cli-docs-generate. The page of a local command comes from .Short, .Long, .Example, .Prints and each input field's doc.",
+			Does: "The CLI pages, from just cli-docs-generate. The page of a local command comes from .Short, .Long, .Example, .Prints, .Logs and each input field's doc.",
 			When: "Change the definition, then generate. Do not write a CLI page by hand.",
 		},
 	},

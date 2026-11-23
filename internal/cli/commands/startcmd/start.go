@@ -41,5 +41,6 @@ var Group = command.Register(command.Define(
 			"10 seconds or less. Then osapi closes the NATS connections and the\n"+
 			"telemetry exporters.").
 		Example("").
+		Logs(startLogs...).
 		Setup(Start),
 ))
