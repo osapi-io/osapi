@@ -131,31 +131,10 @@ func (s *RedactionGuardPublicTestSuite) TestEveryDeniedFieldIsStillLowercase() {
 	}
 }
 
-// specFiles returns each domain's own specification, skipping the combined one
-// that redocly joins from them, so a field is reported against the file it is
-// declared in.
+// specFiles returns the full specification of the API, which has the
+// request body of each endpoint group and behavior.
 func (s *RedactionGuardPublicTestSuite) specFiles() []string {
-	var out []string
-
-	root := filepath.Join("..", "controller", "api")
-	combined := filepath.Join(root, "gen", "api.yaml")
-
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if info.IsDir() || info.Name() != "api.yaml" || path == combined {
-			return nil
-		}
-
-		out = append(out, path)
-
-		return nil
-	})
-	s.Require().NoError(err)
-
-	return out
+	return []string{filepath.Join("..", "controller", "api", "gen", "api.yaml")}
 }
 
 // requestBodyProperties returns every property name reachable from any request

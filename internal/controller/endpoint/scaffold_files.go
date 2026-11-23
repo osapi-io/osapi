@@ -73,7 +73,7 @@ func (sc groupScaffold) pkg() string {
 }
 
 // typeName is a type of the group, with the group's name in front, so its
-// schema cannot have the name of another group's in the joined spec.
+// schema cannot have the name of another group's in the full spec.
 func (sc groupScaffold) typeName(
 	suffix string,
 ) string {

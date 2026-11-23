@@ -61,7 +61,7 @@ var behaviorOpenapiGetCmd = &cobra.Command{
 	},
 	Args:    cobra.NoArgs,
 	Example: "  osapi behavior openapi get --name sysctl",
-	Long:    "It prints the spec as the definition makes it: the part that go generate\nwrites to the behavior's gen/api.yaml, and that the join puts in the spec of\nthe API. An internal behavior serves no route, so it has none.",
+	Long:    "It prints the spec as the definition makes it: the part that go generate\nwrites to the behavior's gen/api.yaml, and puts in the full spec of the\nAPI. An internal behavior serves no route, so it has none.",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		name, _ := cmd.Flags().GetString("name")
 

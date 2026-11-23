@@ -161,7 +161,7 @@ func TestMain(
 	// Each request and response went through the spec: one that broke it
 	// fails the run, even when its own test passed.
 	if v := proxy.Violations(); len(v) > 0 {
-		fmt.Fprintf(os.Stderr, "\n%d requests or responses break the joined spec:\n", len(v))
+		fmt.Fprintf(os.Stderr, "\n%d requests or responses break the full spec:\n", len(v))
 		for _, line := range v {
 			fmt.Fprintln(os.Stderr, "  "+line)
 		}
@@ -391,7 +391,7 @@ func runAgainst(
 
 	code := m.Run()
 	if v := proxy.Violations(); len(v) > 0 {
-		fmt.Fprintf(os.Stderr, "\n%d requests or responses break the joined spec:\n", len(v))
+		fmt.Fprintf(os.Stderr, "\n%d requests or responses break the full spec:\n", len(v))
 		for _, line := range v {
 			fmt.Fprintln(os.Stderr, "  "+line)
 		}

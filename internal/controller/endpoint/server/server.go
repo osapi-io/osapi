@@ -46,13 +46,6 @@ import (
 // permissions from. It matches the key oapi-codegen's wrappers set.
 const scopesKey = "BearerAuth.Scopes"
 
-// ErrorResponse is the body of every answer that is not a success.
-type ErrorResponse struct {
-	Error string `json:"error"`
-	// Reason is why, as one of endpoint.Reasons.
-	Reason endpoint.Reason `json:"reason"`
-}
-
 // Route is one generated endpoint: its HTTP method, its echo path, the
 // permission a token needs ("" for a public one), and the handler.
 type Route struct {
@@ -203,7 +196,7 @@ func Serve[D, In, Out any](
 		in, msg, ok := decode(c)
 		if !ok {
 			return c.JSON(http.StatusBadRequest,
-				ErrorResponse{Error: msg, Reason: endpoint.ReasonInvalidRequest})
+				endpoint.ErrorResponse{Error: msg, Reason: endpoint.ReasonInvalidRequest})
 		}
 
 		out, err := run(c.Request().Context(), deps, in)
@@ -216,7 +209,7 @@ func Serve[D, In, Out any](
 		if err != nil {
 			code, reason := status(s, g, m, err)
 
-			return c.JSON(code, ErrorResponse{Error: err.Error(), Reason: reason})
+			return c.JSON(code, endpoint.ErrorResponse{Error: err.Error(), Reason: reason})
 		}
 
 		respspan.Handled(c)

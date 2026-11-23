@@ -53,7 +53,7 @@ func (s *ConventionsPublicTestSuite) SetupSuite() {
 	s.Require().NoError(yaml.Unmarshal(data, &s.doc))
 }
 
-// op is one operation of the joined spec.
+// op is one operation of the full spec.
 type op struct {
 	verb, path string
 	body       map[string]any

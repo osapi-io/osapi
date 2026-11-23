@@ -402,7 +402,7 @@ whose examples and tests miss a line fails CI too. It also runs
 in a copy of the checkout and runs its tests. Thus the behavior that you start
 from passes each check.
 
-A behavior that replaces a hand-written domain changes the joined spec. The API
+A behavior that replaces a hand-written domain changes the full spec. The API
 contract test, `TestJoinedSpec` in `internal/apicontract`, then fails, and its
 golden diff is the change to the API: write it again with `-update` and read it.
 

@@ -93,7 +93,7 @@ Two other places read `dsl.All()`, so a new DSL needs no change in them:
 
 - `internal/authtoken/gen`, which writes the `Perm*` and `Role*` constants of
   the SDK from the permissions.
-- `RegistryOperations` in `internal/authtoken/operations.go`, which gives the
+- `Operations` in `internal/authtoken/operations.go`, which gives the
   permission of each operation of the UI from the `Operations` of each DSL.
 
 Each generator registers the definitions by a blank import of their `all`

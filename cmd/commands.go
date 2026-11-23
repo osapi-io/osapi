@@ -206,7 +206,7 @@ func endpointDSLDeps() endpointdsl.Deps {
 	return endpointdsl.Deps{
 		Groups: endpoint.All,
 		OpenAPI: func(g *endpoint.Group) (any, error) {
-			return endpoint.OpenAPI(g, endpoint.ErrorRef)
+			return endpoint.OpenAPI(g)
 		},
 		Dir: ".",
 	}
@@ -225,7 +225,7 @@ func behaviorDSLDeps() behaviordsl.Deps {
 				return nil, fmt.Errorf("%s has no endpoint group: run go generate", b.Name)
 			}
 
-			return endpoint.OpenAPI(g, endpoint.ErrorRef)
+			return endpoint.OpenAPI(g)
 		},
 	}
 }

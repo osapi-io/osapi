@@ -3,8 +3,8 @@
 Print a served behavior's part of the OpenAPI spec, as YAML.
 
 It prints the spec as the definition makes it: the part that go generate writes
-to the behavior's gen/api.yaml, and that the join puts in the spec of the API.
-An internal behavior serves no route, so it has none.
+to the behavior's gen/api.yaml, and puts in the full spec of the API. An
+internal behavior serves no route, so it has none.
 
 ```bash
 osapi behavior openapi get [flags]

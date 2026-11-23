@@ -77,7 +77,7 @@ type secretIn struct {
 
 func (s *AuditPublicTestSuite) TestSecretAndDiveInTheSpec() {
 	doc, err := endpoint.OpenAPI(
-		endpoint.Define("node", "The nodes", endpoint.Post[secretIn, Node]("create")), "x")
+		endpoint.Define("node", "The nodes", endpoint.Post[secretIn, Node]("create")))
 	s.Require().NoError(err)
 	var body map[string]any
 	for _, path := range doc.Paths.Map() {

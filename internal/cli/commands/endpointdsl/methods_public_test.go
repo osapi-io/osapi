@@ -42,7 +42,7 @@ func (s *MethodsPublicTestSuite) deps() endpointdsl.Deps {
 	return endpointdsl.Deps{
 		Groups: endpoint.All,
 		OpenAPI: func(g *endpoint.Group) (any, error) {
-			return endpoint.OpenAPI(g, endpoint.ErrorRef)
+			return endpoint.OpenAPI(g)
 		},
 	}
 }

@@ -42,7 +42,7 @@ import (
 )
 
 // specProxy sits between the CLI and the server. It checks each request to
-// /api/ and its response against the joined spec, which osapi generates, and
+// /api/ and its response against the full spec, which osapi generates, and
 // forwards both: the spec must still describe what the server does. Each
 // request or response that breaks it is a violation, which fails the run.
 type specProxy struct {
@@ -61,13 +61,13 @@ func startSpecProxy(
 		filepath.Join(repoRoot(), "internal", "controller", "api", "gen", "api.yaml"),
 	)
 	if err != nil {
-		return nil, 0, fmt.Errorf("load the joined spec: %w", err)
+		return nil, 0, fmt.Errorf("load the full spec: %w", err)
 	}
 	// The spec names the server's paths, not this host and port.
 	doc.Servers = nil
 	router, err := legacy.NewRouter(doc)
 	if err != nil {
-		return nil, 0, fmt.Errorf("route the joined spec: %w", err)
+		return nil, 0, fmt.Errorf("route the full spec: %w", err)
 	}
 	target, err := url.Parse(apiURL)
 	if err != nil {

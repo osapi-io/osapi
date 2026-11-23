@@ -57,7 +57,7 @@ type Group struct {
 	Prefix string
 	// Doc says what the group is, in one line.
 	Doc string
-	// Title is the title of the group's spec. The joined spec puts it in
+	// Title is the title of the group's spec. The full spec puts it in
 	// front of each tag, and the UI's client files take their names from
 	// the result, so a group that moves keeps the title it had.
 	Title string
@@ -935,6 +935,28 @@ var Reasons = []Reason{
 	ReasonInvalidRequest, ReasonUnauthorized, ReasonForbidden, ReasonNotFound,
 	ReasonNotManaged, ReasonNotInstalled, ReasonConflict, ReasonUnavailable,
 	ReasonServerError,
+}
+
+// ReasonDocs say when each reason is the answer, with its status. The
+// ErrorResponse schema of the spec has them.
+var ReasonDocs = map[Reason]string{
+	ReasonInvalidRequest: "the request breaks a rule, such as a missing field (400).",
+	ReasonUnauthorized:   "no token, or a token that is not valid (401).",
+	ReasonForbidden:      "the token does not have the permission (403).",
+	ReasonNotFound:       "the host or osapi does not have what the request names (404).",
+	ReasonNotManaged:     "the item is there, but osapi did not deploy it, so osapi does not change it (409).",
+	ReasonNotInstalled:   "the host does not have a program that the request needs (409).",
+	ReasonConflict:       "the state of the item blocks the request, such as a create of one that exists (409).",
+	ReasonUnavailable:    "a part that osapi depends on is down, such as NATS (503).",
+	ReasonServerError:    "the controller failed; its log has the cause (500).",
+}
+
+// ErrorResponse is the body of each answer that is not a success: the
+// ErrorResponse schema of the spec.
+type ErrorResponse struct {
+	Error string `json:"error"`
+	// Reason is why, as one of Reasons.
+	Reason Reason `json:"reason"`
 }
 
 // ReasonFor is the reason of a status that no error names: the reason of

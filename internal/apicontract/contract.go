@@ -22,7 +22,7 @@
 // for each tag, operation and schema property, sorted. Two documents with the
 // same lines accept the same requests and give the same responses, whatever
 // their prose, their order or where a parameter is declared. The tests that
-// hold a generated spec to a hand-written one, and the joined spec to its
+// hold a generated spec to a hand-written one, and the full spec to its
 // golden copy, compare these lines.
 package apicontract
 
@@ -53,8 +53,8 @@ func Lines(
 	for name, raw := range obj(obj(doc["components"])["schemas"]) {
 		// A schema that is only a $ref to a schema of its own name, in
 		// another file, declares nothing: a spec puts it there so its
-		// responses can say #/components/schemas/<name>, and the join
-		// resolves it.
+		// responses can say #/components/schemas/<name>, and the file it
+		// refers to defines it.
 		if refName(str(obj(raw)["$ref"])) == name {
 			continue
 		}

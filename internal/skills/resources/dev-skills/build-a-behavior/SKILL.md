@@ -226,9 +226,8 @@ you break one. The failures below come from elsewhere:
 | `<name> runs <program>, which this host lacks` | CI only: install the program's package on the runner in `.github/workflows/go-int.yml` |
 | `TestAPI<Method>PublicTestSuite/...`  | The API answer for that case in `gen/api_<method>_public_test.go`: the status, the body, or the spec it breaks |
 | `is not mounted` or `is not attached` | Run `go generate ./internal/behaviors/all`; the gen package is missing          |
-| `behavior output is stale`            | Run `go generate ./internal/behaviors/all` and keep the result                 |
-| `the joined spec is stale`            | Run `mise exec -- just generate` and keep the result                           |
-| `TestJoinedSpec`                      | The joined spec changed, as a new served behavior or a cutover changes it. Write the contract again with `go test ./internal/apicontract -run TestContractPublicTestSuite/TestJoinedSpec -update`, and keep the diff: it is the change to the API |
+| `behavior output is stale`            | Run `mise exec -- just generate` and keep the result                           |
+| `TestJoinedSpec`                      | The full spec changed, as a new served behavior or a cutover changes it. Write the contract again with `go test ./internal/apicontract -run TestContractPublicTestSuite/TestJoinedSpec -update`, and keep the diff: it is the change to the API |
 | `cli-docs-gen-check` fails            | Run `mise exec -- just cli-docs-generate` and keep the result                  |
 | `is served by the <name> behavior and by <dir>` | A route a hand-written domain still serves: this is a cutover, so delete that domain in the same change |
 | `is both a hand-written command and a behavior's` | The same, for a command under `osapi client node` |

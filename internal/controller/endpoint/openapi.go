@@ -37,19 +37,48 @@ import (
 // bearer is the security scheme of every endpoint that is not public.
 const bearer = "BearerAuth"
 
-// ErrorRef is the shared ErrorResponse schema, as a group's spec refers to
-// it from internal/controller/api/<group>/gen, where the hand-written specs
-// are and the generated ones are compared with them.
-const ErrorRef = "../../components/gen/api.yaml#/components/schemas/ErrorResponse"
-
 // errorSchema is the name of the shared error schema.
 const errorSchema = "ErrorResponse"
 
-// OpenAPI is the group's part of the spec. errorRef is where the shared
-// ErrorResponse schema is, relative to the file the spec is written to.
+// reasonDoc is the description of the reason field, before what each
+// reason means.
+const reasonDoc = "Why the request failed, as a word that a program can branch on. " +
+	"The HTTP status is the class of the problem; the reason is the cause, " +
+	"and the error is the message for a person, which can change between releases."
+
+// ErrorSchema is the schema of ErrorResponse, the body of each error
+// answer: its message, and its reason, one of Reasons, with what each means.
+func ErrorSchema() *openapi3.Schema {
+	text := func(doc string, example string) *openapi3.SchemaRef {
+		s := openapi3.NewStringSchema()
+		s.Description = doc
+		s.Example = example
+
+		return s.NewRef()
+	}
+	doc := reasonDoc
+	reason := openapi3.NewStringSchema()
+	for _, r := range Reasons {
+		doc += " " + string(r) + ": " + ReasonDocs[r]
+		reason.Enum = append(reason.Enum, string(r))
+	}
+	reason.Description = doc
+	reason.Example = string(ReasonNotFound)
+
+	s := openapi3.NewObjectSchema()
+	s.Properties = openapi3.Schemas{
+		"error":   text("A description of the error that occurred.", "Failed to retrieve status."),
+		"details": text("Additional details about the error.", "Failed due to network timeout."),
+		"reason":  reason.NewRef(),
+	}
+
+	return s
+}
+
+// OpenAPI is the group's part of the spec. It has the shared ErrorResponse
+// schema, so the spec stands alone.
 func OpenAPI(
 	g *Group,
-	errorRef string,
 ) (*openapi3.T, error) {
 	doc := &openapi3.T{
 		OpenAPI: "3.0.0",
@@ -64,7 +93,7 @@ func OpenAPI(
 			SecuritySchemes: openapi3.SecuritySchemes{
 				bearer: &openapi3.SecuritySchemeRef{Value: openapi3.NewJWTSecurityScheme()},
 			},
-			Schemas: openapi3.Schemas{errorSchema: &openapi3.SchemaRef{Ref: errorRef}},
+			Schemas: openapi3.Schemas{errorSchema: ErrorSchema().NewRef()},
 		},
 	}
 

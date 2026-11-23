@@ -69,18 +69,17 @@ func (s *AllPublicTestSuite) TestUIPermissionsAreCurrent() {
 
 // TestUIOperationsAreCurrent checks that the UI's permission of each
 // operation, which go generate writes from the definitions, is what the
-// joined spec says, and that the
-// file is current.
+// full spec says, and that the file is current.
 func (s *AllPublicTestSuite) TestUIOperationsAreCurrent() {
 	root := filepath.Join("..", "..", "..")
-	got := authtoken.RegistryOperations()
+	got := authtoken.Operations()
 	spec, err := os.ReadFile(
 		filepath.Join(root, "internal", "controller", "api", "gen", "api.yaml"),
 	)
 	s.Require().NoError(err)
-	joined, err := authtoken.OperationPermissions(spec)
+	full, err := authtoken.OperationPermissions(spec)
 	s.Require().NoError(err)
-	s.Equal(joined, got, "the definitions agree with the joined spec")
+	s.Equal(full, got, "the definitions agree with the full spec")
 	file, err := os.ReadFile(filepath.Join(root, authtoken.OperationsFile))
 	s.Require().NoError(err)
 	s.Equal(
@@ -149,9 +148,14 @@ func (s *AllPublicTestSuite) TestEveryRouteIsMounted() {
 }
 
 func (s *AllPublicTestSuite) TestEveryCommandIsAttached() {
-	// osapi client, with node for the served behaviors, as cmd builds it.
+	// osapi client, with node for the served behaviors and next node for
+	// those still beside a hand-written domain, as cmd builds it.
 	root := &cobra.Command{Use: "client"}
-	root.AddCommand(&cobra.Command{Use: "node"})
+	node := &cobra.Command{Use: "node"}
+	next := &cobra.Command{Use: "next"}
+	nextNode := &cobra.Command{Use: "node"}
+	root.AddCommand(node, next)
+	next.AddCommand(nextNode)
 	s.Require().NoError(clicommand.Attach(root, clicommand.Deps{}))
 
 	for _, b := range behavior.All() {

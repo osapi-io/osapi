@@ -781,7 +781,7 @@ in the definition or in internal/behavior/gen.
 
 ### `internal/controller/api/gen/, pkg/sdk/client/gen/, ui/src/sdk/gen/, docs/docs/gen/`
 
-The joined spec, the SDK, the UI client and the API pages, from just generate.
+The full spec, the SDK, the UI client and the API pages, from just generate.
 
 Use: Change the definition, then generate. A generated test that fails is fixed
 in the definition or in internal/behavior/gen.

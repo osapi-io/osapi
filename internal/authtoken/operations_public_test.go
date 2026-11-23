@@ -66,8 +66,8 @@ func (s *OperationsPublicTestSuite) TestOperationPermissionsRefusesBadYAML() {
 	s.Error(err)
 }
 
-func (s *OperationsPublicTestSuite) TestRegistryOperations() {
-	got := authtoken.RegistryOperations()
+func (s *OperationsPublicTestSuite) TestOperations() {
+	got := authtoken.Operations()
 	motd := behavior.Lookup("motdperm")
 	for _, m := range motd.Methods {
 		id := motd.OperationID(m)

@@ -7,7 +7,7 @@ description: >
   when a change touches the parts that each DSL has: the guide.Spec and
   guide.Checks tables and the tests that keep them complete, validate, typed
   values and the KnownTags list of tag keys, the permissions that the role rule
-  reads (declarations, the SDK constants generator and RegistryOperations), the
+  reads (declarations, the SDK constants generator and Operations), the
   generators and genfile.Writer, the scaffold command and its check, the
   generated DSL pages, the dev skill of a DSL, records of calls at run time, or
   what extensions need. Not for a change inside one DSL: build-a-behavior,

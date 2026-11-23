@@ -54,8 +54,8 @@ mise install
 
 - **[Go].** osapi is written in Go. The project supports the two latest major
   versions of Go. Use one of them.
-- **[Node.js].** The runtime for tools such as `@redocly/cli`. It also builds
-  the Docusaurus site and the React UI in `ui/`.
+- **[Node.js].** The runtime that builds the Docusaurus site and the React UI in
+  `ui/`.
 - **[Bun].** The JavaScript package manager and script runner for the Docusaurus
   site and the React UI.
 - **[uv].** A Python package runner. `just md-fmt` uses it to run [mdformat]. It
@@ -718,10 +718,10 @@ but not for your domain, it is missing.
 
 ### The contract of the API
 
-`internal/apicontract/testdata/joined.golden` is the contract of the joined
-spec: each tag, operation, parameter, body, response and schema, one line each.
-A test fails when the joined spec does not agree with it. When you change the
-API on purpose, write the file again in the same pull request:
+`internal/apicontract/testdata/joined.golden` is the contract of the full spec:
+each tag, operation, parameter, body, response and schema, one line each. A test
+fails when the full spec does not agree with it. When you change the API on
+purpose, write the file again in the same pull request:
 
 ```bash
 go test ./internal/apicontract -run TestContractPublicTestSuite/TestJoinedSpec -update
