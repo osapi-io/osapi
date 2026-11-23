@@ -66,7 +66,8 @@ func (s *PagesTestSuite) SetupTest() {
 	s.write(dir+"/notes.txt", "")
 	s.write(pageDir+"/client.md", "# Client\n\n<!-- osapi:sdk-services -->\nold\n"+
 		"<!-- /osapi:sdk-services -->\n\nThe end.\n")
-	s.write(pageDir+"/node/gone.md", "a page of a service that is gone\n")
+	s.write(pageDir+"/gone.md", pageHeader+"\na page of a service that is gone\n")
+	s.write(pageDir+"/notes.md", "a page that a person wrote\n")
 	s.write(
 		exampleDir+"/file_upload.go",
 		"package main\n\nc.File.Upload(ctx)\nc.File.GetChanged(ctx)\n",
@@ -95,7 +96,7 @@ func (s *PagesTestSuite) TestRunPages() {
 		{
 			name: "when a page has the methods, their permissions and their examples",
 			validateFunc: func() {
-				dns := s.page("node/network_dns.md")
+				dns := s.page("network_dns.md")
 				s.Contains(dns, "title: NetworkDNS\n---\n\n"+pageHeader)
 				s.Contains(dns, "`c.NetworkDNS` calls the API's NetworkDNS group. "+
 					"The DNS resolvers of each interface of the host.")
@@ -122,7 +123,7 @@ func (s *PagesTestSuite) TestRunPages() {
 		{
 			name: "when a method has no answer, its example has only an error",
 			validateFunc: func() {
-				job := s.page("controller/job.md")
+				job := s.page("job.md")
 				s.Contains(
 					job,
 					"err := c.Job.Delete(ctx, \"550e8400-e29b-41d4-a716-446655440000\")",
@@ -133,7 +134,7 @@ func (s *PagesTestSuite) TestRunPages() {
 		{
 			name: "when a person wrote a method, the page has its doc comment",
 			validateFunc: func() {
-				file := s.page("controller/file.md")
+				file := s.page("file.md")
 				s.Contains(
 					file,
 					"| [`Upload(ctx, name)`](#upload) | `*Response[FileUploadResponse]` | "+
@@ -151,30 +152,24 @@ func (s *PagesTestSuite) TestRunPages() {
 			},
 		},
 		{
-			name: "when client.md has the table of the services, in two sections",
+			name: "when client.md has one table of the services",
 			validateFunc: func() {
 				index := s.page("client.md")
-				s.Contains(index, "<!-- osapi:sdk-services -->\n\n### Node\n\n"+
-					"| Service | Description |\n| --- | --- |\n"+
-					"| [NetworkDNS](node/network_dns.md) | The DNS resolvers of each interface of the host. |")
-				s.Contains(index, "### Controller")
-				s.Contains(index, "| [Job](controller/job.md) | The job queue. |")
+				s.Contains(index, "<!-- osapi:sdk-services -->\n\n"+
+					"| Service | Description |\n| --- | --- |\n")
+				s.Contains(index, "| [NetworkDNS](network_dns.md) | The DNS resolvers of each interface of the host. |")
+				s.Contains(index, "| [Job](job.md) | The job queue. |")
+				s.NotContains(index, "###")
 				s.NotContains(index, "old")
 				s.Contains(index, "The end.")
 			},
 		},
 		{
-			name: "when the sections have their labels, and a stale page goes",
+			name: "when a stale generated page goes, and a page a person wrote stays",
 			validateFunc: func() {
-				s.Equal(
-					"{ \"label\": \"Node\", \"position\": 2 }\n",
-					s.page("node/_category_.json"),
-				)
-				s.Equal(
-					"{ \"label\": \"Controller\", \"position\": 3 }\n",
-					s.page("controller/_category_.json"),
-				)
-				s.NoFileExists(filepath.Join(s.root, pageDir, "node/gone.md"))
+				s.NoFileExists(filepath.Join(s.root, pageDir, "gone.md"))
+				s.FileExists(filepath.Join(s.root, pageDir, "notes.md"))
+				s.NoDirExists(filepath.Join(s.root, pageDir, "node"))
 			},
 		},
 	}

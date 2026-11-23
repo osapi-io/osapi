@@ -81,7 +81,7 @@ method.
 ## Related
 
 - [CLI reference](../usage/cli/client/node/log/log.mdx): the log commands
-- [SDK reference](../sdk/client/node/log_entry.md): the LogEntry service, and
-  [LogSource](../sdk/client/node/log_source.md)
+- [SDK reference](../sdk/client/log_entry.md): the LogEntry service, and
+  [LogSource](../sdk/client/log_source.md)
 - [Platform detection](../sdk/platform/detection.md): how osapi finds the
   platform of a host
