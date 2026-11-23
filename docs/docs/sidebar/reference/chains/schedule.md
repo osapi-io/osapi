@@ -49,17 +49,17 @@ The behaviors that schedule calls, and each call that its examples make.
 
 ## An entry with a cron expression (create)
 
-| CALL                  | SENDS                                                                          | GETS                                                                      |
-| --------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
-| schedule create       | name=osapitest object=osapitest.cron schedule="0 2 \* \* \*" user=root         | changed=true name=osapitest                                               |
-| └─ managedfile get    | path=/etc/cron.d/osapitest                                                     | error: /etc/cron.d/osapitest: not managed                                 |
-| └─ managedfile get    | path=/etc/cron.hourly/osapitest                                                | error: /etc/cron.hourly/osapitest: not managed                            |
-| └─ managedfile get    | path=/etc/cron.daily/osapitest                                                 | error: /etc/cron.daily/osapitest: not managed                             |
-| └─ managedfile get    | path=/etc/cron.weekly/osapitest                                                | error: /etc/cron.weekly/osapitest: not managed                            |
-| └─ managedfile get    | path=/etc/cron.monthly/osapitest                                               | error: /etc/cron.monthly/osapitest: not managed                           |
-| └─ managedfile get    | path=/etc/cron.d/osapitest                                                     | error: /etc/cron.d/osapitest: not managed                                 |
-| └─ object get         | name=osapitest.cron                                                            | content="0 2 \* \* \* root /usr/local/bin/backup\n" content_type=raw nam… |
-| └─ managedfile update | content="0 2 \* \* \* root /usr/local/bin/backup\n" metadata=&#123;"object":"… | changed=true path=/etc/cron.d/osapitest                                   |
+| CALL                  | SENDS                                                                     | GETS                                                                      |
+| --------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| schedule create       | name=osapitest object=osapitest.cron schedule="0 2 \* \* \*" user=root    | changed=true name=osapitest                                               |
+| └─ managedfile get    | path=/etc/cron.d/osapitest                                                | error: /etc/cron.d/osapitest: not managed                                 |
+| └─ managedfile get    | path=/etc/cron.hourly/osapitest                                           | error: /etc/cron.hourly/osapitest: not managed                            |
+| └─ managedfile get    | path=/etc/cron.daily/osapitest                                            | error: /etc/cron.daily/osapitest: not managed                             |
+| └─ managedfile get    | path=/etc/cron.weekly/osapitest                                           | error: /etc/cron.weekly/osapitest: not managed                            |
+| └─ managedfile get    | path=/etc/cron.monthly/osapitest                                          | error: /etc/cron.monthly/osapitest: not managed                           |
+| └─ managedfile get    | path=/etc/cron.d/osapitest                                                | error: /etc/cron.d/osapitest: not managed                                 |
+| └─ object get         | name=osapitest.cron                                                       | content="0 2 \* \* \* root /usr/local/bin/backup\n" content_type=raw nam… |
+| └─ managedfile update | content="0 2 \* \* \* root /usr/local/bin/backup\n" content_type=raw met… | changed=true path=/etc/cron.d/osapitest                                   |
 
 ## A script that runs daily (create)
 
@@ -73,31 +73,31 @@ The behaviors that schedule calls, and each call that its examples make.
 | └─ managedfile get    | path=/etc/cron.monthly/osapitest                                                  | error: /etc/cron.monthly/osapitest: not managed                              |
 | └─ managedfile get    | path=/etc/cron.daily/osapitest                                                    | error: /etc/cron.daily/osapitest: not managed                                |
 | └─ object get         | name=osapitest.sh                                                                 | content=&lt;2 lines&gt; content_type=raw name=osapitest.sh sha256=b0f49e4f6… |
-| └─ managedfile update | content=&lt;2 lines&gt; metadata=&#123;"interval":"daily","object":"osapitest.sh… | changed=true path=/etc/cron.daily/osapitest                                  |
+| └─ managedfile update | content=&lt;2 lines&gt; content_type=raw metadata=&#123;"interval":"daily","obje… | changed=true path=/etc/cron.daily/osapitest                                  |
 
 ## A template, rendered with its vars (create)
 
-| CALL                  | SENDS                                                                          | GETS                                                                                          |
-| --------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| schedule create       | content_type=template name=osapitest object=osapitest.tmpl schedule="…         | changed=true name=osapitest                                                                   |
-| └─ managedfile get    | path=/etc/cron.d/osapitest                                                     | error: /etc/cron.d/osapitest: not managed                                                     |
-| └─ managedfile get    | path=/etc/cron.hourly/osapitest                                                | error: /etc/cron.hourly/osapitest: not managed                                                |
-| └─ managedfile get    | path=/etc/cron.daily/osapitest                                                 | error: /etc/cron.daily/osapitest: not managed                                                 |
-| └─ managedfile get    | path=/etc/cron.weekly/osapitest                                                | error: /etc/cron.weekly/osapitest: not managed                                                |
-| └─ managedfile get    | path=/etc/cron.monthly/osapitest                                               | error: /etc/cron.monthly/osapitest: not managed                                               |
-| └─ managedfile get    | path=/etc/cron.d/osapitest                                                     | error: /etc/cron.d/osapitest: not managed                                                     |
-| └─ object get         | name=osapitest.tmpl                                                            | content="0 2 \* \* \* root /usr/local/bin/backup &#123;&#123; .Vars.target &#125;&#125;\n" c… |
-| └─ managedfile update | content="0 2 \* \* \* root /usr/local/bin/backup /srv\n" metadata=&#123;"obje… | changed=true path=/etc/cron.d/osapitest                                                       |
+| CALL                  | SENDS                                                                     | GETS                                                                                          |
+| --------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| schedule create       | content_type=template name=osapitest object=osapitest.tmpl schedule="…    | changed=true name=osapitest                                                                   |
+| └─ managedfile get    | path=/etc/cron.d/osapitest                                                | error: /etc/cron.d/osapitest: not managed                                                     |
+| └─ managedfile get    | path=/etc/cron.hourly/osapitest                                           | error: /etc/cron.hourly/osapitest: not managed                                                |
+| └─ managedfile get    | path=/etc/cron.daily/osapitest                                            | error: /etc/cron.daily/osapitest: not managed                                                 |
+| └─ managedfile get    | path=/etc/cron.weekly/osapitest                                           | error: /etc/cron.weekly/osapitest: not managed                                                |
+| └─ managedfile get    | path=/etc/cron.monthly/osapitest                                          | error: /etc/cron.monthly/osapitest: not managed                                               |
+| └─ managedfile get    | path=/etc/cron.d/osapitest                                                | error: /etc/cron.d/osapitest: not managed                                                     |
+| └─ object get         | name=osapitest.tmpl                                                       | content="0 2 \* \* \* root /usr/local/bin/backup &#123;&#123; .Vars.target &#125;&#125;\n" c… |
+| └─ managedfile update | content="0 2 \* \* \* root /usr/local/bin/backup /srv\n" content_type=te… | changed=true path=/etc/cron.d/osapitest                                                       |
 
 ## An entry that has the content (create)
 
-| CALL                  | SENDS                                                                          | GETS                                                                           |
-| --------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
-| schedule create       | name=osapitest object=osapitest.cron schedule="0 2 \* \* \*" user=root         | changed=false name=osapitest                                                   |
-| └─ managedfile get    | path=/etc/cron.d/osapitest                                                     | metadata=&#123;"object":"osapitest.cron","schedule":"0 2 \* \* \*","user":"ro… |
-| └─ managedfile get    | path=/etc/cron.d/osapitest                                                     | metadata=&#123;"object":"osapitest.cron","schedule":"0 2 \* \* \*","user":"ro… |
-| └─ object get         | name=osapitest.cron                                                            | content="0 2 \* \* \* root /usr/local/bin/backup\n" content_type=raw nam…      |
-| └─ managedfile update | content="0 2 \* \* \* root /usr/local/bin/backup\n" metadata=&#123;"object":"… | changed=false path=/etc/cron.d/osapitest                                       |
+| CALL                  | SENDS                                                                     | GETS                                                                           |
+| --------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| schedule create       | name=osapitest object=osapitest.cron schedule="0 2 \* \* \*" user=root    | changed=false name=osapitest                                                   |
+| └─ managedfile get    | path=/etc/cron.d/osapitest                                                | metadata=&#123;"object":"osapitest.cron","schedule":"0 2 \* \* \*","user":"ro… |
+| └─ managedfile get    | path=/etc/cron.d/osapitest                                                | metadata=&#123;"object":"osapitest.cron","schedule":"0 2 \* \* \*","user":"ro… |
+| └─ object get         | name=osapitest.cron                                                       | content="0 2 \* \* \* root /usr/local/bin/backup\n" content_type=raw nam…      |
+| └─ managedfile update | content="0 2 \* \* \* root /usr/local/bin/backup\n" content_type=raw met… | changed=false path=/etc/cron.d/osapitest                                       |
 
 ## An entry of the name in a different directory (create)
 
@@ -108,33 +108,33 @@ The behaviors that schedule calls, and each call that its examples make.
 
 ## A new object (update)
 
-| CALL                  | SENDS                                                                          | GETS                                                                           |
-| --------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
-| schedule update       | name=osapitest object=osapitest-v2.cron                                        | changed=true name=osapitest                                                    |
-| └─ managedfile get    | path=/etc/cron.d/osapitest                                                     | metadata=&#123;"object":"osapitest.cron","schedule":"0 2 \* \* \*","user":"ro… |
-| └─ managedfile get    | path=/etc/cron.d/osapitest                                                     | metadata=&#123;"object":"osapitest.cron","schedule":"0 2 \* \* \*","user":"ro… |
-| └─ object get         | name=osapitest-v2.cron                                                         | content="30 2 \* \* \* root /usr/local/bin/backup --full\n" content_type…      |
-| └─ managedfile update | content="30 2 \* \* \* root /usr/local/bin/backup --full\n" metadata=&#123;"o… | changed=true path=/etc/cron.d/osapitest                                        |
+| CALL                  | SENDS                                                                     | GETS                                                                           |
+| --------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| schedule update       | name=osapitest object=osapitest-v2.cron                                   | changed=true name=osapitest                                                    |
+| └─ managedfile get    | path=/etc/cron.d/osapitest                                                | metadata=&#123;"object":"osapitest.cron","schedule":"0 2 \* \* \*","user":"ro… |
+| └─ managedfile get    | path=/etc/cron.d/osapitest                                                | metadata=&#123;"object":"osapitest.cron","schedule":"0 2 \* \* \*","user":"ro… |
+| └─ object get         | name=osapitest-v2.cron                                                    | content="30 2 \* \* \* root /usr/local/bin/backup --full\n" content_type…      |
+| └─ managedfile update | content="30 2 \* \* \* root /usr/local/bin/backup --full\n" content_type… | changed=true path=/etc/cron.d/osapitest                                        |
 
 ## A new cron expression, with the same object (update)
 
-| CALL                  | SENDS                                                                          | GETS                                                                           |
-| --------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
-| schedule update       | name=osapitest schedule="30 2 \* \* \*"                                        | changed=true name=osapitest                                                    |
-| └─ managedfile get    | path=/etc/cron.d/osapitest                                                     | metadata=&#123;"object":"osapitest.cron","schedule":"0 2 \* \* \*","user":"ro… |
-| └─ managedfile get    | path=/etc/cron.d/osapitest                                                     | metadata=&#123;"object":"osapitest.cron","schedule":"0 2 \* \* \*","user":"ro… |
-| └─ object get         | name=osapitest.cron                                                            | content="0 2 \* \* \* root /usr/local/bin/backup\n" content_type=raw nam…      |
-| └─ managedfile update | content="0 2 \* \* \* root /usr/local/bin/backup\n" metadata=&#123;"object":"… | changed=true path=/etc/cron.d/osapitest                                        |
+| CALL                  | SENDS                                                                     | GETS                                                                           |
+| --------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| schedule update       | name=osapitest schedule="30 2 \* \* \*"                                   | changed=true name=osapitest                                                    |
+| └─ managedfile get    | path=/etc/cron.d/osapitest                                                | metadata=&#123;"object":"osapitest.cron","schedule":"0 2 \* \* \*","user":"ro… |
+| └─ managedfile get    | path=/etc/cron.d/osapitest                                                | metadata=&#123;"object":"osapitest.cron","schedule":"0 2 \* \* \*","user":"ro… |
+| └─ object get         | name=osapitest.cron                                                       | content="0 2 \* \* \* root /usr/local/bin/backup\n" content_type=raw nam…      |
+| └─ managedfile update | content="0 2 \* \* \* root /usr/local/bin/backup\n" content_type=raw met… | changed=true path=/etc/cron.d/osapitest                                        |
 
 ## A new object, cron expression and user (update)
 
-| CALL                  | SENDS                                                                          | GETS                                                                           |
-| --------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
-| schedule update       | name=osapitest object=osapitest-v2.cron schedule="30 2 \* \* \*" user=no…      | changed=true name=osapitest                                                    |
-| └─ managedfile get    | path=/etc/cron.d/osapitest                                                     | metadata=&#123;"object":"osapitest.cron","schedule":"0 2 \* \* \*","user":"ro… |
-| └─ managedfile get    | path=/etc/cron.d/osapitest                                                     | metadata=&#123;"object":"osapitest.cron","schedule":"0 2 \* \* \*","user":"ro… |
-| └─ object get         | name=osapitest-v2.cron                                                         | content="30 2 \* \* \* root /usr/local/bin/backup --full\n" content_type…      |
-| └─ managedfile update | content="30 2 \* \* \* root /usr/local/bin/backup --full\n" metadata=&#123;"o… | changed=true path=/etc/cron.d/osapitest                                        |
+| CALL                  | SENDS                                                                     | GETS                                                                           |
+| --------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| schedule update       | name=osapitest object=osapitest-v2.cron schedule="30 2 \* \* \*" user=no… | changed=true name=osapitest                                                    |
+| └─ managedfile get    | path=/etc/cron.d/osapitest                                                | metadata=&#123;"object":"osapitest.cron","schedule":"0 2 \* \* \*","user":"ro… |
+| └─ managedfile get    | path=/etc/cron.d/osapitest                                                | metadata=&#123;"object":"osapitest.cron","schedule":"0 2 \* \* \*","user":"ro… |
+| └─ object get         | name=osapitest-v2.cron                                                    | content="30 2 \* \* \* root /usr/local/bin/backup --full\n" content_type…      |
+| └─ managedfile update | content="30 2 \* \* \* root /usr/local/bin/backup --full\n" content_type… | changed=true path=/etc/cron.d/osapitest                                        |
 
 ## A daily script with a new object (update)
 
@@ -146,7 +146,7 @@ The behaviors that schedule calls, and each call that its examples make.
 | └─ managedfile get    | path=/etc/cron.daily/osapitest                                                    | metadata=&#123;"interval":"daily","object":"osapitest.sh"&#125; path=/etc/cron.… |
 | └─ managedfile get    | path=/etc/cron.daily/osapitest                                                    | metadata=&#123;"interval":"daily","object":"osapitest.sh"&#125; path=/etc/cron.… |
 | └─ object get         | name=osapitest-v2.sh                                                              | content=&lt;3 lines&gt; content_type=raw name=osapitest-v2.sh sha256=176e1c…     |
-| └─ managedfile update | content=&lt;3 lines&gt; metadata=&#123;"interval":"daily","object":"osapitest-v2… | changed=true path=/etc/cron.daily/osapitest                                      |
+| └─ managedfile update | content=&lt;3 lines&gt; content_type=raw metadata=&#123;"interval":"daily","obje… | changed=true path=/etc/cron.daily/osapitest                                      |
 
 ## Remove an entry (delete)
 

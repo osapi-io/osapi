@@ -111,7 +111,7 @@ components:
           example: "2026-04-01T18:00:00Z"
           type: string
         deployed_sha:
-          description: SHA-256 hash of the currently deployed content.
+          description: SHA-256 of the object when it was deployed.
           example: abc123def456
           type: string
         hostname:

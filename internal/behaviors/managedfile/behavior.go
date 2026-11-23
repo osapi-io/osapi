@@ -72,8 +72,9 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A relative path", GetInput{Path: "etc/app.conf"}, "want an absolute path"),
 	behavior.Write("update", Update).
 		Describe("Write a file and keep a record of it").
-		Explain("Leaves a file already holding the content alone and reports changed: false, "+
-			"whatever its record says, so a file edited by hand is put back.").
+		Explain("Leaves a file already holding the content alone and reports changed: false "+
+			"when its record has the same metadata and object. A file edited by hand is put "+
+			"back. New metadata, or a new object or object checksum, changes only the record.").
 		Example("A new file", UpdateInput{Path: path, Content: "on\n"},
 			Result{Path: path, Changed: true},
 			behavior.Wrote(path, "on\n"),

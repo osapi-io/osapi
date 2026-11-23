@@ -196,7 +196,10 @@ func Delete(
 }
 
 // Stale is each deploy whose object changed after the deploy, or went: the
-// state KV's SHA-256 of what an agent wrote against the object's now.
+// state KV's SHA-256 of the object that an agent deployed against the
+// object's now. A record that names no object, such as a sysctl file, is
+// never stale, and a record without the object's SHA-256 is stale until the
+// next deploy writes it.
 func Stale(
 	ctx context.Context,
 	d Deps,
@@ -221,15 +224,18 @@ func Stale(
 			continue
 		}
 		var state managedfile.State
-		if json.Unmarshal(entry.Value(), &state) != nil || state.UndeployedAt != "" {
+		if json.Unmarshal(entry.Value(), &state) != nil || state.UndeployedAt != "" ||
+			state.ObjectName == "" {
 			continue
 		}
 
+		// The object's checksum, not the file's: the file of a template is
+		// the object rendered, and its checksum is never the object's.
 		current := ""
 		if content, err := d.Objects.GetBytes(ctx, state.ObjectName); err == nil {
 			sum := sha256.Sum256(content)
 			current = hex.EncodeToString(sum[:])
-			if current == state.SHA256 {
+			if current == state.ObjectSHA256 {
 				continue
 			}
 		}
@@ -238,7 +244,7 @@ func Stale(
 			Hostname:    hostnameOf(key),
 			Provider:    providerOf(state.Path),
 			Path:        state.Path,
-			DeployedSha: state.SHA256,
+			DeployedSha: state.ObjectSHA256,
 			CurrentSha:  current,
 			DeployedAt:  state.DeployedAt,
 		})

@@ -439,13 +439,17 @@ func (s *MethodsPublicTestSuite) TestDelete() {
 
 func (s *MethodsPublicTestSuite) TestStale() {
 	key := func(host string) string { return host + "." + hexOf([]byte(host)) }
-	state := func(object, path, sha string, undeployed bool) []byte {
+	// state is a record of a deploy of object, from an object whose checksum
+	// was objectSHA. The file's checksum is never the object's, as for a
+	// template.
+	state := func(object, path, objectSHA string, undeployed bool) []byte {
 		u := ""
 		if undeployed {
 			u = `,"undeployed_at":"2026-11-17T00:00:00Z"`
 		}
 
-		return []byte(`{"object_name":"` + object + `","path":"` + path + `","sha256":"` + sha +
+		return []byte(`{"object_name":"` + object + `","path":"` + path +
+			`","sha256":"rendered","object_sha256":"` + objectSHA +
 			`","deployed_at":"2026-11-17T00:00:00Z"` + u + `}`)
 	}
 
@@ -487,6 +491,61 @@ func (s *MethodsPublicTestSuite) TestStale() {
 				}, got.Items[0])
 				s.Equal("certificate", got.Items[1].Provider)
 				s.Empty(got.Items[1].CurrentSha)
+			},
+		},
+		{
+			name: "when a template deploy's object did not change, it is not stale",
+			setup: func() {
+				s.states.EXPECT().Keys(gomock.Any()).Return([]string{"web-01"}, nil)
+				s.states.EXPECT().Get(gomock.Any(), "web-01").
+					Return(entry{value: state("t", "/etc/app.conf", hexOf(content), false)}, nil)
+				s.objects.EXPECT().GetBytes(gomock.Any(), "t").Return(content, nil)
+			},
+			validateFunc: func(got file.StaleDeploymentsResponse, err error) {
+				s.Require().NoError(err)
+				s.Empty(got.Items)
+			},
+		},
+		{
+			name: "when a template deploy's object changed, it is stale with the deployed object's checksum",
+			setup: func() {
+				s.states.EXPECT().Keys(gomock.Any()).Return([]string{"web-01"}, nil)
+				s.states.EXPECT().Get(gomock.Any(), "web-01").
+					Return(entry{value: state("t", "/etc/app.conf", "old", false)}, nil)
+				s.objects.EXPECT().GetBytes(gomock.Any(), "t").Return(content, nil)
+			},
+			validateFunc: func(got file.StaleDeploymentsResponse, err error) {
+				s.Require().NoError(err)
+				s.Require().Len(got.Items, 1)
+				s.Equal("old", got.Items[0].DeployedSha)
+				s.Equal(hexOf(content), got.Items[0].CurrentSha)
+			},
+		},
+		{
+			name: "when a record has no object checksum, it is stale until the next deploy",
+			setup: func() {
+				s.states.EXPECT().Keys(gomock.Any()).Return([]string{"web-01"}, nil)
+				s.states.EXPECT().Get(gomock.Any(), "web-01").Return(entry{value: []byte(
+					`{"object_name":"t","path":"/etc/app.conf","sha256":"` + hexOf(content) + `"}`,
+				)}, nil)
+				s.objects.EXPECT().GetBytes(gomock.Any(), "t").Return(content, nil)
+			},
+			validateFunc: func(got file.StaleDeploymentsResponse, err error) {
+				s.Require().NoError(err)
+				s.Require().Len(got.Items, 1)
+				s.Empty(got.Items[0].DeployedSha)
+			},
+		},
+		{
+			name: "when a record names no object, it is not stale",
+			setup: func() {
+				s.states.EXPECT().Keys(gomock.Any()).Return([]string{"web-01"}, nil)
+				s.states.EXPECT().Get(gomock.Any(), "web-01").
+					Return(entry{value: state("", "/etc/sysctl.d/osapi-a.conf", "", false)}, nil)
+			},
+			validateFunc: func(got file.StaleDeploymentsResponse, err error) {
+				s.Require().NoError(err)
+				s.Empty(got.Items)
 			},
 		},
 		{

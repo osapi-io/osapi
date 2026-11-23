@@ -4282,7 +4282,7 @@ type StaleDeployment struct {
 	// DeployedAt When the file was last deployed.
 	DeployedAt string `json:"deployed_at"`
 
-	// DeployedSha SHA-256 hash of the currently deployed content.
+	// DeployedSha SHA-256 of the object when it was deployed.
 	DeployedSha string `json:"deployed_sha"`
 
 	// Hostname Host where the file is deployed.

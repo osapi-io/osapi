@@ -89,7 +89,7 @@ type StaleDeployment struct {
 	Provider    string `json:"provider"     doc:"Provider that manages this deployment."            example:"service"`
 	DeployedAt  string `json:"deployed_at"  doc:"When the file was last deployed."                  example:"2026-04-01T18:00:00Z"                         label:"Deployed" render:"time"`
 	Path        string `json:"path"         doc:"Deployment path on the target host."               example:"/etc/systemd/system/osapi-hello-echo.service"                                    table:"-"`
-	DeployedSha string `json:"deployed_sha" doc:"SHA-256 hash of the currently deployed content."   example:"abc123def456"                                                  render:"short=12"`
+	DeployedSha string `json:"deployed_sha" doc:"SHA-256 of the object when it was deployed."       example:"abc123def456"                                                  render:"short=12"`
 	CurrentSha  string `json:"current_sha"  doc:"SHA-256 hash of the current object store content." example:"789abc012def"                                                  render:"short=12"           none:"(deleted)"`
 }
 

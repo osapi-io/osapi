@@ -38,7 +38,7 @@ The behaviors that file calls, and each call that its examples make.
 | --------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | file update           | object_name=example.conf path=/etc/osapi/file-example.conf             | changed=true path=/etc/osapi/file-example.conf sha256=0083dacc561dfd0… |
 | └─ object get         | name=example.conf                                                      | content="listen 8080\n" content_type=raw name=example.conf sha256=008… |
-| └─ managedfile update | content="listen 8080\n" content_type=raw object=example.conf path=/et… | changed=true path=/etc/osapi/file-example.conf                         |
+| └─ managedfile update | content="listen 8080\n" content_type=raw object=example.conf object_s… | changed=true path=/etc/osapi/file-example.conf                         |
 
 ## Render a template (update)
 
@@ -54,7 +54,7 @@ The behaviors that file calls, and each call that its examples make.
 | --------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | file update           | object_name=example.conf path=/etc/osapi/file-example.conf             | changed=false path=/etc/osapi/file-example.conf sha256=0083dacc561dfd… |
 | └─ object get         | name=example.conf                                                      | content="listen 8080\n" content_type=raw name=example.conf sha256=008… |
-| └─ managedfile update | content="listen 8080\n" content_type=raw object=example.conf path=/et… | changed=false path=/etc/osapi/file-example.conf                        |
+| └─ managedfile update | content="listen 8080\n" content_type=raw object=example.conf object_s… | changed=false path=/etc/osapi/file-example.conf                        |
 
 ## Remove a deployed file (delete)
 

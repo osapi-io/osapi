@@ -138,6 +138,7 @@ func (d *debian) Write(
 	}
 	if !f.Secret {
 		state.SHA256 = checksum(f.Content)
+		state.ObjectSHA256 = f.ObjectSHA256
 	}
 	data, err := marshalJSON(state)
 	if err != nil {
@@ -150,10 +151,12 @@ func (d *debian) Write(
 	return true, nil
 }
 
-// stale reports whether osapi deployed f.Path with metadata that is not
-// f's, such as a cron entry whose schedule changed and whose file did not.
-// The write then changes the record, so that a read gives the new metadata.
-// A path that has no record, or an undeployed one, is not stale: a file with
+// stale reports whether osapi deployed f.Path with a record that does not
+// describe f: other metadata, such as a cron entry whose schedule changed and
+// whose file did not, or another object, such as a template whose object
+// changed and renders the same file. The write then changes the record, so
+// that a read gives the new metadata and the stale check the new object. A
+// path that has no record, or an undeployed one, is not stale: a file with
 // the content that osapi did not deploy stays as it is.
 func (d *debian) stale(
 	ctx context.Context,
@@ -168,7 +171,14 @@ func (d *debian) stale(
 		return false
 	}
 
-	return state.UndeployedAt == "" && !maps.Equal(state.Metadata, f.Metadata)
+	objectSHA := f.ObjectSHA256
+	if f.Secret {
+		objectSHA = ""
+	}
+
+	return state.UndeployedAt == "" && (!maps.Equal(state.Metadata, f.Metadata) ||
+		state.ObjectName != f.Object || state.ContentType != f.ContentType ||
+		state.ObjectSHA256 != objectSHA)
 }
 
 // own gives f.Path f's owner and group when it does not have them, and

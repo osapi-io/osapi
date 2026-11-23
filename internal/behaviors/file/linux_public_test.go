@@ -68,10 +68,11 @@ func (s *LinuxPublicTestSuite) TestDeploy() {
 			setup: func() {
 				s.objects.EXPECT().
 					Object(gomock.Any(), "a").
-					Return(object.Object{Name: "a", Content: "x\n"}, nil)
+					Return(object.Object{Name: "a", Content: "x\n", SHA256: "sum"}, nil)
 				s.files.EXPECT().Write(gomock.Any(), gomock.Any()).DoAndReturn(
 					func(_ context.Context, f managedfile.File) (bool, error) {
 						s.Equal("raw", f.ContentType)
+						s.Equal("sum", f.ObjectSHA256)
 						s.Equal("a", f.Object)
 						s.Equal("x\n", string(f.Content))
 
@@ -89,10 +90,13 @@ func (s *LinuxPublicTestSuite) TestDeploy() {
 			facts: map[string]any{"architecture": "arm64"},
 			setup: func() {
 				s.objects.EXPECT().Object(gomock.Any(), "t").Return(
-					object.Object{Name: "t", Content: "{{ .Facts.architecture }}"}, nil)
+					object.Object{
+						Name: "t", Content: "{{ .Facts.architecture }}", SHA256: "object",
+					}, nil)
 				s.files.EXPECT().Write(gomock.Any(), gomock.Any()).DoAndReturn(
 					func(_ context.Context, f managedfile.File) (bool, error) {
 						s.Equal("arm64", string(f.Content))
+						s.Equal("object", f.ObjectSHA256)
 
 						return false, nil
 					})

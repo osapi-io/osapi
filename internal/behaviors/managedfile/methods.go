@@ -101,14 +101,15 @@ func file(
 	in UpdateInput,
 ) (File, error) {
 	f := File{
-		Path:        in.Path,
-		Content:     []byte(in.Content),
-		Owner:       in.Owner,
-		Group:       in.Group,
-		Secret:      in.Secret,
-		Metadata:    in.Metadata,
-		Object:      in.Object,
-		ContentType: in.ContentType,
+		Path:         in.Path,
+		Content:      []byte(in.Content),
+		Owner:        in.Owner,
+		Group:        in.Group,
+		Secret:       in.Secret,
+		Metadata:     in.Metadata,
+		Object:       in.Object,
+		ContentType:  in.ContentType,
+		ObjectSHA256: in.ObjectSHA256,
 	}
 	if in.Mode != "" {
 		mode, err := strconv.ParseUint(in.Mode, 8, 32)

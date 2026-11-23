@@ -182,10 +182,12 @@ func (w *writer) Deploy(
 	}
 	result, err := behavior.Call(ctx, managedfile.Behavior, managedfile.Update, w.files,
 		managedfile.UpdateInput{
-			Path:     path,
-			Content:  got.Content,
-			Mode:     "0644",
-			Metadata: map[string]string{"object": obj},
+			Path:         path,
+			Content:      got.Content,
+			Mode:         "0644",
+			Metadata:     map[string]string{"object": obj},
+			Object:       obj,
+			ObjectSHA256: got.SHA256,
 		})
 	if err != nil || !result.Changed {
 		return false, err

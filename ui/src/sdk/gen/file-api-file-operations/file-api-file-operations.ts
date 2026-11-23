@@ -235,7 +235,7 @@ export const getPutNodeFileUrl = (hostname: string,) => {
 }
 
 /**
- * Writes the object at the path with its mode and ownership, and keeps a record of it. A template object, or content_type template, is rendered first with .Facts, .Vars and .Hostname. A file that holds the content, mode and owner already does not change and reports changed: false. osapi client file stale list shows the deployments whose object changed since.
+ * Writes the object at the path with its mode and ownership, and keeps a record of it. A template object, or content_type template, is rendered first with .Facts, .Vars and .Hostname. The record keeps the SHA-256 of the object as it was read. A file that holds the content, mode and owner already, from the same object, does not change and reports changed: false. osapi client file stale list compares the object now with that SHA-256, so it shows the deployments whose object changed since.
  * @summary Deploy an object of the object store to a path
  */
 export const putNodeFile = async (hostname: string,
