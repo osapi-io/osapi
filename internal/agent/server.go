@@ -77,7 +77,8 @@ func (a *Agent) Start() {
 		}
 	}
 
-	for _, p := range MissingPrograms(detectFn()) {
+	a.missingPrograms = MissingPrograms(detectFn())
+	for _, p := range a.missingPrograms {
 		a.logger.Warn(
 			"a behavior's program is not installed; the behavior fails until it is",
 			slog.String("program", p),

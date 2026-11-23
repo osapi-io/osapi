@@ -1762,6 +1762,9 @@ type AgentInfo struct {
 	// Memory Memory usage information.
 	Memory *MemoryResponse `json:"memory,omitempty"`
 
+	// MissingPrograms The programs that the agent's behaviors declare and that the host lacks. A behavior fails until its program is installed.
+	MissingPrograms *[]string `json:"missing_programs,omitempty"`
+
 	// OsInfo Operating system information.
 	OsInfo *OSInfoResponse `json:"os_info,omitempty"`
 

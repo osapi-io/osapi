@@ -171,8 +171,9 @@ func (s *MethodsPublicTestSuite) TestBuildAgentInfo() {
 					Destination: "0.0.0.0", Gateway: "10.0.0.1", Interface: "eth0",
 					Mask: "/0", Metric: 100,
 				}},
-				Facts: map[string]any{"rack": "a1"},
-				State: job.AgentStateDraining,
+				Facts:           map[string]any{"rack": "a1"},
+				MissingPrograms: []string{"chronyc"},
+				State:           job.AgentStateDraining,
 				Conditions: []job.Condition{{
 					Type: "HighLoad", Status: true, Reason: "load", LastTransitionTime: at,
 				}, {
@@ -202,6 +203,7 @@ func (s *MethodsPublicTestSuite) TestBuildAgentInfo() {
 				s.Equal("eth0", got.PrimaryInterface)
 				s.Equal(100, got.Routes[0].Metric)
 				s.Equal(map[string]any{"rack": "a1"}, got.Facts)
+				s.Equal([]string{"chronyc"}, got.MissingPrograms)
 				s.Equal("Draining", got.State)
 				s.Equal(
 					[]agent.NodeCondition{
@@ -222,6 +224,7 @@ func (s *MethodsPublicTestSuite) TestBuildAgentInfo() {
 				s.Empty(got.MachineID)
 				s.Nil(got.Labels)
 				s.Nil(got.Facts)
+				s.Nil(got.MissingPrograms)
 				s.Empty(got.Uptime)
 				s.Nil(got.OSInfo)
 				s.Nil(got.LoadAverage)

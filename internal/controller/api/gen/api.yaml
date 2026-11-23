@@ -8334,6 +8334,13 @@ components:
           type: string
         memory:
           $ref: '#/components/schemas/MemoryResponse'
+        missing_programs:
+          description: >-
+            The programs that the agent's behaviors declare and that the host
+            lacks. A behavior fails until its program is installed.
+          items:
+            type: string
+          type: array
         os_info:
           $ref: '#/components/schemas/OSInfoResponse'
         package_mgr:

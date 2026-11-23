@@ -172,6 +172,9 @@ func buildAgentInfo(
 	if len(a.Facts) > 0 {
 		info.Facts = a.Facts
 	}
+	if len(a.MissingPrograms) > 0 {
+		info.MissingPrograms = a.MissingPrograms
+	}
 	if a.Uptime > 0 {
 		info.Uptime = formatDuration(a.Uptime)
 	}

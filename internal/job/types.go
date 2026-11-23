@@ -410,6 +410,9 @@ type AgentRegistration struct {
 	MemoryStats *memory.Result `json:"memory_stats,omitempty"`
 	// AgentVersion is the version of the agent binary.
 	AgentVersion string `json:"agent_version,omitempty"`
+	// MissingPrograms are the programs that the agent's behaviors declare
+	// and that the host lacks.
+	MissingPrograms []string `json:"missing_programs,omitempty"`
 	// Process holds process-level resource usage.
 	Process *ProcessMetrics `json:"process,omitempty"`
 	// Conditions contains the evaluated node conditions.
@@ -450,6 +453,9 @@ type AgentInfo struct {
 	MemoryStats *memory.Result `json:"memory_stats,omitempty"`
 	// AgentVersion is the version of the agent binary.
 	AgentVersion string `json:"agent_version,omitempty"`
+	// MissingPrograms are the programs that the agent's behaviors declare
+	// and that the host lacks.
+	MissingPrograms []string `json:"missing_programs,omitempty"`
 	// Architecture is the CPU architecture (e.g., x86_64, aarch64).
 	Architecture string `json:"architecture,omitempty"`
 	// KernelVersion is the kernel version string.

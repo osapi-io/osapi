@@ -153,6 +153,7 @@ schema AgentInfo.labels = map[string]
 schema AgentInfo.load_average = LoadAverageResponse
 schema AgentInfo.machine_id = string
 schema AgentInfo.memory = MemoryResponse
+schema AgentInfo.missing_programs = [string]
 schema AgentInfo.os_info = OSInfoResponse
 schema AgentInfo.package_mgr = string
 schema AgentInfo.primary_interface = string

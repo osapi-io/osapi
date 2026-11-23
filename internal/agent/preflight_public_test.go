@@ -391,6 +391,44 @@ func (s *PreflightPublicTestSuite) TestMissingPrograms() {
 			},
 			want: []string{"ip"},
 		},
+		{
+			name: "when a sudo program is not on PATH but is in an sbin directory, it is not missing",
+			setup: func() {
+				behavior.Register(behavior.Define("users", "Users", behavior.Node,
+					behavior.Sudo("useradd"),
+				))
+				agent.SetLookPath(func(p string) (string, error) {
+					if p == "/usr/sbin/useradd" {
+						return p, nil
+					}
+
+					return "", fmt.Errorf("not found")
+				})
+			},
+		},
+		{
+			name: "when a sudo program is in no directory, it is missing",
+			setup: func() {
+				behavior.Register(behavior.Define("users", "Users", behavior.Node,
+					behavior.Sudo("useradd"),
+				))
+				agent.SetLookPath(
+					func(string) (string, error) { return "", fmt.Errorf("not found") },
+				)
+			},
+			want: []string{"useradd"},
+		},
+		{
+			name: "when a behavior runs any program, it needs none",
+			setup: func() {
+				behavior.Register(behavior.Define("command", "Command", behavior.Node,
+					behavior.Runs(behavior.AnyProgram),
+				))
+				agent.SetLookPath(
+					func(string) (string, error) { return "", fmt.Errorf("not found") },
+				)
+			},
+		},
 	}
 
 	for _, tc := range tests {
