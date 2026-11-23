@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Behavior DSL | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Behavior DSL | OSAPI"><meta data-rh="true" name="description" content="Each part of a behavior definition: what it makes osapi do, and when to use it."><meta data-rh="true" property="og:description" content="Each part of a behavior definition: what it makes osapi do, and when to use it."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Development","item":"https://osapi-io.github.io/osapi/sidebar/development/"},{"@type":"ListItem","position":2,"name":"DSLs","item":"https://osapi-io.github.io/osapi/sidebar/development/dsl/"},{"@type":"ListItem","position":3,"name":"Behavior DSL","item":"https://osapi-io.github.io/osapi/sidebar/development/dsl/behavior"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.ee2257e7.css">
-<script src="/osapi/assets/js/runtime~main.4355c953.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.0f46de78.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.861e2c74.js" defer="defer"></script>
 </head>
 <body>
@@ -36,8 +36,9 @@ behavior.Register(behavior.Define(...)).</p>
 <p>Use: When an operator calls the behavior from a shell.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="titlepackage-updates"><code>Title(&quot;Package updates&quot;)</code><a href="#titlepackage-updates" class="hash-link" aria-label="Direct link to titlepackage-updates" title="Direct link to titlepackage-updates" translate="no">​</a></h3>
 <p>Gives the behavior the title that a person reads: the title of its reference and
-chain pages, the name of its API tag and of its category of blocks in the UI.
-Without it, the title is the name with a capital letter, such as Sysctl.</p>
+chain pages, the name of its API tag, and its name on the UI&#x27;s Behaviors page
+and on its steps of a plan. Without it, the title is the name with a capital
+letter, such as Sysctl.</p>
 <p>Use: When the name does not read well with a capital letter: an initialism such
 as DNS, two words such as Package updates, a group such as Container image, or a
 behavior that Of nests, which names its parent, such as User SSH key.</p>
@@ -51,11 +52,11 @@ provider is not required: a child that needs it declares Requires too.</p>
 <p>Use: For a resource that exists only inside another, such as the SSH keys of a
 user. Not with Under: the parent&#x27;s path is the group.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="areaareaname"><code>Area(area.Name)</code><a href="#areaareaname" class="hash-link" aria-label="Direct link to areaareaname" title="Direct link to areaareaname" translate="no">​</a></h3>
-<p>Puts a served behavior in an area, one of area.All: the tab of the Configure
-page&#x27;s Add Block panel that its blocks sit in, the folder of its SDK page, of
-its reference page and of its chain&#x27;s page, and its section of the docs site&#x27;s
-SDK and Behaviors menus. Use a constant of package area, such as area.Config or
-area.Hardware. area.All has the label and the order of each area.</p>
+<p>Puts a served behavior in an area, one of area.All: its section of the UI&#x27;s
+Behaviors page and of the list of steps of the Plans page, the folder of its SDK
+page, of its reference page and of its chain&#x27;s page, and its section of the docs
+site&#x27;s SDK and Behaviors menus. Use a constant of package area, such as
+area.Config or area.Hardware. area.All has the label and the order of each area.</p>
 <p>Use: On each behavior with API. behavior validate refuses a served behavior with
 none.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="undergroupname"><code>Under(GroupName)</code><a href="#undergroupname" class="hash-link" aria-label="Direct link to undergroupname" title="Direct link to undergroupname" translate="no">​</a></h3>
