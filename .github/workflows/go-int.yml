@@ -64,6 +64,14 @@ jobs:
       # the runner needs chrony.
       - name: chrony
         run: sudo apt-get update && sudo apt-get install -y chrony
+      # The user create examples run useradd --create-home, which copies
+      # /etc/skel. The runner's /etc/skel holds its toolchains for new users,
+      # and the first copy took more than the job's 30 seconds. The examples
+      # need a home, not the toolchains.
+      - name: Empty /etc/skel
+        run: |
+          sudo du -sh /etc/skel || true
+          sudo find /etc/skel -mindepth 1 -delete
       # As root, with the behavior write examples on: the runner is thrown
       # away after the job, so they may change its kernel parameters and /etc.
       - name: Integration
