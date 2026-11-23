@@ -75,9 +75,10 @@ Linux families. The behaviors read each Linux host.
 
 ## Permissions
 
-| Command                             | Permission |
-| ----------------------------------- | ---------- |
-| `log entry list`, `log source list` | `log:read` |
+| Command           | Permission    |
+| ----------------- | ------------- |
+| `log entry list`  | `entry:read`  |
+| `log source list` | `source:read` |
 
 ## Related
 

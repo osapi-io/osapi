@@ -28,7 +28,7 @@ func (s *APIPublicTestSuite) TestRoutes() {
 		{
 			method:     http.MethodGet,
 			path:       "/api/node/:hostname/log/source",
-			permission: "log:read",
+			permission: "source:read",
 		},
 	}
 

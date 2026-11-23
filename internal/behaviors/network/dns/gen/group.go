@@ -112,7 +112,7 @@ var Group = endpoint.Define(
 		Handle(HandleGet).
 		ID("GetNodeNetworkDnsByKey").
 		Describe("Get the DNS resolvers of an interface").
-		Permission("network:read").
+		Permission("dns:read").
 		Returns("Each target host's result.").
 		Explain("Reads the servers and the search domains of the interface: resolvectl on Linux, with resolv.conf on a host that has no resolvers per interface, such as a container, and scutil on macOS.").
 		Example("--target web-01 --interface-name osapi0", "An interface with servers and a domain").
@@ -124,7 +124,7 @@ var Group = endpoint.Define(
 		Handle(HandleUpdate).
 		ID("PutNodeNetworkDns").
 		Describe("Set the DNS resolvers of an interface").
-		Permission("network:write").
+		Permission("dns:write").
 		Returns("Each target host's result, with whether it changed.").
 		Explain("Writes a netplan file of the interface's own, such as /etc/netplan/osapi-dns-eth0.yaml for eth0, under the netplan definition that matches the interface, and applies it. A definition that matches several interfaces, such as cloud-init's all for en*, gives each of them the resolvers. An empty list keeps the interface's servers or domains, and an interface with no resolvers yet starts from none. override_dhcp drops the servers DHCP gives. It runs on the Debian family, and elsewhere, and in a container, reports skipped.").
 		Example("--target web-01 --interface-name osapi0 --servers 9.9.9.9", "Set the servers of an interface").
@@ -136,7 +136,7 @@ var Group = endpoint.Define(
 		Handle(HandleDelete).
 		ID("DeleteNodeNetworkDns").
 		Describe("Drop the DNS resolvers osapi set on an interface").
-		Permission("network:write").
+		Permission("dns:write").
 		Returns("Each target host's result, with whether it changed.").
 		Explain("Removes the interface's netplan file and applies what is left. An interface osapi set nothing on does not change.").
 		Example("--target web-01 --interface-name osapi0", "An interface osapi set").

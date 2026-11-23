@@ -117,7 +117,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - log:read
+            - source:read
       summary: List the sources of the journal
       tags:
         - log_source_operations

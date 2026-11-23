@@ -221,7 +221,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:write
+            - dns:write
       summary: Drop the DNS resolvers osapi set on an interface
       tags:
         - network_dns_operations
@@ -276,7 +276,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:read
+            - dns:read
       summary: Get the DNS resolvers of an interface
       tags:
         - network_dns_operations
@@ -337,7 +337,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:write
+            - dns:write
       summary: Set the DNS resolvers of an interface
       tags:
         - network_dns_operations

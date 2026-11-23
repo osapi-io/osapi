@@ -118,7 +118,7 @@ func Example() {
 	//    osapi client node motd update
 }
 
-// Under nests a behavior in a group, which also names its permission.
+// Under nests a behavior in a group. Its permission keeps the behavior's name.
 func ExampleUnder() {
 	dns := behavior.Define("dns", "Resolver settings",
 		behavior.Node,
@@ -130,7 +130,7 @@ func ExampleUnder() {
 	fmt.Println(dns.Path(m), dns.Permission(m.PermissionVerb()))
 
 	// Output:
-	// /api/node/{hostname}/network/dns network:read
+	// /api/node/{hostname}/network/dns dns:read
 }
 
 // Key puts an input field in the path, for a method that addresses one item.

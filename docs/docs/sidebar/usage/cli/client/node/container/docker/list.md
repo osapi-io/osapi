@@ -110,7 +110,7 @@ The command fails in these cases:
 
 ## Permission
 
-It needs the `container:read` permission. `osapi token roles get --name <role>`
+It needs the `docker:read` permission. `osapi token roles get --name <role>`
 shows what a role grants.
 
 ## Flags

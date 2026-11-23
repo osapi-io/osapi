@@ -28,17 +28,17 @@ func (s *APIPublicTestSuite) TestRoutes() {
 		{
 			method:     http.MethodGet,
 			path:       "/api/node/:hostname/container/image",
-			permission: "container:read",
+			permission: "image:read",
 		},
 		{
 			method:     http.MethodPost,
 			path:       "/api/node/:hostname/container/image/pull",
-			permission: "container:execute",
+			permission: "image:execute",
 		},
 		{
 			method:     http.MethodDelete,
 			path:       "/api/node/:hostname/container/image/:image",
-			permission: "container:write",
+			permission: "image:write",
 		},
 	}
 

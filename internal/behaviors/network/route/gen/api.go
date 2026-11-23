@@ -16,25 +16,25 @@ func Routes(
 		{
 			Method:     http.MethodGet,
 			Path:       "/api/node/:hostname/network/interface/:name/route",
-			Permission: "network:read",
+			Permission: "interface:read",
 			Handler:    server.Serve(s, Group, "list", HandleList, decodeList),
 		},
 		{
 			Method:     http.MethodPost,
 			Path:       "/api/node/:hostname/network/interface/:name/route",
-			Permission: "network:write",
+			Permission: "interface:write",
 			Handler:    server.Serve(s, Group, "create", HandleCreate, decodeCreate),
 		},
 		{
 			Method:     http.MethodPut,
 			Path:       "/api/node/:hostname/network/interface/:name/route",
-			Permission: "network:write",
+			Permission: "interface:write",
 			Handler:    server.Serve(s, Group, "update", HandleUpdate, decodeUpdate),
 		},
 		{
 			Method:     http.MethodDelete,
 			Path:       "/api/node/:hostname/network/interface/:name/route",
-			Permission: "network:write",
+			Permission: "interface:write",
 			Handler:    server.Serve(s, Group, "delete", HandleDelete, decodeDelete),
 		},
 	}

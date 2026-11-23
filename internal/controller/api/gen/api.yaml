@@ -2514,7 +2514,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - container:read
+            - docker:read
       summary: List the containers of the host
       tags:
         - Docker_API_container_docker_operations
@@ -2585,7 +2585,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - container:write
+            - docker:write
       summary: Create a container
       tags:
         - Docker_API_container_docker_operations
@@ -2649,7 +2649,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - container:write
+            - docker:write
       summary: Remove a container
       tags:
         - Docker_API_container_docker_operations
@@ -2710,7 +2710,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - container:read
+            - docker:read
       summary: Get one container
       tags:
         - Docker_API_container_docker_operations
@@ -2722,8 +2722,8 @@ paths:
         and to standard error, and its exit code. A command that exits with a
         code other than 0 is an answer, not a failure. It changes what the
         command changes, which osapi cannot tell, so it reports changed: true.
-        Its permission is container:exec, which only the admin role gets, apart
-        from the container:execute of start, stop and image pull. An agent with
+        Its permission is docker:exec, which only the admin role gets, apart
+        from the docker:execute of start and stop. An agent with
         agent.command.enabled false refuses it, as it refuses a command.
       operationId: PostNodeContainerDockerExec
       parameters:
@@ -2784,7 +2784,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - container:exec
+            - docker:exec
       summary: Run a command in a container
       tags:
         - Docker_API_container_docker_operations
@@ -2847,7 +2847,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - container:execute
+            - docker:execute
       summary: Start a container
       tags:
         - Docker_API_container_docker_operations
@@ -2917,7 +2917,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - container:execute
+            - docker:execute
       summary: Stop a container
       tags:
         - Docker_API_container_docker_operations
@@ -2981,7 +2981,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - container:read
+            - image:read
       summary: List the images of the host
       tags:
         - Image_API_container_image_operations
@@ -3051,7 +3051,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - container:write
+            - image:write
       summary: Remove an image
       tags:
         - Image_API_container_image_operations
@@ -3122,7 +3122,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - container:execute
+            - image:execute
       summary: Pull an image
       tags:
         - Image_API_container_image_operations
@@ -4043,7 +4043,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - log:read
+            - entry:read
       summary: List the entries of the journal
       tags:
         - Entry_API_log_entry_operations
@@ -4108,7 +4108,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - log:read
+            - source:read
       summary: List the sources of the journal
       tags:
         - Source_API_log_source_operations
@@ -4246,7 +4246,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:execute
+            - connectivity:execute
       summary: Ping an address from the host
       tags:
         - Connectivity_API_network_connectivity_operations
@@ -4309,7 +4309,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:write
+            - dns:write
       summary: Drop the DNS resolvers osapi set on an interface
       tags:
         - Dns_API_network_dns_operations
@@ -4371,7 +4371,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:read
+            - dns:read
       summary: Get the DNS resolvers of an interface
       tags:
         - Dns_API_network_dns_operations
@@ -4444,7 +4444,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:write
+            - dns:write
       summary: Set the DNS resolvers of an interface
       tags:
         - Dns_API_network_dns_operations
@@ -4510,7 +4510,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:read
+            - interface:read
       summary: List the network interfaces of the host
       tags:
         - Interface_API_network_interface_operations
@@ -4573,7 +4573,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:write
+            - interface:write
       summary: Drop the config osapi has of a network interface
       tags:
         - Interface_API_network_interface_operations
@@ -4632,7 +4632,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:read
+            - interface:read
       summary: Get a network interface of the host
       tags:
         - Interface_API_network_interface_operations
@@ -4707,7 +4707,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:write
+            - interface:write
       summary: Configure a network interface
       tags:
         - Interface_API_network_interface_operations
@@ -4775,7 +4775,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:write
+            - interface:write
       summary: Change the config osapi has of a network interface
       tags:
         - Interface_API_network_interface_operations
@@ -4847,7 +4847,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:write
+            - interface:write
       summary: Drop a route that osapi wrote
       tags:
         - Route_API_route_operations
@@ -4912,7 +4912,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:read
+            - interface:read
       summary: List the routes of an interface
       tags:
         - Route_API_route_operations
@@ -4989,7 +4989,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:write
+            - interface:write
       summary: Add a static route to an interface
       tags:
         - Route_API_route_operations
@@ -5059,7 +5059,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:write
+            - interface:write
       summary: Change the gateway or the metric of a route
       tags:
         - Route_API_route_operations

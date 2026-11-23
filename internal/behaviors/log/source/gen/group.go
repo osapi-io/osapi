@@ -51,7 +51,7 @@ var Group = endpoint.Define(
 		Handle(HandleList).
 		ID("GetNodeLogSource").
 		Describe("List the sources of the journal").
-		Permission("log:read").
+		Permission("source:read").
 		Returns("Each target host's result.").
 		Explain("Runs journalctl --field=SYSLOG_IDENTIFIER: each syslog identifier that has an entry, once, sorted. A name here is what log entry list takes as unit when the source is a systemd unit.").
 		Example("--target web-01", "The sources").

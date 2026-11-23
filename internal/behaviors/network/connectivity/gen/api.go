@@ -16,7 +16,7 @@ func Routes(
 		{
 			Method:     http.MethodPost,
 			Path:       "/api/node/:hostname/network/connectivity/ping",
-			Permission: "network:execute",
+			Permission: "connectivity:execute",
 			Handler:    server.Serve(s, Group, "ping", HandlePing, decodePing),
 		},
 	}

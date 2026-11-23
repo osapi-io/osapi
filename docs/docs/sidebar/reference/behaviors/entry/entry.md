@@ -34,7 +34,7 @@ The entries of the systemd journal. `osapi behavior get --name entry` and
 
 | NAME                 | VERB | HTTP | ROUTE                                    | PERMISSION | DESCRIPTION                     |
 | -------------------- | ---- | ---- | ---------------------------------------- | ---------- | ------------------------------- |
-| [list](#method-list) | read | GET  | /api/node/&#123;hostname&#125;/log/entry | log:read   | List the entries of the journal |
+| [list](#method-list) | read | GET  | /api/node/&#123;hostname&#125;/log/entry | entry:read | List the entries of the journal |
 
 ### Types (1)
 
@@ -66,7 +66,7 @@ None. Declare them with behavior.Config.
 | Detail      | Runs journalctl --output=json, the newest entries last: the last 100 unless lines says, of one unit when unit says, since a time when since says, and at a priority or above when priority says. A priority is its name, such as err or info. The hand-written log domain read the Debian family only; this reads each Linux host that has journald. |
 | HTTP        | GET                                                                                                                                                                                                                                                                                                                                                  |
 | Route       | /api/node/&#123;hostname&#125;/log/entry                                                                                                                                                                                                                                                                                                             |
-| Permission  | log:read                                                                                                                                                                                                                                                                                                                                             |
+| Permission  | entry:read                                                                                                                                                                                                                                                                                                                                           |
 | Command     | [osapi client node log entry list](../../../usage/cli/client/node/log/entry/list.md)                                                                                                                                                                                                                                                                 |
 | Input type  | ListInput                                                                                                                                                                                                                                                                                                                                            |
 | Output type | \[]Entry                                                                                                                                                                                                                                                                                                                                             |

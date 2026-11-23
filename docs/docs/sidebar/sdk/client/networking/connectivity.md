@@ -37,4 +37,4 @@ for a complete working example.
 
 ## Permissions
 
-Requires `network:write` permission.
+Requires `connectivity:execute` permission.

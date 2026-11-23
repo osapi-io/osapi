@@ -252,16 +252,16 @@ func (s *BehaviorPublicTestSuite) TestPermission() {
 			want: "sysctl:write",
 		},
 		{
-			name: "when under a group the group is the prefix",
+			name: "when under a group the behavior's name is the prefix",
 			b:    grouped(),
 			verb: behavior.VerbRead,
-			want: "network:read",
+			want: "dns:read",
 		},
 		{
 			name: "when under a parent the parent's permission is the child's",
 			b:    child(grouped()),
 			verb: behavior.VerbWrite,
-			want: "network:write",
+			want: "dns:write",
 		},
 	}
 

@@ -286,7 +286,7 @@ func (s *APIPingPublicTestSuite) TestPingValidationHTTP() {
 	})
 }
 
-// TestPingRBACHTTP sends tokens that do not grant network:execute.
+// TestPingRBACHTTP sends tokens that do not grant connectivity:execute.
 func (s *APIPingPublicTestSuite) TestPingRBACHTTP() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
@@ -300,7 +300,7 @@ func (s *APIPingPublicTestSuite) TestPingRBACHTTP() {
 			WantCode: http.StatusUnauthorized,
 		},
 		{
-			Name: "when the token lacks network:execute, it is a 403",
+			Name: "when the token lacks connectivity:execute, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/network/connectivity/ping",

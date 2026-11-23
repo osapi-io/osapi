@@ -299,7 +299,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 	})
 }
 
-// TestUpdateRBACHTTP sends tokens that do not grant network:write.
+// TestUpdateRBACHTTP sends tokens that do not grant interface:write.
 func (s *APIUpdatePublicTestSuite) TestUpdateRBACHTTP() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
@@ -313,7 +313,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateRBACHTTP() {
 			WantCode: http.StatusUnauthorized,
 		},
 		{
-			Name: "when the token lacks network:write, it is a 403",
+			Name: "when the token lacks interface:write, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPut,
 				Path:   "/api/node/server1/network/interface/osapi0/route",

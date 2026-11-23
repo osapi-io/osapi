@@ -56,6 +56,6 @@ for a complete working example.
 
 ## Permissions
 
-Get requires `network:read`. Update and Delete require `network:write`. Get runs
-on every platform; Update and Delete run on the Debian family, and report
-`skipped` in a container and elsewhere.
+Get requires `dns:read`. Update and Delete require `dns:write`. Get runs on
+every platform; Update and Delete run on the Debian family, and report `skipped`
+in a container and elsewhere.

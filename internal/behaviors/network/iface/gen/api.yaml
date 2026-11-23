@@ -349,7 +349,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:read
+            - interface:read
       summary: List the network interfaces of the host
       tags:
         - network_interface_operations
@@ -405,7 +405,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:write
+            - interface:write
       summary: Drop the config osapi has of a network interface
       tags:
         - network_interface_operations
@@ -460,7 +460,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:read
+            - interface:read
       summary: Get a network interface of the host
       tags:
         - network_interface_operations
@@ -521,7 +521,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:write
+            - interface:write
       summary: Configure a network interface
       tags:
         - network_interface_operations
@@ -582,7 +582,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:write
+            - interface:write
       summary: Change the config osapi has of a network interface
       tags:
         - network_interface_operations

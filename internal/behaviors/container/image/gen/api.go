@@ -16,19 +16,19 @@ func Routes(
 		{
 			Method:     http.MethodGet,
 			Path:       "/api/node/:hostname/container/image",
-			Permission: "container:read",
+			Permission: "image:read",
 			Handler:    server.Serve(s, Group, "list", HandleList, decodeList),
 		},
 		{
 			Method:     http.MethodPost,
 			Path:       "/api/node/:hostname/container/image/pull",
-			Permission: "container:execute",
+			Permission: "image:execute",
 			Handler:    server.Serve(s, Group, "pull", HandlePull, decodePull),
 		},
 		{
 			Method:     http.MethodDelete,
 			Path:       "/api/node/:hostname/container/image/:image",
-			Permission: "container:write",
+			Permission: "image:write",
 			Handler:    server.Serve(s, Group, "delete", HandleDelete, decodeDelete),
 		},
 	}

@@ -376,7 +376,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 	})
 }
 
-// TestCreateRBACHTTP sends tokens that do not grant container:write.
+// TestCreateRBACHTTP sends tokens that do not grant docker:write.
 func (s *APICreatePublicTestSuite) TestCreateRBACHTTP() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
@@ -390,7 +390,7 @@ func (s *APICreatePublicTestSuite) TestCreateRBACHTTP() {
 			WantCode: http.StatusUnauthorized,
 		},
 		{
-			Name: "when the token lacks container:write, it is a 403",
+			Name: "when the token lacks docker:write, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/container/docker",

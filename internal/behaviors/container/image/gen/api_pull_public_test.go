@@ -224,7 +224,7 @@ func (s *APIPullPublicTestSuite) TestPullValidationHTTP() {
 	})
 }
 
-// TestPullRBACHTTP sends tokens that do not grant container:execute.
+// TestPullRBACHTTP sends tokens that do not grant image:execute.
 func (s *APIPullPublicTestSuite) TestPullRBACHTTP() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
@@ -238,7 +238,7 @@ func (s *APIPullPublicTestSuite) TestPullRBACHTTP() {
 			WantCode: http.StatusUnauthorized,
 		},
 		{
-			Name: "when the token lacks container:execute, it is a 403",
+			Name: "when the token lacks image:execute, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/container/image/pull",

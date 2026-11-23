@@ -178,7 +178,7 @@ var Group = endpoint.Define(
 		Handle(HandleList).
 		ID("GetNodeNetworkInterface").
 		Describe("List the network interfaces of the host").
-		Permission("network:read").
+		Permission("interface:read").
 		Returns("Each target host's result.").
 		Explain("Reads each interface but the loopback, in the order of its index: /sys/class/net and ip on Linux, ifconfig and netstat on macOS. dhcp4 is true when a route of the interface has proto dhcp, and primary when it has the default route.").
 		Example("--target web-01", "A Linux host").
@@ -189,7 +189,7 @@ var Group = endpoint.Define(
 		Handle(HandleGet).
 		ID("GetNodeNetworkInterfaceByKey").
 		Describe("Get a network interface of the host").
-		Permission("network:read").
+		Permission("interface:read").
 		Returns("Each target host's result.").
 		Explain("Reads the interface as list does.").
 		Example("--target web-01 --name eth0", "An interface with a DHCP address").
@@ -200,7 +200,7 @@ var Group = endpoint.Define(
 		Handle(HandleCreate).
 		ID("PostNodeNetworkInterface").
 		Describe("Configure a network interface").
-		Permission("network:write").
+		Permission("interface:write").
 		Returns("Each target host's result, with whether it changed.").
 		Explain("Writes a netplan file of the interface's own, such as /etc/netplan/osapi-osapi0.yaml for osapi0, under a netplan definition that is the interface's own, and applies it. An interface the host does not have is not found. dhcp4 and dhcp6 are false unless given, so the interface has only the addresses given. An interface that a match defines, such as cloud-init's all for en*, is refused, because the config would change each interface the match takes, now and later. An interface osapi already configures does not change: update replaces its config. It runs on the Debian family, and elsewhere, and in a container, reports skipped.").
 		Example("--target web-01 --name osapi0 --addresses 10.0.1.5/24", "A static address").
@@ -212,7 +212,7 @@ var Group = endpoint.Define(
 		Handle(HandleUpdate).
 		ID("PutNodeNetworkInterface").
 		Describe("Change the config osapi has of a network interface").
-		Permission("network:write").
+		Permission("interface:write").
 		Returns("Each target host's result, with whether it changed.").
 		Explain("Writes the interface's netplan file over the one osapi has, as create writes it, and applies it. An interface osapi does not configure is not found: create configures it.").
 		Example("--target web-01 --name osapi0 --dhcp4", "Move an interface to DHCP").
@@ -222,7 +222,7 @@ var Group = endpoint.Define(
 		Handle(HandleDelete).
 		ID("DeleteNodeNetworkInterface").
 		Describe("Drop the config osapi has of a network interface").
-		Permission("network:write").
+		Permission("interface:write").
 		Returns("Each target host's result, with whether it changed.").
 		Explain("Removes the interface's netplan file and applies what is left. An interface osapi does not configure does not change.").
 		Example("--target web-01 --name osapi0", "An interface osapi configures").

@@ -250,7 +250,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - container:read
+            - image:read
       summary: List the images of the host
       tags:
         - container_image_operations
@@ -312,7 +312,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - container:write
+            - image:write
       summary: Remove an image
       tags:
         - container_image_operations
@@ -373,7 +373,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - container:execute
+            - image:execute
       summary: Pull an image
       tags:
         - container_image_operations

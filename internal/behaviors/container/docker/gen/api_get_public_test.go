@@ -188,7 +188,7 @@ func (s *APIGetPublicTestSuite) TestGetValidationHTTP() {
 	})
 }
 
-// TestGetRBACHTTP sends tokens that do not grant container:read.
+// TestGetRBACHTTP sends tokens that do not grant docker:read.
 func (s *APIGetPublicTestSuite) TestGetRBACHTTP() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
@@ -201,7 +201,7 @@ func (s *APIGetPublicTestSuite) TestGetRBACHTTP() {
 			WantCode: http.StatusUnauthorized,
 		},
 		{
-			Name: "when the token lacks container:read, it is a 403",
+			Name: "when the token lacks docker:read, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodGet,
 				Path:   "/api/node/server1/container/docker/osapitest",

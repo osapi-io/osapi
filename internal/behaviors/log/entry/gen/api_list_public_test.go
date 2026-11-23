@@ -245,7 +245,7 @@ func (s *APIListPublicTestSuite) TestListValidationHTTP() {
 	})
 }
 
-// TestListRBACHTTP sends tokens that do not grant log:read.
+// TestListRBACHTTP sends tokens that do not grant entry:read.
 func (s *APIListPublicTestSuite) TestListRBACHTTP() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
@@ -258,7 +258,7 @@ func (s *APIListPublicTestSuite) TestListRBACHTTP() {
 			WantCode: http.StatusUnauthorized,
 		},
 		{
-			Name: "when the token lacks log:read, it is a 403",
+			Name: "when the token lacks entry:read, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodGet,
 				Path:   "/api/node/server1/log/entry",
