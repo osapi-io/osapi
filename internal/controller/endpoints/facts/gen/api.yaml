@@ -99,6 +99,9 @@ paths:
       summary: List available fact keys
       tags:
         - facts
+      x-osapi-examples:
+        - doc: List available fact keys
+          input: {}
       x-osapi-method: list
 tags:
   - description: Fact key discovery for @fact. references.

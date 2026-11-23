@@ -290,6 +290,10 @@ paths:
       summary: List the groups of the host
       tags:
         - group_operations
+      x-osapi-examples:
+        - doc: A host with a group
+          input:
+            hostname: web-01
       x-osapi-method: list
     post:
       description: 'Adds the group with groupadd, with the ID when one is given. A group that the host has already does not change and reports changed: false, whatever its ID. It runs on the Debian family only, and elsewhere reports skipped.'
@@ -351,6 +355,17 @@ paths:
       summary: Add a group
       tags:
         - group_operations
+      x-osapi-examples:
+        - doc: Add a group
+          input:
+            hostname: web-01
+            name: osapitest
+        - doc: Add a system group with its ID
+          input:
+            gid: 1999
+            hostname: web-01
+            name: osapitest
+            system: true
       x-osapi-method: create
   /api/node/{hostname}/group/{name}:
     delete:
@@ -408,6 +423,11 @@ paths:
       summary: Remove a group
       tags:
         - group_operations
+      x-osapi-examples:
+        - doc: Remove a group
+          input:
+            hostname: web-01
+            name: osapitest
       x-osapi-method: delete
     get:
       description: Reads one group from the same list. A group that the host does not have is not found.
@@ -464,6 +484,11 @@ paths:
       summary: Get one group
       tags:
         - group_operations
+      x-osapi-examples:
+        - doc: A group
+          input:
+            hostname: web-01
+            name: developers
       x-osapi-method: get
     put:
       description: 'Sets the members with gpasswd -M, in place of the members that the group has. The same members, in any order, do not change it and report changed: false. A group that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped.'
@@ -526,6 +551,13 @@ paths:
       summary: Set the members of a group
       tags:
         - group_operations
+      x-osapi-examples:
+        - doc: Set the members
+          input:
+            hostname: web-01
+            members:
+              - root
+            name: osapitest
       x-osapi-method: update
 tags:
   - description: The groups of the host

@@ -316,6 +316,12 @@ paths:
       summary: Drop a route that osapi wrote
       tags:
         - route_operations
+      x-osapi-examples:
+        - doc: One of two routes
+          input:
+            destination: 198.51.100.0/24
+            hostname: web-01
+            name: osapi0
       x-osapi-method: delete
     get:
       description: 'Reads the routes of the main table that go out of the interface: ip route on Linux, netstat on macOS. proto says where a route came from, such as dhcp, kernel or static. An interface with no routes has none; one the host does not have is not found.'
@@ -372,6 +378,19 @@ paths:
       summary: List the routes of an interface
       tags:
         - route_operations
+      x-osapi-examples:
+        - doc: An interface with routes
+          input:
+            hostname: web-01
+            name: eth0
+        - doc: An interface with no routes
+          input:
+            hostname: web-01
+            name: eth1
+        - doc: A Mac
+          input:
+            hostname: web-01
+            name: en0
       x-osapi-method: list
     post:
       description: 'Adds the route to the interface''s netplan file, such as /etc/netplan/osapi-osapi0-routes.yaml for osapi0, under a netplan definition that is the interface''s own, and applies it. A route osapi already has, the same, does not change; one to the same destination by another gateway or metric is refused: update changes it. A default route is refused: the interface behavior sets the gateway. An interface the host does not have is not found. An interface that a match defines, such as cloud-init''s all for en*, is refused, because the route would go on each interface the match takes. It runs on the Debian family, and elsewhere, and in a container, reports skipped.'
@@ -434,6 +453,20 @@ paths:
       summary: Add a static route to an interface
       tags:
         - route_operations
+      x-osapi-examples:
+        - doc: A route
+          input:
+            destination: 198.51.100.0/24
+            hostname: web-01
+            name: osapi0
+            via: 192.0.2.1
+        - doc: A second route, with a metric
+          input:
+            destination: 2001:db8:1::/48
+            hostname: web-01
+            metric: 200
+            name: osapi0
+            via: 2001:db8::1
       x-osapi-method: create
     put:
       description: 'Writes the route over the one osapi has to the same destination, and applies it. A destination osapi has no route to is not found: create adds it.'
@@ -496,6 +529,14 @@ paths:
       summary: Change the gateway or the metric of a route
       tags:
         - route_operations
+      x-osapi-examples:
+        - doc: A new gateway and metric
+          input:
+            destination: 198.51.100.0/24
+            hostname: web-01
+            metric: 10
+            name: osapi0
+            via: 192.0.2.2
       x-osapi-method: update
 tags:
   - description: The routes of an interface

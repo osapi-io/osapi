@@ -225,6 +225,14 @@ paths:
       summary: Get the spans of a trace
       tags:
         - telemetry
+      x-osapi-examples:
+        - doc: Get the spans of a trace
+          input:
+            id: 26e448c9dbe1c4a8d216a98c675079c9
+        - doc: Get the spans of a trace, with --id 26e448c9dbe1c4a8d216a98c675079c9 --all
+          input:
+            all: true
+            id: 26e448c9dbe1c4a8d216a98c675079c9
       x-osapi-method: get
 tags:
   - description: Telemetry endpoints, such as the spans of a trace.

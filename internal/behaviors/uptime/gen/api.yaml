@@ -147,6 +147,10 @@ paths:
       summary: Get the uptime of the host
       tags:
         - uptime_operations
+      x-osapi-examples:
+        - doc: A host up for a day, two hours and five minutes
+          input:
+            hostname: web-01
       x-osapi-method: get
 tags:
   - description: Get the uptime of target hosts

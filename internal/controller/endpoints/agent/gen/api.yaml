@@ -408,6 +408,9 @@ paths:
       summary: List active agents
       tags:
         - agent_operations
+      x-osapi-examples:
+        - doc: List active agents
+          input: {}
       x-osapi-method: list
   /api/agent/{hostname}:
     get:
@@ -467,6 +470,10 @@ paths:
       summary: Get agent details
       tags:
         - agent_operations
+      x-osapi-examples:
+        - doc: Get agent details
+          input:
+            hostname: web-01
       x-osapi-method: get
   /api/agent/{hostname}/drain:
     post:
@@ -528,6 +535,10 @@ paths:
       summary: Drain an agent
       tags:
         - agent_operations
+      x-osapi-examples:
+        - doc: Drain an agent
+          input:
+            hostname: web-01
       x-osapi-method: drain
   /api/agent/{hostname}/undrain:
     post:
@@ -589,6 +600,10 @@ paths:
       summary: Undrain an agent
       tags:
         - agent_operations
+      x-osapi-examples:
+        - doc: Undrain an agent
+          input:
+            hostname: web-01
       x-osapi-method: undrain
   /api/agent/status:
     get:
@@ -625,6 +640,9 @@ paths:
       summary: Show the health of each agent
       tags:
         - agent_operations
+      x-osapi-examples:
+        - doc: Show the health of each agent
+          input: {}
       x-osapi-method: status
 tags:
   - description: Operations related to agent discovery and details.

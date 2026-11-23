@@ -38,106 +38,65 @@ method:
 The methods that upload a file, `File.Upload` and `File.Update`, and
 `File.GetChanged` are written by hand.
 
+The same run writes a program for each service,
+`examples/sdk/client/<service>.go`. It calls each method with the input of each
+example of the method's definition, and prints the answer. `just examples-check`
+compiles each program, so an example cannot go stale.
+
 ## Services
 
-| Service                          | Description                  |
-| -------------------------------- | ---------------------------- |
-| [Service](services/service.md)   | Service management (systemd) |
-| [Schedule](services/schedule.md) | Scheduled entry management   |
+Each service has a page, which `internal/sdk/gen` writes from the same model:
+its methods with their signatures, doc comments and permissions, the code of
+each example of the method's definition, and its types. The services of a node
+act on the hosts of a target. The services of the controller act on the
+controller itself.
 
-### Software
+<!-- osapi:sdk-services -->
 
-| Service                                        | Description        |
-| ---------------------------------------------- | ------------------ |
-| [Package, UpdatePackages](software/package.md) | Package management |
+| Service                                             | Description                                                          |
+| --------------------------------------------------- | -------------------------------------------------------------------- |
+| [Admission](admission.md)                           | Admit, reject and revoke the nodes that ask to join.                 |
+| [Agent](agent.md)                                   | Operations related to agent discovery and details.                   |
+| [Audit](audit.md)                                   | Audit log endpoints for viewing API activity.                        |
+| [Certificate](certificate.md)                       | The certificate authorities that the host trusts.                    |
+| [Command](command.md)                               | Run a command on target hosts.                                       |
+| [ContainerDocker](container_docker.md)              | The Docker containers of the host.                                   |
+| [ContainerImage](container_image.md)                | The Docker images of the host.                                       |
+| [Controller](controller.md)                         | The controller of the fleet.                                         |
+| [Disk](disk.md)                                     | Get the disk usage of target hosts.                                  |
+| [Facts](facts.md)                                   | Fact key discovery for @fact. references.                            |
+| [File](file.md)                                     | Object Store file management operations.                             |
+| [Group](group.md)                                   | The groups of the host.                                              |
+| [Health](health.md)                                 | Health check endpoints for liveness, readiness, and detailed status. |
+| [Hostname](hostname.md)                             | Get or set the hostname of target hosts.                             |
+| [Job](job.md)                                       | Operations related to the job queue.                                 |
+| [Load](load.md)                                     | Get the load averages of target hosts.                               |
+| [LogEntry](log_entry.md)                            | The entries of the systemd journal.                                  |
+| [LogSource](log_source.md)                          | The sources that write to the systemd journal.                       |
+| [Memory](memory.md)                                 | Get the memory usage of target hosts.                                |
+| [NATS](nats.md)                                     | The NATS server of the fleet.                                        |
+| [NTP](ntp.md)                                       | The NTP servers of chrony, and its sync status.                      |
+| [NetworkConnectivity](network_connectivity.md)      | Whether the host reaches an address, by ICMP ping.                   |
+| [NetworkDNS](network_dns.md)                        | The DNS resolvers of each interface of the host.                     |
+| [NetworkInterface](network_interface.md)            | The network interfaces of the host.                                  |
+| [NetworkInterfaceRoute](network_interface_route.md) | The routes of an interface.                                          |
+| [NodeFile](node_file.md)                            | Files of the object store, deployed to the host.                     |
+| [OS](os.md)                                         | Get the operating system of target hosts.                            |
+| [Package](package.md)                               | The packages installed on the host.                                  |
+| [Power](power.md)                                   | Reboot or shut down the host.                                        |
+| [Process](process.md)                               | The processes of the host.                                           |
+| [Schedule](schedule.md)                             | The cron entries that osapi deploys.                                 |
+| [Service](service.md)                               | The systemd services of the host.                                    |
+| [Status](status.md)                                 | The status summary of a node.                                        |
+| [Sysctl](sysctl.md)                                 | Kernel parameters, written to sysctl.d files and applied.            |
+| [Telemetry](telemetry.md)                           | Telemetry endpoints, such as the spans of a trace.                   |
+| [Timezone](timezone.md)                             | The timezone of the host.                                            |
+| [UpdatePackages](update_packages.md)                | The updates the package index has for the host.                      |
+| [Uptime](uptime.md)                                 | Get the uptime of target hosts.                                      |
+| [User](user.md)                                     | The users of the host.                                               |
+| [UserSSHKey](user_ssh_key.md)                       | The authorized SSH keys of a user.                                   |
 
-### Config
-
-| Service                        | Description                 |
-| ------------------------------ | --------------------------- |
-| [Hostname](config/hostname.md) | Hostname query and update   |
-| [Sysctl](config/sysctl.md)     | Kernel parameter management |
-| [NTP](config/ntp.md)           | NTP server configuration    |
-| [Timezone](config/timezone.md) | System timezone             |
-
-### Node
-
-| Service                            | Description                            |
-| ---------------------------------- | -------------------------------------- |
-| [Power](node/power.md)             | Power management (reboot, shutdown)    |
-| [Process](node/process.md)         | Process management (list, get, signal) |
-| [LogEntry, LogSource](node/log.md) | Log query (journal entries, by unit)   |
-| [Status](node/status.md)           | Full node status                       |
-| [Load](node/load.md)               | Load averages                          |
-| [Uptime](node/uptime.md)           | System uptime                          |
-| [OS](node/os.md)                   | Operating system info                  |
-
-### Networking
-
-| Service                                           | Description                        |
-| ------------------------------------------------- | ---------------------------------- |
-| [NetworkDNS](networking/dns.md)                   | DNS configuration query and update |
-| [NetworkConnectivity](networking/connectivity.md) | Ping an address from a host        |
-| [NetworkInterface](networking/interface.md)       | Network interface configuration    |
-| [NetworkInterfaceRoute](networking/route.md)      | Static route configuration         |
-
-### Security
-
-| Service                                | Description               |
-| -------------------------------------- | ------------------------- |
-| [User, UserSSHKey](security/user.md)   | User account management   |
-| [Group](security/group.md)             | Group management          |
-| [Certificate](security/certificate.md) | CA certificate management |
-
-### Containers
-
-| Service                                                 | Description         |
-| ------------------------------------------------------- | ------------------- |
-| [ContainerDocker, ContainerImage](containers/docker.md) | Container lifecycle |
-
-### Files
-
-| Service                          | Description                    |
-| -------------------------------- | ------------------------------ |
-| [File](files/file.md)            | File management (Object Store) |
-| [NodeFile](files/file_deploy.md) | File deployment to agents      |
-
-### Command
-
-| Service                       | Description                     |
-| ----------------------------- | ------------------------------- |
-| [Command](command/command.md) | Command execution (exec, shell) |
-
-### Hardware
-
-| Service                      | Description       |
-| ---------------------------- | ----------------- |
-| [Disk](hardware/disk.md)     | Disk usage        |
-| [Memory](hardware/memory.md) | Memory statistics |
-
-### Audit
-
-| Service                 | Description          |
-| ----------------------- | -------------------- |
-| [Audit](audit/audit.md) | Audit log operations |
-
-### Jobs
-
-| Service            | Description                |
-| ------------------ | -------------------------- |
-| [Job](jobs/job.md) | Async job queue operations |
-
-### Agent
-
-| Service                        | Description                            |
-| ------------------------------ | -------------------------------------- |
-| [Agent, Facts](agent/agent.md) | Agent discovery, lifecycle, enrollment |
-
-### Health
-
-| Service                                      | Description             |
-| -------------------------------------------- | ----------------------- |
-| [Health, Controller, NATS](health/health.md) | Health check operations |
+<!-- /osapi:sdk-services -->
 
 ## Client Options
 

@@ -127,6 +127,26 @@ func (s *ModelPublicTestSuite) TestNew() {
 			},
 		},
 		{
+			name: "when a method has the examples of its definition",
+			validateFunc: func() {
+				list := services["Job"].Methods[0]
+				s.Equal([]*sdkmodel.Example{
+					{Doc: "Every job", Input: map[string]any{}},
+					{Doc: "Three jobs", Input: map[string]any{"limit": float64(3), "all": true}},
+				}, list.Examples)
+				s.Empty(services["File"].Methods[0].Examples)
+			},
+		},
+		{
+			name: "when a service of a node is marked as one",
+			validateFunc: func() {
+				s.True(services["NetworkDNS"].Node)
+				s.True(services["NodeFile"].Node)
+				s.False(services["File"].Node)
+				s.False(services["Job"].Node)
+			},
+		},
+		{
 			name: "when an answer has no body, the method has no result",
 			validateFunc: func() {
 				del := services["Job"].Methods[1]
@@ -194,6 +214,16 @@ func (s *ModelPublicTestSuite) TestNewErrors() {
 				return strings.Replace(text, "      x-osapi-method: list\n", "", 1)
 			},
 			want: "GetJobs: the operation has no x-osapi-method",
+		},
+		{
+			name: "when the examples of an operation are not a list",
+			edit: func(text string) string {
+				return strings.Replace(text, `      x-osapi-examples:
+        - doc: A job
+          input: {id: 550e8400-e29b-41d4-a716-446655440000}
+`, "      x-osapi-examples: many\n", 1)
+			},
+			want: "DeleteJobByID: x-osapi-examples",
 		},
 		{
 			name: "when an operation has no tag of the spec",

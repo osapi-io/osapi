@@ -261,6 +261,10 @@ paths:
       summary: Remove the NTP servers that osapi set
       tags:
         - ntp_operations
+      x-osapi-examples:
+        - doc: Remove the servers
+          input:
+            hostname: web-01
       x-osapi-method: delete
     get:
       description: Reads chronyc tracking, for whether chrony is synchronized, its stratum, its offset from NTP time and the source that it follows, and chronyc sources, for each source that it has.
@@ -316,6 +320,10 @@ paths:
       summary: Get the sync status of chrony and its sources
       tags:
         - ntp_operations
+      x-osapi-examples:
+        - doc: A host synchronized to time.cloudflare.com
+          input:
+            hostname: web-01
       x-osapi-method: get
     post:
       description: 'Writes a server line for each server to /etc/chrony/sources.d/osapi-ntp.sources, and reloads the sources with chronyc reload sources. A file that has the same servers does not change, and reports changed: false.'
@@ -377,6 +385,18 @@ paths:
       summary: Set the NTP servers that chrony uses
       tags:
         - ntp_operations
+      x-osapi-examples:
+        - doc: Set two servers
+          input:
+            hostname: web-01
+            servers:
+              - 0.pool.ntp.org
+              - 1.pool.ntp.org
+        - doc: The servers that the host has
+          input:
+            hostname: web-01
+            servers:
+              - 0.pool.ntp.org
       x-osapi-method: create
     put:
       description: 'The same as create, for servers that osapi set already. It fails with not found when osapi set none. The servers that the file has already report changed: false.'
@@ -438,6 +458,17 @@ paths:
       summary: Replace the NTP servers that osapi set
       tags:
         - ntp_operations
+      x-osapi-examples:
+        - doc: Replace the servers
+          input:
+            hostname: web-01
+            servers:
+              - time.cloudflare.com
+        - doc: The servers that the file has
+          input:
+            hostname: web-01
+            servers:
+              - 0.pool.ntp.org
       x-osapi-method: update
 tags:
   - description: The NTP servers of chrony, and its sync status

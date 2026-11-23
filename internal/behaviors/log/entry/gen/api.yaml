@@ -196,6 +196,17 @@ paths:
       summary: List the entries of the journal
       tags:
         - log_entry_operations
+      x-osapi-examples:
+        - doc: The newest entries
+          input:
+            hostname: web-01
+        - doc: The last entry of one unit at info or above
+          input:
+            hostname: web-01
+            lines: 1
+            priority: info
+            since: 1 hour ago
+            unit: nginx.service
       x-osapi-method: list
 tags:
   - description: The entries of the systemd journal

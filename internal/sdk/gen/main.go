@@ -27,6 +27,13 @@
 // the answer into the SDK's types: the SDK uses nothing that oapi-codegen
 // writes. It runs from the go:generate directive in pkg/sdk/client, after
 // internal/behaviors/all writes the spec.
+//
+// The same run writes a program for each service whose methods have
+// examples, examples/sdk/client/<service>.go: it calls each method with the
+// input of each example of the method's definition, which the spec has in
+// x-osapi-examples. With -docs, it writes the SDK's reference pages under
+// docs/docs/sidebar/sdk/client instead, from the same model and the methods
+// of the SDK's source, and the table of services of client.md.
 package main
 
 import (
@@ -39,6 +46,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/dave/jennifer/jen"
 	"github.com/getkin/kin-openapi/openapi3"
 
 	"github.com/osapi-io/osapi/internal/cli/command/gen/genfile"
@@ -53,15 +61,19 @@ const dir = "pkg/sdk/client"
 
 func main() {
 	root := flag.String("root", ".", "the root of the repository")
+	docs := flag.Bool("docs", false, "write the SDK's reference pages, not the SDK")
 	flag.Parse()
-	if err := run(*root); err != nil {
+	if err := generate(*root, *docs); err != nil {
 		fmt.Fprintln(os.Stderr, "sdk gen:", err)
 		os.Exit(1)
 	}
 }
 
-func run(
+// generate writes the SDK and its examples, or with docs the SDK's
+// reference pages, from the spec under root.
+func generate(
 	root string,
+	docs bool,
 ) error {
 	doc, err := openapi3.NewLoader().LoadFromFile(filepath.Join(root, spec))
 	if err != nil {
@@ -71,13 +83,47 @@ func run(
 	if err != nil {
 		return err
 	}
+	if docs {
+		return runPages(root, m)
+	}
+
+	return run(root, m)
+}
+
+// run writes the SDK and a program of the examples of each service.
+func run(
+	root string,
+	m *sdkmodel.Model,
+) error {
 	w := &genfile.Writer{Root: root}
 	written, err := clean(w, root)
 	if err != nil {
 		return err
 	}
+	out := map[string]*jen.File{}
 	for path, f := range files(m, written) {
-		if err := w.Go(filepath.Join(dir, path), f); err != nil {
+		out[filepath.Join(dir, path)] = f
+	}
+	if err := w.Clean(exampleDir); err != nil {
+		return err
+	}
+	for _, s := range m.Services {
+		f, err := exampleFile(s)
+		if err != nil {
+			return err
+		}
+		if f == nil {
+			continue
+		}
+		rel := filepath.Join(exampleDir, snake(s.Name)+".go")
+		if data, err := os.ReadFile(filepath.Join(root, rel)); err == nil &&
+			!strings.HasPrefix(string(data), header) {
+			return fmt.Errorf("%s is a person's: the example of %s goes there", rel, s.Name)
+		}
+		out[rel] = f
+	}
+	for rel, f := range out {
+		if err := w.Go(rel, f); err != nil {
 			return err
 		}
 	}

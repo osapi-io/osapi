@@ -227,6 +227,9 @@ paths:
       summary: List stored files
       tags:
         - file_operations
+      x-osapi-examples:
+        - doc: List stored files
+          input: {}
       x-osapi-method: list
     post:
       description: Upload a file to the Object Store.
@@ -386,6 +389,10 @@ paths:
       summary: Delete a file
       tags:
         - file_operations
+      x-osapi-examples:
+        - doc: Delete a file
+          input:
+            name: app.conf
       x-osapi-method: delete
     get:
       description: Get metadata for a specific file in the Object Store.
@@ -450,6 +457,10 @@ paths:
       summary: Get file metadata
       tags:
         - file_operations
+      x-osapi-examples:
+        - doc: Get file metadata
+          input:
+            name: app.conf
       x-osapi-method: get
     put:
       description: Replace a file in the Object Store, or create it when the name is new.
@@ -586,6 +597,9 @@ paths:
       summary: List stale file deployments
       tags:
         - file_operations
+      x-osapi-examples:
+        - doc: List stale file deployments
+          input: {}
       x-osapi-method: stale
 tags:
   - description: Object Store file management operations.

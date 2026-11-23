@@ -384,6 +384,10 @@ paths:
       summary: List the users of the host
       tags:
         - user_operations
+      x-osapi-examples:
+        - doc: A host with users
+          input:
+            hostname: web-01
       x-osapi-method: list
     post:
       description: 'Adds the user with useradd, with its home directory, and sets its password with chpasswd when one is given. The controller hashes the password, so the job and NATS have only the hash. A user that the host has already does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.'
@@ -445,6 +449,27 @@ paths:
       summary: Add a user
       tags:
         - user_operations
+      x-osapi-examples:
+        - doc: Add a user
+          input:
+            hostname: web-01
+            name: osapitest
+        - doc: Add a user with a shell, groups and a password
+          input:
+            groups:
+              - root
+            hostname: web-01
+            name: osapitest
+            password: osapi-test-password
+            shell: /bin/sh
+        - doc: Add a system user with its IDs and its home
+          input:
+            gid: 100
+            home: /home/osapitest
+            hostname: web-01
+            name: osapitest
+            system: true
+            uid: 1999
       x-osapi-method: create
   /api/node/{hostname}/user/{name}:
     delete:
@@ -502,6 +527,11 @@ paths:
       summary: Remove a user
       tags:
         - user_operations
+      x-osapi-examples:
+        - doc: Remove a user
+          input:
+            hostname: web-01
+            name: osapitest
       x-osapi-method: delete
     get:
       description: Reads one user from the same list. A user that the host does not have is not found.
@@ -558,6 +588,11 @@ paths:
       summary: Get one user
       tags:
         - user_operations
+      x-osapi-examples:
+        - doc: A user
+          input:
+            hostname: web-01
+            name: alice
       x-osapi-method: get
     put:
       description: 'Changes what the input gives and the user does not have already, with usermod: its shell, its home, which usermod moves the files to, its groups, which replace the groups it has, and whether it is locked. The same values report changed: false. A user that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped.'
@@ -620,6 +655,25 @@ paths:
       summary: Change a user
       tags:
         - user_operations
+      x-osapi-examples:
+        - doc: Set the shell
+          input:
+            hostname: web-01
+            name: osapitest
+            shell: /bin/bash
+        - doc: Move the home, set the groups and lock it
+          input:
+            groups:
+              - root
+            home: /home/osapitest2
+            hostname: web-01
+            lock: locked
+            name: osapitest
+        - doc: Unlock it
+          input:
+            hostname: web-01
+            lock: unlocked
+            name: osapitest
       x-osapi-method: update
   /api/node/{hostname}/user/{name}/passwd:
     post:
@@ -683,6 +737,12 @@ paths:
       summary: Set the password of a user
       tags:
         - user_operations
+      x-osapi-examples:
+        - doc: Set a password
+          input:
+            hostname: web-01
+            name: osapitest
+            password: osapi-test-password
       x-osapi-method: passwd
 tags:
   - description: The users of the host

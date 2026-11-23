@@ -118,6 +118,7 @@ command.Column.None string	boundary	what the output prints, derived from the str
 command.Column.Prefix string	boundary	what the output prints, derived from the struct tags
 command.Column.Render string	checked	from the render tag, which the tag rule checks
 command.Done(flags string)	checked	the flags of an example, which validate checks against the command
+command.GlobalFlag(name string)	identity	a name that the registry, the route or the command path holds
 command.Define(doc string)	free text	prose for a page or a message
 command.Define(name string)	identity	a name that the registry, the route or the command path holds
 command.Example.Doc string	free text	prose for a page or a message
@@ -222,6 +223,8 @@ endpoint.Problem.Group string	boundary	a record that a check or a chain prints
 endpoint.Problem.Message string	boundary	a record that a check or a chain prints
 endpoint.Problem.Method string	boundary	a record that a check or a chain prints
 endpoint.Problem.Rule string	boundary	a record that a check or a chain prints
+endpoint.SpecExample.Doc string	free text	prose for a page or a message
+endpoint.SpecExample.Input map[string]any	fixture	what an example sets up or expects
 endpoint.Put(name string)	identity	a name that the registry, the route or the command path holds
 endpoint.Refusal.Doc string	free text	prose for a page or a message
 endpoint.Scaffold(doc string)	free text	prose for a page or a message

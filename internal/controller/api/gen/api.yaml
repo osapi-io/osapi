@@ -199,6 +199,12 @@ paths:
       summary: List admission records
       tags:
         - Admission_API_admission
+      x-osapi-examples:
+        - doc: List admission records
+          input: {}
+        - doc: List admission records, with --state pending
+          input:
+            state: pending
       x-osapi-method: list
   /api/admission/{machine_id}:
     delete:
@@ -260,6 +266,10 @@ paths:
       summary: Delete a machine
       tags:
         - Admission_API_admission
+      x-osapi-examples:
+        - doc: Delete a machine
+          input:
+            machine_id: d530664edc1c431eb5ef1e9dfd6617a5
       x-osapi-method: delete
     get:
       description: Returns one machine's admission record by machine ID.
@@ -324,6 +334,10 @@ paths:
       summary: Get a machine's admission record
       tags:
         - Admission_API_admission
+      x-osapi-examples:
+        - doc: Get a machine's admission record
+          input:
+            machine_id: d530664edc1c431eb5ef1e9dfd6617a5
       x-osapi-method: get
   /api/admission/{machine_id}/admit:
     post:
@@ -397,6 +411,11 @@ paths:
       summary: Admit a pending machine
       tags:
         - Admission_API_admission
+      x-osapi-examples:
+        - doc: Admit a pending machine
+          input:
+            fingerprint: SHA256:1f53dea6...
+            machine_id: d530664edc1c431eb5ef1e9dfd6617a5
       x-osapi-method: admit
   /api/admission/{machine_id}/reject:
     post:
@@ -464,6 +483,11 @@ paths:
       summary: Reject a pending machine
       tags:
         - Admission_API_admission
+      x-osapi-examples:
+        - doc: Reject a pending machine
+          input:
+            machine_id: d530664edc1c431eb5ef1e9dfd6617a5
+            reason: unknown host
       x-osapi-method: reject
   /api/admission/{machine_id}/revoke:
     post:
@@ -525,6 +549,10 @@ paths:
       summary: Revoke an admitted machine
       tags:
         - Admission_API_admission
+      x-osapi-examples:
+        - doc: Revoke an admitted machine
+          input:
+            machine_id: d530664edc1c431eb5ef1e9dfd6617a5
       x-osapi-method: revoke
   /api/agent:
     get:
@@ -561,6 +589,9 @@ paths:
       summary: List active agents
       tags:
         - Agent_Management_API_agent_operations
+      x-osapi-examples:
+        - doc: List active agents
+          input: {}
       x-osapi-method: list
   /api/agent/{hostname}:
     get:
@@ -620,6 +651,10 @@ paths:
       summary: Get agent details
       tags:
         - Agent_Management_API_agent_operations
+      x-osapi-examples:
+        - doc: Get agent details
+          input:
+            hostname: web-01
       x-osapi-method: get
   /api/agent/{hostname}/drain:
     post:
@@ -681,6 +716,10 @@ paths:
       summary: Drain an agent
       tags:
         - Agent_Management_API_agent_operations
+      x-osapi-examples:
+        - doc: Drain an agent
+          input:
+            hostname: web-01
       x-osapi-method: drain
   /api/agent/{hostname}/undrain:
     post:
@@ -742,6 +781,10 @@ paths:
       summary: Undrain an agent
       tags:
         - Agent_Management_API_agent_operations
+      x-osapi-examples:
+        - doc: Undrain an agent
+          input:
+            hostname: web-01
       x-osapi-method: undrain
   /api/agent/status:
     get:
@@ -778,6 +821,9 @@ paths:
       summary: Show the health of each agent
       tags:
         - Agent_Management_API_agent_operations
+      x-osapi-examples:
+        - doc: Show the health of each agent
+          input: {}
       x-osapi-method: status
   /api/audit:
     get:
@@ -878,6 +924,21 @@ paths:
       summary: List audit log entries
       tags:
         - Audit_Log_API_audit
+      x-osapi-examples:
+        - doc: List audit log entries
+          input: {}
+        - doc: List audit log entries, with --limit 10 --offset 20
+          input:
+            limit: 10
+            offset: 20
+        - doc: List audit log entries, with --writes --user ops@example.com
+          input:
+            user: ops@example.com
+            writes: true
+        - doc: List audit log entries, with --operation hostname --status 403
+          input:
+            operation: hostname
+            status: 403
       x-osapi-method: list
   /api/audit/{id}:
     get:
@@ -942,6 +1003,10 @@ paths:
       summary: Get a single audit log entry
       tags:
         - Audit_Log_API_audit
+      x-osapi-examples:
+        - doc: Get a single audit log entry
+          input:
+            id: 550e8400-e29b-41d4-a716-446655440000
       x-osapi-method: get
   /api/audit/export:
     get:
@@ -984,6 +1049,9 @@ paths:
       summary: Export all audit log entries
       tags:
         - Audit_Log_API_audit
+      x-osapi-examples:
+        - doc: Export all audit log entries
+          input: {}
       x-osapi-method: export
   /api/controller/status:
     get:
@@ -1020,6 +1088,9 @@ paths:
       summary: Show the health of the controller
       tags:
         - Controller_API_controller
+      x-osapi-examples:
+        - doc: Show the health of the controller
+          input: {}
       x-osapi-method: status
   /api/facts/keys:
     get:
@@ -1056,6 +1127,9 @@ paths:
       summary: List available fact keys
       tags:
         - Facts_API_facts
+      x-osapi-examples:
+        - doc: List available fact keys
+          input: {}
       x-osapi-method: list
   /api/file:
     get:
@@ -1098,6 +1172,9 @@ paths:
       summary: List stored files
       tags:
         - File_Management_API_file_operations
+      x-osapi-examples:
+        - doc: List stored files
+          input: {}
       x-osapi-method: list
     post:
       description: Upload a file to the Object Store.
@@ -1257,6 +1334,10 @@ paths:
       summary: Delete a file
       tags:
         - File_Management_API_file_operations
+      x-osapi-examples:
+        - doc: Delete a file
+          input:
+            name: app.conf
       x-osapi-method: delete
     get:
       description: Get metadata for a specific file in the Object Store.
@@ -1321,6 +1402,10 @@ paths:
       summary: Get file metadata
       tags:
         - File_Management_API_file_operations
+      x-osapi-examples:
+        - doc: Get file metadata
+          input:
+            name: app.conf
       x-osapi-method: get
     put:
       description: Replace a file in the Object Store, or create it when the name is new.
@@ -1457,6 +1542,9 @@ paths:
       summary: List stale file deployments
       tags:
         - File_Management_API_file_operations
+      x-osapi-examples:
+        - doc: List stale file deployments
+          input: {}
       x-osapi-method: stale
   /api/health:
     get:
@@ -1479,6 +1567,9 @@ paths:
       summary: Liveness probe
       tags:
         - Health_Check_API_health
+      x-osapi-examples:
+        - doc: Liveness probe
+          input: {}
       x-osapi-method: liveness
   /api/health/ready:
     get:
@@ -1507,6 +1598,9 @@ paths:
       summary: Readiness probe
       tags:
         - Health_Check_API_health
+      x-osapi-examples:
+        - doc: Readiness probe
+          input: {}
       x-osapi-method: ready
   /api/health/status:
     get:
@@ -1543,6 +1637,9 @@ paths:
       summary: System status and component health
       tags:
         - Health_Check_API_health
+      x-osapi-examples:
+        - doc: System status and component health
+          input: {}
       x-osapi-method: status
   /api/job:
     get:
@@ -1618,6 +1715,13 @@ paths:
       summary: List jobs
       tags:
         - Job_Management_API_job_operations
+      x-osapi-examples:
+        - doc: List jobs
+          input: {}
+        - doc: List jobs, with --status completed --limit 3
+          input:
+            limit: 3
+            status: completed
       x-osapi-method: list
   /api/job/{id}:
     delete:
@@ -1672,6 +1776,10 @@ paths:
       summary: Delete a job
       tags:
         - Job_Management_API_job_operations
+      x-osapi-examples:
+        - doc: Delete a job
+          input:
+            id: 550e8400-e29b-41d4-a716-446655440000
       x-osapi-method: delete
     get:
       description: Retrieve details of a specific job by its ID. A job whose target is outside the target scope of the token is not found.
@@ -1729,6 +1837,10 @@ paths:
       summary: Get job detail
       tags:
         - Job_Management_API_job_operations
+      x-osapi-examples:
+        - doc: Get job detail
+          input:
+            id: 550e8400-e29b-41d4-a716-446655440000
       x-osapi-method: get
   /api/job/{id}/retry:
     post:
@@ -1797,6 +1909,10 @@ paths:
       summary: Retry a job
       tags:
         - Job_Management_API_job_operations
+      x-osapi-examples:
+        - doc: Retry a job
+          input:
+            id: 550e8400-e29b-41d4-a716-446655440000
       x-osapi-method: retry
   /api/nats/status:
     get:
@@ -1833,6 +1949,9 @@ paths:
       summary: Show the health of the NATS server
       tags:
         - NATS_API_nats
+      x-osapi-examples:
+        - doc: Show the health of the NATS server
+          input: {}
       x-osapi-method: status
   /api/telemetry/trace/{id}:
     get:
@@ -1904,6 +2023,14 @@ paths:
       summary: Get the spans of a trace
       tags:
         - Telemetry_API_telemetry
+      x-osapi-examples:
+        - doc: Get the spans of a trace
+          input:
+            id: 26e448c9dbe1c4a8d216a98c675079c9
+        - doc: Get the spans of a trace, with --id 26e448c9dbe1c4a8d216a98c675079c9 --all
+          input:
+            all: true
+            id: 26e448c9dbe1c4a8d216a98c675079c9
       x-osapi-method: get
   /api/node/{hostname}/certificate:
     get:
@@ -1960,6 +2087,10 @@ paths:
       summary: List the certificate authorities that the host trusts
       tags:
         - Certificate_API_certificate_operations
+      x-osapi-examples:
+        - doc: A Debian host with a system CA
+          input:
+            hostname: web-01
       x-osapi-method: list
     post:
       description: 'Writes the PEM of the object as a file with the osapi- prefix, such as osapi-internal-ca.crt for internal-ca, in the family''s local directory: /usr/local/share/ca-certificates on the Debian family, /etc/pki/trust/anchors on SUSE, /etc/pki/ca-trust/source/anchors on RHEL and Fedora. Then it rebuilds the trust store: with update-ca-certificates on the Debian family and SUSE, and with update-ca-trust on the others. Alpine reports skipped. A CA that osapi deployed already with the same content does not change and reports changed: false. A file of that name that osapi did not write is refused. macOS reports skipped.'
@@ -2021,6 +2152,12 @@ paths:
       summary: Add a certificate authority to the trust store
       tags:
         - Certificate_API_certificate_operations
+      x-osapi-examples:
+        - doc: Add a CA
+          input:
+            hostname: web-01
+            name: internal-ca
+            object: internal-ca.pem
       x-osapi-method: create
   /api/node/{hostname}/certificate/{name}:
     delete:
@@ -2078,6 +2215,11 @@ paths:
       summary: Remove a certificate authority that osapi deployed
       tags:
         - Certificate_API_certificate_operations
+      x-osapi-examples:
+        - doc: Remove a CA
+          input:
+            hostname: web-01
+            name: internal-ca
       x-osapi-method: delete
     get:
       description: Reads one CA from the same list, by the name that list gives it. A CA that the host does not trust is not found. A name with a slash, such as a system CA of the Debian family, is in list only.
@@ -2134,6 +2276,15 @@ paths:
       summary: Get one certificate authority
       tags:
         - Certificate_API_certificate_operations
+      x-osapi-examples:
+        - doc: A CA that osapi deployed, by the name it was deployed with
+          input:
+            hostname: web-01
+            name: internal-ca
+        - doc: A CA of a Mac
+          input:
+            hostname: web-01
+            name: osapi example CA
       x-osapi-method: get
     put:
       description: Writes the CA from the object, or from the one that it was deployed from when the object is empty, and rebuilds the trust store when the file changed. A CA that osapi did not deploy is not found. macOS reports skipped.
@@ -2196,6 +2347,16 @@ paths:
       summary: Write a certificate authority that osapi deployed again
       tags:
         - Certificate_API_certificate_operations
+      x-osapi-examples:
+        - doc: Write a CA from a new object
+          input:
+            hostname: web-01
+            name: internal-ca
+            object: internal-ca-2.pem
+        - doc: The object that it was deployed from
+          input:
+            hostname: web-01
+            name: internal-ca
       x-osapi-method: update
   /api/node/{hostname}/command/exec:
     post:
@@ -2258,6 +2419,23 @@ paths:
       summary: Run a program with its arguments
       tags:
         - Command_API_command_operations
+      x-osapi-examples:
+        - doc: Print a word
+          input:
+            args:
+              - hello
+            command: echo
+            hostname: web-01
+        - doc: A program that exits non-zero
+          input:
+            command: "false"
+            hostname: web-01
+        - doc: In a directory, for at most 5 seconds
+          input:
+            command: "true"
+            cwd: /tmp
+            hostname: web-01
+            timeout: 5
       x-osapi-method: exec
   /api/node/{hostname}/command/shell:
     post:
@@ -2320,6 +2498,15 @@ paths:
       summary: Run a command line through /bin/sh -c
       tags:
         - Command_API_command_operations
+      x-osapi-examples:
+        - doc: A pipe
+          input:
+            command: echo hello | tr a-z A-Z
+            hostname: web-01
+        - doc: A command line that exits non-zero
+          input:
+            command: exit 3
+            hostname: web-01
       x-osapi-method: shell
   /api/node/{hostname}/container/docker:
     get:
@@ -2387,6 +2574,14 @@ paths:
       summary: List the containers of the host
       tags:
         - Docker_API_container_docker_operations
+      x-osapi-examples:
+        - doc: A host with a container
+          input:
+            hostname: web-01
+        - doc: Only the stopped ones
+          input:
+            hostname: web-01
+            state: stopped
       x-osapi-method: list
     post:
       description: 'Runs docker create, which pulls the image when the host does not have it. The environment goes on docker''s standard input, not in its arguments, which each user of the host can read. auto_start starts the container once it is made. A container of the name that the host has already is not made again, and reports changed: false.'
@@ -2448,6 +2643,15 @@ paths:
       summary: Create a container
       tags:
         - Docker_API_container_docker_operations
+      x-osapi-examples:
+        - doc: Create a container
+          input:
+            command:
+              - sleep
+              - "300"
+            hostname: web-01
+            image: alpine:3.20
+            name: osapitest
       x-osapi-method: create
   /api/node/{hostname}/container/docker/{name}:
     delete:
@@ -2505,6 +2709,11 @@ paths:
       summary: Remove a container
       tags:
         - Docker_API_container_docker_operations
+      x-osapi-examples:
+        - doc: Remove a container
+          input:
+            hostname: web-01
+            name: osapitest
       x-osapi-method: delete
     get:
       description: Reads one container by its name, its ID or the start of its ID. A container that the host does not have is not found.
@@ -2561,6 +2770,11 @@ paths:
       summary: Get one container
       tags:
         - Docker_API_container_docker_operations
+      x-osapi-examples:
+        - doc: A container
+          input:
+            hostname: web-01
+            name: osapitest
       x-osapi-method: get
   /api/node/{hostname}/container/docker/{name}/exec:
     post:
@@ -2624,6 +2838,14 @@ paths:
       summary: Run a command in a container
       tags:
         - Docker_API_container_docker_operations
+      x-osapi-examples:
+        - doc: Run a command
+          input:
+            command:
+              - echo
+              - hello
+            hostname: web-01
+            name: osapitest
       x-osapi-method: exec
   /api/node/{hostname}/container/docker/{name}/start:
     post:
@@ -2681,6 +2903,11 @@ paths:
       summary: Start a container
       tags:
         - Docker_API_container_docker_operations
+      x-osapi-examples:
+        - doc: Start a container
+          input:
+            hostname: web-01
+            name: osapitest
       x-osapi-method: start
   /api/node/{hostname}/container/docker/{name}/stop:
     post:
@@ -2744,6 +2971,12 @@ paths:
       summary: Stop a container
       tags:
         - Docker_API_container_docker_operations
+      x-osapi-examples:
+        - doc: Stop a container
+          input:
+            hostname: web-01
+            name: osapitest
+            timeout: 1
       x-osapi-method: stop
   /api/node/{hostname}/container/image:
     get:
@@ -2800,6 +3033,10 @@ paths:
       summary: List the images of the host
       tags:
         - Image_API_container_image_operations
+      x-osapi-examples:
+        - doc: A host with an image
+          input:
+            hostname: web-01
       x-osapi-method: list
   /api/node/{hostname}/container/image/{image}:
     delete:
@@ -2863,6 +3100,11 @@ paths:
       summary: Remove an image
       tags:
         - Image_API_container_image_operations
+      x-osapi-examples:
+        - doc: Remove an image
+          input:
+            hostname: web-01
+            image: alpine:3.20
       x-osapi-method: delete
   /api/node/{hostname}/container/image/pull:
     post:
@@ -2925,6 +3167,11 @@ paths:
       summary: Pull an image
       tags:
         - Image_API_container_image_operations
+      x-osapi-examples:
+        - doc: Pull an image
+          input:
+            hostname: web-01
+            image: alpine:3.20
       x-osapi-method: pull
   /api/node/{hostname}/disk:
     get:
@@ -2981,6 +3228,10 @@ paths:
       summary: Get the disk usage of the host
       tags:
         - Disk_API_disk_operations
+      x-osapi-examples:
+        - doc: A host with one local filesystem
+          input:
+            hostname: web-01
       x-osapi-method: get
   /api/node/{hostname}/file:
     delete:
@@ -3043,6 +3294,11 @@ paths:
       summary: Remove a file that osapi deployed
       tags:
         - File_API_file_operations
+      x-osapi-examples:
+        - doc: Remove a deployed file
+          input:
+            hostname: web-01
+            path: /etc/osapi/file-example.conf
       x-osapi-method: delete
     get:
       description: 'Compares the file on the host with the record that osapi keeps of what it deployed: in-sync when they agree, drifted when something changed the file, missing when osapi deployed the file and it is gone, and unmanaged when osapi did not deploy the path or undeployed it. A path that is a directory is refused.'
@@ -3107,6 +3363,11 @@ paths:
       summary: Show whether a deployed file holds what osapi wrote
       tags:
         - File_API_file_operations
+      x-osapi-examples:
+        - doc: A deployed file
+          input:
+            hostname: web-01
+            path: /etc/osapi/file-example.conf
       x-osapi-method: status
     put:
       description: 'Writes the object at the path with its mode and ownership, and keeps a record of it. A template object, or content_type template, is rendered first with .Facts, .Vars and .Hostname. The record keeps the SHA-256 of the object as it was read. A file that holds the content, mode and owner already, from the same object, does not change and reports changed: false. osapi client file stale list compares the object now with that SHA-256, so it shows the deployments whose object changed since.'
@@ -3168,6 +3429,19 @@ paths:
       summary: Deploy an object of the object store to a path
       tags:
         - File_API_file_operations
+      x-osapi-examples:
+        - doc: Deploy a file
+          input:
+            hostname: web-01
+            object_name: example.conf
+            path: /etc/osapi/file-example.conf
+        - doc: Render a template
+          input:
+            hostname: web-01
+            object_name: example.conf.tmpl
+            path: /etc/osapi/file-example.conf
+            vars:
+              port: "8080"
       x-osapi-method: update
   /api/node/{hostname}/group:
     get:
@@ -3224,6 +3498,10 @@ paths:
       summary: List the groups of the host
       tags:
         - Group_API_group_operations
+      x-osapi-examples:
+        - doc: A host with a group
+          input:
+            hostname: web-01
       x-osapi-method: list
     post:
       description: 'Adds the group with groupadd, with the ID when one is given. A group that the host has already does not change and reports changed: false, whatever its ID. It runs on the Debian family only, and elsewhere reports skipped.'
@@ -3285,6 +3563,17 @@ paths:
       summary: Add a group
       tags:
         - Group_API_group_operations
+      x-osapi-examples:
+        - doc: Add a group
+          input:
+            hostname: web-01
+            name: osapitest
+        - doc: Add a system group with its ID
+          input:
+            gid: 1999
+            hostname: web-01
+            name: osapitest
+            system: true
       x-osapi-method: create
   /api/node/{hostname}/group/{name}:
     delete:
@@ -3342,6 +3631,11 @@ paths:
       summary: Remove a group
       tags:
         - Group_API_group_operations
+      x-osapi-examples:
+        - doc: Remove a group
+          input:
+            hostname: web-01
+            name: osapitest
       x-osapi-method: delete
     get:
       description: Reads one group from the same list. A group that the host does not have is not found.
@@ -3398,6 +3692,11 @@ paths:
       summary: Get one group
       tags:
         - Group_API_group_operations
+      x-osapi-examples:
+        - doc: A group
+          input:
+            hostname: web-01
+            name: developers
       x-osapi-method: get
     put:
       description: 'Sets the members with gpasswd -M, in place of the members that the group has. The same members, in any order, do not change it and report changed: false. A group that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped.'
@@ -3460,6 +3759,13 @@ paths:
       summary: Set the members of a group
       tags:
         - Group_API_group_operations
+      x-osapi-examples:
+        - doc: Set the members
+          input:
+            hostname: web-01
+            members:
+              - root
+            name: osapitest
       x-osapi-method: update
   /api/node/{hostname}/hostname:
     get:
@@ -3516,6 +3822,10 @@ paths:
       summary: Get the hostname of the host
       tags:
         - Hostname_API_hostname_operations
+      x-osapi-examples:
+        - doc: A host named web-01
+          input:
+            hostname: web-01
       x-osapi-method: get
     put:
       description: 'Sets the static hostname with hostnamectl set-hostname, which keeps it after a reboot. A host that already has the name does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped. In a container the runtime owns the hostname, so there it also reports skipped.'
@@ -3577,6 +3887,15 @@ paths:
       summary: Set the hostname of the host
       tags:
         - Hostname_API_hostname_operations
+      x-osapi-examples:
+        - doc: Rename a host
+          input:
+            hostname: web-01
+            name: web-02
+        - doc: A host that already has the name
+          input:
+            hostname: web-01
+            name: web-01
       x-osapi-method: update
   /api/node/{hostname}/load:
     get:
@@ -3633,6 +3952,10 @@ paths:
       summary: Get the load averages of the host
       tags:
         - Load_API_load_operations
+      x-osapi-examples:
+        - doc: A host under a light load
+          input:
+            hostname: web-01
       x-osapi-method: get
   /api/node/{hostname}/log/entry:
     get:
@@ -3729,6 +4052,17 @@ paths:
       summary: List the entries of the journal
       tags:
         - Entry_API_log_entry_operations
+      x-osapi-examples:
+        - doc: The newest entries
+          input:
+            hostname: web-01
+        - doc: The last entry of one unit at info or above
+          input:
+            hostname: web-01
+            lines: 1
+            priority: info
+            since: 1 hour ago
+            unit: nginx.service
       x-osapi-method: list
   /api/node/{hostname}/log/source:
     get:
@@ -3785,6 +4119,10 @@ paths:
       summary: List the sources of the journal
       tags:
         - Source_API_log_source_operations
+      x-osapi-examples:
+        - doc: The sources
+          input:
+            hostname: web-01
       x-osapi-method: list
   /api/node/{hostname}/memory:
     get:
@@ -3841,6 +4179,10 @@ paths:
       summary: Get the memory usage of the host
       tags:
         - Memory_API_memory_operations
+      x-osapi-examples:
+        - doc: A host with 8 GiB, 2 GiB of it free
+          input:
+            hostname: web-01
       x-osapi-method: get
   /api/node/{hostname}/network/connectivity/ping:
     post:
@@ -3903,6 +4245,15 @@ paths:
       summary: Ping an address from the host
       tags:
         - Connectivity_API_network_connectivity_operations
+      x-osapi-examples:
+        - doc: A host that answers
+          input:
+            address: 127.0.0.1
+            hostname: web-01
+        - doc: A host that does not answer
+          input:
+            address: 192.0.2.1
+            hostname: web-01
       x-osapi-method: ping
   /api/node/{hostname}/network/dns/{interface_name}:
     delete:
@@ -3960,6 +4311,11 @@ paths:
       summary: Drop the DNS resolvers osapi set on an interface
       tags:
         - Dns_API_network_dns_operations
+      x-osapi-examples:
+        - doc: An interface osapi set
+          input:
+            hostname: web-01
+            interface_name: osapi0
       x-osapi-method: delete
     get:
       description: 'Reads the servers and the search domains of the interface: resolvectl on Linux, with resolv.conf on a host that has no resolvers per interface, such as a container, and scutil on macOS.'
@@ -4016,6 +4372,15 @@ paths:
       summary: Get the DNS resolvers of an interface
       tags:
         - Dns_API_network_dns_operations
+      x-osapi-examples:
+        - doc: An interface with servers and a domain
+          input:
+            hostname: web-01
+            interface_name: osapi0
+        - doc: A Mac
+          input:
+            hostname: web-01
+            interface_name: en0
       x-osapi-method: get
     put:
       description: Writes a netplan file of the interface's own, such as /etc/netplan/osapi-dns-eth0.yaml for eth0, under the netplan definition that matches the interface, and applies it. A definition that matches several interfaces, such as cloud-init's all for en*, gives each of them the resolvers. An empty list keeps the interface's servers or domains, and an interface with no resolvers yet starts from none. override_dhcp drops the servers DHCP gives. It runs on the Debian family, and elsewhere, and in a container, reports skipped.
@@ -4078,6 +4443,20 @@ paths:
       summary: Set the DNS resolvers of an interface
       tags:
         - Dns_API_network_dns_operations
+      x-osapi-examples:
+        - doc: Set the servers of an interface
+          input:
+            hostname: web-01
+            interface_name: osapi0
+            servers:
+              - 9.9.9.9
+        - doc: Set the search domains, and keep the servers
+          input:
+            hostname: web-01
+            interface_name: osapi0
+            override_dhcp: true
+            search_domains:
+              - corp.example
       x-osapi-method: update
   /api/node/{hostname}/network/interface:
     get:
@@ -4134,6 +4513,10 @@ paths:
       summary: List the network interfaces of the host
       tags:
         - Interface_API_network_interface_operations
+      x-osapi-examples:
+        - doc: A Linux host
+          input:
+            hostname: web-01
       x-osapi-method: list
   /api/node/{hostname}/network/interface/{name}:
     delete:
@@ -4191,6 +4574,11 @@ paths:
       summary: Drop the config osapi has of a network interface
       tags:
         - Interface_API_network_interface_operations
+      x-osapi-examples:
+        - doc: An interface osapi configures
+          input:
+            hostname: web-01
+            name: osapi0
       x-osapi-method: delete
     get:
       description: Reads the interface as list does.
@@ -4247,6 +4635,15 @@ paths:
       summary: Get a network interface of the host
       tags:
         - Interface_API_network_interface_operations
+      x-osapi-examples:
+        - doc: An interface with a DHCP address
+          input:
+            hostname: web-01
+            name: eth0
+        - doc: A Mac
+          input:
+            hostname: web-01
+            name: en0
       x-osapi-method: get
     post:
       description: 'Writes a netplan file of the interface''s own, such as /etc/netplan/osapi-osapi0.yaml for osapi0, under a netplan definition that is the interface''s own, and applies it. An interface the host does not have is not found. dhcp4 and dhcp6 are false unless given, so the interface has only the addresses given. An interface that a match defines, such as cloud-init''s all for en*, is refused, because the config would change each interface the match takes, now and later. An interface osapi already configures does not change: update replaces its config. It runs on the Debian family, and elsewhere, and in a container, reports skipped.'
@@ -4309,6 +4706,23 @@ paths:
       summary: Configure a network interface
       tags:
         - Interface_API_network_interface_operations
+      x-osapi-examples:
+        - doc: A static address
+          input:
+            addresses:
+              - 10.0.1.5/24
+            hostname: web-01
+            name: osapi0
+        - doc: Each setting
+          input:
+            addresses:
+              - 2001:db8::5/64
+            dhcp6: true
+            hostname: web-01
+            mac_address: 52:54:00:aa:bb:cc
+            mtu: 9000
+            name: osapi0
+            wakeonlan: true
       x-osapi-method: create
     put:
       description: 'Writes the interface''s netplan file over the one osapi has, as create writes it, and applies it. An interface osapi does not configure is not found: create configures it.'
@@ -4371,6 +4785,12 @@ paths:
       summary: Change the config osapi has of a network interface
       tags:
         - Interface_API_network_interface_operations
+      x-osapi-examples:
+        - doc: Move an interface to DHCP
+          input:
+            dhcp4: true
+            hostname: web-01
+            name: osapi0
       x-osapi-method: update
   /api/node/{hostname}/network/interface/{name}/route:
     delete:
@@ -4434,6 +4854,12 @@ paths:
       summary: Drop a route that osapi wrote
       tags:
         - Route_API_route_operations
+      x-osapi-examples:
+        - doc: One of two routes
+          input:
+            destination: 198.51.100.0/24
+            hostname: web-01
+            name: osapi0
       x-osapi-method: delete
     get:
       description: 'Reads the routes of the main table that go out of the interface: ip route on Linux, netstat on macOS. proto says where a route came from, such as dhcp, kernel or static. An interface with no routes has none; one the host does not have is not found.'
@@ -4490,6 +4916,19 @@ paths:
       summary: List the routes of an interface
       tags:
         - Route_API_route_operations
+      x-osapi-examples:
+        - doc: An interface with routes
+          input:
+            hostname: web-01
+            name: eth0
+        - doc: An interface with no routes
+          input:
+            hostname: web-01
+            name: eth1
+        - doc: A Mac
+          input:
+            hostname: web-01
+            name: en0
       x-osapi-method: list
     post:
       description: 'Adds the route to the interface''s netplan file, such as /etc/netplan/osapi-osapi0-routes.yaml for osapi0, under a netplan definition that is the interface''s own, and applies it. A route osapi already has, the same, does not change; one to the same destination by another gateway or metric is refused: update changes it. A default route is refused: the interface behavior sets the gateway. An interface the host does not have is not found. An interface that a match defines, such as cloud-init''s all for en*, is refused, because the route would go on each interface the match takes. It runs on the Debian family, and elsewhere, and in a container, reports skipped.'
@@ -4552,6 +4991,20 @@ paths:
       summary: Add a static route to an interface
       tags:
         - Route_API_route_operations
+      x-osapi-examples:
+        - doc: A route
+          input:
+            destination: 198.51.100.0/24
+            hostname: web-01
+            name: osapi0
+            via: 192.0.2.1
+        - doc: A second route, with a metric
+          input:
+            destination: 2001:db8:1::/48
+            hostname: web-01
+            metric: 200
+            name: osapi0
+            via: 2001:db8::1
       x-osapi-method: create
     put:
       description: 'Writes the route over the one osapi has to the same destination, and applies it. A destination osapi has no route to is not found: create adds it.'
@@ -4614,6 +5067,14 @@ paths:
       summary: Change the gateway or the metric of a route
       tags:
         - Route_API_route_operations
+      x-osapi-examples:
+        - doc: A new gateway and metric
+          input:
+            destination: 198.51.100.0/24
+            hostname: web-01
+            metric: 10
+            name: osapi0
+            via: 192.0.2.2
       x-osapi-method: update
   /api/node/{hostname}/ntp:
     delete:
@@ -4670,6 +5131,10 @@ paths:
       summary: Remove the NTP servers that osapi set
       tags:
         - Ntp_API_ntp_operations
+      x-osapi-examples:
+        - doc: Remove the servers
+          input:
+            hostname: web-01
       x-osapi-method: delete
     get:
       description: Reads chronyc tracking, for whether chrony is synchronized, its stratum, its offset from NTP time and the source that it follows, and chronyc sources, for each source that it has.
@@ -4725,6 +5190,10 @@ paths:
       summary: Get the sync status of chrony and its sources
       tags:
         - Ntp_API_ntp_operations
+      x-osapi-examples:
+        - doc: A host synchronized to time.cloudflare.com
+          input:
+            hostname: web-01
       x-osapi-method: get
     post:
       description: 'Writes a server line for each server to /etc/chrony/sources.d/osapi-ntp.sources, and reloads the sources with chronyc reload sources. A file that has the same servers does not change, and reports changed: false.'
@@ -4786,6 +5255,18 @@ paths:
       summary: Set the NTP servers that chrony uses
       tags:
         - Ntp_API_ntp_operations
+      x-osapi-examples:
+        - doc: Set two servers
+          input:
+            hostname: web-01
+            servers:
+              - 0.pool.ntp.org
+              - 1.pool.ntp.org
+        - doc: The servers that the host has
+          input:
+            hostname: web-01
+            servers:
+              - 0.pool.ntp.org
       x-osapi-method: create
     put:
       description: 'The same as create, for servers that osapi set already. It fails with not found when osapi set none. The servers that the file has already report changed: false.'
@@ -4847,6 +5328,17 @@ paths:
       summary: Replace the NTP servers that osapi set
       tags:
         - Ntp_API_ntp_operations
+      x-osapi-examples:
+        - doc: Replace the servers
+          input:
+            hostname: web-01
+            servers:
+              - time.cloudflare.com
+        - doc: The servers that the file has
+          input:
+            hostname: web-01
+            servers:
+              - 0.pool.ntp.org
       x-osapi-method: update
   /api/node/{hostname}/os:
     get:
@@ -4903,6 +5395,10 @@ paths:
       summary: Get the operating system of the host
       tags:
         - Os_API_os_operations
+      x-osapi-examples:
+        - doc: An Ubuntu host
+          input:
+            hostname: web-01
       x-osapi-method: get
   /api/node/{hostname}/package:
     get:
@@ -4959,6 +5455,10 @@ paths:
       summary: List the packages installed on the host
       tags:
         - Package_API_package_operations
+      x-osapi-examples:
+        - doc: A Debian host
+          input:
+            hostname: web-01
       x-osapi-method: list
     post:
       description: 'Installs the package with apt-get install, at the version when one is given. A package that is installed, at that version when one is given, does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.'
@@ -5020,6 +5520,11 @@ paths:
       summary: Install a package
       tags:
         - Package_API_package_operations
+      x-osapi-examples:
+        - doc: Install a package
+          input:
+            hostname: web-01
+            name: tree
       x-osapi-method: create
   /api/node/{hostname}/package/{name}:
     delete:
@@ -5077,6 +5582,11 @@ paths:
       summary: Remove a package
       tags:
         - Package_API_package_operations
+      x-osapi-examples:
+        - doc: Remove a package
+          input:
+            hostname: web-01
+            name: tree
       x-osapi-method: delete
     get:
       description: Reads one package from the same list. A package that is not installed is not found.
@@ -5133,6 +5643,15 @@ paths:
       summary: Get one installed package
       tags:
         - Package_API_package_operations
+      x-osapi-examples:
+        - doc: An installed package
+          input:
+            hostname: web-01
+            name: curl
+        - doc: An installed formula
+          input:
+            hostname: web-01
+            name: jq
       x-osapi-method: get
   /api/node/{hostname}/power/reboot:
     post:
@@ -5195,6 +5714,15 @@ paths:
       summary: Reboot the host
       tags:
         - Power_API_power_operations
+      x-osapi-examples:
+        - doc: In one minute
+          input:
+            hostname: web-01
+        - doc: In five minutes, with a message
+          input:
+            delay: 300
+            hostname: web-01
+            message: maintenance
       x-osapi-method: reboot
   /api/node/{hostname}/power/shutdown:
     post:
@@ -5257,6 +5785,15 @@ paths:
       summary: Shut the host down
       tags:
         - Power_API_power_operations
+      x-osapi-examples:
+        - doc: In one minute
+          input:
+            hostname: web-01
+        - doc: In five minutes, with a message
+          input:
+            delay: 300
+            hostname: web-01
+            message: maintenance
       x-osapi-method: shutdown
   /api/node/{hostname}/process:
     get:
@@ -5313,6 +5850,10 @@ paths:
       summary: List the processes of the host
       tags:
         - Process_API_process_operations
+      x-osapi-examples:
+        - doc: A Linux host that runs sleep
+          input:
+            hostname: web-01
       x-osapi-method: list
   /api/node/{hostname}/process/{pid}:
     get:
@@ -5370,6 +5911,11 @@ paths:
       summary: Get one process
       tags:
         - Process_API_process_operations
+      x-osapi-examples:
+        - doc: A process of a Linux host
+          input:
+            hostname: web-01
+            pid: 1234
       x-osapi-method: get
   /api/node/{hostname}/process/{pid}/signal:
     post:
@@ -5433,6 +5979,12 @@ paths:
       summary: Send a signal to a process
       tags:
         - Process_API_process_operations
+      x-osapi-examples:
+        - doc: Stop a process
+          input:
+            hostname: web-01
+            pid: 1234
+            signal: TERM
       x-osapi-method: signal
   /api/node/{hostname}/schedule:
     get:
@@ -5489,6 +6041,10 @@ paths:
       summary: List the cron entries that osapi deployed
       tags:
         - Schedule_API_schedule_operations
+      x-osapi-examples:
+        - doc: An entry that osapi deployed
+          input:
+            hostname: web-01
       x-osapi-method: list
     post:
       description: 'Gets the object from the object store and writes it as /etc/cron.d/backup for backup, mode 0644, for a cron expression, or as /etc/cron.daily/backup, mode 0755, for a daily interval. An object of content type template, or content_type template, is rendered with the agent''s facts and the vars. A file that has the content does not change. An entry of the name in a different directory does not change: move it with delete and create. A file at the path that osapi did not deploy is refused. An entry runs as its user, root included, so only admin can deploy one.'
@@ -5550,6 +6106,29 @@ paths:
       summary: Deploy a cron entry
       tags:
         - Schedule_API_schedule_operations
+      x-osapi-examples:
+        - doc: An entry with a cron expression
+          input:
+            hostname: web-01
+            name: osapitest
+            object: osapitest.cron
+            schedule: 0 2 * * *
+            user: root
+        - doc: A script that runs daily
+          input:
+            hostname: web-01
+            interval: daily
+            name: osapitest
+            object: osapitest.sh
+        - doc: A template, rendered with its vars
+          input:
+            content_type: template
+            hostname: web-01
+            name: osapitest
+            object: osapitest.tmpl
+            schedule: 0 2 * * *
+            vars:
+              target: /srv
       x-osapi-method: create
   /api/node/{hostname}/schedule/{name}:
     delete:
@@ -5607,6 +6186,11 @@ paths:
       summary: Remove a cron entry that osapi deployed
       tags:
         - Schedule_API_schedule_operations
+      x-osapi-examples:
+        - doc: Remove an entry
+          input:
+            hostname: web-01
+            name: osapitest
       x-osapi-method: delete
     get:
       description: Reads the entry from /etc/cron.d, then from each interval directory. An entry that osapi did not deploy is not found.
@@ -5663,6 +6247,11 @@ paths:
       summary: Get one cron entry that osapi deployed
       tags:
         - Schedule_API_schedule_operations
+      x-osapi-examples:
+        - doc: An entry that osapi deployed
+          input:
+            hostname: web-01
+            name: osapitest
       x-osapi-method: get
     put:
       description: 'Writes a new object, or the entry''s own, at the entry''s path, with the fields that the request gives and the entry''s own for the rest. A file that has the content does not change. An entry that osapi did not deploy is not found. The entry stays in its directory: an interval does not change with update.'
@@ -5725,6 +6314,29 @@ paths:
       summary: Deploy a cron entry that osapi deployed again
       tags:
         - Schedule_API_schedule_operations
+      x-osapi-examples:
+        - doc: A new object
+          input:
+            hostname: web-01
+            name: osapitest
+            object: osapitest-v2.cron
+        - doc: A new cron expression, with the same object
+          input:
+            hostname: web-01
+            name: osapitest
+            schedule: 30 2 * * *
+        - doc: A new object, cron expression and user
+          input:
+            hostname: web-01
+            name: osapitest
+            object: osapitest-v2.cron
+            schedule: 30 2 * * *
+            user: nobody
+        - doc: A daily script with a new object
+          input:
+            hostname: web-01
+            name: osapitest
+            object: osapitest-v2.sh
       x-osapi-method: update
   /api/node/{hostname}/service:
     get:
@@ -5781,6 +6393,10 @@ paths:
       summary: List the services of the host
       tags:
         - Service_API_service_operations
+      x-osapi-examples:
+        - doc: A service that osapi deployed reads by its name
+          input:
+            hostname: web-01
       x-osapi-method: list
     post:
       description: 'Gets the object from the object store and writes it as the unit file of the service, such as /etc/systemd/system/osapi-app.service for app, then reloads systemd. A unit file at that path that osapi did not write, such as the agent''s own osapi-agent.service, is refused. A unit file that already has the content does not change. The service does not start: start and enable are their own actions.'
@@ -5842,6 +6458,12 @@ paths:
       summary: Deploy a service
       tags:
         - Service_API_service_operations
+      x-osapi-examples:
+        - doc: Deploy a unit file
+          input:
+            hostname: web-01
+            name: app
+            object: app.service
       x-osapi-method: create
   /api/node/{hostname}/service/{name}:
     delete:
@@ -5899,6 +6521,15 @@ paths:
       summary: Remove a service that osapi deployed
       tags:
         - Service_API_service_operations
+      x-osapi-examples:
+        - doc: Remove a service
+          input:
+            hostname: web-01
+            name: app
+        - doc: A unit file that osapi did not deploy
+          input:
+            hostname: web-01
+            name: agent
       x-osapi-method: delete
     get:
       description: Reads one service from the same list, by its name with .service or without it. A service that osapi deployed reads by the name it was deployed with, such as app, as its writes take it, or by its unit's name, osapi-app. A service that systemd has not loaded is not found.
@@ -5955,6 +6586,23 @@ paths:
       summary: Get one service
       tags:
         - Service_API_service_operations
+      x-osapi-examples:
+        - doc: A running service
+          input:
+            hostname: web-01
+            name: ssh
+        - doc: A name with .service
+          input:
+            hostname: web-01
+            name: ssh.service
+        - doc: A service that osapi deployed, by the name it was deployed with
+          input:
+            hostname: web-01
+            name: app
+        - doc: A service that osapi deployed, by its unit's name
+          input:
+            hostname: web-01
+            name: osapi-app
       x-osapi-method: get
     put:
       description: Writes the object as the unit file of a service that osapi deployed, then reloads systemd when the file changed. A service that osapi did not deploy is not found.
@@ -6017,6 +6665,12 @@ paths:
       summary: Deploy a new unit file for a service
       tags:
         - Service_API_service_operations
+      x-osapi-examples:
+        - doc: A new unit file
+          input:
+            hostname: web-01
+            name: app
+            object: app-v2.service
       x-osapi-method: update
   /api/node/{hostname}/service/{name}/disable:
     post:
@@ -6074,6 +6728,11 @@ paths:
       summary: Make a service that osapi deployed not start at boot
       tags:
         - Service_API_service_operations
+      x-osapi-examples:
+        - doc: Disable the service
+          input:
+            hostname: web-01
+            name: app
       x-osapi-method: disable
   /api/node/{hostname}/service/{name}/enable:
     post:
@@ -6131,6 +6790,15 @@ paths:
       summary: Make a service that osapi deployed start at boot
       tags:
         - Service_API_service_operations
+      x-osapi-examples:
+        - doc: Enable the service
+          input:
+            hostname: web-01
+            name: app
+        - doc: A unit with no [Install] section
+          input:
+            hostname: web-01
+            name: static
       x-osapi-method: enable
   /api/node/{hostname}/service/{name}/restart:
     post:
@@ -6188,6 +6856,11 @@ paths:
       summary: Restart a service that osapi deployed
       tags:
         - Service_API_service_operations
+      x-osapi-examples:
+        - doc: Restart the service
+          input:
+            hostname: web-01
+            name: app
       x-osapi-method: restart
   /api/node/{hostname}/service/{name}/start:
     post:
@@ -6245,6 +6918,11 @@ paths:
       summary: Start a service that osapi deployed
       tags:
         - Service_API_service_operations
+      x-osapi-examples:
+        - doc: Start the service
+          input:
+            hostname: web-01
+            name: app
       x-osapi-method: start
   /api/node/{hostname}/service/{name}/stop:
     post:
@@ -6302,6 +6980,11 @@ paths:
       summary: Stop a service that osapi deployed
       tags:
         - Service_API_service_operations
+      x-osapi-examples:
+        - doc: Stop the service
+          input:
+            hostname: web-01
+            name: app
       x-osapi-method: stop
   /api/node/{hostname}/user/{name}/sshkey:
     delete:
@@ -6365,6 +7048,22 @@ paths:
       summary: Remove an authorized SSH key of a user
       tags:
         - Sshkey_API_sshkey_operations
+      x-osapi-examples:
+        - doc: Remove a key
+          input:
+            fingerprint: SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk
+            hostname: web-01
+            name: osapitest
+        - doc: A key the user does not have
+          input:
+            fingerprint: SHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE
+            hostname: web-01
+            name: osapitest
+        - doc: A user that the host does not have
+          input:
+            fingerprint: SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk
+            hostname: web-01
+            name: nobody
       x-osapi-method: delete
     get:
       description: Reads ~/.ssh/authorized_keys of the user through gohai, with the type, the SHA256 fingerprint, the comment and the options of each key. A user with no file has no keys. A user that the host does not have is not found.
@@ -6421,6 +7120,11 @@ paths:
       summary: List the authorized SSH keys of a user
       tags:
         - Sshkey_API_sshkey_operations
+      x-osapi-examples:
+        - doc: A user with keys
+          input:
+            hostname: web-01
+            name: osapitest
       x-osapi-method: list
     post:
       description: Adds the key line to the end of ~/.ssh/authorized_keys of the user, and makes the directory and the file if they are missing, with modes 700 and 600, owned by the user. A key that the file has already, by its fingerprint, does not change it. A line with no public key is refused. A user that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped.
@@ -6483,6 +7187,17 @@ paths:
       summary: Add an authorized SSH key to a user
       tags:
         - Sshkey_API_sshkey_operations
+      x-osapi-examples:
+        - doc: Add a key
+          input:
+            hostname: web-01
+            key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example
+            name: osapitest
+        - doc: Add a second key
+          input:
+            hostname: web-01
+            key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example
+            name: osapitest
       x-osapi-method: create
   /api/node/{hostname}/status:
     get:
@@ -6539,6 +7254,10 @@ paths:
       summary: Get the status summary of the host
       tags:
         - Status_API_status_operations
+      x-osapi-examples:
+        - doc: An Ubuntu host
+          input:
+            hostname: web-01
       x-osapi-method: get
   /api/node/{hostname}/sysctl:
     get:
@@ -6603,6 +7322,18 @@ paths:
       summary: List the kernel's parameters and which osapi manages
       tags:
         - Sysctl_API_sysctl_operations
+      x-osapi-examples:
+        - doc: Every parameter, and which osapi manages
+          input:
+            hostname: web-01
+        - doc: One part of the tree
+          input:
+            hostname: web-01
+            prefix: net.ipv4
+        - doc: A managed parameter the kernel does not have right now
+          input:
+            hostname: web-01
+            prefix: net.bridge
       x-osapi-method: list
     post:
       description: 'Writes osapi-net.ipv4.ip_forward.conf for net.ipv4.ip_forward to behaviors.sysctl.dir, /etc/sysctl.d by default, and applies it with sysctl -p. It fails when sysctl -p fails, because the value is not set. A second run with the same value changes nothing and reports changed: false. If the kernel has a different value, for example after a failed apply, it applies the value again.'
@@ -6664,6 +7395,12 @@ paths:
       summary: Manage a kernel parameter and apply it
       tags:
         - Sysctl_API_sysctl_operations
+      x-osapi-examples:
+        - doc: Turn on IP forwarding
+          input:
+            hostname: web-01
+            key: net.ipv4.ip_forward
+            value: "1"
       x-osapi-method: create
   /api/node/{hostname}/sysctl/{key}:
     delete:
@@ -6721,6 +7458,11 @@ paths:
       summary: Stop the management of a kernel parameter
       tags:
         - Sysctl_API_sysctl_operations
+      x-osapi-examples:
+        - doc: Remove a parameter
+          input:
+            hostname: web-01
+            key: vm.swappiness
       x-osapi-method: delete
     get:
       operationId: GetNodeSysctlByKey
@@ -6776,6 +7518,19 @@ paths:
       summary: Get a kernel parameter's current value, and whether osapi manages it
       tags:
         - Sysctl_API_sysctl_operations
+      x-osapi-examples:
+        - doc: A parameter osapi manages
+          input:
+            hostname: web-01
+            key: vm.swappiness
+        - doc: A value of several fields
+          input:
+            hostname: web-01
+            key: net.ipv4.ping_group_range
+        - doc: A managed parameter the kernel does not have right now
+          input:
+            hostname: web-01
+            key: net.bridge.bridge-nf-call-iptables
       x-osapi-method: get
     put:
       description: 'The same as create, addressed by the parameter: osapi manages the parameter from then on whether it did before or not. Setting the value it already has reports changed: false.'
@@ -6838,6 +7593,12 @@ paths:
       summary: Set a kernel parameter, manage it, and apply it
       tags:
         - Sysctl_API_sysctl_operations
+      x-osapi-examples:
+        - doc: Lower swappiness
+          input:
+            hostname: web-01
+            key: vm.swappiness
+            value: "10"
       x-osapi-method: update
   /api/node/{hostname}/timezone:
     get:
@@ -6894,6 +7655,10 @@ paths:
       summary: Get the timezone of the host
       tags:
         - Timezone_API_timezone_operations
+      x-osapi-examples:
+        - doc: A Linux host on UTC
+          input:
+            hostname: web-01
       x-osapi-method: get
     put:
       description: 'Sets the timezone with timedatectl set-timezone. A host that already has the timezone does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.'
@@ -6955,6 +7720,15 @@ paths:
       summary: Set the timezone of the host
       tags:
         - Timezone_API_timezone_operations
+      x-osapi-examples:
+        - doc: Set a new timezone
+          input:
+            hostname: web-01
+            timezone: America/New_York
+        - doc: A host that already has the timezone
+          input:
+            hostname: web-01
+            timezone: UTC
       x-osapi-method: update
   /api/node/{hostname}/updatepackages:
     get:
@@ -7011,6 +7785,10 @@ paths:
       summary: List the packages the index has newer versions of
       tags:
         - Updatepackages_API_updatepackages_operations
+      x-osapi-examples:
+        - doc: Two updates
+          input:
+            hostname: web-01
       x-osapi-method: list
     put:
       description: 'Runs apt-get update. It reports changed: true when the Release file of a repository under /var/lib/apt/lists changed, and changed: false when each repository was unchanged.'
@@ -7066,6 +7844,10 @@ paths:
       summary: Refresh the package index
       tags:
         - Updatepackages_API_updatepackages_operations
+      x-osapi-examples:
+        - doc: The repositories are unchanged since the last refresh
+          input:
+            hostname: web-01
       x-osapi-method: update
   /api/node/{hostname}/uptime:
     get:
@@ -7122,6 +7904,10 @@ paths:
       summary: Get the uptime of the host
       tags:
         - Uptime_API_uptime_operations
+      x-osapi-examples:
+        - doc: A host up for a day, two hours and five minutes
+          input:
+            hostname: web-01
       x-osapi-method: get
   /api/node/{hostname}/user:
     get:
@@ -7178,6 +7964,10 @@ paths:
       summary: List the users of the host
       tags:
         - User_API_user_operations
+      x-osapi-examples:
+        - doc: A host with users
+          input:
+            hostname: web-01
       x-osapi-method: list
     post:
       description: 'Adds the user with useradd, with its home directory, and sets its password with chpasswd when one is given. The controller hashes the password, so the job and NATS have only the hash. A user that the host has already does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.'
@@ -7239,6 +8029,27 @@ paths:
       summary: Add a user
       tags:
         - User_API_user_operations
+      x-osapi-examples:
+        - doc: Add a user
+          input:
+            hostname: web-01
+            name: osapitest
+        - doc: Add a user with a shell, groups and a password
+          input:
+            groups:
+              - root
+            hostname: web-01
+            name: osapitest
+            password: osapi-test-password
+            shell: /bin/sh
+        - doc: Add a system user with its IDs and its home
+          input:
+            gid: 100
+            home: /home/osapitest
+            hostname: web-01
+            name: osapitest
+            system: true
+            uid: 1999
       x-osapi-method: create
   /api/node/{hostname}/user/{name}:
     delete:
@@ -7296,6 +8107,11 @@ paths:
       summary: Remove a user
       tags:
         - User_API_user_operations
+      x-osapi-examples:
+        - doc: Remove a user
+          input:
+            hostname: web-01
+            name: osapitest
       x-osapi-method: delete
     get:
       description: Reads one user from the same list. A user that the host does not have is not found.
@@ -7352,6 +8168,11 @@ paths:
       summary: Get one user
       tags:
         - User_API_user_operations
+      x-osapi-examples:
+        - doc: A user
+          input:
+            hostname: web-01
+            name: alice
       x-osapi-method: get
     put:
       description: 'Changes what the input gives and the user does not have already, with usermod: its shell, its home, which usermod moves the files to, its groups, which replace the groups it has, and whether it is locked. The same values report changed: false. A user that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped.'
@@ -7414,6 +8235,25 @@ paths:
       summary: Change a user
       tags:
         - User_API_user_operations
+      x-osapi-examples:
+        - doc: Set the shell
+          input:
+            hostname: web-01
+            name: osapitest
+            shell: /bin/bash
+        - doc: Move the home, set the groups and lock it
+          input:
+            groups:
+              - root
+            home: /home/osapitest2
+            hostname: web-01
+            lock: locked
+            name: osapitest
+        - doc: Unlock it
+          input:
+            hostname: web-01
+            lock: unlocked
+            name: osapitest
       x-osapi-method: update
   /api/node/{hostname}/user/{name}/passwd:
     post:
@@ -7477,6 +8317,12 @@ paths:
       summary: Set the password of a user
       tags:
         - User_API_user_operations
+      x-osapi-examples:
+        - doc: Set a password
+          input:
+            hostname: web-01
+            name: osapitest
+            password: osapi-test-password
       x-osapi-method: passwd
 components:
   schemas:

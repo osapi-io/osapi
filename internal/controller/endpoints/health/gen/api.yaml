@@ -340,6 +340,9 @@ paths:
       summary: Liveness probe
       tags:
         - health
+      x-osapi-examples:
+        - doc: Liveness probe
+          input: {}
       x-osapi-method: liveness
   /api/health/ready:
     get:
@@ -368,6 +371,9 @@ paths:
       summary: Readiness probe
       tags:
         - health
+      x-osapi-examples:
+        - doc: Readiness probe
+          input: {}
       x-osapi-method: ready
   /api/health/status:
     get:
@@ -404,6 +410,9 @@ paths:
       summary: System status and component health
       tags:
         - health
+      x-osapi-examples:
+        - doc: System status and component health
+          input: {}
       x-osapi-method: status
 tags:
   - description: Health check endpoints for liveness, readiness, and detailed status.

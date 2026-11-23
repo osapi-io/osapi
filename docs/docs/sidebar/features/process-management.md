@@ -71,6 +71,6 @@ method.
   its examples and what it refuses
 - [CLI Reference](../usage/cli/client/node/process/process.mdx): process
   commands
-- [SDK Reference](../sdk/client/node/process.md): Process service
+- [SDK Reference](../sdk/client/process.md): Process service
 - [Platform Detection](../sdk/platform/detection.md): OS family detection
 - [Configuration](../usage/configuration.md): full configuration reference

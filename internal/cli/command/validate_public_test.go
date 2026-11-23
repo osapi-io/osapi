@@ -413,6 +413,24 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 	)
 }
 
+func (s *ValidatePublicTestSuite) TestGlobalFlag() {
+	tests := []struct {
+		name string
+		flag string
+		want bool
+	}{
+		{name: "when the root command adds the flag", flag: "json", want: true},
+		{name: "when the flag is its short letter", flag: "j", want: true},
+		{name: "when a command adds the flag", flag: "target", want: false},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, command.GlobalFlag(tc.flag))
+		})
+	}
+}
+
 func TestValidatePublicTestSuite(
 	t *testing.T,
 ) {

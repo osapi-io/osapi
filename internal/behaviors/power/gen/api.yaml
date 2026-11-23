@@ -200,6 +200,15 @@ paths:
       summary: Reboot the host
       tags:
         - power_operations
+      x-osapi-examples:
+        - doc: In one minute
+          input:
+            hostname: web-01
+        - doc: In five minutes, with a message
+          input:
+            delay: 300
+            hostname: web-01
+            message: maintenance
       x-osapi-method: reboot
   /api/node/{hostname}/power/shutdown:
     post:
@@ -262,6 +271,15 @@ paths:
       summary: Shut the host down
       tags:
         - power_operations
+      x-osapi-examples:
+        - doc: In one minute
+          input:
+            hostname: web-01
+        - doc: In five minutes, with a message
+          input:
+            delay: 300
+            hostname: web-01
+            message: maintenance
       x-osapi-method: shutdown
 tags:
   - description: Reboot or shut down the host

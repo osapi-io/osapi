@@ -166,6 +166,10 @@ paths:
       summary: Get the disk usage of the host
       tags:
         - disk_operations
+      x-osapi-examples:
+        - doc: A host with one local filesystem
+          input:
+            hostname: web-01
       x-osapi-method: get
 tags:
   - description: Get the disk usage of target hosts

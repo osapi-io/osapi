@@ -97,20 +97,14 @@ export function featureItems(): Item[] {
   return pages('sidebar/features', ['features']).map(doc);
 }
 
-// sdkItems are the pages of the SDK: the client's overview, then a section
-// for each folder of the client, then the platform pages and a link to the
-// orchestrator.
+// sdkItems are the pages of the SDK: the client's overview and the page of
+// each service, one list as the services are fields of one client, then the
+// platform pages and a link to the orchestrator.
 export function sdkItems(): Item[] {
   const items: Item[] = [
     header('Client Library'),
     ...pages('sidebar/sdk/client').map(doc)
   ];
-  for (const f of folders('sidebar/sdk/client')) {
-    items.push(
-      header(f.label),
-      ...pages(`sidebar/sdk/client/${f.name}`).map(doc)
-    );
-  }
   items.push(
     separator,
     header('Platform'),

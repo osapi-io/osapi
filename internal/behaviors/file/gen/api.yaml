@@ -310,6 +310,11 @@ paths:
       summary: Remove a file that osapi deployed
       tags:
         - file_operations
+      x-osapi-examples:
+        - doc: Remove a deployed file
+          input:
+            hostname: web-01
+            path: /etc/osapi/file-example.conf
       x-osapi-method: delete
     get:
       description: 'Compares the file on the host with the record that osapi keeps of what it deployed: in-sync when they agree, drifted when something changed the file, missing when osapi deployed the file and it is gone, and unmanaged when osapi did not deploy the path or undeployed it. A path that is a directory is refused.'
@@ -374,6 +379,11 @@ paths:
       summary: Show whether a deployed file holds what osapi wrote
       tags:
         - file_operations
+      x-osapi-examples:
+        - doc: A deployed file
+          input:
+            hostname: web-01
+            path: /etc/osapi/file-example.conf
       x-osapi-method: status
     put:
       description: 'Writes the object at the path with its mode and ownership, and keeps a record of it. A template object, or content_type template, is rendered first with .Facts, .Vars and .Hostname. The record keeps the SHA-256 of the object as it was read. A file that holds the content, mode and owner already, from the same object, does not change and reports changed: false. osapi client file stale list compares the object now with that SHA-256, so it shows the deployments whose object changed since.'
@@ -435,6 +445,19 @@ paths:
       summary: Deploy an object of the object store to a path
       tags:
         - file_operations
+      x-osapi-examples:
+        - doc: Deploy a file
+          input:
+            hostname: web-01
+            object_name: example.conf
+            path: /etc/osapi/file-example.conf
+        - doc: Render a template
+          input:
+            hostname: web-01
+            object_name: example.conf.tmpl
+            path: /etc/osapi/file-example.conf
+            vars:
+              port: "8080"
       x-osapi-method: update
 tags:
   - description: Files of the object store, deployed to the host
