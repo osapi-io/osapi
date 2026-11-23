@@ -5,12 +5,12 @@ sidebar_label: Overview
 
 # Architecture
 
-osapi manages Linux hosts through typed operations. A client sends a request to
-the controller for one host, a group of hosts or all the hosts. The controller
-checks the identity of the client and the request. Then it puts the request on
-NATS as a job. An agent on each host receives the job, does the work and sends
-back the result. The controller does not change a host itself. Thus the
-controller needs no privileges on a host.
+osapi manages Linux and macOS hosts through typed operations. A client sends a
+request to the controller for one host, a group of hosts or all the hosts. The
+controller checks the identity of the client and the request. Then it puts the
+request on NATS as a job. An agent on each host receives the job, does the work
+and sends back the result. The controller does not change a host itself. Thus
+the controller needs no privileges on a host.
 
 ```mermaid
 graph LR
