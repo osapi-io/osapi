@@ -283,14 +283,17 @@ func (s *BehaviorSmokeSuite) reset(
 	s.deleteResults(b, input)
 }
 
-// deleteResults runs the behavior's delete with the fields of input that it
-// takes, and returns its rows; none when the behavior has no delete or input
-// cannot name the item.
+// deleteResults runs the behavior's delete, or its undeploy when it has no
+// delete, with the fields of input that it takes, and returns its rows; none
+// when the behavior has neither or input cannot name the item.
 func (s *BehaviorSmokeSuite) deleteResults(
 	b *behavior.Behavior,
 	input any,
 ) []map[string]any {
 	del := b.Method("delete")
+	if del == nil {
+		del = b.Method("undeploy")
+	}
 	if del == nil {
 		return nil
 	}
