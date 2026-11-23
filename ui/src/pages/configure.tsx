@@ -17,6 +17,7 @@ import {
   useStack,
   ALL_BLOCK_TYPES,
   BLOCK_GROUPS,
+  blockRunnable,
   type BlockStatus,
 } from "@/hooks/use-stack";
 import { useCommands } from "@/hooks/use-commands";
@@ -40,7 +41,13 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Text } from "@/components/ui/text";
 import { Chip } from "@/components/ui/chip";
 import { useAuth } from "@/hooks/use-auth";
-import { BLOCK_PERMISSIONS } from "@/lib/permissions";
+import {
+  BLOCK_PERMISSIONS,
+  blockAllowed,
+  blockKind,
+  blockKindLabels,
+} from "@/lib/permissions";
+import { BlockKindIcon } from "@/components/domain/block-kind";
 import { BEHAVIOR_BLOCKS, type BehaviorBlockType } from "@/lib/blocks.gen";
 import { runBehavior } from "@/lib/behavior-block";
 import { BehaviorBlockForm } from "@/components/domain/behavior-block-form";
@@ -208,7 +215,7 @@ export function Configure() {
     setApplying(true);
 
     for (const block of blocks) {
-      if (block.status !== "ready") continue;
+      if (!blockRunnable(block)) continue;
 
       // Focus and scroll to the executing block
       setFocusedId(block.id);
@@ -426,7 +433,13 @@ export function Configure() {
         }}
         label={block.label}
         description={block.description}
-        status={block.status}
+        kind={blockKind(block.type)}
+        // A block that waits for its target is not ready to apply.
+        status={
+          block.status === "ready" && !blockRunnable(block)
+            ? "pending"
+            : block.status
+        }
         focused={focusedId === block.id}
         error={block.error}
         target={block.target}
@@ -535,7 +548,8 @@ export function Configure() {
                   <div className="flex flex-wrap gap-1.5">
                     {cat.types.map((bt) => {
                       const perm = BLOCK_PERMISSIONS[bt.type];
-                      const allowed = perm ? can(perm) : true;
+                      const allowed = blockAllowed(bt.type, can);
+                      const kind = blockKind(bt.type);
                       return (
                         <Chip
                           key={bt.type}
@@ -544,8 +558,13 @@ export function Configure() {
                             addBlockAndFocus(bt);
                           }}
                           disabled={!allowed}
-                          title={allowed ? bt.description : `Requires ${perm}`}
+                          title={
+                            allowed
+                              ? `${kind ? `${blockKindLabels[kind]}: ` : ""}${bt.description}`
+                              : `Requires ${perm ?? "a permission that is not known"}`
+                          }
                         >
+                          {kind && <BlockKindIcon kind={kind} />}
                           {bt.label}
                           {!allowed && (
                             <Lock className="h-3 w-3 text-text-muted/40" />

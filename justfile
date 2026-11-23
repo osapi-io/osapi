@@ -82,7 +82,7 @@ test: linux-tune
 # (`just go-ci-checks`): the quick checks share one job, and each slow check is
 # a job. A check added here runs on a laptop and in CI, with no change to the
 # workflow.
-go_quick_checks := "just-fmt-check docs-fmt-check react-fmt-check react-generate-check go-mod-check go-pkg-check"
+go_quick_checks := "just-fmt-check docs-fmt-check react-fmt-check react-unit react-generate-check go-mod-check go-pkg-check"
 go_slow_checks := "behavior-gen-check go-generate-check docs-gen-check cli-docs-gen-check behavior-scaffold-check endpoint-scaffold-check command-scaffold-check behavior-cover-check go-fmt-check go-vet examples-check spec-client-check"
 
 # Fail when a behavior that osapi behavior create writes does not pass its tests
@@ -277,6 +277,14 @@ go-generate-check:
         echo "generated code is stale: run go generate ./... and commit the result" >&2
         exit 1
     fi
+
+# Run the unit tests of the UI
+#
+# The shared react module has no recipe that runs tests. bun runs them itself,
+# with no test package: they are the src/**/*.test.ts files of the UI, and
+# tsconfig.test.json checks their types.
+react-unit:
+    cd {{ react_dir }} && bun test
 
 # Fail when the UI client that orval writes is not what is committed
 #

@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { BEHAVIOR_BLOCKS } from "@/lib/blocks.gen";
+import { blockKind, type HandBlockType } from "@/lib/permissions";
 
 export type BlockStatus =
   "unchecked" | "pending" | "ready" | "applying" | "applied" | "error";
@@ -26,25 +27,10 @@ export interface BlockGroup {
   categories: BlockCategory[];
 }
 
-const HAND_BLOCK_TYPES: BlockType[] = [
-  // ── Services ──────────────────────────────────────────────────────────────
-  {
-    type: "power-reboot",
-    label: "Reboot",
-    description: "Reboot the host",
-    category: "power",
-    group: "node",
-  },
-  {
-    type: "power-shutdown",
-    label: "Shutdown",
-    description: "Shutdown the host",
-    category: "power",
-    group: "node",
-  },
-
-  // ── Networking ─────────────────────────────────────────────────────────────
-
+// The blocks that are not a behavior's. Each has an operation in
+// BLOCK_OPERATIONS, which gives its permission: a type with none fails the
+// type check here.
+const HAND_BLOCK_TYPES: (BlockType & { type: HandBlockType })[] = [
   // ── Files ──────────────────────────────────────────────────────────────────
   {
     type: "object-list",
@@ -77,7 +63,7 @@ const HAND_BLOCK_TYPES: BlockType[] = [
     readyOnAdd: true,
   },
 
-  // ── Hardware ───────────────────────────────────────────────────────────────
+  // ── Audit ──────────────────────────────────────────────────────────────────
   {
     type: "audit-list",
     label: "List",
@@ -234,23 +220,41 @@ export interface Block {
 
 let nextId = 1;
 
+/**
+ * The target that a new block starts with. A read of a behavior may run on
+ * each agent, so it starts with _all. A write or an action starts with none:
+ * the user picks the hosts that it changes, and the block does not apply
+ * until then. A block that is not a behavior's runs on the controller, and
+ * its target is not used.
+ */
+export function defaultTarget(type: string): string {
+  return type in BEHAVIOR_BLOCKS && blockKind(type) !== "read" ? "" : "_all";
+}
+
+/** Whether Apply runs the block: it is ready and it has a target. */
+export function blockRunnable(block: Block): boolean {
+  return block.status === "ready" && block.target !== "";
+}
+
+/** A new block of a type, as the panel adds it. */
+export function newBlock(blockType: BlockType, id: string): Block {
+  return {
+    id,
+    type: blockType.type,
+    label: blockType.label,
+    description: blockType.description,
+    status: blockType.readyOnAdd ? "ready" : "pending",
+    target: defaultTarget(blockType.type),
+    data: {},
+  };
+}
+
 export function useStack() {
   const [blocks, setBlocks] = useState<Block[]>([]);
 
   const addBlock = useCallback((blockType: BlockType): string => {
     const id = `${blockType.type}-${nextId++}`;
-    setBlocks((prev) => [
-      ...prev,
-      {
-        id,
-        type: blockType.type,
-        label: blockType.label,
-        description: blockType.description,
-        status: blockType.readyOnAdd ? "ready" : "pending",
-        target: "_all",
-        data: {},
-      },
-    ]);
+    setBlocks((prev) => [...prev, newBlock(blockType, id)]);
     return id;
   }, []);
 
@@ -323,7 +327,7 @@ export function useStack() {
             label: item.label,
             description: item.description,
             status: hasData ? "ready" : "pending",
-            target: item.target ?? "_all",
+            target: item.target ?? defaultTarget(item.type),
             data: { ...item.data },
           };
         }),
@@ -336,7 +340,7 @@ export function useStack() {
     setBlocks([]);
   }, []);
 
-  const readyBlocks = blocks.filter((b) => b.status === "ready");
+  const readyBlocks = blocks.filter(blockRunnable);
   const hasApplied = blocks.some(
     (b) => b.status === "applied" || b.status === "error",
   );

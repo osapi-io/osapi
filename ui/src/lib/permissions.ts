@@ -96,7 +96,7 @@ export function hasAnyPermission(
 // operation that is renamed or removed fails the type check here.
 // ---------------------------------------------------------------------------
 
-export const BLOCK_OPERATIONS: Record<string, OperationId> = {
+export const BLOCK_OPERATIONS = {
   "object-list": "getFiles",
   "object-upload": "postFile",
   "object-delete": "deleteFileByName",
@@ -104,7 +104,13 @@ export const BLOCK_OPERATIONS: Record<string, OperationId> = {
   "audit-list": "getAuditLogs",
   "audit-get": "getAuditLogByID",
   "audit-export": "getAuditExport",
-};
+} as const satisfies Record<string, OperationId>;
+
+/**
+ * A block that is not a behavior's: it must have an operation in
+ * BLOCK_OPERATIONS, so it cannot be in the panel with no permission.
+ */
+export type HandBlockType = keyof typeof BLOCK_OPERATIONS;
 
 export const BLOCK_PERMISSIONS: Record<string, Permission> = Object.fromEntries(
   [
@@ -116,3 +122,38 @@ export const BLOCK_PERMISSIONS: Record<string, Permission> = Object.fromEntries(
     ...Object.values(BEHAVIOR_BLOCKS).map((def) => [def.type, def.permission]),
   ],
 );
+
+/**
+ * Whether a role that has the permissions that can accepts may use a block.
+ * A block with no known permission is refused, not allowed: the panel
+ * cannot tell what the API will ask for.
+ */
+export function blockAllowed(
+  type: string,
+  can: (permission: Permission) => boolean,
+): boolean {
+  const perm = BLOCK_PERMISSIONS[type];
+  return perm !== undefined && can(perm);
+}
+
+/**
+ * What a block does to a host: a read changes nothing, a write changes what
+ * the host is configured to be, and an action makes something happen, such
+ * as a restart or a reboot. It is the verb of the block's permission, as the
+ * behavior DSL gives it: read, write, or a verb of an action (execute, shell
+ * or exec).
+ */
+export type BlockKind = "read" | "write" | "action";
+
+export const blockKindLabels: Record<BlockKind, string> = {
+  read: "Read",
+  write: "Write",
+  action: "Action",
+};
+
+export function blockKind(type: string): BlockKind | undefined {
+  const perm = BLOCK_PERMISSIONS[type];
+  if (perm === undefined) return undefined;
+  const verb = perm.slice(perm.indexOf(":") + 1);
+  return verb === "read" ? "read" : verb === "write" ? "write" : "action";
+}
