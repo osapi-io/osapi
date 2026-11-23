@@ -58,6 +58,10 @@ have. The UI shows a block without permission in gray, with a lock icon.
 
 ## Pages
 
+The routes are in `ui/src/App.tsx`. The navbar has Dashboard and Configure. The
+Admin menu has Audit Log, Admission, Jobs, Roles and Traces. A page that needs a
+permission that the session does not have shows that the permission is missing.
+
 ### Dashboard (`/`)
 
 An overview of the fleet health:
@@ -74,32 +78,53 @@ An overview of the fleet health:
 
 A builder that puts operations together from blocks:
 
-- a sidebar with block categories (Schedule, File, Docker, Command, DNS,
-  Network)
-- blocks that the RBAC permissions control
-- a target picker for each block (`_all`, `_any`, a hostname, labels)
-- apply in sequence, with a spinner for each block
-- the results
+- The Add Block panel has a tab for each area that has blocks, in the order of
+  `area.All` in Go: Services, Software, Config, Node, Logs, Networking,
+  Security, Containers, Object Store, Command and Hardware. The Audit and Fleet
+  areas have no blocks, so they have no tab.
+- In a tab, the blocks of each behavior are in a category with the title of the
+  behavior, such as Package updates. A behavior under another behavior, such as
+  User SSH key, comes after its parent.
+- The RBAC permissions control the blocks. A block that the session cannot run
+  is gray, with a lock icon.
+- Each block has a target picker (`_all`, `_any`, a hostname, labels).
+- Apply runs the blocks in sequence, with a spinner for each block, and shows
+  the results. A result links to its job and its trace.
 
-### Roles (`/roles`)
+### Audit Log (`/admin/audit`)
+
+The history of the API requests: who sent each request, the operation, the
+status and the duration. Filters select by user, operation or path, and status,
+and the reads show only when you ask for them. An entry opens in full, with the
+chain of calls that its job made on each host, and links to its job and its
+trace. The page needs `audit:read`, which only the admin role has.
+
+### Admission (`/admin/admission`)
+
+The machines that ask to join the fleet, in four sections: Pending, Admitted,
+Rejected and Revoked. You admit or reject a pending machine, and revoke an
+admitted machine.
+
+### Jobs (`/admin/jobs`)
+
+The job queue and its history, with a status filter. You can retry or delete a
+job. `/admin/jobs/:id` shows the detail of one job above the list, such as the
+job of a block's result on the Configure page.
+
+### Roles (`/admin/roles`)
 
 An RBAC reference: the current session with a role badge, a table of the role
 definitions, the full permission matrix and the table of block permissions.
+`/roles` goes to this page.
 
-### Enrollment (`/admin/enrollment`)
+### Traces (`/admin/traces`)
 
-PKI enrollment management:
+The span tree of a trace, read through the controller. Type the trace ID that a
+command prints after its job ID, or open `/admin/traces/:id`. The page needs
+`trace:read`.
 
-- The page lists the pending agents, with the machine ID, the fingerprint and
-  the time of the request. Each agent has Accept and Reject buttons. When no
-  agent is pending, the page shows an empty state.
-- Below them, the page lists the enrolled agents: the agents whose key the
-  controller stores. Each has a Remove button. To confirm, click it a second
-  time. Remove sends the machine ID of the card. Thus it removes that agent,
-  also when another agent has the same hostname.
-- The command bar has accept, reject and remove commands, by hostname.
-
-### SignIn
+### Sign in
 
 JWT authentication: a field to paste a token, with validation. The page reads
 the roles from the JWT claims, and shows a CLI hint for `osapi token generate`.
+The page shows when the session has no token, on each route.
