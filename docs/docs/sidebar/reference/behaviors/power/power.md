@@ -16,6 +16,7 @@ Reboot or shut down the host. `osapi behavior get --name power` and
 | Name        | power                        |
 | Description | Reboot or shut down the host |
 | Placement   | node                         |
+| Area        | node                         |
 | Internal    | no                           |
 | API         | yes                          |
 | CLI         | yes                          |

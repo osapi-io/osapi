@@ -16,6 +16,7 @@ Get the memory usage of target hosts. `osapi behavior get --name memory` and
 | Name        | memory                               |
 | Description | Get the memory usage of target hosts |
 | Placement   | node                                 |
+| Area        | hardware                             |
 | Internal    | no                                   |
 | API         | yes                                  |
 | CLI         | yes                                  |

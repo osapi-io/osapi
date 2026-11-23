@@ -18,6 +18,7 @@ shows each call that its examples make.
 | Description | The DNS resolvers of each interface of the host |
 | Placement   | node                                            |
 | Group       | network                                         |
+| Area        | networking                                      |
 | Internal    | no                                              |
 | API         | yes                                             |
 | CLI         | yes                                             |

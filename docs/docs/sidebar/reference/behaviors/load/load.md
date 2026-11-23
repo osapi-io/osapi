@@ -16,6 +16,7 @@ Get the load averages of target hosts. `osapi behavior get --name load` and
 | Name        | load                                  |
 | Description | Get the load averages of target hosts |
 | Placement   | node                                  |
+| Area        | node                                  |
 | Internal    | no                                    |
 | API         | yes                                   |
 | CLI         | yes                                   |

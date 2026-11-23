@@ -17,6 +17,7 @@ The Docker images of the host. `osapi behavior get --name image` and
 | Description | The Docker images of the host |
 | Placement   | node                          |
 | Group       | container                     |
+| Area        | containers                    |
 | Internal    | no                            |
 | API         | yes                           |
 | CLI         | yes                           |

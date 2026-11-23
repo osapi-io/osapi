@@ -16,6 +16,7 @@ Run a command on target hosts. `osapi behavior get --name command` and
 | Name        | command                       |
 | Description | Run a command on target hosts |
 | Placement   | node                          |
+| Area        | command                       |
 | Internal    | no                            |
 | API         | yes                           |
 | CLI         | yes                           |

@@ -17,6 +17,7 @@ the same.
 | Name        | updatepackages                                 |
 | Description | The updates the package index has for the host |
 | Placement   | node                                           |
+| Area        | software                                       |
 | Internal    | no                                             |
 | API         | yes                                            |
 | CLI         | yes                                            |

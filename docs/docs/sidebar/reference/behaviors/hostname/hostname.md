@@ -16,6 +16,7 @@ and `osapi behavior method get` show the same.
 | Name        | hostname                                |
 | Description | Get or set the hostname of target hosts |
 | Placement   | node                                    |
+| Area        | config                                  |
 | Internal    | no                                      |
 | API         | yes                                     |
 | CLI         | yes                                     |

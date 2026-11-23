@@ -18,6 +18,7 @@ make.
 | Name        | certificate                                                                                                                                                                               |
 | Description | The certificate authorities that the host trusts                                                                                                                                          |
 | Placement   | node                                                                                                                                                                                      |
+| Area        | security                                                                                                                                                                                  |
 | Internal    | no                                                                                                                                                                                        |
 | API         | yes                                                                                                                                                                                       |
 | CLI         | yes                                                                                                                                                                                       |

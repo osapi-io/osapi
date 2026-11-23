@@ -16,6 +16,7 @@ The groups of the host. `osapi behavior get --name group` and
 | Name        | group                  |
 | Description | The groups of the host |
 | Placement   | node                   |
+| Area        | security               |
 | Internal    | no                     |
 | API         | yes                    |
 | CLI         | yes                    |

@@ -36,11 +36,12 @@ type ListOutput struct {
 
 // Summary is one behavior and the names of its methods.
 type Summary struct {
-	Name     string   `json:"name"`
-	Group    string   `json:"group,omitempty"`
-	Methods  []string `json:"methods"`
-	Doc      string   `json:"doc"                label:"Description"`
-	Internal bool     `json:"internal,omitempty"`
+	Name     string            `json:"name"`
+	Group    string            `json:"group,omitempty"`
+	Area     behavior.AreaName `json:"area,omitempty"`
+	Methods  []string          `json:"methods"`
+	Doc      string            `json:"doc"                label:"Description"`
+	Internal bool              `json:"internal,omitempty"`
 }
 
 // GetInput names the behavior.
@@ -56,6 +57,7 @@ type GetOutput struct {
 	Doc        string             `                 json:"doc"             label:"Description"`
 	Placement  behavior.Placement `                 json:"placement"`
 	Group      string             `                 json:"group,omitempty"`
+	Area       behavior.AreaName  `                 json:"area,omitempty"`
 	Internal   bool               `                 json:"internal"`
 	API        bool               `                 json:"api"             label:"API"`
 	CLI        bool               `                 json:"cli"             label:"CLI"`

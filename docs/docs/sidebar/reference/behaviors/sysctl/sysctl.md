@@ -18,6 +18,7 @@ make.
 | Name        | sysctl                                                   |
 | Description | Kernel parameters, written to sysctl.d files and applied |
 | Placement   | node                                                     |
+| Area        | config                                                   |
 | Internal    | no                                                       |
 | API         | yes                                                      |
 | CLI         | yes                                                      |

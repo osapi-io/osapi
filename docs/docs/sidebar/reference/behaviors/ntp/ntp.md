@@ -17,6 +17,7 @@ shows each call that its examples make.
 | Name        | ntp                                            |
 | Description | The NTP servers of chrony, and its sync status |
 | Placement   | node                                           |
+| Area        | config                                         |
 | Internal    | no                                             |
 | API         | yes                                            |
 | CLI         | yes                                            |

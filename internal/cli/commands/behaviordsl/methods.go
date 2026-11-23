@@ -46,7 +46,8 @@ func List(
 			names = append(names, m.Name)
 		}
 		out.Items = append(out.Items, Summary{
-			Name: b.Name, Group: b.Group, Methods: names, Doc: b.Doc, Internal: b.Internal,
+			Name: b.Name, Group: b.Group, Area: b.Area, Methods: names,
+			Doc: b.Doc, Internal: b.Internal,
 		})
 	}
 
@@ -78,7 +79,7 @@ func Get(
 		return GetOutput{}, err
 	}
 	out := GetOutput{
-		Name: b.Name, Doc: b.Doc, Placement: b.Placement, Group: b.Group,
+		Name: b.Name, Doc: b.Doc, Placement: b.Placement, Group: b.Group, Area: b.Area,
 		Internal: b.Internal, API: b.API, CLI: b.CLI,
 		Platforms:  platformNames(b),
 		Sudo:       sudoOf(b),

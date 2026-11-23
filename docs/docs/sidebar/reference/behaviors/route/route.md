@@ -17,6 +17,7 @@ shows each call that its examples make.
 | Name        | route                             |
 | Description | The routes of an interface        |
 | Placement   | node                              |
+| Area        | networking                        |
 | Internal    | no                                |
 | API         | yes                               |
 | CLI         | yes                               |

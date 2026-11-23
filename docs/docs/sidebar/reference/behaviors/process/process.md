@@ -16,6 +16,7 @@ The processes of the host. `osapi behavior get --name process` and
 | Name        | process                   |
 | Description | The processes of the host |
 | Placement   | node                      |
+| Area        | node                      |
 | Internal    | no                        |
 | API         | yes                       |
 | CLI         | yes                       |

@@ -16,6 +16,7 @@ The packages installed on the host. `osapi behavior get --name package` and
 | Name        | package                            |
 | Description | The packages installed on the host |
 | Placement   | node                               |
+| Area        | software                           |
 | Internal    | no                                 |
 | API         | yes                                |
 | CLI         | yes                                |
