@@ -6,17 +6,17 @@ session runs in a scratch copy of this checkout, with this skill and the osapi
 CLI, as in each checkout. The session does not see the checks. When it stops,
 `run.sh` checks what it left:
 
-| Check                                         | How                                                |
-| --------------------------------------------- | -------------------------------------------------- |
-| The definition breaks no rule                 | `go run . behavior validate`                       |
-| It is registered under its name               | `go run . behavior get --name <name> --json`       |
-| Its own tests pass with 100% coverage         | `go test -cover ./internal/behaviors/<name>/`      |
-| Every behavior is valid, mounted and attached | `go test ./internal/behaviors/all/`                |
+| Check                                         | How                                                       |
+| --------------------------------------------- | --------------------------------------------------------- |
+| The definition breaks no rule                 | `go run . behavior validate`                              |
+| It is registered under its name               | `go run . behavior get --name <name> --json`              |
+| Its own tests pass with 100% coverage         | `go test -cover ./internal/behaviors/<name>/`             |
+| Every behavior is valid, mounted and attached | `go test ./internal/behaviors/all/`                       |
 | Generated files are current                   | `go generate` and `just cli-docs-generate` change nothing |
-| Lint is clean                                 | golangci-lint on the behavior's package            |
-| It touched nothing it should not              | only its directory, its import and generated files |
-| Per eval: sudo declared, refusals declared    | a grep of the behavior's package                   |
-| Per eval: internal, requires, platforms       | `behavior get --json` and whether `gen/` exists    |
+| Lint is clean                                 | golangci-lint on the behavior's package                   |
+| It touched nothing it should not              | only its directory, its import and generated files        |
+| Per eval: sudo declared, refusals declared    | a grep of the behavior's package                          |
+| Per eval: internal, requires, platforms       | `behavior get --json` and whether `gen/` exists           |
 
 An eval of kind `ask` gives a request that is not clear enough to build. It
 passes when the session changes nothing and asks the user two or more questions.

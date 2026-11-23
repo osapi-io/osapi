@@ -1,6 +1,6 @@
 ---
 name: build-a-command
-description: >
+description: >-
   Build or change a group of local commands, the typed definition under
   internal/cli/commands/<group>/ of osapi commands that run in the CLI process
   and call no API, such as osapi token generate. Use when asked to add or change
@@ -14,17 +14,17 @@ description: >
 # Build a command
 
 A local command runs in the CLI process. It calls no API. Examples are
-`osapi token generate` and `osapi token roles list`. A group of local
-commands is one directory, `internal/cli/commands/<group>/`, plus one import in
+`osapi token generate` and `osapi token roles list`. A group of local commands
+is one directory, `internal/cli/commands/<group>/`, plus one import in
 `internal/cli/commands/all`. The DSL is in `internal/cli/command`.
 
-This skill gives a procedure and decisions. It is not a catalog. The binary tells
-you about the DSL:
+This skill gives a procedure and decisions. It is not a catalog. The binary
+tells you about the DSL:
 
-- `cli command spec get` tells each part of the DSL, what it does and when to use
-  it.
-- `cli command validate --help` tells each rule, with its fix. Each failure
-  also ends with its fix.
+- `cli command spec get` tells each part of the DSL, what it does and when to
+  use it.
+- `cli command validate --help` tells each rule, with its fix. Each failure also
+  ends with its fix.
 - `cli command list` tells each command of the binary, and the layer that made
   it. `cli command get --name <group>` tells the commands, the flags and the
   refused inputs of a group.
@@ -34,41 +34,42 @@ the tool is correct.
 
 The DSL makes the cobra command, the flags, the help, the page and the checks of
 each method. The method is a typed function. If the work needs a part that
-`cli command spec get` does not list, stop and say so. That is a platform change,
-and a person decides it. Do not add code around it.
+`cli command spec get` does not list, stop and say so. That is a platform
+change, and a person decides it. Do not add code around it.
 
 The design is `components/osapi/commands.md` in osapi-io/specs. Read it first.
 
 ## Local command, endpoint or behavior
 
-| The command | It is |
-| --- | --- |
-| Runs on the machine of the person, with no API: the config, a file, a token | A local command: this skill |
-| Calls the API for work on the controller: the registry, the job queue, the audit log | An endpoint: use the build-an-endpoint skill |
-| Calls the API for work on a host | A behavior: use the build-a-behavior skill |
-| Runs for a long time and stops on a signal, such as `controller start` | A local command, made with `command.Process`: this skill. "The rules to keep" tells how |
+| The command                                                                          | It is                                                                                   |
+| ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| Runs on the machine of the person, with no API: the config, a file, a token          | A local command: this skill                                                             |
+| Calls the API for work on the controller: the registry, the job queue, the audit log | An endpoint: use the build-an-endpoint skill                                            |
+| Calls the API for work on a host                                                     | A behavior: use the build-a-behavior skill                                              |
+| Runs for a long time and stops on a signal, such as `controller start`               | A local command, made with `command.Process`: this skill. "The rules to keep" tells how |
 
 ## Find what you need
 
-| Question | Ask |
-| --- | --- |
-| Each part of the DSL, what it does and when to use it | `go run . cli command spec get` |
+| Question                                                                                                                      | Ask                                                        |
+| ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Each part of the DSL, what it does and when to use it                                                                         | `go run . cli command spec get`                            |
 | What a `Deps` can take, such as `avfs.VFS` or an interface, and how a test replaces each: memfs, fstest.MapFS, a mockgen mock | `go run . cli command spec get`, under "What a Deps takes" |
-| Each rule a definition must pass, with its fix | `go run . cli command validate --help` |
-| Each command of the binary, and the layer that made it | `go run . cli command list` |
-| The commands, flags and refused inputs of a group | `go run . cli command get --name <group>` |
-| Whether a definition breaks a rule | `go run . cli command validate` |
-| A complete group | `internal/cli/commands/token` |
+| Each rule a definition must pass, with its fix                                                                                | `go run . cli command validate --help`                     |
+| Each command of the binary, and the layer that made it                                                                        | `go run . cli command list`                                |
+| The commands, flags and refused inputs of a group                                                                             | `go run . cli command get --name <group>`                  |
+| Whether a definition breaks a rule                                                                                            | `go run . cli command validate`                            |
+| A complete group                                                                                                              | `internal/cli/commands/token`                              |
 
 ## Build a new group
 
-1. Write it: `go run . cli command create --name <group> --description "<one line>"`,
-   then `go generate ./internal/cli/commands/all`. The group has a list and a
-   get, an empty `Deps`, its types and the tests of its methods. It builds,
-   validates and passes its tests before you change it.
+1. Write it:
+   `go run . cli command create --name <group> --description "<one line>"`, then
+   `go generate ./internal/cli/commands/all`. The group has a list and a get, an
+   empty `Deps`, its types and the tests of its methods. It builds, validates
+   and passes its tests before you change it.
 2. Change it in this order: `types.go`, `deps.go`, `methods.go`, then
-   `<group>.go`. Decide each method with the user first. "Decide first"
-   below has the questions.
+   `<group>.go`. Decide each method with the user first. "Decide first" below
+   has the questions.
 3. When `Deps` gets its first field, give it with `command.Provide` in
    `cmd/commands.go`, as the token group does. Add a `mocks/` package for the
    tests. While `Deps` is empty, the CLI needs no wiring.
@@ -98,75 +99,75 @@ The design is `components/osapi/commands.md` in osapi-io/specs. Read it first.
 
 - Each value is a flag. A command takes no positional argument.
 - The last word of each command is a verb or an action. A noun goes before the
-  verb with `.Sub`, such as `token roles list`. Give the noun's command its
-  help with `command.SubDoc("roles", "...")`; validate fails a Sub without one.
-- A command that stands alone, such as `osapi version`, is the method of a
-  group with `command.Flat()`: the group adds no word, so the method is under
-  the group's parent, the root or the words of `Under`. A command of the root
-  has a word of `command.Roots`; add one there only for a command that belongs
-  at the root. Any other command is a verb or an action. Add a word to
+  verb with `.Sub`, such as `token roles list`. Give the noun's command its help
+  with `command.SubDoc("roles", "...")`; validate fails a Sub without one.
+- A command that stands alone, such as `osapi version`, is the method of a group
+  with `command.Flat()`: the group adds no word, so the method is under the
+  group's parent, the root or the words of `Under`. A command of the root has a
+  word of `command.Roots`; add one there only for a command that belongs at the
+  root. Any other command is a verb or an action. Add a word to
   `command.Actions` only for a real action, never for a noun.
-- Give each rule of each input field a `.Fails` input that breaks it: the
-  input with the other fields valid and one value wrong. A required field needs
-  one too, with the field empty. `TestRefusals` runs each one, and expects a
-  usage error. You write the bad value, because a generator cannot know one for
-  a custom rule.
+- Give each rule of each input field a `.Fails` input that breaks it: the input
+  with the other fields valid and one value wrong. A required field needs one
+  too, with the field empty. `TestRefusals` runs each one, and expects a usage
+  error. You write the bad value, because a generator cannot know one for a
+  custom rule.
 - A rule that the standard tags cannot say is a custom rule. Declare it with
   `rule.Declare`, with its check and its message.
 - `--json` prints the output of the method. Do not make a second shape for it.
-- Give each method that prints a body a `.Prints(sample)` after the example
-  that it shows: a value of its output type, in `samples.go` of the group, with
-  each time in UTC. The CLI page shows the sample as the CLI prints it, and as
-  JSON for `--json`. validate fails a method with no `.Prints`. A method with
-  no body needs none: its page shows its one line for each example. A process
-  prints no output, so it needs none.
+- Give each method that prints a body a `.Prints(sample)` after the example that
+  it shows: a value of its output type, in `samples.go` of the group, with each
+  time in UTC. The CLI page shows the sample as the CLI prints it, and as JSON
+  for `--json`. validate fails a method with no `.Prints`. A method with no body
+  needs none: its page shows its one line for each example. A process prints no
+  output, so it needs none.
 - A command that runs until a signal, such as `nats server start`, is
-  `command.Process("start").Setup(fn)`. `internal/cli/commands/controllercmd`
-  is a complete one:
-  `command.Process("start").Flag("controller.api.port").Setup(Start)`. `fn`
-  gets the command's context and the
-  deps, makes each component and starts nothing, and returns
-  `command.Running{Components, Cleanup}`. `command.Serve` starts them, waits
-  until the context ends, then stops them with `context.WithoutCancel` and
-  `command.ShutdownTimeout`. Never make a context of your own.
+  `command.Process("start").Setup(fn)`. `internal/cli/commands/controllercmd` is
+  a complete one:
+  `command.Process("start").Flag("controller.api.port").Setup(Start)`. `fn` gets
+  the command's context and the deps, makes each component and starts nothing,
+  and returns `command.Running{Components, Cleanup}`. `command.Serve` starts
+  them, waits until the context ends, then stops them with
+  `context.WithoutCancel` and `command.ShutdownTimeout`. Never make a context of
+  your own.
 - A process's flags are config keys: `.Flag("agent.max_jobs")` makes
-  `--agent-max-jobs`, with the key's type, default and doc. Give a key a
-  default in `config.Defaults`, never in the flag. A setup that runs the
-  components of another, as `osapi start` does, calls their `Components` and
-  adds its own cleanup with `command.Then`.
+  `--agent-max-jobs`, with the key's type, default and doc. Give a key a default
+  in `config.Defaults`, never in the flag. A setup that runs the components of
+  another, as `osapi start` does, calls their `Components` and adds its own
+  cleanup with `command.Then`.
 - A group that goes `Under` a command written by hand, such as `nats`, needs
   that command given to `AttachLocal` in `cmd/commands.go`. Without it, the
   definition makes a second command of that name, and a test fails.
 - A check whose answer is its report, such as `config validate`, returns its
-  output with `command.Fail()` when the check fails: the report prints, then
-  the command exits 1, so a script or CI fails on it.
+  output with `command.Fail()` when the check fails: the report prints, then the
+  command exits 1, so a script or CI fails on it.
 - The output type prints the output. Give each field the tags that it needs:
   `render`, `label`, `none`, `empty`, `prefix` and `table:"-"`, and a heading
-  with `_ struct{} \`title:"..."\``. `osapi cli command spec get` has each tag.
+  with `_ struct{} \`title:"..."\``. `osapi cli command spec get\` has each tag.
 - A list of long text, which a table cell cuts, is `table:"blocks"`: each item
-  is its first field, then a paragraph for each other field (`label:"-"` for
-  one with no label). A list whose items hold a list is `table:"sections"`:
-  each item is a section headed by its first field.
-- A method is its `Sub` and its name, so a group can have `get` and
-  `spec get`. A noun gets a verb under it with `Sub`; a word goes into
-  `command.Actions` only when no CRUD verb says what the command does.
-- If the output type cannot print the output, change the output type first.
-  A method that does a different thing with each value, such as a matrix, is
-  two methods: a list and a get. A tree is a list of the row's own type. No
-  command writes its own output, and the DSL has no way to.
+  is its first field, then a paragraph for each other field (`label:"-"` for one
+  with no label). A list whose items hold a list is `table:"sections"`: each
+  item is a section headed by its first field.
+- A method is its `Sub` and its name, so a group can have `get` and `spec get`.
+  A noun gets a verb under it with `Sub`; a word goes into `command.Actions`
+  only when no CRUD verb says what the command does.
+- If the output type cannot print the output, change the output type first. A
+  method that does a different thing with each value, such as a matrix, is two
+  methods: a list and a get. A tree is a list of the row's own type. No command
+  writes its own output, and the DSL has no way to.
 
 ## Decide first
 
 Ask the user when the request does not tell you. Give your recommendation with
 each question.
 
-| Ask | Answer becomes |
-| --- | --- |
-| Does it call the API? | This skill, or build-an-endpoint or build-a-behavior |
-| Is it a new command, or one that moves? | A move keeps the name, the flags and the output; tell the user each difference |
-| Where does it go in the tree? | Under the root, or under a command with `Under` and a `command.Parent` constant, such as `command.ParentController` |
-| What does it read from the machine? | A field of `Deps` for each: the config, the file system, a clock |
-| What does a person read at a shell? | The tags of the output type, and its shape |
+| Ask                                     | Answer becomes                                                                                                      |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Does it call the API?                   | This skill, or build-an-endpoint or build-a-behavior                                                                |
+| Is it a new command, or one that moves? | A move keeps the name, the flags and the output; tell the user each difference                                      |
+| Where does it go in the tree?           | Under the root, or under a command with `Under` and a `command.Parent` constant, such as `command.ParentController` |
+| What does it read from the machine?     | A field of `Deps` for each: the config, the file system, a clock                                                    |
+| What does a person read at a shell?     | The tags of the output type, and its shape                                                                          |
 
 ## Check it
 
@@ -178,21 +179,22 @@ go test ./internal/cli/... ./cmd/
 mise exec -- just test
 ```
 
-| Failure names | It means |
-| --- | --- |
-| `cli command validate`, or `TestAllPublicTestSuite/TestValidate` in `internal/cli/commands/all` | A rule of the definition. The problem names the rule and ends with its fix |
-| `TestRefusals` | A `.Fails` input does not give a usage error: it breaks no rule, or it breaks a rule of another field |
-| `TestCommandShape` | The last word of a command is not a verb or an action |
-| `go-generate-check` | A `gen/` file is stale: run `go generate ./internal/cli/commands/all` |
-| `cli-docs-gen-check` | A CLI page is stale: run `mise exec -- just cli-docs-generate` |
-| `is not given: add command.Provide` when a command runs | The group's `Deps` has a field, and `cmd/commands.go` does not give it |
-| `command-scaffold-check` | A group that `cli command create` writes no longer passes its tests: change `internal/cli/command/scaffold_files.go`, and run its golden test with `-update` |
-| `the spec has no term for` | A new option of the DSL has no entry in `internal/cli/command/spec.go`. Add one |
+| Failure names                                                                                   | It means                                                                                                                                                     |
+| ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `cli command validate`, or `TestAllPublicTestSuite/TestValidate` in `internal/cli/commands/all` | A rule of the definition. The problem names the rule and ends with its fix                                                                                   |
+| `TestRefusals`                                                                                  | A `.Fails` input does not give a usage error: it breaks no rule, or it breaks a rule of another field                                                        |
+| `TestCommandShape`                                                                              | The last word of a command is not a verb or an action                                                                                                        |
+| `go-generate-check`                                                                             | A `gen/` file is stale: run `go generate ./internal/cli/commands/all`                                                                                        |
+| `cli-docs-gen-check`                                                                            | A CLI page is stale: run `mise exec -- just cli-docs-generate`                                                                                               |
+| `is not given: add command.Provide` when a command runs                                         | The group's `Deps` has a field, and `cmd/commands.go` does not give it                                                                                       |
+| `command-scaffold-check`                                                                        | A group that `cli command create` writes no longer passes its tests: change `internal/cli/command/scaffold_files.go`, and run its golden test with `-update` |
+| `the spec has no term for`                                                                      | A new option of the DSL has no entry in `internal/cli/command/spec.go`. Add one                                                                              |
 
-Never edit a path that `cli command spec get` lists under "Generated, never edited".
-Change the definition and generate. Do not write CLI docs for a local command.
+Never edit a path that `cli command spec get` lists under "Generated, never
+edited". Change the definition and generate. Do not write CLI docs for a local
+command.
 
-When the change touches what the DSLs share, such as the spec and checks
-tables, typed values and `command.KnownTags`, the permissions that the role
-rule reads, `genfile.Writer` or the generated DSL pages, read the build-a-dsl
-skill first: `osapi skill get --name build-a-dsl`.
+When the change touches what the DSLs share, such as the spec and checks tables,
+typed values and `command.KnownTags`, the permissions that the role rule reads,
+`genfile.Writer` or the generated DSL pages, read the build-a-dsl skill first:
+`osapi skill get --name build-a-dsl`.

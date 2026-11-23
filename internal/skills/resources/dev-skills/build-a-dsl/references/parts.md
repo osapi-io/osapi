@@ -65,7 +65,9 @@ typed value goes (osapi-io/osapi#1078).
 
 ## Permissions
 
-The Permission column of [Methods](#methods) gives the permission of each method.
+The Permission column of [Methods](#methods) gives the permission of each
+method.
+
 ## Generation and the scaffold
 
 A generator writes its files through `genfile.Writer`. `Clean`, `Write`, `Go`,
@@ -86,7 +88,9 @@ checkout and runs the tests of what it wrote. `behavior-scaffold-check`,
 Each page of a DSL under `development/dsl/` comes from its `Spec`.
 `cli docs dsl generate` writes them from the list in `dslPages` in
 `cmd/commands.go`, and `cli-docs-gen-check` fails when a page differs from the
-binary. A generated page starts with the `guide.Generated` comment, and the generator removes a page with the comment that it did not write. A hand-written page has no comment, and the generator keeps it.
+binary. A generated page starts with the `guide.Generated` comment, and the
+generator removes a page with the comment that it did not write. A hand-written
+page has no comment, and the generator keeps it.
 
 A skill keeps only judgment: what to ask the person, and which way to select. It
 sends the agent to `spec get` and `validate` for each fact. The skills are in

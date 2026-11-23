@@ -9,13 +9,14 @@ An endpoint is one operation of the controller itself, such as `GET /api/agent`
 or `POST /api/job/{id}/retry`. It runs on the controller, in the request. It has
 no target and no result for each host. A group is one directory,
 `internal/controller/endpoints/<group>/`, plus one import in
-`internal/controller/endpoints/all`. The DSL is in `internal/controller/endpoint`.
+`internal/controller/endpoints/all`. The DSL is in
+`internal/controller/endpoint`.
 
-This skill gives a procedure and decisions. It is not a catalog. The binary tells
-about the DSL:
+This skill gives a procedure and decisions. It is not a catalog. The binary
+tells about the DSL:
 
-- `controller endpoint spec get` tells each part of the DSL, what it does and when
-  to use it, and what the DSL cannot do yet.
+- `controller endpoint spec get` tells each part of the DSL, what it does and
+  when to use it, and what the DSL cannot do yet.
 - `controller endpoint validate --help` tells each rule, with its fix. Each
   failure also ends with its fix.
 - `controller endpoint list` and `controller endpoint get` tell what each group
@@ -27,19 +28,19 @@ the tool is correct.
 The DSL makes the spec, the routes, the decoders and the CLI commands of a
 group. A group's handlers are typed functions. Each controller group is served,
 and its commands are made, from its definition. If the work needs a part that
-`controller endpoint spec get` does not list, stop and say so. That is a platform
-change, and a person decides it. Do not add code around it.
+`controller endpoint spec get` does not list, stop and say so. That is a
+platform change, and a person decides it. Do not add code around it.
 
 The design, with what is built and what comes next, is
 `components/osapi/endpoints.md` in osapi-io/specs. Read it first.
 
 ## Endpoint or behavior
 
-| The operation | It is |
-| --- | --- |
-| Runs on the controller: the registry, the job queue, the audit log, the object store, the trace backend | An endpoint |
-| Changes or reads a host, through a job to the agent | A behavior: use the build-a-behavior skill |
-| Spans hosts, or orders several steps | Neither: an osapi-orchestrator workflow |
+| The operation                                                                                           | It is                                      |
+| ------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| Runs on the controller: the registry, the job queue, the audit log, the object store, the trace backend | An endpoint                                |
+| Changes or reads a host, through a job to the agent                                                     | A behavior: use the build-a-behavior skill |
+| Spans hosts, or orders several steps                                                                    | Neither: an osapi-orchestrator workflow    |
 
 A user of osapi does not add endpoints. They are part of the platform. Thus this
 skill is for a person who changes osapi itself.
@@ -48,22 +49,23 @@ skill is for a person who changes osapi itself.
 
 Ask the code and the binary before you read prose:
 
-| Question | Ask |
-| --- | --- |
-| Each part of the DSL, what it does and when to use it, and what is not built | `go run . controller endpoint spec get` |
+| Question                                                                          | Ask                                                                |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Each part of the DSL, what it does and when to use it, and what is not built      | `go run . controller endpoint spec get`                            |
 | Each service of the controller that a `Deps` can take, and how a test replaces it | `go run . controller endpoint spec get`, under "What a Deps takes" |
-| Each rule a definition must pass, with its fix | `go run . controller endpoint validate --help` |
-| Which groups exist, and their methods | `go run . controller endpoint list` |
-| The routes, permissions and operationIds of a group | `go run . controller endpoint get --name <group>` |
-| The spec that the definition makes | `go run . controller endpoint openapi get --name <group>` |
-| Whether a definition breaks a rule | `go run . controller endpoint validate` |
-| A complete group | `internal/controller/endpoints/agent` |
-| The hand-written spec of a group | `internal/controller/api/<group>/gen/api.yaml` |
-| How two specs are compared | `go doc ./internal/apicontract` |
+| Each rule a definition must pass, with its fix                                    | `go run . controller endpoint validate --help`                     |
+| Which groups exist, and their methods                                             | `go run . controller endpoint list`                                |
+| The routes, permissions and operationIds of a group                               | `go run . controller endpoint get --name <group>`                  |
+| The spec that the definition makes                                                | `go run . controller endpoint openapi get --name <group>`          |
+| Whether a definition breaks a rule                                                | `go run . controller endpoint validate`                            |
+| A complete group                                                                  | `internal/controller/endpoints/agent`                              |
+| The hand-written spec of a group                                                  | `internal/controller/api/<group>/gen/api.yaml`                     |
+| How two specs are compared                                                        | `go doc ./internal/apicontract`                                    |
 
 ## Build a new group
 
-1. Write it: `go run . controller endpoint create --name <group> --description "<one line>"`,
+1. Write it:
+   `go run . controller endpoint create --name <group> --description "<one line>"`,
    then `go generate ./internal/controller/endpoints/all` and
    `mise exec -- just generate`. The group has a list and a get, an empty
    `Deps`, its types and the tests of its methods. It builds, validates and
@@ -74,20 +76,21 @@ Ask the code and the binary before you read prose:
 3. When `Deps` gets its first field, give it in
    `internal/controller/handlers.go`, as `agentDeps` does. While it is empty,
    the controller needs no wiring.
-4. Tag the fields of each output type, so that the command prints what a
-   person needs at a shell: `render`, `label`, `none`, `empty`, `prefix`,
-   `table:"-"`, and a heading with `_ struct{} \`title:"..."\``. A method that
-   answers with no body prints one line, such as `[ok] web-01 drained`; give it
-   `.Says("...")` when the line is a state, such as `draining`.
+4. Tag the fields of each output type, so that the command prints what a person
+   needs at a shell: `render`, `label`, `none`, `empty`, `prefix`, `table:"-"`,
+   and a heading with
+   `_ struct{} \`title:"..."\``. A method that answers with no body prints one line, such as `[ok]
+   web-01
+   drained`; give it `.Says("...")`when the line is a state, such as`draining\`.
 5. A new operation changes the API: run `TestJoinedSpec` with `-update`, and
    keep the diff.
 
 ## Move a hand-written group
 
 Do the groups in the order of the design page. A move is two pull requests: the
-spec, held to the hand-written spec, and then the switch. `controller endpoint
-spec` has each option and tag that the steps name. `internal/controller/endpoints/agent`
-is the example of each step.
+spec, held to the hand-written spec, and then the switch.
+`controller endpoint spec` has each option and tag that the steps name.
+`internal/controller/endpoints/agent` is the example of each step.
 
 The spec:
 
@@ -101,11 +104,11 @@ The spec:
    `Doc`: the full spec fails when two groups define one schema in different
    words.
 3. Write `<group>.go`. Copy `Title` and `Tag` from the hand-written spec. The
-   UI's client files get their names from them. Give each method the
-   operationId of the hand-written spec with `.ID`. Use `.Sub` for a fixed
-   segment and `.Action` for a segment after the key. Map each 400 that the
-   method decides, 404, 409 and 503 with `.Errors`. A status whose body is the
-   method's output, such as a probe's 503, is `.Answers`, not an error.
+   UI's client files get their names from them. Give each method the operationId
+   of the hand-written spec with `.ID`. Use `.Sub` for a fixed segment and
+   `.Action` for a segment after the key. Map each 400 that the method decides,
+   404, 409 and 503 with `.Errors`. A status whose body is the method's output,
+   such as a probe's 503, is `.Answers`, not an error.
 4. Add the import to `internal/controller/endpoints/all/all.go`, and a row to
    `moving` in `internal/controller/endpoints/all/parity_public_test.go`.
 5. Run the checks until they pass.
@@ -115,10 +118,10 @@ The switch:
 1. Write `deps.go`: the `Deps` struct of interfaces that the handlers use, with
    a `mocks/` package. Add `endpoint.Uses[Deps]()`.
 2. Write `methods.go`: one function for each method,
-   `func(ctx, Deps, In) (Out, error)`, with `.Handle(fn)`. Move the logic of
-   the hand-written handler. Answer 404 or 409 with `endpoint.Errorf`, so the
-   message names what the method was called with. A failure of the controller
-   is a plain error, which is a 500.
+   `func(ctx, Deps, In) (Out, error)`, with `.Handle(fn)`. Move the logic of the
+   hand-written handler. Answer 404 or 409 with `endpoint.Errorf`, so the
+   message names what the method was called with. A failure of the controller is
+   a plain error, which is a 500.
 3. Move each case of the hand-written handler tests into
    `methods_public_test.go`, on mocks, or into `http_public_test.go`, through
    the generated routes. Auth, 400 and each status go there.
@@ -130,34 +133,35 @@ The switch:
    without `-update`: the contract of the API does not change. Read the diff of
    the Go SDK and the UI client, which must not change their names.
 
-Each input field has a `validate` tag, such as `validate:"required,min=1,max=255"`.
-A field with no limit is `validate:"omitempty"`. The server answers 400 to a
-value that breaks a rule, and the spec carries the rule and the whole tag.
-`validate` refuses an input field with no tag. A custom rule, such as
-`resource_name`, needs its schema from `rule.Register`, beside its validator in
-`internal/validation`. Without one the spec does not build. The endpoint DSL
-and the behavior DSL use the same rules; `spec` prints them under
-`validate:"..."`.
+Each input field has a `validate` tag, such as
+`validate:"required,min=1,max=255"`. A field with no limit is
+`validate:"omitempty"`. The server answers 400 to a value that breaks a rule,
+and the spec carries the rule and the whole tag. `validate` refuses an input
+field with no tag. A custom rule, such as `resource_name`, needs its schema from
+`rule.Register`, beside its validator in `internal/validation`. Without one the
+spec does not build. The endpoint DSL and the behavior DSL use the same rules;
+`spec` prints them under `validate:"..."`.
 
 An optional field of a write's body, `validate:"omitempty,..."`, is
 `json:"name,omitempty"` too, also inside the type that `in:"body"` names.
-Without it the client sends `""` or `0`, and the field's other rules refuse
-it. The `optional` rule fails such a field; the behavior DSL asks the same
-check of its writes. A list's rules after `dive` are each item's:
-`validate:"max=10,dive,max=255"` is at most 10 items of at most 255
-characters, in the server and in the spec. A field tagged `secret:"true"` is
-write-only in the spec.
+Without it the client sends `""` or `0`, and the field's other rules refuse it.
+The `optional` rule fails such a field; the behavior DSL asks the same check of
+its writes. A list's rules after `dive` are each item's:
+`validate:"max=10,dive,max=255"` is at most 10 items of at most 255 characters,
+in the server and in the spec. A field tagged `secret:"true"` is write-only in
+the spec.
 
-The generated route checks these rules before the handler runs. Do not write
-the check in the handler; declare the rule. Do not call a handler from other
-code: that skips the check, and `TestHandlersRunFromRoutes` fails it.
+The generated route checks these rules before the handler runs. Do not write the
+check in the handler; declare the rule. Do not call a handler from other code:
+that skips the check, and `TestHandlersRunFromRoutes` fails it.
 
-Give each rule of each input field a `.Fails` input that breaks it: the
-method's input, with the other fields valid and one value wrong, such as a name
-of 256 characters for `max=255`. The API refuses each one with 400, and a test
-sends each one through the routes. `validate` names a rule that has none.
-In an endpoint, a required field needs one too, with the field empty. In a behavior it needs none, because the generated tests leave the field out. You
-write the bad value, because a generator cannot know one for a custom rule.
+Give each rule of each input field a `.Fails` input that breaks it: the method's
+input, with the other fields valid and one value wrong, such as a name of 256
+characters for `max=255`. The API refuses each one with 400, and a test sends
+each one through the routes. `validate` names a rule that has none. In an
+endpoint, a required field needs one too, with the field empty. In a behavior it
+needs none, because the generated tests leave the field out. You write the bad
+value, because a generator cannot know one for a custom rule.
 
 The CLI:
 
@@ -165,35 +169,33 @@ The CLI:
    command, `.Example("--flag value")` with its examples, and `.Notes` and
    `.Result` with the `reference.Notes` and `reference.Result` annotations of
    the hand-written command, so its page keeps those sections. Each input field
-   is a flag, named for its json name with `_` as `-`; a field of an
-   `in:"body"` struct is a flag too. Keep the flag of the hand-written command
-   with the `flag` and `short` tags, such as `-T/--target`.
-   A `[]byte` field is a file. In the API it is a part of an `in:"form"`
-   multipart body. In the CLI its flag is the path of a local file, and the
-   command sends the content of that file, such as `file upload --file`.
-   Each command is `<group> <resource> <verb>`, such as `telemetry trace get`:
-   the verb is `list`, `get`, `create`, `update`, `delete`, or an action such
-   as `retry`, never a noun. A verb that the group has as a method already
-   gets `.Use`, such as `facts keys list`. The group's one line is the help
-   of its command, and `CommandLong` adds more. Give each `.Sub` segment a
-   `SubDoc("segment", "...")`, so its command says what it holds. The page of
-   each names the permission that covers its commands. Delete the hand-written
-   parent in `cmd/`.
+   is a flag, named for its json name with `_` as `-`; a field of an `in:"body"`
+   struct is a flag too. Keep the flag of the hand-written command with the
+   `flag` and `short` tags, such as `-T/--target`. A `[]byte` field is a file.
+   In the API it is a part of an `in:"form"` multipart body. In the CLI its flag
+   is the path of a local file, and the command sends the content of that file,
+   such as `file upload --file`. Each command is `<group> <resource> <verb>`,
+   such as `telemetry trace get`: the verb is `list`, `get`, `create`, `update`,
+   `delete`, or an action such as `retry`, never a noun. A verb that the group
+   has as a method already gets `.Use`, such as `facts keys list`. The group's
+   one line is the help of its command, and `CommandLong` adds more. Give each
+   `.Sub` segment a `SubDoc("segment", "...")`, so its command says what it
+   holds. The page of each names the permission that covers its commands. Delete
+   the hand-written parent in `cmd/`.
 2. Tag the fields of each output type until the command prints as the
-   hand-written command did. Delete the output code of the hand-written
-   command. If no tag gives the shape, change the output type: the CLI, the UI
-   and the SDK then get the same values. A tree is a list of the row's own
-   type, such as the sub-components of a component. No command writes its own
-   output. `--json` prints the API's answer, not a shape of its own.
+   hand-written command did. Delete the output code of the hand-written command.
+   If no tag gives the shape, change the output type: the CLI, the UI and the
+   SDK then get the same values. A tree is a list of the row's own type, such as
+   the sub-components of a component. No command writes its own output. `--json`
+   prints the API's answer, not a shape of its own.
 3. Run `go generate ./internal/controller/endpoints/all`. It writes
    `gen/cli.go`.
 4. Before you delete the hand-written commands, save their help:
    `go run . help client <group> <command> --json`. Compare it with the help of
    the generated commands: the same flags, types and required flags. Tell the
-   user each difference.
-   Run `mise exec -- just cli-docs-generate` and read the diff of each
-   command's page under `docs/docs/sidebar/usage/cli/client/<group>/`: no
-   section may go.
+   user each difference. Run `mise exec -- just cli-docs-generate` and read the
+   diff of each command's page under
+   `docs/docs/sidebar/usage/cli/client/<group>/`: no section may go.
 5. Delete `cmd/client_<group>_<method>.go` for each method. A command that is
    not a method of the group, such as `agent key`, stays.
 6. Run `mise exec -- just cli-docs-generate`, and run each command against a
@@ -208,26 +210,27 @@ is that status only.
 
 When a difference is a bug in the hand-written spec or its handler, do not copy
 the bug into the definition. Tell the user, and file an issue. If the user
-agrees, the row accepts the line, with the issue in its reason. Drain and undrain
-were the first case (osapi#788).
+agrees, the row accepts the line, with the issue in its reason. Drain and
+undrain were the first case (osapi#788).
 
 ## Decide first
 
 Ask the user when the request does not tell you. Give your recommendation with
 each question.
 
-| Ask | Answer becomes |
-| --- | --- |
-| Is it work on the controller, or on a host? | This skill, or build-a-behavior |
-| Is it a new operation, or one that moves? | A new one has no hand-written spec and no parity row; a move keeps every name |
-| Which permission does it need? | The default `<group>:read` or `<group>:write`, or `.Permission`, such as `agent:read` for facts |
-| Does a probe call it without a token? | `.Public()`, for the health probes only |
+| Ask                                                                | Answer becomes                                                                                                                                                                                                                                                                        |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Is it work on the controller, or on a host?                        | This skill, or build-a-behavior                                                                                                                                                                                                                                                       |
+| Is it a new operation, or one that moves?                          | A new one has no hand-written spec and no parity row; a move keeps every name                                                                                                                                                                                                         |
+| Which permission does it need?                                     | The default `<group>:read` or `<group>:write`, or `.Permission`, such as `agent:read` for facts                                                                                                                                                                                       |
+| Does a probe call it without a token?                              | `.Public()`, for the health probes only                                                                                                                                                                                                                                               |
 | Which errors can it return, and what does each mean to the caller? | `.Errors`: 400 (`Invalid`) for a request it cannot do, 404 when it is not there, 409 for a state that does not allow it, 503 when a backend is not set. A failure of the controller is a 500, never a 409. A status with the output as its body, such as a probe's 503, is `.Answers` |
-| Does a success answer 201 or 204? | `.Status`: 201 when it creates a resource, with `.Location` naming the output field of its ID; 204 when it has nothing to return, such as a delete or an action. Never 202: each method answers when its work is done |
-| Is it a list? | Its output is `items` and `total_items` |
+| Does a success answer 201 or 204?                                  | `.Status`: 201 when it creates a resource, with `.Location` naming the output field of its ID; 204 when it has nothing to return, such as a delete or an action. Never 202: each method answers when its work is done                                                                 |
+| Is it a list?                                                      | Its output is `items` and `total_items`                                                                                                                                                                                                                                               |
 
 The conventions of the API are in `components/osapi/api.md` in osapi-io/specs.
-`TestConventions` in `internal/apicontract` fails on an operation that breaks one.
+`TestConventions` in `internal/apicontract` fails on an operation that breaks
+one.
 
 ## Check it
 
@@ -239,29 +242,29 @@ go test ./internal/controller/endpoint/... ./internal/controller/endpoints/... .
 mise exec -- just test
 ```
 
-| Failure names | It means |
-| --- | --- |
-| `controller endpoint validate`, or `TestAllPublicTestSuite/TestValidate` | A rule of the definition. The problem names the rule and ends with its fix. `validate --help` lists each rule |
-| `go-generate-check` | A `gen/` file is stale: run `go generate ./internal/controller/endpoints/all` |
-| `schema <name>: <group> and <group> both define it` from `just generate` | Two groups define one schema in different words: copy the description with `Doc` and each `example` from the other group |
-| `endpoint: no ... given to the server` at startup | The controller does not give the group's `Deps`: add it in `internal/controller/handlers.go` |
-| `is both a hand-written command and the <group> group's` at startup | Delete the hand-written command of that method |
-| `endpoint-scaffold-check` | A group that `controller endpoint create` writes no longer passes its tests: change the scaffold in `internal/controller/endpoint/scaffold_files.go`, and run its golden test with `-update` |
-| `TestEndpointParity` | A line of the contract differs. `-` is only in the hand-written spec, `+` only in the generated spec. Change the definition until they agree, or see the bug rule above |
-| `TestJoinedSpec` | The full spec changed. If you changed the API on purpose, write the contract again: `go test ./internal/apicontract -run TestContractPublicTestSuite/TestJoinedSpec -update`, and keep the diff. If you did not, find what changed it |
-| `the spec has no term for` | A new option of the DSL has no entry in `internal/controller/endpoint/spec.go`. Add one |
+| Failure names                                                            | It means                                                                                                                                                                                                                              |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `controller endpoint validate`, or `TestAllPublicTestSuite/TestValidate` | A rule of the definition. The problem names the rule and ends with its fix. `validate --help` lists each rule                                                                                                                         |
+| `go-generate-check`                                                      | A `gen/` file is stale: run `go generate ./internal/controller/endpoints/all`                                                                                                                                                         |
+| `schema <name>: <group> and <group> both define it` from `just generate` | Two groups define one schema in different words: copy the description with `Doc` and each `example` from the other group                                                                                                              |
+| `endpoint: no ... given to the server` at startup                        | The controller does not give the group's `Deps`: add it in `internal/controller/handlers.go`                                                                                                                                          |
+| `is both a hand-written command and the <group> group's` at startup      | Delete the hand-written command of that method                                                                                                                                                                                        |
+| `endpoint-scaffold-check`                                                | A group that `controller endpoint create` writes no longer passes its tests: change the scaffold in `internal/controller/endpoint/scaffold_files.go`, and run its golden test with `-update`                                          |
+| `TestEndpointParity`                                                     | A line of the contract differs. `-` is only in the hand-written spec, `+` only in the generated spec. Change the definition until they agree, or see the bug rule above                                                               |
+| `TestJoinedSpec`                                                         | The full spec changed. If you changed the API on purpose, write the contract again: `go test ./internal/apicontract -run TestContractPublicTestSuite/TestJoinedSpec -update`, and keep the diff. If you did not, find what changed it |
+| `the spec has no term for`                                               | A new option of the DSL has no entry in `internal/controller/endpoint/spec.go`. Add one                                                                                                                                               |
 
-Never edit a path that `controller endpoint spec get` lists under "Generated, never
-edited". Change the definition and generate. Do not write CLI docs for an
+Never edit a path that `controller endpoint spec get` lists under "Generated,
+never edited". Change the definition and generate. Do not write CLI docs for an
 endpoint.
 
 ## What the DSL does not do
 
-`controller endpoint spec get` lists each part of the DSL. If a request needs a part
-that is not in the list, say so and stop. Do not write a handler for a group,
-and do not wire a group into the controller by hand.
+`controller endpoint spec get` lists each part of the DSL. If a request needs a
+part that is not in the list, say so and stop. Do not write a handler for a
+group, and do not wire a group into the controller by hand.
 
-When the change touches what the DSLs share, such as the spec and checks
-tables, typed values and `command.KnownTags`, the permissions that the role
-rule reads, `genfile.Writer` or the generated DSL pages, read the build-a-dsl
-skill first: `osapi skill get --name build-a-dsl`.
+When the change touches what the DSLs share, such as the spec and checks tables,
+typed values and `command.KnownTags`, the permissions that the role rule reads,
+`genfile.Writer` or the generated DSL pages, read the build-a-dsl skill first:
+`osapi skill get --name build-a-dsl`.

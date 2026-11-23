@@ -1,6 +1,6 @@
 ---
 name: build-a-dsl
-description: >
+description: >-
   Add a DSL to osapi, or change what the three DSLs share: the behavior DSL
   (internal/behavior), the endpoint DSL (internal/controller/endpoint) and the
   command DSL (internal/cli/command). Use when asked to add a fourth DSL, or
