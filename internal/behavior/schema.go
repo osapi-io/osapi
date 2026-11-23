@@ -58,9 +58,18 @@ type Schema struct {
 }
 
 // SchemaFor builds the JSON Schema for t from its struct tags: json names
-// the field, doc describes it, and validate gives its constraints.
+// the field, doc describes it, and validate gives its constraints. A struct
+// that holds itself, such as a step whose steps are steps, is expanded one
+// time: inside itself it is an object that names its type.
 func SchemaFor(
 	t reflect.Type,
+) (*Schema, error) {
+	return schemaFor(t, map[reflect.Type]bool{})
+}
+
+func schemaFor(
+	t reflect.Type,
+	open map[reflect.Type]bool,
 ) (*Schema, error) {
 	for t.Kind() == reflect.Pointer {
 		t = t.Elem()
@@ -77,21 +86,27 @@ func SchemaFor(
 	case reflect.Float32, reflect.Float64:
 		return &Schema{Type: "number"}, nil
 	case reflect.Slice, reflect.Array:
-		items, err := SchemaFor(t.Elem())
+		items, err := schemaFor(t.Elem(), open)
 		if err != nil {
 			return nil, err
 		}
 
 		return &Schema{Type: "array", Items: items}, nil
 	case reflect.Map:
-		values, err := SchemaFor(t.Elem())
+		values, err := schemaFor(t.Elem(), open)
 		if err != nil {
 			return nil, err
 		}
 
 		return &Schema{Type: "object", AdditionalProperties: values}, nil
 	case reflect.Struct:
-		return structSchema(t)
+		if open[t] {
+			return &Schema{Type: "object", Description: "a " + t.Name() + ", as above"}, nil
+		}
+		open[t] = true
+		defer delete(open, t)
+
+		return structSchema(t, open)
 	default:
 		return nil, fmt.Errorf("type %s: kind %s has no JSON Schema", t, t.Kind())
 	}
@@ -99,6 +114,7 @@ func SchemaFor(
 
 func structSchema(
 	t reflect.Type,
+	open map[reflect.Type]bool,
 ) (*Schema, error) {
 	s := &Schema{Type: "object", Properties: map[string]*Schema{}}
 
@@ -113,11 +129,13 @@ func structSchema(
 			continue
 		}
 
-		fs, err := SchemaFor(f.Type)
+		fs, err := schemaFor(f.Type, open)
 		if err != nil {
 			return nil, fmt.Errorf("%s.%s: %w", t.Name(), f.Name, err)
 		}
-		fs.Description = f.Tag.Get("doc")
+		if doc := f.Tag.Get("doc"); doc != "" {
+			fs.Description = doc
+		}
 		if Secret(f) {
 			fs.Format = "password"
 			fs.WriteOnly = true

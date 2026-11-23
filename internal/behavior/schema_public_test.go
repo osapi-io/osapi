@@ -88,6 +88,13 @@ func (s *SchemaPublicTestSuite) SetupSuite() {
 	rule.Register("test_format", rule.Format("hostname"))
 }
 
+// treeNode holds itself, as a step's steps are steps.
+type treeNode struct {
+	Name     string     `json:"name"`
+	Children []treeNode `json:"children"`
+	Parent   *treeNode  `json:"parent"`
+}
+
 func (s *SchemaPublicTestSuite) TestSchemaFor() {
 	tests := []struct {
 		name         string
@@ -135,6 +142,18 @@ func (s *SchemaPublicTestSuite) TestSchemaFor() {
 				assert.Equal(s.T(), "string", p["items"].Items.Properties["name"].Type)
 				assert.NotContains(s.T(), p, "Skipped")
 				assert.NotContains(s.T(), p, "unexport")
+			},
+		},
+		{
+			name: "when a struct holds itself",
+			t:    reflect.TypeFor[treeNode](),
+			validateFunc: func(sch *behavior.Schema) {
+				kids := sch.Properties["children"]
+				assert.Equal(s.T(), "array", kids.Type)
+				assert.Equal(s.T(), "object", kids.Items.Type)
+				assert.Equal(s.T(), "a treeNode, as above", kids.Items.Description)
+				assert.Nil(s.T(), kids.Items.Properties, "the type is expanded one time")
+				assert.Equal(s.T(), "a treeNode, as above", sch.Properties["parent"].Description)
 			},
 		},
 		{
