@@ -75,6 +75,7 @@ func (s *ScopePublicTestSuite) TestInScope() {
 		target  string
 		scope   []string
 		listErr error
+		noList  bool
 		want    bool
 	}{
 		{name: "when the scope is empty", target: "_all", want: true},
@@ -132,15 +133,23 @@ func (s *ScopePublicTestSuite) TestInScope() {
 			name:   "when the registry cannot be read",
 			target: "web-01", scope: []string{"group:web"}, listErr: errors.New("nats down"),
 		},
+		{
+			name:   "when no registry is registered",
+			target: "web-01", scope: []string{"group:web"}, noList: true,
+		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			validation.RegisterTargetValidator(
-				func(_ context.Context) ([]validation.AgentTarget, error) {
-					return agents, tt.listErr
-				},
-			)
+			var lister validation.AgentLister = func(
+				_ context.Context,
+			) ([]validation.AgentTarget, error) {
+				return agents, tt.listErr
+			}
+			if tt.noList {
+				lister = nil
+			}
+			validation.RegisterTargetValidator(lister)
 
 			s.Equal(tt.want, validation.InScope(context.Background(), tt.target, tt.scope))
 		})
