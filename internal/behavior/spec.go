@@ -193,7 +193,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindMethod,
 			Name: `Action("name", fn)`,
-			Does: "A write named for what it does, such as restart: POST on the method's path with the name after it, /service/{name}/restart, and <group>:write. Named with one of the CLI's actions. Out has Changed bool.",
+			Does: "A write named for what it does, such as restart: POST on the method's path with the name after it, /service/{name}/restart, and <group>:execute, which the operator role gets and automation does not. Named with one of the CLI's actions. Out has Changed bool.",
 			When: "For a change that create, update and delete do not say, such as start, stop, restart, enable, signal or reboot.",
 		},
 
@@ -314,10 +314,10 @@ var Spec = guide.Spec{
 			Kind: KindRefine,
 			Name: ".AdminOnly() on a method",
 			Does: "Makes the permission of the method's verb, such as <name>:write, one that only the " +
-				"admin role grants. With no mark, admin and write get <name>:read and <name>:write, and " +
-				"read gets <name>:read. Each method with the same verb must agree. osapi token roles " +
-				"get --name write shows what a role gets.",
-			When: "For a write that is a trust decision, which an operator with the write role must not make.",
+				"admin role grants. With no mark, admin gets each permission; operator each read and each execute permission, and automation each read and each write permission, that is not admin only; read each read that is not admin only; auditor and observer get their lists. An action's permission is " +
+				"<name>:execute. Each method with the same verb must agree. osapi token roles get " +
+				"--name automation shows what a role gets.",
+			When: "For a write that is a trust decision or reaches root, which automation must not make, such as an account or a cron entry.",
 		},
 		{
 			Kind: KindRefine,

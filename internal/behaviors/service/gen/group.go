@@ -322,7 +322,7 @@ var Group = endpoint.Define(
 		Handle(HandleStart).
 		ID("PostNodeServiceStart").
 		Describe("Start a service that osapi deployed").
-		Permission("service:write").
+		Permission("service:execute").
 		Returns("Each target host's result, with whether it changed.").
 		Action("start").
 		Explain("Starts the service. A service that runs does not change. A service that osapi did not deploy is not found.").
@@ -333,7 +333,7 @@ var Group = endpoint.Define(
 		Handle(HandleStop).
 		ID("PostNodeServiceStop").
 		Describe("Stop a service that osapi deployed").
-		Permission("service:write").
+		Permission("service:execute").
 		Returns("Each target host's result, with whether it changed.").
 		Action("stop").
 		Explain("Stops the service. A service that does not run does not change. A service that osapi did not deploy is not found.").
@@ -344,7 +344,7 @@ var Group = endpoint.Define(
 		Handle(HandleRestart).
 		ID("PostNodeServiceRestart").
 		Describe("Restart a service that osapi deployed").
-		Permission("service:write").
+		Permission("service:execute").
 		Returns("Each target host's result, with whether it changed.").
 		Action("restart").
 		Explain("Restarts the service. It always changes the host. A service that osapi did not deploy is not found.").
@@ -355,7 +355,7 @@ var Group = endpoint.Define(
 		Handle(HandleEnable).
 		ID("PostNodeServiceEnable").
 		Describe("Make a service that osapi deployed start at boot").
-		Permission("service:write").
+		Permission("service:execute").
 		Returns("Each target host's result, with whether it changed.").
 		Action("enable").
 		Explain("Enables the service. A service that is enabled does not change, and nor does a unit with no [Install] section, which systemd calls static: it cannot start at boot. A service that osapi did not deploy is not found.").
@@ -367,7 +367,7 @@ var Group = endpoint.Define(
 		Handle(HandleDisable).
 		ID("PostNodeServiceDisable").
 		Describe("Make a service that osapi deployed not start at boot").
-		Permission("service:write").
+		Permission("service:execute").
 		Returns("Each target host's result, with whether it changed.").
 		Action("disable").
 		Explain("Disables the service. A service that is not enabled does not change. A service that osapi did not deploy is not found.").

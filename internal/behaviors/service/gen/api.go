@@ -46,31 +46,31 @@ func Routes(
 		{
 			Method:     http.MethodPost,
 			Path:       "/api/node/:hostname/service/:name/start",
-			Permission: "service:write",
+			Permission: "service:execute",
 			Handler:    server.Serve(s, Group, "start", HandleStart, decodeStart),
 		},
 		{
 			Method:     http.MethodPost,
 			Path:       "/api/node/:hostname/service/:name/stop",
-			Permission: "service:write",
+			Permission: "service:execute",
 			Handler:    server.Serve(s, Group, "stop", HandleStop, decodeStop),
 		},
 		{
 			Method:     http.MethodPost,
 			Path:       "/api/node/:hostname/service/:name/restart",
-			Permission: "service:write",
+			Permission: "service:execute",
 			Handler:    server.Serve(s, Group, "restart", HandleRestart, decodeRestart),
 		},
 		{
 			Method:     http.MethodPost,
 			Path:       "/api/node/:hostname/service/:name/enable",
-			Permission: "service:write",
+			Permission: "service:execute",
 			Handler:    server.Serve(s, Group, "enable", HandleEnable, decodeEnable),
 		},
 		{
 			Method:     http.MethodPost,
 			Path:       "/api/node/:hostname/service/:name/disable",
-			Permission: "service:write",
+			Permission: "service:execute",
 			Handler:    server.Serve(s, Group, "disable", HandleDisable, decodeDisable),
 		},
 	}

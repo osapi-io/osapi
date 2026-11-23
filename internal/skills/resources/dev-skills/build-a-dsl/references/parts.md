@@ -72,10 +72,19 @@ API routes gives them when it registers. Then the built-in roles get its
 permissions by the rule:
 
 - `admin` gets each permission.
-- `write` gets each `read` and `write` permission that is not admin only.
-- `read` gets each `read` permission that is not admin only.
+- `operator` gets each `read` and each `execute` permission that is not admin
+  only: it acts, such as a restart, a signal or a reboot, but changes no
+  configuration.
+- `automation` gets each `read` and each `write` permission that is not admin
+  only: it changes the configuration, but runs no action.
+- `read` gets each `read` permission that is not admin only. Logs, files and
+  process arguments can hold secrets, and `read` has them.
+- `auditor` gets `audit:read`, `trace:read`, `job:read` and `health:read`.
+- `observer` gets `health:read`, `status:read` and `agent:read`, for a
+  dashboard or a monitor.
 
-A permission with the verb `execute` or `shell` is admin only. A method that the
+A permission with the verb `shell` is admin only, and so are the hand-written
+domains' `command:execute`, `docker:execute`, `user:write` and `schedule:write`. A method that the
 DSL marks `AdminOnly()` is admin only too. Give a new DSL that serves the API an
 `AdminOnly()` option. `authtoken.Check()` fails a permission that a method names
 but nothing declares, and methods that disagree on `AdminOnly`.

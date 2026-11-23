@@ -58,7 +58,7 @@ func declaredPermissions() []dsl.Declared {
 		}
 		for _, m := range b.Methods {
 			out = append(out, dsl.Declared{
-				Permission: b.Permission(m.Verb),
+				Permission: b.Permission(m.PermissionVerb()),
 				AdminOnly:  m.Admin,
 				Where:      "behavior " + b.Name + " " + m.Name,
 			})
@@ -77,7 +77,10 @@ func servedOperations() []dsl.Operation {
 			continue
 		}
 		for _, m := range b.Methods {
-			out = append(out, dsl.Operation{ID: b.OperationID(m), Permission: b.Permission(m.Verb)})
+			out = append(
+				out,
+				dsl.Operation{ID: b.OperationID(m), Permission: b.Permission(m.PermissionVerb())},
+			)
 		}
 	}
 

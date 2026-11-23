@@ -99,12 +99,12 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 		},
 		{
 			name: "when the role is a custom role of the config, it is signed",
-			in:   token.GenerateInput{Roles: []string{"auditor"}, Subject: "ops"},
+			in:   token.GenerateInput{Roles: []string{"security"}, Subject: "ops"},
 			setup: func() {
 				s.config.EXPECT().CustomRoles().
-					Return(authtoken.CustomRoles{"auditor": {"audit:read"}}, nil)
+					Return(authtoken.CustomRoles{"security": {"audit:read"}}, nil)
 				s.config.EXPECT().SigningKey().Return(key)
-				s.tokens.EXPECT().Generate(key, []string{"auditor"}, "ops", nil).
+				s.tokens.EXPECT().Generate(key, []string{"security"}, "ops", nil).
 					Return("signed", nil)
 			},
 			validateFunc: func(got token.GenerateOutput, err error) {
@@ -156,8 +156,8 @@ func (s *MethodsPublicTestSuite) TestRoles() {
 			name: "when the config has custom roles, they follow the built-in ones by name",
 			setup: func() {
 				s.config.EXPECT().CustomRoles().Return(authtoken.CustomRoles{
-					"ops":     {"node:read"},
-					"auditor": {"audit:read"},
+					"ops":      {"node:read"},
+					"security": {"audit:read"},
 				}, nil)
 			},
 			validateFunc: func(got token.RolesOutput, err error) {
@@ -167,12 +167,13 @@ func (s *MethodsPublicTestSuite) TestRoles() {
 					names = append(names, r.Name+"/"+r.Source)
 				}
 				s.Equal([]string{
-					"admin/built-in", "write/built-in", "read/built-in",
-					"auditor/config", "ops/config",
+					"admin/built-in", "operator/built-in", "automation/built-in",
+					"auditor/built-in", "read/built-in", "observer/built-in",
+					"ops/config", "security/config",
 				}, names)
-				s.Equal([]string{"node:read"}, got.Roles[4].Permissions)
+				s.Equal([]string{"node:read"}, got.Roles[6].Permissions)
 				perms, _ := authtoken.RolePermissions("read")
-				s.Equal(authtoken.Strings(perms), got.Roles[2].Permissions)
+				s.Equal(authtoken.Strings(perms), got.Roles[4].Permissions)
 			},
 		},
 		{

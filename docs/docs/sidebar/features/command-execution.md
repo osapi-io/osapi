@@ -87,8 +87,8 @@ shell access:
 - `command:shell` guards the `shell` endpoint (`/bin/sh -c`, with pipes,
   redirects, and expansion).
 
-Only the built-in `admin` role includes either permission by default. The
-`write` and `read` roles do not.
+Only the built-in `admin` role includes either permission by default. No other
+built-in role does.
 
 > **Upgrade note.** A custom role or token that has only `command:execute`
 > cannot use the `shell` endpoint now. It also needs `command:shell`. Add

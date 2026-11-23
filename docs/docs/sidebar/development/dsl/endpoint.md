@@ -278,10 +278,11 @@ trace:read for telemetry.
 ### `.AdminOnly()`
 
 Makes the method's permission one that only the admin role grants. By the rule,
-admin gets each permission, write each read and write permission, and read each
-read permission; an execute or shell permission is admin only with no mark. Each
-method with the same permission must agree. osapi token roles get --name write
-shows what a role gets.
+admin gets each permission; operator each read and each execute permission, and
+automation each read and each write permission, that is not admin only; read
+each read that is not admin only; auditor and observer get their lists; a shell
+permission is admin only with no mark. Each method with the same permission must
+agree. osapi token roles get --name automation shows what a role gets.
 
 Use: For a trust decision or a record of who did what, such as admission:write,
 agent:write or audit:read.

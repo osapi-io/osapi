@@ -152,7 +152,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:write
+            - network:execute
       summary: Ping an address from the host
       tags:
         - network_connectivity_operations

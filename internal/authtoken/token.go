@@ -22,22 +22,7 @@ package authtoken
 
 import (
 	"log/slog"
-	"sort"
 )
-
-// RoleHierarchy defines the relationship between roles and their associated scopes.
-// Each role is mapped to a list of permissible scopes. This hierarchy is used to
-// determine whether a user with a given role has access to specific actions.
-//
-// Example:
-//   - "admin" includes "read", "write", and "admin" scopes.
-//   - "write" includes "read" and "write" scopes.
-//   - "read" includes only the "read" scope.
-var RoleHierarchy = map[string][]string{
-	"admin": {"read", "write", "admin"},
-	"write": {"read", "write"},
-	"read":  {"read"},
-}
 
 // New factory to create a new instance.
 func New(
@@ -46,17 +31,4 @@ func New(
 	return &Token{
 		logger: logger,
 	}
-}
-
-// GenerateAllowedRoles extracts the keys from RoleHierarchy to create a list of allowed roles.
-func GenerateAllowedRoles(
-	roleHierarchy map[string][]string,
-) []string {
-	roles := make([]string, 0, len(roleHierarchy))
-	for role := range roleHierarchy {
-		roles = append(roles, role)
-	}
-	sort.Strings(roles)
-
-	return roles
 }

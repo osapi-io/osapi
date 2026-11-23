@@ -195,7 +195,7 @@ func MethodGet(
 		out.HTTPMethod, out.Route, out.Permission = m.HTTPMethod(), b.Path(
 			m,
 		), string(
-			b.Permission(m.Verb),
+			b.Permission(m.PermissionVerb()),
 		)
 	}
 	if b.CLI {

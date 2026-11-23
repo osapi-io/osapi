@@ -266,7 +266,7 @@ None. The method takes no input; its command needs only --target.
 | Detail      | Starts the service. A service that runs does not change. A service that osapi did not deploy is not found. |
 | HTTP        | POST                                                                                                       |
 | Route       | /api/node/&#123;hostname&#125;/service/&#123;name&#125;/start                                              |
-| Permission  | service:write                                                                                              |
+| Permission  | service:execute                                                                                            |
 | Command     | [osapi client node service start](../../../usage/cli/client/node/service/start.md)                         |
 | Input type  | StartInput                                                                                                 |
 | Output type | Result                                                                                                     |
@@ -300,7 +300,7 @@ None. The method takes no input; its command needs only --target.
 | Detail      | Stops the service. A service that does not run does not change. A service that osapi did not deploy is not found. |
 | HTTP        | POST                                                                                                              |
 | Route       | /api/node/&#123;hostname&#125;/service/&#123;name&#125;/stop                                                      |
-| Permission  | service:write                                                                                                     |
+| Permission  | service:execute                                                                                                   |
 | Command     | [osapi client node service stop](../../../usage/cli/client/node/service/stop.md)                                  |
 | Input type  | StopInput                                                                                                         |
 | Output type | Result                                                                                                            |
@@ -334,7 +334,7 @@ None. The method takes no input; its command needs only --target.
 | Detail      | Restarts the service. It always changes the host. A service that osapi did not deploy is not found. |
 | HTTP        | POST                                                                                                |
 | Route       | /api/node/&#123;hostname&#125;/service/&#123;name&#125;/restart                                     |
-| Permission  | service:write                                                                                       |
+| Permission  | service:execute                                                                                     |
 | Command     | [osapi client node service restart](../../../usage/cli/client/node/service/restart.md)              |
 | Input type  | RestartInput                                                                                        |
 | Output type | Result                                                                                              |
@@ -368,7 +368,7 @@ None. The method takes no input; its command needs only --target.
 | Detail      | Enables the service. A service that is enabled does not change, and nor does a unit with no \[Install] section, which systemd calls static: it cannot start at boot. A service that osapi did not deploy is not found. |
 | HTTP        | POST                                                                                                                                                                                                                   |
 | Route       | /api/node/&#123;hostname&#125;/service/&#123;name&#125;/enable                                                                                                                                                         |
-| Permission  | service:write                                                                                                                                                                                                          |
+| Permission  | service:execute                                                                                                                                                                                                        |
 | Command     | [osapi client node service enable](../../../usage/cli/client/node/service/enable.md)                                                                                                                                   |
 | Input type  | EnableInput                                                                                                                                                                                                            |
 | Output type | Result                                                                                                                                                                                                                 |
@@ -403,7 +403,7 @@ None. The method takes no input; its command needs only --target.
 | Detail      | Disables the service. A service that is not enabled does not change. A service that osapi did not deploy is not found. |
 | HTTP        | POST                                                                                                                   |
 | Route       | /api/node/&#123;hostname&#125;/service/&#123;name&#125;/disable                                                        |
-| Permission  | service:write                                                                                                          |
+| Permission  | service:execute                                                                                                        |
 | Command     | [osapi client node service disable](../../../usage/cli/client/node/service/disable.md)                                 |
 | Input type  | DisableInput                                                                                                           |
 | Output type | Result                                                                                                                 |
