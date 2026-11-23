@@ -73,8 +73,8 @@ type Client struct {
 	// DNS provides DNS configuration query and update operations.
 	DNS *DNSService
 
-	// Ping provides network ping operations.
-	Ping *PingService
+	// Connectivity pings an address from the target hosts.
+	Connectivity *ConnectivityService
 
 	// Command provides command execution operations (exec, shell).
 	Command *CommandService
@@ -223,7 +223,7 @@ func New(
 	c.Uptime = &UptimeService{client: httpClient}
 	c.OS = &OSService{client: httpClient}
 	c.DNS = &DNSService{client: httpClient}
-	c.Ping = &PingService{client: httpClient}
+	c.Connectivity = &ConnectivityService{client: httpClient}
 	c.Command = &CommandService{client: httpClient}
 	c.FileDeploy = &FileDeployService{client: httpClient}
 	c.Job = &JobService{client: httpClient}

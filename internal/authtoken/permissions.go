@@ -74,8 +74,6 @@ func PermissionsOf(
 // come from their definitions.
 var builtinPermissions = []Permission{
 	"node:read",
-	"network:read",
-	"network:write",
 	"file:read",
 	"file:write",
 	"health:read",

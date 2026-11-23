@@ -53,7 +53,6 @@ import {
   postNodeContainerDockerPull,
   deleteNodeContainerDockerImage,
 } from "@/sdk/gen/docker-management-api-docker-image/docker-management-api-docker-image";
-import { postNodeNetworkPing } from "@/sdk/gen/network-management-api-network-operations/network-management-api-network-operations";
 import {
   getNodeNtp,
   postNodeNtp,
@@ -127,7 +126,6 @@ import {
   Terminal,
   Lock,
   Server,
-  Radio,
   Cog,
   Package,
   SlidersHorizontal,
@@ -175,7 +173,6 @@ const blockIcons: Record<
   "dns-get": Server,
   "interface-list": Network,
   "route-list": GitBranch,
-  ping: Radio,
   // Security
   "user-list": Users,
   "group-list": UsersRound,
@@ -475,11 +472,6 @@ export function Configure() {
           case "command-shell":
             result = await postNodeCommandShell(t, {
               command: block.data.command as string,
-            });
-            break;
-          case "ping":
-            result = await postNodeNetworkPing(t, {
-              address: block.data.address as string,
             });
             break;
           case "ntp-get":
@@ -881,18 +873,6 @@ export function Configure() {
             field="command"
             label="Shell Command"
             placeholder="echo hello | tee /tmp/out.txt"
-          />
-        );
-      case "ping":
-        return (
-          <SingleInputBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            field="address"
-            label="Host Address"
-            placeholder="1.1.1.1 or @fact.custom.gateway"
-            facts
           />
         );
       case "ntp-set":

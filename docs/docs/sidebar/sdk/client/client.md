@@ -53,12 +53,12 @@ resp, err := client.Hostname.Get(ctx, "_any")
 
 ### Networking
 
-| Service                              | Description                        |
-| ------------------------------------ | ---------------------------------- |
-| [DNS](networking/dns.md)             | DNS configuration query and update |
-| [Ping](networking/ping.md)           | Network ping                       |
-| [Interface](networking/interface.md) | Network interface configuration    |
-| [Route](networking/route.md)         | Static route configuration         |
+| Service                                    | Description                        |
+| ------------------------------------------ | ---------------------------------- |
+| [DNS](networking/dns.md)                   | DNS configuration query and update |
+| [Connectivity](networking/connectivity.md) | Ping an address from a host        |
+| [Interface](networking/interface.md)       | Network interface configuration    |
+| [Route](networking/route.md)               | Static route configuration         |
 
 ### Security
 

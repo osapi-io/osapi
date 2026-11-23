@@ -601,6 +601,30 @@ func (e MemoryEntryStatus) Valid() bool {
 	}
 }
 
+// Defines values for NetworkConnectivityPingResultStatus.
+const (
+	NetworkConnectivityPingResultStatusFailed  NetworkConnectivityPingResultStatus = "failed"
+	NetworkConnectivityPingResultStatusOk      NetworkConnectivityPingResultStatus = "ok"
+	NetworkConnectivityPingResultStatusSkipped NetworkConnectivityPingResultStatus = "skipped"
+	NetworkConnectivityPingResultStatusTimeout NetworkConnectivityPingResultStatus = "timeout"
+)
+
+// Valid indicates whether the value is a known member of the NetworkConnectivityPingResultStatus enum.
+func (e NetworkConnectivityPingResultStatus) Valid() bool {
+	switch e {
+	case NetworkConnectivityPingResultStatusFailed:
+		return true
+	case NetworkConnectivityPingResultStatusOk:
+		return true
+	case NetworkConnectivityPingResultStatusSkipped:
+		return true
+	case NetworkConnectivityPingResultStatusTimeout:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for NetworkDnsEntryStatus.
 const (
 	NetworkDnsEntryStatusFailed  NetworkDnsEntryStatus = "failed"
@@ -901,30 +925,6 @@ func (e PackageResultStatus) Valid() bool {
 	case PackageResultStatusSkipped:
 		return true
 	case PackageResultStatusTimeout:
-		return true
-	default:
-		return false
-	}
-}
-
-// Defines values for PingResponseStatus.
-const (
-	PingResponseStatusFailed  PingResponseStatus = "failed"
-	PingResponseStatusOk      PingResponseStatus = "ok"
-	PingResponseStatusSkipped PingResponseStatus = "skipped"
-	PingResponseStatusTimeout PingResponseStatus = "timeout"
-)
-
-// Valid indicates whether the value is a known member of the PingResponseStatus enum.
-func (e PingResponseStatus) Valid() bool {
-	switch e {
-	case PingResponseStatusFailed:
-		return true
-	case PingResponseStatusOk:
-		return true
-	case PingResponseStatusSkipped:
-		return true
-	case PingResponseStatusTimeout:
 		return true
 	default:
 		return false
@@ -3123,6 +3123,55 @@ type NATSInfo struct {
 	Version string `json:"version"`
 }
 
+// NetworkConnectivityPingRequest defines model for NetworkConnectivityPingRequest.
+type NetworkConnectivityPingRequest struct {
+	// Address The IPv4 or IPv6 address to ping, or an @fact. reference that the agent resolves
+	Address string `json:"address" validate:"required,ip_or_fact"`
+}
+
+// NetworkConnectivityPingResponse defines model for NetworkConnectivityPingResponse.
+type NetworkConnectivityPingResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID             `json:"job_id,omitempty" validate:"uuid"`
+	Results []NetworkConnectivityPingResult `json:"results"`
+}
+
+// NetworkConnectivityPingResult defines model for NetworkConnectivityPingResult.
+type NetworkConnectivityPingResult struct {
+	// AvgRtt Average round-trip time in milliseconds, with two decimals. Absent when no reply came back.
+	AvgRtt *string `json:"avg_rtt,omitempty"`
+
+	// Changed Always false: a ping changes nothing on the host
+	Changed *bool `json:"changed,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Hostname Hostname of the agent that produced this result.
+	Hostname string `json:"hostname"`
+
+	// MaxRtt Maximum round-trip time in milliseconds, with two decimals. Absent when no reply came back.
+	MaxRtt *string `json:"max_rtt,omitempty"`
+
+	// MinRtt Minimum round-trip time in milliseconds, with two decimals. Absent when no reply came back.
+	MinRtt *string `json:"min_rtt,omitempty"`
+
+	// PacketLoss Percentage of packet loss
+	PacketLoss *float64 `json:"packet_loss,omitempty"`
+
+	// PacketsReceived Number of packets received
+	PacketsReceived *int `json:"packets_received,omitempty"`
+
+	// PacketsSent Number of packets sent
+	PacketsSent *int `json:"packets_sent,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status NetworkConnectivityPingResultStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
+}
+
+// NetworkConnectivityPingResultStatus The status of the operation for this host.
+type NetworkConnectivityPingResultStatus string
+
 // NetworkDnsDeleteResponse defines model for NetworkDnsDeleteResponse.
 type NetworkDnsDeleteResponse struct {
 	// JobId The job ID used to process this request.
@@ -3707,49 +3756,6 @@ type PackageResult struct {
 
 // PackageResultStatus The status of the operation for this host.
 type PackageResultStatus string
-
-// PingCollectionResponse defines model for PingCollectionResponse.
-type PingCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []PingResponse      `json:"results"`
-}
-
-// PingResponse defines model for PingResponse.
-type PingResponse struct {
-	// AvgRtt Average round-trip time in milliseconds, with two decimals. Absent when no reply came back.
-	AvgRtt *string `json:"avg_rtt,omitempty"`
-
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname The hostname of the agent that executed the ping.
-	Hostname string `json:"hostname"`
-
-	// MaxRtt Maximum round-trip time in milliseconds, with two decimals. Absent when no reply came back.
-	MaxRtt *string `json:"max_rtt,omitempty"`
-
-	// MinRtt Minimum round-trip time in milliseconds, with two decimals. Absent when no reply came back.
-	MinRtt *string `json:"min_rtt,omitempty"`
-
-	// PacketLoss Percentage of packet loss.
-	PacketLoss *float64 `json:"packet_loss,omitempty"`
-
-	// PacketsReceived Number of packets received.
-	PacketsReceived *int `json:"packets_received,omitempty"`
-
-	// PacketsSent Number of packets sent.
-	PacketsSent *int `json:"packets_sent,omitempty"`
-
-	// Status The status of the operation for this host.
-	Status PingResponseStatus `json:"status"`
-}
-
-// PingResponseStatus The status of the operation for this host.
-type PingResponseStatus string
 
 // PowerRebootResponse defines model for PowerRebootResponse.
 type PowerRebootResponse struct {
@@ -5079,12 +5085,6 @@ type GetNodeLogEntryParams struct {
 // GetNodeLogEntryParamsPriority defines parameters for GetNodeLogEntry.
 type GetNodeLogEntryParamsPriority string
 
-// PostNodeNetworkPingJSONBody defines parameters for PostNodeNetworkPing.
-type PostNodeNetworkPingJSONBody struct {
-	// Address The IP address of the server to ping. Supports both IPv4 and IPv6. Also accepts @fact. references that are resolved agent-side.
-	Address string `json:"address" validate:"required,ip_or_fact"`
-}
-
 // GetNodeSysctlParams defines parameters for GetNodeSysctl.
 type GetNodeSysctlParams struct {
 	// Prefix Only this parameter and the ones under it, such as net.ipv4
@@ -5151,6 +5151,9 @@ type PutNodeGroupJSONRequestBody = GroupUpdateRequest
 // PutNodeHostnameJSONRequestBody defines body for PutNodeHostname for application/json ContentType.
 type PutNodeHostnameJSONRequestBody = HostnameUpdateRequest
 
+// PostNodeNetworkConnectivityPingJSONRequestBody defines body for PostNodeNetworkConnectivityPing for application/json ContentType.
+type PostNodeNetworkConnectivityPingJSONRequestBody = NetworkConnectivityPingRequest
+
 // PutNodeNetworkDnsJSONRequestBody defines body for PutNodeNetworkDns for application/json ContentType.
 type PutNodeNetworkDnsJSONRequestBody = NetworkDnsUpdateRequest
 
@@ -5168,9 +5171,6 @@ type PostNodeNetworkInterfaceRouteJSONRequestBody = NetworkInterfaceRouteCreateR
 
 // PutNodeNetworkInterfaceRouteJSONRequestBody defines body for PutNodeNetworkInterfaceRoute for application/json ContentType.
 type PutNodeNetworkInterfaceRouteJSONRequestBody = NetworkInterfaceRouteUpdateRequest
-
-// PostNodeNetworkPingJSONRequestBody defines body for PostNodeNetworkPing for application/json ContentType.
-type PostNodeNetworkPingJSONRequestBody PostNodeNetworkPingJSONBody
 
 // PostNodeNtpJSONRequestBody defines body for PostNodeNtp for application/json ContentType.
 type PostNodeNtpJSONRequestBody = NtpCreateRequest
@@ -5508,6 +5508,11 @@ type ClientInterface interface {
 	// GetNodeMemory request
 	GetNodeMemory(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// PostNodeNetworkConnectivityPingWithBody request with any body
+	PostNodeNetworkConnectivityPingWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostNodeNetworkConnectivityPing(ctx context.Context, hostname Hostname, body PostNodeNetworkConnectivityPingJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// DeleteNodeNetworkDns request
 	DeleteNodeNetworkDns(ctx context.Context, hostname Hostname, interfaceName NetworkDnsInterfaceName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -5555,11 +5560,6 @@ type ClientInterface interface {
 	PutNodeNetworkInterfaceRouteWithBody(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PutNodeNetworkInterfaceRoute(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, body PutNodeNetworkInterfaceRouteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PostNodeNetworkPingWithBody request with any body
-	PostNodeNetworkPingWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostNodeNetworkPing(ctx context.Context, hostname Hostname, body PostNodeNetworkPingJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteNodeNtp request
 	DeleteNodeNtp(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -6658,6 +6658,30 @@ func (c *Client) GetNodeMemory(ctx context.Context, hostname Hostname, reqEditor
 	return c.Client.Do(req)
 }
 
+func (c *Client) PostNodeNetworkConnectivityPingWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeNetworkConnectivityPingRequestWithBody(c.Server, hostname, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeNetworkConnectivityPing(ctx context.Context, hostname Hostname, body PostNodeNetworkConnectivityPingJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeNetworkConnectivityPingRequest(c.Server, hostname, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) DeleteNodeNetworkDns(ctx context.Context, hostname Hostname, interfaceName NetworkDnsInterfaceName, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDeleteNodeNetworkDnsRequest(c.Server, hostname, interfaceName)
 	if err != nil {
@@ -6864,30 +6888,6 @@ func (c *Client) PutNodeNetworkInterfaceRouteWithBody(ctx context.Context, hostn
 
 func (c *Client) PutNodeNetworkInterfaceRoute(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, body PutNodeNetworkInterfaceRouteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutNodeNetworkInterfaceRouteRequest(c.Server, hostname, name, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostNodeNetworkPingWithBody(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeNetworkPingRequestWithBody(c.Server, hostname, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostNodeNetworkPing(ctx context.Context, hostname Hostname, body PostNodeNetworkPingJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeNetworkPingRequest(c.Server, hostname, body)
 	if err != nil {
 		return nil, err
 	}
@@ -10270,6 +10270,53 @@ func NewGetNodeMemoryRequest(server string, hostname Hostname) (*http.Request, e
 	return req, nil
 }
 
+// NewPostNodeNetworkConnectivityPingRequest calls the generic PostNodeNetworkConnectivityPing builder with application/json body
+func NewPostNodeNetworkConnectivityPingRequest(server string, hostname Hostname, body PostNodeNetworkConnectivityPingJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostNodeNetworkConnectivityPingRequestWithBody(server, hostname, "application/json", bodyReader)
+}
+
+// NewPostNodeNetworkConnectivityPingRequestWithBody generates requests for PostNodeNetworkConnectivityPing with any type of body
+func NewPostNodeNetworkConnectivityPingRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/node/%s/network/connectivity/ping", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewDeleteNodeNetworkDnsRequest generates requests for DeleteNodeNetworkDns
 func NewDeleteNodeNetworkDnsRequest(server string, hostname Hostname, interfaceName NetworkDnsInterfaceName) (*http.Request, error) {
 	var err error
@@ -10824,53 +10871,6 @@ func NewPutNodeNetworkInterfaceRouteRequestWithBody(server string, hostname Host
 	}
 
 	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewPostNodeNetworkPingRequest calls the generic PostNodeNetworkPing builder with application/json body
-func NewPostNodeNetworkPingRequest(server string, hostname Hostname, body PostNodeNetworkPingJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostNodeNetworkPingRequestWithBody(server, hostname, "application/json", bodyReader)
-}
-
-// NewPostNodeNetworkPingRequestWithBody generates requests for PostNodeNetworkPing with any type of body
-func NewPostNodeNetworkPingRequestWithBody(server string, hostname Hostname, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/node/%s/network/ping", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
@@ -13292,6 +13292,11 @@ type ClientWithResponsesInterface interface {
 	// GetNodeMemoryWithResponse request
 	GetNodeMemoryWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeMemoryResponse, error)
 
+	// PostNodeNetworkConnectivityPingWithBodyWithResponse request with any body
+	PostNodeNetworkConnectivityPingWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeNetworkConnectivityPingResponse, error)
+
+	PostNodeNetworkConnectivityPingWithResponse(ctx context.Context, hostname Hostname, body PostNodeNetworkConnectivityPingJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeNetworkConnectivityPingResponse, error)
+
 	// DeleteNodeNetworkDnsWithResponse request
 	DeleteNodeNetworkDnsWithResponse(ctx context.Context, hostname Hostname, interfaceName NetworkDnsInterfaceName, reqEditors ...RequestEditorFn) (*DeleteNodeNetworkDnsResponse, error)
 
@@ -13339,11 +13344,6 @@ type ClientWithResponsesInterface interface {
 	PutNodeNetworkInterfaceRouteWithBodyWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeNetworkInterfaceRouteResponse, error)
 
 	PutNodeNetworkInterfaceRouteWithResponse(ctx context.Context, hostname Hostname, name NetworkInterfaceRouteName, body PutNodeNetworkInterfaceRouteJSONRequestBody, reqEditors ...RequestEditorFn) (*PutNodeNetworkInterfaceRouteResponse, error)
-
-	// PostNodeNetworkPingWithBodyWithResponse request with any body
-	PostNodeNetworkPingWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeNetworkPingResponse, error)
-
-	PostNodeNetworkPingWithResponse(ctx context.Context, hostname Hostname, body PostNodeNetworkPingJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeNetworkPingResponse, error)
 
 	// DeleteNodeNtpWithResponse request
 	DeleteNodeNtpWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*DeleteNodeNtpResponse, error)
@@ -15613,6 +15613,42 @@ func (r GetNodeMemoryResponse) ContentType() string {
 	return ""
 }
 
+type PostNodeNetworkConnectivityPingResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *NetworkConnectivityPingResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostNodeNetworkConnectivityPingResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostNodeNetworkConnectivityPingResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostNodeNetworkConnectivityPingResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type DeleteNodeNetworkDnsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -16039,40 +16075,6 @@ func (r PutNodeNetworkInterfaceRouteResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r PutNodeNetworkInterfaceRouteResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type PostNodeNetworkPingResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *PingCollectionResponse
-	JSON400      *ErrorResponse
-	JSON401      *ErrorResponse
-	JSON403      *ErrorResponse
-	JSON500      *ErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r PostNodeNetworkPingResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostNodeNetworkPingResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r PostNodeNetworkPingResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -18514,6 +18516,23 @@ func (c *ClientWithResponses) GetNodeMemoryWithResponse(ctx context.Context, hos
 	return ParseGetNodeMemoryResponse(rsp)
 }
 
+// PostNodeNetworkConnectivityPingWithBodyWithResponse request with arbitrary body returning *PostNodeNetworkConnectivityPingResponse
+func (c *ClientWithResponses) PostNodeNetworkConnectivityPingWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeNetworkConnectivityPingResponse, error) {
+	rsp, err := c.PostNodeNetworkConnectivityPingWithBody(ctx, hostname, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeNetworkConnectivityPingResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostNodeNetworkConnectivityPingWithResponse(ctx context.Context, hostname Hostname, body PostNodeNetworkConnectivityPingJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeNetworkConnectivityPingResponse, error) {
+	rsp, err := c.PostNodeNetworkConnectivityPing(ctx, hostname, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeNetworkConnectivityPingResponse(rsp)
+}
+
 // DeleteNodeNetworkDnsWithResponse request returning *DeleteNodeNetworkDnsResponse
 func (c *ClientWithResponses) DeleteNodeNetworkDnsWithResponse(ctx context.Context, hostname Hostname, interfaceName NetworkDnsInterfaceName, reqEditors ...RequestEditorFn) (*DeleteNodeNetworkDnsResponse, error) {
 	rsp, err := c.DeleteNodeNetworkDns(ctx, hostname, interfaceName, reqEditors...)
@@ -18668,23 +18687,6 @@ func (c *ClientWithResponses) PutNodeNetworkInterfaceRouteWithResponse(ctx conte
 		return nil, err
 	}
 	return ParsePutNodeNetworkInterfaceRouteResponse(rsp)
-}
-
-// PostNodeNetworkPingWithBodyWithResponse request with arbitrary body returning *PostNodeNetworkPingResponse
-func (c *ClientWithResponses) PostNodeNetworkPingWithBodyWithResponse(ctx context.Context, hostname Hostname, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeNetworkPingResponse, error) {
-	rsp, err := c.PostNodeNetworkPingWithBody(ctx, hostname, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostNodeNetworkPingResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostNodeNetworkPingWithResponse(ctx context.Context, hostname Hostname, body PostNodeNetworkPingJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeNetworkPingResponse, error) {
-	rsp, err := c.PostNodeNetworkPing(ctx, hostname, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostNodeNetworkPingResponse(rsp)
 }
 
 // DeleteNodeNtpWithResponse request returning *DeleteNodeNtpResponse
@@ -22814,6 +22816,74 @@ func ParseGetNodeMemoryResponse(rsp *http.Response) (*GetNodeMemoryResponse, err
 	return response, nil
 }
 
+// ParsePostNodeNetworkConnectivityPingResponse parses an HTTP response from a PostNodeNetworkConnectivityPingWithResponse call
+func ParsePostNodeNetworkConnectivityPingResponse(rsp *http.Response) (*PostNodeNetworkConnectivityPingResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostNodeNetworkConnectivityPingResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NetworkConnectivityPingResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseDeleteNodeNetworkDnsResponse parses an HTTP response from a DeleteNodeNetworkDnsWithResponse call
 func ParseDeleteNodeNetworkDnsResponse(rsp *http.Response) (*DeleteNodeNetworkDnsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -23617,60 +23687,6 @@ func ParsePutNodeNetworkInterfaceRouteResponse(rsp *http.Response) (*PutNodeNetw
 			return nil, err
 		}
 		response.JSON409 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePostNodeNetworkPingResponse parses an HTTP response from a PostNodeNetworkPingWithResponse call
-func ParsePostNodeNetworkPingResponse(rsp *http.Response) (*PostNodeNetworkPingResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostNodeNetworkPingResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest PingCollectionResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON403 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

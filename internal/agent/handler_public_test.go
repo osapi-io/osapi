@@ -48,8 +48,6 @@ import (
 	"github.com/osapi-io/osapi/internal/provider"
 	commandMocks "github.com/osapi-io/osapi/internal/provider/command/mocks"
 	fileMocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
-	"github.com/osapi-io/osapi/internal/provider/network/ping"
-	pingMocks "github.com/osapi-io/osapi/internal/provider/network/ping/mocks"
 	diskMocks "github.com/osapi-io/osapi/internal/provider/node/disk/mocks"
 	hostMocks "github.com/osapi-io/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/osapi-io/osapi/internal/provider/node/load/mocks"
@@ -101,14 +99,6 @@ func (s *HandlerPublicTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockJobClient = mocks.NewMockJobClient(s.mockCtrl)
 
-	// Use plain ping mock with appropriate expectations
-	pingMock := pingMocks.NewPlainMockProvider(s.mockCtrl)
-	pingMock.EXPECT().Do(gomock.Any(), gomock.Any()).Return(&ping.Result{
-		PacketsSent:     3,
-		PacketsReceived: 3,
-		PacketLoss:      0,
-	}, nil).AnyTimes()
-
 	s.testAgent = newTestAgent(newTestAgentParams{
 		jobClient:       s.mockJobClient,
 		streamName:      "test-stream",
@@ -116,7 +106,6 @@ func (s *HandlerPublicTestSuite) SetupTest() {
 		diskProvider:    diskMocks.NewDefaultMockProvider(s.mockCtrl),
 		memoryProvider:  memoryMocks.NewDefaultMockProvider(s.mockCtrl),
 		loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
-		pingProvider:    pingMock,
 		commandProvider: commandMocks.NewDefaultMockProvider(s.mockCtrl),
 		fileProvider:    fileMocks.NewDefaultMockProvider(s.mockCtrl),
 		processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),

@@ -33,7 +33,6 @@ import (
 	"github.com/osapi-io/osapi/internal/exec"
 	dockerProv "github.com/osapi-io/osapi/internal/provider/container/docker"
 	fileProv "github.com/osapi-io/osapi/internal/provider/file"
-	"github.com/osapi-io/osapi/internal/provider/network/ping"
 	certProv "github.com/osapi-io/osapi/internal/provider/node/certificate"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
@@ -86,17 +85,6 @@ func (e hostEnv) memory() memory.Provider {
 
 func (e hostEnv) load() load.Provider {
 	return load.New()
-}
-
-func (e hostEnv) ping() ping.Provider {
-	switch e.platform {
-	case "debian":
-		return ping.NewDebianProvider()
-	case "darwin":
-		return ping.NewDarwinProvider()
-	default:
-		return ping.NewLinuxProvider()
-	}
 }
 
 // docker returns the Docker provider, or nil if Docker does not answer. The

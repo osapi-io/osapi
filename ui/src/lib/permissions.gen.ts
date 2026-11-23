@@ -3,8 +3,6 @@
 
 export type Permission =
   | "node:read"
-  | "network:read"
-  | "network:write"
   | "file:read"
   | "file:write"
   | "health:read"
@@ -36,6 +34,8 @@ export type Permission =
   | "os:read"
   | "package:read"
   | "package:write"
+  | "network:read"
+  | "network:write"
   | "service:read"
   | "service:write"
   | "status:read"
@@ -56,8 +56,6 @@ export type Permission =
 
 export const ALL_PERMISSIONS: Permission[] = [
   "node:read",
-  "network:read",
-  "network:write",
   "file:read",
   "file:write",
   "health:read",
@@ -89,6 +87,8 @@ export const ALL_PERMISSIONS: Permission[] = [
   "os:read",
   "package:read",
   "package:write",
+  "network:read",
+  "network:write",
   "service:read",
   "service:write",
   "status:read",
@@ -112,8 +112,6 @@ export const ALL_PERMISSIONS: Permission[] = [
 export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
   admin: [
     "node:read",
-    "network:read",
-    "network:write",
     "file:read",
     "file:write",
     "health:read",
@@ -145,6 +143,8 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "os:read",
     "package:read",
     "package:write",
+    "network:read",
+    "network:write",
     "service:read",
     "service:write",
     "status:read",
@@ -165,8 +165,6 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
   ],
   write: [
     "node:read",
-    "network:read",
-    "network:write",
     "file:read",
     "file:write",
     "health:read",
@@ -193,6 +191,8 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "os:read",
     "package:read",
     "package:write",
+    "network:read",
+    "network:write",
     "service:read",
     "service:write",
     "status:read",
@@ -210,7 +210,6 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
   ],
   read: [
     "node:read",
-    "network:read",
     "file:read",
     "health:read",
     "trace:read",
@@ -228,6 +227,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "memory:read",
     "os:read",
     "package:read",
+    "network:read",
     "service:read",
     "status:read",
     "sysctl:read",

@@ -308,7 +308,7 @@ func skipWrite(
 }
 
 // skipWriteOp skips a mutating test unless the global OSAPI_INTEGRATION_WRITES=1
-// or the operation-specific override is set (e.g., OSAPI_INTEGRATION_WRITE_PING=1).
+// or the operation-specific override is set (e.g., OSAPI_INTEGRATION_WRITE_HOSTNAME_UPDATE=1).
 func skipWriteOp(
 	t *testing.T,
 	op string,

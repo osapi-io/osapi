@@ -3,6 +3,7 @@ export * from './agent-management-api-agent-operations/agent-management-api-agen
 export * from './audit-log-api-audit/audit-log-api-audit';
 export * from './certificate-management-api-certificate-operations/certificate-management-api-certificate-operations';
 export * from './command-execution-api-command-operations/command-execution-api-command-operations';
+export * from './connectivity-api-network-connectivity-operations/connectivity-api-network-connectivity-operations';
 export * from './controller-api-controller/controller-api-controller';
 export * from './disk-api-disk-operations/disk-api-disk-operations';
 export * from './dns-api-network-dns-operations/dns-api-network-dns-operations';
@@ -20,7 +21,6 @@ export * from './job-management-api-job-operations/job-management-api-job-operat
 export * from './load-api-load-operations/load-api-load-operations';
 export * from './memory-api-memory-operations/memory-api-memory-operations';
 export * from './nats-api-nats/nats-api-nats';
-export * from './network-management-api-network-operations/network-management-api-network-operations';
 export * from './node-file-operations-api-node-file-operations/node-file-operations-api-node-file-operations';
 export * from './ntp-management-api-ntp-operations/ntp-management-api-ntp-operations';
 export * from './os-api-os-operations/os-api-os-operations';

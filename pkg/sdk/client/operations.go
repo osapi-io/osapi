@@ -40,9 +40,7 @@ type JobOperation = string
 const ()
 
 // Network operations.
-const (
-	OpNetworkPingDo JobOperation = "network.ping.do"
-)
+const ()
 
 // Command operations — execute arbitrary commands on agents.
 const (

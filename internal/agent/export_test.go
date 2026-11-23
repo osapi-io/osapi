@@ -58,7 +58,6 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/command"
 	dockerProv "github.com/osapi-io/osapi/internal/provider/container/docker"
 	fileProv "github.com/osapi-io/osapi/internal/provider/file"
-	"github.com/osapi-io/osapi/internal/provider/network/ping"
 	diskProv "github.com/osapi-io/osapi/internal/provider/node/disk"
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
@@ -594,22 +593,6 @@ func ExportGetLoadProvider(
 	return a.loadProvider
 }
 
-// ExportGetPingProvider returns the first ping.Provider found in the registry
-// for testing.
-func ExportGetPingProvider(
-	a *Agent,
-) ping.Provider {
-	if a.registry == nil {
-		return nil
-	}
-	for _, p := range a.registry.AllProviders() {
-		if v, ok := p.(ping.Provider); ok {
-			return v
-		}
-	}
-	return nil
-}
-
 // ExportGetCommandProvider returns the first command.Provider found in the
 // registry for testing.
 func ExportGetCommandProvider(
@@ -833,7 +816,6 @@ func ExportProviders(
 		"disk":        e.disk(),
 		"memory":      e.memory(),
 		"load":        e.load(),
-		"ping":        e.ping(),
 		"cron":        e.cron(),
 		"ntp":         e.ntp(),
 		"power":       e.power(),

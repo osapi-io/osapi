@@ -22,7 +22,6 @@ package agent_test
 
 import (
 	"encoding/json"
-	"errors"
 	"log/slog"
 	"testing"
 
@@ -36,8 +35,6 @@ import (
 	"github.com/osapi-io/osapi/internal/job/mocks"
 	commandMocks "github.com/osapi-io/osapi/internal/provider/command/mocks"
 	fileMocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
-	"github.com/osapi-io/osapi/internal/provider/network/ping"
-	pingMocks "github.com/osapi-io/osapi/internal/provider/network/ping/mocks"
 	diskMocks "github.com/osapi-io/osapi/internal/provider/node/disk/mocks"
 	hostMocks "github.com/osapi-io/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/osapi-io/osapi/internal/provider/node/load/mocks"
@@ -75,20 +72,6 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 	memMock := memoryMocks.NewDefaultMockProvider(s.mockCtrl)
 	loadMock := loadMocks.NewDefaultMockProvider(s.mockCtrl)
 
-	// Use plain ping mock to avoid hardcoded address expectations
-	pingMock := pingMocks.NewPlainMockProvider(s.mockCtrl)
-	// Set up expectations for addresses used in tests
-	pingMock.EXPECT().Do(gomock.Any(), "127.0.0.1").Return(&ping.Result{
-		PacketsSent:     3,
-		PacketsReceived: 3,
-		PacketLoss:      0,
-	}, nil).AnyTimes()
-	pingMock.EXPECT().Do(gomock.Any(), "8.8.8.8").Return(&ping.Result{
-		PacketsSent:     3,
-		PacketsReceived: 3,
-		PacketLoss:      0,
-	}, nil).AnyTimes()
-
 	commandMock := commandMocks.NewDefaultMockProvider(s.mockCtrl)
 	fMock := fileMocks.NewDefaultMockProvider(s.mockCtrl)
 
@@ -102,7 +85,6 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 		diskProvider:    diskMock,
 		memoryProvider:  memMock,
 		loadProvider:    loadMock,
-		pingProvider:    pingMock,
 		commandProvider: commandMock,
 		fileProvider:    fMock,
 		processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
@@ -119,24 +101,6 @@ func (s *ProcessorPublicTestSuite) TestProcessJobOperation() {
 		jobRequest   job.Request
 		validateFunc func(json.RawMessage, error)
 	}{
-		{
-			name: "successful network ping operation",
-			jobRequest: job.Request{
-				Type:      job.TypeQuery,
-				Category:  "network",
-				Operation: "ping.do",
-				Data:      json.RawMessage(`{"address": "8.8.8.8"}`),
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Equal(false, response["changed"])
-			},
-		},
 		{
 			name: "successful command exec operation",
 			jobRequest: job.Request{
@@ -253,151 +217,11 @@ func (s *ProcessorPublicTestSuite) TestProcessJobOperation() {
 				s.Nil(result)
 			},
 		},
-		{
-			name: "unsupported network operation",
-			jobRequest: job.Request{
-				Type:      job.TypeQuery,
-				Category:  "network",
-				Operation: "unsupported.get",
-				Data:      json.RawMessage(`{}`),
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.Error(err)
-				s.Contains(err.Error(), "unsupported network operation: unsupported.get")
-				s.Nil(result)
-			},
-		},
-		{
-			name: "network ping missing address",
-			jobRequest: job.Request{
-				Type:      job.TypeQuery,
-				Category:  "network",
-				Operation: "ping.do",
-				Data:      json.RawMessage(`{}`),
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.Error(err)
-				s.Contains(err.Error(), "missing ping address")
-				s.Nil(result)
-			},
-		},
-		{
-			name: "network ping invalid data format",
-			jobRequest: job.Request{
-				Type:      job.TypeQuery,
-				Category:  "network",
-				Operation: "ping.do",
-				Data:      json.RawMessage(`invalid json`),
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.Error(err)
-				s.Contains(err.Error(), "failed to parse ping data")
-				s.Nil(result)
-			},
-		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			tt.validateFunc(agent.ExportProcessJobOperation(s.testAgent, tt.jobRequest))
-		})
-	}
-}
-
-func (s *ProcessorPublicTestSuite) TestNetworkOperations() {
-	tests := []struct {
-		name      string
-		operation string
-		// jobType defaults to a query.
-		jobType job.Type
-		data    string
-		// createAgent builds an agent with the providers a row needs;
-		// nil uses the suite's agent.
-		createAgent  func() *agent.Agent
-		validateFunc func(json.RawMessage, error)
-	}{
-		{
-			name:      "ping with valid address",
-			operation: "ping.do",
-			data:      `{"address": "127.0.0.1"}`,
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Equal(false, response["changed"])
-			},
-		},
-		{
-			name:      "ping without address",
-			operation: "ping.execute",
-			data:      `{}`,
-			validateFunc: func(_ json.RawMessage, err error) {
-				s.Error(err)
-				s.Contains(err.Error(), "missing ping address")
-			},
-		},
-		{
-			name:      "unsupported network operation",
-			operation: "unknown.get",
-			data:      `{}`,
-			validateFunc: func(_ json.RawMessage, err error) {
-				s.Error(err)
-				s.Contains(err.Error(), "unsupported network operation")
-			},
-		},
-		{
-			name:      "ping provider error",
-			operation: "ping.do",
-			jobType:   job.TypeQuery,
-			data:      `{"address": "8.8.8.8"}`,
-			createAgent: func() *agent.Agent {
-				pingMock := pingMocks.NewPlainMockProvider(s.mockCtrl)
-				pingMock.EXPECT().
-					Do(gomock.Any(), "8.8.8.8").
-					Return(nil, errors.New("ping timeout"))
-				return newTestAgent(newTestAgentParams{
-					appFs:           memfs.New(),
-					appConfig:       config.Config{},
-					jobClient:       s.mockJobClient,
-					hostProvider:    hostMocks.NewPlainMockProvider(s.mockCtrl),
-					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memoryProvider:  memoryMocks.NewPlainMockProvider(s.mockCtrl),
-					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
-					pingProvider:    pingMock,
-					commandProvider: commandMocks.NewPlainMockProvider(s.mockCtrl),
-				})
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.Error(err)
-				s.Contains(err.Error(), "ping failed")
-				s.Nil(result)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			a := s.testAgent
-			if tt.createAgent != nil {
-				a = tt.createAgent()
-			}
-
-			jobType := tt.jobType
-			if jobType == "" {
-				jobType = job.TypeQuery
-			}
-
-			request := job.Request{
-				Type:      jobType,
-				Category:  "network",
-				Operation: tt.operation,
-				Data:      json.RawMessage(tt.data),
-			}
-
-			tt.validateFunc(agent.ExportProcessNetworkOperation(a, request))
 		})
 	}
 }
@@ -432,13 +256,6 @@ func (s *ProcessorPublicTestSuite) TestProviderFactoryMethods() {
 		{
 			name:        "getLoadProvider",
 			getProvider: func() interface{} { return agent.ExportGetLoadProvider(s.testAgent) },
-			validateFunc: func(provider interface{}) {
-				s.NotNil(provider)
-			},
-		},
-		{
-			name:        "getPingProvider",
-			getProvider: func() interface{} { return agent.ExportGetPingProvider(s.testAgent) },
 			validateFunc: func(provider interface{}) {
 				s.NotNil(provider)
 			},
