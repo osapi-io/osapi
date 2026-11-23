@@ -34,7 +34,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				Path:   "/api/node/server1/user/osapitest",
 				Body:   `{"name":"osapitest","shell":"/bin/bash"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.update",
@@ -54,7 +54,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				Path:   "/api/node/_all/user/osapitest",
 				Body:   `{"name":"osapitest","shell":"/bin/bash"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"user.update",
@@ -76,7 +76,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				Path:   "/api/node/server1/user/osapitest",
 				Body:   `{"name":"osapitest","shell":"/bin/bash"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.update",
@@ -96,7 +96,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				Path:   "/api/node/_all/user/osapitest",
 				Body:   `{"name":"osapitest","shell":"/bin/bash"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"user.update",
@@ -118,7 +118,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				Path:   "/api/node/server1/user/osapitest",
 				Body:   `{"name":"osapitest","home":"/home/osapitest2","groups":["root"],"lock":"locked"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.update",
@@ -140,7 +140,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				Path:   "/api/node/_all/user/osapitest",
 				Body:   `{"name":"osapitest","home":"/home/osapitest2","groups":["root"],"lock":"locked"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"user.update",
@@ -164,7 +164,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				Path:   "/api/node/server1/user/osapitest",
 				Body:   `{"name":"osapitest","lock":"unlocked"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.update",
@@ -184,7 +184,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				Path:   "/api/node/_all/user/osapitest",
 				Body:   `{"name":"osapitest","lock":"unlocked"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"user.update",
@@ -206,7 +206,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				Path:   "/api/node/server1/user/osapitest",
 				Body:   `{"name":"osapitest","shell":"/bin/bash"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.update",
@@ -226,7 +226,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				Path:   "/api/node/server1/user/osapitest",
 				Body:   `{"name":"osapitest","shell":"/bin/bash"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.update",
@@ -246,7 +246,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				Path:   "/api/node/server1/user/osapitest",
 				Body:   `{"name":"osapitest","shell":"/bin/bash"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.update",
@@ -266,7 +266,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				Path:   "/api/node/server1/user/osapitest",
 				Body:   `{"name":"osapitest","shell":"/bin/bash"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.update",
@@ -284,7 +284,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				Path:   "/api/node/_all/user/osapitest",
 				Body:   `{"name":"osapitest","shell":"/bin/bash"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"user.update",
@@ -302,7 +302,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				Path:   "/api/node/server1/user/osapitest",
 				Body:   `{"name":"osapitest","shell":"/bin/bash"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.update",
@@ -327,7 +327,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 				Path:   "/api/node/nowhere/user/osapitest",
 				Body:   `{"name":"osapitest","shell":"/bin/bash"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -337,7 +337,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 				Path:   "/api/node//user/osapitest",
 				Body:   `{"name":"osapitest","shell":"/bin/bash"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -347,7 +347,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 				Path:   "/api/node/server1/user/osapitest",
 				Body:   `{`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -357,7 +357,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 				Path:   "/api/node/server1/user/osapitest",
 				Body:   `{"shell":[]}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -367,7 +367,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 				Path:   "/api/node/server1/user/-r",
 				Body:   `{"name":"-r"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -377,7 +377,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 				Path:   "/api/node/server1/user/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 				Body:   `{"name":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -387,7 +387,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 				Path:   "/api/node/server1/user/alice",
 				Body:   `{"name":"alice","shell":"bash"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -397,7 +397,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 				Path:   "/api/node/server1/user/alice",
 				Body:   `{"name":"alice","shell":"/bin/a\nb"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -407,7 +407,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 				Path:   "/api/node/server1/user/alice",
 				Body:   `{"name":"alice","home":"home"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -417,7 +417,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 				Path:   "/api/node/server1/user/alice",
 				Body:   `{"name":"alice","home":"/home/a\nb"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -427,7 +427,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 				Path:   "/api/node/server1/user/alice",
 				Body:   `{"name":"alice","groups":["-r"]}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -437,7 +437,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 				Path:   "/api/node/server1/user/alice",
 				Body:   `{"name":"alice","groups":["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -447,7 +447,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 				Path:   "/api/node/server1/user/alice",
 				Body:   `{"name":"alice","lock":"maybe"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 	})
@@ -484,6 +484,16 @@ func (s *APIUpdatePublicTestSuite) TestUpdateRBACHTTP() {
 				Body:   `{"name":"osapitest","shell":"/bin/bash"}`,
 			},
 			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the write role, it is a 403: the method is admin only",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/user/osapitest",
+				Body:   `{"name":"osapitest","shell":"/bin/bash"}`,
+			},
+			Token:    servertest.Write,
 			WantCode: http.StatusForbidden,
 		},
 		{

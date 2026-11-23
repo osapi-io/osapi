@@ -62,7 +62,7 @@ tags:
   - name: Node_File_Operations_API_node_file_operations
     x-displayName: Node/File
     description: File deploy, undeploy, and status operations on a target node.
-  - name: User_Management_API_user_operations
+  - name: User_SSH_Key_Management_API_user_operations
     x-displayName: Node/User
     description: User account management on a target node.
   - description: The certificate authorities that the host trusts
@@ -137,6 +137,9 @@ tags:
   - description: Get the uptime of target hosts
     name: Uptime_API_uptime_operations
     x-displayName: Node/Uptime
+  - description: The users of the host
+    name: User_API_user_operations
+    x-displayName: Node/User
 paths:
   /api/admission:
     servers: []
@@ -2730,319 +2733,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/user:
-    servers: []
-    get:
-      summary: List all users
-      description: |
-        List all user accounts on the target node.
-      tags:
-        - User_Management_API_user_operations
-      operationId: GetNodeUser
-      security:
-        - BearerAuth:
-            - user:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      responses:
-        '200':
-          description: List of user accounts.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserCollectionResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error listing users.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    post:
-      summary: Create a user
-      description: |
-        Create a new user account on the target node.
-      tags:
-        - User_Management_API_user_operations
-      operationId: PostNodeUser
-      security:
-        - BearerAuth:
-            - user:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      requestBody:
-        description: User account creation parameters.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserCreateRequest'
-      responses:
-        '200':
-          description: User created.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserMutationResponse'
-        '400':
-          description: Invalid request payload.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error creating user.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/user/{name}:
-    servers: []
-    get:
-      summary: Get a user
-      description: |
-        Get a specific user account by name on the target node.
-      tags:
-        - User_Management_API_user_operations
-      operationId: GetNodeUserByName
-      security:
-        - BearerAuth:
-            - user:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/UserName'
-      responses:
-        '200':
-          description: User account detail.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserCollectionResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: User not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error retrieving user.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    put:
-      summary: Update a user
-      description: |
-        Update an existing user account on the target node.
-      tags:
-        - User_Management_API_user_operations
-      operationId: PutNodeUser
-      security:
-        - BearerAuth:
-            - user:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/UserName'
-      requestBody:
-        description: User account update parameters.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserUpdateRequest'
-      responses:
-        '200':
-          description: User updated.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserMutationResponse'
-        '400':
-          description: Invalid request payload.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: User not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error updating user.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    delete:
-      summary: Delete a user
-      description: |
-        Delete a user account from the target node.
-      tags:
-        - User_Management_API_user_operations
-      operationId: DeleteNodeUser
-      security:
-        - BearerAuth:
-            - user:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/UserName'
-      responses:
-        '200':
-          description: User deleted.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserMutationResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: User not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error deleting user.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/user/{name}/password:
-    servers: []
-    post:
-      summary: Change user password
-      description: |
-        Change the password for a user account on the target node.
-      tags:
-        - User_Management_API_user_operations
-      operationId: PostNodeUserPassword
-      security:
-        - BearerAuth:
-            - user:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/UserName'
-      requestBody:
-        description: Password change parameters.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserPasswordRequest'
-      responses:
-        '200':
-          description: Password changed.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserMutationResponse'
-        '400':
-          description: Invalid request payload.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: User not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error changing password.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /api/node/{hostname}/user/{name}/ssh-key:
     servers: []
     get:
@@ -3050,14 +2740,14 @@ paths:
       description: |
         List SSH authorized keys for a user on the target node.
       tags:
-        - User_Management_API_user_operations
+        - User_SSH_Key_Management_API_user_operations
       operationId: GetNodeUserSSHKey
       security:
         - BearerAuth:
             - user:read
       parameters:
         - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/UserName'
+        - $ref: '#/components/parameters/SSHKeyUserName'
       responses:
         '200':
           description: List of SSH authorized keys.
@@ -3094,14 +2784,14 @@ paths:
       description: |
         Add an SSH authorized key for a user on the target node.
       tags:
-        - User_Management_API_user_operations
+        - User_SSH_Key_Management_API_user_operations
       operationId: PostNodeUserSSHKey
       security:
         - BearerAuth:
             - user:write
       parameters:
         - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/UserName'
+        - $ref: '#/components/parameters/SSHKeyUserName'
       requestBody:
         description: SSH public key to add.
         required: true
@@ -3148,14 +2838,14 @@ paths:
         Remove an SSH authorized key by fingerprint for a user on the target
         node.
       tags:
-        - User_Management_API_user_operations
+        - User_SSH_Key_Management_API_user_operations
       operationId: DeleteNodeUserSSHKey
       security:
         - BearerAuth:
             - user:write
       parameters:
         - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/UserName'
+        - $ref: '#/components/parameters/SSHKeyUserName'
         - $ref: '#/components/parameters/SSHKeyFingerprint'
       responses:
         '200':
@@ -7750,6 +7440,399 @@ paths:
       summary: Get the uptime of the host
       tags:
         - Uptime_API_uptime_operations
+  /api/node/{hostname}/user:
+    servers: []
+    get:
+      description: >-
+        Lists each user with its IDs, home, shell, groups and whether it is
+        locked, from /etc/passwd, /etc/group and /etc/shadow through gohai, on
+        every platform. The groups are those that list the user as a member,
+        besides its primary group.
+      operationId: GetNodeUser
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserCollectionResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            The host does not have what the request names, such as the object of
+            a deploy.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - user:read
+      summary: List the users of the host
+      tags:
+        - User_API_user_operations
+    post:
+      description: >-
+        Adds the user with useradd, with its home directory, and sets its
+        password with chpasswd when one is given. The controller hashes the
+        password, so the job and NATS have only the hash. A user that the host
+        has already does not change and reports changed: false. It runs on the
+        Debian family only, and elsewhere reports skipped.
+      operationId: PostNodeUser
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserCreateResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            The host does not have what the request names, such as the object of
+            a deploy.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - user:write
+      summary: Add a user
+      tags:
+        - User_API_user_operations
+  /api/node/{hostname}/user/{name}:
+    servers: []
+    delete:
+      description: >-
+        Removes the user and its home directory with userdel -r. A user that the
+        host does not have does not change and reports changed: false. It runs
+        on the Debian family only, and elsewhere reports skipped.
+      operationId: DeleteNodeUser
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/UserName'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDeleteResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host has no user with that name.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - user:write
+      summary: Remove a user
+      tags:
+        - User_API_user_operations
+    get:
+      description: >-
+        Reads one user from the same list. A user that the host does not have is
+        not found.
+      operationId: GetNodeUserByKey
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/UserName'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserGetResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host has no user with that name.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - user:read
+      summary: Get one user
+      tags:
+        - User_API_user_operations
+    put:
+      description: >-
+        Changes what the input gives and the user does not have already, with
+        usermod: its shell, its home, which usermod moves the files to, its
+        groups, which replace the groups it has, and whether it is locked. The
+        same values report changed: false. A user that the host does not have is
+        not found. It runs on the Debian family only, and elsewhere reports
+        skipped.
+      operationId: PutNodeUser
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/UserName'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserUpdateResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host has no user with that name.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - user:write
+      summary: Change a user
+      tags:
+        - User_API_user_operations
+  /api/node/{hostname}/user/{name}/passwd:
+    servers: []
+    post:
+      description: >-
+        Sets the password with chpasswd -e, from its hash on standard input. The
+        controller hashes the password, so the job and NATS have only the hash.
+        Each run makes a new hash, so it always reports changed: true. A user
+        that the host does not have is not found. It runs on the Debian family
+        only, and elsewhere reports skipped.
+      operationId: PostNodeUserPasswd
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/UserName'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPasswdRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPasswdResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host has no user with that name.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - user:execute
+      summary: Set the password of a user
+      tags:
+        - User_API_user_operations
 components:
   schemas:
     ErrorResponse:
@@ -9843,209 +9926,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FileUndeployResult'
-      required:
-        - results
-    UserCreateRequest:
-      type: object
-      required:
-        - name
-      properties:
-        name:
-          type: string
-          description: >
-            Username for the new account. Must start with a lowercase letter or
-            underscore, followed by lowercase letters, digits, underscores, or
-            hyphens, with an optional trailing `$`; 32 characters or fewer.
-          x-oapi-codegen-extra-tags:
-            validate: required,account_name
-        uid:
-          type: integer
-          description: Numeric user ID. If omitted, the system assigns one.
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=0
-        gid:
-          type: integer
-          description: >-
-            Primary group ID. If omitted, a group matching the username is
-            created.
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=0
-        home:
-          type: string
-          description: Home directory path.
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=1
-        shell:
-          type: string
-          description: Login shell path.
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=1
-        groups:
-          type: array
-          items:
-            type: string
-          description: Supplementary group names.
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,dive,account_name
-        password:
-          type: string
-          description: >-
-            Initial password. Sent in plaintext over TLS, hashed by the
-            controller before the job is stored, and never written to disk or
-            logs in plaintext.
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=1
-        system:
-          type: boolean
-          description: Create a system account.
-          x-oapi-codegen-extra-tags:
-            validate: omitempty
-    UserUpdateRequest:
-      type: object
-      properties:
-        shell:
-          type: string
-          description: New login shell path.
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=1
-        home:
-          type: string
-          description: New home directory path.
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=1
-        groups:
-          type: array
-          items:
-            type: string
-          description: Supplementary group names (replaces existing).
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,dive,account_name
-        lock:
-          type: boolean
-          description: Lock or unlock the account.
-          x-oapi-codegen-extra-tags:
-            validate: omitempty
-    UserPasswordRequest:
-      type: object
-      required:
-        - password
-      properties:
-        password:
-          type: string
-          description: >-
-            New password. Sent in plaintext over TLS, hashed by the controller
-            before the job is stored, and never written to disk or logs in
-            plaintext.
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1
-    UserInfo:
-      type: object
-      description: A user account on the target node.
-      properties:
-        name:
-          type: string
-          description: Username.
-        uid:
-          type: integer
-          description: Numeric user ID.
-        gid:
-          type: integer
-          description: Primary group ID.
-        home:
-          type: string
-          description: Home directory path.
-        shell:
-          type: string
-          description: Login shell path.
-        groups:
-          type: array
-          items:
-            type: string
-          description: Supplementary group names.
-        locked:
-          type: boolean
-          description: Whether the account is locked.
-    UserEntry:
-      type: object
-      description: User listing result for one host.
-      properties:
-        hostname:
-          type: string
-          description: Hostname of the agent that reported this entry.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        users:
-          type: array
-          items:
-            $ref: '#/components/schemas/UserInfo'
-          description: User accounts on this host.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    UserCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/UserEntry'
-      required:
-        - results
-    UserMutationResult:
-      type: object
-      description: >-
-        Result of a user create, update, delete, or password operation for one
-        host.
-      properties:
-        hostname:
-          type: string
-          description: Hostname of the agent that processed this operation.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        name:
-          type: string
-          description: Username.
-        changed:
-          type: boolean
-          description: Whether the operation modified system state.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    UserMutationResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/UserMutationResult'
       required:
         - results
     SSHKeyAddRequest:
@@ -13158,6 +13038,278 @@ components:
       required:
         - results
       type: object
+    UserAccount:
+      properties:
+        error:
+          description: Error message if the agent failed.
+          type: string
+        gid:
+          description: Its primary group ID
+          type: integer
+        groups:
+          description: The groups it is a member of, besides its primary group
+          items:
+            type: string
+          type: array
+        home:
+          description: Its home directory
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        locked:
+          description: Whether a login with its password is refused
+          type: boolean
+        name:
+          description: The user
+          type: string
+        shell:
+          description: Its login shell
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+        uid:
+          description: Its numeric user ID
+          type: integer
+      required:
+        - hostname
+        - status
+      type: object
+    UserCollectionResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/UserAccount'
+          type: array
+      required:
+        - results
+      type: object
+    UserCreateRequest:
+      properties:
+        gid:
+          description: Its primary group ID; a group of its own when it is 0
+          minimum: 0
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=0
+        groups:
+          description: The groups it is a member of, besides its primary group
+          items:
+            maxLength: 32
+            pattern: ^[a-z_][a-z0-9_-]*\$?$
+            type: string
+          type: array
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,dive,max=32,account_name
+        home:
+          description: Its home directory; /home/<name> when empty
+          pattern: ^[^\r\n]*$
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,startswith=/,no_linebreak
+        name:
+          description: The user to add, such as alice
+          maxLength: 32
+          pattern: ^[a-z_][a-z0-9_-]*\$?$
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,max=32,account_name
+        password:
+          description: Its password, which osapi hashes on the controller; none when empty
+          format: password
+          pattern: ^[^\r\n]*$
+          type: string
+          writeOnly: true
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,no_linebreak
+        shell:
+          description: Its login shell, such as /bin/bash; the system's default when empty
+          pattern: ^[^\r\n]*$
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,startswith=/,no_linebreak
+        system:
+          description: Add it as a system user, with an ID from the system range
+          type: boolean
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
+        uid:
+          description: Its numeric user ID; the system assigns one when it is 0
+          minimum: 0
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=0
+      required:
+        - name
+      type: object
+    UserCreateResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/UserResult'
+          type: array
+      required:
+        - results
+      type: object
+    UserDeleteResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/UserResult'
+          type: array
+      required:
+        - results
+      type: object
+    UserGetResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/UserAccount'
+          type: array
+      required:
+        - results
+      type: object
+    UserPasswdRequest:
+      properties:
+        password:
+          description: The new password, which osapi hashes on the controller
+          format: password
+          pattern: ^[^\r\n]*$
+          type: string
+          writeOnly: true
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,no_linebreak
+      type: object
+    UserPasswdResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/UserResult'
+          type: array
+      required:
+        - results
+      type: object
+    UserResult:
+      properties:
+        changed:
+          description: Whether the host changed
+          type: boolean
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        name:
+          description: The user
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
+      type: object
+    UserUpdateRequest:
+      properties:
+        groups:
+          description: The groups it is a member of, which replace the groups it has
+          items:
+            maxLength: 32
+            pattern: ^[a-z_][a-z0-9_-]*\$?$
+            type: string
+          type: array
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,dive,max=32,account_name
+        home:
+          description: Its home directory, which usermod moves the files to
+          pattern: ^[^\r\n]*$
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,startswith=/,no_linebreak
+        lock:
+          description: >-
+            Whether to refuse logins with its password: locked refuses them,
+            unlocked allows them
+          enum:
+            - locked
+            - unlocked
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,oneof=locked unlocked
+        shell:
+          description: Its login shell, such as /bin/bash
+          pattern: ^[^\r\n]*$
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,startswith=/,no_linebreak
+      type: object
+    UserUpdateResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/UserResult'
+          type: array
+      required:
+        - results
+      type: object
   securitySchemes:
     BearerAuth:
       bearerFormat: JWT
@@ -13188,7 +13340,7 @@ components:
         type: string
         minLength: 1
         pattern: ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$
-    UserName:
+    SSHKeyUserName:
       name: name
       in: path
       required: true
@@ -13319,6 +13471,17 @@ components:
         type: string
       x-oapi-codegen-extra-tags:
         validate: required,min=1,sysctl_key
+    UserName:
+      description: The user, such as alice
+      in: path
+      name: name
+      required: true
+      schema:
+        maxLength: 32
+        pattern: ^[a-z_][a-z0-9_-]*\$?$
+        type: string
+      x-oapi-codegen-extra-tags:
+        validate: required,max=32,account_name
 x-tagGroups:
   - name: Admission API
     tags:
@@ -13361,9 +13524,9 @@ x-tagGroups:
   - name: Node File Operations API
     tags:
       - Node_File_Operations_API_node_file_operations
-  - name: User Management API
+  - name: User SSH Key Management API
     tags:
-      - User_Management_API_user_operations
+      - User_SSH_Key_Management_API_user_operations
   - name: Certificate API
     tags:
       - Certificate_API_certificate_operations
@@ -13436,3 +13599,6 @@ x-tagGroups:
   - name: Uptime API
     tags:
       - Uptime_API_uptime_operations
+  - name: User API
+    tags:
+      - User_API_user_operations

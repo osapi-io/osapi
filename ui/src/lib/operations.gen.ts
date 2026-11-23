@@ -106,7 +106,7 @@ export const OPERATION_PERMISSIONS = {
   postNodeServiceStop: "service:execute",
   postNodeSysctl: "sysctl:write",
   postNodeUser: "user:write",
-  postNodeUserPasswd: "user:write",
+  postNodeUserPasswd: "user:execute",
   postNodeUserSSHKey: "user:write",
   putFileByName: "file:write",
   putNodeCertificate: "certificate:write",

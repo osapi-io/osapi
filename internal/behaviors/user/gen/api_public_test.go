@@ -53,7 +53,7 @@ func (s *APIPublicTestSuite) TestRoutes() {
 		{
 			method:     http.MethodPost,
 			path:       "/api/node/:hostname/user/:name/passwd",
-			permission: "user:write",
+			permission: "user:execute",
 		},
 	}
 

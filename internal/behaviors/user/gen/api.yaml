@@ -651,7 +651,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - user:write
+            - user:execute
       summary: Set the password of a user
       tags:
         - user_operations

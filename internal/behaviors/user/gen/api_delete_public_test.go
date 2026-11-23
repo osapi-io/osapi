@@ -34,7 +34,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 				Path:   "/api/node/server1/user/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.delete",
@@ -51,7 +51,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 				Path:   "/api/node/_all/user/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"user.delete",
@@ -70,7 +70,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 				Path:   "/api/node/server1/user/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.delete",
@@ -87,7 +87,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 				Path:   "/api/node/_all/user/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"user.delete",
@@ -106,7 +106,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 				Path:   "/api/node/server1/user/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.delete",
@@ -123,7 +123,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 				Path:   "/api/node/server1/user/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.delete",
@@ -140,7 +140,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 				Path:   "/api/node/server1/user/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.delete",
@@ -157,7 +157,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 				Path:   "/api/node/server1/user/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.delete",
@@ -172,7 +172,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 				Path:   "/api/node/_all/user/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"user.delete",
@@ -187,7 +187,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 				Path:   "/api/node/server1/user/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.delete",
@@ -209,7 +209,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteValidationHTTP() {
 				Path:   "/api/node/nowhere/user/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -219,7 +219,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteValidationHTTP() {
 				Path:   "/api/node//user/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -229,7 +229,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteValidationHTTP() {
 				Path:   "/api/node/server1/user/-r",
 				Body:   `{"name":"-r"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -239,7 +239,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteValidationHTTP() {
 				Path:   "/api/node/server1/user/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 				Body:   `{"name":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 	})
@@ -276,6 +276,16 @@ func (s *APIDeletePublicTestSuite) TestDeleteRBACHTTP() {
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the write role, it is a 403: the method is admin only",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/user/osapitest",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.Write,
 			WantCode: http.StatusForbidden,
 		},
 		{

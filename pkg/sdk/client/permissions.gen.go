@@ -50,6 +50,7 @@ const (
 	PermUpdatepackagesRead  Permission = "updatepackages:read"
 	PermUpdatepackagesWrite Permission = "updatepackages:write"
 	PermUptimeRead          Permission = "uptime:read"
+	PermUserExecute         Permission = "user:execute"
 	PermNetworkExecute      Permission = "network:execute"
 	PermAdmissionRead       Permission = "admission:read"
 	PermAdmissionWrite      Permission = "admission:write"

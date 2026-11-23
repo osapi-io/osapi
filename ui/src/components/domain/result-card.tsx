@@ -886,11 +886,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
 
   // Security — user operations
   if (
-    [
-      "user-list-keys",
-      "user-add-key",
-      "user-remove-key",
-    ].includes(type) &&
+    ["user-list-keys", "user-add-key", "user-remove-key"].includes(type) &&
     Array.isArray(data.results)
   ) {
     const label = type.replace("-", " ");

@@ -34,7 +34,7 @@ func (s *APIPasswdPublicTestSuite) TestPasswd() {
 				Path:   "/api/node/server1/user/osapitest/passwd",
 				Body:   `{"name":"osapitest","password":"osapi-test-password","password_hash":"$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.passwd",
@@ -55,7 +55,7 @@ func (s *APIPasswdPublicTestSuite) TestPasswd() {
 				Path:   "/api/node/_all/user/osapitest/passwd",
 				Body:   `{"name":"osapitest","password":"osapi-test-password","password_hash":"$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"user.passwd",
@@ -78,7 +78,7 @@ func (s *APIPasswdPublicTestSuite) TestPasswd() {
 				Path:   "/api/node/server1/user/osapitest/passwd",
 				Body:   `{"name":"osapitest","password":"osapi-test-password","password_hash":"$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.passwd",
@@ -99,7 +99,7 @@ func (s *APIPasswdPublicTestSuite) TestPasswd() {
 				Path:   "/api/node/server1/user/osapitest/passwd",
 				Body:   `{"name":"osapitest","password":"osapi-test-password","password_hash":"$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.passwd",
@@ -120,7 +120,7 @@ func (s *APIPasswdPublicTestSuite) TestPasswd() {
 				Path:   "/api/node/server1/user/osapitest/passwd",
 				Body:   `{"name":"osapitest","password":"osapi-test-password","password_hash":"$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.passwd",
@@ -141,7 +141,7 @@ func (s *APIPasswdPublicTestSuite) TestPasswd() {
 				Path:   "/api/node/server1/user/osapitest/passwd",
 				Body:   `{"name":"osapitest","password":"osapi-test-password","password_hash":"$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.passwd",
@@ -160,7 +160,7 @@ func (s *APIPasswdPublicTestSuite) TestPasswd() {
 				Path:   "/api/node/_all/user/osapitest/passwd",
 				Body:   `{"name":"osapitest","password":"osapi-test-password","password_hash":"$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"user.passwd",
@@ -179,7 +179,7 @@ func (s *APIPasswdPublicTestSuite) TestPasswd() {
 				Path:   "/api/node/server1/user/osapitest/passwd",
 				Body:   `{"name":"osapitest","password":"osapi-test-password","password_hash":"$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.passwd",
@@ -205,7 +205,7 @@ func (s *APIPasswdPublicTestSuite) TestPasswdValidationHTTP() {
 				Path:   "/api/node/nowhere/user/osapitest/passwd",
 				Body:   `{"name":"osapitest","password":"osapi-test-password","password_hash":"$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -215,7 +215,7 @@ func (s *APIPasswdPublicTestSuite) TestPasswdValidationHTTP() {
 				Path:   "/api/node//user/osapitest/passwd",
 				Body:   `{"name":"osapitest","password":"osapi-test-password","password_hash":"$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -225,7 +225,7 @@ func (s *APIPasswdPublicTestSuite) TestPasswdValidationHTTP() {
 				Path:   "/api/node/server1/user/osapitest/passwd",
 				Body:   `{`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -235,7 +235,7 @@ func (s *APIPasswdPublicTestSuite) TestPasswdValidationHTTP() {
 				Path:   "/api/node/server1/user/osapitest/passwd",
 				Body:   `{"password":[]}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -245,7 +245,7 @@ func (s *APIPasswdPublicTestSuite) TestPasswdValidationHTTP() {
 				Path:   "/api/node/server1/user/-r/passwd",
 				Body:   `{"name":"-r"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -255,7 +255,7 @@ func (s *APIPasswdPublicTestSuite) TestPasswdValidationHTTP() {
 				Path:   "/api/node/server1/user/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/passwd",
 				Body:   `{"name":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -265,13 +265,13 @@ func (s *APIPasswdPublicTestSuite) TestPasswdValidationHTTP() {
 				Path:   "/api/node/server1/user/alice/passwd",
 				Body:   `{"name":"alice","password":"a\nb"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 	})
 }
 
-// TestPasswdRBACHTTP sends tokens that do not grant user:write.
+// TestPasswdRBACHTTP sends tokens that do not grant user:execute.
 func (s *APIPasswdPublicTestSuite) TestPasswdRBACHTTP() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
@@ -285,7 +285,7 @@ func (s *APIPasswdPublicTestSuite) TestPasswdRBACHTTP() {
 			WantCode: http.StatusUnauthorized,
 		},
 		{
-			Name: "when the token lacks user:write, it is a 403",
+			Name: "when the token lacks user:execute, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/user/osapitest/passwd",
@@ -302,6 +302,16 @@ func (s *APIPasswdPublicTestSuite) TestPasswdRBACHTTP() {
 				Body:   `{"name":"osapitest","password":"osapi-test-password","password_hash":"$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1"}`,
 			},
 			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the write role, it is a 403: the method is admin only",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/user/osapitest/passwd",
+				Body:   `{"name":"osapitest","password":"osapi-test-password","password_hash":"$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1"}`,
+			},
+			Token:    servertest.Write,
 			WantCode: http.StatusForbidden,
 		},
 		{

@@ -128,6 +128,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A name longer than 32 characters",
 			GetInput{Name: strings.Repeat("a", 33)}, "max"),
 	behavior.Write("create", Create).
+		AdminOnly().
 		On(behavior.PlatformDebian).
 		Sudo("useradd", "chpasswd").
 		Before(hashCreate).
@@ -195,6 +196,7 @@ var Behavior = behavior.Register(behavior.Define(
 			CreateInput{Name: "osapitest", PasswordHash: "plain"}, "crypt hash",
 			withHost()...),
 	behavior.Write("update", Update).Key("name").
+		AdminOnly().
 		On(behavior.PlatformDebian).
 		Sudo("usermod").
 		Describe("Change a user").
@@ -266,6 +268,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A lock that is not locked or unlocked",
 			UpdateInput{Name: "alice", Lock: "maybe"}, "oneof"),
 	behavior.Write("delete", Delete).Key("name").
+		AdminOnly().
 		On(behavior.PlatformDebian).
 		Sudo("userdel").
 		Describe("Remove a user").
@@ -288,6 +291,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A name longer than 32 characters",
 			DeleteInput{Name: strings.Repeat("a", 33)}, "max"),
 	behavior.Action("passwd", SetPassword).Key("name").
+		AdminOnly().
 		On(behavior.PlatformDebian).
 		Sudo("chpasswd").
 		Always().

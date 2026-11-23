@@ -46,7 +46,7 @@ func Routes(
 		{
 			Method:     http.MethodPost,
 			Path:       "/api/node/:hostname/user/:name/passwd",
-			Permission: "user:write",
+			Permission: "user:execute",
 			Handler:    server.Serve(s, Group, "passwd", HandlePasswd, decodePasswd),
 		},
 	}

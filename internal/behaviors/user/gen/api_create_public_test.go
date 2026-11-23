@@ -34,7 +34,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/server1/user",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.create",
@@ -51,7 +51,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/_all/user",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"user.create",
@@ -70,7 +70,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/server1/user",
 				Body:   `{"name":"osapitest","shell":"/bin/sh","groups":["root"],"password":"osapi-test-password","password_hash":"$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.create",
@@ -93,7 +93,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/_all/user",
 				Body:   `{"name":"osapitest","shell":"/bin/sh","groups":["root"],"password":"osapi-test-password","password_hash":"$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"user.create",
@@ -118,7 +118,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/server1/user",
 				Body:   `{"name":"osapitest","uid":1999,"gid":100,"home":"/home/osapitest","system":true}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.create",
@@ -141,7 +141,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/_all/user",
 				Body:   `{"name":"osapitest","uid":1999,"gid":100,"home":"/home/osapitest","system":true}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"user.create",
@@ -166,7 +166,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/server1/user",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.create",
@@ -183,7 +183,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/_all/user",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"user.create",
@@ -202,7 +202,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/server1/user",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.create",
@@ -219,7 +219,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/server1/user",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.create",
@@ -236,7 +236,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/server1/user",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.create",
@@ -253,7 +253,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/server1/user",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"user.create",
@@ -268,7 +268,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/_all/user",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"user.create",
@@ -290,7 +290,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/nowhere/user",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -300,7 +300,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node//user",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -310,7 +310,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/user",
 				Body:   `{"name":""}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -320,7 +320,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/user",
 				Body:   `{`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -330,7 +330,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/user",
 				Body:   `{"name":[]}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -340,7 +340,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/user",
 				Body:   `{"name":"-r"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -350,7 +350,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/user",
 				Body:   `{"name":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -360,7 +360,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/user",
 				Body:   `{"name":"osapitest","uid":-1}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -370,7 +370,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/user",
 				Body:   `{"name":"osapitest","gid":-1}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -380,7 +380,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/user",
 				Body:   `{"name":"osapitest","home":"home"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -390,7 +390,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/user",
 				Body:   `{"name":"osapitest","home":"/home/a\nb"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -400,7 +400,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/user",
 				Body:   `{"name":"osapitest","shell":"bash"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -410,7 +410,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/user",
 				Body:   `{"name":"osapitest","shell":"/bin/a\nb"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -420,7 +420,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/user",
 				Body:   `{"name":"osapitest","groups":["-r"]}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -430,7 +430,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/user",
 				Body:   `{"name":"osapitest","groups":["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -440,7 +440,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/user",
 				Body:   `{"name":"osapitest","password":"a\nb"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 	})
@@ -477,6 +477,16 @@ func (s *APICreatePublicTestSuite) TestCreateRBACHTTP() {
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the write role, it is a 403: the method is admin only",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/user",
+				Body:   `{"name":"osapitest"}`,
+			},
+			Token:    servertest.Write,
 			WantCode: http.StatusForbidden,
 		},
 		{

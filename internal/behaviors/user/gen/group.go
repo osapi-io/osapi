@@ -255,7 +255,7 @@ var Group = endpoint.Define(
 		Handle(HandlePasswd).
 		ID("PostNodeUserPasswd").
 		Describe("Set the password of a user").
-		Permission("user:write").
+		Permission("user:execute").
 		Returns("Each target host's result, with whether it changed.").
 		Action("passwd").
 		Explain("Sets the password with chpasswd -e, from its hash on standard input. The controller hashes the password, so the job and NATS have only the hash. Each run makes a new hash, so it always reports changed: true. A user that the host does not have is not found. It runs on the Debian family only, and elsewhere reports skipped.").

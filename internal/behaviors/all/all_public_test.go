@@ -263,12 +263,13 @@ func (s *AllPublicTestSuite) TestNoRouteIsServedTwice() {
 	}
 
 	s.Run("when a behavior shares a hand-written route", func() {
-		served := behavior.Define("user", "User", behavior.Node, behavior.API,
-			behavior.Read("list", sysctl.List).Describe("List"))
+		served := behavior.Define("docker", "Docker", behavior.Node, behavior.API,
+			behavior.Under(behavior.GroupName("container")),
+			behavior.Write("create", sysctl.Create).Describe("Create"))
 		got := collisions(served, ops)
 		s.Require().Len(got, 1)
-		s.Contains(got[0], "GET /api/node/{hostname}/user is served by the user behavior "+
-			"and by internal/controller/api/node/user")
+		s.Contains(got[0], "POST /api/node/{hostname}/container/docker is served by the docker "+
+			"behavior and by internal/controller/api/node/container")
 	})
 }
 
