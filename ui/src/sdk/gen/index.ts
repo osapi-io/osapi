@@ -12,6 +12,7 @@ export * from './docker-management-api-docker-image/docker-management-api-docker
 export * from './docker-management-api-docker-operations/docker-management-api-docker-operations';
 export * from './entry-api-log-entry-operations/entry-api-log-entry-operations';
 export * from './facts-api-facts/facts-api-facts';
+export * from './file-api-file-operations/file-api-file-operations';
 export * from './file-management-api-file-operations/file-management-api-file-operations';
 export * from './group-api-group-operations/group-api-group-operations';
 export * from './health-check-api-health/health-check-api-health';
@@ -21,7 +22,6 @@ export * from './job-management-api-job-operations/job-management-api-job-operat
 export * from './load-api-load-operations/load-api-load-operations';
 export * from './memory-api-memory-operations/memory-api-memory-operations';
 export * from './nats-api-nats/nats-api-nats';
-export * from './node-file-operations-api-node-file-operations/node-file-operations-api-node-file-operations';
 export * from './ntp-api-ntp-operations/ntp-api-ntp-operations';
 export * from './os-api-os-operations/os-api-os-operations';
 export * from './package-api-package-operations/package-api-package-operations';

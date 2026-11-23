@@ -1581,25 +1581,25 @@ func (e PutFileByNameMultipartBodyContentType) Valid() bool {
 
 // Defines values for GetJobsParamsStatus.
 const (
-	Completed      GetJobsParamsStatus = "completed"
-	Failed         GetJobsParamsStatus = "failed"
-	PartialFailure GetJobsParamsStatus = "partial_failure"
-	Processing     GetJobsParamsStatus = "processing"
-	Submitted      GetJobsParamsStatus = "submitted"
+	GetJobsParamsStatusCompleted      GetJobsParamsStatus = "completed"
+	GetJobsParamsStatusFailed         GetJobsParamsStatus = "failed"
+	GetJobsParamsStatusPartialFailure GetJobsParamsStatus = "partial_failure"
+	GetJobsParamsStatusProcessing     GetJobsParamsStatus = "processing"
+	GetJobsParamsStatusSubmitted      GetJobsParamsStatus = "submitted"
 )
 
 // Valid indicates whether the value is a known member of the GetJobsParamsStatus enum.
 func (e GetJobsParamsStatus) Valid() bool {
 	switch e {
-	case Completed:
+	case GetJobsParamsStatusCompleted:
 		return true
-	case Failed:
+	case GetJobsParamsStatusFailed:
 		return true
-	case PartialFailure:
+	case GetJobsParamsStatusPartialFailure:
 		return true
-	case Processing:
+	case GetJobsParamsStatusProcessing:
 		return true
-	case Submitted:
+	case GetJobsParamsStatusSubmitted:
 		return true
 	default:
 		return false
