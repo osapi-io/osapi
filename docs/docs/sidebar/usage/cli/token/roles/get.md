@@ -21,7 +21,7 @@ $ osapi token roles get --name admin
 [1;38;2;0;213;255mRole:[0m
   [38;2;10;143;176mName:[0m         admin
   [38;2;10;143;176mSource:[0m       built-in
-  [38;2;10;143;176mPermissions:[0m  node:read, file:read, file:write, health:read
+  [38;2;10;143;176mPermissions:[0m  status:read, file:read, file:write, health:read
 ```
 
 With `--json`, the command prints:
@@ -30,7 +30,7 @@ With `--json`, the command prints:
 {
   "name": "admin",
   "source": "built-in",
-  "permissions": ["node:read", "file:read", "file:write", "health:read"]
+  "permissions": ["status:read", "file:read", "file:write", "health:read"]
 }
 ```
 
