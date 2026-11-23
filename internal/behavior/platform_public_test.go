@@ -262,6 +262,36 @@ func (s *PlatformPublicTestSuite) TestPrograms() {
 			s.Equal(tc.wantRuns, runs)
 		})
 	}
+
+	debianOnly := behavior.Define("updatepackages", "Updates", behavior.Node,
+		behavior.Platform(behavior.PlatformDebian, func(host.Host) (fakeProvider, error) {
+			return fakeProvider{}, nil
+		}),
+		behavior.Sudo("apt-get"), behavior.Runs("apt"),
+		behavior.Read("list", get),
+	)
+	onlyTests := []struct {
+		name     string
+		platform behavior.PlatformName
+		wantSudo []string
+		wantRuns []string
+	}{
+		{
+			name: "when the behavior has a provider for the platform", platform: "debian",
+			wantSudo: []string{"apt-get"}, wantRuns: []string{"apt"},
+		},
+		{
+			name:     "when the behavior has no provider for the platform, it needs no program",
+			platform: "rhel",
+		},
+	}
+	for _, tc := range onlyTests {
+		s.Run(tc.name, func() {
+			sudo, runs := debianOnly.Programs(tc.platform)
+			s.Equal(tc.wantSudo, sudo)
+			s.Equal(tc.wantRuns, runs)
+		})
+	}
 }
 
 // TestProviderSudo: a program declared with SudoOnPlatform holds on each host
