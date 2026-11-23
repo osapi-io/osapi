@@ -8,10 +8,11 @@ set allow-duplicate-variables
 
 react_dir := "ui"
 
-# The skills `osapi init` installs open with YAML frontmatter, which mdformat
-# rewrites into a heading. Claude Code then never loads the skill.
+# The skills, the ones `osapi init` installs and the ones in .claude/, are
+# written by hand, so md formats them. The shared recipe keeps their YAML
+# frontmatter.
 
-md_extra_excludes := "--exclude 'internal/skills/resources/**'"
+md_agent_exclude := ""
 
 import? '.just/remote/go.just'
 
