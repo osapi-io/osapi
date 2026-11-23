@@ -222,7 +222,8 @@ func Create(
 	if root == "" {
 		root = "."
 	}
-	files, err := behavior.Scaffold(root, in.Group, in.Name, in.Package, in.Description)
+	files, err := behavior.Scaffold(
+		root, in.Group, in.Name, in.Package, in.Description, in.Requires)
 	if err != nil {
 		return CreateOutput{}, err
 	}
@@ -238,13 +239,23 @@ func Create(
 	for _, f := range files {
 		out.Files = append(out.Files, File{Path: f})
 	}
-	for _, step := range []string{
+	steps := []string{
 		"go generate ./internal/behaviors/" + path + "/mocks ./internal/behaviors/all",
 		"change the types, the provider and the examples in internal/behaviors/" + path,
+	}
+	if len(in.Requires) > 0 {
+		// The scaffold wires each required behavior; the calls are the
+		// author's, and the tests fail until an example makes one.
+		steps = append(steps, "call "+strings.Join(in.Requires, " and ")+
+			" with behavior.Call in internal/behaviors/"+path+"/debian.go, from an example:"+
+			" until then, go test fails the rule used")
+	}
+	steps = append(steps,
 		"go generate ./internal/behaviors/all",
 		"osapi behavior validate",
 		"just test",
-	} {
+	)
+	for _, step := range steps {
 		out.Next = append(out.Next, Step{Step: step})
 	}
 

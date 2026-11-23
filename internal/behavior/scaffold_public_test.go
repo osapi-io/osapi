@@ -29,6 +29,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 )
 
 const allGo = `// Package all registers every behavior.
@@ -47,6 +48,15 @@ var update = flag.Bool("update", false, "rewrite the scaffold's golden files")
 
 type ScaffoldPublicTestSuite struct {
 	suite.Suite
+}
+
+// SetupSubTest registers the behaviors a scaffold may require: managedfile,
+// as a real behavior's package; chained, whose method lives in this test
+// package; and empty, which has no method.
+func (s *ScaffoldPublicTestSuite) SetupSubTest() {
+	behavior.Register(managedfile.Behavior)
+	behavior.Register(behavior.Define("chained", "x", behavior.Read("get", get)))
+	behavior.Register(behavior.Define("empty", "x"))
 }
 
 func (s *ScaffoldPublicTestSuite) TearDownSubTest() {
@@ -76,6 +86,7 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 		bname        string
 		goPackage    string
 		doc          string
+		requires     []string
 		wantErr      string
 		validateFunc func(root string, files []string)
 	}{
@@ -189,6 +200,49 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 					`_ "github.com/osapi-io/osapi/internal/behaviors/network/neighbors"`,
 				)
 			},
+		},
+		{
+			name:     "when a behavior is required, it writes the wiring of each",
+			setup:    func() string { return s.checkout(allGo) },
+			bname:    "motd",
+			doc:      "x",
+			requires: []string{"managedfile", "chained"},
+			validateFunc: func(root string, _ []string) {
+				def, err := os.ReadFile(filepath.Join(root, "internal/behaviors/motd/behavior.go"))
+				s.Require().NoError(err)
+				s.Contains(string(def),
+					"behavior.Requires(managedfile.Behavior, behavior_test.Behavior),")
+				debian, err := os.ReadFile(
+					filepath.Join(root, "internal/behaviors/motd/debian.go"))
+				s.Require().NoError(err)
+				s.Contains(string(debian),
+					"if managedfileProvider == nil ||\n\t\tbehavior_testProvider == nil {")
+			},
+		},
+		{
+			name:     "when a required behavior is not registered",
+			setup:    func() string { return s.checkout(allGo) },
+			bname:    "motd",
+			doc:      "x",
+			requires: []string{"nosuch"},
+			wantErr: `requires "nosuch", which is not a registered behavior: ` +
+				"osapi behavior list names each one",
+		},
+		{
+			name:     "when a required behavior is named twice",
+			setup:    func() string { return s.checkout(allGo) },
+			bname:    "motd",
+			doc:      "x",
+			requires: []string{"managedfile", "managedfile"},
+			wantErr:  `requires "managedfile" twice`,
+		},
+		{
+			name:     "when a required behavior has no method",
+			setup:    func() string { return s.checkout(allGo) },
+			bname:    "motd",
+			doc:      "x",
+			requires: []string{"empty"},
+			wantErr:  `requires "empty", which has no method to call`,
 		},
 		{
 			name:    "when the group is not a Go package name",
@@ -324,7 +378,8 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 		s.Run(tc.name, func() {
 			root := tc.setup()
 
-			files, err := behavior.Scaffold(root, tc.group, tc.bname, tc.goPackage, tc.doc)
+			files, err := behavior.Scaffold(
+				root, tc.group, tc.bname, tc.goPackage, tc.doc, tc.requires)
 
 			if tc.wantErr != "" {
 				s.ErrorContains(err, tc.wantErr)
@@ -343,10 +398,11 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 // the diff of its golden files.
 func (s *ScaffoldPublicTestSuite) TestGolden() {
 	tests := []struct {
-		name  string
-		group string
-		bname string
-		doc   string
+		name     string
+		group    string
+		bname    string
+		doc      string
+		requires []string
 	}{
 		{
 			name:  "motd",
@@ -359,13 +415,19 @@ func (s *ScaffoldPublicTestSuite) TestGolden() {
 			bname: "neighbors",
 			doc:   "The neighbor table",
 		},
+		{
+			name:     "ntpconf",
+			bname:    "ntpconf",
+			doc:      "The NTP config",
+			requires: []string{"managedfile"},
+		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			root := s.checkout(allGo)
 
-			files, err := behavior.Scaffold(root, tc.group, tc.bname, "", tc.doc)
+			files, err := behavior.Scaffold(root, tc.group, tc.bname, "", tc.doc, tc.requires)
 			s.Require().NoError(err)
 
 			for _, rel := range files {

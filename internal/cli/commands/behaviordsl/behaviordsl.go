@@ -110,11 +110,16 @@ var Group = command.Register(command.Define(
 			"that two behaviors share, such as writing a file, becomes an internal\n"+
 			"behavior that the two require: add `behavior.Internal` to it then, and\n"+
 			"`behavior.Requires` to each user. `osapi behavior validate` fails an\n"+
-			"internal behavior that no behavior requires.").
+			"internal behavior that no behavior requires.\n\n"+
+			"`--requires` names the behaviors that the new one is built on. For each,\n"+
+			"it writes `behavior.Requires`, the `host.Require` in the builder and a\n"+
+			"field of the provider. You write each `behavior.Call`: until an example\n"+
+			"calls a required behavior, the tests fail the rule `used`.").
 		Example(`--name motd --description "The message shown at login"`).
 		Prints(sampleCreate).
 		Example(`--name motd --description "The message shown at login" --root ~/src/osapi`).
 		Example(`--group network --name neighbors --description "The host's ARP neighbors"`).
+		Example(`--name ntpconf --description "The NTP config" --requires managedfile`).
 		Fails("no name", CreateInput{Description: "x"}).
 		Fails("no description", CreateInput{Name: "x"}).
 		Handle(Create),

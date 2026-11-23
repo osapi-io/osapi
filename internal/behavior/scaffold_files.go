@@ -78,6 +78,8 @@ type scaffold struct {
 	goPackage string
 	path      string
 	doc       string
+	// requires are the behaviors it is built on, in the order given.
+	requires []requirement
 }
 
 // pkg is the import path of the new behavior's package.
@@ -127,6 +129,9 @@ func (sc scaffold) newFile() *jen.File {
 	f := jen.NewFilePathName(sc.pkg(), sc.goPackage)
 	f.HeaderComment(license)
 	f.ImportName(behaviorPath, "behavior")
+	for _, r := range sc.requires {
+		f.ImportName(r.path, r.pkg)
+	}
 
 	return f
 }
@@ -141,6 +146,10 @@ func (sc scaffold) newTestFile() *jen.File {
 	f.ImportName(gomockPath, "gomock")
 	f.ImportName(behaviorPath, "behavior")
 	f.ImportName(behaviortestPath, "behaviortest")
+	for _, r := range sc.requires {
+		f.ImportName(r.path, r.pkg)
+		f.ImportAlias(r.path+"/mocks", r.pkg+"mocks")
+	}
 
 	return f
 }
@@ -154,6 +163,28 @@ func comments(
 	for _, l := range lines {
 		f.Comment(l)
 	}
+}
+
+// wrap breaks text into lines of at most width characters, at spaces, for
+// a comment.
+func wrap(
+	text string,
+	width int,
+) []string {
+	var lines []string
+	line := ""
+	for _, w := range strings.Fields(text) {
+		if line != "" && len(line)+1+len(w) > width {
+			lines = append(lines, line)
+			line = ""
+		}
+		if line != "" {
+			line += " "
+		}
+		line += w
+	}
+
+	return append(lines, line)
 }
 
 // multi lays out a group one item to a line, as the house style writes
@@ -255,6 +286,15 @@ func (sc scaffold) behaviorFile() *jen.File {
 		b("Area").Call(b("AreaConfig")),
 		b("CLI"),
 		b("Config").Call(jen.Id("defaults")),
+	)
+	if len(sc.requires) > 0 {
+		required := make([]jen.Code, 0, len(sc.requires))
+		for _, r := range sc.requires {
+			required = append(required, jen.Qual(r.path, "Behavior"))
+		}
+		opts = append(opts, b("Requires").Call(required...))
+	}
+	opts = append(opts,
 		b("Platform").Call(b("PlatformDebian"), jen.Id("newDebian")),
 		b("Writes").Call(jen.Id("defaultPath")),
 		b("Read").Call(jen.Lit("get"), jen.Id("Get")).
@@ -408,23 +448,60 @@ func (sc scaffold) debianFile() *jen.File {
 		"in-memory filesystem, and the examples in behavior.go run it on a fake",
 		"host.",
 	)
-	f.Type().Id("debian").Struct(
+	fields := []jen.Code{
 		jen.Id("fs").Qual(avfsPath, "VFS"),
 		jen.Id("path").String(),
+	}
+	values := make([]jen.Code, 0, 2+len(sc.requires))
+	values = append(values,
+		field("fs", jen.Id("h").Dot("FS")),
+		field("path", jen.Qual(hostPath, "Settings").Index(jen.Id("Settings")).
+			Call(jen.Id("h")).Dot("Path")),
 	)
+	var body []jen.Code
+	var missing jen.Code
+	for _, r := range sc.requires {
+		v := r.pkg + "Provider"
+		doc := wrap(r.pkg+" is the provider of the "+r.name+" behavior, which this one "+
+			"requires. Call its methods with behavior.Call, so the trace shows each call "+
+			"as a step:", 75)
+		for _, l := range doc {
+			fields = append(fields, jen.Comment(l))
+		}
+		fields = append(fields,
+			jen.Comment("//"),
+			jen.Comment("//\tbehavior.Call(ctx, "+r.pkg+".Behavior, "+r.pkg+"."+r.fn+
+				", d."+r.pkg+", in)"),
+			jen.Id(r.pkg).Qual(r.path, "Provider"),
+		)
+		values = append(values, field(r.pkg, jen.Id(v)))
+		body = append(body, jen.Id(v).Op(":=").Qual(hostPath, "Require").
+			Types(jen.Qual(r.path, "Provider")).Call(jen.Id("h"), jen.Qual(r.path, "Behavior")))
+		isNil := jen.Id(v).Op("==").Nil()
+		if missing == nil {
+			missing = isNil
+		} else {
+			missing = jen.Add(missing).Op("||").Line().Add(isNil)
+		}
+	}
+	f.Type().Id("debian").Struct(fields...)
 	f.Line()
-	comments(f,
-		"newDebian is the provider on Debian and its family, built by the agent at",
-		"startup with the host and the behavior's settings.",
-	)
+	doc := "newDebian is the provider on Debian and its family, built by the agent at " +
+		"startup with the host and the behavior's settings."
+	literal := jen.Op("&").Id("debian").Values(values...)
+	if missing != nil {
+		doc += " It declines a host where a behavior it requires has no provider, and " +
+			"the methods report skipped there."
+		literal = jen.Op("&").Id("debian").Add(multi("{", "}", values...))
+		body = append(body,
+			jen.If(missing).Block(jen.Return(jen.Nil(), jen.Qual(behaviorPath, "ErrUnsupported"))),
+			jen.Line(),
+		)
+	}
+	comments(f, wrap(doc, 77)...)
+	body = append(body, jen.Return(literal, jen.Nil()))
 	f.Func().Id("newDebian").Add(params(jen.Id("h").Qual(hostPath, "Host"))).
-		Params(jen.Id("Provider"), jen.Error()).Block(
-		jen.Return(jen.Op("&").Id("debian").Values(
-			field("fs", jen.Id("h").Dot("FS")),
-			field("path", jen.Qual(hostPath, "Settings").Index(jen.Id("Settings")).
-				Call(jen.Id("h")).Dot("Path")),
-		), jen.Nil()),
-	)
+		Params(jen.Id("Provider"), jen.Error()).Block(body...)
 	f.Line()
 	comments(f, "Get reads the value; a value never set reads as empty.")
 	f.Func().Add(recv.Clone()).Id("Get").Add(params(ctx.Clone())).
@@ -637,22 +714,56 @@ func (sc scaffold) debianTestFile() *jen.File {
 		jen.Id("provider").Add(q("Provider")),
 	)
 	f.Line()
-	suiteMethod(f, suite, "SetupSubTest",
+	hostFields := []jen.Code{
+		field("FS", jen.Qual(memfsPath, "New").Call()),
+		field(
+			"Settings",
+			q("Settings").Values(field("Path", jen.Lit("/etc/osapi/"+sc.name))),
+		),
+	}
+	if len(sc.requires) > 0 {
+		// Each required behavior's provider is a mock, which the tests of
+		// the calls that the author writes set up.
+		required := make([]jen.Code, 0, len(sc.requires))
+		for _, r := range sc.requires {
+			required = append(required, jen.Qual(r.path, "Behavior").Dot("Name").Op(":").
+				Qual(r.path+"/mocks", "NewMockProvider").
+				Call(jen.Id("ctrl")))
+		}
+		hostFields = append(hostFields,
+			field("Required", jen.Map(jen.String()).Any().Add(multi("{", "}", required...))))
+	}
+	var setup []jen.Code
+	if len(sc.requires) > 0 {
+		setup = append(setup,
+			jen.Id("ctrl").Op(":=").Qual(gomockPath, "NewController").Call(s("T")))
+	}
+	suiteMethod(f, suite, "SetupSubTest", append(setup,
 		jen.List(jen.Id("p"), jen.Err()).Op(":=").Add(q("Behavior")).Dot("Provider").Call(
 			jen.Lit("debian"),
-			jen.Qual(hostPath, "Host").Add(multi(
-				"{",
-				"}",
-				field("FS", jen.Qual(memfsPath, "New").Call()),
-				field(
-					"Settings",
-					q("Settings").Values(field("Path", jen.Lit("/etc/osapi/"+sc.name))),
-				),
-			)),
+			jen.Qual(hostPath, "Host").Add(multi("{", "}", hostFields...)),
 		),
 		s("Require").Dot("NoError").Call(jen.Err()),
 		provider().Op("=").Id("p").Assert(q("Provider")),
-	)
+	)...)
+	if len(sc.requires) > 0 {
+		f.Line()
+		names := make([]string, 0, len(sc.requires))
+		for _, r := range sc.requires {
+			names = append(names, r.name)
+		}
+		comments(f,
+			"TestNewDebian: the provider requires "+strings.Join(names, " and ")+
+				", so on a host where",
+			"one has no provider it declines, and the methods report skipped.",
+		)
+		suiteMethod(f, suite, "TestNewDebian",
+			jen.List(jen.Id("_"), jen.Err()).Op(":=").Add(q("Behavior")).Dot("Provider").
+				Call(jen.Lit("debian"), jen.Qual(hostPath, "Host").Values()),
+			jen.Line(),
+			s("ErrorIs", jen.Err(), jen.Qual(behaviorPath, "ErrUnsupported")),
+		)
+	}
 	f.Line()
 	suiteMethod(f, suite, "TestGet",
 		table(
