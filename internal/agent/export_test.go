@@ -47,7 +47,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/avfs/avfs/vfs/memfs"
-	"github.com/osapi-io/gohai/pkg/gohai/family"
 	"github.com/osapi-io/osapi/internal/agent/identity"
 	behaviorHost "github.com/osapi-io/osapi/internal/behavior/host"
 	"github.com/osapi-io/osapi/internal/config"
@@ -866,10 +865,22 @@ func init() {
 	collectFactsFn = FakeFacts
 }
 
+// defaultDetectFn and defaultContainerFn are the functions that setup.go
+// gives detectFn and containerFn, kept before a test replaces them.
+var (
+	defaultDetectFn    = detectFn
+	defaultContainerFn = containerFn
+)
+
 // ResetPlatformFns puts back the functions that tell the platform of the host.
 func ResetPlatformFns() {
-	detectFn = family.Detect
-	containerFn = func() bool { return inContainer(source.Sources{}) }
+	detectFn = defaultDetectFn
+	containerFn = defaultContainerFn
+}
+
+// ExportDefaultContainerFn calls the containerFn that setup.go gives.
+func ExportDefaultContainerFn() bool {
+	return defaultContainerFn()
 }
 
 // ExportIdentityAttrs gives a the hostname, machine ID and facts that it
