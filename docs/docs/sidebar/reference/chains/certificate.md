@@ -60,7 +60,7 @@ The behaviors that certificate calls, and each call that its examples make.
 | certificate create    | name=internal-ca object=internal-ca.pem                                                | changed=true name=internal-ca                                                |
 | └─ managedfile get    | path=/usr/local/share/ca-certificates/osapi-internal-ca.crt                            | error: /usr/local/share/ca-certificates/osapi-internal-ca.crt: not managed   |
 | └─ object get         | name=internal-ca.pem                                                                   | content=&lt;12 lines&gt; content_type=raw name=internal-ca.pem sha256=333ed… |
-| └─ managedfile update | content=&lt;12 lines&gt; metadata=&#123;"object":"internal-ca.pem"&#125; mode=0644 pa… | changed=true path=/usr/local/share/ca-certificates/osapi-internal-ca.…       |
+| └─ managedfile update | content=&lt;12 lines&gt; metadata=&#123;"object":"internal-ca.pem"&#125; mode=0644 ob… | changed=true path=/usr/local/share/ca-certificates/osapi-internal-ca.…       |
 
 ## Add a CA on the RHEL family (create)
 
@@ -69,7 +69,7 @@ The behaviors that certificate calls, and each call that its examples make.
 | certificate create    | name=internal-ca object=internal-ca.pem                                                | changed=true name=internal-ca                                                |
 | └─ managedfile get    | path=/etc/pki/ca-trust/source/anchors/osapi-internal-ca.crt                            | error: /etc/pki/ca-trust/source/anchors/osapi-internal-ca.crt: not managed   |
 | └─ object get         | name=internal-ca.pem                                                                   | content=&lt;12 lines&gt; content_type=raw name=internal-ca.pem sha256=333ed… |
-| └─ managedfile update | content=&lt;12 lines&gt; metadata=&#123;"object":"internal-ca.pem"&#125; mode=0644 pa… | changed=true path=/etc/pki/ca-trust/source/anchors/osapi-internal-ca.…       |
+| └─ managedfile update | content=&lt;12 lines&gt; metadata=&#123;"object":"internal-ca.pem"&#125; mode=0644 ob… | changed=true path=/etc/pki/ca-trust/source/anchors/osapi-internal-ca.…       |
 
 ## Add a CA on SUSE (create)
 
@@ -87,7 +87,7 @@ The behaviors that certificate calls, and each call that its examples make.
 | certificate create    | name=internal-ca object=internal-ca.pem                                                | changed=false name=internal-ca                                                   |
 | └─ managedfile get    | path=/usr/local/share/ca-certificates/osapi-internal-ca.crt                            | metadata=&#123;"object":"internal-ca.pem"&#125; path=/usr/local/share/ca-certif… |
 | └─ object get         | name=internal-ca.pem                                                                   | content=&lt;12 lines&gt; content_type=raw name=internal-ca.pem sha256=333ed…     |
-| └─ managedfile update | content=&lt;12 lines&gt; metadata=&#123;"object":"internal-ca.pem"&#125; mode=0644 pa… | changed=false path=/usr/local/share/ca-certificates/osapi-internal-ca…           |
+| └─ managedfile update | content=&lt;12 lines&gt; metadata=&#123;"object":"internal-ca.pem"&#125; mode=0644 ob… | changed=false path=/usr/local/share/ca-certificates/osapi-internal-ca…           |
 
 ## Write a CA from a new object (update)
 
@@ -123,7 +123,7 @@ The behaviors that certificate calls, and each call that its examples make.
 | certificate update    | name=internal-ca                                                                       | changed=false name=internal-ca                                                   |
 | └─ managedfile get    | path=/usr/local/share/ca-certificates/osapi-internal-ca.crt                            | metadata=&#123;"object":"internal-ca.pem"&#125; path=/usr/local/share/ca-certif… |
 | └─ object get         | name=internal-ca.pem                                                                   | content=&lt;12 lines&gt; content_type=raw name=internal-ca.pem sha256=333ed…     |
-| └─ managedfile update | content=&lt;12 lines&gt; metadata=&#123;"object":"internal-ca.pem"&#125; mode=0644 pa… | changed=false path=/usr/local/share/ca-certificates/osapi-internal-ca…           |
+| └─ managedfile update | content=&lt;12 lines&gt; metadata=&#123;"object":"internal-ca.pem"&#125; mode=0644 ob… | changed=false path=/usr/local/share/ca-certificates/osapi-internal-ca…           |
 
 ## Remove a CA (delete)
 

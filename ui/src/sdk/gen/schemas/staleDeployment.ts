@@ -10,7 +10,7 @@ export interface StaleDeployment {
   current_sha: string;
   /** When the file was last deployed. */
   deployed_at: string;
-  /** SHA-256 hash of the currently deployed content. */
+  /** SHA-256 of the object when it was deployed. */
   deployed_sha: string;
   /** Host where the file is deployed. */
   hostname: string;

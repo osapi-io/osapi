@@ -162,6 +162,110 @@ func (s *DebianPublicTestSuite) TestWriteOfTheSameContent() {
 	}
 }
 
+// TestWriteOfANewObject: a file that has the content changes when osapi
+// deployed it from another object, or from the object as it was, such as a
+// template whose object changed and renders the same file. The record then
+// keeps the object's checksum, which the stale check compares, and a
+// secret's record keeps none.
+func (s *DebianPublicTestSuite) TestWriteOfANewObject() {
+	record := func(st managedfile.State) []byte {
+		data, _ := json.Marshal(st)
+
+		return data
+	}
+	tests := []struct {
+		name        string
+		record      []byte
+		secret      bool
+		wantChanged bool
+		wantSHA     string
+	}{
+		{
+			name: "when the record has the object as it is, it does not change",
+			record: record(managedfile.State{
+				Path: path, ObjectName: "a.tmpl", ContentType: "template", ObjectSHA256: "new",
+			}),
+		},
+		{
+			name: "when the object changed, the record gets its checksum",
+			record: record(managedfile.State{
+				Path: path, ObjectName: "a.tmpl", ContentType: "template", ObjectSHA256: "old",
+			}),
+			wantChanged: true,
+			wantSHA:     "new",
+		},
+		{
+			name: "when the record names another object, it changes",
+			record: record(managedfile.State{
+				Path: path, ObjectName: "b.tmpl", ContentType: "template", ObjectSHA256: "new",
+			}),
+			wantChanged: true,
+			wantSHA:     "new",
+		},
+		{
+			name: "when the record has another content type, it changes",
+			record: record(managedfile.State{
+				Path: path, ObjectName: "a.tmpl", ContentType: "raw", ObjectSHA256: "new",
+			}),
+			wantChanged: true,
+			wantSHA:     "new",
+		},
+		{
+			name: "when the record was written before object checksums, it gets one",
+			record: record(managedfile.State{
+				Path: path, ObjectName: "a.tmpl", ContentType: "template",
+			}),
+			wantChanged: true,
+			wantSHA:     "new",
+		},
+		{
+			name: "when the content is a secret, the record keeps no object checksum",
+			record: record(managedfile.State{
+				Path: path, ObjectName: "a.tmpl", ContentType: "template",
+			}),
+			secret: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			fs := memfs.New()
+			s.Require().NoError(fs.MkdirAll("/etc/osapi", 0o755))
+			s.Require().NoError(fs.WriteFile(path, []byte("on\n"), 0o644))
+			entry := jobmocks.NewMockKeyValueEntry(s.ctrl)
+			entry.EXPECT().Value().Return(tc.record)
+			s.state.EXPECT().KVGet(gomock.Any(), "file-state", gomock.Any()).Return(entry, nil)
+			if tc.wantChanged {
+				s.state.EXPECT().KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
+					DoAndReturn(func(_ context.Context, _, _ string, data []byte) (uint64, error) {
+						var st managedfile.State
+						s.Require().NoError(json.Unmarshal(data, &st))
+						s.Equal(tc.wantSHA, st.ObjectSHA256)
+						s.Equal("a.tmpl", st.ObjectName)
+
+						return 1, nil
+					})
+			}
+			p := managedfile.NewDebian(fs, s.state, "file-state", nil, "web-01")
+
+			changed, err := p.Write(
+				context.Background(),
+				managedfile.File{
+					Path:         path,
+					Content:      []byte("on\n"),
+					Object:       "a.tmpl",
+					ContentType:  "template",
+					ObjectSHA256: "new",
+					Secret:       tc.secret,
+				},
+			)
+
+			s.NoError(err)
+			s.Equal(tc.wantChanged, changed)
+		})
+	}
+}
+
 func (s *DebianPublicTestSuite) TestRemove() {
 	tests := []struct {
 		name    string

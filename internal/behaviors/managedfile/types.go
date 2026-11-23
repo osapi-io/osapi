@@ -37,6 +37,10 @@ type UpdateInput struct {
 	// ContentType is how the content was made from the object: as it is, or
 	// rendered as a template.
 	ContentType string `json:"content_type" validate:"omitempty,oneof=raw template" doc:"How the content was made from its object: raw or template"`
+	// ObjectSHA256 is the checksum of the object as it was read, which the
+	// stale check compares with the object's now. The content's own checksum
+	// is not it when the object is a template.
+	ObjectSHA256 string `json:"object_sha256" validate:"omitempty" doc:"SHA-256 of the object that the content came from, in hex"`
 }
 
 // DeleteInput is a file to stop managing.
@@ -77,8 +81,9 @@ type File struct {
 	// secret's could be recovered by guessing.
 	Secret   bool
 	Metadata map[string]string
-	// Object and ContentType are where the content came from, for the
-	// record.
-	Object      string
-	ContentType string
+	// Object, ContentType and ObjectSHA256 are where the content came from,
+	// for the record. A secret's record keeps no ObjectSHA256 either.
+	Object       string
+	ContentType  string
+	ObjectSHA256 string
 }

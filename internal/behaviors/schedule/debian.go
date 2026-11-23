@@ -244,7 +244,8 @@ func (d *debian) deploy(
 		return false, err
 	}
 	content := obj.Content
-	if or(string(contentType), obj.ContentType) == string(client.ContentTemplate) {
+	kind := or(or(string(contentType), obj.ContentType), string(client.ContentRaw))
+	if kind == string(client.ContentTemplate) {
 		data := behavior.TemplateData{Vars: vars, Hostname: d.hostname}
 		if d.facts != nil {
 			data.Facts = d.facts()
@@ -260,7 +261,15 @@ func (d *debian) deploy(
 		}
 	}
 	result, err := behavior.Call(ctx, managedfile.Behavior, managedfile.Update, d.files,
-		managedfile.UpdateInput{Path: path, Content: content, Mode: mode, Metadata: record})
+		managedfile.UpdateInput{
+			Path:         path,
+			Content:      content,
+			Mode:         mode,
+			Metadata:     record,
+			Object:       objectName,
+			ContentType:  kind,
+			ObjectSHA256: obj.SHA256,
+		})
 
 	return result.Changed, err
 }

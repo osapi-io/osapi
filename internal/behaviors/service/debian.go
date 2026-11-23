@@ -168,11 +168,12 @@ func (d *debian) Deploy(
 	}
 	result, err := behavior.Call(ctx, managedfile.Behavior, managedfile.Update, d.files,
 		managedfile.UpdateInput{
-			Path:     path,
-			Content:  obj.Content,
-			Mode:     "0644",
-			Metadata: map[string]string{"object": u.Object},
-			Object:   u.Object,
+			Path:         path,
+			Content:      obj.Content,
+			Mode:         "0644",
+			Metadata:     map[string]string{"object": u.Object},
+			Object:       u.Object,
+			ObjectSHA256: obj.SHA256,
 		})
 	if err != nil || !result.Changed {
 		return false, err

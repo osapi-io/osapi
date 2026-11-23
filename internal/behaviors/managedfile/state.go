@@ -26,7 +26,10 @@ import (
 )
 
 // State is the record osapi keeps of a file it wrote, in the file-state
-// store: what it wrote, where, with what checksum and when. Every part of
+// store: what it wrote, where, with what checksum and when. SHA256 is the
+// checksum of the file, for drift. ObjectSHA256 is the checksum of the object
+// the file came from, for the stale check: the file of a template is the
+// object rendered, so the two differ. Every part of
 // osapi that writes files on a host records them this way, and the
 // controller reads the records to report drift, so the format lives with the
 // behavior that owns managed files.
@@ -34,6 +37,7 @@ type State struct {
 	ObjectName   string            `json:"object_name"`
 	Path         string            `json:"path"`
 	SHA256       string            `json:"sha256"`
+	ObjectSHA256 string            `json:"object_sha256,omitempty"`
 	Mode         string            `json:"mode,omitempty"`
 	Owner        string            `json:"owner,omitempty"`
 	Group        string            `json:"group,omitempty"`

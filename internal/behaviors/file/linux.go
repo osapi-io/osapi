@@ -92,13 +92,14 @@ func (l *linux) Deploy(
 
 	result, err := behavior.Call(ctx, managedfile.Behavior, managedfile.Update, l.files,
 		managedfile.UpdateInput{
-			Path:        in.Path,
-			Content:     content,
-			Mode:        in.Mode,
-			Owner:       in.Owner,
-			Group:       in.Group,
-			Object:      in.ObjectName,
-			ContentType: contentType,
+			Path:         in.Path,
+			Content:      content,
+			Mode:         in.Mode,
+			Owner:        in.Owner,
+			Group:        in.Group,
+			Object:       in.ObjectName,
+			ContentType:  contentType,
+			ObjectSHA256: obj.SHA256,
 		})
 	if err != nil {
 		return UpdateResult{}, err

@@ -103,16 +103,20 @@ func (s *DebianPublicTestSuite) TestList() {
 }
 
 // TestCreateRendersTheFacts: a template reads the agent's facts, as the
-// file deployer's did.
+// file deployer's did. The record keeps the object and its checksum, for the
+// stale check.
 func (s *DebianPublicTestSuite) TestCreateRendersTheFacts() {
 	s.files.EXPECT().Read(gomock.Any(), gomock.Any()).
 		Return(managedfile.Record{}, managedfile.ErrNotManaged).AnyTimes()
 	s.objects.EXPECT().Object(gomock.Any(), "arch.tmpl").
-		Return(object.Object{Name: "arch.tmpl", Content: "# {{ .Facts.architecture }}\n", ContentType: "template"}, nil)
+		Return(object.Object{Name: "arch.tmpl", Content: "# {{ .Facts.architecture }}\n", ContentType: "template", SHA256: "object"}, nil)
 	s.files.EXPECT().Write(gomock.Any(), gomock.Any()).
 		DoAndReturn(func(_ context.Context, f managedfile.File) (bool, error) {
 			s.Equal("/etc/cron.d/arch", f.Path)
 			s.Equal("# arm64\n", string(f.Content))
+			s.Equal("arch.tmpl", f.Object)
+			s.Equal("template", f.ContentType)
+			s.Equal("object", f.ObjectSHA256)
 
 			return true, nil
 		})
