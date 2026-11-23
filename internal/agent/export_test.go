@@ -63,7 +63,6 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/node/load"
 	memProv "github.com/osapi-io/osapi/internal/provider/node/memory"
 	"github.com/osapi-io/osapi/internal/provider/node/ntp"
-	"github.com/osapi-io/osapi/internal/provider/node/power"
 )
 
 // SetEmbeddedFS overrides the embedded filesystem for testing.
@@ -513,7 +512,6 @@ func SetAgentAppConfig(
 	if a.registry != nil {
 		a.registry.processors["node"] = NewNodeProcessor(
 			ntp.Provider(nil),
-			power.Provider(nil),
 			nil,
 			nil,
 			a.logger,
@@ -541,7 +539,6 @@ func SetAgentHostProvider(
 	if a.registry != nil {
 		a.registry.processors["node"] = NewNodeProcessor(
 			ntp.Provider(nil),
-			power.Provider(nil),
 			nil,
 			nil,
 			a.logger,
@@ -818,7 +815,6 @@ func ExportProviders(
 		"load":        e.load(),
 		"cron":        e.cron(),
 		"ntp":         e.ntp(),
-		"power":       e.power(),
 		"process":     e.process(),
 		"user":        e.user(),
 		"certificate": e.certificate(),

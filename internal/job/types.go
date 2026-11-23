@@ -192,12 +192,6 @@ const (
 	OperationNtpDelete = client.OpNtpDelete
 )
 
-// Power operations.
-const (
-	OperationPowerReboot   = client.OpPowerReboot
-	OperationPowerShutdown = client.OpPowerShutdown
-)
-
 // Process operations.
 const (
 	OperationProcessList   = client.OpProcessList

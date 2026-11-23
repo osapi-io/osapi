@@ -1,7 +1,17 @@
 # Power
 
-Manage power state.
+Reboot or shut down the host.
 
 import DocCardList from '@theme/DocCardList';
 
 <DocCardList />
+
+## Permission
+
+Each command needs the `power:execute` permission.
+`osapi token roles get --name <role>` shows what a role grants.
+
+## Notes
+
+The \[power behavior](../../../../../reference/behaviors/power/power.md) page
+tells where the behavior runs, what it is built on and its settings.

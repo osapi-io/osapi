@@ -18,7 +18,6 @@ import { ScheduleDeleteBlock } from "@/components/domain/schedule-delete-block";
 import { ContainerActionBlock } from "@/components/domain/container-action-block";
 import { DockerExecBlock } from "@/components/domain/docker-exec-block";
 import { NtpBlock } from "@/components/domain/ntp-block";
-import { PowerBlock } from "@/components/domain/power-block";
 import { ProcessSignalBlock } from "@/components/domain/process-signal-block";
 import { UserBlock } from "@/components/domain/user-block";
 import { UserPasswordBlock } from "@/components/domain/user-password-block";
@@ -59,10 +58,6 @@ import {
   putNodeNtp,
   deleteNodeNtp,
 } from "@/sdk/gen/ntp-management-api-ntp-operations/ntp-management-api-ntp-operations";
-import {
-  postNodePowerReboot,
-  postNodePowerShutdown,
-} from "@/sdk/gen/power-management-api-power-operations/power-management-api-power-operations";
 import {
   getNodeProcess,
   getNodeProcessByPid,
@@ -496,16 +491,6 @@ export function Configure() {
           case "ntp-delete":
             result = await deleteNodeNtp(t);
             break;
-          case "power-reboot":
-            result = await postNodePowerReboot(t, {
-              ...(block.data.delay ? { delay: Number(block.data.delay) } : {}),
-            });
-            break;
-          case "power-shutdown":
-            result = await postNodePowerShutdown(t, {
-              ...(block.data.delay ? { delay: Number(block.data.delay) } : {}),
-            });
-            break;
           case "process-list":
             result = await getNodeProcess(t);
             break;
@@ -887,15 +872,6 @@ export function Configure() {
       case "ntp-get":
       case "ntp-delete":
         return null;
-      case "power-reboot":
-      case "power-shutdown":
-        return (
-          <PowerBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-          />
-        );
       case "process-list":
         return null;
       case "process-get":

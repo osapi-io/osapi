@@ -129,7 +129,9 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 			continue
 		}
 		for _, m := range b.Methods {
-			if m.Verb != behavior.VerbWrite {
+			// A method that takes the host down, such as a reboot, never runs
+			// on the host the test runs on.
+			if m.Verb != behavior.VerbWrite || m.Disruptive {
 				continue
 			}
 			for _, ex := range m.Examples {

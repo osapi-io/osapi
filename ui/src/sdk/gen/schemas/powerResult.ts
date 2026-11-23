@@ -6,20 +6,17 @@
  */
 import type { PowerResultStatus } from './powerResultStatus';
 
-/**
- * Result of a power operation for one host.
- */
 export interface PowerResult {
-  /** Hostname of the agent that processed this operation. */
+  /** reboot or shutdown */
+  action?: string;
+  /** Always true: each run changes the host. */
+  changed?: boolean;
+  /** Seconds before the host goes down. */
+  delay?: number;
+  /** Error message if the agent failed. */
+  error?: string;
+  /** Hostname of the agent that produced this result. */
   hostname: string;
   /** The status of the operation for this host. */
   status: PowerResultStatus;
-  /** The power action performed (reboot, shutdown). */
-  action?: string;
-  /** The delay in seconds before the operation executes. */
-  delay?: number;
-  /** Whether the operation modified system state. */
-  changed?: boolean;
-  /** Error message if the agent failed. */
-  error?: string;
 }
