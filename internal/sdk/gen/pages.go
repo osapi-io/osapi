@@ -122,7 +122,8 @@ func pagePath(
 func serviceTables(
 	m *sdkmodel.Model,
 ) string {
-	rows := []string{"| Service | Description |", "| --- | --- |"}
+	rows := make([]string, 0, 2+len(m.Services))
+	rows = append(rows, "| Service | Description |", "| --- | --- |")
 	for _, s := range m.Services {
 		rows = append(rows, fmt.Sprintf("| [%s](%s.md) | %s |",
 			s.Name, snake(s.Name), cell(sentence(s.Doc))))

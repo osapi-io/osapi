@@ -157,7 +157,10 @@ func (s *PagesTestSuite) TestRunPages() {
 				index := s.page("client.md")
 				s.Contains(index, "<!-- osapi:sdk-services -->\n\n"+
 					"| Service | Description |\n| --- | --- |\n")
-				s.Contains(index, "| [NetworkDNS](network_dns.md) | The DNS resolvers of each interface of the host. |")
+				s.Contains(
+					index,
+					"| [NetworkDNS](network_dns.md) | The DNS resolvers of each interface of the host. |",
+				)
 				s.Contains(index, "| [Job](job.md) | The job queue. |")
 				s.NotContains(index, "###")
 				s.NotContains(index, "old")
