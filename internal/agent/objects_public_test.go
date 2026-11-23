@@ -30,8 +30,8 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/agent"
+	agentMocks "github.com/osapi-io/osapi/internal/agent/mocks"
 	"github.com/osapi-io/osapi/internal/behavior"
-	fileMocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
 )
 
 type ObjectsPublicTestSuite struct {
@@ -79,7 +79,7 @@ func (s *ObjectsPublicTestSuite) TestObject() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			store := fileMocks.NewMockObjects(gomock.NewController(s.T()))
+			store := agentMocks.NewMockObjectReader(gomock.NewController(s.T()))
 			store.EXPECT().ObjectGetBytes(gomock.Any(), "b", "a").Return([]byte("x"), tc.get)
 			if tc.get == nil {
 				store.EXPECT().ObjectInfo(gomock.Any(), "b", "a").Return(tc.info, tc.infoErr)
