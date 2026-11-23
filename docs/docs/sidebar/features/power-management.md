@@ -93,8 +93,8 @@ for how osapi finds the OS family.
 
 ## Permissions
 
-The Permission column of [Methods](#methods) gives the permission of each
-method.
+The [power](../reference/behaviors/power/power.md) reference page gives the
+permission of each method.
 
 ## Related
 

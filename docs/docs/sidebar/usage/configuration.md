@@ -152,11 +152,6 @@ Against a NATS server osapi does not run,
 [`osapi nats setup`](cli/nats/setup.md) creates osapi's streams and buckets with
 the controller's connection.
 
-## Permissions
-
-The Permission column of [Methods](#methods) gives the permission of each
-method.
-
 ## Namespace
 
 The `namespace` field on NATS connections prefixes all subject names and

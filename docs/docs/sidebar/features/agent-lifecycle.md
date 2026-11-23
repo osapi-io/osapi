@@ -140,8 +140,9 @@ The two commands return the current state and a confirmation message.
 
 ## Permissions
 
-The Permission column of [Methods](#methods) gives the permission of each
-method.
+The [agent](../reference/endpoints/agent.md) and
+[admission](../reference/endpoints/admission.md) reference pages give the
+permission of each method.
 
 ## Related
 

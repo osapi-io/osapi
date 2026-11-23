@@ -97,8 +97,3 @@ change.
 
 The watcher can move to a separate process. It needs only access to NATS KV and
 a `Notifier` implementation.
-
-## Permissions
-
-The Permission column of [Methods](#methods) gives the permission of each
-method.

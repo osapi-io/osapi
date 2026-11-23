@@ -123,8 +123,8 @@ on a host.
 
 ## Permissions
 
-The Permission column of [Methods](#methods) gives the permission of each
-method.
+The [certificate](../reference/behaviors/certificate/certificate.md) reference
+page gives the permission of each method.
 
 ## Related
 

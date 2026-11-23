@@ -196,8 +196,8 @@ family.
 
 ## Permissions
 
-The Permission column of [Methods](#methods) gives the permission of each
-method.
+The [schedule](../reference/behaviors/schedule/schedule.md) reference page gives
+the permission of each method.
 
 ## Naming rules
 

@@ -196,7 +196,7 @@ controller:
       bearer_token: '<jwt>'
 ```
 
-Refer to [Configuration](../usage/configuration.md#permissions) for all the
+Refer to [Configuration](../usage/configuration.md#authentication) for all the
 settings, with custom roles and CORS.
 
 ## Agent-Level authentication (PKI)

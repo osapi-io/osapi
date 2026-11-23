@@ -69,8 +69,9 @@ methods do not need it.
 
 ## Permissions
 
-The Permission column of [Methods](#methods) gives the permission of each
-method.
+The [docker](../reference/behaviors/docker/docker.md) and
+[image](../reference/behaviors/image/image.md) reference pages give the
+permission of each method.
 
 ## Related
 

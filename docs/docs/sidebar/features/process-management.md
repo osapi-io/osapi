@@ -62,8 +62,8 @@ names its host. A host that failed or that was skipped shows its error.
 
 ## Permissions
 
-The Permission column of [Methods](#methods) gives the permission of each
-method.
+The [process](../reference/behaviors/process/process.md) reference page gives
+the permission of each method.
 
 ## Related
 
