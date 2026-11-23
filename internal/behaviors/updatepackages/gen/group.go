@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	updatepackages "github.com/osapi-io/osapi/internal/behaviors/updatepackages"
@@ -73,6 +74,7 @@ func HandleUpdate(
 var Group = endpoint.Define(
 	"updatepackages",
 	"The updates the package index has for the host",
+	endpoint.Area(area.Software),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("updatepackages_operations", "Node/Updatepackages", "The updates the package index has for the host"),

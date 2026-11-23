@@ -103,3 +103,20 @@ export const BEHAVIOR_BLOCKS = {
 export type BehaviorBlockType = keyof typeof BEHAVIOR_BLOCKS;
 
 export type BehaviorName = "certificate" | "command" | "disk" | "file" | "group" | "hostname" | "load" | "memory" | "ntp" | "os" | "package" | "power" | "process" | "route" | "schedule" | "service" | "sshkey" | "status" | "sysctl" | "timezone" | "updatepackages" | "uptime" | "user" | "docker" | "image" | "entry" | "source" | "connectivity" | "dns" | "interface";
+
+export const AREAS = [
+  {"name":"services","label":"Services"},
+  {"name":"software","label":"Software"},
+  {"name":"config","label":"Config"},
+  {"name":"node","label":"Node"},
+  {"name":"networking","label":"Networking"},
+  {"name":"security","label":"Security"},
+  {"name":"containers","label":"Containers"},
+  {"name":"files","label":"Files"},
+  {"name":"command","label":"Command"},
+  {"name":"hardware","label":"Hardware"},
+  {"name":"audit","label":"Audit"},
+  {"name":"fleet","label":"Fleet"},
+] as const;
+
+export type AreaName = (typeof AREAS)[number]["name"];

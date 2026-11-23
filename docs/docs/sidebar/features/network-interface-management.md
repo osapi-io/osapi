@@ -187,8 +187,9 @@ access and is not available in standard container environments.
   interface commands
 - [CLI Reference](../usage/cli/client/node/network/interface/route/route.mdx):
   route commands
-- [SDK Reference](../sdk/client/network_interface.md): NetworkInterface service
-- [SDK Reference](../sdk/client/network_interface_route.md):
+- [SDK Reference](../sdk/client/networking/network_interface.md):
+  NetworkInterface service
+- [SDK Reference](../sdk/client/networking/network_interface_route.md):
   NetworkInterfaceRoute service
 - [Network Management](network-management.md): DNS and ping
 - [Platform Detection](../sdk/platform/detection.md): OS family detection

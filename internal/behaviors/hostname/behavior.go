@@ -25,6 +25,7 @@ package hostname
 import (
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 )
 
@@ -33,7 +34,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"hostname", "Get or set the hostname of target hosts",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaConfig),
+	behavior.Area(area.Config),
 	behavior.CLI,
 	// gohai reads the name from hostname, on Linux and on macOS.
 	behavior.Platform(behavior.PlatformLinux, newLinux),

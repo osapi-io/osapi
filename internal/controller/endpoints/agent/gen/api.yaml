@@ -408,6 +408,7 @@ paths:
       summary: List active agents
       tags:
         - agent_operations
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: List active agents
           input: {}
@@ -470,6 +471,7 @@ paths:
       summary: Get agent details
       tags:
         - agent_operations
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Get agent details
           input:
@@ -535,6 +537,7 @@ paths:
       summary: Drain an agent
       tags:
         - agent_operations
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Drain an agent
           input:
@@ -600,6 +603,7 @@ paths:
       summary: Undrain an agent
       tags:
         - agent_operations
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Undrain an agent
           input:
@@ -640,6 +644,7 @@ paths:
       summary: Show the health of each agent
       tags:
         - agent_operations
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Show the health of each agent
           input: {}

@@ -28,6 +28,7 @@ import (
 	"runtime"
 	"slices"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/validation"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
@@ -82,8 +83,9 @@ type Behavior struct {
 	// Group nests the behavior under another path and command, such as
 	// network for dns. Empty sits it directly under node.
 	Group string
-	// Area is where the UI shows the behavior, one of Areas. Area sets it.
-	Area AreaName
+	// Area is the area of the behavior's operations, one of area.All. Area
+	// sets it.
+	Area area.Name
 	// Parent is the behavior whose items this one's items are under, set
 	// with Of: a user's SSH keys are under the user. Nil for a behavior of
 	// the host.
@@ -192,35 +194,13 @@ func Under(
 	return optionFunc(func(b *Behavior) { b.Group = string(group) })
 }
 
-// AreaName is an area of the UI, one of Areas.
-type AreaName string
-
-// The areas of the UI.
-const (
-	AreaServices   AreaName = "services"
-	AreaSoftware   AreaName = "software"
-	AreaConfig     AreaName = "config"
-	AreaNode       AreaName = "node"
-	AreaNetworking AreaName = "networking"
-	AreaSecurity   AreaName = "security"
-	AreaCommand    AreaName = "command"
-	AreaHardware   AreaName = "hardware"
-	AreaContainers AreaName = "containers"
-)
-
-// Areas are the areas of the UI that a served behavior can sit in: the
-// groups of the Configure page's Add Block panel.
-var Areas = []AreaName{
-	AreaServices, AreaSoftware, AreaConfig, AreaNode, AreaNetworking, AreaSecurity, AreaCommand,
-	AreaHardware, AreaContainers,
-}
-
-// Area puts a served behavior in an area of the UI: Area(AreaHardware) puts
-// disk's blocks under Hardware in the Configure page's Add Block panel.
-// behavior validate refuses a behavior with API and no area, or an area
-// that is not one of Areas.
+// Area puts a served behavior in an area, one of area.All:
+// Area(area.Hardware) puts disk's blocks under Hardware in the Configure
+// page's Add Block panel, and its SDK page under Hardware. behavior validate
+// refuses a behavior with API and no area, or an area that is not one of
+// area.All.
 func Area(
-	name AreaName,
+	name area.Name,
 ) Option {
 	return optionFunc(func(b *Behavior) { b.Area = name })
 }

@@ -14,6 +14,7 @@ Read the audit log. `osapi controller endpoint get --name audit` shows the same.
 | ----------- | ------------------ |
 | Name        | audit              |
 | Description | Read the audit log |
+| Area        | audit              |
 
 ### Methods (3)
 

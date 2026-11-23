@@ -22,7 +22,10 @@
 // reaches an address, by ICMP ping.
 package connectivity
 
-import "github.com/osapi-io/osapi/internal/behavior"
+import (
+	"github.com/osapi-io/osapi/internal/area"
+	"github.com/osapi-io/osapi/internal/behavior"
+)
 
 // The ping commands and what each prints, for the examples.
 const (
@@ -63,7 +66,7 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Node,
 	behavior.Under(behavior.GroupNetwork),
 	behavior.API,
-	behavior.Area(behavior.AreaNetworking),
+	behavior.Area(area.Networking),
 	behavior.CLI,
 	behavior.Platform(behavior.PlatformLinux, newLinux),
 	behavior.Platform(behavior.PlatformDarwin, newDarwin),

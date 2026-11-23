@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	uptime "github.com/osapi-io/osapi/internal/behaviors/uptime"
@@ -44,6 +45,7 @@ func HandleGet(
 var Group = endpoint.Define(
 	"uptime",
 	"Get the uptime of target hosts",
+	endpoint.Area(area.Node),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("uptime_operations", "Node/Uptime", "Get the uptime of target hosts"),

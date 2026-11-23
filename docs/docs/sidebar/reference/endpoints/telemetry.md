@@ -15,6 +15,7 @@ Read telemetry through the controller.
 | ----------- | ------------------------------------- |
 | Name        | telemetry                             |
 | Description | Read telemetry through the controller |
+| Area        | fleet                                 |
 
 ### Methods (1)
 

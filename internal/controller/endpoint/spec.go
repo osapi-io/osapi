@@ -64,6 +64,12 @@ var Spec = guide.Spec{
 
 		{
 			Kind: KindOption,
+			Name: `Area(area.Name)`,
+			Does: "Puts the group's operations in an area, one of area.All: the tab of the UI's Configure page, the folder of the SDK's page and its section of the docs site's SDK menu. The spec gives each operation its area as x-osapi-area. Use a constant of package area, such as area.Fleet. area.All has the label and the order of each area.",
+			When: "In each group. endpoint validate refuses a group with none.",
+		},
+		{
+			Kind: KindOption,
 			Name: `Title("title")`,
 			Does: "Sets the title of the group's spec. The full spec puts it in front of each tag, and the UI's client files get their names from the result.",
 			When: "When a group moves from a hand-written spec: copy its info.title, so no client file is renamed.",

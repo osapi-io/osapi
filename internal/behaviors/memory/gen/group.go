@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	memory "github.com/osapi-io/osapi/internal/behaviors/memory"
@@ -43,6 +44,7 @@ func HandleGet(
 var Group = endpoint.Define(
 	"memory",
 	"Get the memory usage of target hosts",
+	endpoint.Area(area.Hardware),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("memory_operations", "Node/Memory", "Get the memory usage of target hosts"),

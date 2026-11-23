@@ -25,6 +25,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
@@ -40,6 +41,7 @@ var (
 // Group is the job group's definition.
 var Group = endpoint.Register(endpoint.Define(
 	"job", "Manage the jobs in the queue",
+	endpoint.Area(area.Fleet),
 	endpoint.Title("Job Management API"),
 	endpoint.Tag("job_operations", "Job", "Operations related to the job queue."),
 	endpoint.Uses[Deps](),

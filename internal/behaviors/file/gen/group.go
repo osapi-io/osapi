@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	file "github.com/osapi-io/osapi/internal/behaviors/file"
@@ -123,6 +124,7 @@ func HandleDelete(
 var Group = endpoint.Define(
 	"file",
 	"Files of the object store, deployed to the host",
+	endpoint.Area(area.Config),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("file_operations", "Node/File", "Files of the object store, deployed to the host"),

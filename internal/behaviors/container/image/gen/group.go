@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	image "github.com/osapi-io/osapi/internal/behaviors/container/image"
@@ -119,6 +120,7 @@ func HandleDelete(
 var Group = endpoint.Define(
 	"image",
 	"The Docker images of the host",
+	endpoint.Area(area.Containers),
 	endpoint.Prefix("node/{hostname}/container"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("container_image_operations", "Node/Image", "The Docker images of the host"),

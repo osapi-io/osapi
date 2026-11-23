@@ -297,6 +297,7 @@ paths:
       summary: List the certificate authorities that the host trusts
       tags:
         - certificate_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: A Debian host with a system CA
           input:
@@ -362,6 +363,7 @@ paths:
       summary: Add a certificate authority to the trust store
       tags:
         - certificate_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: Add a CA
           input:
@@ -425,6 +427,7 @@ paths:
       summary: Remove a certificate authority that osapi deployed
       tags:
         - certificate_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: Remove a CA
           input:
@@ -486,6 +489,7 @@ paths:
       summary: Get one certificate authority
       tags:
         - certificate_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: A CA that osapi deployed, by the name it was deployed with
           input:
@@ -557,6 +561,7 @@ paths:
       summary: Write a certificate authority that osapi deployed again
       tags:
         - certificate_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: Write a CA from a new object
           input:

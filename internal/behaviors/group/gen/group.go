@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	group "github.com/osapi-io/osapi/internal/behaviors/group"
@@ -151,6 +152,7 @@ func HandleDelete(
 var Group = endpoint.Define(
 	"group",
 	"The groups of the host",
+	endpoint.Area(area.Security),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("group_operations", "Node/Group", "The groups of the host"),

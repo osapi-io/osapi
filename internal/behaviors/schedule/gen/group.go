@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	schedule "github.com/osapi-io/osapi/internal/behaviors/schedule"
@@ -162,6 +163,7 @@ func HandleDelete(
 var Group = endpoint.Define(
 	"schedule",
 	"The cron entries that osapi deploys",
+	endpoint.Area(area.Config),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("schedule_operations", "Node/Schedule", "The cron entries that osapi deploys"),

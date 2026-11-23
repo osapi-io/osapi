@@ -97,14 +97,23 @@ export function featureItems(): Item[] {
   return pages('sidebar/features', ['features']).map(doc);
 }
 
-// sdkItems are the pages of the SDK: the client's overview and the page of
-// each service, one list as the services are fields of one client, then the
-// platform pages and a link to the orchestrator.
+// sdkItems are the pages of the SDK: the client's overview, then a section
+// for each area, with the page of each of its services. internal/sdk/gen
+// writes a folder for each area, and its _category_.json, from the areas of
+// the spec, so the sections have the labels and the order of area.All in Go.
+// Then the platform pages and a link to the orchestrator.
 export function sdkItems(): Item[] {
   const items: Item[] = [
     header('Client Library'),
     ...pages('sidebar/sdk/client').map(doc)
   ];
+  for (const f of folders('sidebar/sdk/client')) {
+    items.push(
+      separator,
+      header(f.label),
+      ...pages(`sidebar/sdk/client/${f.name}`).map(doc)
+    );
+  }
   items.push(
     separator,
     header('Platform'),

@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	sshkey "github.com/osapi-io/osapi/internal/behaviors/sshkey"
@@ -110,6 +111,7 @@ func HandleDelete(
 var Group = endpoint.Define(
 	"sshkey",
 	"The authorized SSH keys of a user",
+	endpoint.Area(area.Security),
 	endpoint.Prefix("node/{hostname}/user/{name}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("sshkey_operations", "Node/Sshkey", "The authorized SSH keys of a user"),

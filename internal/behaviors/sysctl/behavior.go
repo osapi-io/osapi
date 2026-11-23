@@ -31,6 +31,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	"github.com/osapi-io/osapi/internal/validation/rule"
@@ -57,7 +58,7 @@ var Behavior = behavior.Register(behavior.Define(
 	// move them.
 	behavior.Writes(DefaultDir+"/osapi-*.conf"),
 	behavior.API,
-	behavior.Area(behavior.AreaConfig),
+	behavior.Area(area.Config),
 	behavior.CLI,
 	behavior.Validator("sysctl_key", keyRE.MatchString,
 		func(t rule.Target) { t.Pattern(keyPattern) },

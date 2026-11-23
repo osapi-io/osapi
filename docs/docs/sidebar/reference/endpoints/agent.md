@@ -15,6 +15,7 @@ Manage the agents in the fleet: discovery, drain and PKI enrollment.
 | ----------- | ------------------------------------------------------------------- |
 | Name        | agent                                                               |
 | Description | Manage the agents in the fleet: discovery, drain and PKI enrollment |
+| Area        | fleet                                                               |
 
 ### Methods (5)
 

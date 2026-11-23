@@ -15,6 +15,7 @@ the same.
 | ----------- | ---------------------- |
 | Name        | admission              |
 | Description | The admission of nodes |
+| Area        | fleet                  |
 
 ### Methods (6)
 

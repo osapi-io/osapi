@@ -30,6 +30,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 
@@ -39,10 +40,15 @@ import (
 )
 
 // pageDir is the SDK's reference pages, from the root of the repository.
-// The generator owns each page in it that starts with pageHeader, and fills
-// the table of services of client.md. The pages are one list, as the
-// services are fields of one client.
+// The page of each service is in the folder of its area, such as
+// fleet/agent.md, and the _category_.json of the folder gives the area's
+// label and order, from the spec's x-osapi-areas. The generator owns each
+// folder of pageDir, and fills the table of services of client.md.
 const pageDir = "docs/docs/sidebar/sdk/client"
+
+// categoryFile is the file of a folder of the docs site that gives its
+// label and its place in the sidebar.
+const categoryFile = "_category_.json"
 
 // pageHeader heads each page this generator writes, under its front
 // matter.
@@ -80,13 +86,17 @@ func runPages(
 	written := handExamples(filepath.Join(root, exampleDir))
 	w := &genfile.Writer{Root: root}
 	users := typeUsers(m)
-	old, _ := os.ReadDir(filepath.Join(root, pageDir))
-	for _, e := range old {
-		name := filepath.Join(pageDir, e.Name())
-		data, err := os.ReadFile(filepath.Join(root, name))
-		if err == nil && strings.Contains(string(data), pageHeader) {
-			_ = w.Remove(name)
+	removeOld(w, root)
+	for i, a := range m.Areas {
+		if !slices.ContainsFunc(
+			m.Services,
+			func(s *sdkmodel.Service) bool { return s.Area == a.Name },
+		) {
+			continue
 		}
+		// An area's folder follows client.md, the first page of pageDir.
+		_ = w.Write(filepath.Join(pageDir, a.Name, categoryFile),
+			fmt.Appendf(nil, "{\n  \"label\": %q,\n  \"position\": %d\n}\n", a.Label, i+2))
 	}
 	for _, s := range m.Services {
 		cs, err := calls(s)
@@ -110,26 +120,65 @@ func runPages(
 	return w.Flush()
 }
 
-// pagePath is the page of s, from the root of the repository.
+// removeOld records the removal of each page that a run wrote before, in
+// pageDir and in the folder of each area, and of each folder's
+// categoryFile, so an area or a service that is gone leaves nothing behind.
+func removeOld(
+	w *genfile.Writer,
+	root string,
+) {
+	old, _ := os.ReadDir(filepath.Join(root, pageDir))
+	for _, e := range old {
+		name := filepath.Join(pageDir, e.Name())
+		if !e.IsDir() {
+			data, err := os.ReadFile(filepath.Join(root, name))
+			if err == nil && strings.Contains(string(data), pageHeader) {
+				_ = w.Remove(name)
+			}
+
+			continue
+		}
+		_ = w.Remove(filepath.Join(name, categoryFile))
+		pages, _ := os.ReadDir(filepath.Join(root, name))
+		for _, p := range pages {
+			page := filepath.Join(name, p.Name())
+			data, err := os.ReadFile(filepath.Join(root, page))
+			if err == nil && strings.Contains(string(data), pageHeader) {
+				_ = w.Remove(page)
+			}
+		}
+	}
+}
+
+// pagePath is the page of s, in the folder of its area, from the root of
+// the repository.
 func pagePath(
 	s *sdkmodel.Service,
 ) string {
-	return filepath.Join(pageDir, snake(s.Name)+".md")
+	return filepath.Join(pageDir, s.Area, snake(s.Name)+".md")
 }
 
-// serviceTables is the table of the services of client.md, in the order of
-// their names.
+// serviceTables is the tables of the services of client.md: one for each
+// area that has a service, under its label, in the order of the areas, with
+// its services in the order of their names.
 func serviceTables(
 	m *sdkmodel.Model,
 ) string {
-	rows := make([]string, 0, 2+len(m.Services))
-	rows = append(rows, "| Service | Description |", "| --- | --- |")
-	for _, s := range m.Services {
-		rows = append(rows, fmt.Sprintf("| [%s](%s.md) | %s |",
-			s.Name, snake(s.Name), cell(sentence(s.Doc))))
+	var parts []string
+	for _, a := range m.Areas {
+		rows := []string{"### " + a.Label, "", "| Service | Description |", "| --- | --- |"}
+		for _, s := range m.Services {
+			if s.Area == a.Name {
+				rows = append(rows, fmt.Sprintf("| [%s](%s/%s.md) | %s |",
+					s.Name, a.Name, snake(s.Name), cell(sentence(s.Doc))))
+			}
+		}
+		if len(rows) > 4 {
+			parts = append(parts, strings.Join(rows, "\n"))
+		}
 	}
 
-	return strings.Join(rows, "\n")
+	return strings.Join(parts, "\n\n")
 }
 
 // serviceTypes is the types that the methods of s send and receive, in the

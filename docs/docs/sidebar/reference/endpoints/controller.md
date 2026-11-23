@@ -15,6 +15,7 @@ shows the same.
 | ----------- | --------------------------- |
 | Name        | controller                  |
 | Description | The controller of the fleet |
+| Area        | fleet                       |
 
 ### Methods (1)
 

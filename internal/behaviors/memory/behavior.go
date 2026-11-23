@@ -21,14 +21,17 @@
 // Package memory is the memory behavior: the memory of the host, in bytes.
 package memory
 
-import "github.com/osapi-io/osapi/internal/behavior"
+import (
+	"github.com/osapi-io/osapi/internal/area"
+	"github.com/osapi-io/osapi/internal/behavior"
+)
 
 // Behavior is the memory definition.
 var Behavior = behavior.Register(behavior.Define(
 	"memory", "Get the memory usage of target hosts",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaHardware),
+	behavior.Area(area.Hardware),
 	behavior.CLI,
 	behavior.Platform(behavior.PlatformLinux, newReader),
 	behavior.Platform(behavior.PlatformDarwin, newReader),

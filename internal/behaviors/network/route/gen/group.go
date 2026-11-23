@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	route "github.com/osapi-io/osapi/internal/behaviors/network/route"
@@ -144,6 +145,7 @@ func HandleDelete(
 var Group = endpoint.Define(
 	"route",
 	"The routes of an interface",
+	endpoint.Area(area.Networking),
 	endpoint.Prefix("node/{hostname}/network/interface/{name}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("route_operations", "Node/Route", "The routes of an interface"),

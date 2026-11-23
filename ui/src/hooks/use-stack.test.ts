@@ -1,10 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import {
   ALL_BLOCK_TYPES,
+  BLOCK_AREAS,
   blockRunnable,
   newBlock,
   type Block,
 } from "@/hooks/use-stack";
+import { AREAS } from "@/lib/blocks.gen";
 import { blockKind } from "@/lib/permissions";
 
 const blockType = (type: string) => {
@@ -62,5 +64,21 @@ describe("blockKind", () => {
       (bt) => blockKind(bt.type) === undefined,
     ).map((bt) => bt.type);
     expect(missing).toEqual([]);
+  });
+});
+
+describe("the areas of the panel", () => {
+  test("are the generated AREAS that have a block, in their order", () => {
+    const withBlocks = AREAS.filter((a) =>
+      ALL_BLOCK_TYPES.some((b) => b.area === a.name),
+    );
+    expect(BLOCK_AREAS.map((a) => [a.name, a.label])).toEqual(
+      withBlocks.map((a) => [a.name, a.label]),
+    );
+  });
+
+  test("leave out an area with no block, such as fleet", () => {
+    expect(BLOCK_AREAS.some((a) => a.name === "fleet")).toBe(false);
+    expect(BLOCK_AREAS.find((a) => a.name === "files")?.label).toBe("Files");
   });
 });

@@ -143,7 +143,8 @@ func (s *MainTestSuite) TestRunErrors() {
 	})
 	s.Run("when the spec is not a model", func() {
 		s.write("internal/controller/api/gen/api.yaml",
-			"openapi: 3.0.0\ninfo: {title: t, version: '1'}\npaths:\n"+
+			"openapi: 3.0.0\ninfo: {title: t, version: '1'}\n"+
+				"x-osapi-areas: [{name: fleet, label: Fleet}]\npaths:\n"+
 				"  /api/x:\n    get:\n      operationId: X\n      tags: [Nope]\n"+
 				"      responses: {'200': {description: ok}}\n")
 		s.ErrorContains(generate(s.root, false), "no tag of the spec")

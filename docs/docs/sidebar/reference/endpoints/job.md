@@ -15,6 +15,7 @@ the same.
 | ----------- | ---------------------------- |
 | Name        | job                          |
 | Description | Manage the jobs in the queue |
+| Area        | fleet                        |
 
 ### Methods (4)
 

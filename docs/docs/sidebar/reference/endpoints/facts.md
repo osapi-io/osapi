@@ -15,6 +15,7 @@ Read the facts that an input can refer to.
 | ----------- | ----------------------------------------- |
 | Name        | facts                                     |
 | Description | Read the facts that an input can refer to |
+| Area        | fleet                                     |
 
 ### Methods (1)
 

@@ -316,6 +316,7 @@ paths:
       summary: Drop a route that osapi wrote
       tags:
         - route_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: One of two routes
           input:
@@ -378,6 +379,7 @@ paths:
       summary: List the routes of an interface
       tags:
         - route_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: An interface with routes
           input:
@@ -453,6 +455,7 @@ paths:
       summary: Add a static route to an interface
       tags:
         - route_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: A route
           input:
@@ -529,6 +532,7 @@ paths:
       summary: Change the gateway or the metric of a route
       tags:
         - route_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: A new gateway and metric
           input:

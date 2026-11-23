@@ -22,7 +22,10 @@
 // the systemd journal of the host, read with journalctl on each Linux host.
 package source
 
-import "github.com/osapi-io/osapi/internal/behavior"
+import (
+	"github.com/osapi-io/osapi/internal/area"
+	"github.com/osapi-io/osapi/internal/behavior"
+)
 
 // Behavior is the sources of the systemd journal: each syslog identifier
 // that has an entry. They are what journald holds now, not a fact of the
@@ -33,7 +36,7 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Node,
 	behavior.Under(behavior.GroupLog),
 	behavior.API,
-	behavior.Area(behavior.AreaNode),
+	behavior.Area(area.Node),
 	behavior.CLI,
 	behavior.Platform(behavior.PlatformLinux, newLinux),
 	behavior.Read("list", List).

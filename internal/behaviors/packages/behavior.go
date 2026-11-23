@@ -23,6 +23,7 @@ package packages
 import (
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 )
 
@@ -53,7 +54,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"package", "The packages installed on the host",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaSoftware),
+	behavior.Area(area.Software),
 	behavior.CLI,
 	behavior.Platform(behavior.PlatformDebian, newDebian),
 	behavior.Platform(behavior.PlatformLinux, newReader),

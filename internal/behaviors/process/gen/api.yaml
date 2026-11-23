@@ -260,6 +260,7 @@ paths:
       summary: List the processes of the host
       tags:
         - process_operations
+      x-osapi-area: node
       x-osapi-examples:
         - doc: A Linux host that runs sleep
           input:
@@ -321,6 +322,7 @@ paths:
       summary: Get one process
       tags:
         - process_operations
+      x-osapi-area: node
       x-osapi-examples:
         - doc: A process of a Linux host
           input:
@@ -389,6 +391,7 @@ paths:
       summary: Send a signal to a process
       tags:
         - process_operations
+      x-osapi-area: node
       x-osapi-examples:
         - doc: Stop a process
           input:

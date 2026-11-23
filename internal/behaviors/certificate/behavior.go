@@ -32,6 +32,7 @@ import (
 	"github.com/osapi-io/osapi/internal/validation/rule"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	"github.com/osapi-io/osapi/internal/behaviors/object"
@@ -125,7 +126,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"certificate", "The certificate authorities that the host trusts",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaSecurity),
+	behavior.Area(area.Security),
 	behavior.CLI,
 	behavior.Requires(object.Behavior),
 	behavior.Requires(managedfile.Behavior),

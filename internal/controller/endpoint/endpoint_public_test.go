@@ -35,6 +35,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/apicontract"
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
@@ -564,11 +565,13 @@ func (s *EndpointPublicTestSuite) TestExamplesAndDocs() {
 // parameter of each method, and keeps the method's own key after the name.
 func (s *EndpointPublicTestSuite) TestPrefix() {
 	g := endpoint.Define("sysctl", "Kernel parameters", endpoint.Prefix("/fleet/node/{hostname}/"),
+		endpoint.Area(area.Config),
 		endpoint.Get[hostOnly, Node]("list"),
 		endpoint.Get[hostKey, Node]("get"),
 	)
 
 	s.Equal("fleet/node/{hostname}", g.Prefix)
+	s.Equal(area.Config, g.Area)
 	s.Equal("/api/fleet/node/{hostname}/sysctl", g.Path(g.Method("list")))
 	s.Equal("/api/fleet/node/{hostname}/sysctl/{key}", g.Path(g.Method("get")))
 	s.Empty(g.Method("list").Key(), "the prefix's field is not the key")
@@ -589,6 +592,7 @@ func (s *EndpointPublicTestSuite) TestPrefix() {
 	get := doc.Paths.Value("/api/fleet/node/{hostname}/sysctl/{key}").Get
 	s.Equal("#/components/parameters/Hostname", get.Parameters[0].Ref)
 	s.Equal("#/components/parameters/NodeKey", get.Parameters[1].Ref)
+	s.Equal("config", get.Extensions[endpoint.AreaExtension], "the operation has its group's area")
 
 	missing := endpoint.Define(
 		"sysctl",
@@ -915,6 +919,15 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 			},
 		},
 		{
+			name: "when the group's area is not one of area.All",
+			group: endpoint.Define("node", "The nodes", endpoint.Area("kitchen"),
+				endpoint.Get[noInput, Node]("list")),
+			want: []string{
+				`area "kitchen" is not one of services, software, config, node, networking, ` +
+					`security, containers, files, command, hardware, audit, fleet.`,
+			},
+		},
+		{
 			name: "when a Sub segment makes a command with no SubDoc, it says so",
 			group: endpoint.Define("node", "The nodes",
 				endpoint.SubDoc("files", "Read the files"),
@@ -960,6 +973,11 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 	seen := map[string]bool{}
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			// Each group but the one about its area has one, so the other
+			// rules are what the case reads.
+			if tc.group.Area == "" {
+				tc.group.Area = area.Fleet
+			}
 			var got []string
 			for _, p := range endpoint.Validate(tc.group) {
 				got = append(got, p.Message)

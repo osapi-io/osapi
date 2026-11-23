@@ -166,5 +166,5 @@ not fail.
 - [CLI Reference: User](../usage/cli/client/node/user/user.mdx)
 - [CLI Reference: SSH Key](../usage/cli/client/node/user/sshkey/sshkey.mdx)
 - [CLI Reference: Group](../usage/cli/client/node/group/group.mdx)
-- [SDK: User](../sdk/client/user.md)
-- [SDK: Group](../sdk/client/group.md)
+- [SDK: User](../sdk/client/security/user.md)
+- [SDK: Group](../sdk/client/security/group.md)

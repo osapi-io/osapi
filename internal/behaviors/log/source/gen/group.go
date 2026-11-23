@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	source "github.com/osapi-io/osapi/internal/behaviors/log/source"
@@ -43,6 +44,7 @@ func HandleList(
 var Group = endpoint.Define(
 	"source",
 	"The sources that write to the systemd journal",
+	endpoint.Area(area.Node),
 	endpoint.Prefix("node/{hostname}/log"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("log_source_operations", "Node/Source", "The sources that write to the systemd journal"),

@@ -203,6 +203,7 @@ paths:
       summary: Get the timezone of the host
       tags:
         - timezone_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: A Linux host on UTC
           input:
@@ -268,6 +269,7 @@ paths:
       summary: Set the timezone of the host
       tags:
         - timezone_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: Set a new timezone
           input:

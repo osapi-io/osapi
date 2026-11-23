@@ -33,6 +33,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"gopkg.in/yaml.v3"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
@@ -75,7 +76,8 @@ func Encode(
 // the comment header. Each group keeps its part in the order of docs: its
 // tag, its paths and its schemas. A tag gets the title of its group in front,
 // with _ for each space, such as Agent_Management_API_agent_operations, and
-// x-tagGroups puts it under that title. The UI's client files take their
+// x-tagGroups puts it under that title. x-osapi-areas lists the areas, with
+// the label and in the order of area.All. The UI's client files take their
 // names from the tags. The shared ErrorResponse schema is first. Two groups
 // that serve one path, or that give one schema or parameter two shapes, are
 // an error.
@@ -163,7 +165,19 @@ func Full(
 			"parameters", params.node,
 		),
 		"x-tagGroups", groups,
+		endpoint.AreasExtension, areas(),
 	), header)
+}
+
+// areas is area.All as the spec lists it: each area's name and label, in
+// order.
+func areas() *yaml.Node {
+	out := &yaml.Node{Kind: yaml.SequenceNode}
+	for _, a := range area.All {
+		out.Content = append(out.Content, mapping("name", string(a.Name), "label", a.Label))
+	}
+
+	return out
 }
 
 // part is one map of the full spec, such as its paths, with the groups'

@@ -15,6 +15,7 @@ Check the health of the controller.
 | ----------- | ---------------------------------- |
 | Name        | health                             |
 | Description | Check the health of the controller |
+| Area        | fleet                              |
 
 ### Methods (3)
 

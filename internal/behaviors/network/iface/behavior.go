@@ -25,6 +25,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behaviors/netplan"
 	"github.com/osapi-io/osapi/internal/validation/rule"
@@ -158,7 +159,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"interface", "The network interfaces of the host",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaNetworking),
+	behavior.Area(area.Networking),
 	behavior.CLI,
 	behavior.Under(behavior.GroupNetwork),
 	behavior.Platform(behavior.PlatformDebian, newDebian),

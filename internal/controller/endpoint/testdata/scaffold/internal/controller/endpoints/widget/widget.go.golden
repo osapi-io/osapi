@@ -25,6 +25,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
@@ -36,6 +37,7 @@ var ErrNotFound = errors.New("not found")
 // lists every option.
 var Group = endpoint.Register(endpoint.Define(
 	"widget", "Widgets of the controller",
+	endpoint.Area(area.Fleet),
 	endpoint.Uses[Deps](),
 	endpoint.Get[ListInput, WidgetList]("list").
 		Handle(List).

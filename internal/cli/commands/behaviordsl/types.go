@@ -21,6 +21,7 @@
 package behaviordsl
 
 import (
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/guide"
 )
@@ -36,12 +37,12 @@ type ListOutput struct {
 
 // Summary is one behavior and the names of its methods.
 type Summary struct {
-	Name     string            `json:"name"`
-	Group    string            `json:"group,omitempty"`
-	Area     behavior.AreaName `json:"area,omitempty"`
-	Methods  []string          `json:"methods"`
-	Doc      string            `json:"doc"                label:"Description"`
-	Internal bool              `json:"internal,omitempty"`
+	Name     string    `json:"name"`
+	Group    string    `json:"group,omitempty"`
+	Area     area.Name `json:"area,omitempty"`
+	Methods  []string  `json:"methods"`
+	Doc      string    `json:"doc"                label:"Description"`
+	Internal bool      `json:"internal,omitempty"`
 }
 
 // GetInput names the behavior.
@@ -57,7 +58,7 @@ type GetOutput struct {
 	Doc        string             `                 json:"doc"             label:"Description"`
 	Placement  behavior.Placement `                 json:"placement"`
 	Group      string             `                 json:"group,omitempty"`
-	Area       behavior.AreaName  `                 json:"area,omitempty"`
+	Area       area.Name          `                 json:"area,omitempty"`
 	Internal   bool               `                 json:"internal"`
 	API        bool               `                 json:"api"             label:"API"`
 	CLI        bool               `                 json:"cli"             label:"CLI"`

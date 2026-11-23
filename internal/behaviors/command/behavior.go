@@ -23,14 +23,17 @@
 // them only where agent.command.enabled is true.
 package command
 
-import "github.com/osapi-io/osapi/internal/behavior"
+import (
+	"github.com/osapi-io/osapi/internal/area"
+	"github.com/osapi-io/osapi/internal/behavior"
+)
 
 // Behavior is the command definition.
 var Behavior = behavior.Register(behavior.Define(
 	"command", "Run a command on target hosts",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaCommand),
+	behavior.Area(area.Command),
 	behavior.CLI,
 	behavior.Platform(behavior.PlatformLinux, newRunner),
 	behavior.Platform(behavior.PlatformDarwin, newRunner),

@@ -29,6 +29,7 @@ import (
 
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	"github.com/osapi-io/osapi/internal/behaviors/object"
@@ -56,7 +57,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"file", "Files of the object store, deployed to the host",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaConfig),
+	behavior.Area(area.Config),
 	behavior.CLI,
 	behavior.Requires(object.Behavior),
 	behavior.Requires(managedfile.Behavior),

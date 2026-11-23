@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	disk "github.com/osapi-io/osapi/internal/behaviors/disk"
@@ -54,6 +55,7 @@ func HandleGet(
 var Group = endpoint.Define(
 	"status",
 	"The status summary of a node",
+	endpoint.Area(area.Node),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("status_operations", "Node/Status", "The status summary of a node"),

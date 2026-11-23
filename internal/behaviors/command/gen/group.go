@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	command "github.com/osapi-io/osapi/internal/behaviors/command"
@@ -84,6 +85,7 @@ func HandleShell(
 var Group = endpoint.Define(
 	"command",
 	"Run a command on target hosts",
+	endpoint.Area(area.Command),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("command_operations", "Node/Command", "Run a command on target hosts"),

@@ -248,6 +248,7 @@ paths:
       summary: Drop the DNS resolvers osapi set on an interface
       tags:
         - network_dns_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: An interface osapi set
           input:
@@ -309,6 +310,7 @@ paths:
       summary: Get the DNS resolvers of an interface
       tags:
         - network_dns_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: An interface with servers and a domain
           input:
@@ -380,6 +382,7 @@ paths:
       summary: Set the DNS resolvers of an interface
       tags:
         - network_dns_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: Set the servers of an interface
           input:

@@ -376,6 +376,7 @@ paths:
       summary: List the network interfaces of the host
       tags:
         - network_interface_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: A Linux host
           input:
@@ -437,6 +438,7 @@ paths:
       summary: Drop the config osapi has of a network interface
       tags:
         - network_interface_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: An interface osapi configures
           input:
@@ -498,6 +500,7 @@ paths:
       summary: Get a network interface of the host
       tags:
         - network_interface_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: An interface with a DHCP address
           input:
@@ -569,6 +572,7 @@ paths:
       summary: Configure a network interface
       tags:
         - network_interface_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: A static address
           input:
@@ -648,6 +652,7 @@ paths:
       summary: Change the config osapi has of a network interface
       tags:
         - network_interface_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: Move an interface to DHCP
           input:

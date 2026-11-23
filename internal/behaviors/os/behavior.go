@@ -22,14 +22,17 @@
 // distribution and version.
 package os
 
-import "github.com/osapi-io/osapi/internal/behavior"
+import (
+	"github.com/osapi-io/osapi/internal/area"
+	"github.com/osapi-io/osapi/internal/behavior"
+)
 
 // Behavior is the os definition.
 var Behavior = behavior.Register(behavior.Define(
 	"os", "Get the operating system of target hosts",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaNode),
+	behavior.Area(area.Node),
 	behavior.CLI,
 	// gohai reads /etc/os-release on Linux, and sw_vers on macOS.
 	behavior.Platform(behavior.PlatformLinux, newReader),

@@ -369,6 +369,7 @@ paths:
       summary: List the services of the host
       tags:
         - service_operations
+      x-osapi-area: services
       x-osapi-examples:
         - doc: A service that osapi deployed reads by its name
           input:
@@ -434,6 +435,7 @@ paths:
       summary: Deploy a service
       tags:
         - service_operations
+      x-osapi-area: services
       x-osapi-examples:
         - doc: Deploy a unit file
           input:
@@ -497,6 +499,7 @@ paths:
       summary: Remove a service that osapi deployed
       tags:
         - service_operations
+      x-osapi-area: services
       x-osapi-examples:
         - doc: Remove a service
           input:
@@ -562,6 +565,7 @@ paths:
       summary: Get one service
       tags:
         - service_operations
+      x-osapi-area: services
       x-osapi-examples:
         - doc: A running service
           input:
@@ -641,6 +645,7 @@ paths:
       summary: Deploy a new unit file for a service
       tags:
         - service_operations
+      x-osapi-area: services
       x-osapi-examples:
         - doc: A new unit file
           input:
@@ -704,6 +709,7 @@ paths:
       summary: Make a service that osapi deployed not start at boot
       tags:
         - service_operations
+      x-osapi-area: services
       x-osapi-examples:
         - doc: Disable the service
           input:
@@ -766,6 +772,7 @@ paths:
       summary: Make a service that osapi deployed start at boot
       tags:
         - service_operations
+      x-osapi-area: services
       x-osapi-examples:
         - doc: Enable the service
           input:
@@ -832,6 +839,7 @@ paths:
       summary: Restart a service that osapi deployed
       tags:
         - service_operations
+      x-osapi-area: services
       x-osapi-examples:
         - doc: Restart the service
           input:
@@ -894,6 +902,7 @@ paths:
       summary: Start a service that osapi deployed
       tags:
         - service_operations
+      x-osapi-area: services
       x-osapi-examples:
         - doc: Start the service
           input:
@@ -956,6 +965,7 @@ paths:
       summary: Stop a service that osapi deployed
       tags:
         - service_operations
+      x-osapi-area: services
       x-osapi-examples:
         - doc: Stop the service
           input:

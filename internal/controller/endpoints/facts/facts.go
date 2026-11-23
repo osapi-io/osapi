@@ -22,6 +22,7 @@
 package facts
 
 import (
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
@@ -29,6 +30,7 @@ import (
 // Group is the facts group's definition.
 var Group = endpoint.Register(endpoint.Define(
 	"facts", "Read the facts that an input can refer to",
+	endpoint.Area(area.Fleet),
 	endpoint.SubDoc("keys", "Read the keys of @fact references"),
 	endpoint.Title("Facts API"),
 	endpoint.Tag("facts", "Facts", "Fact key discovery for @fact. references."),

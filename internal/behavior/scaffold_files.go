@@ -31,6 +31,7 @@ import (
 
 const (
 	behaviorPath     = module + "/internal/behavior"
+	areaPath         = module + "/internal/area"
 	behaviortestPath = module + "/internal/behavior/behaviortest"
 	hostPath         = module + "/internal/behavior/host"
 	atomicfilePath   = module + "/internal/atomicfile"
@@ -128,6 +129,7 @@ func renderGo(
 func (sc scaffold) newFile() *jen.File {
 	f := jen.NewFilePathName(sc.pkg(), sc.goPackage)
 	f.HeaderComment(license)
+	f.ImportName(areaPath, "area")
 	f.ImportName(behaviorPath, "behavior")
 	for _, r := range sc.requires {
 		f.ImportName(r.path, r.pkg)
@@ -283,7 +285,7 @@ func (sc scaffold) behaviorFile() *jen.File {
 		b("API"),
 		// The scaffold writes a config file, so its blocks go under Config in
 		// the UI; the author moves it to the area that fits.
-		b("Area").Call(b("AreaConfig")),
+		b("Area").Call(jen.Qual(areaPath, "Config")),
 		b("CLI"),
 		b("Config").Call(jen.Id("defaults")),
 	)

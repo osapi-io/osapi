@@ -23,6 +23,7 @@ package timezone
 import (
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 )
 
@@ -35,7 +36,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"timezone", "The timezone of the host",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaConfig),
+	behavior.Area(area.Config),
 	behavior.CLI,
 	behavior.Platform(behavior.PlatformLinux, newReader),
 	behavior.Platform(behavior.PlatformDarwin, newReader),

@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	dns "github.com/osapi-io/osapi/internal/behaviors/network/dns"
@@ -104,6 +105,7 @@ func HandleDelete(
 var Group = endpoint.Define(
 	"dns",
 	"The DNS resolvers of each interface of the host",
+	endpoint.Area(area.Networking),
 	endpoint.Prefix("node/{hostname}/network"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("network_dns_operations", "Node/Dns", "The DNS resolvers of each interface of the host"),

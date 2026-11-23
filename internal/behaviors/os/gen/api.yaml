@@ -155,6 +155,7 @@ paths:
       summary: Get the operating system of the host
       tags:
         - os_operations
+      x-osapi-area: node
       x-osapi-examples:
         - doc: An Ubuntu host
           input:

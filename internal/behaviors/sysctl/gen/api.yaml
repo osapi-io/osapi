@@ -291,6 +291,7 @@ paths:
       summary: List the kernel's parameters and which osapi manages
       tags:
         - sysctl_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: Every parameter, and which osapi manages
           input:
@@ -364,6 +365,7 @@ paths:
       summary: Manage a kernel parameter and apply it
       tags:
         - sysctl_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: Turn on IP forwarding
           input:
@@ -427,6 +429,7 @@ paths:
       summary: Stop the management of a kernel parameter
       tags:
         - sysctl_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: Remove a parameter
           input:
@@ -487,6 +490,7 @@ paths:
       summary: Get a kernel parameter's current value, and whether osapi manages it
       tags:
         - sysctl_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: A parameter osapi manages
           input:
@@ -562,6 +566,7 @@ paths:
       summary: Set a kernel parameter, manage it, and apply it
       tags:
         - sysctl_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: Lower swappiness
           input:

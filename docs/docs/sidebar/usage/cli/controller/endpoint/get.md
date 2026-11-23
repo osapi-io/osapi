@@ -25,6 +25,7 @@ $ osapi controller endpoint get --name agent
 [1;38;2;0;213;255mEndpoint group:[0m
   [38;2;10;143;176mName:[0m         agent
   [38;2;10;143;176mDescription:[0m  Manage the agents in the fleet: discovery, drain and PKI enrollment
+  [38;2;10;143;176mArea:[0m         fleet
 
 [1;38;2;255;0;255mMethods (2):[0m
   [38;2;176;48;176mNAME   [0m[38;2;176;48;176mVERB  [0m[38;2;176;48;176mPATH                         [0m[38;2;176;48;176mPERMISSION   [0m[38;2;176;48;176mOPERATION ID[0m
@@ -43,6 +44,7 @@ With `--json`, the command prints:
 {
   "name": "agent",
   "doc": "Manage the agents in the fleet: discovery, drain and PKI enrollment",
+  "area": "fleet",
   "methods": [
     {
       "name": "list",

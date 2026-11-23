@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	connectivity "github.com/osapi-io/osapi/internal/behaviors/network/connectivity"
@@ -55,6 +56,7 @@ func HandlePing(
 var Group = endpoint.Define(
 	"connectivity",
 	"Whether the host reaches an address, by ICMP ping",
+	endpoint.Area(area.Networking),
 	endpoint.Prefix("node/{hostname}/network"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("network_connectivity_operations", "Node/Connectivity", "Whether the host reaches an address, by ICMP ping"),

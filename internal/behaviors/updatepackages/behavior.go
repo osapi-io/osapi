@@ -20,7 +20,10 @@
 
 package updatepackages
 
-import "github.com/osapi-io/osapi/internal/behavior"
+import (
+	"github.com/osapi-io/osapi/internal/area"
+	"github.com/osapi-io/osapi/internal/behavior"
+)
 
 // Behavior is the updates the package index has for the host. They are not
 // facts about the host but what its repositories have, so apt reads them,
@@ -29,7 +32,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"updatepackages", "The updates the package index has for the host",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaSoftware),
+	behavior.Area(area.Software),
 	behavior.CLI,
 	behavior.Platform(behavior.PlatformDebian, newDebian),
 	behavior.Read("list", List).

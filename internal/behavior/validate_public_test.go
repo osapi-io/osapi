@@ -29,6 +29,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 )
@@ -680,7 +681,7 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 		{
 			name: "when a .Before step has the method's input in and out, it breaks no rule",
 			b: behavior.Define("account", "Accounts", behavior.Node, onDebian,
-				behavior.API, behavior.Area(behavior.AreaConfig),
+				behavior.API, behavior.Area(area.Config),
 				behavior.Write("update", setPassword).Describe("Update").Before(hashStep).
 					Fails("no name", pwIn{}, "name"),
 			),
@@ -688,7 +689,7 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 		{
 			name: "when a .Before step is not func(context.Context, In) (In, error)",
 			b: behavior.Define("account", "Accounts", behavior.Node, onDebian,
-				behavior.API, behavior.Area(behavior.AreaConfig),
+				behavior.API, behavior.Area(area.Config),
 				behavior.Write("update", setPassword).Describe("Update").
 					Before(func(pwIn) pwIn { return pwIn{} }).
 					Fails("no name", pwIn{}, "name"),
@@ -706,7 +707,7 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 		{
 			name: "when a .Before step has no secret field to keep out of the job",
 			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
-				behavior.API, behavior.Area(behavior.AreaConfig),
+				behavior.API, behavior.Area(area.Config),
 				behavior.Write("update", set).Describe("Update").Key("key").
 					Before(func(_ context.Context, in getIn) (getIn, error) { return in, nil }).
 					Fails("no key", getIn{}, "key"),
@@ -721,7 +722,7 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 				behavior.Node,
 				onDebian,
 				behavior.API,
-				behavior.Area(behavior.AreaConfig),
+				behavior.Area(area.Config),
 				behavior.Write("update", func(context.Context, fakeProvider, badBeforeIn) (result, error) {
 					return result{}, nil
 				}).

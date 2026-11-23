@@ -29,6 +29,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/password"
 )
@@ -68,7 +69,7 @@ func withPassword(
 	step any,
 ) (*behavior.Behavior, *behavior.Method) {
 	b := behavior.Define("account", "Accounts", behavior.Node, onDebian,
-		behavior.API, behavior.Area(behavior.AreaConfig),
+		behavior.API, behavior.Area(area.Config),
 		behavior.Write("update", setPassword).Describe("Update").Before(step),
 	)
 

@@ -147,6 +147,7 @@ paths:
       summary: Get the uptime of the host
       tags:
         - uptime_operations
+      x-osapi-area: node
       x-osapi-examples:
         - doc: A host up for a day, two hours and five minutes
           input:

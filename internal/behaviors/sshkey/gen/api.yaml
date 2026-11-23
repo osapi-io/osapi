@@ -253,6 +253,7 @@ paths:
       summary: Remove an authorized SSH key of a user
       tags:
         - sshkey_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: Remove a key
           input:
@@ -325,6 +326,7 @@ paths:
       summary: List the authorized SSH keys of a user
       tags:
         - sshkey_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: A user with keys
           input:
@@ -392,6 +394,7 @@ paths:
       summary: Add an authorized SSH key to a user
       tags:
         - sshkey_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: Add a key
           input:

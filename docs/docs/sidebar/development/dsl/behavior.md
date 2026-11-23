@@ -56,12 +56,12 @@ provider is not required: a child that needs it declares Requires too.
 Use: For a resource that exists only inside another, such as the SSH keys of a
 user. Not with Under: the parent's path is the group.
 
-### `Area(AreaName)`
+### `Area(area.Name)`
 
-Puts a served behavior in an area of the UI: the group of the Configure page's
-Add Block panel that its blocks sit in. Use a constant: AreaServices,
-AreaSoftware, AreaConfig, AreaNode, AreaNetworking, AreaSecurity, AreaCommand,
-AreaHardware or AreaContainers.
+Puts a served behavior in an area, one of area.All: the tab of the Configure
+page's Add Block panel that its blocks sit in, the folder of its SDK page and
+its section of the docs site's SDK menu. Use a constant of package area, such as
+area.Config or area.Hardware. area.All has the label and the order of each area.
 
 Use: On each behavior with API. behavior validate refuses a served behavior with
 none.

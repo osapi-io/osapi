@@ -15,6 +15,7 @@ Manage the files in the Object Store.
 | ----------- | ------------------------------------ |
 | Name        | file                                 |
 | Description | Manage the files in the Object Store |
+| Area        | files                                |
 
 ### Methods (6)
 

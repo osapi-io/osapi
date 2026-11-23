@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	process "github.com/osapi-io/osapi/internal/behaviors/process"
@@ -109,6 +110,7 @@ func HandleSignal(
 var Group = endpoint.Define(
 	"process",
 	"The processes of the host",
+	endpoint.Area(area.Node),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("process_operations", "Node/Process", "The processes of the host"),

@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	docker "github.com/osapi-io/osapi/internal/behaviors/container/docker"
@@ -228,6 +229,7 @@ func HandleExec(
 var Group = endpoint.Define(
 	"docker",
 	"The Docker containers of the host",
+	endpoint.Area(area.Containers),
 	endpoint.Prefix("node/{hostname}/container"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("container_docker_operations", "Node/Docker", "The Docker containers of the host"),

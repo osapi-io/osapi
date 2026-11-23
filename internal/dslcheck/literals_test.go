@@ -46,7 +46,7 @@ var definitions = []string{
 var typed = map[string]bool{
 	"github.com/osapi-io/osapi/internal/behavior.PlatformName":      true,
 	"github.com/osapi-io/osapi/internal/behavior.GroupName":         true,
-	"github.com/osapi-io/osapi/internal/behavior.AreaName":          true,
+	"github.com/osapi-io/osapi/internal/area.Name":                  true,
 	"github.com/osapi-io/osapi/internal/behavior.Verb":              true,
 	"github.com/osapi-io/osapi/internal/behavior.Placement":         true,
 	"github.com/osapi-io/osapi/internal/cli/command.Parent":         true,

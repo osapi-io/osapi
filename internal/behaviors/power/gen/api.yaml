@@ -200,6 +200,7 @@ paths:
       summary: Reboot the host
       tags:
         - power_operations
+      x-osapi-area: node
       x-osapi-examples:
         - doc: In one minute
           input:
@@ -271,6 +272,7 @@ paths:
       summary: Shut the host down
       tags:
         - power_operations
+      x-osapi-area: node
       x-osapi-examples:
         - doc: In one minute
           input:

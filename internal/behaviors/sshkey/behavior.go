@@ -24,6 +24,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behaviors/user"
 )
@@ -70,7 +71,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"sshkey", "The authorized SSH keys of a user",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaSecurity),
+	behavior.Area(area.Security),
 	behavior.CLI,
 	behavior.Of(user.Behavior),
 	behavior.Requires(user.Behavior),

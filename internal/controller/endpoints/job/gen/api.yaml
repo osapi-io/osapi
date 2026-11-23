@@ -299,6 +299,7 @@ paths:
       summary: List jobs
       tags:
         - job_operations
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: List jobs
           input: {}
@@ -360,6 +361,7 @@ paths:
       summary: Delete a job
       tags:
         - job_operations
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Delete a job
           input:
@@ -421,6 +423,7 @@ paths:
       summary: Get job detail
       tags:
         - job_operations
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Get job detail
           input:
@@ -493,6 +496,7 @@ paths:
       summary: Retry a job
       tags:
         - job_operations
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Retry a job
           input:

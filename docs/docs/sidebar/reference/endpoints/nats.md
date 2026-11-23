@@ -15,6 +15,7 @@ the same.
 | ----------- | ---------------------------- |
 | Name        | nats                         |
 | Description | The NATS server of the fleet |
+| Area        | fleet                        |
 
 ### Methods (1)
 

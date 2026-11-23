@@ -15,6 +15,17 @@ tags:
   - name: Job_API
     description: The job queue
     x-displayName: Job
+x-osapi-areas:
+  - name: config
+    label: Config
+  - name: networking
+    label: Networking
+  - name: files
+    label: Files
+  - name: fleet
+    label: Fleet
+  - name: audit
+    label: Audit
 paths:
   /api/node/{hostname}/network/dns/{interface_name}:
     get:
@@ -26,6 +37,7 @@ paths:
       summary: Get the DNS resolvers of an interface
       description: Reads the resolvers of the interface.
       tags: [Dns_API]
+      x-osapi-area: networking
       security:
         - BearerAuth: [dns:read]
       parameters:
@@ -52,6 +64,7 @@ paths:
         - doc: Override DHCP
           input: {hostname: web-01, interface_name: eth0, override_dhcp: true}
       tags: [Dns_API]
+      x-osapi-area: networking
       parameters:
         - $ref: '#/components/parameters/Hostname'
         - name: interface_name
@@ -74,6 +87,7 @@ paths:
       operationId: PostFile
       x-osapi-method: upload
       tags: [File_API]
+      x-osapi-area: files
       requestBody:
         content:
           multipart/form-data:
@@ -100,6 +114,7 @@ paths:
         - doc: A file
           input: {hostname: web-01, path: /etc/hosts}
       tags: [NodeFile_API]
+      x-osapi-area: config
       parameters:
         - $ref: '#/components/parameters/Hostname'
         - name: path
@@ -122,6 +137,7 @@ paths:
         - doc: Three jobs
           input: {limit: 3, all: true}
       tags: [Job_API]
+      x-osapi-area: fleet
       parameters:
         - name: limit
           in: query
@@ -144,6 +160,7 @@ paths:
         - doc: A job
           input: {id: 550e8400-e29b-41d4-a716-446655440000}
       tags: [Job_API]
+      x-osapi-area: fleet
       parameters:
         - name: id
           in: path

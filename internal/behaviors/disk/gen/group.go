@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	disk "github.com/osapi-io/osapi/internal/behaviors/disk"
@@ -43,6 +44,7 @@ func HandleGet(
 var Group = endpoint.Define(
 	"disk",
 	"Get the disk usage of target hosts",
+	endpoint.Area(area.Hardware),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("disk_operations", "Node/Disk", "Get the disk usage of target hosts"),

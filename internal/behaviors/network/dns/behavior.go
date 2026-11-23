@@ -24,6 +24,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behaviors/netplan"
 )
@@ -52,7 +53,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"dns", "The DNS resolvers of each interface of the host",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaNetworking),
+	behavior.Area(area.Networking),
 	behavior.CLI,
 	behavior.Under(behavior.GroupNetwork),
 	behavior.Platform(behavior.PlatformDebian, newDebian),

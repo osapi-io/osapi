@@ -34,6 +34,7 @@ import (
 
 const (
 	cliCommandPath = module + "/internal/cli/command"
+	areaPath       = module + "/internal/area"
 	endpointPath   = module + "/internal/controller/endpoint"
 	behaviorPkg    = module + "/internal/behavior"
 	dispatchPath   = module + "/internal/behavior/dispatch"
@@ -176,6 +177,9 @@ func groupFile(
 
 	opts := append([]jen.Code{
 		jen.Lit(b.Name), jen.Lit(b.Doc),
+		// The behavior's area is the constant of package area that its
+		// definition names, such as area.Hardware.
+		jen.Qual(endpointPath, "Area").Call(jen.Qual(areaPath, title(string(b.Area)))),
 		jen.Qual(endpointPath, "Prefix").Call(jen.Lit(prefix)),
 		jen.Qual(endpointPath, "Uses").Index(jen.Qual(dispatchPath, "Deps")).Call(),
 		jen.Qual(endpointPath, "Tag").Call(

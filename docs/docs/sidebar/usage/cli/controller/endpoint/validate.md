@@ -24,6 +24,10 @@ The rules:
 - `field`: The field that Location names is a json field of the method's output,
   and the field that Example\[T] names is a json field of T. Fix: Correct the
   name to the json name of the field, such as job_id.
+- `area`: The group has an area, one of area.All, so the UI, the SDK's pages and
+  the docs site can place its operations. Fix: Add endpoint.Area(...) to the
+  group's definition with a constant of package area, such as area.Fleet. Add a
+  new area to area.All with its label first.
 - `name`: The group and each method have a name of lowercase letters and digits,
   starting with a letter. Fix: Name the group as its path segment, such as
   agent, and each method for what it does, such as list or drain.

@@ -26,6 +26,7 @@ package group
 import (
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 )
 
@@ -49,7 +50,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"group", "The groups of the host",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaSecurity),
+	behavior.Area(area.Security),
 	behavior.CLI,
 	behavior.Platform(behavior.PlatformDebian, newDebian),
 	behavior.Platform(behavior.PlatformLinux, newReader),
