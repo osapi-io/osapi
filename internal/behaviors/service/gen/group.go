@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	service "github.com/osapi-io/osapi/internal/behaviors/service"
@@ -257,10 +258,11 @@ func HandleDisable(
 var Group = endpoint.Define(
 	"service",
 	"The systemd services of the host",
+	endpoint.Area(area.Services),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("service_operations", "Node/Service", "The systemd services of the host"),
-	endpoint.CommandNotes("The [service behavior](../../../../../reference/behaviors/service/service.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.CommandNotes("The [service behavior](../../../../../reference/behaviors/services/service/service.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[ListRequest, ServiceCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeService").

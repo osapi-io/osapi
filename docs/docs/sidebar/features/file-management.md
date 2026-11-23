@@ -29,7 +29,7 @@ are synchronous REST calls. They do not use the job system.
 Store and writes it to the target path on the filesystem of the agent. A deploy
 can set the file permissions (mode, owner, group) and can render a Go template.
 Deploy, undeploy and status are the update, delete and status methods of the
-[file behavior](../reference/behaviors/file/file.md):
+[file behavior](../reference/behaviors/config/file/file.md):
 `osapi client node file update`, `osapi client node file delete` and
 `osapi client node file status`. They run on each Linux host and on macOS.
 
@@ -317,8 +317,8 @@ nats:
 
 ## Permissions
 
-The [file](../reference/endpoints/file.md) and
-[node file](../reference/behaviors/file/file.md) reference pages give the
+The [file](../reference/endpoints/objectstore/file.md) and
+[node file](../reference/behaviors/config/file/file.md) reference pages give the
 permission of each method.
 
 ## Related

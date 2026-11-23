@@ -30,6 +30,7 @@ import (
 
 const (
 	endpointPath = module + "/internal/controller/endpoint"
+	areaPath     = module + "/internal/area"
 	suitePath    = "github.com/stretchr/testify/suite"
 )
 
@@ -112,6 +113,7 @@ func renderGo(
 func (sc groupScaffold) newFile() *jen.File {
 	f := jen.NewFilePathName(sc.pkg(), sc.name)
 	f.HeaderComment(license)
+	f.ImportName(areaPath, "area")
 	f.ImportName(endpointPath, "endpoint")
 
 	return f
@@ -173,6 +175,9 @@ func (sc groupScaffold) groupFile() *jen.File {
 	)
 	f.Var().Id("Group").Op("=").Add(e("Register").Call(e("Define").Add(multiline("(", ")",
 		jen.Lit(sc.name).Op(",").Lit(sc.doc),
+		// A group of the controller goes under Fleet; the author moves it to
+		// the area that fits.
+		e("Area").Call(jen.Qual(areaPath, "Fleet")),
 		e("Uses").Index(jen.Id("Deps")).Call(),
 		e("Get").Index(jen.List(jen.Id("ListInput"), jen.Id(sc.typeName("List")))).
 			Call(jen.Lit("list")).

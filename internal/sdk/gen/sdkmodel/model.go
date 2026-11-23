@@ -47,8 +47,27 @@ const MethodExtension = "x-osapi-method"
 // layer writes it.
 const ExamplesExtension = "x-osapi-examples"
 
+// AreaExtension is the extension of each operation of the spec that names
+// its area, such as fleet. The endpoint layer writes it.
+const AreaExtension = "x-osapi-area"
+
+// AreasExtension is the extension of the spec that lists the areas in their
+// order, each with its name and its label. The endpoint layer writes it.
+const AreasExtension = "x-osapi-areas"
+
+// Area is one area of the spec: the operations of its services are under
+// it, such as in the folder of the SDK's pages.
+type Area struct {
+	// Name is the name of the area, such as fleet.
+	Name string `json:"name"`
+	// Label is what a reader sees, such as Fleet.
+	Label string `json:"label"`
+}
+
 // Model is the SDK that the spec describes.
 type Model struct {
+	// Areas are the areas of the spec, in its order.
+	Areas []*Area
 	// Services are the services of the SDK, in the order of their names.
 	Services []*Service
 	// Types are the types that the methods send and receive, in the order
@@ -68,6 +87,9 @@ type Service struct {
 	// Node is true for a group of a node, whose paths start with
 	// /api/node/, and false for a group of the controller.
 	Node bool
+	// Area is the name of the area of the service's operations, one of the
+	// Areas of the model.
+	Area string
 }
 
 // Method is one operation of the spec.
@@ -261,11 +283,16 @@ func New(
 	doc *openapi3.T,
 ) (*Model, error) {
 	b := &builder{doc: doc, types: map[string]*Type{}}
+	areas, err := specAreas(doc)
+	if err != nil {
+		return nil, err
+	}
+	b.areas = areas
 	services, err := b.services()
 	if err != nil {
 		return nil, err
 	}
-	m := &Model{Services: services}
+	m := &Model{Areas: areas, Services: services}
 	for _, t := range b.types {
 		m.Types = append(m.Types, t)
 	}
@@ -274,10 +301,50 @@ func New(
 	return m, nil
 }
 
+// specAreas is the list of areas of doc, from its AreasExtension.
+func specAreas(
+	doc *openapi3.T,
+) ([]*Area, error) {
+	var out []*Area
+	data, err := json.Marshal(doc.Extensions[AreasExtension])
+	if err == nil {
+		err = json.Unmarshal(data, &out)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", AreasExtension, err)
+	}
+	if len(out) == 0 {
+		return nil, fmt.Errorf("the spec has no %s", AreasExtension)
+	}
+
+	return out, nil
+}
+
 // builder makes the model, and each type a method meets, once.
 type builder struct {
 	doc   *openapi3.T
 	types map[string]*Type
+	areas []*Area
+}
+
+// area is the area of op, from its AreaExtension: one of the areas of the
+// spec.
+func (b *builder) area(
+	op *openapi3.Operation,
+) (string, error) {
+	name, _ := op.Extensions[AreaExtension].(string)
+	for _, a := range b.areas {
+		if a.Name == name {
+			return name, nil
+		}
+	}
+
+	return "", fmt.Errorf(
+		"the %s %q is not one of the spec's %s",
+		AreaExtension,
+		name,
+		AreasExtension,
+	)
 }
 
 // verbs is the order of the methods of one path.
@@ -318,6 +385,17 @@ func (b *builder) services() ([]*Service, error) {
 			}
 			group[s] = name
 			node[s] = strings.HasPrefix(path, "/api/node/")
+			a, err := b.area(op)
+			if err != nil {
+				return nil, fmt.Errorf("%s: %w", op.OperationID, err)
+			}
+			if s.Area != "" && s.Area != a {
+				return nil, fmt.Errorf(
+					"%s: the operations of tag %s are in the areas %s and %s",
+					op.OperationID, op.Tags[0], s.Area, a,
+				)
+			}
+			s.Area = a
 			m, err := b.method(verb, path, op)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", op.OperationID, err)

@@ -68,6 +68,11 @@ func (s *PagesTestSuite) SetupTest() {
 		"<!-- /osapi:sdk-services -->\n\nThe end.\n")
 	s.write(pageDir+"/gone.md", pageHeader+"\na page of a service that is gone\n")
 	s.write(pageDir+"/notes.md", "a page that a person wrote\n")
+	s.write(pageDir+"/kitchen/"+categoryFile, "{}\n")
+	s.write(pageDir+"/kitchen/sink.md", pageHeader+"\na page of an area that is gone\n")
+	s.write(pageDir+"/kitchen/notes.md", "a page that a person wrote\n")
+	s.write(pageDir+"/pantry/"+categoryFile, "{}\n")
+	s.write(pageDir+"/pantry/jar.md", pageHeader+"\na page of an area that is gone\n")
 	s.write(
 		exampleDir+"/file_upload.go",
 		"package main\n\nc.File.Upload(ctx)\nc.File.GetChanged(ctx)\n",
@@ -96,7 +101,7 @@ func (s *PagesTestSuite) TestRunPages() {
 		{
 			name: "when a page has the methods, their permissions and their examples",
 			validateFunc: func() {
-				dns := s.page("network_dns.md")
+				dns := s.page("networking/network_dns.md")
 				s.Contains(dns, "title: NetworkDNS\n---\n\n"+pageHeader)
 				s.Contains(dns, "`c.NetworkDNS` calls the API's NetworkDNS group. "+
 					"The DNS resolvers of each interface of the host.")
@@ -123,7 +128,7 @@ func (s *PagesTestSuite) TestRunPages() {
 		{
 			name: "when a method has no answer, its example has only an error",
 			validateFunc: func() {
-				job := s.page("job.md")
+				job := s.page("fleet/job.md")
 				s.Contains(
 					job,
 					"err := c.Job.Delete(ctx, \"550e8400-e29b-41d4-a716-446655440000\")",
@@ -134,7 +139,7 @@ func (s *PagesTestSuite) TestRunPages() {
 		{
 			name: "when a person wrote a method, the page has its doc comment",
 			validateFunc: func() {
-				file := s.page("file.md")
+				file := s.page("files/file.md")
 				s.Contains(
 					file,
 					"| [`Upload(ctx, name)`](#upload) | `*Response[FileUploadResponse]` | "+
@@ -152,19 +157,35 @@ func (s *PagesTestSuite) TestRunPages() {
 			},
 		},
 		{
-			name: "when client.md has one table of the services",
+			name: "when client.md has a table of the services of each area, in the areas' order",
 			validateFunc: func() {
 				index := s.page("client.md")
-				s.Contains(index, "<!-- osapi:sdk-services -->\n\n"+
-					"| Service | Description |\n| --- | --- |\n")
+				s.Contains(index, "<!-- osapi:sdk-services -->\n\n### Config\n\n"+
+					"| Service | Description |\n| --- | --- |\n"+
+					"| [NodeFile](config/node_file.md) | The files of the host. |\n\n"+
+					"### Networking\n\n")
 				s.Contains(
 					index,
-					"| [NetworkDNS](network_dns.md) | The DNS resolvers of each interface of the host. |",
+					"| [NetworkDNS](networking/network_dns.md) | "+
+						"The DNS resolvers of each interface of the host. |",
 				)
-				s.Contains(index, "| [Job](job.md) | The job queue. |")
-				s.NotContains(index, "###")
+				s.Contains(index, "### Files\n\n")
+				s.Contains(index, "### Fleet\n\n| Service | Description |\n| --- | --- |\n"+
+					"| [Job](fleet/job.md) | The job queue. |")
+				s.NotContains(index, "### Audit", "an area with no service has no table")
 				s.NotContains(index, "old")
 				s.Contains(index, "The end.")
+			},
+		},
+		{
+			name: "when the folder of each area has its label and its order",
+			validateFunc: func() {
+				s.Equal("{\n  \"label\": \"Config\",\n  \"position\": 2\n}\n",
+					s.page("config/"+categoryFile))
+				s.Equal("{\n  \"label\": \"Fleet\",\n  \"position\": 5\n}\n",
+					s.page("fleet/"+categoryFile))
+				s.NoDirExists(filepath.Join(s.root, pageDir, "audit"),
+					"an area with no service has no folder")
 			},
 		},
 		{
@@ -173,6 +194,11 @@ func (s *PagesTestSuite) TestRunPages() {
 				s.NoFileExists(filepath.Join(s.root, pageDir, "gone.md"))
 				s.FileExists(filepath.Join(s.root, pageDir, "notes.md"))
 				s.NoDirExists(filepath.Join(s.root, pageDir, "node"))
+				s.NoFileExists(filepath.Join(s.root, pageDir, "kitchen", "sink.md"))
+				s.NoFileExists(filepath.Join(s.root, pageDir, "kitchen", categoryFile))
+				s.FileExists(filepath.Join(s.root, pageDir, "kitchen", "notes.md"))
+				s.NoDirExists(filepath.Join(s.root, pageDir, "pantry"),
+					"the folder of an area that has no page now is removed")
 			},
 		},
 	}
@@ -220,6 +246,14 @@ func (s *PagesTestSuite) TestRunPagesErrors() {
 				s.Require().NoError(os.Remove(filepath.Join(s.root, pageDir, "client.md")))
 			},
 			wantErr: "client.md",
+		},
+		{
+			name: "when the folder of an area is a file",
+			setup: func() {
+				s.Require().NoError(os.RemoveAll(filepath.Join(s.root, pageDir, "fleet")))
+				s.write(pageDir+"/fleet", "a file that a person wrote\n")
+			},
+			wantErr: "fleet",
 		},
 	}
 

@@ -162,6 +162,7 @@ paths:
       summary: Get the load averages of the host
       tags:
         - load_operations
+      x-osapi-area: node
       x-osapi-examples:
         - doc: A host under a light load
           input:

@@ -149,6 +149,9 @@ func (s *BlocksPublicTestSuite) TestBlocks() {
 	ts := uiblocks.TypeScript(got)
 	s.Contains(ts, `"item-list": {"type":"item-list"`)
 	s.Contains(ts, `export type BehaviorName = "item";`)
+	s.Contains(ts, "export const AREAS = [\n  {\"name\":\"services\",\"label\":\"Services\"},\n")
+	s.Contains(ts, "  {\"name\":\"fleet\",\"label\":\"Fleet\"},\n] as const;\n")
+	s.Contains(ts, `export type AreaName = (typeof AREAS)[number]["name"];`)
 }
 
 // TestFileIsCurrent: the UI's file is what the registry makes.

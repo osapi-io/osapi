@@ -25,6 +25,7 @@ package ntp
 import (
 	"regexp"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	"github.com/osapi-io/osapi/internal/validation/rule"
@@ -55,7 +56,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"ntp", "The NTP servers of chrony, and its sync status",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaConfig),
+	behavior.Area(area.Config),
 	behavior.CLI,
 	behavior.Requires(managedfile.Behavior),
 	behavior.Platform(behavior.PlatformDebian, newDebian),

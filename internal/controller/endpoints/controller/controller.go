@@ -22,6 +22,7 @@
 package controller
 
 import (
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/health"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
@@ -32,6 +33,7 @@ import (
 // lists every option.
 var Group = endpoint.Register(endpoint.Define(
 	"controller", "The controller of the fleet",
+	endpoint.Area(area.Fleet),
 	endpoint.Title("Controller API"),
 	endpoint.Tag("controller", "Controller", "The controller of the fleet."),
 	endpoint.Uses[Deps](),

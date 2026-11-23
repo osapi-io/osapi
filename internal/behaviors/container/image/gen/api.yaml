@@ -277,6 +277,7 @@ paths:
       summary: List the images of the host
       tags:
         - container_image_operations
+      x-osapi-area: containers
       x-osapi-examples:
         - doc: A host with an image
           input:
@@ -344,6 +345,7 @@ paths:
       summary: Remove an image
       tags:
         - container_image_operations
+      x-osapi-area: containers
       x-osapi-examples:
         - doc: Remove an image
           input:
@@ -411,6 +413,7 @@ paths:
       summary: Pull an image
       tags:
         - container_image_operations
+      x-osapi-area: containers
       x-osapi-examples:
         - doc: Pull an image
           input:

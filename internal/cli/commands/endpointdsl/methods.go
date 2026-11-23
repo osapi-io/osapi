@@ -48,7 +48,10 @@ func List(
 		for _, m := range g.Methods {
 			names = append(names, m.Name)
 		}
-		out.Items = append(out.Items, Summary{Name: g.Name, Methods: names, Doc: g.Doc})
+		out.Items = append(
+			out.Items,
+			Summary{Name: g.Name, Area: g.Area, Methods: names, Doc: g.Doc},
+		)
 	}
 
 	return out, nil
@@ -82,7 +85,9 @@ func Get(
 	if err != nil {
 		return GetOutput{}, err
 	}
-	out := GetOutput{Name: g.Name, Doc: g.Doc, Methods: []Method{}, Types: []Type{}}
+	out := GetOutput{
+		Name: g.Name, Doc: g.Doc, Area: g.Area, Methods: []Method{}, Types: []Type{},
+	}
 	for _, m := range g.Methods {
 		out.Methods = append(out.Methods, Method{
 			Name: m.Name, Verb: m.HTTPMethod(), Path: g.Path(m),

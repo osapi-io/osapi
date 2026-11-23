@@ -414,15 +414,15 @@ golden diff is the change to the API: write it again with `-update` and read it.
 
 ## Generated, never edited
 
-| File                                                     | From                                                                                  |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `internal/behaviors/<name>/gen/*.go`                     | the definition, its types and its examples, built with jen                            |
-| `internal/behaviors/<name>/gen/api.yaml`                 | `gen/group.go`, by the endpoint layer's spec builder in `internal/behavior/gen/group` |
-| `internal/controller/api/gen/api.yaml`                   | the hand-written specs and every `gen/api.yaml`, by `just generate`                   |
-| `internal/behaviors/<name>/mocks/provider.gen.go`        | the Provider interface, by mockgen                                                    |
-| `internal/behaviors/all/gen/gen.go`                      | every behavior with `API` or `CLI`                                                    |
-| `docs/docs/sidebar/reference/behaviors/<name>/<name>.md` | `osapi behavior get` and `method get`, as markdown, by `just cli-docs-generate`       |
-| `docs/docs/sidebar/usage/cli/client/...`                 | the generated commands, by `just cli-docs-generate`                                   |
+| File                                                            | From                                                                                                                                                             |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `internal/behaviors/<name>/gen/*.go`                            | the definition, its types and its examples, built with jen                                                                                                       |
+| `internal/behaviors/<name>/gen/api.yaml`                        | `gen/group.go`, by the endpoint layer's spec builder in `internal/behavior/gen/group`                                                                            |
+| `internal/controller/api/gen/api.yaml`                          | the hand-written specs and every `gen/api.yaml`, by `just generate`                                                                                              |
+| `internal/behaviors/<name>/mocks/provider.gen.go`               | the Provider interface, by mockgen                                                                                                                               |
+| `internal/behaviors/all/gen/gen.go`                             | every behavior with `API` or `CLI`                                                                                                                               |
+| `docs/docs/sidebar/reference/behaviors/<area>/<name>/<name>.md` | `osapi behavior get` and `method get`, as markdown, by `just cli-docs-generate`, in the folder of the behavior's area, or of `internal` for an internal behavior |
+| `docs/docs/sidebar/usage/cli/client/...`                        | the generated commands, by `just cli-docs-generate`                                                                                                              |
 
 `gen/cli.go` puts the docs of a method on its command. `.Describe` is the
 `Short` of the command, `.Explain` is its `Long`, and the examples are its

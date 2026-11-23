@@ -22,12 +22,14 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/cli"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/behavior"
 	behaviorcommand "github.com/osapi-io/osapi/internal/behavior/command"
@@ -61,25 +63,27 @@ func referencePages() ([]clidocs.Page, error) {
 		Path:    referenceDir + "behaviors/_catalog.mdx",
 		Partial: true,
 		Parts: []clidocs.Part{
-			{Group: "behavior", Out: bl, Link: column("NAME", func(name string) string {
-				return name + "/" + name + ".md"
-			})},
+			{Group: "behavior", Out: bl, Link: column("NAME", behaviorPage)},
 		},
 	})
+	pages = append(pages, behaviorFolders("behaviors/", func(*behavior.Behavior) bool {
+		return true
+	})...)
 	for _, b := range behavior.All() {
 		got, err := behaviordsl.Get(ctx, bd, behaviordsl.GetInput{Name: b.Name})
 		if err != nil {
 			return nil, err
 		}
-		uses := columns(func(name string) string { return "../" + name + "/" + name + ".md" },
+		// A behavior's page is in a folder of its own, in the folder of its
+		// area.
+		uses := columns(func(name string) string { return "../../" + behaviorPage(name) },
 			"Uses", "Used by")
 		toBehavior := func(h string, cell string) string {
 			switch {
 			case h == "NAME" && b.Method(cell) != nil:
 				return "#method-" + cell
 			case h == "Command":
-				// A behavior's page is in a directory of its own.
-				return cliPageFrom("../../../", cell)
+				return cliPageFrom("../../../../", cell)
 			}
 
 			return uses(h, cell)
@@ -99,7 +103,7 @@ func referencePages() ([]clidocs.Page, error) {
 			})
 		}
 		pages = append(pages, clidocs.Page{
-			Path:  referenceDir + "behaviors/" + b.Name + "/" + b.Name + ".md",
+			Path:  referenceDir + "behaviors/" + behaviorcommand.ReferencePage(b),
 			Title: behaviorcommand.Title(b),
 			Intro: b.Doc + ". `osapi behavior get --name " + b.Name +
 				"` and `osapi behavior method get` show the same." + chainLink(b),
@@ -120,13 +124,13 @@ func referencePages() ([]clidocs.Page, error) {
 				switch header {
 				case "BEHAVIOR":
 					if b := behavior.Lookup(cell); b != nil && len(b.Requires) > 0 {
-						return cell + ".md"
+						return chainPage(b)
 					}
 
-					return "../behaviors/" + cell + "/" + cell + ".md"
+					return "../behaviors/" + behaviorPage(cell)
 				case "CALLS", "USED BY":
 					if behavior.Lookup(cell) != nil {
-						return "../behaviors/" + cell + "/" + cell + ".md"
+						return "../behaviors/" + behaviorPage(cell)
 					}
 				}
 
@@ -134,6 +138,9 @@ func referencePages() ([]clidocs.Page, error) {
 			}},
 		},
 	})
+	pages = append(pages, behaviorFolders("chains/", func(b *behavior.Behavior) bool {
+		return len(b.Requires) > 0
+	})...)
 	for _, b := range behavior.All() {
 		if len(b.Requires) == 0 {
 			continue
@@ -143,13 +150,13 @@ func referencePages() ([]clidocs.Page, error) {
 			return nil, err
 		}
 		pages = append(pages, clidocs.Page{
-			Path:  referenceDir + "chains/" + b.Name + ".md",
+			Path:  referenceDir + "chains/" + chainPage(b),
 			Title: behaviorcommand.Title(b),
 			Intro: "The behaviors that " + b.Name + " calls, and each call that its examples make. " +
 				"`osapi behavior chain get --name " + b.Name + "` shows the same.",
 			Parts: []clidocs.Part{
 				{Group: "chain", Out: got, Link: columns(func(name string) string {
-					return "../behaviors/" + name + "/" + name + ".md"
+					return "../../behaviors/" + behaviorPage(name)
 				}, "Behavior", "Calls", "Used by")},
 			},
 		})
@@ -164,18 +171,17 @@ func referencePages() ([]clidocs.Page, error) {
 		Path:    referenceDir + "endpoints/_catalog.mdx",
 		Partial: true,
 		Parts: []clidocs.Part{
-			{Group: "endpoint", Out: el, Link: column("NAME", func(name string) string {
-				return name + ".md"
-			})},
+			{Group: "endpoint", Out: el, Link: column("NAME", endpointPage)},
 		},
 	})
+	pages = append(pages, endpointFolders()...)
 	for _, g := range endpoint.All() {
 		got, err := endpointdsl.Get(ctx, ed, endpointdsl.GetInput{Name: g.Name})
 		if err != nil {
 			return nil, err
 		}
 		pages = append(pages, clidocs.Page{
-			Path:  referenceDir + "endpoints/" + g.Name + ".md",
+			Path:  referenceDir + "endpoints/" + endpointPage(g.Name),
 			Title: endpointTitle(g),
 			Intro: g.Doc + ". `osapi controller endpoint get --name " + g.Name + "` shows the same.",
 			Parts: []clidocs.Part{{Group: "endpoint", Out: got}},
@@ -294,7 +300,112 @@ func chainLink(
 		return ""
 	}
 
-	return " [Its chain](../../chains/" + b.Name + ".md) shows each call that its examples make."
+	return " [Its chain](../../../chains/" + chainPage(b) +
+		") shows each call that its examples make."
+}
+
+// chainPage is the chain page of b, from reference/chains: the page is in
+// the folder of the area of b, the behavior at the top of the chain, such
+// as config/sysctl.md.
+func chainPage(
+	b *behavior.Behavior,
+) string {
+	return behaviorcommand.ReferenceFolder(b) + "/" + b.Name + ".md"
+}
+
+// behaviorPage is the reference page of the behavior name, from
+// reference/behaviors, such as hardware/disk/disk.md, or none for a name
+// that no behavior has.
+func behaviorPage(
+	name string,
+) string {
+	b := behavior.Lookup(name)
+	if b == nil {
+		return ""
+	}
+
+	return behaviorcommand.ReferencePage(b)
+}
+
+// endpointPage is the reference page of the endpoint group name, from
+// reference/endpoints: the page is in the folder of the group's area, such
+// as fleet/agent.md.
+func endpointPage(
+	name string,
+) string {
+	for _, g := range endpoint.All() {
+		if g.Name == name {
+			return string(g.Area) + "/" + name + ".md"
+		}
+	}
+
+	return ""
+}
+
+// behaviorFolders are the _category_.json of each folder under dir, of the
+// reference, that has the page of a behavior that has: the folder of each
+// area, and of the internal behaviors, last.
+func behaviorFolders(
+	dir string,
+	has func(*behavior.Behavior) bool,
+) []clidocs.Page {
+	used := map[string]bool{}
+	for _, b := range behavior.All() {
+		if has(b) {
+			used[behaviorcommand.ReferenceFolder(b)] = true
+		}
+	}
+	folders := areaFolders(dir, used)
+	if used[behaviorcommand.InternalFolder] {
+		folders = append(folders, categoryPage(
+			referenceDir+dir+behaviorcommand.InternalFolder,
+			behaviorcommand.InternalLabel,
+			len(area.All)+2,
+		))
+	}
+
+	return folders
+}
+
+// endpointFolders are the _category_.json of each folder of an area that
+// has an endpoint group's page.
+func endpointFolders() []clidocs.Page {
+	used := map[string]bool{}
+	for _, g := range endpoint.All() {
+		used[string(g.Area)] = true
+	}
+
+	return areaFolders("endpoints/", used)
+}
+
+// areaFolders are the _category_.json of each folder of an area under dir,
+// of the reference, that used names, with the label and the order of
+// area.All. A folder follows the index page of dir, the first page.
+func areaFolders(
+	dir string,
+	used map[string]bool,
+) []clidocs.Page {
+	var folders []clidocs.Page
+	for i, a := range area.All {
+		if used[string(a.Name)] {
+			folders = append(folders, categoryPage(referenceDir+dir+string(a.Name), a.Label, i+2))
+		}
+	}
+
+	return folders
+}
+
+// categoryPage is the _category_.json of folder: its label and its place
+// in the sidebar.
+func categoryPage(
+	folder string,
+	label string,
+	position int,
+) clidocs.Page {
+	return clidocs.Page{
+		Path: folder + "/_category_.json",
+		Text: fmt.Sprintf("{\n  \"label\": %q,\n  \"position\": %d\n}\n", label, position),
+	}
 }
 
 // endpointInitialisms are the group names that a title keeps in capitals.

@@ -23,7 +23,10 @@
 // from ps on macOS, and sends a signal to one with kill.
 package process
 
-import "github.com/osapi-io/osapi/internal/behavior"
+import (
+	"github.com/osapi-io/osapi/internal/area"
+	"github.com/osapi-io/osapi/internal/behavior"
+)
 
 // The Linux host of the examples booted 1000 seconds before the fake
 // host's time. Process 1234, sleep 300 of alice, started 500 seconds after
@@ -89,7 +92,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"process", "The processes of the host",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaNode),
+	behavior.Area(area.Node),
 	behavior.CLI,
 	behavior.Platform(behavior.PlatformLinux, newGohai),
 	behavior.Platform(behavior.PlatformDarwin, newGohai),

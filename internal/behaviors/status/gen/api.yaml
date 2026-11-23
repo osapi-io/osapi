@@ -241,6 +241,7 @@ paths:
       summary: Get the status summary of the host
       tags:
         - status_operations
+      x-osapi-area: node
       x-osapi-examples:
         - doc: An Ubuntu host
           input:

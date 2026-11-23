@@ -22,7 +22,10 @@
 // the host, read with journalctl on each Linux host.
 package entry
 
-import "github.com/osapi-io/osapi/internal/behavior"
+import (
+	"github.com/osapi-io/osapi/internal/area"
+	"github.com/osapi-io/osapi/internal/behavior"
+)
 
 // The journal of the examples: two entries, as journalctl --output=json
 // prints them, one line each.
@@ -52,7 +55,7 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Node,
 	behavior.Under(behavior.GroupLog),
 	behavior.API,
-	behavior.Area(behavior.AreaNode),
+	behavior.Area(area.Logs),
 	behavior.CLI,
 	behavior.Platform(behavior.PlatformLinux, newLinux),
 	behavior.Read("list", List).

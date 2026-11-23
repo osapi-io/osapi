@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	ntp "github.com/osapi-io/osapi/internal/behaviors/ntp"
@@ -127,10 +128,11 @@ func HandleDelete(
 var Group = endpoint.Define(
 	"ntp",
 	"The NTP servers of chrony, and its sync status",
+	endpoint.Area(area.Config),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("ntp_operations", "Node/Ntp", "The NTP servers of chrony, and its sync status"),
-	endpoint.CommandNotes("The [ntp behavior](../../../../../reference/behaviors/ntp/ntp.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.CommandNotes("The [ntp behavior](../../../../../reference/behaviors/config/ntp/ntp.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[GetRequest, NtpGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodeNtp").

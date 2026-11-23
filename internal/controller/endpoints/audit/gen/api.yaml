@@ -277,6 +277,7 @@ paths:
       summary: List audit log entries
       tags:
         - audit
+      x-osapi-area: audit
       x-osapi-examples:
         - doc: List audit log entries
           input: {}
@@ -356,6 +357,7 @@ paths:
       summary: Get a single audit log entry
       tags:
         - audit
+      x-osapi-area: audit
       x-osapi-examples:
         - doc: Get a single audit log entry
           input:
@@ -402,6 +404,7 @@ paths:
       summary: Export all audit log entries
       tags:
         - audit
+      x-osapi-area: audit
       x-osapi-examples:
         - doc: Export all audit log entries
           input: {}

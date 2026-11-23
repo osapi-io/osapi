@@ -227,6 +227,7 @@ paths:
       summary: List stored files
       tags:
         - file_operations
+      x-osapi-area: objectstore
       x-osapi-examples:
         - doc: List stored files
           input: {}
@@ -328,6 +329,7 @@ paths:
       summary: Upload a file
       tags:
         - file_operations
+      x-osapi-area: objectstore
       x-osapi-method: upload
   /api/file/{name}:
     delete:
@@ -389,6 +391,7 @@ paths:
       summary: Delete a file
       tags:
         - file_operations
+      x-osapi-area: objectstore
       x-osapi-examples:
         - doc: Delete a file
           input:
@@ -457,6 +460,7 @@ paths:
       summary: Get file metadata
       tags:
         - file_operations
+      x-osapi-area: objectstore
       x-osapi-examples:
         - doc: Get file metadata
           input:
@@ -555,6 +559,7 @@ paths:
       summary: Replace a file
       tags:
         - file_operations
+      x-osapi-area: objectstore
       x-osapi-method: update
   /api/file/stale:
     get:
@@ -597,6 +602,7 @@ paths:
       summary: List stale file deployments
       tags:
         - file_operations
+      x-osapi-area: objectstore
       x-osapi-examples:
         - doc: List stale file deployments
           input: {}

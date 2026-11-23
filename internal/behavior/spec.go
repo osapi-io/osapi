@@ -101,8 +101,8 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindOption,
-			Name: `Area(AreaName)`,
-			Does: "Puts a served behavior in an area of the UI: the group of the Configure page's Add Block panel that its blocks sit in. Use a constant: AreaServices, AreaSoftware, AreaConfig, AreaNode, AreaNetworking, AreaSecurity, AreaCommand, AreaHardware or AreaContainers.",
+			Name: `Area(area.Name)`,
+			Does: "Puts a served behavior in an area, one of area.All: the tab of the Configure page's Add Block panel that its blocks sit in, the folder of its SDK page, of its reference page and of its chain's page, and its section of the docs site's SDK and Behaviors menus. Use a constant of package area, such as area.Config or area.Hardware. area.All has the label and the order of each area.",
 			When: "On each behavior with API. behavior validate refuses a served behavior with none.",
 		},
 		{
@@ -613,8 +613,8 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindGenerated,
-			Name: "docs/docs/sidebar/reference/behaviors/<name>/",
-			Does: "The docs page of the behavior: the output of osapi behavior get and osapi behavior method get, as markdown, from just cli-docs-generate (osapi cli docs reference generate).",
+			Name: "docs/docs/sidebar/reference/behaviors/<area>/<name>/",
+			Does: "The docs page of the behavior, in the folder of its area, or of internal for an internal behavior: the output of osapi behavior get and osapi behavior method get, as markdown, from just cli-docs-generate (osapi cli docs reference generate).",
 			When: "Change the definition, then run just cli-docs-generate. A page that shows the wrong thing is fixed in the definition, or in the get command that shows it.",
 		},
 		{

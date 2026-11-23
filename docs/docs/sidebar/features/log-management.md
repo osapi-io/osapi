@@ -75,14 +75,14 @@ Linux families. The behaviors read each Linux host.
 
 ## Permissions
 
-The [log entry](../reference/behaviors/entry/entry.md) and
-[log source](../reference/behaviors/source/source.md) reference pages give the
-permission of each method.
+The [log entry](../reference/behaviors/logs/entry/entry.md) and
+[log source](../reference/behaviors/logs/source/source.md) reference pages give
+the permission of each method.
 
 ## Related
 
 - [CLI reference](../usage/cli/client/node/log/log.mdx): the log commands
-- [SDK reference](../sdk/client/log_entry.md): the LogEntry service, and
-  [LogSource](../sdk/client/log_source.md)
+- [SDK reference](../sdk/client/logs/log_entry.md): the LogEntry service, and
+  [LogSource](../sdk/client/logs/log_source.md)
 - [Platform detection](../sdk/platform/detection.md): how osapi finds the
   platform of a host

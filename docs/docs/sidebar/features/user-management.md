@@ -10,9 +10,9 @@ accounts.
 
 ## How it works
 
-The [user behavior](../reference/behaviors/user/user.md) and the
-[group behavior](../reference/behaviors/group/group.md) read the local user
-database through gohai on each platform: `/etc/passwd`, `/etc/shadow` and
+The [user behavior](../reference/behaviors/security/user/user.md) and the
+[group behavior](../reference/behaviors/security/group/group.md) read the local
+user database through gohai on each platform: `/etc/passwd`, `/etc/shadow` and
 `/etc/group`. They change it on the Debian family only, with `useradd`,
 `usermod`, `userdel`, `chpasswd`, `groupadd`, `gpasswd` and `groupdel`. On other
 platforms, a change reports `skipped`. All operations run on the agent and use
@@ -38,8 +38,8 @@ and the agent have only the hash, never the password.
 
 ### SSH keys
 
-The [SSH key behavior](../reference/behaviors/sshkey/sshkey.md) manages the
-`~/.ssh/authorized_keys` file of a user. Its commands are under
+The [SSH key behavior](../reference/behaviors/security/sshkey/sshkey.md) manages
+the `~/.ssh/authorized_keys` file of a user. Its commands are under
 `osapi client node user sshkey`. It reads the keys through gohai on each
 platform, and it changes them on the Debian family only.
 
@@ -55,9 +55,9 @@ missing, with modes `700` and `600`, and gives them to the user with `chown`.
 
 ### Groups
 
-The [group behavior](../reference/behaviors/group/group.md) manages local
-groups. It reads `/etc/group` through gohai on each platform, and it changes
-groups on the Debian family only. On other platforms, a change reports
+The [group behavior](../reference/behaviors/security/group/group.md) manages
+local groups. It reads `/etc/group` through gohai on each platform, and it
+changes groups on the Debian family only. On other platforms, a change reports
 `skipped`.
 
 - **List**: list each group with its ID and its members, by name
@@ -145,10 +145,10 @@ $ osapi client node user create --target group:web \
 
 ## Permissions
 
-The [user](../reference/behaviors/user/user.md),
-[group](../reference/behaviors/group/group.md), and
-[sshkey](../reference/behaviors/sshkey/sshkey.md) reference pages give the
-permission of each method.
+The [user](../reference/behaviors/security/user/user.md),
+[group](../reference/behaviors/security/group/group.md), and
+[sshkey](../reference/behaviors/security/sshkey/sshkey.md) reference pages give
+the permission of each method.
 
 ## Supported platforms
 
@@ -166,5 +166,5 @@ not fail.
 - [CLI Reference: User](../usage/cli/client/node/user/user.mdx)
 - [CLI Reference: SSH Key](../usage/cli/client/node/user/sshkey/sshkey.mdx)
 - [CLI Reference: Group](../usage/cli/client/node/group/group.mdx)
-- [SDK: User](../sdk/client/user.md)
-- [SDK: Group](../sdk/client/group.md)
+- [SDK: User](../sdk/client/security/user.md)
+- [SDK: Group](../sdk/client/security/group.md)

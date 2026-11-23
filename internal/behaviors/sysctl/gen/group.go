@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	sysctl "github.com/osapi-io/osapi/internal/behaviors/sysctl"
@@ -151,10 +152,11 @@ func HandleDelete(
 var Group = endpoint.Define(
 	"sysctl",
 	"Kernel parameters, written to sysctl.d files and applied",
+	endpoint.Area(area.Config),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("sysctl_operations", "Node/Sysctl", "Kernel parameters, written to sysctl.d files and applied"),
-	endpoint.CommandNotes("The [sysctl behavior](../../../../../reference/behaviors/sysctl/sysctl.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.CommandNotes("The [sysctl behavior](../../../../../reference/behaviors/config/sysctl/sysctl.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[ListRequest, SysctlCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeSysctl").

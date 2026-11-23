@@ -20,7 +20,10 @@
 
 package endpointdsl
 
-import "github.com/osapi-io/osapi/internal/controller/endpoint"
+import (
+	"github.com/osapi-io/osapi/internal/area"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
+)
 
 // The sample outputs of the examples, which the docs page of each command
 // shows as the CLI prints it.
@@ -28,11 +31,13 @@ var (
 	sampleList = ListOutput{Items: []Summary{
 		{
 			Name:    "agent",
+			Area:    area.Fleet,
 			Methods: []string{"status", "list", "get", "drain", "undrain"},
 			Doc:     "Manage the agents in the fleet: discovery, drain and PKI enrollment",
 		},
 		{
 			Name:    "audit",
+			Area:    area.Audit,
 			Methods: []string{"list", "export", "get"},
 			Doc:     "Read the audit log",
 		},
@@ -41,6 +46,7 @@ var (
 	sampleGet = GetOutput{
 		Name: "agent",
 		Doc:  "Manage the agents in the fleet: discovery, drain and PKI enrollment",
+		Area: area.Fleet,
 		Methods: []Method{
 			{
 				Name:        "list",

@@ -22,7 +22,10 @@
 // booted.
 package uptime
 
-import "github.com/osapi-io/osapi/internal/behavior"
+import (
+	"github.com/osapi-io/osapi/internal/area"
+	"github.com/osapi-io/osapi/internal/behavior"
+)
 
 // Behavior is the uptime definition. The routes, the agent's dispatch, the
 // CLI commands, the spec, the docs pages and the tests of every layer above
@@ -31,7 +34,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"uptime", "Get the uptime of target hosts",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaNode),
+	behavior.Area(area.Node),
 	behavior.CLI,
 	// gohai reads /proc/uptime on Linux, and the boot time from sysctl on macOS.
 	behavior.Platform(behavior.PlatformLinux, newReader),

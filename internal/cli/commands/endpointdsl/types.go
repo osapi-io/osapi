@@ -21,6 +21,7 @@
 package endpointdsl
 
 import (
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/cli/commands/behaviordsl"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
@@ -38,9 +39,10 @@ type ListOutput struct {
 
 // Summary is one endpoint group and the names of its methods.
 type Summary struct {
-	Name    string   `json:"name"`
-	Methods []string `json:"methods"`
-	Doc     string   `json:"doc"     label:"Description"`
+	Name    string    `json:"name"`
+	Area    area.Name `json:"area"`
+	Methods []string  `json:"methods"`
+	Doc     string    `json:"doc"     label:"Description"`
 }
 
 // GetInput names the group.
@@ -50,11 +52,12 @@ type GetInput struct {
 
 // GetOutput is a group and each of its methods.
 type GetOutput struct {
-	_       struct{} `title:"Endpoint group"`
-	Name    string   `                       json:"name"`
-	Doc     string   `                       json:"doc"     label:"Description"`
-	Methods []Method `                       json:"methods"`
-	Types   []Type   `                       json:"types"`
+	_       struct{}  `title:"Endpoint group"`
+	Name    string    `                       json:"name"`
+	Doc     string    `                       json:"doc"     label:"Description"`
+	Area    area.Name `                       json:"area"`
+	Methods []Method  `                       json:"methods"`
+	Types   []Type    `                       json:"types"`
 }
 
 // Type is the input and the output type of one method, with their fields:

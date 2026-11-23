@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	docker "github.com/osapi-io/osapi/internal/behaviors/container/docker"
@@ -228,10 +229,11 @@ func HandleExec(
 var Group = endpoint.Define(
 	"docker",
 	"The Docker containers of the host",
+	endpoint.Area(area.Containers),
 	endpoint.Prefix("node/{hostname}/container"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("container_docker_operations", "Node/Docker", "The Docker containers of the host"),
-	endpoint.CommandNotes("The [docker behavior](../../../../../../reference/behaviors/docker/docker.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.CommandNotes("The [docker behavior](../../../../../../reference/behaviors/containers/docker/docker.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[ListRequest, ContainerDockerCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeContainerDocker").

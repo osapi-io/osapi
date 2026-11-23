@@ -310,6 +310,7 @@ paths:
       summary: Remove a file that osapi deployed
       tags:
         - file_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: Remove a deployed file
           input:
@@ -379,6 +380,7 @@ paths:
       summary: Show whether a deployed file holds what osapi wrote
       tags:
         - file_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: A deployed file
           input:
@@ -445,6 +447,7 @@ paths:
       summary: Deploy an object of the object store to a path
       tags:
         - file_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: Deploy a file
           input:

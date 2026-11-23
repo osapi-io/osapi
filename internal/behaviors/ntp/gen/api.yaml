@@ -261,6 +261,7 @@ paths:
       summary: Remove the NTP servers that osapi set
       tags:
         - ntp_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: Remove the servers
           input:
@@ -320,6 +321,7 @@ paths:
       summary: Get the sync status of chrony and its sources
       tags:
         - ntp_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: A host synchronized to time.cloudflare.com
           input:
@@ -385,6 +387,7 @@ paths:
       summary: Set the NTP servers that chrony uses
       tags:
         - ntp_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: Set two servers
           input:
@@ -458,6 +461,7 @@ paths:
       summary: Replace the NTP servers that osapi set
       tags:
         - ntp_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: Replace the servers
           input:

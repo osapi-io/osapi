@@ -200,6 +200,7 @@ paths:
       summary: Get the hostname of the host
       tags:
         - hostname_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: A host named web-01
           input:
@@ -265,6 +266,7 @@ paths:
       summary: Set the hostname of the host
       tags:
         - hostname_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: Rename a host
           input:

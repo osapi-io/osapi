@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	iface "github.com/osapi-io/osapi/internal/behaviors/network/iface"
@@ -170,10 +171,11 @@ func HandleDelete(
 var Group = endpoint.Define(
 	"interface",
 	"The network interfaces of the host",
+	endpoint.Area(area.Networking),
 	endpoint.Prefix("node/{hostname}/network"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("network_interface_operations", "Node/Interface", "The network interfaces of the host"),
-	endpoint.CommandNotes("The [interface behavior](../../../../../../reference/behaviors/interface/interface.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.CommandNotes("The [interface behavior](../../../../../../reference/behaviors/networking/interface/interface.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[ListRequest, NetworkInterfaceCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeNetworkInterface").

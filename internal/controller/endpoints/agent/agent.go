@@ -30,6 +30,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/health"
 
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
@@ -49,6 +50,7 @@ var (
 var Group = endpoint.Register(endpoint.Define(
 	"agent",
 	"Manage the agents in the fleet: discovery, drain and PKI enrollment",
+	endpoint.Area(area.Fleet),
 	endpoint.CommandLong(
 		"Most commands read the NATS KV heartbeat registry directly, and make no job.",
 	),

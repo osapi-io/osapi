@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	certificate "github.com/osapi-io/osapi/internal/behaviors/certificate"
@@ -156,10 +157,11 @@ func HandleDelete(
 var Group = endpoint.Define(
 	"certificate",
 	"The certificate authorities that the host trusts",
+	endpoint.Area(area.Security),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("certificate_operations", "Node/Certificate", "The certificate authorities that the host trusts"),
-	endpoint.CommandNotes("The [certificate behavior](../../../../../reference/behaviors/certificate/certificate.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.CommandNotes("The [certificate behavior](../../../../../reference/behaviors/security/certificate/certificate.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[ListRequest, CertificateCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeCertificate").

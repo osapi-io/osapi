@@ -5,8 +5,8 @@ sidebar_position: 3
 # Command execution
 
 osapi can run any command on managed hosts. The
-[command behavior](../reference/behaviors/command/command.md) supplies the
-command execution operations. Command execution goes through the
+[command behavior](../reference/behaviors/command/command/command.md) supplies
+the command execution operations. Command execution goes through the
 [job system](job-system.md). Thus the API server does not run commands. The
 agents run them.
 
@@ -135,8 +135,8 @@ NATS, agent and authentication settings.
 
 ## Permissions
 
-The [command](../reference/behaviors/command/command.md) reference page gives
-the permission of each method.
+The [command](../reference/behaviors/command/command/command.md) reference page
+gives the permission of each method.
 
 ## Related
 

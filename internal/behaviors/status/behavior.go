@@ -21,6 +21,7 @@
 package status
 
 import (
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behaviors/disk"
 	"github.com/osapi-io/osapi/internal/behaviors/hostname"
@@ -92,7 +93,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"status", "The status summary of a node",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaNode),
+	behavior.Area(area.Node),
 	behavior.CLI,
 	behavior.Platform(behavior.PlatformLinux, newReader),
 	behavior.Platform(behavior.PlatformDarwin, newReader),

@@ -354,6 +354,7 @@ paths:
       summary: List the cron entries that osapi deployed
       tags:
         - schedule_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: An entry that osapi deployed
           input:
@@ -419,6 +420,7 @@ paths:
       summary: Deploy a cron entry
       tags:
         - schedule_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: An entry with a cron expression
           input:
@@ -499,6 +501,7 @@ paths:
       summary: Remove a cron entry that osapi deployed
       tags:
         - schedule_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: Remove an entry
           input:
@@ -560,6 +563,7 @@ paths:
       summary: Get one cron entry that osapi deployed
       tags:
         - schedule_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: An entry that osapi deployed
           input:
@@ -627,6 +631,7 @@ paths:
       summary: Deploy a cron entry that osapi deployed again
       tags:
         - schedule_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: A new object
           input:

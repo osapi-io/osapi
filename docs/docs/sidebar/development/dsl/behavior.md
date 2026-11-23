@@ -56,12 +56,13 @@ provider is not required: a child that needs it declares Requires too.
 Use: For a resource that exists only inside another, such as the SSH keys of a
 user. Not with Under: the parent's path is the group.
 
-### `Area(AreaName)`
+### `Area(area.Name)`
 
-Puts a served behavior in an area of the UI: the group of the Configure page's
-Add Block panel that its blocks sit in. Use a constant: AreaServices,
-AreaSoftware, AreaConfig, AreaNode, AreaNetworking, AreaSecurity, AreaCommand,
-AreaHardware or AreaContainers.
+Puts a served behavior in an area, one of area.All: the tab of the Configure
+page's Add Block panel that its blocks sit in, the folder of its SDK page, of
+its reference page and of its chain's page, and its section of the docs site's
+SDK and Behaviors menus. Use a constant of package area, such as area.Config or
+area.Hardware. area.All has the label and the order of each area.
 
 Use: On each behavior with API. behavior validate refuses a served behavior with
 none.
@@ -762,11 +763,12 @@ The double of the provider, from go generate
 
 Use: Run it again after provider.go changes.
 
-### `docs/docs/sidebar/reference/behaviors/<name>/`
+### `docs/docs/sidebar/reference/behaviors/<area>/<name>/`
 
-The docs page of the behavior: the output of osapi behavior get and osapi
-behavior method get, as markdown, from just cli-docs-generate (osapi cli docs
-reference generate).
+The docs page of the behavior, in the folder of its area, or of internal for an
+internal behavior: the output of osapi behavior get and osapi behavior method
+get, as markdown, from just cli-docs-generate (osapi cli docs reference
+generate).
 
 Use: Change the definition, then run just cli-docs-generate. A page that shows
 the wrong thing is fixed in the definition, or in the get command that shows it.

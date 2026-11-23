@@ -266,6 +266,7 @@ paths:
       summary: List the packages installed on the host
       tags:
         - package_operations
+      x-osapi-area: software
       x-osapi-examples:
         - doc: A Debian host
           input:
@@ -331,6 +332,7 @@ paths:
       summary: Install a package
       tags:
         - package_operations
+      x-osapi-area: software
       x-osapi-examples:
         - doc: Install a package
           input:
@@ -393,6 +395,7 @@ paths:
       summary: Remove a package
       tags:
         - package_operations
+      x-osapi-area: software
       x-osapi-examples:
         - doc: Remove a package
           input:
@@ -454,6 +457,7 @@ paths:
       summary: Get one installed package
       tags:
         - package_operations
+      x-osapi-area: software
       x-osapi-examples:
         - doc: An installed package
           input:

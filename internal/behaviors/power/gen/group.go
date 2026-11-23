@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	power "github.com/osapi-io/osapi/internal/behaviors/power"
@@ -79,10 +80,11 @@ func HandleShutdown(
 var Group = endpoint.Define(
 	"power",
 	"Reboot or shut down the host",
+	endpoint.Area(area.Node),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("power_operations", "Node/Power", "Reboot or shut down the host"),
-	endpoint.CommandNotes("The [power behavior](../../../../../reference/behaviors/power/power.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.CommandNotes("The [power behavior](../../../../../reference/behaviors/node/power/power.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Post[RebootRequest, PowerRebootResponse]("reboot").
 		Handle(HandleReboot).
 		ID("PostNodePowerReboot").

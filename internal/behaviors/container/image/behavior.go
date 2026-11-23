@@ -23,7 +23,10 @@
 // with the docker CLI, on each platform where docker answers.
 package image
 
-import "github.com/osapi-io/osapi/internal/behavior"
+import (
+	"github.com/osapi-io/osapi/internal/area"
+	"github.com/osapi-io/osapi/internal/behavior"
+)
 
 // The examples' image. The integration test runs the write examples on a
 // live host, each from its image removed first: alpine is small.
@@ -51,7 +54,7 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Node,
 	behavior.Under(behavior.GroupContainer),
 	behavior.API,
-	behavior.Area(behavior.AreaContainers),
+	behavior.Area(area.Containers),
 	behavior.CLI,
 	behavior.Platform(behavior.PlatformLinux, newCLI),
 	behavior.Platform(behavior.PlatformDarwin, newCLI),

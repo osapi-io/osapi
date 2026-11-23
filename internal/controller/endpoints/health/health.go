@@ -24,6 +24,7 @@ package health
 import (
 	"net/http"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
@@ -31,6 +32,7 @@ import (
 // Group is the health group's definition.
 var Group = endpoint.Register(endpoint.Define(
 	"health", "Check the health of the controller",
+	endpoint.Area(area.Fleet),
 	endpoint.Title("Health Check API"),
 	endpoint.Tag("health", "Health",
 		"Health check endpoints for liveness, readiness, and detailed status."),

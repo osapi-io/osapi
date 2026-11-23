@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v3"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/gen/specgen"
 )
@@ -91,8 +92,10 @@ func (s *SpecgenPublicTestSuite) TestFull() {
 						Name string   `yaml:"name"`
 						Tags []string `yaml:"tags"`
 					} `yaml:"x-tagGroups"`
+					Areas []area.Area `yaml:"x-osapi-areas"`
 				}
 				s.Require().NoError(yaml.Unmarshal(got, &doc))
+				s.Equal(area.All, doc.Areas, "the areas, with their labels, in order")
 				s.Equal("Zeta_API_zeta_operations", doc.Tags[0].Name)
 				s.Equal("Alpha_Management_API_alpha_operations", doc.Tags[1].Name)
 				s.Equal("/api/zeta", doc.Paths.Content[0].Value, "in the order of the groups")

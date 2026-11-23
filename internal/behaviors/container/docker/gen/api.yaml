@@ -472,6 +472,7 @@ paths:
       summary: List the containers of the host
       tags:
         - container_docker_operations
+      x-osapi-area: containers
       x-osapi-examples:
         - doc: A host with a container
           input:
@@ -541,6 +542,7 @@ paths:
       summary: Create a container
       tags:
         - container_docker_operations
+      x-osapi-area: containers
       x-osapi-examples:
         - doc: Create a container
           input:
@@ -607,6 +609,7 @@ paths:
       summary: Remove a container
       tags:
         - container_docker_operations
+      x-osapi-area: containers
       x-osapi-examples:
         - doc: Remove a container
           input:
@@ -668,6 +671,7 @@ paths:
       summary: Get one container
       tags:
         - container_docker_operations
+      x-osapi-area: containers
       x-osapi-examples:
         - doc: A container
           input:
@@ -736,6 +740,7 @@ paths:
       summary: Run a command in a container
       tags:
         - container_docker_operations
+      x-osapi-area: containers
       x-osapi-examples:
         - doc: Run a command
           input:
@@ -801,6 +806,7 @@ paths:
       summary: Start a container
       tags:
         - container_docker_operations
+      x-osapi-area: containers
       x-osapi-examples:
         - doc: Start a container
           input:
@@ -869,6 +875,7 @@ paths:
       summary: Stop a container
       tags:
         - container_docker_operations
+      x-osapi-area: containers
       x-osapi-examples:
         - doc: Stop a container
           input:

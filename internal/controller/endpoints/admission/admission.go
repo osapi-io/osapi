@@ -30,6 +30,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
@@ -51,6 +52,7 @@ var notConfigured503 = endpoint.Unavailable(ErrNotConfigured,
 // Group is the admission group's definition.
 var Group = endpoint.Register(endpoint.Define(
 	"admission", "The admission of nodes",
+	endpoint.Area(area.Fleet),
 	endpoint.Title("Admission API"),
 	endpoint.Tag("admission", "Admission",
 		"Admit, reject and revoke the nodes that ask to join."),

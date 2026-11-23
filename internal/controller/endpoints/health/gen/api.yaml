@@ -340,6 +340,7 @@ paths:
       summary: Liveness probe
       tags:
         - health
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Liveness probe
           input: {}
@@ -371,6 +372,7 @@ paths:
       summary: Readiness probe
       tags:
         - health
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Readiness probe
           input: {}
@@ -410,6 +412,7 @@ paths:
       summary: System status and component health
       tags:
         - health
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: System status and component health
           input: {}

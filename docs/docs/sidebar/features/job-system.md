@@ -96,8 +96,8 @@ the NATS stream, consumer and DLQ settings.
 
 ## Permissions
 
-The [job](../reference/endpoints/job.md) reference page gives the permission of
-each method.
+The [job](../reference/endpoints/fleet/job.md) reference page gives the
+permission of each method.
 
 ## Related
 

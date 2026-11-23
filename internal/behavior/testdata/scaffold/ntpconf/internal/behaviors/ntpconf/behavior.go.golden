@@ -22,6 +22,7 @@
 package ntpconf
 
 import (
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 )
@@ -33,7 +34,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"ntpconf", "The NTP config",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaConfig),
+	behavior.Area(area.Config),
 	behavior.CLI,
 	behavior.Config(defaults),
 	behavior.Requires(managedfile.Behavior),

@@ -159,6 +159,7 @@ paths:
       summary: Get the memory usage of the host
       tags:
         - memory_operations
+      x-osapi-area: hardware
       x-osapi-examples:
         - doc: A host with 8 GiB, 2 GiB of it free
           input:

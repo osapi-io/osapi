@@ -31,6 +31,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/command"
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
@@ -237,7 +238,9 @@ func elem(
 }
 
 // TypeScript is blocks as the UI's BEHAVIOR_BLOCKS, keyed by block type,
-// and the union of the behavior names.
+// the union of the behavior names, and area.All as the UI's AREAS: the tabs
+// of the Configure page's Add Block panel, with their labels, in their
+// order.
 func TypeScript(
 	blocks []Block,
 ) string {
@@ -259,7 +262,15 @@ func TypeScript(
 	}
 	sb.WriteString("} as const satisfies Record<string, BehaviorBlockDef>;\n\n")
 	sb.WriteString("export type BehaviorBlockType = keyof typeof BEHAVIOR_BLOCKS;\n\n")
-	fmt.Fprintf(&sb, "export type BehaviorName = %s;\n", strings.Join(names, " | "))
+	fmt.Fprintf(&sb, "export type BehaviorName = %s;\n\n", strings.Join(names, " | "))
+	sb.WriteString("export const AREAS = [\n")
+	for _, a := range area.All {
+		// An Area is two strings, which always encode.
+		data, _ := json.Marshal(a)
+		fmt.Fprintf(&sb, "  %s,\n", data)
+	}
+	sb.WriteString("] as const;\n\n")
+	sb.WriteString("export type AreaName = (typeof AREAS)[number][\"name\"];\n")
 
 	return sb.String()
 }

@@ -191,6 +191,7 @@ paths:
       summary: List the packages the index has newer versions of
       tags:
         - updatepackages_operations
+      x-osapi-area: software
       x-osapi-examples:
         - doc: Two updates
           input:
@@ -250,6 +251,7 @@ paths:
       summary: Refresh the package index
       tags:
         - updatepackages_operations
+      x-osapi-area: software
       x-osapi-examples:
         - doc: The repositories are unchanged since the last refresh
           input:

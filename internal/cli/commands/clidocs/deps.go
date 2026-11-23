@@ -50,6 +50,9 @@ type Page struct {
 	Intro   string
 	Partial bool
 	Parts   []Part
+	// Text, when set, is the whole file, such as the _category_.json that
+	// gives a folder its label and its place in the sidebar.
+	Text string
 }
 
 // Part is the output of one command, and the group whose output it is.

@@ -21,7 +21,10 @@
 // Package neighbors is the neighbors behavior: The neighbor table.
 package neighbors
 
-import "github.com/osapi-io/osapi/internal/behavior"
+import (
+	"github.com/osapi-io/osapi/internal/area"
+	"github.com/osapi-io/osapi/internal/behavior"
+)
 
 // Behavior is the neighbors definition. The routes, the agent's dispatch, the
 // CLI commands, the spec, the docs pages and the tests of every layer above
@@ -31,7 +34,7 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Node,
 	behavior.Under(behavior.GroupNetwork),
 	behavior.API,
-	behavior.Area(behavior.AreaConfig),
+	behavior.Area(area.Config),
 	behavior.CLI,
 	behavior.Config(defaults),
 	behavior.Platform(behavior.PlatformDebian, newDebian),

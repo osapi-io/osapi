@@ -21,7 +21,10 @@
 // Package motd is the motd behavior: The "message" shown at login.
 package motd
 
-import "github.com/osapi-io/osapi/internal/behavior"
+import (
+	"github.com/osapi-io/osapi/internal/area"
+	"github.com/osapi-io/osapi/internal/behavior"
+)
 
 // Behavior is the motd definition. The routes, the agent's dispatch, the
 // CLI commands, the spec, the docs pages and the tests of every layer above
@@ -30,7 +33,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"motd", "The \"message\" shown at login",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaConfig),
+	behavior.Area(area.Config),
 	behavior.CLI,
 	behavior.Config(defaults),
 	behavior.Platform(behavior.PlatformDebian, newDebian),

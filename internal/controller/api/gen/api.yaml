@@ -199,6 +199,7 @@ paths:
       summary: List admission records
       tags:
         - Admission_API_admission
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: List admission records
           input: {}
@@ -266,6 +267,7 @@ paths:
       summary: Delete a machine
       tags:
         - Admission_API_admission
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Delete a machine
           input:
@@ -334,6 +336,7 @@ paths:
       summary: Get a machine's admission record
       tags:
         - Admission_API_admission
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Get a machine's admission record
           input:
@@ -411,6 +414,7 @@ paths:
       summary: Admit a pending machine
       tags:
         - Admission_API_admission
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Admit a pending machine
           input:
@@ -483,6 +487,7 @@ paths:
       summary: Reject a pending machine
       tags:
         - Admission_API_admission
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Reject a pending machine
           input:
@@ -549,6 +554,7 @@ paths:
       summary: Revoke an admitted machine
       tags:
         - Admission_API_admission
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Revoke an admitted machine
           input:
@@ -589,6 +595,7 @@ paths:
       summary: List active agents
       tags:
         - Agent_Management_API_agent_operations
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: List active agents
           input: {}
@@ -651,6 +658,7 @@ paths:
       summary: Get agent details
       tags:
         - Agent_Management_API_agent_operations
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Get agent details
           input:
@@ -716,6 +724,7 @@ paths:
       summary: Drain an agent
       tags:
         - Agent_Management_API_agent_operations
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Drain an agent
           input:
@@ -781,6 +790,7 @@ paths:
       summary: Undrain an agent
       tags:
         - Agent_Management_API_agent_operations
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Undrain an agent
           input:
@@ -821,6 +831,7 @@ paths:
       summary: Show the health of each agent
       tags:
         - Agent_Management_API_agent_operations
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Show the health of each agent
           input: {}
@@ -924,6 +935,7 @@ paths:
       summary: List audit log entries
       tags:
         - Audit_Log_API_audit
+      x-osapi-area: audit
       x-osapi-examples:
         - doc: List audit log entries
           input: {}
@@ -1003,6 +1015,7 @@ paths:
       summary: Get a single audit log entry
       tags:
         - Audit_Log_API_audit
+      x-osapi-area: audit
       x-osapi-examples:
         - doc: Get a single audit log entry
           input:
@@ -1049,6 +1062,7 @@ paths:
       summary: Export all audit log entries
       tags:
         - Audit_Log_API_audit
+      x-osapi-area: audit
       x-osapi-examples:
         - doc: Export all audit log entries
           input: {}
@@ -1088,6 +1102,7 @@ paths:
       summary: Show the health of the controller
       tags:
         - Controller_API_controller
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Show the health of the controller
           input: {}
@@ -1127,6 +1142,7 @@ paths:
       summary: List available fact keys
       tags:
         - Facts_API_facts
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: List available fact keys
           input: {}
@@ -1172,6 +1188,7 @@ paths:
       summary: List stored files
       tags:
         - File_Management_API_file_operations
+      x-osapi-area: objectstore
       x-osapi-examples:
         - doc: List stored files
           input: {}
@@ -1273,6 +1290,7 @@ paths:
       summary: Upload a file
       tags:
         - File_Management_API_file_operations
+      x-osapi-area: objectstore
       x-osapi-method: upload
   /api/file/{name}:
     delete:
@@ -1334,6 +1352,7 @@ paths:
       summary: Delete a file
       tags:
         - File_Management_API_file_operations
+      x-osapi-area: objectstore
       x-osapi-examples:
         - doc: Delete a file
           input:
@@ -1402,6 +1421,7 @@ paths:
       summary: Get file metadata
       tags:
         - File_Management_API_file_operations
+      x-osapi-area: objectstore
       x-osapi-examples:
         - doc: Get file metadata
           input:
@@ -1500,6 +1520,7 @@ paths:
       summary: Replace a file
       tags:
         - File_Management_API_file_operations
+      x-osapi-area: objectstore
       x-osapi-method: update
   /api/file/stale:
     get:
@@ -1542,6 +1563,7 @@ paths:
       summary: List stale file deployments
       tags:
         - File_Management_API_file_operations
+      x-osapi-area: objectstore
       x-osapi-examples:
         - doc: List stale file deployments
           input: {}
@@ -1567,6 +1589,7 @@ paths:
       summary: Liveness probe
       tags:
         - Health_Check_API_health
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Liveness probe
           input: {}
@@ -1598,6 +1621,7 @@ paths:
       summary: Readiness probe
       tags:
         - Health_Check_API_health
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Readiness probe
           input: {}
@@ -1637,6 +1661,7 @@ paths:
       summary: System status and component health
       tags:
         - Health_Check_API_health
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: System status and component health
           input: {}
@@ -1715,6 +1740,7 @@ paths:
       summary: List jobs
       tags:
         - Job_Management_API_job_operations
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: List jobs
           input: {}
@@ -1776,6 +1802,7 @@ paths:
       summary: Delete a job
       tags:
         - Job_Management_API_job_operations
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Delete a job
           input:
@@ -1837,6 +1864,7 @@ paths:
       summary: Get job detail
       tags:
         - Job_Management_API_job_operations
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Get job detail
           input:
@@ -1909,6 +1937,7 @@ paths:
       summary: Retry a job
       tags:
         - Job_Management_API_job_operations
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Retry a job
           input:
@@ -1949,6 +1978,7 @@ paths:
       summary: Show the health of the NATS server
       tags:
         - NATS_API_nats
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Show the health of the NATS server
           input: {}
@@ -2023,6 +2053,7 @@ paths:
       summary: Get the spans of a trace
       tags:
         - Telemetry_API_telemetry
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Get the spans of a trace
           input:
@@ -2087,6 +2118,7 @@ paths:
       summary: List the certificate authorities that the host trusts
       tags:
         - Certificate_API_certificate_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: A Debian host with a system CA
           input:
@@ -2152,6 +2184,7 @@ paths:
       summary: Add a certificate authority to the trust store
       tags:
         - Certificate_API_certificate_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: Add a CA
           input:
@@ -2215,6 +2248,7 @@ paths:
       summary: Remove a certificate authority that osapi deployed
       tags:
         - Certificate_API_certificate_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: Remove a CA
           input:
@@ -2276,6 +2310,7 @@ paths:
       summary: Get one certificate authority
       tags:
         - Certificate_API_certificate_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: A CA that osapi deployed, by the name it was deployed with
           input:
@@ -2347,6 +2382,7 @@ paths:
       summary: Write a certificate authority that osapi deployed again
       tags:
         - Certificate_API_certificate_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: Write a CA from a new object
           input:
@@ -2419,6 +2455,7 @@ paths:
       summary: Run a program with its arguments
       tags:
         - Command_API_command_operations
+      x-osapi-area: command
       x-osapi-examples:
         - doc: Print a word
           input:
@@ -2498,6 +2535,7 @@ paths:
       summary: Run a command line through /bin/sh -c
       tags:
         - Command_API_command_operations
+      x-osapi-area: command
       x-osapi-examples:
         - doc: A pipe
           input:
@@ -2574,6 +2612,7 @@ paths:
       summary: List the containers of the host
       tags:
         - Docker_API_container_docker_operations
+      x-osapi-area: containers
       x-osapi-examples:
         - doc: A host with a container
           input:
@@ -2643,6 +2682,7 @@ paths:
       summary: Create a container
       tags:
         - Docker_API_container_docker_operations
+      x-osapi-area: containers
       x-osapi-examples:
         - doc: Create a container
           input:
@@ -2709,6 +2749,7 @@ paths:
       summary: Remove a container
       tags:
         - Docker_API_container_docker_operations
+      x-osapi-area: containers
       x-osapi-examples:
         - doc: Remove a container
           input:
@@ -2770,6 +2811,7 @@ paths:
       summary: Get one container
       tags:
         - Docker_API_container_docker_operations
+      x-osapi-area: containers
       x-osapi-examples:
         - doc: A container
           input:
@@ -2838,6 +2880,7 @@ paths:
       summary: Run a command in a container
       tags:
         - Docker_API_container_docker_operations
+      x-osapi-area: containers
       x-osapi-examples:
         - doc: Run a command
           input:
@@ -2903,6 +2946,7 @@ paths:
       summary: Start a container
       tags:
         - Docker_API_container_docker_operations
+      x-osapi-area: containers
       x-osapi-examples:
         - doc: Start a container
           input:
@@ -2971,6 +3015,7 @@ paths:
       summary: Stop a container
       tags:
         - Docker_API_container_docker_operations
+      x-osapi-area: containers
       x-osapi-examples:
         - doc: Stop a container
           input:
@@ -3033,6 +3078,7 @@ paths:
       summary: List the images of the host
       tags:
         - Image_API_container_image_operations
+      x-osapi-area: containers
       x-osapi-examples:
         - doc: A host with an image
           input:
@@ -3100,6 +3146,7 @@ paths:
       summary: Remove an image
       tags:
         - Image_API_container_image_operations
+      x-osapi-area: containers
       x-osapi-examples:
         - doc: Remove an image
           input:
@@ -3167,6 +3214,7 @@ paths:
       summary: Pull an image
       tags:
         - Image_API_container_image_operations
+      x-osapi-area: containers
       x-osapi-examples:
         - doc: Pull an image
           input:
@@ -3228,6 +3276,7 @@ paths:
       summary: Get the disk usage of the host
       tags:
         - Disk_API_disk_operations
+      x-osapi-area: hardware
       x-osapi-examples:
         - doc: A host with one local filesystem
           input:
@@ -3294,6 +3343,7 @@ paths:
       summary: Remove a file that osapi deployed
       tags:
         - File_API_file_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: Remove a deployed file
           input:
@@ -3363,6 +3413,7 @@ paths:
       summary: Show whether a deployed file holds what osapi wrote
       tags:
         - File_API_file_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: A deployed file
           input:
@@ -3429,6 +3480,7 @@ paths:
       summary: Deploy an object of the object store to a path
       tags:
         - File_API_file_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: Deploy a file
           input:
@@ -3498,6 +3550,7 @@ paths:
       summary: List the groups of the host
       tags:
         - Group_API_group_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: A host with a group
           input:
@@ -3563,6 +3616,7 @@ paths:
       summary: Add a group
       tags:
         - Group_API_group_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: Add a group
           input:
@@ -3631,6 +3685,7 @@ paths:
       summary: Remove a group
       tags:
         - Group_API_group_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: Remove a group
           input:
@@ -3692,6 +3747,7 @@ paths:
       summary: Get one group
       tags:
         - Group_API_group_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: A group
           input:
@@ -3759,6 +3815,7 @@ paths:
       summary: Set the members of a group
       tags:
         - Group_API_group_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: Set the members
           input:
@@ -3822,6 +3879,7 @@ paths:
       summary: Get the hostname of the host
       tags:
         - Hostname_API_hostname_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: A host named web-01
           input:
@@ -3887,6 +3945,7 @@ paths:
       summary: Set the hostname of the host
       tags:
         - Hostname_API_hostname_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: Rename a host
           input:
@@ -3952,6 +4011,7 @@ paths:
       summary: Get the load averages of the host
       tags:
         - Load_API_load_operations
+      x-osapi-area: node
       x-osapi-examples:
         - doc: A host under a light load
           input:
@@ -4052,6 +4112,7 @@ paths:
       summary: List the entries of the journal
       tags:
         - Entry_API_log_entry_operations
+      x-osapi-area: logs
       x-osapi-examples:
         - doc: The newest entries
           input:
@@ -4119,6 +4180,7 @@ paths:
       summary: List the sources of the journal
       tags:
         - Source_API_log_source_operations
+      x-osapi-area: logs
       x-osapi-examples:
         - doc: The sources
           input:
@@ -4179,6 +4241,7 @@ paths:
       summary: Get the memory usage of the host
       tags:
         - Memory_API_memory_operations
+      x-osapi-area: hardware
       x-osapi-examples:
         - doc: A host with 8 GiB, 2 GiB of it free
           input:
@@ -4245,6 +4308,7 @@ paths:
       summary: Ping an address from the host
       tags:
         - Connectivity_API_network_connectivity_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: A host that answers
           input:
@@ -4311,6 +4375,7 @@ paths:
       summary: Drop the DNS resolvers osapi set on an interface
       tags:
         - Dns_API_network_dns_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: An interface osapi set
           input:
@@ -4372,6 +4437,7 @@ paths:
       summary: Get the DNS resolvers of an interface
       tags:
         - Dns_API_network_dns_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: An interface with servers and a domain
           input:
@@ -4443,6 +4509,7 @@ paths:
       summary: Set the DNS resolvers of an interface
       tags:
         - Dns_API_network_dns_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: Set the servers of an interface
           input:
@@ -4513,6 +4580,7 @@ paths:
       summary: List the network interfaces of the host
       tags:
         - Interface_API_network_interface_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: A Linux host
           input:
@@ -4574,6 +4642,7 @@ paths:
       summary: Drop the config osapi has of a network interface
       tags:
         - Interface_API_network_interface_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: An interface osapi configures
           input:
@@ -4635,6 +4704,7 @@ paths:
       summary: Get a network interface of the host
       tags:
         - Interface_API_network_interface_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: An interface with a DHCP address
           input:
@@ -4706,6 +4776,7 @@ paths:
       summary: Configure a network interface
       tags:
         - Interface_API_network_interface_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: A static address
           input:
@@ -4785,6 +4856,7 @@ paths:
       summary: Change the config osapi has of a network interface
       tags:
         - Interface_API_network_interface_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: Move an interface to DHCP
           input:
@@ -4854,6 +4926,7 @@ paths:
       summary: Drop a route that osapi wrote
       tags:
         - Route_API_route_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: One of two routes
           input:
@@ -4916,6 +4989,7 @@ paths:
       summary: List the routes of an interface
       tags:
         - Route_API_route_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: An interface with routes
           input:
@@ -4991,6 +5065,7 @@ paths:
       summary: Add a static route to an interface
       tags:
         - Route_API_route_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: A route
           input:
@@ -5067,6 +5142,7 @@ paths:
       summary: Change the gateway or the metric of a route
       tags:
         - Route_API_route_operations
+      x-osapi-area: networking
       x-osapi-examples:
         - doc: A new gateway and metric
           input:
@@ -5131,6 +5207,7 @@ paths:
       summary: Remove the NTP servers that osapi set
       tags:
         - Ntp_API_ntp_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: Remove the servers
           input:
@@ -5190,6 +5267,7 @@ paths:
       summary: Get the sync status of chrony and its sources
       tags:
         - Ntp_API_ntp_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: A host synchronized to time.cloudflare.com
           input:
@@ -5255,6 +5333,7 @@ paths:
       summary: Set the NTP servers that chrony uses
       tags:
         - Ntp_API_ntp_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: Set two servers
           input:
@@ -5328,6 +5407,7 @@ paths:
       summary: Replace the NTP servers that osapi set
       tags:
         - Ntp_API_ntp_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: Replace the servers
           input:
@@ -5395,6 +5475,7 @@ paths:
       summary: Get the operating system of the host
       tags:
         - Os_API_os_operations
+      x-osapi-area: node
       x-osapi-examples:
         - doc: An Ubuntu host
           input:
@@ -5455,6 +5536,7 @@ paths:
       summary: List the packages installed on the host
       tags:
         - Package_API_package_operations
+      x-osapi-area: software
       x-osapi-examples:
         - doc: A Debian host
           input:
@@ -5520,6 +5602,7 @@ paths:
       summary: Install a package
       tags:
         - Package_API_package_operations
+      x-osapi-area: software
       x-osapi-examples:
         - doc: Install a package
           input:
@@ -5582,6 +5665,7 @@ paths:
       summary: Remove a package
       tags:
         - Package_API_package_operations
+      x-osapi-area: software
       x-osapi-examples:
         - doc: Remove a package
           input:
@@ -5643,6 +5727,7 @@ paths:
       summary: Get one installed package
       tags:
         - Package_API_package_operations
+      x-osapi-area: software
       x-osapi-examples:
         - doc: An installed package
           input:
@@ -5714,6 +5799,7 @@ paths:
       summary: Reboot the host
       tags:
         - Power_API_power_operations
+      x-osapi-area: node
       x-osapi-examples:
         - doc: In one minute
           input:
@@ -5785,6 +5871,7 @@ paths:
       summary: Shut the host down
       tags:
         - Power_API_power_operations
+      x-osapi-area: node
       x-osapi-examples:
         - doc: In one minute
           input:
@@ -5850,6 +5937,7 @@ paths:
       summary: List the processes of the host
       tags:
         - Process_API_process_operations
+      x-osapi-area: node
       x-osapi-examples:
         - doc: A Linux host that runs sleep
           input:
@@ -5911,6 +5999,7 @@ paths:
       summary: Get one process
       tags:
         - Process_API_process_operations
+      x-osapi-area: node
       x-osapi-examples:
         - doc: A process of a Linux host
           input:
@@ -5979,6 +6068,7 @@ paths:
       summary: Send a signal to a process
       tags:
         - Process_API_process_operations
+      x-osapi-area: node
       x-osapi-examples:
         - doc: Stop a process
           input:
@@ -6041,6 +6131,7 @@ paths:
       summary: List the cron entries that osapi deployed
       tags:
         - Schedule_API_schedule_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: An entry that osapi deployed
           input:
@@ -6106,6 +6197,7 @@ paths:
       summary: Deploy a cron entry
       tags:
         - Schedule_API_schedule_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: An entry with a cron expression
           input:
@@ -6186,6 +6278,7 @@ paths:
       summary: Remove a cron entry that osapi deployed
       tags:
         - Schedule_API_schedule_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: Remove an entry
           input:
@@ -6247,6 +6340,7 @@ paths:
       summary: Get one cron entry that osapi deployed
       tags:
         - Schedule_API_schedule_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: An entry that osapi deployed
           input:
@@ -6314,6 +6408,7 @@ paths:
       summary: Deploy a cron entry that osapi deployed again
       tags:
         - Schedule_API_schedule_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: A new object
           input:
@@ -6393,6 +6488,7 @@ paths:
       summary: List the services of the host
       tags:
         - Service_API_service_operations
+      x-osapi-area: services
       x-osapi-examples:
         - doc: A service that osapi deployed reads by its name
           input:
@@ -6458,6 +6554,7 @@ paths:
       summary: Deploy a service
       tags:
         - Service_API_service_operations
+      x-osapi-area: services
       x-osapi-examples:
         - doc: Deploy a unit file
           input:
@@ -6521,6 +6618,7 @@ paths:
       summary: Remove a service that osapi deployed
       tags:
         - Service_API_service_operations
+      x-osapi-area: services
       x-osapi-examples:
         - doc: Remove a service
           input:
@@ -6586,6 +6684,7 @@ paths:
       summary: Get one service
       tags:
         - Service_API_service_operations
+      x-osapi-area: services
       x-osapi-examples:
         - doc: A running service
           input:
@@ -6665,6 +6764,7 @@ paths:
       summary: Deploy a new unit file for a service
       tags:
         - Service_API_service_operations
+      x-osapi-area: services
       x-osapi-examples:
         - doc: A new unit file
           input:
@@ -6728,6 +6828,7 @@ paths:
       summary: Make a service that osapi deployed not start at boot
       tags:
         - Service_API_service_operations
+      x-osapi-area: services
       x-osapi-examples:
         - doc: Disable the service
           input:
@@ -6790,6 +6891,7 @@ paths:
       summary: Make a service that osapi deployed start at boot
       tags:
         - Service_API_service_operations
+      x-osapi-area: services
       x-osapi-examples:
         - doc: Enable the service
           input:
@@ -6856,6 +6958,7 @@ paths:
       summary: Restart a service that osapi deployed
       tags:
         - Service_API_service_operations
+      x-osapi-area: services
       x-osapi-examples:
         - doc: Restart the service
           input:
@@ -6918,6 +7021,7 @@ paths:
       summary: Start a service that osapi deployed
       tags:
         - Service_API_service_operations
+      x-osapi-area: services
       x-osapi-examples:
         - doc: Start the service
           input:
@@ -6980,6 +7084,7 @@ paths:
       summary: Stop a service that osapi deployed
       tags:
         - Service_API_service_operations
+      x-osapi-area: services
       x-osapi-examples:
         - doc: Stop the service
           input:
@@ -7048,6 +7153,7 @@ paths:
       summary: Remove an authorized SSH key of a user
       tags:
         - Sshkey_API_sshkey_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: Remove a key
           input:
@@ -7120,6 +7226,7 @@ paths:
       summary: List the authorized SSH keys of a user
       tags:
         - Sshkey_API_sshkey_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: A user with keys
           input:
@@ -7187,6 +7294,7 @@ paths:
       summary: Add an authorized SSH key to a user
       tags:
         - Sshkey_API_sshkey_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: Add a key
           input:
@@ -7254,6 +7362,7 @@ paths:
       summary: Get the status summary of the host
       tags:
         - Status_API_status_operations
+      x-osapi-area: node
       x-osapi-examples:
         - doc: An Ubuntu host
           input:
@@ -7322,6 +7431,7 @@ paths:
       summary: List the kernel's parameters and which osapi manages
       tags:
         - Sysctl_API_sysctl_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: Every parameter, and which osapi manages
           input:
@@ -7395,6 +7505,7 @@ paths:
       summary: Manage a kernel parameter and apply it
       tags:
         - Sysctl_API_sysctl_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: Turn on IP forwarding
           input:
@@ -7458,6 +7569,7 @@ paths:
       summary: Stop the management of a kernel parameter
       tags:
         - Sysctl_API_sysctl_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: Remove a parameter
           input:
@@ -7518,6 +7630,7 @@ paths:
       summary: Get a kernel parameter's current value, and whether osapi manages it
       tags:
         - Sysctl_API_sysctl_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: A parameter osapi manages
           input:
@@ -7593,6 +7706,7 @@ paths:
       summary: Set a kernel parameter, manage it, and apply it
       tags:
         - Sysctl_API_sysctl_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: Lower swappiness
           input:
@@ -7655,6 +7769,7 @@ paths:
       summary: Get the timezone of the host
       tags:
         - Timezone_API_timezone_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: A Linux host on UTC
           input:
@@ -7720,6 +7835,7 @@ paths:
       summary: Set the timezone of the host
       tags:
         - Timezone_API_timezone_operations
+      x-osapi-area: config
       x-osapi-examples:
         - doc: Set a new timezone
           input:
@@ -7785,6 +7901,7 @@ paths:
       summary: List the packages the index has newer versions of
       tags:
         - Updatepackages_API_updatepackages_operations
+      x-osapi-area: software
       x-osapi-examples:
         - doc: Two updates
           input:
@@ -7844,6 +7961,7 @@ paths:
       summary: Refresh the package index
       tags:
         - Updatepackages_API_updatepackages_operations
+      x-osapi-area: software
       x-osapi-examples:
         - doc: The repositories are unchanged since the last refresh
           input:
@@ -7904,6 +8022,7 @@ paths:
       summary: Get the uptime of the host
       tags:
         - Uptime_API_uptime_operations
+      x-osapi-area: node
       x-osapi-examples:
         - doc: A host up for a day, two hours and five minutes
           input:
@@ -7964,6 +8083,7 @@ paths:
       summary: List the users of the host
       tags:
         - User_API_user_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: A host with users
           input:
@@ -8029,6 +8149,7 @@ paths:
       summary: Add a user
       tags:
         - User_API_user_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: Add a user
           input:
@@ -8107,6 +8228,7 @@ paths:
       summary: Remove a user
       tags:
         - User_API_user_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: Remove a user
           input:
@@ -8168,6 +8290,7 @@ paths:
       summary: Get one user
       tags:
         - User_API_user_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: A user
           input:
@@ -8235,6 +8358,7 @@ paths:
       summary: Change a user
       tags:
         - User_API_user_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: Set the shell
           input:
@@ -8317,6 +8441,7 @@ paths:
       summary: Set the password of a user
       tags:
         - User_API_user_operations
+      x-osapi-area: security
       x-osapi-examples:
         - doc: Set a password
           input:
@@ -14104,3 +14229,30 @@ x-tagGroups:
   - name: User API
     tags:
       - User_API_user_operations
+x-osapi-areas:
+  - name: services
+    label: Services
+  - name: software
+    label: Software
+  - name: config
+    label: Config
+  - name: node
+    label: Node
+  - name: logs
+    label: Logs
+  - name: networking
+    label: Networking
+  - name: security
+    label: Security
+  - name: containers
+    label: Containers
+  - name: objectstore
+    label: Object Store
+  - name: command
+    label: Command
+  - name: hardware
+    label: Hardware
+  - name: audit
+    label: Audit
+  - name: fleet
+    label: Fleet

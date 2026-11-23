@@ -30,6 +30,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/cli/command"
 
 	"github.com/osapi-io/osapi/internal/validation"
@@ -46,6 +47,7 @@ var name = regexp.MustCompile(`^[a-z][a-z0-9]*$`)
 // The rules Validate checks, by the name a Problem reports.
 const (
 	RuleName    = "name"
+	RuleArea    = "area"
 	RuleMethods = "methods"
 	RuleUnique  = "unique"
 	RuleSegment = "segment"
@@ -135,6 +137,11 @@ var Checks = guide.Checks{
 		Rule:     RuleField,
 		Requires: "The field that Location names is a json field of the method's output, and the field that Example[T] names is a json field of T.",
 		Fix:      "Correct the name to the json name of the field, such as job_id.",
+	},
+	{
+		Rule:     RuleArea,
+		Requires: "The group has an area, one of area.All, so the UI, the SDK's pages and the docs site can place its operations.",
+		Fix:      "Add endpoint.Area(...) to the group's definition with a constant of package area, such as area.Fleet. Add a new area to area.All with its label first.",
 	},
 	{
 		Rule:     RuleName,
@@ -243,6 +250,10 @@ func Validate(
 	}
 	if len(g.Methods) == 0 {
 		add("", RuleMethods, "the group has no methods.")
+	}
+	if !area.Valid(g.Area) {
+		add("", RuleArea,
+			fmt.Sprintf("area %q is not one of %s.", g.Area, area.List()))
 	}
 	var named []string
 	for t, examples := range g.Examples {

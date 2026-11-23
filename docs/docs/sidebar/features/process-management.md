@@ -4,7 +4,7 @@ sidebar_position: 20
 
 # Process management
 
-The [process behavior](../reference/behaviors/process/process.md) shows the
+The [process behavior](../reference/behaviors/node/process/process.md) shows the
 processes of managed hosts, and sends a signal to one process. The agent reads
 the processes through gohai's process collector: from `/proc` on each Linux
 family, and from `ps` on macOS.
@@ -62,15 +62,15 @@ names its host. A host that failed or that was skipped shows its error.
 
 ## Permissions
 
-The [process](../reference/behaviors/process/process.md) reference page gives
-the permission of each method.
+The [process](../reference/behaviors/node/process/process.md) reference page
+gives the permission of each method.
 
 ## Related
 
-- [Process behavior](../reference/behaviors/process/process.md): each method,
-  its examples and what it refuses
+- [Process behavior](../reference/behaviors/node/process/process.md): each
+  method, its examples and what it refuses
 - [CLI Reference](../usage/cli/client/node/process/process.mdx): process
   commands
-- [SDK Reference](../sdk/client/process.md): Process service
+- [SDK Reference](../sdk/client/node/process.md): Process service
 - [Platform Detection](../sdk/platform/detection.md): OS family detection
 - [Configuration](../usage/configuration.md): full configuration reference

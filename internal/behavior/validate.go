@@ -27,6 +27,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/validation"
@@ -367,13 +368,13 @@ func ValidateBehavior(
 			b.Doc,
 		)
 	}
-	if b.API && !slices.Contains(Areas, b.Area) {
+	if b.API && !area.Valid(b.Area) {
 		add(
 			"",
 			RuleSurface,
 			"served, but area %q is not one of %s; add behavior.Area(...), so the UI can place its blocks",
 			b.Area,
-			areaList(),
+			area.List(),
 		)
 	}
 	if b.CLI && !b.API {
@@ -983,16 +984,6 @@ func knownPlatformList() string {
 	names := make([]string, 0, len(KnownPlatforms()))
 	for _, p := range KnownPlatforms() {
 		names = append(names, string(p))
-	}
-
-	return strings.Join(names, ", ")
-}
-
-// areaList is Areas, for a message.
-func areaList() string {
-	names := make([]string, 0, len(Areas))
-	for _, a := range Areas {
-		names = append(names, string(a))
 	}
 
 	return strings.Join(names, ", ")

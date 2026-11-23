@@ -27,6 +27,7 @@ package power
 import (
 	"context"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 )
 
@@ -35,7 +36,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"power", "Reboot or shut down the host",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaNode),
+	behavior.Area(area.Node),
 	behavior.CLI,
 	behavior.Platform(behavior.PlatformDebian, newDebian),
 	action("reboot", Reboot, "Reboot the host", "-r"),

@@ -97,14 +97,23 @@ export function featureItems(): Item[] {
   return pages('sidebar/features', ['features']).map(doc);
 }
 
-// sdkItems are the pages of the SDK: the client's overview and the page of
-// each service, one list as the services are fields of one client, then the
-// platform pages and a link to the orchestrator.
+// sdkItems are the pages of the SDK: the client's overview, then a section
+// for each area, with the page of each of its services. internal/sdk/gen
+// writes a folder for each area, and its _category_.json, from the areas of
+// the spec, so the sections have the labels and the order of area.All in Go.
+// Then the platform pages and a link to the orchestrator.
 export function sdkItems(): Item[] {
   const items: Item[] = [
     header('Client Library'),
     ...pages('sidebar/sdk/client').map(doc)
   ];
+  for (const f of folders('sidebar/sdk/client')) {
+    items.push(
+      separator,
+      header(f.label),
+      ...pages(`sidebar/sdk/client/${f.name}`).map(doc)
+    );
+  }
   items.push(
     separator,
     header('Platform'),
@@ -118,10 +127,21 @@ export function sdkItems(): Item[] {
 }
 
 // behaviorItems are the reference pages of the behaviors, which the registry
-// generates: each behavior's page, by its title.
+// generates: a section for each area, with the page of each of its
+// behaviors, by its title. osapi cli docs reference writes the page of each
+// behavior in a folder of its own, in the folder of its area, and the
+// _category_.json of each area's folder, from area.All in Go, so the sections
+// have the labels and the order of the SDK's. The internal behaviors, which
+// have no area, are last.
 export function behaviorItems(): Item[] {
-  return folders('sidebar/reference/behaviors')
-    .flatMap((f) => pages(`sidebar/reference/behaviors/${f.name}`))
-    .sort((a, b) => a.title.localeCompare(b.title))
-    .map(doc);
+  return folders('sidebar/reference/behaviors').flatMap((area, i) => [
+    ...(i > 0 ? [separator] : []),
+    header(area.label),
+    ...folders(`sidebar/reference/behaviors/${area.name}`)
+      .flatMap((f) =>
+        pages(`sidebar/reference/behaviors/${area.name}/${f.name}`)
+      )
+      .sort((a, b) => a.title.localeCompare(b.title))
+      .map(doc)
+  ]);
 }

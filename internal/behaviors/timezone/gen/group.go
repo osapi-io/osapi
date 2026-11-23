@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	timezone "github.com/osapi-io/osapi/internal/behaviors/timezone"
@@ -79,10 +80,11 @@ func HandleUpdate(
 var Group = endpoint.Define(
 	"timezone",
 	"The timezone of the host",
+	endpoint.Area(area.Config),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("timezone_operations", "Node/Timezone", "The timezone of the host"),
-	endpoint.CommandNotes("The [timezone behavior](../../../../../reference/behaviors/timezone/timezone.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.CommandNotes("The [timezone behavior](../../../../../reference/behaviors/config/timezone/timezone.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[GetRequest, TimezoneGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodeTimezone").

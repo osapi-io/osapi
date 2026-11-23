@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { BEHAVIOR_BLOCKS } from "@/lib/blocks.gen";
+import { AREAS, BEHAVIOR_BLOCKS, type AreaName } from "@/lib/blocks.gen";
 import { blockKind, type HandBlockType } from "@/lib/permissions";
 
 export type BlockStatus =
@@ -11,7 +11,7 @@ export interface BlockType {
   description: string;
   category: string;
   /** The area of the Add Block panel that the block goes in. */
-  area: string;
+  area: AreaName;
   /** Blocks that need no input are ready immediately */
   readyOnAdd?: boolean;
 }
@@ -23,7 +23,7 @@ export interface BlockCategory {
 }
 
 export interface BlockArea {
-  name: string;
+  name: AreaName;
   label: string;
   categories: BlockCategory[];
 }
@@ -32,13 +32,13 @@ export interface BlockArea {
 // BLOCK_OPERATIONS, which gives its permission: a type with none fails the
 // type check here.
 const HAND_BLOCK_TYPES: (BlockType & { type: HandBlockType })[] = [
-  // ── Files ──────────────────────────────────────────────────────────────────
+  // ── Object Store ──────────────────────────────────────────────────────────────────
   {
     type: "object-list",
     label: "List",
     description: "List files in object store",
     category: "file",
-    area: "files",
+    area: "objectstore",
     readyOnAdd: true,
   },
   {
@@ -46,46 +46,21 @@ const HAND_BLOCK_TYPES: (BlockType & { type: HandBlockType })[] = [
     label: "Upload",
     description: "Upload to object store",
     category: "file",
-    area: "files",
+    area: "objectstore",
   },
   {
     type: "object-delete",
     label: "Delete",
     description: "Delete file from object store",
     category: "file",
-    area: "files",
+    area: "objectstore",
   },
   {
     type: "object-stale",
     label: "Stale",
     description: "Check for stale deployments",
     category: "file-deploy",
-    area: "files",
-    readyOnAdd: true,
-  },
-
-  // ── Audit ──────────────────────────────────────────────────────────────────
-  {
-    type: "audit-list",
-    label: "List",
-    description: "List audit log entries",
-    category: "audit",
-    area: "audit",
-    readyOnAdd: true,
-  },
-  {
-    type: "audit-get",
-    label: "Get",
-    description: "Get audit entry details",
-    category: "audit",
-    area: "audit",
-  },
-  {
-    type: "audit-export",
-    label: "Export",
-    description: "Export audit log",
-    category: "audit",
-    area: "audit",
+    area: "objectstore",
     readyOnAdd: true,
   },
 ];
@@ -114,14 +89,13 @@ const categoryNames: Record<string, string> = {
   updatepackages: "Package Index",
   file: "File",
   "file-deploy": "File Deploy",
-  audit: "Audit",
 };
 
 const behaviorTitles: Record<string, string> = Object.fromEntries(
   Object.values(BEHAVIOR_BLOCKS).map((def) => [def.behavior, def.title]),
 );
 
-function buildCategories(area: string): BlockCategory[] {
+function buildCategories(area: AreaName): BlockCategory[] {
   const types = ALL_BLOCK_TYPES.filter((b) => b.area === area);
   const cats = [...new Set(types.map((b) => b.category))];
   return cats.map((cat) => ({
@@ -132,65 +106,22 @@ function buildCategories(area: string): BlockCategory[] {
 }
 
 /**
- * The areas of the panel: the AreaName of each behavior, from behavior.Area
- * in its definition, and the areas of the hand-written blocks. A new
- * AreaName fails the type check here until the panel has it.
+ * The areas of the panel: AREAS, from area.All in Go, with their labels and
+ * in their order, each with the blocks that declare it. An area with no
+ * block, such as fleet, has no tab. The area of each behavior's blocks is
+ * its behavior.Area, and the area of each hand-written block is an
+ * AreaName, so a misspelled area fails the type check here.
  */
 type BehaviorArea =
   (typeof BEHAVIOR_BLOCKS)[keyof typeof BEHAVIOR_BLOCKS]["area"];
-type PanelArea = BehaviorArea | "files" | "audit";
-type PanelAreaName =
-  | "services"
-  | "software"
-  | "config"
-  | "node"
-  | "networking"
-  | "security"
-  | "containers"
-  | "files"
-  | "command"
-  | "hardware"
-  | "audit";
-const areaInPanel = (a: PanelArea): PanelAreaName => a;
-void areaInPanel;
+const behaviorArea = (a: BehaviorArea): AreaName => a;
+void behaviorArea;
 
-export const BLOCK_AREAS: (BlockArea & { name: PanelAreaName })[] = [
-  {
-    name: "services",
-    label: "Services",
-    categories: buildCategories("services"),
-  },
-  {
-    name: "software",
-    label: "Software",
-    categories: buildCategories("software"),
-  },
-  { name: "config", label: "Config", categories: buildCategories("config") },
-  { name: "node", label: "Node", categories: buildCategories("node") },
-  {
-    name: "networking",
-    label: "Networking",
-    categories: buildCategories("networking"),
-  },
-  {
-    name: "security",
-    label: "Security",
-    categories: buildCategories("security"),
-  },
-  {
-    name: "containers",
-    label: "Containers",
-    categories: buildCategories("containers"),
-  },
-  { name: "files", label: "Files", categories: buildCategories("files") },
-  { name: "command", label: "Command", categories: buildCategories("command") },
-  {
-    name: "hardware",
-    label: "Hardware",
-    categories: buildCategories("hardware"),
-  },
-  { name: "audit", label: "Audit", categories: buildCategories("audit") },
-];
+export const BLOCK_AREAS: BlockArea[] = AREAS.map((a) => ({
+  name: a.name,
+  label: a.label,
+  categories: buildCategories(a.name),
+})).filter((a) => a.categories.length > 0);
 
 /** Flat list for backwards compat (command palette, etc.) */
 export const BLOCK_CATEGORIES: BlockCategory[] = BLOCK_AREAS.flatMap(

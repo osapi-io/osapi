@@ -21,14 +21,17 @@
 // Package load is the load behavior: the load averages of the host.
 package load
 
-import "github.com/osapi-io/osapi/internal/behavior"
+import (
+	"github.com/osapi-io/osapi/internal/area"
+	"github.com/osapi-io/osapi/internal/behavior"
+)
 
 // Behavior is the load definition.
 var Behavior = behavior.Register(behavior.Define(
 	"load", "Get the load averages of target hosts",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaNode),
+	behavior.Area(area.Node),
 	behavior.CLI,
 	// gohai reads /proc/loadavg on Linux, and vm.loadavg from sysctl on macOS.
 	behavior.Platform(behavior.PlatformLinux, newReader),

@@ -238,6 +238,35 @@ func cell(
 	return cellEscaper.Replace(s)
 }
 
+// InternalFolder is the folder of the reference pages of the internal
+// behaviors, which have no area, after the folders of the areas.
+const InternalFolder = "internal"
+
+// InternalLabel is the label of InternalFolder in the sidebar and the navbar.
+const InternalLabel = "Internal"
+
+// ReferenceFolder is the folder of b's reference page under
+// reference/behaviors: the folder of its area, such as hardware, or
+// InternalFolder for an internal behavior, which has no area.
+func ReferenceFolder(
+	b *behavior.Behavior,
+) string {
+	if b.Area == "" {
+		return InternalFolder
+	}
+
+	return string(b.Area)
+}
+
+// ReferencePage is b's reference page from reference/behaviors, such as
+// hardware/disk/disk.md: each behavior's page is in a folder of its own, in
+// the folder of its area.
+func ReferencePage(
+	b *behavior.Behavior,
+) string {
+	return ReferenceFolder(b) + "/" + b.Name + "/" + b.Name + ".md"
+}
+
 // GroupAnnotations are the docs annotations of a behavior's own command: a
 // note that links to the page of the behavior.
 func GroupAnnotations(
@@ -251,12 +280,11 @@ func GroupAnnotations(
 
 	return map[string]string{
 		reference.Notes: fmt.Sprintf(
-			"The [%s behavior](%sreference/behaviors/%s/%s.md) page tells where the behavior runs, "+
+			"The [%s behavior](%sreference/behaviors/%s) page tells where the behavior runs, "+
 				"what it is built on and its settings.",
 			b.Name,
 			up,
-			b.Name,
-			b.Name,
+			ReferencePage(b),
 		),
 	}
 }

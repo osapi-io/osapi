@@ -34,6 +34,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
@@ -57,6 +58,9 @@ type Group struct {
 	Prefix string
 	// Doc says what the group is, in one line.
 	Doc string
+	// Area is the area of the group's operations, one of area.All, which
+	// Area sets.
+	Area area.Name
 	// Title is the title of the group's spec. The full spec puts it in
 	// front of each tag, and the UI's client files take their names from
 	// the result, so a group that moves keeps the title it had.
@@ -89,6 +93,15 @@ func (f optionFunc) apply(
 	g *Group,
 ) {
 	f(g)
+}
+
+// Area puts the group's operations in an area, one of area.All: the tab of
+// the UI's Configure page, the folder of the SDK's page and its section of
+// the docs site's SDK menu. endpoint validate refuses a group with none.
+func Area(
+	name area.Name,
+) Option {
+	return optionFunc(func(g *Group) { g.Area = name })
 }
 
 // Title sets the title of the group's spec.

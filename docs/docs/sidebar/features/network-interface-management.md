@@ -12,14 +12,15 @@ management of Ubuntu.
 ## How it works
 
 Interfaces are the
-[interface behavior](../reference/behaviors/interface/interface.md). `list` and
-`get` read each interface through gohai on every platform: `/sys/class/net` and
-`ip` on Linux, and `ifconfig` and `netstat` on macOS. An interface has its
-state, MAC address, MTU and addresses. `dhcp4` is true when a route of the
-interface has proto `dhcp`. `primary` is true when the interface has the default
-route. `list` leaves out the loopback.
+[interface behavior](../reference/behaviors/networking/interface/interface.md).
+`list` and `get` read each interface through gohai on every platform:
+`/sys/class/net` and `ip` on Linux, and `ifconfig` and `netstat` on macOS. An
+interface has its state, MAC address, MTU and addresses. `dhcp4` is true when a
+route of the interface has proto `dhcp`. `primary` is true when the interface
+has the default route. `list` leaves out the loopback.
 
-Routes are the [route behavior](../reference/behaviors/route/route.md), under an
+Routes are the
+[route behavior](../reference/behaviors/networking/route/route.md), under an
 interface: `osapi client node network interface route`. `list` reads the routes
 of the main table that go out of the interface, through gohai on every platform:
 `ip route` on Linux, and `netstat` on macOS. A route has its destination,
@@ -28,7 +29,7 @@ gateway, interface, family, metric, `proto` (where it came from, such as `dhcp`,
 
 `create`, `update` and `delete` write a Netplan file of the interface's own on
 the Debian family, through the internal
-[netplan behavior](../reference/behaviors/netplan/netplan.md):
+[netplan behavior](../reference/behaviors/internal/netplan/netplan.md):
 
 - **Interfaces**: `osapi-{name}.yaml` has the addresses, DHCP, default gateways,
   MTU, MAC and Wake-on-LAN of the named interface. `dhcp4` and `dhcp6` are
@@ -91,10 +92,10 @@ The DNS behavior also supports delete: it removes the interface's own
 ## Permissions and platforms
 
 The generated page of each behavior gives the permission, the platforms and the
-route of each method: [dns](../reference/behaviors/dns/dns.md),
-[interface](../reference/behaviors/interface/interface.md),
-[route](../reference/behaviors/route/route.md). The pages come from the
-definitions, so they stay true when a method changes, and this page does not
+route of each method: [dns](../reference/behaviors/networking/dns/dns.md),
+[interface](../reference/behaviors/networking/interface/interface.md),
+[route](../reference/behaviors/networking/route/route.md). The pages come from
+the definitions, so they stay true when a method changes, and this page does not
 copy them. [Authentication](authentication.md) tells which permissions each role
 has.
 
@@ -187,8 +188,9 @@ access and is not available in standard container environments.
   interface commands
 - [CLI Reference](../usage/cli/client/node/network/interface/route/route.mdx):
   route commands
-- [SDK Reference](../sdk/client/network_interface.md): NetworkInterface service
-- [SDK Reference](../sdk/client/network_interface_route.md):
+- [SDK Reference](../sdk/client/networking/network_interface.md):
+  NetworkInterface service
+- [SDK Reference](../sdk/client/networking/network_interface_route.md):
   NetworkInterfaceRoute service
 - [Network Management](network-management.md): DNS and ping
 - [Platform Detection](../sdk/platform/detection.md): OS family detection

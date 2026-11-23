@@ -30,6 +30,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/commands/behaviordsl"
@@ -81,7 +82,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 		byName[it.Name] = it
 	}
 	s.Contains(byName["sysctl"].Methods, "update")
-	s.Equal(behavior.AreaConfig, byName["sysctl"].Area)
+	s.Equal(area.Config, byName["sysctl"].Area)
 	s.True(byName["managedfile"].Internal)
 }
 
@@ -97,7 +98,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 			validateFunc: func(got behaviordsl.GetOutput, err error) {
 				s.Require().NoError(err)
 				s.True(got.API)
-				s.Equal(behavior.AreaConfig, got.Area)
+				s.Equal(area.Config, got.Area)
 				s.Equal([]string{"managedfile"}, got.Uses)
 				s.NotEmpty(got.Methods[0].Route)
 				s.NotEmpty(got.Methods[0].Command)

@@ -26,6 +26,7 @@ package docker
 import (
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 )
 
@@ -100,7 +101,7 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Node,
 	behavior.Under(behavior.GroupContainer),
 	behavior.API,
-	behavior.Area(behavior.AreaContainers),
+	behavior.Area(area.Containers),
 	behavior.CLI,
 	behavior.Platform(behavior.PlatformLinux, newCLI),
 	behavior.Platform(behavior.PlatformDarwin, newCLI),

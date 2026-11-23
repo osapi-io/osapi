@@ -79,6 +79,15 @@ func ErrorSchema() *openapi3.Schema {
 // the method in its group, such as get or drain.
 const MethodExtension = "x-osapi-method"
 
+// AreaExtension is the extension of each operation of the spec that names
+// its area, one of area.All, such as fleet.
+const AreaExtension = "x-osapi-area"
+
+// AreasExtension is the extension of the full spec that lists the areas,
+// area.All, in their order, each with its name and its label. A generator
+// that reads the spec, such as the SDK's pages, takes the areas from it.
+const AreasExtension = "x-osapi-areas"
+
 // OpenAPI is the group's part of the spec. It has the shared ErrorResponse
 // schema, so the spec stands alone.
 func OpenAPI(
@@ -145,9 +154,10 @@ func (b *builder) operation(
 		Description: m.explain,
 		Tags:        []string{g.Tag},
 		Responses:   openapi3.NewResponses(),
-		// The method's name in its group, such as get or drain. The SDK's
-		// generator names each typed method from it.
-		Extensions: map[string]any{MethodExtension: m.Name},
+		// The method's name in its group, such as get or drain, from which
+		// the SDK's generator names each typed method, and the group's area,
+		// which puts the method's SDK page in its folder.
+		Extensions: map[string]any{MethodExtension: m.Name, AreaExtension: string(g.Area)},
 	}
 	// The examples of the method, as the input that each one sends. The
 	// SDK's generator writes a program that calls the method with each one.

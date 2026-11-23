@@ -188,6 +188,7 @@ paths:
       summary: List admission records
       tags:
         - admission
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: List admission records
           input: {}
@@ -255,6 +256,7 @@ paths:
       summary: Delete a machine
       tags:
         - admission
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Delete a machine
           input:
@@ -323,6 +325,7 @@ paths:
       summary: Get a machine's admission record
       tags:
         - admission
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Get a machine's admission record
           input:
@@ -400,6 +403,7 @@ paths:
       summary: Admit a pending machine
       tags:
         - admission
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Admit a pending machine
           input:
@@ -472,6 +476,7 @@ paths:
       summary: Reject a pending machine
       tags:
         - admission
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Reject a pending machine
           input:
@@ -538,6 +543,7 @@ paths:
       summary: Revoke an admitted machine
       tags:
         - admission
+      x-osapi-area: fleet
       x-osapi-examples:
         - doc: Revoke an admitted machine
           input:

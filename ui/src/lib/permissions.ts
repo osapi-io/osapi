@@ -101,9 +101,6 @@ export const BLOCK_OPERATIONS = {
   "object-upload": "postFile",
   "object-delete": "deleteFileByName",
   "object-stale": "getFileStale",
-  "audit-list": "getAuditLogs",
-  "audit-get": "getAuditLogByID",
-  "audit-export": "getAuditExport",
 } as const satisfies Record<string, OperationId>;
 
 /**

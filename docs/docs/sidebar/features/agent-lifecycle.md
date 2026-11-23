@@ -140,8 +140,8 @@ The two commands return the current state and a confirmation message.
 
 ## Permissions
 
-The [agent](../reference/endpoints/agent.md) and
-[admission](../reference/endpoints/admission.md) reference pages give the
+The [agent](../reference/endpoints/fleet/agent.md) and
+[admission](../reference/endpoints/fleet/admission.md) reference pages give the
 permission of each method.
 
 ## Related

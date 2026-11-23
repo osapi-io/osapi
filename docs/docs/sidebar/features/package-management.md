@@ -7,9 +7,10 @@ sidebar_position: 15
 osapi reads the packages installed on each host, and installs and removes them
 on the Debian family. It is two behaviors:
 
-- [package](../reference/behaviors/package/package.md): the installed packages.
-- [updatepackages](../reference/behaviors/updatepackages/updatepackages.md): the
-  updates that the package index has, and the refresh of the index.
+- [package](../reference/behaviors/software/package/package.md): the installed
+  packages.
+- [updatepackages](../reference/behaviors/software/updatepackages/updatepackages.md):
+  the updates that the package index has, and the refresh of the index.
 
 ## How it works
 
@@ -47,11 +48,12 @@ The index is not a fact about the host. It is what the repositories have, so
 ## Permissions and platforms
 
 The generated page of each behavior gives the permission, the platforms and the
-route of each method: [package](../reference/behaviors/package/package.md),
-[updatepackages](../reference/behaviors/updatepackages/updatepackages.md). The
-pages come from the definitions, so they stay true when a method changes, and
-this page does not copy them. [Authentication](authentication.md) tells which
-permissions each role has.
+route of each method:
+[package](../reference/behaviors/software/package/package.md),
+[updatepackages](../reference/behaviors/software/updatepackages/updatepackages.md).
+The pages come from the definitions, so they stay true when a method changes,
+and this page does not copy them. [Authentication](authentication.md) tells
+which permissions each role has.
 
 ## CLI usage
 

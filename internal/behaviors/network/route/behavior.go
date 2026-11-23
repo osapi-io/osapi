@@ -23,6 +23,7 @@ package route
 import (
 	"slices"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behaviors/netplan"
 	"github.com/osapi-io/osapi/internal/behaviors/network/iface"
@@ -151,7 +152,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"route", "The routes of an interface",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaNetworking),
+	behavior.Area(area.Networking),
 	behavior.CLI,
 	behavior.Of(iface.Behavior),
 	behavior.Platform(behavior.PlatformDebian, newDebian),

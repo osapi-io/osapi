@@ -166,6 +166,7 @@ paths:
       summary: Get the disk usage of the host
       tags:
         - disk_operations
+      x-osapi-area: hardware
       x-osapi-examples:
         - doc: A host with one local filesystem
           input:

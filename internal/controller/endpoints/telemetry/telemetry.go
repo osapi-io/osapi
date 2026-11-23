@@ -24,6 +24,7 @@ package telemetry
 import (
 	"errors"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
@@ -38,6 +39,7 @@ var (
 // Group is the telemetry group's definition.
 var Group = endpoint.Register(endpoint.Define(
 	"telemetry", "Read telemetry through the controller",
+	endpoint.Area(area.Fleet),
 	endpoint.SubDoc("trace", "Read a trace from the tracing backend"),
 	endpoint.Title("Telemetry API"),
 	endpoint.Tag("telemetry", "Telemetry",

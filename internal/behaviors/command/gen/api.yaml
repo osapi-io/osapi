@@ -234,6 +234,7 @@ paths:
       summary: Run a program with its arguments
       tags:
         - command_operations
+      x-osapi-area: command
       x-osapi-examples:
         - doc: Print a word
           input:
@@ -313,6 +314,7 @@ paths:
       summary: Run a command line through /bin/sh -c
       tags:
         - command_operations
+      x-osapi-area: command
       x-osapi-examples:
         - doc: A pipe
           input:

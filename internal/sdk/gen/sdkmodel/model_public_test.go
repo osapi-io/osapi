@@ -75,6 +75,27 @@ func (s *ModelPublicTestSuite) TestNew() {
 			},
 		},
 		{
+			name: "when the areas are those of x-osapi-areas, in its order",
+			validateFunc: func() {
+				s.Equal([]*sdkmodel.Area{
+					{Name: "config", Label: "Config"},
+					{Name: "networking", Label: "Networking"},
+					{Name: "files", Label: "Files"},
+					{Name: "fleet", Label: "Fleet"},
+					{Name: "audit", Label: "Audit"},
+				}, m.Areas)
+			},
+		},
+		{
+			name: "when a service has the area of its operations",
+			validateFunc: func() {
+				s.Equal("networking", services["NetworkDNS"].Area)
+				s.Equal("files", services["File"].Area)
+				s.Equal("config", services["NodeFile"].Area)
+				s.Equal("fleet", services["Job"].Area)
+			},
+		},
+		{
 			name: "when a method has the name of x-osapi-method, with its parameters",
 			validateFunc: func() {
 				get := services["NetworkDNS"].Methods[0]
@@ -208,6 +229,42 @@ func (s *ModelPublicTestSuite) TestNewErrors() {
 		edit func(string) string
 		want string
 	}{
+		{
+			name: "when the spec has no x-osapi-areas",
+			edit: func(text string) string {
+				i := strings.Index(text, "x-osapi-areas:")
+				j := strings.Index(text, "paths:\n")
+
+				return text[:i] + text[j:]
+			},
+			want: "the spec has no x-osapi-areas",
+		},
+		{
+			name: "when x-osapi-areas is not a list",
+			edit: func(text string) string {
+				i := strings.Index(text, "x-osapi-areas:")
+				j := strings.Index(text, "paths:\n")
+
+				return text[:i] + "x-osapi-areas: many\n" + text[j:]
+			},
+			want: "x-osapi-areas: json",
+		},
+		{
+			name: "when an operation has no x-osapi-area",
+			edit: func(text string) string {
+				return strings.Replace(text, "      x-osapi-area: fleet\n", "", 1)
+			},
+			want: `GetJobs: the x-osapi-area "" is not one of the spec's x-osapi-areas`,
+		},
+		{
+			name: "when the operations of a tag are in two areas",
+			edit: func(text string) string {
+				i := strings.LastIndex(text, "      x-osapi-area: fleet\n")
+
+				return text[:i] + "      x-osapi-area: files\n" + text[i+len("      x-osapi-area: fleet\n"):]
+			},
+			want: "the operations of tag Job_API are in the areas fleet and files",
+		},
 		{
 			name: "when an operation has no x-osapi-method",
 			edit: func(text string) string {

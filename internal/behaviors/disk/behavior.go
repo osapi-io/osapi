@@ -22,14 +22,17 @@
 // filesystems.
 package disk
 
-import "github.com/osapi-io/osapi/internal/behavior"
+import (
+	"github.com/osapi-io/osapi/internal/area"
+	"github.com/osapi-io/osapi/internal/behavior"
+)
 
 // Behavior is the disk definition.
 var Behavior = behavior.Register(behavior.Define(
 	"disk", "Get the disk usage of target hosts",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaHardware),
+	behavior.Area(area.Hardware),
 	behavior.CLI,
 	// gohai reads /proc/mounts, df, lsblk and zfs on Linux, and mount and df
 	// on macOS.

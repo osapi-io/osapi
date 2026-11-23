@@ -25,6 +25,17 @@ internal/controller/endpoints/all.
 
 ## Options of Define
 
+### `Area(area.Name)`
+
+Puts the group's operations in an area, one of area.All: the tab of the UI's
+Configure page, the folder of the SDK's page and of the group's reference page,
+and its section of the docs site's SDK menu. An area with no block in the UI,
+such as fleet, has no tab. The spec gives each operation its area as
+x-osapi-area. Use a constant of package area, such as area.Fleet. area.All has
+the label and the order of each area.
+
+Use: In each group. endpoint validate refuses a group with none.
+
 ### `Title("title")`
 
 Sets the title of the group's spec. The full spec puts it in front of each tag,

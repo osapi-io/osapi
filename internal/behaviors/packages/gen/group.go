@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	packages "github.com/osapi-io/osapi/internal/behaviors/packages"
@@ -126,10 +127,11 @@ func HandleDelete(
 var Group = endpoint.Define(
 	"package",
 	"The packages installed on the host",
+	endpoint.Area(area.Software),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("package_operations", "Node/Package", "The packages installed on the host"),
-	endpoint.CommandNotes("The [package behavior](../../../../../reference/behaviors/package/package.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.CommandNotes("The [package behavior](../../../../../reference/behaviors/software/package/package.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[ListRequest, PackageCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodePackage").

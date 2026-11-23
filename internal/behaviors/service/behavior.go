@@ -26,6 +26,7 @@ import (
 
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	"github.com/osapi-io/osapi/internal/behaviors/object"
@@ -81,7 +82,7 @@ var Behavior = behavior.Register(behavior.Define(
 	"service", "The systemd services of the host",
 	behavior.Node,
 	behavior.API,
-	behavior.Area(behavior.AreaServices),
+	behavior.Area(area.Services),
 	behavior.CLI,
 	behavior.Requires(object.Behavior),
 	behavior.Requires(managedfile.Behavior),

@@ -5,6 +5,7 @@ package gen
 import (
 	"context"
 
+	area "github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	load "github.com/osapi-io/osapi/internal/behaviors/load"
@@ -43,10 +44,11 @@ func HandleGet(
 var Group = endpoint.Define(
 	"load",
 	"Get the load averages of target hosts",
+	endpoint.Area(area.Node),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("load_operations", "Node/Load", "Get the load averages of target hosts"),
-	endpoint.CommandNotes("The [load behavior](../../../../../reference/behaviors/load/load.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.CommandNotes("The [load behavior](../../../../../reference/behaviors/node/load/load.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[GetRequest, LoadGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodeLoad").

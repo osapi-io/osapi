@@ -120,8 +120,8 @@ family.
 
 ## Permissions
 
-The [ntp](../reference/behaviors/ntp/ntp.md) reference page gives the permission
-of each method.
+The [ntp](../reference/behaviors/config/ntp/ntp.md) reference page gives the
+permission of each method.
 
 ## Related
 
