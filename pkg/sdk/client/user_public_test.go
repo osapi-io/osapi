@@ -57,7 +57,7 @@ func (suite *UserPublicTestSuite) TestUserList() {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","users":[{"name":"root","uid":0,"gid":0,"home":"/root","shell":"/bin/bash"}]}]}`,
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","name":"root","uid":0,"gid":0,"home":"/root","shell":"/bin/bash"}]}`,
 					),
 				)
 			},
@@ -71,9 +71,8 @@ func (suite *UserPublicTestSuite) TestUserList() {
 				suite.Len(resp.Data.Results, 1)
 				suite.Equal("agent1", resp.Data.Results[0].Hostname)
 				suite.Equal("ok", resp.Data.Results[0].Status)
-				suite.Require().Len(resp.Data.Results[0].Users, 1)
-				suite.Equal("root", resp.Data.Results[0].Users[0].Name)
-				suite.Equal(0, resp.Data.Results[0].Users[0].UID)
+				suite.Equal("root", resp.Data.Results[0].Name)
+				suite.Equal(0, resp.Data.Results[0].UID)
 			},
 		},
 		{
@@ -208,7 +207,7 @@ func (suite *UserPublicTestSuite) TestUserGet() {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","users":[{"name":"testuser","uid":1000,"gid":1000,"home":"/home/testuser","shell":"/bin/bash","groups":["sudo","docker"]}]}]}`,
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","name":"testuser","uid":1000,"gid":1000,"home":"/home/testuser","shell":"/bin/bash","groups":["sudo","docker"]}]}`,
 					),
 				)
 			},
@@ -219,9 +218,8 @@ func (suite *UserPublicTestSuite) TestUserGet() {
 				suite.NoError(err)
 				suite.NotNil(resp)
 				suite.Len(resp.Data.Results, 1)
-				suite.Require().Len(resp.Data.Results[0].Users, 1)
-				suite.Equal("testuser", resp.Data.Results[0].Users[0].Name)
-				suite.Equal([]string{"sudo", "docker"}, resp.Data.Results[0].Users[0].Groups)
+				suite.Equal("testuser", resp.Data.Results[0].Name)
+				suite.Equal([]string{"sudo", "docker"}, resp.Data.Results[0].Groups)
 			},
 		},
 		{

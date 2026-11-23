@@ -47,6 +47,7 @@ export type Permission =
   | "updatepackages:read"
   | "updatepackages:write"
   | "uptime:read"
+  | "user:execute"
   | "network:execute"
   | "admission:read"
   | "admission:write"
@@ -102,6 +103,7 @@ export const ALL_PERMISSIONS: Permission[] = [
   "updatepackages:read",
   "updatepackages:write",
   "uptime:read",
+  "user:execute",
   "network:execute",
   "admission:read",
   "admission:write",
@@ -160,6 +162,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "updatepackages:read",
     "updatepackages:write",
     "uptime:read",
+    "user:execute",
     "network:execute",
     "admission:read",
     "admission:write",

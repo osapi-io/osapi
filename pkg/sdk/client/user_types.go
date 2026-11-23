@@ -21,26 +21,23 @@
 package client
 
 import (
+	openapi_types "github.com/oapi-codegen/runtime/types"
+
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
 // UserInfoResult represents a user listing result from a query operation.
 type UserInfoResult struct {
-	Hostname string     `json:"hostname"`
-	Status   string     `json:"status"`
-	Users    []UserInfo `json:"users,omitempty"`
-	Error    string     `json:"error,omitempty"`
-}
-
-// UserInfo represents a user account on the target node.
-type UserInfo struct {
-	Name   string   `json:"name,omitempty"`
-	UID    int      `json:"uid,omitempty"`
-	GID    int      `json:"gid,omitempty"`
-	Home   string   `json:"home,omitempty"`
-	Shell  string   `json:"shell,omitempty"`
-	Groups []string `json:"groups,omitempty"`
-	Locked bool     `json:"locked,omitempty"`
+	Hostname string   `json:"hostname"`
+	Status   string   `json:"status"`
+	Name     string   `json:"name,omitempty"`
+	UID      int      `json:"uid,omitempty"`
+	GID      int      `json:"gid,omitempty"`
+	Home     string   `json:"home,omitempty"`
+	Shell    string   `json:"shell,omitempty"`
+	Groups   []string `json:"groups,omitempty"`
+	Locked   bool     `json:"locked,omitempty"`
+	Error    string   `json:"error,omitempty"`
 }
 
 // UserMutationResult represents the result of a user create, update, delete,
@@ -113,114 +110,6 @@ type SSHKeyMutationResult struct {
 type SSHKeyAddOpts struct {
 	// Key is the full SSH public key line (e.g., "ssh-ed25519 AAAA... user@host").
 	Key string
-}
-
-// userInfoCollectionFromList converts a gen.UserCollectionResponse
-// to a Collection[UserInfoResult].
-func userInfoCollectionFromList(
-	g *gen.UserCollectionResponse,
-) Collection[UserInfoResult] {
-	results := make([]UserInfoResult, 0, len(g.Results))
-	for _, r := range g.Results {
-		result := UserInfoResult{
-			Hostname: r.Hostname,
-			Status:   string(r.Status),
-			Error:    derefString(r.Error),
-		}
-
-		if r.Users != nil {
-			users := make([]UserInfo, 0, len(*r.Users))
-			for _, u := range *r.Users {
-				users = append(users, userInfoFromGen(u))
-			}
-
-			result.Users = users
-		}
-
-		results = append(results, result)
-	}
-
-	return Collection[UserInfoResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
-	}
-}
-
-// userInfoCollectionFromGet converts a gen.UserCollectionResponse (from
-// get-by-name) to a Collection[UserInfoResult].
-func userInfoCollectionFromGet(
-	g *gen.UserCollectionResponse,
-) Collection[UserInfoResult] {
-	return userInfoCollectionFromList(g)
-}
-
-// userMutationCollectionFromCreate converts a gen.UserMutationResponse
-// to a Collection[UserMutationResult].
-func userMutationCollectionFromCreate(
-	g *gen.UserMutationResponse,
-) Collection[UserMutationResult] {
-	return userMutationCollectionFromGen(g)
-}
-
-// userMutationCollectionFromUpdate converts a gen.UserMutationResponse
-// to a Collection[UserMutationResult].
-func userMutationCollectionFromUpdate(
-	g *gen.UserMutationResponse,
-) Collection[UserMutationResult] {
-	return userMutationCollectionFromGen(g)
-}
-
-// userMutationCollectionFromDelete converts a gen.UserMutationResponse
-// to a Collection[UserMutationResult].
-func userMutationCollectionFromDelete(
-	g *gen.UserMutationResponse,
-) Collection[UserMutationResult] {
-	return userMutationCollectionFromGen(g)
-}
-
-// userMutationCollectionFromPassword converts a gen.UserMutationResponse
-// to a Collection[UserMutationResult].
-func userMutationCollectionFromPassword(
-	g *gen.UserMutationResponse,
-) Collection[UserMutationResult] {
-	return userMutationCollectionFromGen(g)
-}
-
-// userMutationCollectionFromGen is the shared converter for all user
-// mutation response types.
-func userMutationCollectionFromGen(
-	g *gen.UserMutationResponse,
-) Collection[UserMutationResult] {
-	results := make([]UserMutationResult, 0, len(g.Results))
-	for _, r := range g.Results {
-		results = append(results, UserMutationResult{
-			Hostname: r.Hostname,
-			Status:   string(r.Status),
-			Name:     derefString(r.Name),
-			Changed:  derefBool(r.Changed),
-			Error:    derefString(r.Error),
-		})
-	}
-
-	return Collection[UserMutationResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
-	}
-}
-
-// userInfoFromGen converts a gen.UserInfo to a UserInfo.
-func userInfoFromGen(
-	g gen.UserInfo,
-) UserInfo {
-	return UserInfo{
-		Name:   derefString(g.Name),
-		UID:    derefInt(g.Uid),
-		GID:    derefInt(g.Gid),
-		Home:   derefString(g.Home),
-		Shell:  derefString(g.Shell),
-		Groups: derefStringSlice(g.Groups),
-		Locked: derefBool(g.Locked),
-	}
 }
 
 // sshKeyCollectionFromGen converts a gen.SSHKeyCollectionResponse
@@ -298,5 +187,52 @@ func sshKeyMutationResultFromGen(
 		Status:   string(r.Status),
 		Changed:  derefBool(r.Changed),
 		Error:    derefString(r.Error),
+	}
+}
+
+func userInfoCollectionFromGen(
+	rows []gen.UserAccount,
+	jobID *openapi_types.UUID,
+) Collection[UserInfoResult] {
+	results := make([]UserInfoResult, 0, len(rows))
+	for _, r := range rows {
+		results = append(results, UserInfoResult{
+			Hostname: r.Hostname,
+			Status:   string(r.Status),
+			Name:     derefString(r.Name),
+			UID:      derefInt(r.Uid),
+			GID:      derefInt(r.Gid),
+			Home:     derefString(r.Home),
+			Shell:    derefString(r.Shell),
+			Groups:   derefStringSlice(r.Groups),
+			Locked:   derefBool(r.Locked),
+			Error:    derefString(r.Error),
+		})
+	}
+
+	return Collection[UserInfoResult]{
+		Results: results,
+		JobID:   jobIDFromGen(jobID),
+	}
+}
+
+func userMutationCollectionFromGen(
+	rows []gen.UserResult,
+	jobID *openapi_types.UUID,
+) Collection[UserMutationResult] {
+	results := make([]UserMutationResult, 0, len(rows))
+	for _, r := range rows {
+		results = append(results, UserMutationResult{
+			Hostname: r.Hostname,
+			Status:   string(r.Status),
+			Name:     derefString(r.Name),
+			Changed:  derefBool(r.Changed),
+			Error:    derefString(r.Error),
+		})
+	}
+
+	return Collection[UserMutationResult]{
+		Results: results,
+		JobID:   jobIDFromGen(jobID),
 	}
 }

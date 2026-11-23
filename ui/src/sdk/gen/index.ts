@@ -37,4 +37,5 @@ export * from './telemetry-api-telemetry/telemetry-api-telemetry';
 export * from './timezone-api-timezone-operations/timezone-api-timezone-operations';
 export * from './updatepackages-api-updatepackages-operations/updatepackages-api-updatepackages-operations';
 export * from './uptime-api-uptime-operations/uptime-api-uptime-operations';
-export * from './user-management-api-user-operations/user-management-api-user-operations';
+export * from './user-api-user-operations/user-api-user-operations';
+export * from './user-ssh-key-management-api-user-operations/user-ssh-key-management-api-user-operations';

@@ -68,54 +68,6 @@ func (e SSHKeyMutationEntryStatus) Valid() bool {
 	}
 }
 
-// Defines values for UserEntryStatus.
-const (
-	UserEntryStatusFailed  UserEntryStatus = "failed"
-	UserEntryStatusOk      UserEntryStatus = "ok"
-	UserEntryStatusSkipped UserEntryStatus = "skipped"
-	UserEntryStatusTimeout UserEntryStatus = "timeout"
-)
-
-// Valid indicates whether the value is a known member of the UserEntryStatus enum.
-func (e UserEntryStatus) Valid() bool {
-	switch e {
-	case UserEntryStatusFailed:
-		return true
-	case UserEntryStatusOk:
-		return true
-	case UserEntryStatusSkipped:
-		return true
-	case UserEntryStatusTimeout:
-		return true
-	default:
-		return false
-	}
-}
-
-// Defines values for UserMutationResultStatus.
-const (
-	UserMutationResultStatusFailed  UserMutationResultStatus = "failed"
-	UserMutationResultStatusOk      UserMutationResultStatus = "ok"
-	UserMutationResultStatusSkipped UserMutationResultStatus = "skipped"
-	UserMutationResultStatusTimeout UserMutationResultStatus = "timeout"
-)
-
-// Valid indicates whether the value is a known member of the UserMutationResultStatus enum.
-func (e UserMutationResultStatus) Valid() bool {
-	switch e {
-	case UserMutationResultStatusFailed:
-		return true
-	case UserMutationResultStatusOk:
-		return true
-	case UserMutationResultStatusSkipped:
-		return true
-	case UserMutationResultStatusTimeout:
-		return true
-	default:
-		return false
-	}
-}
-
 // ErrorResponse defines model for ErrorResponse.
 type ErrorResponse = externalRef0.ErrorResponse
 
@@ -187,329 +139,37 @@ type SSHKeyMutationResponse struct {
 	Results []SSHKeyMutationEntry `json:"results"`
 }
 
-// UserCollectionResponse defines model for UserCollectionResponse.
-type UserCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []UserEntry         `json:"results"`
-}
-
-// UserCreateRequest defines model for UserCreateRequest.
-type UserCreateRequest struct {
-	// Gid Primary group ID. If omitted, a group matching the username is created.
-	Gid *int `json:"gid,omitempty" validate:"omitempty,min=0"`
-
-	// Groups Supplementary group names.
-	Groups *[]string `json:"groups,omitempty" validate:"omitempty,dive,account_name"`
-
-	// Home Home directory path.
-	Home *string `json:"home,omitempty" validate:"omitempty,min=1"`
-
-	// Name Username for the new account. Must start with a lowercase letter or underscore, followed by lowercase letters, digits, underscores, or hyphens, with an optional trailing `$`; 32 characters or fewer.
-	Name string `json:"name" validate:"required,account_name"`
-
-	// Password Initial password. Sent in plaintext over TLS, hashed by the controller before the job is stored, and never written to disk or logs in plaintext.
-	Password *string `json:"password,omitempty" validate:"omitempty,min=1"`
-
-	// Shell Login shell path.
-	Shell *string `json:"shell,omitempty" validate:"omitempty,min=1"`
-
-	// System Create a system account.
-	System *bool `json:"system,omitempty" validate:"omitempty"`
-
-	// Uid Numeric user ID. If omitted, the system assigns one.
-	Uid *int `json:"uid,omitempty" validate:"omitempty,min=0"`
-}
-
-// UserEntry User listing result for one host.
-type UserEntry struct {
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname Hostname of the agent that reported this entry.
-	Hostname string `json:"hostname"`
-
-	// Status The status of the operation for this host.
-	Status UserEntryStatus `json:"status"`
-
-	// Users User accounts on this host.
-	Users *[]UserInfo `json:"users,omitempty"`
-}
-
-// UserEntryStatus The status of the operation for this host.
-type UserEntryStatus string
-
-// UserInfo A user account on the target node.
-type UserInfo struct {
-	// Gid Primary group ID.
-	Gid *int `json:"gid,omitempty"`
-
-	// Groups Supplementary group names.
-	Groups *[]string `json:"groups,omitempty"`
-
-	// Home Home directory path.
-	Home *string `json:"home,omitempty"`
-
-	// Locked Whether the account is locked.
-	Locked *bool `json:"locked,omitempty"`
-
-	// Name Username.
-	Name *string `json:"name,omitempty"`
-
-	// Shell Login shell path.
-	Shell *string `json:"shell,omitempty"`
-
-	// Uid Numeric user ID.
-	Uid *int `json:"uid,omitempty"`
-}
-
-// UserMutationResponse defines model for UserMutationResponse.
-type UserMutationResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID  `json:"job_id,omitempty"`
-	Results []UserMutationResult `json:"results"`
-}
-
-// UserMutationResult Result of a user create, update, delete, or password operation for one host.
-type UserMutationResult struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname Hostname of the agent that processed this operation.
-	Hostname string `json:"hostname"`
-
-	// Name Username.
-	Name *string `json:"name,omitempty"`
-
-	// Status The status of the operation for this host.
-	Status UserMutationResultStatus `json:"status"`
-}
-
-// UserMutationResultStatus The status of the operation for this host.
-type UserMutationResultStatus string
-
-// UserPasswordRequest defines model for UserPasswordRequest.
-type UserPasswordRequest struct {
-	// Password New password. Sent in plaintext over TLS, hashed by the controller before the job is stored, and never written to disk or logs in plaintext.
-	Password string `json:"password" validate:"required,min=1"`
-}
-
-// UserUpdateRequest defines model for UserUpdateRequest.
-type UserUpdateRequest struct {
-	// Groups Supplementary group names (replaces existing).
-	Groups *[]string `json:"groups,omitempty" validate:"omitempty,dive,account_name"`
-
-	// Home New home directory path.
-	Home *string `json:"home,omitempty" validate:"omitempty,min=1"`
-
-	// Lock Lock or unlock the account.
-	Lock *bool `json:"lock,omitempty" validate:"omitempty"`
-
-	// Shell New login shell path.
-	Shell *string `json:"shell,omitempty" validate:"omitempty,min=1"`
-}
-
 // Hostname defines model for Hostname.
 type Hostname = string
 
 // SSHKeyFingerprint defines model for SSHKeyFingerprint.
 type SSHKeyFingerprint = string
 
-// UserName defines model for UserName.
-type UserName = string
+// SSHKeyUserName defines model for SSHKeyUserName.
+type SSHKeyUserName = string
 
 // bearerAuthContextKey is the context key for BearerAuth security scheme
 type bearerAuthContextKey string
-
-// PostNodeUserJSONRequestBody defines body for PostNodeUser for application/json ContentType.
-type PostNodeUserJSONRequestBody = UserCreateRequest
-
-// PutNodeUserJSONRequestBody defines body for PutNodeUser for application/json ContentType.
-type PutNodeUserJSONRequestBody = UserUpdateRequest
-
-// PostNodeUserPasswordJSONRequestBody defines body for PostNodeUserPassword for application/json ContentType.
-type PostNodeUserPasswordJSONRequestBody = UserPasswordRequest
 
 // PostNodeUserSSHKeyJSONRequestBody defines body for PostNodeUserSSHKey for application/json ContentType.
 type PostNodeUserSSHKeyJSONRequestBody = SSHKeyAddRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// List all users
-	// (GET /api/node/{hostname}/user)
-	GetNodeUser(ctx *echo.Context, hostname Hostname) error
-	// Create a user
-	// (POST /api/node/{hostname}/user)
-	PostNodeUser(ctx *echo.Context, hostname Hostname) error
-	// Delete a user
-	// (DELETE /api/node/{hostname}/user/{name})
-	DeleteNodeUser(ctx *echo.Context, hostname Hostname, name UserName) error
-	// Get a user
-	// (GET /api/node/{hostname}/user/{name})
-	GetNodeUserByName(ctx *echo.Context, hostname Hostname, name UserName) error
-	// Update a user
-	// (PUT /api/node/{hostname}/user/{name})
-	PutNodeUser(ctx *echo.Context, hostname Hostname, name UserName) error
-	// Change user password
-	// (POST /api/node/{hostname}/user/{name}/password)
-	PostNodeUserPassword(ctx *echo.Context, hostname Hostname, name UserName) error
 	// List SSH authorized keys
 	// (GET /api/node/{hostname}/user/{name}/ssh-key)
-	GetNodeUserSSHKey(ctx *echo.Context, hostname Hostname, name UserName) error
+	GetNodeUserSSHKey(ctx *echo.Context, hostname Hostname, name SSHKeyUserName) error
 	// Add SSH authorized key
 	// (POST /api/node/{hostname}/user/{name}/ssh-key)
-	PostNodeUserSSHKey(ctx *echo.Context, hostname Hostname, name UserName) error
+	PostNodeUserSSHKey(ctx *echo.Context, hostname Hostname, name SSHKeyUserName) error
 	// Remove SSH authorized key
 	// (DELETE /api/node/{hostname}/user/{name}/ssh-key/{fingerprint})
-	DeleteNodeUserSSHKey(ctx *echo.Context, hostname Hostname, name UserName, fingerprint SSHKeyFingerprint) error
+	DeleteNodeUserSSHKey(ctx *echo.Context, hostname Hostname, name SSHKeyUserName, fingerprint SSHKeyFingerprint) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
 type ServerInterfaceWrapper struct {
 	Handler ServerInterface
-}
-
-// GetNodeUser converts echo context to params.
-func (w *ServerInterfaceWrapper) GetNodeUser(ctx *echo.Context) error {
-	var err error
-	// ------------- Path parameter "hostname" -------------
-	var hostname Hostname
-
-	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
-	}
-
-	ctx.Set(string(BearerAuthScopes), []string{"user:read"})
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetNodeUser(ctx, hostname)
-	return err
-}
-
-// PostNodeUser converts echo context to params.
-func (w *ServerInterfaceWrapper) PostNodeUser(ctx *echo.Context) error {
-	var err error
-	// ------------- Path parameter "hostname" -------------
-	var hostname Hostname
-
-	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
-	}
-
-	ctx.Set(string(BearerAuthScopes), []string{"user:write"})
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PostNodeUser(ctx, hostname)
-	return err
-}
-
-// DeleteNodeUser converts echo context to params.
-func (w *ServerInterfaceWrapper) DeleteNodeUser(ctx *echo.Context) error {
-	var err error
-	// ------------- Path parameter "hostname" -------------
-	var hostname Hostname
-
-	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
-	}
-
-	// ------------- Path parameter "name" -------------
-	var name UserName
-
-	err = runtime.BindStyledParameterWithOptions("simple", "name", ctx.Param("name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter name: %s", err))
-	}
-
-	ctx.Set(string(BearerAuthScopes), []string{"user:write"})
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.DeleteNodeUser(ctx, hostname, name)
-	return err
-}
-
-// GetNodeUserByName converts echo context to params.
-func (w *ServerInterfaceWrapper) GetNodeUserByName(ctx *echo.Context) error {
-	var err error
-	// ------------- Path parameter "hostname" -------------
-	var hostname Hostname
-
-	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
-	}
-
-	// ------------- Path parameter "name" -------------
-	var name UserName
-
-	err = runtime.BindStyledParameterWithOptions("simple", "name", ctx.Param("name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter name: %s", err))
-	}
-
-	ctx.Set(string(BearerAuthScopes), []string{"user:read"})
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetNodeUserByName(ctx, hostname, name)
-	return err
-}
-
-// PutNodeUser converts echo context to params.
-func (w *ServerInterfaceWrapper) PutNodeUser(ctx *echo.Context) error {
-	var err error
-	// ------------- Path parameter "hostname" -------------
-	var hostname Hostname
-
-	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
-	}
-
-	// ------------- Path parameter "name" -------------
-	var name UserName
-
-	err = runtime.BindStyledParameterWithOptions("simple", "name", ctx.Param("name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter name: %s", err))
-	}
-
-	ctx.Set(string(BearerAuthScopes), []string{"user:write"})
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PutNodeUser(ctx, hostname, name)
-	return err
-}
-
-// PostNodeUserPassword converts echo context to params.
-func (w *ServerInterfaceWrapper) PostNodeUserPassword(ctx *echo.Context) error {
-	var err error
-	// ------------- Path parameter "hostname" -------------
-	var hostname Hostname
-
-	err = runtime.BindStyledParameterWithOptions("simple", "hostname", ctx.Param("hostname"), &hostname, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter hostname: %s", err))
-	}
-
-	// ------------- Path parameter "name" -------------
-	var name UserName
-
-	err = runtime.BindStyledParameterWithOptions("simple", "name", ctx.Param("name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter name: %s", err))
-	}
-
-	ctx.Set(string(BearerAuthScopes), []string{"user:write"})
-
-	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PostNodeUserPassword(ctx, hostname, name)
-	return err
 }
 
 // GetNodeUserSSHKey converts echo context to params.
@@ -524,7 +184,7 @@ func (w *ServerInterfaceWrapper) GetNodeUserSSHKey(ctx *echo.Context) error {
 	}
 
 	// ------------- Path parameter "name" -------------
-	var name UserName
+	var name SSHKeyUserName
 
 	err = runtime.BindStyledParameterWithOptions("simple", "name", ctx.Param("name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
 	if err != nil {
@@ -550,7 +210,7 @@ func (w *ServerInterfaceWrapper) PostNodeUserSSHKey(ctx *echo.Context) error {
 	}
 
 	// ------------- Path parameter "name" -------------
-	var name UserName
+	var name SSHKeyUserName
 
 	err = runtime.BindStyledParameterWithOptions("simple", "name", ctx.Param("name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
 	if err != nil {
@@ -576,7 +236,7 @@ func (w *ServerInterfaceWrapper) DeleteNodeUserSSHKey(ctx *echo.Context) error {
 	}
 
 	// ------------- Path parameter "name" -------------
-	var name UserName
+	var name SSHKeyUserName
 
 	err = runtime.BindStyledParameterWithOptions("simple", "name", ctx.Param("name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
 	if err != nil {
@@ -645,552 +305,15 @@ func RegisterHandlersWithOptions(router EchoRouter, si ServerInterface, options 
 		Handler: si,
 	}
 
-	router.GET(options.BaseURL+"/api/node/:hostname/user", wrapper.GetNodeUser, options.OperationMiddlewares["GetNodeUser"]...)
-	router.POST(options.BaseURL+"/api/node/:hostname/user", wrapper.PostNodeUser, options.OperationMiddlewares["PostNodeUser"]...)
-	router.DELETE(options.BaseURL+"/api/node/:hostname/user/:name", wrapper.DeleteNodeUser, options.OperationMiddlewares["DeleteNodeUser"]...)
-	router.GET(options.BaseURL+"/api/node/:hostname/user/:name", wrapper.GetNodeUserByName, options.OperationMiddlewares["GetNodeUserByName"]...)
-	router.PUT(options.BaseURL+"/api/node/:hostname/user/:name", wrapper.PutNodeUser, options.OperationMiddlewares["PutNodeUser"]...)
-	router.POST(options.BaseURL+"/api/node/:hostname/user/:name/password", wrapper.PostNodeUserPassword, options.OperationMiddlewares["PostNodeUserPassword"]...)
 	router.GET(options.BaseURL+"/api/node/:hostname/user/:name/ssh-key", wrapper.GetNodeUserSSHKey, options.OperationMiddlewares["GetNodeUserSSHKey"]...)
 	router.POST(options.BaseURL+"/api/node/:hostname/user/:name/ssh-key", wrapper.PostNodeUserSSHKey, options.OperationMiddlewares["PostNodeUserSSHKey"]...)
 	router.DELETE(options.BaseURL+"/api/node/:hostname/user/:name/ssh-key/:fingerprint", wrapper.DeleteNodeUserSSHKey, options.OperationMiddlewares["DeleteNodeUserSSHKey"]...)
 
 }
 
-type GetNodeUserRequestObject struct {
-	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-}
-
-type GetNodeUserResponseObject interface {
-	VisitGetNodeUserResponse(w http.ResponseWriter) error
-}
-
-type GetNodeUser200JSONResponse UserCollectionResponse
-
-func (response GetNodeUser200JSONResponse) VisitGetNodeUserResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type GetNodeUser400JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeUser400JSONResponse) VisitGetNodeUserResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type GetNodeUser401JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeUser401JSONResponse) VisitGetNodeUserResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(401)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type GetNodeUser403JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeUser403JSONResponse) VisitGetNodeUserResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(403)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type GetNodeUser500JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeUser500JSONResponse) VisitGetNodeUserResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type PostNodeUserRequestObject struct {
-	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Body     *PostNodeUserJSONRequestBody
-}
-
-type PostNodeUserResponseObject interface {
-	VisitPostNodeUserResponse(w http.ResponseWriter) error
-}
-
-type PostNodeUser200JSONResponse UserMutationResponse
-
-func (response PostNodeUser200JSONResponse) VisitPostNodeUserResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type PostNodeUser400JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeUser400JSONResponse) VisitPostNodeUserResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type PostNodeUser401JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeUser401JSONResponse) VisitPostNodeUserResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(401)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type PostNodeUser403JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeUser403JSONResponse) VisitPostNodeUserResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(403)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type PostNodeUser500JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeUser500JSONResponse) VisitPostNodeUserResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type DeleteNodeUserRequestObject struct {
-	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     UserName `json:"name" validate:"required,account_name"`
-}
-
-type DeleteNodeUserResponseObject interface {
-	VisitDeleteNodeUserResponse(w http.ResponseWriter) error
-}
-
-type DeleteNodeUser200JSONResponse UserMutationResponse
-
-func (response DeleteNodeUser200JSONResponse) VisitDeleteNodeUserResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type DeleteNodeUser400JSONResponse externalRef0.ErrorResponse
-
-func (response DeleteNodeUser400JSONResponse) VisitDeleteNodeUserResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type DeleteNodeUser401JSONResponse externalRef0.ErrorResponse
-
-func (response DeleteNodeUser401JSONResponse) VisitDeleteNodeUserResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(401)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type DeleteNodeUser403JSONResponse externalRef0.ErrorResponse
-
-func (response DeleteNodeUser403JSONResponse) VisitDeleteNodeUserResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(403)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type DeleteNodeUser404JSONResponse externalRef0.ErrorResponse
-
-func (response DeleteNodeUser404JSONResponse) VisitDeleteNodeUserResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(404)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type DeleteNodeUser500JSONResponse externalRef0.ErrorResponse
-
-func (response DeleteNodeUser500JSONResponse) VisitDeleteNodeUserResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type GetNodeUserByNameRequestObject struct {
-	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     UserName `json:"name" validate:"required,account_name"`
-}
-
-type GetNodeUserByNameResponseObject interface {
-	VisitGetNodeUserByNameResponse(w http.ResponseWriter) error
-}
-
-type GetNodeUserByName200JSONResponse UserCollectionResponse
-
-func (response GetNodeUserByName200JSONResponse) VisitGetNodeUserByNameResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type GetNodeUserByName400JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeUserByName400JSONResponse) VisitGetNodeUserByNameResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type GetNodeUserByName401JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeUserByName401JSONResponse) VisitGetNodeUserByNameResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(401)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type GetNodeUserByName403JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeUserByName403JSONResponse) VisitGetNodeUserByNameResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(403)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type GetNodeUserByName404JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeUserByName404JSONResponse) VisitGetNodeUserByNameResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(404)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type GetNodeUserByName500JSONResponse externalRef0.ErrorResponse
-
-func (response GetNodeUserByName500JSONResponse) VisitGetNodeUserByNameResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type PutNodeUserRequestObject struct {
-	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     UserName `json:"name" validate:"required,account_name"`
-	Body     *PutNodeUserJSONRequestBody
-}
-
-type PutNodeUserResponseObject interface {
-	VisitPutNodeUserResponse(w http.ResponseWriter) error
-}
-
-type PutNodeUser200JSONResponse UserMutationResponse
-
-func (response PutNodeUser200JSONResponse) VisitPutNodeUserResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type PutNodeUser400JSONResponse externalRef0.ErrorResponse
-
-func (response PutNodeUser400JSONResponse) VisitPutNodeUserResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type PutNodeUser401JSONResponse externalRef0.ErrorResponse
-
-func (response PutNodeUser401JSONResponse) VisitPutNodeUserResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(401)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type PutNodeUser403JSONResponse externalRef0.ErrorResponse
-
-func (response PutNodeUser403JSONResponse) VisitPutNodeUserResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(403)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type PutNodeUser404JSONResponse externalRef0.ErrorResponse
-
-func (response PutNodeUser404JSONResponse) VisitPutNodeUserResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(404)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type PutNodeUser500JSONResponse externalRef0.ErrorResponse
-
-func (response PutNodeUser500JSONResponse) VisitPutNodeUserResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type PostNodeUserPasswordRequestObject struct {
-	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     UserName `json:"name" validate:"required,account_name"`
-	Body     *PostNodeUserPasswordJSONRequestBody
-}
-
-type PostNodeUserPasswordResponseObject interface {
-	VisitPostNodeUserPasswordResponse(w http.ResponseWriter) error
-}
-
-type PostNodeUserPassword200JSONResponse UserMutationResponse
-
-func (response PostNodeUserPassword200JSONResponse) VisitPostNodeUserPasswordResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type PostNodeUserPassword400JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeUserPassword400JSONResponse) VisitPostNodeUserPasswordResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type PostNodeUserPassword401JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeUserPassword401JSONResponse) VisitPostNodeUserPasswordResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(401)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type PostNodeUserPassword403JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeUserPassword403JSONResponse) VisitPostNodeUserPasswordResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(403)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type PostNodeUserPassword404JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeUserPassword404JSONResponse) VisitPostNodeUserPasswordResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(404)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
-type PostNodeUserPassword500JSONResponse externalRef0.ErrorResponse
-
-func (response PostNodeUserPassword500JSONResponse) VisitPostNodeUserPasswordResponse(w http.ResponseWriter) error {
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(response); err != nil {
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-	_, err := buf.WriteTo(w)
-	return err
-}
-
 type GetNodeUserSSHKeyRequestObject struct {
-	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     UserName `json:"name" validate:"required,account_name"`
+	Hostname Hostname       `json:"hostname" validate:"required,min=1,valid_target"`
+	Name     SSHKeyUserName `json:"name" validate:"required,account_name"`
 }
 
 type GetNodeUserSSHKeyResponseObject interface {
@@ -1268,8 +391,8 @@ func (response GetNodeUserSSHKey500JSONResponse) VisitGetNodeUserSSHKeyResponse(
 }
 
 type PostNodeUserSSHKeyRequestObject struct {
-	Hostname Hostname `json:"hostname" validate:"required,min=1,valid_target"`
-	Name     UserName `json:"name" validate:"required,account_name"`
+	Hostname Hostname       `json:"hostname" validate:"required,min=1,valid_target"`
+	Name     SSHKeyUserName `json:"name" validate:"required,account_name"`
 	Body     *PostNodeUserSSHKeyJSONRequestBody
 }
 
@@ -1349,7 +472,7 @@ func (response PostNodeUserSSHKey500JSONResponse) VisitPostNodeUserSSHKeyRespons
 
 type DeleteNodeUserSSHKeyRequestObject struct {
 	Hostname    Hostname          `json:"hostname" validate:"required,min=1,valid_target"`
-	Name        UserName          `json:"name" validate:"required,account_name"`
+	Name        SSHKeyUserName    `json:"name" validate:"required,account_name"`
 	Fingerprint SSHKeyFingerprint `json:"fingerprint" validate:"required,ssh_fingerprint"`
 }
 
@@ -1429,24 +552,6 @@ func (response DeleteNodeUserSSHKey500JSONResponse) VisitDeleteNodeUserSSHKeyRes
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
-	// List all users
-	// (GET /api/node/{hostname}/user)
-	GetNodeUser(ctx context.Context, request GetNodeUserRequestObject) (GetNodeUserResponseObject, error)
-	// Create a user
-	// (POST /api/node/{hostname}/user)
-	PostNodeUser(ctx context.Context, request PostNodeUserRequestObject) (PostNodeUserResponseObject, error)
-	// Delete a user
-	// (DELETE /api/node/{hostname}/user/{name})
-	DeleteNodeUser(ctx context.Context, request DeleteNodeUserRequestObject) (DeleteNodeUserResponseObject, error)
-	// Get a user
-	// (GET /api/node/{hostname}/user/{name})
-	GetNodeUserByName(ctx context.Context, request GetNodeUserByNameRequestObject) (GetNodeUserByNameResponseObject, error)
-	// Update a user
-	// (PUT /api/node/{hostname}/user/{name})
-	PutNodeUser(ctx context.Context, request PutNodeUserRequestObject) (PutNodeUserResponseObject, error)
-	// Change user password
-	// (POST /api/node/{hostname}/user/{name}/password)
-	PostNodeUserPassword(ctx context.Context, request PostNodeUserPasswordRequestObject) (PostNodeUserPasswordResponseObject, error)
 	// List SSH authorized keys
 	// (GET /api/node/{hostname}/user/{name}/ssh-key)
 	GetNodeUserSSHKey(ctx context.Context, request GetNodeUserSSHKeyRequestObject) (GetNodeUserSSHKeyResponseObject, error)
@@ -1470,180 +575,8 @@ type strictHandler struct {
 	middlewares []StrictMiddlewareFunc
 }
 
-// GetNodeUser operation middleware
-func (sh *strictHandler) GetNodeUser(ctx *echo.Context, hostname Hostname) error {
-	var request GetNodeUserRequestObject
-
-	request.Hostname = hostname
-
-	handler := func(ctx *echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.GetNodeUser(ctx.Request().Context(), request.(GetNodeUserRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetNodeUser")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return err
-	} else if validResponse, ok := response.(GetNodeUserResponseObject); ok {
-		return validResponse.VisitGetNodeUserResponse(ctx.Response())
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// PostNodeUser operation middleware
-func (sh *strictHandler) PostNodeUser(ctx *echo.Context, hostname Hostname) error {
-	var request PostNodeUserRequestObject
-
-	request.Hostname = hostname
-
-	var body PostNodeUserJSONRequestBody
-	if err := ctx.Bind(&body); err != nil {
-		return err
-	}
-	request.Body = &body
-
-	handler := func(ctx *echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.PostNodeUser(ctx.Request().Context(), request.(PostNodeUserRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "PostNodeUser")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return err
-	} else if validResponse, ok := response.(PostNodeUserResponseObject); ok {
-		return validResponse.VisitPostNodeUserResponse(ctx.Response())
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// DeleteNodeUser operation middleware
-func (sh *strictHandler) DeleteNodeUser(ctx *echo.Context, hostname Hostname, name UserName) error {
-	var request DeleteNodeUserRequestObject
-
-	request.Hostname = hostname
-	request.Name = name
-
-	handler := func(ctx *echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.DeleteNodeUser(ctx.Request().Context(), request.(DeleteNodeUserRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "DeleteNodeUser")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return err
-	} else if validResponse, ok := response.(DeleteNodeUserResponseObject); ok {
-		return validResponse.VisitDeleteNodeUserResponse(ctx.Response())
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// GetNodeUserByName operation middleware
-func (sh *strictHandler) GetNodeUserByName(ctx *echo.Context, hostname Hostname, name UserName) error {
-	var request GetNodeUserByNameRequestObject
-
-	request.Hostname = hostname
-	request.Name = name
-
-	handler := func(ctx *echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.GetNodeUserByName(ctx.Request().Context(), request.(GetNodeUserByNameRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetNodeUserByName")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return err
-	} else if validResponse, ok := response.(GetNodeUserByNameResponseObject); ok {
-		return validResponse.VisitGetNodeUserByNameResponse(ctx.Response())
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// PutNodeUser operation middleware
-func (sh *strictHandler) PutNodeUser(ctx *echo.Context, hostname Hostname, name UserName) error {
-	var request PutNodeUserRequestObject
-
-	request.Hostname = hostname
-	request.Name = name
-
-	var body PutNodeUserJSONRequestBody
-	if err := ctx.Bind(&body); err != nil {
-		return err
-	}
-	request.Body = &body
-
-	handler := func(ctx *echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.PutNodeUser(ctx.Request().Context(), request.(PutNodeUserRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "PutNodeUser")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return err
-	} else if validResponse, ok := response.(PutNodeUserResponseObject); ok {
-		return validResponse.VisitPutNodeUserResponse(ctx.Response())
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// PostNodeUserPassword operation middleware
-func (sh *strictHandler) PostNodeUserPassword(ctx *echo.Context, hostname Hostname, name UserName) error {
-	var request PostNodeUserPasswordRequestObject
-
-	request.Hostname = hostname
-	request.Name = name
-
-	var body PostNodeUserPasswordJSONRequestBody
-	if err := ctx.Bind(&body); err != nil {
-		return err
-	}
-	request.Body = &body
-
-	handler := func(ctx *echo.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.PostNodeUserPassword(ctx.Request().Context(), request.(PostNodeUserPasswordRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "PostNodeUserPassword")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return err
-	} else if validResponse, ok := response.(PostNodeUserPasswordResponseObject); ok {
-		return validResponse.VisitPostNodeUserPasswordResponse(ctx.Response())
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
 // GetNodeUserSSHKey operation middleware
-func (sh *strictHandler) GetNodeUserSSHKey(ctx *echo.Context, hostname Hostname, name UserName) error {
+func (sh *strictHandler) GetNodeUserSSHKey(ctx *echo.Context, hostname Hostname, name SSHKeyUserName) error {
 	var request GetNodeUserSSHKeyRequestObject
 
 	request.Hostname = hostname
@@ -1669,7 +602,7 @@ func (sh *strictHandler) GetNodeUserSSHKey(ctx *echo.Context, hostname Hostname,
 }
 
 // PostNodeUserSSHKey operation middleware
-func (sh *strictHandler) PostNodeUserSSHKey(ctx *echo.Context, hostname Hostname, name UserName) error {
+func (sh *strictHandler) PostNodeUserSSHKey(ctx *echo.Context, hostname Hostname, name SSHKeyUserName) error {
 	var request PostNodeUserSSHKeyRequestObject
 
 	request.Hostname = hostname
@@ -1701,7 +634,7 @@ func (sh *strictHandler) PostNodeUserSSHKey(ctx *echo.Context, hostname Hostname
 }
 
 // DeleteNodeUserSSHKey operation middleware
-func (sh *strictHandler) DeleteNodeUserSSHKey(ctx *echo.Context, hostname Hostname, name UserName, fingerprint SSHKeyFingerprint) error {
+func (sh *strictHandler) DeleteNodeUserSSHKey(ctx *echo.Context, hostname Hostname, name SSHKeyUserName, fingerprint SSHKeyFingerprint) error {
 	var request DeleteNodeUserSSHKeyRequestObject
 
 	request.Hostname = hostname

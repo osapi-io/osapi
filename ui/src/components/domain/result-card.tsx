@@ -459,92 +459,6 @@ function DockerListResult({ data }: { data: Record<string, unknown> }) {
   );
 }
 
-// User list
-function UserListResult({ data }: { data: Record<string, unknown> }) {
-  const { search, setSearch } = useListSearch();
-  type UserHost = {
-    hostname: string;
-    status?: string;
-    users?: {
-      name?: string;
-      uid?: number;
-      gid?: number;
-      home?: string;
-      shell?: string;
-      groups?: string[];
-      locked?: boolean;
-    }[];
-    error?: string;
-  };
-  const hosts = data.results as UserHost[];
-  const totalUsers = hosts.reduce((n, h) => n + (h.users?.length ?? 0), 0);
-  return (
-    <ResultShell
-      jobId={data.job_id as string | undefined}
-      label="user list"
-      data={data}
-    >
-      <ListSearchBar
-        search={search}
-        setSearch={setSearch}
-        hasItems={totalUsers > 0}
-      />
-      {hosts.map((host) => {
-        const allUsers = host.users ?? [];
-        const users = allUsers.filter((u) =>
-          matches(search, u.name, u.uid, u.shell, u.home),
-        );
-        if (
-          search &&
-          users.length === 0 &&
-          !host.error &&
-          host.status !== "skipped"
-        )
-          return null;
-        return (
-          <div
-            key={host.hostname}
-            className="border-b border-border/50 last:border-0"
-          >
-            <HostGroupHeader
-              hostname={host.hostname}
-              status={
-                host.status === "skipped"
-                  ? "skipped"
-                  : host.error
-                    ? "failed"
-                    : "ok"
-              }
-              detail={
-                host.status === "skipped"
-                  ? "skipped"
-                  : `${allUsers.length} user${allUsers.length !== 1 ? "s" : ""}`
-              }
-            />
-            {host.error && host.status !== "skipped" && (
-              <HostError>{host.error}</HostError>
-            )}
-            {host.status !== "skipped" &&
-              users.map((u, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-4 border-b border-border/30 px-4 py-2 pl-9 last:border-0"
-                >
-                  <KeyValue label="name" value={u.name} variant="strong" />
-                  {u.uid != null && (
-                    <KeyValue label="uid" value={String(u.uid)} />
-                  )}
-                  {u.shell && <KeyValue label="shell" value={u.shell} />}
-                  {u.home && <KeyValue label="home" value={u.home} />}
-                </div>
-              ))}
-          </div>
-        );
-      })}
-    </ResultShell>
-  );
-}
-
 // ---------------------------------------------------------------------------
 // Router
 // ---------------------------------------------------------------------------
@@ -970,23 +884,9 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
     );
   }
 
-  // User list — expanded with search
-  if (type === "user-list" && Array.isArray(data.results)) {
-    return <UserListResult data={data} />;
-  }
-
   // Security — user operations
   if (
-    [
-      "user-get",
-      "user-create",
-      "user-update",
-      "user-delete",
-      "user-list-keys",
-      "user-add-key",
-      "user-remove-key",
-      "user-change-password",
-    ].includes(type) &&
+    ["user-list-keys", "user-add-key", "user-remove-key"].includes(type) &&
     Array.isArray(data.results)
   ) {
     const label = type.replace("-", " ");

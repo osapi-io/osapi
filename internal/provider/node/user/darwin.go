@@ -36,55 +36,6 @@ func NewDarwinProvider() *Darwin {
 	return &Darwin{}
 }
 
-// ListUsers returns ErrUnsupported on Darwin.
-func (d *Darwin) ListUsers(
-	_ context.Context,
-) ([]User, error) {
-	return nil, provider.ErrUnsupported
-}
-
-// GetUser returns ErrUnsupported on Darwin.
-func (d *Darwin) GetUser(
-	_ context.Context,
-	_ string,
-) (*User, error) {
-	return nil, provider.ErrUnsupported
-}
-
-// CreateUser returns ErrUnsupported on Darwin.
-func (d *Darwin) CreateUser(
-	_ context.Context,
-	_ CreateUserOpts,
-) (*Result, error) {
-	return nil, provider.ErrUnsupported
-}
-
-// UpdateUser returns ErrUnsupported on Darwin.
-func (d *Darwin) UpdateUser(
-	_ context.Context,
-	_ string,
-	_ UpdateUserOpts,
-) (*Result, error) {
-	return nil, provider.ErrUnsupported
-}
-
-// DeleteUser returns ErrUnsupported on Darwin.
-func (d *Darwin) DeleteUser(
-	_ context.Context,
-	_ string,
-) (*Result, error) {
-	return nil, provider.ErrUnsupported
-}
-
-// ChangePassword returns ErrUnsupported on Darwin.
-func (d *Darwin) ChangePassword(
-	_ context.Context,
-	_ string,
-	_ string,
-) (*Result, error) {
-	return nil, provider.ErrUnsupported
-}
-
 // ListKeys returns ErrUnsupported on Darwin.
 func (d *Darwin) ListKeys(
 	_ context.Context,

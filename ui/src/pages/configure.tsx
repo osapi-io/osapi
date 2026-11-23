@@ -15,8 +15,6 @@ import { SingleInputBlock } from "@/components/domain/single-input-block";
 import { FileDeleteBlock } from "@/components/domain/file-delete-block";
 import { ContainerActionBlock } from "@/components/domain/container-action-block";
 import { DockerExecBlock } from "@/components/domain/docker-exec-block";
-import { UserBlock } from "@/components/domain/user-block";
-import { UserPasswordBlock } from "@/components/domain/user-password-block";
 import { UserSSHKeyBlock } from "@/components/domain/user-ssh-key-block";
 import { UserRemoveKeyBlock } from "@/components/domain/user-remove-key-block";
 import { ApplyButton } from "@/components/domain/apply-button";
@@ -55,16 +53,10 @@ import {
   getFileStale,
 } from "@/sdk/gen/file-management-api-file-operations/file-management-api-file-operations";
 import {
-  getNodeUser,
-  getNodeUserByName,
-  postNodeUser,
-  putNodeUser,
-  deleteNodeUser,
   getNodeUserSSHKey,
   postNodeUserSSHKey,
   deleteNodeUserSSHKey,
-  postNodeUserPassword,
-} from "@/sdk/gen/user-management-api-user-operations/user-management-api-user-operations";
+} from "@/sdk/gen/user-ssh-key-management-api-user-operations/user-ssh-key-management-api-user-operations";
 import {
   postNodeFileDeploy,
   postNodeFileUndeploy,
@@ -411,44 +403,6 @@ export function Configure() {
               command: block.data.command as string,
             });
             break;
-          case "user-list":
-            result = await getNodeUser(t);
-            break;
-          case "user-get":
-            result = await getNodeUserByName(t, block.data.name as string);
-            break;
-          case "user-create": {
-            const groupsStr = (block.data.groups as string) || "";
-            result = await postNodeUser(t, {
-              name: block.data.name as string,
-              shell: (block.data.shell as string) || undefined,
-              home: (block.data.home as string) || undefined,
-              groups: groupsStr
-                ? groupsStr
-                    .split(",")
-                    .map((s) => s.trim())
-                    .filter(Boolean)
-                : undefined,
-            });
-            break;
-          }
-          case "user-update": {
-            const updGroupsStr = (block.data.groups as string) || "";
-            result = await putNodeUser(t, block.data.name as string, {
-              shell: (block.data.shell as string) || undefined,
-              home: (block.data.home as string) || undefined,
-              groups: updGroupsStr
-                ? updGroupsStr
-                    .split(",")
-                    .map((s) => s.trim())
-                    .filter(Boolean)
-                : undefined,
-            });
-            break;
-          }
-          case "user-delete":
-            result = await deleteNodeUser(t, block.data.name as string);
-            break;
           case "user-list-keys":
             result = await getNodeUserSSHKey(t, block.data.name as string);
             break;
@@ -463,11 +417,6 @@ export function Configure() {
               block.data.name as string,
               block.data.fingerprint as string,
             );
-            break;
-          case "user-change-password":
-            result = await postNodeUserPassword(t, block.data.name as string, {
-              password: block.data.password as string,
-            });
             break;
           case "audit-list":
             result = await getAuditLogs();
@@ -709,36 +658,6 @@ export function Configure() {
             placeholder="echo hello | tee /tmp/out.txt"
           />
         );
-      case "user-list":
-        return null;
-      case "user-create":
-        return (
-          <UserBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-          />
-        );
-      case "user-update":
-        return (
-          <UserBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-          />
-        );
-      case "user-get":
-      case "user-delete":
-        return (
-          <SingleInputBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            field="name"
-            label="Username"
-            placeholder="deploy"
-          />
-        );
       case "user-list-keys":
         return (
           <SingleInputBlock
@@ -761,14 +680,6 @@ export function Configure() {
       case "user-remove-key":
         return (
           <UserRemoveKeyBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-          />
-        );
-      case "user-change-password":
-        return (
-          <UserPasswordBlock
             data={block.data}
             onChange={(data) => updateBlockData(block.id, data)}
             onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}

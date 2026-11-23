@@ -252,6 +252,13 @@ func (d *Debian) RemoveKey(
 	return &SSHKeyResult{Changed: true}, nil
 }
 
+// passwdFile is where a user's home directory is read from, and
+// passwdFields the number of fields of each of its lines.
+const (
+	passwdFile   = "/etc/passwd"
+	passwdFields = 7
+)
+
 // userHomeDir resolves a user's home directory from /etc/passwd.
 func (d *Debian) userHomeDir(
 	username string,

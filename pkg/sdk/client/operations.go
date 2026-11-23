@@ -69,14 +69,7 @@ const (
 )
 
 // User operations.
-const (
-	OpUserList           JobOperation = "node.user.list"
-	OpUserGet            JobOperation = "node.user.get"
-	OpUserCreate         JobOperation = "node.user.create"
-	OpUserUpdate         JobOperation = "node.user.update"
-	OpUserDelete         JobOperation = "node.user.delete"
-	OpUserChangePassword JobOperation = "node.user.password"
-)
+const ()
 
 // SSH Key operations.
 const (

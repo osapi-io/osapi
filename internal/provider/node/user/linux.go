@@ -36,55 +36,6 @@ func NewLinuxProvider() *Linux {
 	return &Linux{}
 }
 
-// ListUsers returns ErrUnsupported on generic Linux.
-func (l *Linux) ListUsers(
-	_ context.Context,
-) ([]User, error) {
-	return nil, provider.ErrUnsupported
-}
-
-// GetUser returns ErrUnsupported on generic Linux.
-func (l *Linux) GetUser(
-	_ context.Context,
-	_ string,
-) (*User, error) {
-	return nil, provider.ErrUnsupported
-}
-
-// CreateUser returns ErrUnsupported on generic Linux.
-func (l *Linux) CreateUser(
-	_ context.Context,
-	_ CreateUserOpts,
-) (*Result, error) {
-	return nil, provider.ErrUnsupported
-}
-
-// UpdateUser returns ErrUnsupported on generic Linux.
-func (l *Linux) UpdateUser(
-	_ context.Context,
-	_ string,
-	_ UpdateUserOpts,
-) (*Result, error) {
-	return nil, provider.ErrUnsupported
-}
-
-// DeleteUser returns ErrUnsupported on generic Linux.
-func (l *Linux) DeleteUser(
-	_ context.Context,
-	_ string,
-) (*Result, error) {
-	return nil, provider.ErrUnsupported
-}
-
-// ChangePassword returns ErrUnsupported on generic Linux.
-func (l *Linux) ChangePassword(
-	_ context.Context,
-	_ string,
-	_ string,
-) (*Result, error) {
-	return nil, provider.ErrUnsupported
-}
-
 // ListKeys returns ErrUnsupported on generic Linux.
 func (l *Linux) ListKeys(
 	_ context.Context,

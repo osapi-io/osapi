@@ -58,7 +58,7 @@ var Actions = map[string]bool{
 	"uninstall": true, "upload": true, "deploy": true, "undeploy": true,
 	"pull": true, "signal": true, "reboot": true, "shutdown": true, "ping": true,
 	"status": true, "fingerprint": true, "liveness": true, "ready": true,
-	"generate": true, "validate": true, "setup": true,
+	"generate": true, "validate": true, "setup": true, "passwd": true,
 }
 
 // Roots are the words of the commands directly under osapi that name what

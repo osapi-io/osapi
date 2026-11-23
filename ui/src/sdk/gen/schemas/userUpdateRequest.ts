@@ -4,14 +4,25 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
+import type { UserUpdateRequestLock } from './userUpdateRequestLock';
 
 export interface UserUpdateRequest {
-  /** New login shell path. */
-  shell?: string;
-  /** New home directory path. */
-  home?: string;
-  /** Supplementary group names (replaces existing). */
+  /**
+     * The groups it is a member of, which replace the groups it has
+     * @items.maxLength 32
+     * @items.pattern ^[a-z_][a-z0-9_-]*\$?$
+     */
   groups?: string[];
-  /** Lock or unlock the account. */
-  lock?: boolean;
+  /**
+     * Its home directory, which usermod moves the files to
+     * @pattern ^[^\r\n]*$
+     */
+  home?: string;
+  /** Whether to refuse logins with its password: locked refuses them, unlocked allows them */
+  lock?: UserUpdateRequestLock;
+  /**
+     * Its login shell, such as /bin/bash
+     * @pattern ^[^\r\n]*$
+     */
+  shell?: string;
 }

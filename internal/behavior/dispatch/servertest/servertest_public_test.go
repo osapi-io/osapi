@@ -29,6 +29,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/dispatch/servertest"
 	"github.com/osapi-io/osapi/internal/behaviors/sysctl"
 	"github.com/osapi-io/osapi/internal/behaviors/sysctl/gen"
+	"github.com/osapi-io/osapi/internal/behaviors/user"
 )
 
 // ServertestPublicTestSuite runs one case of each kind through sysctl's
@@ -144,6 +145,57 @@ func (s *ServertestPublicTestSuite) TestRun() {
 			WantCode: http.StatusForbidden,
 		},
 	})
+}
+
+// TestJobInput: an input with a field that a .Before step sets matches the
+// job's input when its other fields are the same, its secret is empty and
+// the step set the field; any other input must be equal.
+func (s *ServertestPublicTestSuite) TestJobInput() {
+	want := user.CreateInput{Name: "alice", Password: "pw", PasswordHash: "$6$a$b"}
+
+	tests := []struct {
+		name string
+		want any
+		got  any
+		ok   bool
+	}{
+		{
+			name: "when the step set a new hash",
+			want: want,
+			got:  user.CreateInput{Name: "alice", PasswordHash: "$6$c$d"},
+			ok:   true,
+		},
+		{
+			name: "when the job has the password",
+			want: want,
+			got:  user.CreateInput{Name: "alice", Password: "pw", PasswordHash: "$6$c$d"},
+		},
+		{name: "when the step set no hash", want: want, got: user.CreateInput{Name: "alice"}},
+		{
+			name: "when another field differs",
+			want: want,
+			got:  user.CreateInput{Name: "bob", PasswordHash: "$6$c$d"},
+		},
+		{
+			name: "when the job's input is another type",
+			want: want,
+			got:  user.DeleteInput{Name: "alice"},
+		},
+		{
+			name: "when the input has no step, it must be equal",
+			want: sysctl.GetInput{Key: "a"},
+			got:  sysctl.GetInput{Key: "a"},
+			ok:   true,
+		},
+		{name: "when the input is not a struct", want: 1, got: 1, ok: true},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.ok, servertest.JobInput(tc.want).Matches(tc.got))
+		})
+	}
+	s.Contains(servertest.JobInput(want).String(), "after its controller step")
 }
 
 func TestServertestPublicTestSuite(

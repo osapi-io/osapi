@@ -53,12 +53,10 @@ func NewNodeProcessor(
 	logger = logger.With(slog.String("subsystem", "agent.processor.node"))
 
 	return func(ctx context.Context, req job.Request) (json.RawMessage, error) {
-		// Extract base operation from dotted operation (e.g., "user.list" -> "user")
+		// Extract base operation from dotted operation (e.g., "sshKey.list" -> "sshKey")
 		baseOperation := strings.Split(req.Operation, ".")[0]
 
 		switch baseOperation {
-		case "user":
-			return processUserOperation(ctx, userProvider, logger, req)
 		case "sshKey":
 			return processSSHKeyOperation(ctx, userProvider, logger, req)
 		default:
