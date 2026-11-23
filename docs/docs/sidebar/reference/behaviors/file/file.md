@@ -24,7 +24,7 @@ Files of the object store, deployed to the host.
 | Platforms   | linux                                                                       |
 | Sudo        | none                                                                        |
 | Runs        | none                                                                        |
-| Writes      | *                                                                           |
+| Writes      | \*                                                                          |
 | Keeps state | no                                                                          |
 | Uses        | [object](../object/object.md), [managedfile](../managedfile/managedfile.md) |
 | Used by     | none                                                                        |
@@ -39,11 +39,11 @@ Files of the object store, deployed to the host.
 
 ### Types (3)
 
-| NAME                     | INPUT                                                                                 | OUTPUT                                           |
-| ------------------------ | ------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| [status](#method-status) | StatusInput &#123; path* &#125;                                                       | Status &#123; path, state, sha256 &#125;         |
-| [update](#method-update) | UpdateInput &#123; object_name*, path*, mode, owner, group, content_type, vars &#125; | UpdateResult &#123; path, sha256, changed &#125; |
-| [delete](#method-delete) | DeleteInput &#123; path* &#125;                                                       | DeleteResult &#123; path, changed &#125;         |
+| NAME                     | INPUT                                                                                   | OUTPUT                                           |
+| ------------------------ | --------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| [status](#method-status) | StatusInput &#123; path\* &#125;                                                        | Status &#123; path, state, sha256 &#125;         |
+| [update](#method-update) | UpdateInput &#123; object_name\*, path\*, mode, owner, group, content_type, vars &#125; | UpdateResult &#123; path, sha256, changed &#125; |
+| [delete](#method-delete) | DeleteInput &#123; path\* &#125;                                                        | DeleteResult &#123; path, changed &#125;         |
 
 ### Settings (0)
 
@@ -112,15 +112,15 @@ None. Declare them with behavior.Config.
 
 ### Input (7)
 
-| FIELD        | TYPE   | REQUIRED | CONSTRAINTS                      | DESCRIPTION                                                                                                                 |
-| ------------ | ------ | -------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| object_name  | string | yes      | min length 1, max length 255     | The object of the object store, from osapi client file list                                                                 |
-| path         | string | yes      | pattern ^/                       | Absolute path of the file on the host                                                                                       |
-| mode         | string | no       | pattern ^\[0-7]&#123;3,4&#125;$  | Permissions in octal, such as 0644; when empty, a file keeps its mode and a new file gets 0644                              |
-| owner        | string | no       | pattern ^\[a-z_]\[a-z0-9_-]*\$?$ | User that owns the file; left as written when empty                                                                         |
-| group        | string | no       | pattern ^\[a-z_]\[a-z0-9_-]*\$?$ | Group that owns the file; left as written when empty                                                                        |
-| content_type | string | no       | one of raw template              | How the object is written: raw as it is, or template rendered with .Facts, .Vars and .Hostname; the object's own when empty |
-| vars         | object | no       |                                  | Variables of a template, as .Vars, each as key=value                                                                        |
+| FIELD        | TYPE   | REQUIRED | CONSTRAINTS                       | DESCRIPTION                                                                                                                 |
+| ------------ | ------ | -------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| object_name  | string | yes      | min length 1, max length 255      | The object of the object store, from osapi client file list                                                                 |
+| path         | string | yes      | pattern ^/                        | Absolute path of the file on the host                                                                                       |
+| mode         | string | no       | pattern ^\[0-7]&#123;3,4&#125;$   | Permissions in octal, such as 0644; when empty, a file keeps its mode and a new file gets 0644                              |
+| owner        | string | no       | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$ | User that owns the file; left as written when empty                                                                         |
+| group        | string | no       | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$ | Group that owns the file; left as written when empty                                                                        |
+| content_type | string | no       | one of raw template               | How the object is written: raw as it is, or template rendered with .Facts, .Vars and .Hostname; the object's own when empty |
+| vars         | object | no       |                                   | Variables of a template, as .Vars, each as key=value                                                                        |
 
 ### Output (3)
 

@@ -49,7 +49,8 @@ func (s *MarkdownPublicTestSuite) TestPage() {
 		},
 	}
 	m.Heading("Method:")
-	m.KV("Name", "get", "Uses", "netplan, managedfile", "Note", "a | b\nc")
+	m.KV("Name", "get", "Uses", "netplan, managedfile", "Note", "a | b\nc",
+		"Writes", "/etc/cron.d/*, /etc/cron.daily/*")
 	m.Heading("Linked")
 	m.Table(command.Table{
 		Title: "Methods (1):", Headers: []string{"NAME", "ROUTE"},
@@ -66,6 +67,8 @@ func (s *MarkdownPublicTestSuite) TestPage() {
 	s.Contains(page, "| Uses | [netplan](netplan.md), [managedfile](managedfile.md) |",
 		"each value of a list links")
 	s.Contains(page, "| Note | a \\| b c |", "a pipe is escaped and a newline is a space")
+	s.Contains(page, `| Writes | /etc/cron.d/\*, /etc/cron.daily/\* |`,
+		"an asterisk is escaped, so two are not emphasis")
 	s.Contains(page, "\n## [Linked](linked.md)\n", "a heading links")
 	s.Contains(page, "\n### Methods (1)\n\n| NAME | ROUTE |\n| --- | --- |\n")
 	s.Contains(page, "| [dns](dns.md) | /api/&#123;hostname&#125; |")

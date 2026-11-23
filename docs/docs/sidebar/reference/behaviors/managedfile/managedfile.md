@@ -24,7 +24,7 @@ same.
 | Platforms   | debian, linux                                                                                                                                                                                                                       |
 | Sudo        | chown                                                                                                                                                                                                                               |
 | Runs        | stat                                                                                                                                                                                                                                |
-| Writes      | *                                                                                                                                                                                                                                   |
+| Writes      | \*                                                                                                                                                                                                                                  |
 | Keeps state | yes                                                                                                                                                                                                                                 |
 | Uses        | none                                                                                                                                                                                                                                |
 | Used by     | [certificate](../certificate/certificate.md), [file](../file/file.md), [netplan](../netplan/netplan.md), [ntp](../ntp/ntp.md), [schedule](../schedule/schedule.md), [service](../service/service.md), [sysctl](../sysctl/sysctl.md) |
@@ -39,11 +39,11 @@ same.
 
 ### Types (3)
 
-| NAME                     | INPUT                                                                                                 | OUTPUT                                                  |
-| ------------------------ | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| [get](#method-get)       | GetInput &#123; path* &#125;                                                                          | Record &#123; path, sha256, metadata, undeployed &#125; |
-| [update](#method-update) | UpdateInput &#123; path*, content*, mode, owner, group, secret, metadata, object, content_type &#125; | Result &#123; path, changed &#125;                      |
-| [delete](#method-delete) | DeleteInput &#123; path* &#125;                                                                       | Result &#123; path, changed &#125;                      |
+| NAME                     | INPUT                                                                                                   | OUTPUT                                                  |
+| ------------------------ | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| [get](#method-get)       | GetInput &#123; path\* &#125;                                                                           | Record &#123; path, sha256, metadata, undeployed &#125; |
+| [update](#method-update) | UpdateInput &#123; path\*, content\*, mode, owner, group, secret, metadata, object, content_type &#125; | Result &#123; path, changed &#125;                      |
+| [delete](#method-delete) | DeleteInput &#123; path\* &#125;                                                                        | Result &#123; path, changed &#125;                      |
 
 ### Settings (0)
 
@@ -106,17 +106,17 @@ None. Declare them with behavior.Config.
 
 ### Input (9)
 
-| FIELD        | TYPE    | REQUIRED | CONSTRAINTS                      | DESCRIPTION                                                                                    |
-| ------------ | ------- | -------- | -------------------------------- | ---------------------------------------------------------------------------------------------- |
-| path         | string  | yes      | pattern ^/                       | Absolute path of the file                                                                      |
-| content      | string  | yes      |                                  | The file's whole content                                                                       |
-| mode         | string  | no       | pattern ^\[0-7]&#123;3,4&#125;$  | Permissions in octal, such as 0600; when empty, a file keeps its mode and a new file gets 0644 |
-| owner        | string  | no       | pattern ^\[a-z_]\[a-z0-9_-]*\$?$ | User that owns the file; left as written when empty                                            |
-| group        | string  | no       | pattern ^\[a-z_]\[a-z0-9_-]*\$?$ | Group that owns the file; left as written when empty                                           |
-| secret       | boolean | no       |                                  | The content is a secret: its record keeps no checksum of it                                    |
-| metadata     | object  | no       |                                  | What the caller keeps in the file's record, such as the setting it holds                       |
-| object       | string  | no       |                                  | The object of the object store that the content came from; empty when it came from no object   |
-| content_type | string  | no       | one of raw template              | How the content was made from its object: raw or template                                      |
+| FIELD        | TYPE    | REQUIRED | CONSTRAINTS                       | DESCRIPTION                                                                                    |
+| ------------ | ------- | -------- | --------------------------------- | ---------------------------------------------------------------------------------------------- |
+| path         | string  | yes      | pattern ^/                        | Absolute path of the file                                                                      |
+| content      | string  | yes      |                                   | The file's whole content                                                                       |
+| mode         | string  | no       | pattern ^\[0-7]&#123;3,4&#125;$   | Permissions in octal, such as 0600; when empty, a file keeps its mode and a new file gets 0644 |
+| owner        | string  | no       | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$ | User that owns the file; left as written when empty                                            |
+| group        | string  | no       | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$ | Group that owns the file; left as written when empty                                           |
+| secret       | boolean | no       |                                   | The content is a secret: its record keeps no checksum of it                                    |
+| metadata     | object  | no       |                                   | What the caller keeps in the file's record, such as the setting it holds                       |
+| object       | string  | no       |                                   | The object of the object store that the content came from; empty when it came from no object   |
+| content_type | string  | no       | one of raw template               | How the content was made from its object: raw or template                                      |
 
 ### Output (2)
 

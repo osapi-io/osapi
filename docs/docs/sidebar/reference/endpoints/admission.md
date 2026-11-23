@@ -29,11 +29,11 @@ the same.
 
 ### Types (6)
 
-| NAME   | INPUT                                  | OUTPUT                                                                                                                                                             |
-| ------ | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| list   | ListInput &#123; state &#125;          | ListAdmissionResponse &#123; total_items, items &#125;                                                                                                             |
-| get    | MachineInput &#123; machine_id* &#125; | Admission &#123; machine_id, hostname, state, online, last_seen, fingerprint, requested_at, admitted_at, decided_at, reason, previous, previous_fingerprint &#125; |
-| admit  | AdmitInput &#123; machine_id* &#125;   |                                                                                                                                                                    |
-| reject | RejectInput &#123; machine_id* &#125;  |                                                                                                                                                                    |
-| revoke | MachineInput &#123; machine_id* &#125; |                                                                                                                                                                    |
-| delete | MachineInput &#123; machine_id* &#125; |                                                                                                                                                                    |
+| NAME   | INPUT                                   | OUTPUT                                                                                                                                                             |
+| ------ | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| list   | ListInput &#123; state &#125;           | ListAdmissionResponse &#123; total_items, items &#125;                                                                                                             |
+| get    | MachineInput &#123; machine_id\* &#125; | Admission &#123; machine_id, hostname, state, online, last_seen, fingerprint, requested_at, admitted_at, decided_at, reason, previous, previous_fingerprint &#125; |
+| admit  | AdmitInput &#123; machine_id\* &#125;   |                                                                                                                                                                    |
+| reject | RejectInput &#123; machine_id\* &#125;  |                                                                                                                                                                    |
+| revoke | MachineInput &#123; machine_id\* &#125; |                                                                                                                                                                    |
+| delete | MachineInput &#123; machine_id\* &#125; |                                                                                                                                                                    |

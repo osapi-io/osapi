@@ -110,8 +110,8 @@ Use: For each program that needs root.
 ### `Runs(programs...)`
 
 Lists the programs that the providers run without sudo. The agent warns when one
-is not installed. Runs(behavior.AnyProgram), "*", is each program: the agent and
-the integration test look for none.
+is not installed. Runs(behavior.AnyProgram), "\*", is each program: the agent
+and the integration test look for none.
 
 Use: For each program that does not need root. AnyProgram only for a behavior
 that runs the program its caller names, such as command.
@@ -146,7 +146,7 @@ zfs.
 ### `Writes("/etc/x.d/osapi-*.conf")`
 
 Lists the paths that the providers write, remove or change the mode of. Each
-such call is a file span in a trace. "*" is the path that the caller names.
+such call is a file span in a trace. "\*" is the path that the caller names.
 
 Use: For each path, also when a required behavior, such as managedfile, does the
 write.

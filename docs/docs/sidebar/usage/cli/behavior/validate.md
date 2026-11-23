@@ -127,8 +127,8 @@ The rules:
   call it, because it has no API and no CLI. The chain layer owns this rule:
   osapi behavior chain validate. Fix: Add behavior.Requires(it) to the behavior
   that uses it, or remove behavior.Internal if an operator calls it.
-- `writes`: Each path given to Writes is "_" or an absolute path.Match pattern.
-  Fix: Use a pattern such as "/etc/sysctl.d/osapi-_.conf".
+- `writes`: Each path given to Writes is "\*" or an absolute path.Match pattern.
+  Fix: Use a pattern such as "/etc/sysctl.d/osapi-\*.conf".
 
 `go test` runs the examples and refusals of each behavior on a fake host, and
 checks these. Each failure ends with its fix:

@@ -8,7 +8,7 @@ that is the interface's own, and applies it. A route osapi already has, the
 same, does not change; one to the same destination by another gateway or metric
 is refused: update changes it. A default route is refused: the interface
 behavior sets the gateway. An interface the host does not have is not found. An
-interface that a match defines, such as cloud-init's all for en*, is refused,
+interface that a match defines, such as cloud-init's all for en\*, is refused,
 because the route would go on each interface the match takes. It runs on the
 Debian family, and elsewhere, and in a container, reports skipped.
 

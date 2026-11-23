@@ -12,22 +12,22 @@ shows each call that its examples make.
 
 ## Behavior
 
-|             |                                                                                               |
-| ----------- | --------------------------------------------------------------------------------------------- |
-| Name        | schedule                                                                                      |
-| Description | The cron entries that osapi deploys                                                           |
-| Placement   | node                                                                                          |
-| Internal    | no                                                                                            |
-| API         | yes                                                                                           |
-| CLI         | yes                                                                                           |
-| Next        | no                                                                                            |
-| Platforms   | debian                                                                                        |
-| Sudo        | none                                                                                          |
-| Runs        | none                                                                                          |
-| Writes      | /etc/cron.d/_, /etc/cron.hourly/_, /etc/cron.daily/_, /etc/cron.weekly/_, /etc/cron.monthly/* |
-| Keeps state | no                                                                                            |
-| Uses        | [object](../object/object.md), [managedfile](../managedfile/managedfile.md)                   |
-| Used by     | none                                                                                          |
+|             |                                                                                                    |
+| ----------- | -------------------------------------------------------------------------------------------------- |
+| Name        | schedule                                                                                           |
+| Description | The cron entries that osapi deploys                                                                |
+| Placement   | node                                                                                               |
+| Internal    | no                                                                                                 |
+| API         | yes                                                                                                |
+| CLI         | yes                                                                                                |
+| Next        | no                                                                                                 |
+| Platforms   | debian                                                                                             |
+| Sudo        | none                                                                                               |
+| Runs        | none                                                                                               |
+| Writes      | /etc/cron.d/\*, /etc/cron.hourly/\*, /etc/cron.daily/\*, /etc/cron.weekly/\*, /etc/cron.monthly/\* |
+| Keeps state | no                                                                                                 |
+| Uses        | [object](../object/object.md), [managedfile](../managedfile/managedfile.md)                        |
+| Used by     | none                                                                                               |
 
 ### Methods (5)
 
@@ -41,13 +41,13 @@ shows each call that its examples make.
 
 ### Types (5)
 
-| NAME                     | INPUT                                                                                  | OUTPUT                                                                |
-| ------------------------ | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| [list](#method-list)     | ListInput                                                                              | \[]Entry &#123; name, object, schedule, interval, user, source &#125; |
-| [get](#method-get)       | GetInput &#123; name* &#125;                                                           | Entry &#123; name, object, schedule, interval, user, source &#125;    |
-| [create](#method-create) | CreateInput &#123; name*, object*, schedule, interval, user, content_type, vars &#125; | Result &#123; name, changed &#125;                                    |
-| [update](#method-update) | UpdateInput &#123; name*, object, schedule, user, content_type, vars &#125;            | Result &#123; name, changed &#125;                                    |
-| [delete](#method-delete) | DeleteInput &#123; name* &#125;                                                        | Result &#123; name, changed &#125;                                    |
+| NAME                     | INPUT                                                                                    | OUTPUT                                                                |
+| ------------------------ | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| [list](#method-list)     | ListInput                                                                                | \[]Entry &#123; name, object, schedule, interval, user, source &#125; |
+| [get](#method-get)       | GetInput &#123; name\* &#125;                                                            | Entry &#123; name, object, schedule, interval, user, source &#125;    |
+| [create](#method-create) | CreateInput &#123; name\*, object\*, schedule, interval, user, content_type, vars &#125; | Result &#123; name, changed &#125;                                    |
+| [update](#method-update) | UpdateInput &#123; name\*, object, schedule, user, content_type, vars &#125;             | Result &#123; name, changed &#125;                                    |
+| [delete](#method-delete) | DeleteInput &#123; name\* &#125;                                                         | Result &#123; name, changed &#125;                                    |
 
 ### Settings (0)
 
@@ -95,11 +95,11 @@ None. The method takes no input; its command needs only --target.
 
 ### Examples (3)
 
-| EXAMPLE                            | INPUT  | OUTPUT                                                                                 |
-| ---------------------------------- | ------ | -------------------------------------------------------------------------------------- |
-| An entry that osapi deployed       | (none) | \[name=osapitest, object=osapitest.cron, schedule=0 2 * * *, source=cron.d, user=root] |
-| A daily script that osapi deployed | (none) | \[interval=daily, name=osapitest, object=osapitest.sh, source=daily]                   |
-| A host where osapi deployed none   | (none) |                                                                                        |
+| EXAMPLE                            | INPUT  | OUTPUT                                                                                    |
+| ---------------------------------- | ------ | ----------------------------------------------------------------------------------------- |
+| An entry that osapi deployed       | (none) | \[name=osapitest, object=osapitest.cron, schedule=0 2 \* \* \*, source=cron.d, user=root] |
+| A daily script that osapi deployed | (none) | \[interval=daily, name=osapitest, object=osapitest.sh, source=daily]                      |
+| A host where osapi deployed none   | (none) |                                                                                           |
 
 ## Method get
 
@@ -135,9 +135,9 @@ None. The method takes no input; its command needs only --target.
 
 ### Examples (1)
 
-| EXAMPLE                      | INPUT          | OUTPUT                                                                              |
-| ---------------------------- | -------------- | ----------------------------------------------------------------------------------- |
-| An entry that osapi deployed | name=osapitest | name=osapitest, object=osapitest.cron, schedule=0 2 * * *, user=root, source=cron.d |
+| EXAMPLE                      | INPUT          | OUTPUT                                                                                 |
+| ---------------------------- | -------------- | -------------------------------------------------------------------------------------- |
+| An entry that osapi deployed | name=osapitest | name=osapitest, object=osapitest.cron, schedule=0 2 \* \* \*, user=root, source=cron.d |
 
 ## Method create
 
@@ -160,9 +160,9 @@ None. The method takes no input; its command needs only --target.
 | ------------ | ------ | -------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | name         | string | yes      | pattern ^\[a-zA-Z0-9_-]+$, max length 64 | The entry, and its file name, such as backup                                                                         |
 | object       | string | yes      | min length 1, max length 255             | The object that holds the entry, from osapi client file upload                                                       |
-| schedule     | string | no       |                                          | A cron expression, such as */5 * * * *; give it or interval                                                          |
+| schedule     | string | no       |                                          | A cron expression, such as \*/5 \* \* \* \*; give it or interval                                                     |
 | interval     | string | no       | one of hourly daily weekly monthly       | The interval of a script in /etc/cron.daily and the like; give it or schedule                                        |
-| user         | string | no       | pattern ^\[a-z_]\[a-z0-9_-]*\$?$         | The user the entry runs as                                                                                           |
+| user         | string | no       | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$        | The user the entry runs as                                                                                           |
 | content_type | string | no       | one of raw template                      | The content type: raw, or template to render the object with the agent's facts and vars; the object's own when empty |
 | vars         | object | no       |                                          | The vars of a template, as key=value                                                                                 |
 
@@ -175,13 +175,13 @@ None. The method takes no input; its command needs only --target.
 
 ### Examples (5)
 
-| EXAMPLE                                       | INPUT                                                                                                    | OUTPUT                        |
-| --------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| An entry with a cron expression               | name=osapitest, object=osapitest.cron, schedule=0 2 * * *, user=root                                     | name=osapitest, changed=true  |
-| A script that runs daily                      | name=osapitest, object=osapitest.sh, interval=daily                                                      | name=osapitest, changed=true  |
-| A template, rendered with its vars            | name=osapitest, object=osapitest.tmpl, schedule=0 2 * * *, content_type=template, vars=map\[target:/srv] | name=osapitest, changed=true  |
-| An entry that has the content                 | name=osapitest, object=osapitest.cron, schedule=0 2 * * *, user=root                                     | name=osapitest, changed=false |
-| An entry of the name in a different directory | name=osapitest, object=osapitest.sh, interval=daily                                                      | name=osapitest, changed=false |
+| EXAMPLE                                       | INPUT                                                                                                       | OUTPUT                        |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| An entry with a cron expression               | name=osapitest, object=osapitest.cron, schedule=0 2 \* \* \*, user=root                                     | name=osapitest, changed=true  |
+| A script that runs daily                      | name=osapitest, object=osapitest.sh, interval=daily                                                         | name=osapitest, changed=true  |
+| A template, rendered with its vars            | name=osapitest, object=osapitest.tmpl, schedule=0 2 \* \* \*, content_type=template, vars=map\[target:/srv] | name=osapitest, changed=true  |
+| An entry that has the content                 | name=osapitest, object=osapitest.cron, schedule=0 2 \* \* \*, user=root                                     | name=osapitest, changed=false |
+| An entry of the name in a different directory | name=osapitest, object=osapitest.sh, interval=daily                                                         | name=osapitest, changed=false |
 
 ## Method update
 
@@ -205,7 +205,7 @@ None. The method takes no input; its command needs only --target.
 | name         | string | yes      | pattern ^\[a-zA-Z0-9_-]+$, max length 64 | The entry, such as backup                                      |
 | object       | string | no       | min length 1, max length 255             | The object to deploy; the entry's own when empty               |
 | schedule     | string | no       |                                          | A new cron expression; the entry's own when empty              |
-| user         | string | no       | pattern ^\[a-z_]\[a-z0-9_-]*\$?$         | The user the entry runs as; the entry's own when empty         |
+| user         | string | no       | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$        | The user the entry runs as; the entry's own when empty         |
 | content_type | string | no       | one of raw template                      | The content type, raw or template; the object's own when empty |
 | vars         | object | no       |                                          | The vars of a template, as key=value                           |
 
@@ -218,12 +218,12 @@ None. The method takes no input; its command needs only --target.
 
 ### Examples (4)
 
-| EXAMPLE                                     | INPUT                                                                      | OUTPUT                       |
-| ------------------------------------------- | -------------------------------------------------------------------------- | ---------------------------- |
-| A new object                                | name=osapitest, object=osapitest-v2.cron                                   | name=osapitest, changed=true |
-| A new cron expression, with the same object | name=osapitest, schedule=30 2 * * *                                        | name=osapitest, changed=true |
-| A new object, cron expression and user      | name=osapitest, object=osapitest-v2.cron, schedule=30 2 * * *, user=nobody | name=osapitest, changed=true |
-| A daily script with a new object            | name=osapitest, object=osapitest-v2.sh                                     | name=osapitest, changed=true |
+| EXAMPLE                                     | INPUT                                                                         | OUTPUT                       |
+| ------------------------------------------- | ----------------------------------------------------------------------------- | ---------------------------- |
+| A new object                                | name=osapitest, object=osapitest-v2.cron                                      | name=osapitest, changed=true |
+| A new cron expression, with the same object | name=osapitest, schedule=30 2 \* \* \*                                        | name=osapitest, changed=true |
+| A new object, cron expression and user      | name=osapitest, object=osapitest-v2.cron, schedule=30 2 \* \* \*, user=nobody | name=osapitest, changed=true |
+| A daily script with a new object            | name=osapitest, object=osapitest-v2.sh                                        | name=osapitest, changed=true |
 
 ## Method delete
 

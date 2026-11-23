@@ -37,9 +37,9 @@ client file upload. `osapi behavior get --name object` and
 
 ### Types (1)
 
-| NAME               | INPUT                        | OUTPUT                                                   |
-| ------------------ | ---------------------------- | -------------------------------------------------------- |
-| [get](#method-get) | GetInput &#123; name* &#125; | Object &#123; name, content, content_type, sha256 &#125; |
+| NAME               | INPUT                         | OUTPUT                                                   |
+| ------------------ | ----------------------------- | -------------------------------------------------------- |
+| [get](#method-get) | GetInput &#123; name\* &#125; | Object &#123; name, content, content_type, sha256 &#125; |
 
 ### Settings (0)
 

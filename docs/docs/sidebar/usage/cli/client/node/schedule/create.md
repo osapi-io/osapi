@@ -286,7 +286,7 @@ shows what a role grants.
 | `--interval`     | The interval of a script in /etc/cron.daily and the like; give it or schedule (hourly, daily, weekly, monthly)                       |         |
 | `--name`         | The entry, and its file name, such as backup (required)                                                                              |         |
 | `--object`       | The object that holds the entry, from osapi client file upload (required)                                                            |         |
-| `--schedule`     | A cron expression, such as */5 * * * *; give it or interval                                                                          |         |
+| `--schedule`     | A cron expression, such as \*/5 \* \* \* \*; give it or interval                                                                     |         |
 | `-T, --target`   | Target: _all, _any, hostname, or label (group:web.dev)                                                                               | `_all`  |
 | `--user`         | The user the entry runs as                                                                                                           |         |
 | `--vars`         | The vars of a template, as key=value                                                                                                 |         |

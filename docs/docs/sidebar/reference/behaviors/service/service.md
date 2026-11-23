@@ -24,7 +24,7 @@ shows each call that its examples make.
 | Platforms   | debian, linux                                                               |
 | Sudo        | none                                                                        |
 | Runs        | systemctl                                                                   |
-| Writes      | /etc/systemd/system/osapi-*.service                                         |
+| Writes      | /etc/systemd/system/osapi-\*.service                                        |
 | Keeps state | no                                                                          |
 | Uses        | [object](../object/object.md), [managedfile](../managedfile/managedfile.md) |
 | Used by     | none                                                                        |
@@ -46,18 +46,18 @@ shows each call that its examples make.
 
 ### Types (10)
 
-| NAME                       | INPUT                                    | OUTPUT                                                            |
-| -------------------------- | ---------------------------------------- | ----------------------------------------------------------------- |
-| [list](#method-list)       | ListInput                                | \[]Entry &#123; name, state, enabled, description, managed &#125; |
-| [get](#method-get)         | GetInput &#123; name* &#125;             | Entry &#123; name, state, enabled, description, managed &#125;    |
-| [create](#method-create)   | CreateInput &#123; name*, object* &#125; | Result &#123; name, changed &#125;                                |
-| [update](#method-update)   | UpdateInput &#123; name*, object* &#125; | Result &#123; name, changed &#125;                                |
-| [delete](#method-delete)   | DeleteInput &#123; name* &#125;          | Result &#123; name, changed &#125;                                |
-| [start](#method-start)     | StartInput &#123; name* &#125;           | Result &#123; name, changed &#125;                                |
-| [stop](#method-stop)       | StopInput &#123; name* &#125;            | Result &#123; name, changed &#125;                                |
-| [restart](#method-restart) | RestartInput &#123; name* &#125;         | Result &#123; name, changed &#125;                                |
-| [enable](#method-enable)   | EnableInput &#123; name* &#125;          | Result &#123; name, changed &#125;                                |
-| [disable](#method-disable) | DisableInput &#123; name* &#125;         | Result &#123; name, changed &#125;                                |
+| NAME                       | INPUT                                      | OUTPUT                                                            |
+| -------------------------- | ------------------------------------------ | ----------------------------------------------------------------- |
+| [list](#method-list)       | ListInput                                  | \[]Entry &#123; name, state, enabled, description, managed &#125; |
+| [get](#method-get)         | GetInput &#123; name\* &#125;              | Entry &#123; name, state, enabled, description, managed &#125;    |
+| [create](#method-create)   | CreateInput &#123; name\*, object\* &#125; | Result &#123; name, changed &#125;                                |
+| [update](#method-update)   | UpdateInput &#123; name\*, object\* &#125; | Result &#123; name, changed &#125;                                |
+| [delete](#method-delete)   | DeleteInput &#123; name\* &#125;           | Result &#123; name, changed &#125;                                |
+| [start](#method-start)     | StartInput &#123; name\* &#125;            | Result &#123; name, changed &#125;                                |
+| [stop](#method-stop)       | StopInput &#123; name\* &#125;             | Result &#123; name, changed &#125;                                |
+| [restart](#method-restart) | RestartInput &#123; name\* &#125;          | Result &#123; name, changed &#125;                                |
+| [enable](#method-enable)   | EnableInput &#123; name\* &#125;           | Result &#123; name, changed &#125;                                |
+| [disable](#method-disable) | DisableInput &#123; name\* &#125;          | Result &#123; name, changed &#125;                                |
 
 ### Settings (0)
 

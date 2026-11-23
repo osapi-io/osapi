@@ -135,14 +135,15 @@ func (c Checks) Help() string {
 }
 
 // mdxEscapes are the characters that MDX reads as the start of a tag, of an
-// expression or of a link: Uses[Deps]() is an empty link to it.
+// expression, of a link or of emphasis: Uses[Deps]() is an empty link to it,
+// and the text between two asterisks, as in /etc/a/*, /etc/b/*, is italic.
 var mdxEscapes = strings.NewReplacer(
-	"<", "&lt;", ">", "&gt;", "{", "&#123;", "}", "&#125;", "[", "\\[",
+	"<", "&lt;", ">", "&gt;", "{", "&#123;", "}", "&#125;", "[", "\\[", "*", "\\*",
 )
 
 // MDX escapes the characters of s that MDX would parse, outside code spans:
-// osapi-<key>.conf is a tag to MDX, and {key} an expression. Inside a code
-// span MDX reads nothing, so the text there stays as it is.
+// osapi-<key>.conf is a tag to MDX, {key} an expression and *x* emphasis.
+// Inside a code span MDX reads nothing, so the text there stays as it is.
 func MDX(
 	s string,
 ) string {

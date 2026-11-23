@@ -43,15 +43,15 @@ The Docker containers of the host. `osapi behavior get --name docker` and
 
 ### Types (7)
 
-| NAME                     | INPUT                                                                                                      | OUTPUT                                                                                                      |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| [list](#method-list)     | ListInput &#123; state &#125;                                                                              | \[]Entry &#123; id, name, image, state, summary, created, health, ports, mounts, networks, env_names &#125; |
-| [get](#method-get)       | GetInput &#123; name* &#125;                                                                               | Entry &#123; id, name, image, state, summary, created, health, ports, mounts, networks, env_names &#125;    |
-| [create](#method-create) | CreateInput &#123; name*, image*, container_hostname, dns, command, env, ports, volumes, auto_start &#125; | Result &#123; name, id, changed &#125;                                                                      |
-| [delete](#method-delete) | DeleteInput &#123; name* &#125;                                                                            | Result &#123; name, id, changed &#125;                                                                      |
-| [start](#method-start)   | StartInput &#123; name* &#125;                                                                             | Result &#123; name, id, changed &#125;                                                                      |
-| [stop](#method-stop)     | StopInput &#123; name*, timeout &#125;                                                                     | Result &#123; name, id, changed &#125;                                                                      |
-| [exec](#method-exec)     | ExecInput &#123; name*, command*, env, working_dir &#125;                                                  | ExecResult &#123; stdout, stderr, exit_code, changed &#125;                                                 |
+| NAME                     | INPUT                                                                                                        | OUTPUT                                                                                                      |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| [list](#method-list)     | ListInput &#123; state &#125;                                                                                | \[]Entry &#123; id, name, image, state, summary, created, health, ports, mounts, networks, env_names &#125; |
+| [get](#method-get)       | GetInput &#123; name\* &#125;                                                                                | Entry &#123; id, name, image, state, summary, created, health, ports, mounts, networks, env_names &#125;    |
+| [create](#method-create) | CreateInput &#123; name\*, image\*, container_hostname, dns, command, env, ports, volumes, auto_start &#125; | Result &#123; name, id, changed &#125;                                                                      |
+| [delete](#method-delete) | DeleteInput &#123; name\* &#125;                                                                             | Result &#123; name, id, changed &#125;                                                                      |
+| [start](#method-start)   | StartInput &#123; name\* &#125;                                                                              | Result &#123; name, id, changed &#125;                                                                      |
+| [stop](#method-stop)     | StopInput &#123; name\*, timeout &#125;                                                                      | Result &#123; name, id, changed &#125;                                                                      |
+| [exec](#method-exec)     | ExecInput &#123; name\*, command\*, env, working_dir &#125;                                                  | ExecResult &#123; stdout, stderr, exit_code, changed &#125;                                                 |
 
 ### Settings (0)
 
@@ -128,9 +128,9 @@ None. Declare them with behavior.Config.
 
 ### Input (1)
 
-| FIELD | TYPE   | REQUIRED | CONSTRAINTS                            | DESCRIPTION                |
-| ----- | ------ | -------- | -------------------------------------- | -------------------------- |
-| name  | string | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9_.-]*$ | The container's name or ID |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS                             | DESCRIPTION                |
+| ----- | ------ | -------- | --------------------------------------- | -------------------------- |
+| name  | string | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9_.-]\*$ | The container's name or ID |
 
 ### Output (11)
 
@@ -171,17 +171,17 @@ None. Declare them with behavior.Config.
 
 ### Input (9)
 
-| FIELD              | TYPE    | REQUIRED | CONSTRAINTS                                           | DESCRIPTION                                                                           |
-| ------------------ | ------- | -------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| name               | string  | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9_.-]*$                | The container's name                                                                  |
-| image              | string  | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9._/:@-]*$             | The image to run, such as alpine:3.20; docker pulls it when the host does not have it |
-| container_hostname | string  | no       | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9.-]*$, max length 253 | The hostname inside the container                                                     |
-| dns                | array   | no       |                                                       | The DNS servers of the container                                                      |
-| command            | array   | no       |                                                       | The command, in place of the image's own                                              |
-| env                | object  | no       | format password                                       | The environment variables of the container                                            |
-| ports              | array   | no       |                                                       | The published ports, each host:container, such as 8080:80                             |
-| volumes            | array   | no       |                                                       | The bind mounts, each host:container, such as /srv/data:/data                         |
-| auto_start         | boolean | no       |                                                       | Start the container once it is created                                                |
+| FIELD              | TYPE    | REQUIRED | CONSTRAINTS                                            | DESCRIPTION                                                                           |
+| ------------------ | ------- | -------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| name               | string  | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9_.-]\*$                | The container's name                                                                  |
+| image              | string  | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9._/:@-]\*$             | The image to run, such as alpine:3.20; docker pulls it when the host does not have it |
+| container_hostname | string  | no       | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9.-]\*$, max length 253 | The hostname inside the container                                                     |
+| dns                | array   | no       |                                                        | The DNS servers of the container                                                      |
+| command            | array   | no       |                                                        | The command, in place of the image's own                                              |
+| env                | object  | no       | format password                                        | The environment variables of the container                                            |
+| ports              | array   | no       |                                                        | The published ports, each host:container, such as 8080:80                             |
+| volumes            | array   | no       |                                                        | The bind mounts, each host:container, such as /srv/data:/data                         |
+| auto_start         | boolean | no       |                                                        | Start the container once it is created                                                |
 
 ### Output (3)
 
@@ -215,9 +215,9 @@ None. Declare them with behavior.Config.
 
 ### Input (1)
 
-| FIELD | TYPE   | REQUIRED | CONSTRAINTS                            | DESCRIPTION                |
-| ----- | ------ | -------- | -------------------------------------- | -------------------------- |
-| name  | string | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9_.-]*$ | The container's name or ID |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS                             | DESCRIPTION                |
+| ----- | ------ | -------- | --------------------------------------- | -------------------------- |
+| name  | string | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9_.-]\*$ | The container's name or ID |
 
 ### Output (3)
 
@@ -251,9 +251,9 @@ None. Declare them with behavior.Config.
 
 ### Input (1)
 
-| FIELD | TYPE   | REQUIRED | CONSTRAINTS                            | DESCRIPTION                |
-| ----- | ------ | -------- | -------------------------------------- | -------------------------- |
-| name  | string | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9_.-]*$ | The container's name or ID |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS                             | DESCRIPTION                |
+| ----- | ------ | -------- | --------------------------------------- | -------------------------- |
+| name  | string | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9_.-]\*$ | The container's name or ID |
 
 ### Output (3)
 
@@ -287,10 +287,10 @@ None. Declare them with behavior.Config.
 
 ### Input (2)
 
-| FIELD   | TYPE    | REQUIRED | CONSTRAINTS                            | DESCRIPTION                                                     |
-| ------- | ------- | -------- | -------------------------------------- | --------------------------------------------------------------- |
-| name    | string  | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9_.-]*$ | The container's name or ID                                      |
-| timeout | integer | no       | min 0, max 300                         | Seconds to wait before docker kills it; docker's default when 0 |
+| FIELD   | TYPE    | REQUIRED | CONSTRAINTS                             | DESCRIPTION                                                     |
+| ------- | ------- | -------- | --------------------------------------- | --------------------------------------------------------------- |
+| name    | string  | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9_.-]\*$ | The container's name or ID                                      |
+| timeout | integer | no       | min 0, max 300                          | Seconds to wait before docker kills it; docker's default when 0 |
 
 ### Output (3)
 
@@ -324,12 +324,12 @@ None. Declare them with behavior.Config.
 
 ### Input (4)
 
-| FIELD       | TYPE   | REQUIRED | CONSTRAINTS                            | DESCRIPTION                           |
-| ----------- | ------ | -------- | -------------------------------------- | ------------------------------------- |
-| name        | string | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9_.-]*$ | The container's name or ID            |
-| command     | array  | yes      |                                        | The command and its arguments         |
-| env         | object | no       | format password                        | Environment variables for the command |
-| working_dir | string | no       | pattern ^/                             | The directory the command runs in     |
+| FIELD       | TYPE   | REQUIRED | CONSTRAINTS                             | DESCRIPTION                           |
+| ----------- | ------ | -------- | --------------------------------------- | ------------------------------------- |
+| name        | string | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9_.-]\*$ | The container's name or ID            |
+| command     | array  | yes      |                                         | The command and its arguments         |
+| env         | object | no       | format password                         | Environment variables for the command |
+| working_dir | string | no       | pattern ^/                              | The directory the command runs in     |
 
 ### Output (4)
 

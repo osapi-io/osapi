@@ -25,7 +25,7 @@ make.
 | Platforms   | debian                                                                                   |
 | Sudo        | netplan                                                                                  |
 | Runs        | netplan                                                                                  |
-| Writes      | /etc/netplan/osapi-*.yaml                                                                |
+| Writes      | /etc/netplan/osapi-\*.yaml                                                               |
 | Keeps state | no                                                                                       |
 | Uses        | [managedfile](../managedfile/managedfile.md)                                             |
 | Used by     | [route](../route/route.md), [dns](../dns/dns.md), [interface](../interface/interface.md) |
@@ -40,11 +40,11 @@ make.
 
 ### Types (3)
 
-| NAME                     | INPUT                                               | OUTPUT                                                   |
-| ------------------------ | --------------------------------------------------- | -------------------------------------------------------- |
-| [update](#method-update) | UpdateInput &#123; path*, content*, metadata &#125; | Result &#123; path, changed &#125;                       |
-| [delete](#method-delete) | DeleteInput &#123; path* &#125;                     | Result &#123; path, changed &#125;                       |
-| [get](#method-get)       | GetInput &#123; name* &#125;                        | Interface &#123; name, type, section, id, matches &#125; |
+| NAME                     | INPUT                                                 | OUTPUT                                                   |
+| ------------------------ | ----------------------------------------------------- | -------------------------------------------------------- |
+| [update](#method-update) | UpdateInput &#123; path\*, content\*, metadata &#125; | Result &#123; path, changed &#125;                       |
+| [delete](#method-delete) | DeleteInput &#123; path\* &#125;                      | Result &#123; path, changed &#125;                       |
+| [get](#method-get)       | GetInput &#123; name\* &#125;                         | Interface &#123; name, type, section, id, matches &#125; |
 
 ### Settings (0)
 
@@ -144,20 +144,20 @@ None. Declare them with behavior.Config.
 
 ### Output (5)
 
-| FIELD   | TYPE   | DESCRIPTION                                                                                                                            |
-| ------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------- |
-| name    | string | The interface                                                                                                                          |
-| type    | string | Its type, such as ethernet, bond or wifi; empty when netplan does not report it                                                        |
-| section | string | The netplan section that configures it, such as ethernets or bonds                                                                     |
-| id      | string | The netplan ID of the definition that matches it, such as all for a match on en*; the interface's name when netplan does not define it |
-| matches | array  | Each interface that the definition matches, this one too, in name order                                                                |
+| FIELD   | TYPE   | DESCRIPTION                                                                                                                             |
+| ------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| name    | string | The interface                                                                                                                           |
+| type    | string | Its type, such as ethernet, bond or wifi; empty when netplan does not report it                                                         |
+| section | string | The netplan section that configures it, such as ethernets or bonds                                                                      |
+| id      | string | The netplan ID of the definition that matches it, such as all for a match on en\*; the interface's name when netplan does not define it |
+| matches | array  | Each interface that the definition matches, this one too, in name order                                                                 |
 
 ### Examples (5)
 
-| EXAMPLE                                                   | INPUT       | OUTPUT                                                                          |
-| --------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------- |
-| A bond                                                    | name=bond0  | name=bond0, type=bond, section=bonds, id=bond0, matches=\[bond0]                |
-| An interface a match defines, as cloud-init's all for en* | name=enp0s1 | name=enp0s1, type=ethernet, section=ethernets, id=all, matches=\[enp0s1 enp0s2] |
-| An interface netplan does not define                      | name=lo     | name=lo, type=ethernet, section=ethernets, id=lo, matches=\[lo]                 |
-| A netplan without status                                  | name=eth0   | name=eth0, type=, section=ethernets, id=eth0, matches=\[eth0]                   |
-| An interface netplan does not manage                      | name=eth9   | name=eth9, type=, section=ethernets, id=eth9, matches=\[eth9]                   |
+| EXAMPLE                                                    | INPUT       | OUTPUT                                                                          |
+| ---------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------- |
+| A bond                                                     | name=bond0  | name=bond0, type=bond, section=bonds, id=bond0, matches=\[bond0]                |
+| An interface a match defines, as cloud-init's all for en\* | name=enp0s1 | name=enp0s1, type=ethernet, section=ethernets, id=all, matches=\[enp0s1 enp0s2] |
+| An interface netplan does not define                       | name=lo     | name=lo, type=ethernet, section=ethernets, id=lo, matches=\[lo]                 |
+| A netplan without status                                   | name=eth0   | name=eth0, type=, section=ethernets, id=eth0, matches=\[eth0]                   |
+| An interface netplan does not manage                       | name=eth9   | name=eth9, type=, section=ethernets, id=eth9, matches=\[eth9]                   |

@@ -37,10 +37,10 @@ and `osapi behavior method get` show the same.
 
 ### Types (2)
 
-| NAME                     | INPUT                           | OUTPUT                             |
-| ------------------------ | ------------------------------- | ---------------------------------- |
-| [get](#method-get)       | GetInput                        | Entry &#123; name &#125;           |
-| [update](#method-update) | UpdateInput &#123; name* &#125; | Result &#123; name, changed &#125; |
+| NAME                     | INPUT                            | OUTPUT                             |
+| ------------------------ | -------------------------------- | ---------------------------------- |
+| [get](#method-get)       | GetInput                         | Entry &#123; name &#125;           |
+| [update](#method-update) | UpdateInput &#123; name\* &#125; | Result &#123; name, changed &#125; |
 
 ### Settings (0)
 

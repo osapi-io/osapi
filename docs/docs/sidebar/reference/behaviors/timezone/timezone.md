@@ -37,10 +37,10 @@ The timezone of the host. `osapi behavior get --name timezone` and
 
 ### Types (2)
 
-| NAME                     | INPUT                               | OUTPUT                                   |
-| ------------------------ | ----------------------------------- | ---------------------------------------- |
-| [get](#method-get)       | GetInput                            | Entry &#123; timezone, utc_offset &#125; |
-| [update](#method-update) | UpdateInput &#123; timezone* &#125; | Result &#123; timezone, changed &#125;   |
+| NAME                     | INPUT                                | OUTPUT                                   |
+| ------------------------ | ------------------------------------ | ---------------------------------------- |
+| [get](#method-get)       | GetInput                             | Entry &#123; timezone, utc_offset &#125; |
+| [update](#method-update) | UpdateInput &#123; timezone\* &#125; | Result &#123; timezone, changed &#125;   |
 
 ### Settings (0)
 
@@ -106,9 +106,9 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (1)
 
-| FIELD    | TYPE   | REQUIRED | CONSTRAINTS                                                                  | DESCRIPTION                                                    |
-| -------- | ------ | -------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| timezone | string | yes      | pattern ^\[A-Za-z0-9_+]\[A-Za-z0-9_+-]_(/\[A-Za-z0-9\_+-]+)_$, max length 64 | The IANA name of the timezone, such as UTC or America/New_York |
+| FIELD    | TYPE   | REQUIRED | CONSTRAINTS                                                                   | DESCRIPTION                                                    |
+| -------- | ------ | -------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| timezone | string | yes      | pattern ^\[A-Za-z0-9_+]\[A-Za-z0-9_+-]\*(/\[A-Za-z0-9_+-]+)\*$, max length 64 | The IANA name of the timezone, such as UTC or America/New_York |
 
 ### Output (2)
 

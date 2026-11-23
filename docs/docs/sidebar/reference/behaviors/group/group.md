@@ -40,13 +40,13 @@ The groups of the host. `osapi behavior get --name group` and
 
 ### Types (5)
 
-| NAME                     | INPUT                                        | OUTPUT                                      |
-| ------------------------ | -------------------------------------------- | ------------------------------------------- |
-| [list](#method-list)     | ListInput                                    | \[]Account &#123; name, gid, members &#125; |
-| [get](#method-get)       | GetInput &#123; name* &#125;                 | Account &#123; name, gid, members &#125;    |
-| [create](#method-create) | CreateInput &#123; name*, gid, system &#125; | Result &#123; name, changed &#125;          |
-| [update](#method-update) | UpdateInput &#123; name*, members &#125;     | Result &#123; name, changed &#125;          |
-| [delete](#method-delete) | DeleteInput &#123; name* &#125;              | Result &#123; name, changed &#125;          |
+| NAME                     | INPUT                                         | OUTPUT                                      |
+| ------------------------ | --------------------------------------------- | ------------------------------------------- |
+| [list](#method-list)     | ListInput                                     | \[]Account &#123; name, gid, members &#125; |
+| [get](#method-get)       | GetInput &#123; name\* &#125;                 | Account &#123; name, gid, members &#125;    |
+| [create](#method-create) | CreateInput &#123; name\*, gid, system &#125; | Result &#123; name, changed &#125;          |
+| [update](#method-update) | UpdateInput &#123; name\*, members &#125;     | Result &#123; name, changed &#125;          |
+| [delete](#method-delete) | DeleteInput &#123; name\* &#125;              | Result &#123; name, changed &#125;          |
 
 ### Settings (0)
 
@@ -112,9 +112,9 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (1)
 
-| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                     | DESCRIPTION                   |
-| ----- | ------ | -------- | ----------------------------------------------- | ----------------------------- |
-| name  | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]*\$?$, max length 32 | The group, such as developers |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                      | DESCRIPTION                   |
+| ----- | ------ | -------- | ------------------------------------------------ | ----------------------------- |
+| name  | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The group, such as developers |
 
 ### Output (3)
 
@@ -147,11 +147,11 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (3)
 
-| FIELD  | TYPE    | REQUIRED | CONSTRAINTS                                     | DESCRIPTION                                                |
-| ------ | ------- | -------- | ----------------------------------------------- | ---------------------------------------------------------- |
-| name   | string  | yes      | pattern ^\[a-z_]\[a-z0-9_-]*\$?$, max length 32 | The group to add, such as developers                       |
-| gid    | integer | no       | min 0                                           | Its numeric group ID; the system assigns one when it is 0  |
-| system | boolean | no       |                                                 | Add it as a system group, with an ID from the system range |
+| FIELD  | TYPE    | REQUIRED | CONSTRAINTS                                      | DESCRIPTION                                                |
+| ------ | ------- | -------- | ------------------------------------------------ | ---------------------------------------------------------- |
+| name   | string  | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The group to add, such as developers                       |
+| gid    | integer | no       | min 0                                            | Its numeric group ID; the system assigns one when it is 0  |
+| system | boolean | no       |                                                  | Add it as a system group, with an ID from the system range |
 
 ### Output (2)
 
@@ -185,10 +185,10 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (2)
 
-| FIELD   | TYPE   | REQUIRED | CONSTRAINTS                                     | DESCRIPTION                                                    |
-| ------- | ------ | -------- | ----------------------------------------------- | -------------------------------------------------------------- |
-| name    | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]*\$?$, max length 32 | The group, such as developers                                  |
-| members | array  | no       |                                                 | Its members, which replace the members it has; none when empty |
+| FIELD   | TYPE   | REQUIRED | CONSTRAINTS                                      | DESCRIPTION                                                    |
+| ------- | ------ | -------- | ------------------------------------------------ | -------------------------------------------------------------- |
+| name    | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The group, such as developers                                  |
+| members | array  | no       |                                                  | Its members, which replace the members it has; none when empty |
 
 ### Output (2)
 
@@ -221,9 +221,9 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (1)
 
-| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                     | DESCRIPTION                             |
-| ----- | ------ | -------- | ----------------------------------------------- | --------------------------------------- |
-| name  | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]*\$?$, max length 32 | The group to remove, such as developers |
+| FIELD | TYPE   | REQUIRED | CONSTRAINTS                                      | DESCRIPTION                             |
+| ----- | ------ | -------- | ------------------------------------------------ | --------------------------------------- |
+| name  | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The group to remove, such as developers |
 
 ### Output (2)
 
