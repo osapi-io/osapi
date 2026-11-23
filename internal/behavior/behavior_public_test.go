@@ -204,6 +204,34 @@ func (s *BehaviorPublicTestSuite) TestDefine() {
 	}
 }
 
+func (s *BehaviorPublicTestSuite) TestPermissionVerb() {
+	b := top()
+	tests := []struct {
+		name   string
+		method string
+		want   behavior.Verb
+	}{
+		{
+			name:   "when the method is an action, its permission is execute",
+			method: "restart",
+			want:   behavior.VerbExecute,
+		},
+		{
+			name:   "when the method is a read, its permission is read",
+			method: "get",
+			want:   behavior.VerbRead,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			m := b.Method(tc.method)
+			s.Require().NotNil(m)
+			s.Equal(tc.want, m.PermissionVerb())
+		})
+	}
+}
+
 func (s *BehaviorPublicTestSuite) TestPermission() {
 	tests := []struct {
 		name string
