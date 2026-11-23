@@ -54,7 +54,6 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/provider"
-	fileProv "github.com/osapi-io/osapi/internal/provider/file"
 	diskProv "github.com/osapi-io/osapi/internal/provider/node/disk"
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
@@ -756,7 +755,6 @@ func ExportProviders(
 	plat string,
 	container bool,
 	fileState provider.FileState,
-	files fileProv.Provider,
 ) map[string]any {
 	e := hostEnv{
 		log:             log,
@@ -767,7 +765,6 @@ func ExportProviders(
 		hostname:        "test-host",
 		fileState:       fileState,
 		fileStateBucket: "file-state",
-		files:           files,
 	}
 
 	return map[string]any{
@@ -956,7 +953,7 @@ func ResetGetgroups() {
 
 // ExportStoreObjects is the object store that behaviors read, over store.
 func ExportStoreObjects(
-	store fileProv.Objects,
+	store ObjectReader,
 	bucket string,
 ) behaviorHost.Objects {
 	return storeObjects{store: store, bucket: bucket}

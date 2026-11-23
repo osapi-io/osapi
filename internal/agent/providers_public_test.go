@@ -32,7 +32,6 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/agent"
-	filemocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
 )
 
 type ProvidersPublicTestSuite struct {
@@ -104,14 +103,12 @@ func (s *ProvidersPublicTestSuite) TestProviders() {
 					tc.platform,
 					tc.container,
 					providermocks.NewMockFileState(ctrl),
-					filemocks.NewMockProvider(ctrl),
 				)
 			} else {
 				providers = agent.ExportProviders(
 					slog.Default(),
 					tc.platform,
 					tc.container,
-					nil,
 					nil,
 				)
 			}

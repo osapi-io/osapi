@@ -30,7 +30,6 @@ import (
 	"github.com/avfs/avfs"
 
 	"github.com/osapi-io/osapi/internal/exec"
-	fileProv "github.com/osapi-io/osapi/internal/provider/file"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
@@ -51,7 +50,6 @@ type hostEnv struct {
 	// deploy. fileState is nil when the agent has no file-state bucket.
 	fileState       provider.FileState
 	fileStateBucket string
-	files           fileProv.Provider
 	// objects are the objects of the object store, for behaviors; nil
 	// without an object store.
 	objects host.Objects

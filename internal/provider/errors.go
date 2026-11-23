@@ -18,6 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+// Package provider defines shared types for all provider implementations.
 package provider
 
 import "github.com/osapi-io/osapi/internal/behavior"
