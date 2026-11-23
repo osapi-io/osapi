@@ -37,13 +37,13 @@ const OperationsFile = "ui/src/lib/operations.gen.ts"
 // methods are the keys of a path item that are operations.
 var methods = []string{"get", "put", "post", "delete", "patch", "head", "options"}
 
-// RegistryOperations is the permission of each operation that the API
-// serves, by the name that the UI's generated client gives its function: the
+// Operations is the permission of each operation that the API serves, by
+// the name that the UI's generated client gives its function: the
 // operationId with a small first letter, such as getNodeStatus. The
-// registered endpoint groups and the behaviors that the API serves give
-// theirs from their definitions. A public method needs no permission and is
-// not in it.
-func RegistryOperations() map[string]string {
+// endpoint groups and the behaviors give theirs from their definitions. The
+// full spec is output, so nothing here reads it. A public method needs no
+// permission and is not in it.
+func Operations() map[string]string {
 	out := map[string]string{}
 	for _, d := range dsl.All() {
 		if !d.ServesAPI() {
@@ -66,8 +66,8 @@ func uiName(
 }
 
 // OperationPermissions is the permission of each operation of spec, such as
-// the joined spec, by the name that the UI's generated
-// client gives its function. An operation with no scope, such as a health
+// the full spec, by the name that the UI's generated client gives its
+// function. An operation with no scope, such as a health
 // probe, needs no permission and is not in it.
 func OperationPermissions(
 	spec []byte,

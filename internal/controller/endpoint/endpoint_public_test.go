@@ -174,7 +174,7 @@ type badNamedBody struct {
 func (s *EndpointPublicTestSuite) contract(
 	g *endpoint.Group,
 ) []string {
-	doc, err := endpoint.OpenAPI(g, "../components.yaml#/components/schemas/ErrorResponse")
+	doc, err := endpoint.OpenAPI(g)
 	s.Require().NoError(err)
 	raw, err := json.Marshal(doc)
 	s.Require().NoError(err)
@@ -516,7 +516,7 @@ func (s *EndpointPublicTestSuite) TestLocation() {
 	m := endpoint.Post[noInput, Node]("make").Status(http.StatusCreated).Location("name")
 	s.Equal("name", m.LocationField())
 
-	doc, err := endpoint.OpenAPI(endpoint.Define("node", "The nodes", m), "x")
+	doc, err := endpoint.OpenAPI(endpoint.Define("node", "The nodes", m))
 	s.Require().NoError(err)
 	created := doc.Paths.Find("/api/node").Post.Responses.Value("201").Value
 	s.Contains(created.Headers, "Location")
@@ -529,7 +529,7 @@ func (s *EndpointPublicTestSuite) TestExamplesAndDocs() {
 		endpoint.Example[Sample]("nosuchfield", "x"),
 		endpoint.Get[noInput, Sample]("get"),
 	)
-	doc, err := endpoint.OpenAPI(g, "x")
+	doc, err := endpoint.OpenAPI(g)
 	s.Require().NoError(err)
 
 	sample := doc.Components.Schemas["Sample"].Value
@@ -575,7 +575,7 @@ func (s *EndpointPublicTestSuite) TestPrefix() {
 	s.Equal("key", g.Method("get").Key())
 	s.Empty(endpoint.Validate(g))
 
-	doc, err := endpoint.OpenAPI(g, "x")
+	doc, err := endpoint.OpenAPI(g)
 	s.Require().NoError(err)
 	s.Equal([]string{"Hostname", "NodeKey"}, func() []string {
 		names := make([]string, 0, len(doc.Components.Parameters))
@@ -656,7 +656,7 @@ func (s *EndpointPublicTestSuite) TestRefusals() {
 
 func (s *EndpointPublicTestSuite) TestBodyValidateTags() {
 	doc, err := endpoint.OpenAPI(endpoint.Define("node", "The nodes",
-		endpoint.Post[boundsInput, Node]("make")), "x")
+		endpoint.Post[boundsInput, Node]("make")))
 	s.Require().NoError(err)
 
 	body := doc.Paths.Value("/api/node").Post.RequestBody.Value.
@@ -672,7 +672,7 @@ func (s *EndpointPublicTestSuite) TestBodyValidateTags() {
 
 func (s *EndpointPublicTestSuite) TestParameterValidateTags() {
 	doc, err := endpoint.OpenAPI(endpoint.Define("node", "The nodes",
-		endpoint.Get[keyInput, Node]("get")), "x")
+		endpoint.Get[keyInput, Node]("get")))
 	s.Require().NoError(err)
 
 	params := doc.Paths.Value("/api/node/{hostname}").Get.Parameters
@@ -756,7 +756,7 @@ func (s *EndpointPublicTestSuite) TestOpenAPIErrors() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			_, err := endpoint.OpenAPI(endpoint.Define("node", "The nodes", tc.method), "x")
+			_, err := endpoint.OpenAPI(endpoint.Define("node", "The nodes", tc.method))
 
 			s.ErrorContains(err, tc.wantErr)
 		})

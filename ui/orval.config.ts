@@ -3,7 +3,7 @@ import { defineConfig } from 'orval'
 export default defineConfig({
   osapi: {
     input: {
-      // The joined spec, read where just generate writes it.
+      // The full spec, read where just generate writes it.
       target: '../internal/controller/api/gen/api.yaml',
     },
     output: {

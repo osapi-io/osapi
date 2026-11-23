@@ -51,7 +51,7 @@ var moving = []struct {
 	accepted map[string]string
 }{
 	// each group moved: their hand-written specs are gone,
-	// and TestJoinedSpec holds the joined spec, which has their generated
+	// and TestJoinedSpec holds the full spec, which has their generated
 	// specs, to the same contract.
 }
 
@@ -74,7 +74,7 @@ func (s *ParityPublicTestSuite) TestEndpointParity() {
 			var hand map[string]any
 			s.Require().NoError(yaml.Unmarshal(data, &hand))
 
-			doc, err := endpoint.OpenAPI(g, endpoint.ErrorRef)
+			doc, err := endpoint.OpenAPI(g)
 			s.Require().NoError(err)
 			raw, err := json.Marshal(doc)
 			s.Require().NoError(err)

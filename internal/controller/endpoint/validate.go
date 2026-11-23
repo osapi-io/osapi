@@ -381,7 +381,7 @@ func Validate(
 		routes[route] = m.Name
 	}
 
-	if _, err := OpenAPI(g, ErrorRef); err != nil {
+	if _, err := OpenAPI(g); err != nil {
 		add("", RuleSchema, "the spec does not build: "+err.Error()+".")
 	}
 

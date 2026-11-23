@@ -39,9 +39,9 @@ func main() {
 	root := flag.String("root", ".", "The root of the osapi repository")
 	flag.Parse()
 
-	ops := authtoken.RegistryOperations()
 	path := filepath.Join(*root, authtoken.OperationsFile)
-	if err := os.WriteFile(path, []byte(authtoken.OperationsTypeScript(ops)), 0o644); err != nil {
+	text := authtoken.OperationsTypeScript(authtoken.Operations())
+	if err := os.WriteFile(path, []byte(text), 0o644); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}

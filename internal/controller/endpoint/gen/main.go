@@ -113,7 +113,7 @@ func group(
 	pkg string,
 	dir string,
 ) error {
-	doc, err := endpoint.OpenAPI(g, specgen.ErrorRef(dir))
+	doc, err := endpoint.OpenAPI(g)
 	if err != nil {
 		return err
 	}

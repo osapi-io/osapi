@@ -98,7 +98,8 @@ The spec:
    input and output fields", with `example` and `doc` from the hand-written
    spec. A schema that the spec has in place, with no name, is a type alias of a
    struct with no name, such as `Message`. Copy the type's description with
-   `Doc`: the join fails when two specs define one schema in different words.
+   `Doc`: the full spec fails when two groups define one schema in different
+   words.
 3. Write `<group>.go`. Copy `Title` and `Tag` from the hand-written spec. The
    UI's client files get their names from them. Give each method the
    operationId of the hand-written spec with `.ID`. Use `.Sub` for a fixed
@@ -242,12 +243,12 @@ mise exec -- just test
 | --- | --- |
 | `controller endpoint validate`, or `TestAllPublicTestSuite/TestValidate` | A rule of the definition. The problem names the rule and ends with its fix. `validate --help` lists each rule |
 | `go-generate-check` | A `gen/` file is stale: run `go generate ./internal/controller/endpoints/all` |
-| `Conflict on components => schemas` from `just generate` | Two specs define one schema in different words: copy the description with `Doc` and each `example` from the other spec |
+| `schema <name>: <group> and <group> both define it` from `just generate` | Two groups define one schema in different words: copy the description with `Doc` and each `example` from the other group |
 | `endpoint: no ... given to the server` at startup | The controller does not give the group's `Deps`: add it in `internal/controller/handlers.go` |
 | `is both a hand-written command and the <group> group's` at startup | Delete the hand-written command of that method |
 | `endpoint-scaffold-check` | A group that `controller endpoint create` writes no longer passes its tests: change the scaffold in `internal/controller/endpoint/scaffold_files.go`, and run its golden test with `-update` |
 | `TestEndpointParity` | A line of the contract differs. `-` is only in the hand-written spec, `+` only in the generated spec. Change the definition until they agree, or see the bug rule above |
-| `TestJoinedSpec` | The joined spec changed. If you changed the API on purpose, write the contract again: `go test ./internal/apicontract -run TestContractPublicTestSuite/TestJoinedSpec -update`, and keep the diff. If you did not, find what changed it |
+| `TestJoinedSpec` | The full spec changed. If you changed the API on purpose, write the contract again: `go test ./internal/apicontract -run TestContractPublicTestSuite/TestJoinedSpec -update`, and keep the diff. If you did not, find what changed it |
 | `the spec has no term for` | A new option of the DSL has no entry in `internal/controller/endpoint/spec.go`. Add one |
 
 Never edit a path that `controller endpoint spec get` lists under "Generated, never

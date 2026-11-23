@@ -74,7 +74,7 @@ it. Read it before you start.
    shared command that does not apply. A DSL that serves API routes gives
    `Permissions` and `Operations`: the role rule (`declarations()`), the SDK's
    `Perm*` and `Role*` constants and the UI's operation permissions
-   (`RegistryOperations`) read them from `dsl.All()`, so nothing else names the
+   (`Operations`) read them from `dsl.All()`, so nothing else names the
    DSL. Give it an `AdminOnly()` option. A DSL with no API route gives neither.
    Then add each shared command, and run `TestEveryDSLHasTheSharedParts`.
 5. **Generate through `genfile.Writer`.** Record each change and `Flush` at the

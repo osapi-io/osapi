@@ -31,8 +31,6 @@ import (
 	"strings"
 	"testing"
 
-	"gopkg.in/yaml.v3"
-
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
@@ -47,6 +45,7 @@ type SpecPublicTestSuite struct {
 // use.
 var notDSL = map[string]bool{
 	"OpenAPI":                 true,
+	"ErrorSchema":             true,
 	"Validate":                true,
 	"Lookup":                  true,
 	"All":                     true,
@@ -200,28 +199,15 @@ func (s *SpecPublicTestSuite) TestSpecKinds() {
 // of the ErrorResponse schema, in its order, and the schema says what each
 // one means, so a client's typed reason and the server cannot drift.
 func (s *SpecPublicTestSuite) TestReasonsMatchTheSchema() {
-	raw, err := os.ReadFile("../api/components/gen/api.yaml")
-	s.Require().NoError(err)
-	var doc struct {
-		Components struct {
-			Schemas map[string]struct {
-				Properties map[string]struct {
-					Description string   `yaml:"description"`
-					Enum        []string `yaml:"enum"`
-				} `yaml:"properties"`
-			} `yaml:"schemas"`
-		} `yaml:"components"`
-	}
-	s.Require().NoError(yaml.Unmarshal(raw, &doc))
-	reason := doc.Components.Schemas["ErrorResponse"].Properties["reason"]
-	want := make([]string, 0, len(endpoint.Reasons))
+	reason := endpoint.ErrorSchema().Properties["reason"].Value
+	want := make([]any, 0, len(endpoint.Reasons))
 	for _, r := range endpoint.Reasons {
 		want = append(want, string(r))
+		s.NotEmpty(endpoint.ReasonDocs[r], "%s has a doc", r)
+		s.Contains(reason.Description, string(r)+": "+endpoint.ReasonDocs[r])
 	}
 	s.Equal(want, reason.Enum)
-	for _, r := range endpoint.Reasons {
-		s.Contains(reason.Description, r+":", "the schema says what %s means", r)
-	}
+	s.Len(endpoint.ReasonDocs, len(endpoint.Reasons))
 }
 
 // TestReasons: each helper gives the reason of its status, Because names

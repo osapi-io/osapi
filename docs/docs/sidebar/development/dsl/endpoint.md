@@ -27,8 +27,8 @@ internal/controller/endpoints/all.
 
 ### `Title("title")`
 
-Sets the title of the group's spec. The joined spec puts it in front of each
-tag, and the UI's client files get their names from the result.
+Sets the title of the group's spec. The full spec puts it in front of each tag,
+and the UI's client files get their names from the result.
 
 Use: When a group moves from a hand-written spec: copy its info.title, so no
 client file is renamed.
@@ -47,8 +47,9 @@ each one.
 Describes T, a named type, in its schema. Go has no tag on a type, so a group
 says it here.
 
-Use: For each type whose schema has a description, such as one that another spec
-defines too: the join fails when two specs define one schema in different words.
+Use: For each type whose schema has a description, such as one that another
+group defines too: the full spec fails when two groups define one schema in
+different words.
 
 ### `Example[T]("field", "example")`
 
@@ -607,7 +608,7 @@ Use: Add ,omitempty to the json tag of each field it names.
 
 ### `TestJoinedSpec`
 
-Holds the joined spec to its contract,
+Holds the full spec to its contract,
 internal/apicontract/testdata/joined.golden.
 
 Use: When you change the API on purpose, run it with -update and keep the diff.
@@ -683,7 +684,7 @@ fixed in the definition or in internal/controller/endpoint/gen.
 
 ### `internal/controller/api/gen/, pkg/sdk/client/gen/, ui/src/sdk/gen/, docs/docs/gen/`
 
-The joined spec, the SDK, the UI client and the API pages, from just generate.
+The full spec, the SDK, the UI client and the API pages, from just generate.
 
 Use: Change the definition, then generate. A generated file that is wrong is
 fixed in the definition or in internal/controller/endpoint/gen.

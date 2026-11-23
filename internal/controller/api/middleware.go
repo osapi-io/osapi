@@ -25,12 +25,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/osapi-io/osapi/internal/controller/api/apierr"
-
 	"github.com/labstack/echo/v5"
 
 	"github.com/osapi-io/osapi/internal/authtoken"
-	"github.com/osapi-io/osapi/internal/controller/api/components/gen"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/telemetry/respspan"
 )
 
@@ -69,20 +67,18 @@ func ScopeMiddleware(
 
 			authHeader := ctx.Request().Header.Get("Authorization")
 			if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-				errMsg := "Bearer token required"
-				return nil, ctx.JSON(http.StatusUnauthorized, gen.ErrorResponse{
-					Error:  &errMsg,
-					Reason: apierr.Unauthorized(),
+				return nil, ctx.JSON(http.StatusUnauthorized, endpoint.ErrorResponse{
+					Error:  "Bearer token required",
+					Reason: endpoint.ReasonUnauthorized,
 				})
 			}
 
 			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 			claims, err := tokenManager.Validate(tokenString, signingKey)
 			if err != nil {
-				errMsg := "Invalid token: " + err.Error()
-				return nil, ctx.JSON(http.StatusUnauthorized, gen.ErrorResponse{
-					Error:  &errMsg,
-					Reason: apierr.Unauthorized(),
+				return nil, ctx.JSON(http.StatusUnauthorized, endpoint.ErrorResponse{
+					Error:  "Invalid token: " + err.Error(),
+					Reason: endpoint.ReasonUnauthorized,
 				})
 			}
 
@@ -112,9 +108,9 @@ func ScopeMiddleware(
 				requiredScopes,
 				resolved,
 			)
-			return nil, ctx.JSON(http.StatusForbidden, gen.ErrorResponse{
-				Error:  &errMsg,
-				Reason: apierr.Forbidden(),
+			return nil, ctx.JSON(http.StatusForbidden, endpoint.ErrorResponse{
+				Error:  errMsg,
+				Reason: endpoint.ReasonForbidden,
 			})
 		},
 	)

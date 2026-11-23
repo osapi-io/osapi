@@ -626,7 +626,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindGenerated,
 			Name: "internal/controller/api/gen/, pkg/sdk/client/gen/, ui/src/sdk/gen/, docs/docs/gen/",
-			Does: "The joined spec, the SDK, the UI client and the API pages, from just generate.",
+			Does: "The full spec, the SDK, the UI client and the API pages, from just generate.",
 			When: "Change the definition, then generate. A generated test that fails is fixed in the definition or in internal/behavior/gen.",
 		},
 		{

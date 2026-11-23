@@ -13,12 +13,6 @@ react_dir := "ui"
 
 md_extra_excludes := "--exclude 'internal/skills/resources/**'"
 
-# Pinned so the combined spec does not change under whoever runs `just
-# generate`. Run through bunx rather than from the path: bun is declared in
-# .mise.toml, redocly was not declared anywhere.
-
-redocly_version := "2.19.1"
-
 import? '.just/remote/go.just'
 
 import? '.just/remote/docusaurus.just'
@@ -173,7 +167,7 @@ go-pkg-check:
         exit 1
     fi
 
-# Compile a client that oapi-codegen writes from the joined spec with its
+# Compile a client that oapi-codegen writes from the full spec with its
 # default options, as a person outside osapi would. The SDK's own client has
 # its config; this holds the spec to a stranger's generator. The package goes
 # in the module, so it builds with osapi's dependencies, and is removed after.
@@ -185,7 +179,7 @@ spec-client-check:
     go tool oapi-codegen -generate types,client -package specclient \
         internal/controller/api/gen/api.yaml > "$dir/client.go"
     if ! go build "./$dir"; then
-        echo "a client that oapi-codegen generates from the joined spec does not compile" >&2
+        echo "a client that oapi-codegen generates from the full spec does not compile" >&2
         exit 1
     fi
 
@@ -240,8 +234,8 @@ cli-docs-gen-check:
         exit 1
     fi
 
-# The API reference pages under docs/docs/gen are generated from the joined
-# OpenAPI specs. Nothing compared them with the specs, so /api/next pages went
+# The API reference pages under docs/docs/gen are generated from the full
+# OpenAPI spec. Nothing compared them with the specs, so /api/next pages went
 # stale without a failure. Regenerate them and fail when a page changed.
 docs-gen-check:
     #!/usr/bin/env bash
@@ -288,10 +282,10 @@ react-unit:
 
 # Fail when the UI client that orval writes is not what is committed
 #
-# orval writes ui/src/sdk/gen from the joined spec. go generate does not run
+# orval writes ui/src/sdk/gen from the full spec. go generate does not run
 # orval, so go-generate-check does not find a stale UI client. An orval bump
 # that changes the output went to main twice with the old client (#686,
-# #1150). The check reads the committed joined spec, which behavior-gen-check
+# #1150). The check reads the committed full spec, which behavior-gen-check
 # holds fresh. orval takes under a second, so the check is a quick one.
 react-generate-check:
     #!/usr/bin/env bash
@@ -317,53 +311,34 @@ react-generate-check:
 behavior-gen-check:
     #!/usr/bin/env bash
     set -euo pipefail
+    # The full spec is written in the same step, from the behaviors and the
+    # endpoint groups. The SDK, the UI and the API docs are generated from
+    # it, so a behavior changed without just generate leaves all three
+    # describing its old shape.
     generated() {
         {
             find internal/behaviors -type f -path '*/gen/*'
+            echo internal/controller/api/gen/api.yaml
         } 2>/dev/null | sort | xargs shasum
     }
     before=$(generated)
     go generate ./internal/behaviors/all
     if [ "$before" != "$(generated)" ]; then
         diff <(echo "$before") <(generated) || true
-        echo "behavior output is stale: run go generate ./internal/behaviors/all and commit the result" >&2
-        exit 1
-    fi
-    # A served behavior's spec joins the main one, which the SDK, UI and API
-    # docs are generated from, so a behavior changed without just generate
-    # leaves all three describing its old shape.
-    joined=$(mktemp -d)/api.yaml
-    just join-spec "$joined" > /dev/null
-    if ! diff -q "$joined" internal/controller/api/gen/api.yaml > /dev/null; then
-        diff "$joined" internal/controller/api/gen/api.yaml | head -20 || true
-        echo "the joined spec is stale: run just generate and commit the result" >&2
+        echo "behavior output is stale: run just generate and commit the result" >&2
         exit 1
     fi
 
-# The join reads the hand-written specs and each behavior's gen/api.yaml.
-
-# The endpoint groups' and the behaviors' gen/api.yaml are written by go
-# generate, and the join reads them. The SDK client is generated, in the same
-# go generate pass, from the joined spec. So those specs are written first,
-# then joined, then the rest is generated: one run leaves nothing stale.
-# Temporary: the first step goes when the generators write the full spec and
-# the join is removed (#833).
+# go generate writes the full spec in internal/behaviors/all, which comes
+# before pkg/sdk/client/gen, where the SDK client is generated from it. So one
+# run leaves nothing stale.
 
 # Generate code
 generate:
-    go generate ./internal/controller/endpoints/all ./internal/behaviors/all ./internal/cli/commands/all
-    just join-spec internal/controller/api/gen/api.yaml
     just go-generate
     just cli-docs-generate
     just docs-generate
     just react-generate
-
-# redocly join takes the info of the joined spec, its title and description,
-# from the first file. The components spec has the API's own, so it is first.
-# Join the components spec, each endpoint group's and each served behavior's
-# gen/api.yaml into out
-join-spec out:
-    bunx @redocly/cli@{{ redocly_version }} join --prefix-tags-with-info-prop title -o {{ out }} internal/controller/api/components/gen/api.yaml $(find internal/controller/endpoints -path '*/gen/api.yaml' | sort) $(find internal/behaviors -path '*/gen/api.yaml' | sort)
 
 # Format, lint, and generate before committing
 ready:

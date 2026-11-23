@@ -36,10 +36,10 @@ import (
 	"github.com/osapi-io/osapi/internal/apicontract"
 )
 
-// update rewrites the golden contract of the joined spec:
+// update rewrites the golden contract of the full spec:
 //
 //	go test ./internal/apicontract -run TestContractPublicTestSuite/TestJoinedSpec -update
-var update = flag.Bool("update", false, "rewrite the golden contract of the joined spec")
+var update = flag.Bool("update", false, "rewrite the golden contract of the full spec")
 
 type ContractPublicTestSuite struct {
 	suite.Suite
@@ -54,7 +54,7 @@ func (s *ContractPublicTestSuite) load(
 	return doc
 }
 
-// TestJoinedSpec holds the joined spec, which the controller serves and the
+// TestJoinedSpec holds the full spec, which the controller serves and the
 // clients come from, to its golden contract. A change to the API that is
 // wanted updates the golden file in the same pull request, so the diff
 // shows it; a change that is not wanted, such as a schema that a move to a
@@ -74,7 +74,7 @@ func (s *ContractPublicTestSuite) TestJoinedSpec() {
 	s.Equal(string(want), got)
 }
 
-// TestJoinedSpecIsValid holds the joined spec to OpenAPI itself: a tool that
+// TestJoinedSpecIsValid holds the full spec to OpenAPI itself: a tool that
 // validates a spec, as kin-openapi's router does, rejects one that breaks
 // it, such as an object field whose example is a string.
 func (s *ContractPublicTestSuite) TestJoinedSpecIsValid() {

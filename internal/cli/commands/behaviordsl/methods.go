@@ -432,8 +432,8 @@ func names(
 }
 
 // OpenAPIGet is the served behavior's part of the OpenAPI spec, as YAML: the
-// part that go generate writes to its gen/api.yaml and that the join puts in
-// the spec of the API.
+// part that go generate writes to its gen/api.yaml and puts in the full spec
+// of the API.
 func OpenAPIGet(
 	_ context.Context,
 	d Deps,
