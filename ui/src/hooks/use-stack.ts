@@ -166,35 +166,6 @@ const HAND_BLOCK_TYPES: BlockType[] = [
     category: "user",
     group: "security",
   },
-  {
-    type: "certificate-list",
-    label: "List",
-    description: "List CA certificates",
-    category: "certificate",
-    group: "security",
-    readyOnAdd: true,
-  },
-  {
-    type: "certificate-create",
-    label: "Create",
-    description: "Add a CA certificate",
-    category: "certificate",
-    group: "security",
-  },
-  {
-    type: "certificate-update",
-    label: "Update",
-    description: "Update a CA certificate",
-    category: "certificate",
-    group: "security",
-  },
-  {
-    type: "certificate-delete",
-    label: "Delete",
-    description: "Remove a CA certificate",
-    category: "certificate",
-    group: "security",
-  },
 
   // ── Containers ─────────────────────────────────────────────────────────────
   {

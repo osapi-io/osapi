@@ -4,10 +4,10 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { CertificateCAMutationEntry } from './certificateCAMutationEntry';
+import type { CertificateEntry } from './certificateEntry';
 
-export interface CertificateCAMutationResponse {
+export interface CertificateCollectionResponse {
   /** The job ID used to process this request. */
   job_id?: string;
-  results: CertificateCAMutationEntry[];
+  results: CertificateEntry[];
 }

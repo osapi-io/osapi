@@ -8,10 +8,10 @@
 /**
  * The status of the operation for this host.
  */
-export type CertificateCAMutationEntryStatus = typeof CertificateCAMutationEntryStatus[keyof typeof CertificateCAMutationEntryStatus];
+export type CertificateResultStatus = typeof CertificateResultStatus[keyof typeof CertificateResultStatus];
 
 
-export const CertificateCAMutationEntryStatus = {
+export const CertificateResultStatus = {
   ok: 'ok',
   failed: 'failed',
   skipped: 'skipped',
