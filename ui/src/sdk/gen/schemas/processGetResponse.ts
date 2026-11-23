@@ -4,10 +4,10 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { ProcessGetEntry } from './processGetEntry';
+import type { ProcessEntry } from './processEntry';
 
 export interface ProcessGetResponse {
   /** The job ID used to process this request. */
   job_id?: string;
-  results: ProcessGetEntry[];
+  results: ProcessEntry[];
 }

@@ -27,12 +27,13 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
-// ProcessService provides process management operations.
+// ProcessService lists the processes of a host, gets one, and sends a
+// signal to one.
 type ProcessService struct {
 	client *gen.ClientWithResponses
 }
 
-// List returns all running processes on the target host.
+// List is each process of the target host, one row for each process.
 func (s *ProcessService) List(
 	ctx context.Context,
 	hostname string,
@@ -47,6 +48,8 @@ func (s *ProcessService) List(
 		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
+		resp.JSON404,
+		resp.JSON409,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
@@ -60,19 +63,19 @@ func (s *ProcessService) List(
 	}
 
 	return newResponse(
-		processInfoCollectionFromList(resp.JSON200),
+		processInfoCollectionFromGen(resp.JSON200.Results, resp.JSON200.JobId),
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
 }
 
-// Get returns information about a specific process by PID on the target host.
+// Get is the process pid of the target host.
 func (s *ProcessService) Get(
 	ctx context.Context,
 	hostname string,
 	pid int,
 ) (*Response[Collection[ProcessInfoResult]], error) {
-	resp, err := s.client.GetNodeProcessByPidWithResponse(ctx, hostname, pid)
+	resp, err := s.client.GetNodeProcessByKeyWithResponse(ctx, hostname, pid)
 	if err != nil {
 		return nil, fmt.Errorf("process get: %w", err)
 	}
@@ -83,6 +86,7 @@ func (s *ProcessService) Get(
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON404,
+		resp.JSON409,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
@@ -96,22 +100,20 @@ func (s *ProcessService) Get(
 	}
 
 	return newResponse(
-		processInfoCollectionFromGet(resp.JSON200),
+		processInfoCollectionFromGen(resp.JSON200.Results, resp.JSON200.JobId),
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
 }
 
-// Signal sends a signal to a specific process by PID on the target host.
+// Signal sends opts.Signal to the process pid of the target host.
 func (s *ProcessService) Signal(
 	ctx context.Context,
 	hostname string,
 	pid int,
 	opts ProcessSignalOpts,
 ) (*Response[Collection[ProcessSignalResult]], error) {
-	body := gen.ProcessSignalRequest{
-		Signal: gen.ProcessSignalRequestSignal(opts.Signal),
-	}
+	body := gen.ProcessSignalRequest{Signal: gen.ProcessSignalRequestSignal(opts.Signal)}
 
 	resp, err := s.client.PostNodeProcessSignalWithResponse(ctx, hostname, pid, body)
 	if err != nil {
@@ -124,6 +126,7 @@ func (s *ProcessService) Signal(
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON404,
+		resp.JSON409,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
@@ -137,7 +140,7 @@ func (s *ProcessService) Signal(
 	}
 
 	return newResponse(
-		processSignalCollectionFromGen(resp.JSON200),
+		processSignalCollectionFromGen(resp.JSON200.Results, resp.JSON200.JobId),
 		resp.Body,
 		resp.HTTPResponse,
 	), nil

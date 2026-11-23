@@ -88,7 +88,6 @@ func newTestAgent(
 		"node",
 		agent.NewNodeProcessor(
 			nil,
-			nil,
 			logger,
 		),
 		p.hostProvider, p.diskProvider, p.memoryProvider, p.loadProvider,

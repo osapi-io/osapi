@@ -5,18 +5,30 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { ProcessEntryStatus } from './processEntryStatus';
-import type { ProcessInfo } from './processInfo';
 
-/**
- * Process list result for a single agent.
- */
 export interface ProcessEntry {
-  /** The hostname of the agent. */
-  hostname: string;
-  /** The status of the operation for this host. */
-  status: ProcessEntryStatus;
-  /** List of processes on this agent. */
-  processes?: ProcessInfo[];
+  /** Its full command line */
+  command?: string;
+  /** Its CPU time as a percent of the time since it started */
+  cpu_percent?: number;
   /** Error message if the agent failed. */
   error?: string;
+  /** Hostname of the agent that produced this result. */
+  hostname: string;
+  /** Its resident memory as a percent of the host's memory */
+  mem_percent?: number;
+  /** Its resident memory in bytes */
+  mem_rss?: number;
+  /** The name of the process */
+  name?: string;
+  /** The process ID */
+  pid?: number;
+  /** When it started, in RFC 3339 */
+  start_time?: string;
+  /** Its state, such as running or sleep */
+  state?: string;
+  /** The status of the operation for this host. */
+  status: ProcessEntryStatus;
+  /** The user that runs it */
+  user?: string;
 }

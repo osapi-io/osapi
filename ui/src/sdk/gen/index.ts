@@ -26,7 +26,7 @@ export * from './ntp-api-ntp-operations/ntp-api-ntp-operations';
 export * from './os-api-os-operations/os-api-os-operations';
 export * from './package-api-package-operations/package-api-package-operations';
 export * from './power-api-power-operations/power-api-power-operations';
-export * from './process-management-api-process-operations/process-management-api-process-operations';
+export * from './process-api-process-operations/process-api-process-operations';
 export * from './route-api-route-operations/route-api-route-operations';
 export * from './schedule-management-api-schedule-operations/schedule-management-api-schedule-operations';
 export * from './service-api-service-operations/service-api-service-operations';

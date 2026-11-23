@@ -115,7 +115,8 @@ type Client struct {
 	// Timezone provides system timezone management operations (get, update).
 	Timezone *TimezoneService
 
-	// Process provides process management operations (list, get, signal).
+	// Process lists the processes of a host, gets one, and sends a signal
+	// to one.
 	Process *ProcessService
 
 	// Power provides power management operations (reboot, shutdown).

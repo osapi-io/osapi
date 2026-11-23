@@ -4,41 +4,28 @@ sidebar_position: 20
 
 # Process management
 
-osapi shows the running processes on managed hosts, and can send signals to
-specific processes. The agent reads the processes with gohai's process
-collector: `/proc` on each Linux family, and `ps` on macOS.
+The [process behavior](../reference/behaviors/process/process.md) shows the
+processes of managed hosts, and sends a signal to one process. The agent reads
+the processes through gohai's process collector: from `/proc` on each Linux
+family, and from `ps` on macOS.
 
 ## How it works
 
-The process provider reads the process data from the operating system when the
-request arrives. Facts are collected at intervals, but process data is always
-live. Each request returns the processes that run at that time.
+The agent reads the processes when the request arrives. Facts are collected at
+intervals, but process data is always live.
 
-### List
-
-Returns all running processes with their PID, name, user, state, CPU and memory
-usage, and command line. On Linux, gohai reads `/proc/{pid}/stat`,
-`/proc/{pid}/status` and `/proc/{pid}/cmdline`; on macOS, `ps`. The CPU usage is
-the average since the process started on Linux, and `ps`'s `%cpu` on macOS.
-
-### Get
-
-Returns detailed information about a single process identified by PID. If the
-PID does not exist, the agent returns a 404 error.
-
-### Signal
-
-Sends a POSIX signal to a process by PID. The signals are `TERM`, `KILL`, `HUP`,
-`INT`, `USR1`, `USR2`, `QUIT`, `STOP` and `CONT`. The agent calls
-`syscall.Kill()`. If the process got the signal, it returns `changed: true`.
-
-## Operations
-
-| Operation | Description                            |
-| --------- | -------------------------------------- |
-| List      | List all running processes             |
-| Get       | Get information about a process by PID |
-| Signal    | Send a signal to a process by PID      |
+- **List**: lists each process with its PID, name, user, state, CPU, memory,
+  command line and start time. On Linux, gohai reads `/proc/{pid}/stat`,
+  `/proc/{pid}/status` and `/proc/{pid}/cmdline`. On macOS, it runs `ps`. The
+  CPU value on Linux is the average since the process started. On macOS, it is
+  the `%cpu` of `ps`. Each row of the result is one process of one host.
+- **Get**: reads one process by its PID, without the others. A PID that the host
+  does not have is not found, and the API returns 404.
+- **Signal**: sends `TERM`, `KILL`, `HUP`, `INT`, `USR1` or `USR2` to one
+  process with `kill`, through sudo when the agent uses it. The agent reads the
+  process first, so a PID that the host does not have is not found. A PID below
+  1 is refused, because `kill` sends to a group of processes for 0 and for a
+  negative PID. A signal always reports `changed: true`.
 
 ## CLI usage
 
@@ -61,22 +48,10 @@ All commands accept `--json` to give the raw JSON output.
 
 ## Broadcast support
 
-All process operations accept broadcast targets. Use `--target _all` to list
-processes on all registered agents. Use a label selector, for example
-`--target group:web`, to target a part of the fleet.
-
-Responses always include per-host results:
-
-```
-  Job ID: 550e8400-e29b-41d4-a716-446655440000
-
-  web-01
-  PID   NAME      USER  STATE     CPU%  MEM%  COMMAND
-  1     systemd   root  sleeping  0.0%  0.1%  /sbin/init
-  1234  nginx     www   sleeping  2.3%  1.5%  nginx: worker process
-```
-
-Skipped and failed hosts appear with their error in the output.
+All process operations accept broadcast targets. Use `--target _all` to list the
+processes of each registered agent. Use a label selector, for example
+`--target group:web`, to target a part of the fleet. Each row of the result
+names its host. A host that failed or that was skipped shows its error.
 
 ## Supported platforms
 
@@ -85,9 +60,6 @@ Skipped and failed hosts appear with their error in the output.
 | Each Linux family | Full         | Full   |
 | Darwin            | Full         | Full   |
 
-List and get are reads, so they come from gohai on every family. Signal is
-`kill(2)`, which each of them has.
-
 ## Permissions
 
 | Operation | Permission        |
@@ -95,12 +67,14 @@ List and get are reads, so they come from gohai on every family. Signal is
 | List, Get | `process:read`    |
 | Signal    | `process:execute` |
 
-Process listing and inspection require `process:read`, included in all built-in
-roles. Sending signals requires `process:execute`, included only in the `admin`
-role by default.
+Each built-in role that reads gets `process:read`. The `admin` and `operator`
+roles get `process:execute`. The `automation` role does not, because a signal is
+an action and not a change to the configuration.
 
 ## Related
 
+- [Process behavior](../reference/behaviors/process/process.md): each method,
+  its examples and what it refuses
 - [CLI Reference](../usage/cli/client/node/process/process.mdx): process
   commands
 - [SDK Reference](../sdk/client/node/process.md): Process service

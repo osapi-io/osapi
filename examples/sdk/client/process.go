@@ -52,46 +52,40 @@ func processExample() {
 	ctx := context.Background()
 	hostname := "_any"
 
-	// List all running processes on the target host.
-	// Returns Collection[ProcessInfoResult] with per-host results.
+	// List the processes of the target host. Each row of the
+	// Collection[ProcessInfoResult] is one process of one host.
 	fmt.Println("=== Listing processes ===")
 	listResp, err := c.Process.List(ctx, hostname)
 	if err != nil {
 		log.Fatalf("process list failed: %v", err)
 	}
 
-	for _, r := range listResp.Data.Results {
-		if r.Error != "" {
-			fmt.Printf("  %s: ERROR %s\n", r.Hostname, r.Error)
+	for _, p := range listResp.Data.Results[:min(5, len(listResp.Data.Results))] {
+		if p.Error != "" {
+			fmt.Printf("  %s: ERROR %s\n", p.Hostname, p.Error)
 			continue
 		}
-		fmt.Printf("  %s: %d processes\n", r.Hostname, len(r.Processes))
-		for _, p := range r.Processes[:min(5, len(r.Processes))] {
-			fmt.Printf("    PID=%d name=%s user=%s cpu=%.1f%% mem=%.1f%%\n",
-				p.PID, p.Name, p.User, p.CPUPercent, p.MemPercent)
-		}
-		if len(r.Processes) > 5 {
-			fmt.Printf("    ... and %d more\n", len(r.Processes)-5)
-		}
+		fmt.Printf("  %s: PID=%d name=%s user=%s cpu=%.1f%% mem=%.1f%%\n",
+			p.Hostname, p.PID, p.Name, p.User, p.CPUPercent, p.MemPercent)
+	}
+	if len(listResp.Data.Results) > 5 {
+		fmt.Printf("  ... and %d more\n", len(listResp.Data.Results)-5)
 	}
 
-	// Get details for PID 1 (init/systemd).
+	// Get PID 1, the host's init.
 	fmt.Println("\n=== Getting process PID 1 ===")
 	getResp, err := c.Process.Get(ctx, hostname, 1)
 	if err != nil {
-		fmt.Printf("process get failed (may not have permission): %v\n", err)
-		return
+		log.Fatalf("process get failed: %v", err)
 	}
 
-	for _, r := range getResp.Data.Results {
-		if r.Error != "" {
-			fmt.Printf("  %s: ERROR %s\n", r.Hostname, r.Error)
+	for _, p := range getResp.Data.Results {
+		if p.Error != "" {
+			fmt.Printf("  %s: ERROR %s\n", p.Hostname, p.Error)
 			continue
 		}
-		for _, p := range r.Processes {
-			fmt.Printf("  %s: PID=%d name=%s user=%s state=%s\n",
-				r.Hostname, p.PID, p.Name, p.User, p.State)
-		}
+		fmt.Printf("  %s: PID=%d name=%s user=%s state=%s\n",
+			p.Hostname, p.PID, p.Name, p.User, p.State)
 	}
 }
 

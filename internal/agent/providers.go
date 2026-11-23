@@ -37,7 +37,6 @@ import (
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
 	"github.com/osapi-io/osapi/internal/provider/node/memory"
-	processProv "github.com/osapi-io/osapi/internal/provider/node/process"
 	userProv "github.com/osapi-io/osapi/internal/provider/node/user"
 	cronProv "github.com/osapi-io/osapi/internal/provider/schedule/cron"
 )
@@ -124,10 +123,6 @@ func (e hostEnv) cron() cronProv.Provider {
 	default:
 		return cronProv.NewLinuxProvider()
 	}
-}
-
-func (e hostEnv) process() processProv.Provider {
-	return processProv.New(e.log, processProv.NewSyscallSignaler())
 }
 
 func (e hostEnv) user() userProv.Provider {

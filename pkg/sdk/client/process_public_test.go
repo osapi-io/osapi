@@ -26,6 +26,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -43,556 +44,170 @@ func (suite *ProcessPublicTestSuite) SetupTest() {
 	suite.ctx = context.Background()
 }
 
-func (suite *ProcessPublicTestSuite) TestList() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.ProcessInfoResult]], error)
-	}{
-		{
-			name: "when listing processes returns result collection",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","processes":[{"pid":1,"name":"init","user":"root","state":"running","cpu_percent":0.1,"mem_percent":0.5,"mem_rss":1024,"command":"/sbin/init","start_time":"2026-01-01T00:00:00Z"}]}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.ProcessInfoResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("agent1", resp.Data.Results[0].Hostname)
-				suite.Equal("ok", resp.Data.Results[0].Status)
-				suite.Len(resp.Data.Results[0].Processes, 1)
-				suite.Equal(1, resp.Data.Results[0].Processes[0].PID)
-				suite.Equal("init", resp.Data.Results[0].Processes[0].Name)
-			},
-		},
-		{
-			name: "when broadcast list returns multiple results",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"server1","status":"ok","processes":[]},{"hostname":"server2","status":"ok","processes":[]}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.ProcessInfoResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Len(resp.Data.Results, 2)
-			},
-		},
-		{
-			name: "when server returns 401 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusUnauthorized)
-				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.ProcessInfoResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
+// reply is a handler that answers with status and body.
+func reply(
+	status int,
+	body string,
+) http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
+		if body != "" {
+			w.Header().Set("Content-Type", "application/json")
+		}
+		w.WriteHeader(status)
+		_, _ = w.Write([]byte(body))
+	}
+}
 
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusUnauthorized, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.ProcessInfoResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 500 returns ServerError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusInternalServerError)
-				_, _ = w.Write([]byte(`{"error":"internal error"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.ProcessInfoResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.ServerError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusInternalServerError, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.ProcessInfoResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "process list")
-			},
-		},
-		{
-			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.ProcessInfoResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
-		},
+// serve runs call against handler, or against serverURL when it is set.
+func (suite *ProcessPublicTestSuite) serve(
+	handler http.HandlerFunc,
+	serverURL string,
+	call func(c *client.Client) error,
+) error {
+	if serverURL == "" {
+		server := httptest.NewServer(handler)
+		defer server.Close()
+		serverURL = server.URL
 	}
 
-	for _, tc := range tests {
+	return call(client.New(serverURL, "test-token", client.WithLogger(slog.Default())))
+}
+
+const processRow = `{"job_id":"00000000-0000-0000-0000-000000000001","results":[` +
+	`{"hostname":"agent1","status":"ok","pid":1234,"name":"sleep","user":"alice",` +
+	`"state":"sleep","cpu_percent":5,"mem_percent":1,"mem_rss":20971520,` +
+	`"command":"sleep 300","start_time":"2026-01-02T02:55:45Z"}]}`
+
+var sleeping = client.ProcessInfoResult{
+	Hostname: "agent1", Status: "ok", PID: 1234, Name: "sleep", User: "alice",
+	State: "sleep", CPUPercent: 5, MemPercent: 1, MemRSS: 20971520,
+	Command: "sleep 300", StartTime: "2026-01-02T02:55:45Z",
+}
+
+// failure is an answer that each method turns into an error, and a test of
+// that error.
+type failure struct {
+	name      string
+	handler   http.HandlerFunc
+	serverURL string
+	is        func(err error) bool
+}
+
+// failures are the failures of the method op, whose error names op when
+// the call does not reach the server.
+func failures(
+	op string,
+) []failure {
+	return []failure{
+		{
+			"403", reply(http.StatusForbidden, `{"error":"forbidden"}`), "",
+			func(err error) bool { var t *client.AuthError; return errors.As(err, &t) },
+		},
+		{
+			"404", reply(http.StatusNotFound, `{"error":"not found"}`), "",
+			func(err error) bool { var t *client.NotFoundError; return errors.As(err, &t) },
+		},
+		{
+			"500", reply(http.StatusInternalServerError, `{"error":"boom"}`), "",
+			func(err error) bool { var t *client.ServerError; return errors.As(err, &t) },
+		},
+		{
+			"200 with no body", reply(http.StatusOK, ""), "",
+			func(err error) bool { var t *client.UnexpectedStatusError; return errors.As(err, &t) },
+		},
+		{
+			"no server", nil, "http://127.0.0.1:0",
+			func(err error) bool { return strings.Contains(err.Error(), op) },
+		},
+	}
+}
+
+func (suite *ProcessPublicTestSuite) TestList() {
+	err := suite.serve(reply(http.StatusOK, processRow), "", func(c *client.Client) error {
+		resp, err := c.Process.List(suite.ctx, "_any")
+		suite.Require().NoError(err)
+		suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
+		suite.Equal([]client.ProcessInfoResult{sleeping}, resp.Data.Results)
+
+		return nil
+	})
+	suite.NoError(err)
+
+	for _, tc := range failures("process list") {
 		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
+			err := suite.serve(tc.handler, tc.serverURL, func(c *client.Client) error {
+				resp, err := c.Process.List(suite.ctx, "_any")
+				suite.Nil(resp)
 
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Process.List(suite.ctx, "_any")
-			tc.validateFunc(resp, err)
+				return err
+			})
+			suite.Require().Error(err)
+			suite.True(tc.is(err), "%T: %v", err, err)
 		})
 	}
 }
 
 func (suite *ProcessPublicTestSuite) TestGet() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.ProcessInfoResult]], error)
-	}{
-		{
-			name: "when getting process returns result",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","process":{"pid":1234,"name":"nginx","user":"www-data"}}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.ProcessInfoResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("agent1", resp.Data.Results[0].Hostname)
-				suite.Require().Len(resp.Data.Results[0].Processes, 1)
-				suite.Equal(1234, resp.Data.Results[0].Processes[0].PID)
-				suite.Equal("nginx", resp.Data.Results[0].Processes[0].Name)
-			},
-		},
-		{
-			name: "when server returns 401 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusUnauthorized)
-				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.ProcessInfoResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
+	err := suite.serve(reply(http.StatusOK, processRow), "", func(c *client.Client) error {
+		resp, err := c.Process.Get(suite.ctx, "_any", 1234)
+		suite.Require().NoError(err)
+		suite.Equal([]client.ProcessInfoResult{sleeping}, resp.Data.Results)
 
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.ProcessInfoResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
+		return nil
+	})
+	suite.NoError(err)
 
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-			},
-		},
-		{
-			name: "when server returns 404 returns NotFoundError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusNotFound)
-				_, _ = w.Write([]byte(`{"error":"not found"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.ProcessInfoResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.NotFoundError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusNotFound, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 500 returns ServerError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusInternalServerError)
-				_, _ = w.Write([]byte(`{"error":"internal error"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.ProcessInfoResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.ServerError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.ProcessInfoResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "process get")
-			},
-		},
-		{
-			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.ProcessInfoResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-			},
-		},
-	}
-
-	for _, tc := range tests {
+	for _, tc := range failures("process get") {
 		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
+			err := suite.serve(tc.handler, tc.serverURL, func(c *client.Client) error {
+				resp, err := c.Process.Get(suite.ctx, "_any", 1234)
+				suite.Nil(resp)
 
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Process.Get(suite.ctx, "_any", 1234)
-			tc.validateFunc(resp, err)
+				return err
+			})
+			suite.Require().Error(err)
+			suite.True(tc.is(err), "%T: %v", err, err)
 		})
 	}
 }
 
 func (suite *ProcessPublicTestSuite) TestSignal() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		opts         client.ProcessSignalOpts
-		validateFunc func(*client.Response[client.Collection[client.ProcessSignalResult]], error)
-	}{
-		{
-			name: "when signaling process returns result",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","pid":1234,"signal":"TERM","changed":true}]}`,
-					),
-				)
-			},
-			opts: client.ProcessSignalOpts{Signal: "TERM"},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.ProcessSignalResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("agent1", resp.Data.Results[0].Hostname)
-				suite.Equal("ok", resp.Data.Results[0].Status)
-				suite.Equal(1234, resp.Data.Results[0].PID)
-				suite.Equal("TERM", resp.Data.Results[0].Signal)
-				suite.True(resp.Data.Results[0].Changed)
-			},
-		},
-		{
-			name: "when broadcast signal returns multiple results",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"server1","status":"ok","changed":true},{"hostname":"server2","status":"skipped","error":"unsupported"}]}`,
-					),
-				)
-			},
-			opts: client.ProcessSignalOpts{Signal: "KILL"},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.ProcessSignalResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Len(resp.Data.Results, 2)
-			},
-		},
-		{
-			name: "when server returns 400 returns ValidationError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusBadRequest)
-				_, _ = w.Write([]byte(`{"error":"invalid signal"}`))
-			},
-			opts: client.ProcessSignalOpts{Signal: "INVALID"},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.ProcessSignalResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.ValidationError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusBadRequest, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 401 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusUnauthorized)
-				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
-			},
-			opts: client.ProcessSignalOpts{Signal: "TERM"},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.ProcessSignalResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusUnauthorized, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			opts: client.ProcessSignalOpts{Signal: "TERM"},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.ProcessSignalResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 404 returns NotFoundError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusNotFound)
-				_, _ = w.Write([]byte(`{"error":"not found"}`))
-			},
-			opts: client.ProcessSignalOpts{Signal: "TERM"},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.ProcessSignalResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.NotFoundError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusNotFound, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 500 returns ServerError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusInternalServerError)
-				_, _ = w.Write([]byte(`{"error":"internal error"}`))
-			},
-			opts: client.ProcessSignalOpts{Signal: "TERM"},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.ProcessSignalResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.ServerError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusInternalServerError, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			opts:      client.ProcessSignalOpts{Signal: "TERM"},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.ProcessSignalResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "process signal")
-			},
-		},
-		{
-			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			opts: client.ProcessSignalOpts{Signal: "TERM"},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.ProcessSignalResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
-		},
+	var body string
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		b := make([]byte, 64)
+		n, _ := r.Body.Read(b)
+		body = string(b[:n])
+		reply(http.StatusOK, `{"results":[{"hostname":"agent1","status":"ok",`+
+			`"pid":1234,"signal":"TERM","changed":true}]}`)(w, r)
 	}
+	err := suite.serve(handler, "", func(c *client.Client) error {
+		resp, err := c.Process.Signal(
+			suite.ctx,
+			"_any",
+			1234,
+			client.ProcessSignalOpts{Signal: "TERM"},
+		)
+		suite.Require().NoError(err)
+		suite.Equal([]client.ProcessSignalResult{
+			{Hostname: "agent1", Status: "ok", PID: 1234, Signal: "TERM", Changed: true},
+		}, resp.Data.Results)
 
-	for _, tc := range tests {
+		return nil
+	})
+	suite.NoError(err)
+	suite.JSONEq(`{"signal":"TERM"}`, body)
+
+	for _, tc := range failures("process signal") {
 		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
+			err := suite.serve(tc.handler, tc.serverURL, func(c *client.Client) error {
+				resp, err := c.Process.Signal(suite.ctx, "_any", 1234,
+					client.ProcessSignalOpts{Signal: "TERM"})
+				suite.Nil(resp)
 
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Process.Signal(suite.ctx, "_any", 1234, tc.opts)
-			tc.validateFunc(resp, err)
+				return err
+			})
+			suite.Require().Error(err)
+			suite.True(tc.is(err), "%T: %v", err, err)
 		})
 	}
 }

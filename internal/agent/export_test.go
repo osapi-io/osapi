@@ -511,7 +511,6 @@ func SetAgentAppConfig(
 	if a.registry != nil {
 		a.registry.processors["node"] = NewNodeProcessor(
 			nil,
-			nil,
 			a.logger,
 		)
 	}
@@ -536,7 +535,6 @@ func SetAgentHostProvider(
 	// dispatch picks up the change.
 	if a.registry != nil {
 		a.registry.processors["node"] = NewNodeProcessor(
-			nil,
 			nil,
 			a.logger,
 		)
@@ -806,13 +804,12 @@ func ExportProviders(
 	}
 
 	return map[string]any{
-		"host":    e.host(),
-		"disk":    e.disk(),
-		"memory":  e.memory(),
-		"load":    e.load(),
-		"cron":    e.cron(),
-		"process": e.process(),
-		"user":    e.user(),
+		"host":   e.host(),
+		"disk":   e.disk(),
+		"memory": e.memory(),
+		"load":   e.load(),
+		"cron":   e.cron(),
+		"user":   e.user(),
 	}
 }
 

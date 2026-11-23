@@ -28,7 +28,6 @@ import (
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/job"
-	processProv "github.com/osapi-io/osapi/internal/provider/node/process"
 	"github.com/osapi-io/osapi/internal/provider/node/user"
 )
 
@@ -48,19 +47,16 @@ func (a *Agent) processJobOperation(
 
 // NewNodeProcessor returns a ProcessorFunc that handles node-related operations.
 func NewNodeProcessor(
-	processProvider processProv.Provider,
 	userProvider user.Provider,
 	logger *slog.Logger,
 ) ProcessorFunc {
 	logger = logger.With(slog.String("subsystem", "agent.processor.node"))
 
 	return func(ctx context.Context, req job.Request) (json.RawMessage, error) {
-		// Extract base operation from dotted operation (e.g., "power.reboot" -> "power")
+		// Extract base operation from dotted operation (e.g., "user.list" -> "user")
 		baseOperation := strings.Split(req.Operation, ".")[0]
 
 		switch baseOperation {
-		case "process":
-			return processProcessOperation(ctx, processProvider, logger, req)
 		case "user":
 			return processUserOperation(ctx, userProvider, logger, req)
 		case "sshKey":

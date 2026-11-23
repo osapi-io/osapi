@@ -22,6 +22,13 @@ send signals to processes on target hosts. Use `client.Process.List()`,
 | ------------------- | ---------------------------------- |
 | `ProcessSignalOpts` | `Signal` (string, e.g. TERM, KILL) |
 
+## Result Types
+
+| Type                  | Fields                                                                                                                      |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `ProcessInfoResult`   | `Hostname`, `Status`, `PID`, `Name`, `User`, `State`, `CPUPercent`, `MemPercent`, `MemRSS`, `Command`, `StartTime`, `Error` |
+| `ProcessSignalResult` | `Hostname`, `Status`, `PID`, `Signal`, `Changed`, `Error`                                                                   |
+
 ## Usage
 
 ```go
@@ -29,22 +36,18 @@ import "github.com/osapi-io/osapi/pkg/sdk/client"
 
 c := client.New("http://localhost:8080", token)
 
-// List all processes
+// List the processes. Each row is one process of one host.
 resp, err := c.Process.List(ctx, "web-01")
-for _, r := range resp.Data.Results {
-    for _, p := range r.Processes {
-        fmt.Printf("PID=%d name=%s cpu=%.1f%%\n",
-            p.PID, p.Name, p.CPUPercent)
-    }
+for _, p := range resp.Data.Results {
+    fmt.Printf("%s PID=%d name=%s cpu=%.1f%%\n",
+        p.Hostname, p.PID, p.Name, p.CPUPercent)
 }
 
-// Get a specific process
-resp, err := c.Process.Get(ctx, "web-01", 1234)
-for _, r := range resp.Data.Results {
-    for _, p := range r.Processes {
-        fmt.Printf("PID=%d user=%s state=%s\n",
-            p.PID, p.User, p.State)
-    }
+// Get one process
+resp, err = c.Process.Get(ctx, "web-01", 1234)
+for _, p := range resp.Data.Results {
+    fmt.Printf("PID=%d user=%s state=%s\n",
+        p.PID, p.User, p.State)
 }
 
 // Send TERM signal to a process
@@ -70,6 +73,5 @@ resp, err := c.Process.List(ctx, "_all")
 | List, Get | `process:read`    |
 | Signal    | `process:execute` |
 
-Process management is supported on the Debian OS family (Ubuntu, Debian,
-Raspbian). On unsupported platforms (Darwin, generic Linux), operations return
-`status: skipped`.
+The process behavior operates on each Linux family and on macOS. The `operator`
+and `admin` roles get `process:execute`.
