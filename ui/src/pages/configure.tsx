@@ -11,18 +11,14 @@ import { FileUploadBlock } from "@/components/domain/file-upload-block";
 import { SingleInputBlock } from "@/components/domain/single-input-block";
 import { FileDeleteBlock } from "@/components/domain/file-delete-block";
 import { ApplyButton } from "@/components/domain/apply-button";
-import { StackBar } from "@/components/domain/stack-bar";
-import { SaveStackDialog } from "@/components/domain/save-stack-dialog";
 import {
   useStack,
   ALL_BLOCK_TYPES,
-  BLOCK_GROUPS,
+  BLOCK_AREAS,
   blockRunnable,
   type BlockStatus,
 } from "@/hooks/use-stack";
 import { useCommands } from "@/hooks/use-commands";
-import { useStacks } from "@/hooks/use-stacks";
-import { features } from "@/lib/features";
 import {
   postFile,
   getFiles,
@@ -87,16 +83,21 @@ const blockIcons: Record<
 > = {
   // Services
   "service-list": Cog,
-  "schedule-list": Calendar,
   // Software
   "package-list": Package,
   "updatepackages-list": RefreshCw,
   // Config
+  "schedule-list": Calendar,
   "sysctl-list": SlidersHorizontal,
   "ntp-get": Clock,
   "timezone-get": Globe,
   "hostname-get": Tag,
-  // System
+  "file-status": FileDown,
+  // Node
+  "status-get": Monitor,
+  "load-get": Gauge,
+  "uptime-get": Timer,
+  "os-get": Info,
   "power-reboot": Power,
   "process-list": Activity,
   // Networking
@@ -108,19 +109,13 @@ const blockIcons: Record<
   "group-list": UsersRound,
   // Containers
   "docker-list": Container,
-  // Files
-  "object-list": FolderOpen,
-  "file-status": FileDown,
   // Command
   "command-exec": Terminal,
-  // Node
-  "status-get": Monitor,
-  "load-get": Gauge,
-  "uptime-get": Timer,
-  "os-get": Info,
   // Hardware
   "disk-get": HardDrive,
   "memory-get": MemoryStick,
+  // Files
+  "object-list": FolderOpen,
   // Audit
   "audit-list": ClipboardList,
 };
@@ -137,11 +132,8 @@ export function Configure() {
     setBlockStatus,
     setBlockTarget,
     resetBlocks,
-    loadBlocks,
     clearBlocks,
   } = useStack();
-  const { stacks, activeStack, activeStackId, loadStack, clearActiveStack } =
-    useStacks();
   const [applying, setApplying] = useState(false);
 
   // After Apply, what the run did, counted from the blocks' states.
@@ -150,24 +142,7 @@ export function Configure() {
   const applySummary = hasApplied
     ? `${applied + failed} applied: ${applied} ok${failed ? `, ${failed} failed` : ""}`
     : `${blocks.length} block${blocks.length === 1 ? "" : "s"}`;
-  const [showSaveDialog, setShowSaveDialog] = useState(false);
-  const [activeGroup, setActiveGroup] = useState("services");
-
-  const handleLoadStack = useCallback(
-    (id: string) => {
-      loadStack(id);
-      const stack = stacks.find((s) => s.id === id);
-      if (stack) {
-        loadBlocks(stack.blocks);
-      }
-    },
-    [stacks, loadStack, loadBlocks],
-  );
-
-  const handleNewStack = useCallback(() => {
-    clearActiveStack();
-    clearBlocks();
-  }, [clearActiveStack, clearBlocks]);
+  const [activeArea, setActiveArea] = useState("services");
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const blockRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const focusBlock = useBlockFocus(blockRefs);
@@ -485,21 +460,8 @@ export function Configure() {
     <ContentArea>
       <PageHeader
         title="Configure"
-        subtitle={
-          activeStack
-            ? `Editing stack: ${activeStack.name}`
-            : "Build a stack by selecting blocks"
-        }
+        subtitle="Add blocks to a stack, then apply them to your hosts"
       />
-
-      {features.stacks && (
-        <StackBar
-          stacks={stacks}
-          activeStackId={activeStackId}
-          onLoad={handleLoadStack}
-          onNew={handleNewStack}
-        />
-      )}
 
       <div className="grid grid-cols-12 gap-6">
         {/* Sidebar */}
@@ -519,22 +481,22 @@ export function Configure() {
             )}
           </div>
 
-          {/* Group pills */}
+          {/* Area pills */}
           <div className="flex flex-wrap gap-1.5">
-            {BLOCK_GROUPS.map((group) => (
+            {BLOCK_AREAS.map((area) => (
               <Chip
-                key={group.name}
+                key={area.name}
                 size="sm"
-                active={activeGroup === group.name}
-                onClick={() => setActiveGroup(group.name)}
+                active={activeArea === area.name}
+                onClick={() => setActiveArea(area.name)}
               >
-                {group.label}
+                {area.label}
               </Chip>
             ))}
           </div>
 
-          {/* Categories for active group */}
-          {BLOCK_GROUPS.find((g) => g.name === activeGroup)?.categories.map(
+          {/* Categories for the active area */}
+          {BLOCK_AREAS.find((a) => a.name === activeArea)?.categories.map(
             (cat) => {
               const CatIcon = blockIcons[cat.types[0]?.type] || Terminal;
               return (
@@ -582,7 +544,7 @@ export function Configure() {
         {/* Main */}
         <main className="col-span-9">
           {blocks.length === 0 ? (
-            <EmptyState message="Select a saved stack above or add blocks to build a new one" />
+            <EmptyState message="Add blocks from the panel to build a stack" />
           ) : (
             <>
               <BlockStack>{stackItems}</BlockStack>
@@ -592,27 +554,14 @@ export function Configure() {
                 ready={canApply}
                 applying={applying}
                 hasApplied={hasApplied}
-                hasBlocks={blocks.length > 0}
-                showSave={features.stacks}
                 onApply={handleApply}
                 onReset={resetBlocks}
-                onSave={() => setShowSaveDialog(true)}
               />
               <div className="h-24" />
             </>
           )}
         </main>
       </div>
-      <SaveStackDialog
-        open={showSaveDialog}
-        blockCount={blocks.length}
-        onSave={(name, description) => {
-          // TODO: POST /stacks — mock no-op for now
-          console.log("Saving stack:", { name, description, blocks });
-          setShowSaveDialog(false);
-        }}
-        onClose={() => setShowSaveDialog(false)}
-      />
     </ContentArea>
   );
 }
