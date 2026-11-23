@@ -63,32 +63,3 @@ func GetJobsStreamConfig(
 		Discard:     discard,
 	}
 }
-
-// GetJobsConsumerConfig returns the consumer configuration for processing job requests.
-func GetJobsConsumerConfig(
-	consumerConfig *config.AgentConsumer,
-	streamSubjects string,
-) jetstream.ConsumerConfig {
-	// Parse duration string to time.Duration
-	ackWait, _ := time.ParseDuration(consumerConfig.AckWait)
-
-	// Parse replay policy
-	var replayPolicy jetstream.ReplayPolicy
-	if consumerConfig.ReplayPolicy == "original" {
-		replayPolicy = jetstream.ReplayOriginalPolicy
-	} else {
-		replayPolicy = jetstream.ReplayInstantPolicy
-	}
-
-	return jetstream.ConsumerConfig{
-		Name:          consumerConfig.Name,
-		Description:   "Consumer for processing job requests",
-		Durable:       consumerConfig.Name,
-		AckPolicy:     jetstream.AckExplicitPolicy,
-		MaxDeliver:    consumerConfig.MaxDeliver,
-		AckWait:       ackWait,
-		MaxAckPending: consumerConfig.MaxAckPending,
-		FilterSubject: streamSubjects,
-		ReplayPolicy:  replayPolicy,
-	}
-}
