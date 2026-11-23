@@ -116,6 +116,7 @@ command.Column.Label string	boundary	what the output prints, derived from the st
 command.Column.None string	boundary	what the output prints, derived from the struct tags
 command.Column.Prefix string	boundary	what the output prints, derived from the struct tags
 command.Column.Render string	checked	from the render tag, which the tag rule checks
+command.Done(flags string)	checked	the flags of an example, which validate checks against the command
 command.Define(doc string)	free text	prose for a page or a message
 command.Define(name string)	identity	a name that the registry, the route or the command path holds
 command.Example.Doc string	free text	prose for a page or a message
