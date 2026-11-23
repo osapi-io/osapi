@@ -59,7 +59,7 @@ var Group = endpoint.Define(
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("status_operations", "Node/Status", "The status summary of a node"),
-	endpoint.CommandNotes("The [status behavior](../../../../../reference/behaviors/status/status.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.CommandNotes("The [status behavior](../../../../../reference/behaviors/node/status/status.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[GetRequest, StatusGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodeStatus").

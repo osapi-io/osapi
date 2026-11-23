@@ -75,9 +75,9 @@ Linux families. The behaviors read each Linux host.
 
 ## Permissions
 
-The [log entry](../reference/behaviors/entry/entry.md) and
-[log source](../reference/behaviors/source/source.md) reference pages give the
-permission of each method.
+The [log entry](../reference/behaviors/node/entry/entry.md) and
+[log source](../reference/behaviors/node/source/source.md) reference pages give
+the permission of each method.
 
 ## Related
 

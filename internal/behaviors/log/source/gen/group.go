@@ -48,7 +48,7 @@ var Group = endpoint.Define(
 	endpoint.Prefix("node/{hostname}/log"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("log_source_operations", "Node/Source", "The sources that write to the systemd journal"),
-	endpoint.CommandNotes("The [source behavior](../../../../../../reference/behaviors/source/source.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.CommandNotes("The [source behavior](../../../../../../reference/behaviors/node/source/source.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[ListRequest, LogSourceCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeLogSource").

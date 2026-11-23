@@ -195,7 +195,7 @@ var Group = endpoint.Define(
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("user_operations", "Node/User", "The users of the host"),
-	endpoint.CommandNotes("The [user behavior](../../../../../reference/behaviors/user/user.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.CommandNotes("The [user behavior](../../../../../reference/behaviors/security/user/user.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[ListRequest, UserCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeUser").

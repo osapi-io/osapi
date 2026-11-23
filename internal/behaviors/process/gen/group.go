@@ -114,7 +114,7 @@ var Group = endpoint.Define(
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("process_operations", "Node/Process", "The processes of the host"),
-	endpoint.CommandNotes("The [process behavior](../../../../../reference/behaviors/process/process.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.CommandNotes("The [process behavior](../../../../../reference/behaviors/node/process/process.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[ListRequest, ProcessCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeProcess").

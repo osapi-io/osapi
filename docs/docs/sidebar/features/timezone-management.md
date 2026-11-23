@@ -5,7 +5,8 @@ sidebar_position: 12
 # Timezone management
 
 osapi reads the system timezone of each host, and sets it on the Debian family.
-It is the [timezone behavior](../reference/behaviors/timezone/timezone.md). The
+It is the
+[timezone behavior](../reference/behaviors/config/timezone/timezone.md). The
 update is idempotent. If the host already has the timezone, the agent changes
 nothing and returns `changed: false`.
 
@@ -29,10 +30,11 @@ be an IANA name, such as `UTC` or `America/Argentina/Buenos_Aires`.
 ## Permissions and platforms
 
 The generated page of each behavior gives the permission, the platforms and the
-route of each method: [timezone](../reference/behaviors/timezone/timezone.md).
-The pages come from the definitions, so they stay true when a method changes,
-and this page does not copy them. [Authentication](authentication.md) tells
-which permissions each role has.
+route of each method:
+[timezone](../reference/behaviors/config/timezone/timezone.md). The pages come
+from the definitions, so they stay true when a method changes, and this page
+does not copy them. [Authentication](authentication.md) tells which permissions
+each role has.
 
 ## CLI usage
 

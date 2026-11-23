@@ -140,7 +140,7 @@ type refOut struct {
 func (s *MethodsPublicTestSuite) TestGenerateReference() {
 	pages := []clidocs.Page{
 		{
-			Path:  "docs/docs/sidebar/reference/behaviors/dns/dns.md",
+			Path:  "docs/docs/sidebar/reference/behaviors/networking/dns/dns.md",
 			Title: "DNS",
 			Intro: "The resolvers.",
 			Parts: []clidocs.Part{
@@ -155,6 +155,10 @@ func (s *MethodsPublicTestSuite) TestGenerateReference() {
 			Path: "docs/docs/sidebar/reference/behaviors/_catalog.mdx", Partial: true,
 			Parts: []clidocs.Part{{Group: "behavior", Out: refOut{Name: "all"}}},
 		},
+		{
+			Path: "docs/docs/sidebar/reference/behaviors/networking/_category_.json",
+			Text: "{\"label\": \"Networking\"}\n",
+		},
 	}
 	d := clidocs.Deps{Pages: func() ([]clidocs.Page, error) { return pages, nil }}
 	root := s.T().TempDir()
@@ -164,6 +168,20 @@ func (s *MethodsPublicTestSuite) TestGenerateReference() {
 	s.Require().NoError(os.WriteFile(stale, []byte(guide.Generated), 0o644))
 	landing := filepath.Join(staleDir, "chains.mdx")
 	s.Require().NoError(os.WriteFile(landing, []byte("written by a person"), 0o644))
+	topCategory := filepath.Join(staleDir, "_category_.json")
+	s.Require().NoError(os.WriteFile(topCategory, []byte("{}"), 0o644))
+	// A folder of an area that has no page now, with the folder of a page
+	// that moved in it.
+	goneArea := filepath.Join(root, "docs/docs/sidebar/reference/behaviors/kitchen")
+	s.Require().NoError(os.MkdirAll(filepath.Join(goneArea, "oven"), 0o755))
+	s.Require().NoError(os.WriteFile(filepath.Join(goneArea, "_category_.json"),
+		[]byte("{}"), 0o644))
+	s.Require().NoError(os.WriteFile(filepath.Join(goneArea, "oven", "oven.md"),
+		[]byte(guide.Generated), 0o644))
+	kept := filepath.Join(root, "docs/docs/sidebar/reference/behaviors/notes")
+	s.Require().NoError(os.MkdirAll(kept, 0o755))
+	s.Require().NoError(os.WriteFile(filepath.Join(kept, "notes.md"),
+		[]byte("written by a person"), 0o644))
 
 	got, err := clidocs.GenerateReference(
 		context.Background(),
@@ -172,7 +190,7 @@ func (s *MethodsPublicTestSuite) TestGenerateReference() {
 	)
 
 	s.Require().NoError(err)
-	s.Equal(2, got.Pages)
+	s.Equal(3, got.Pages)
 	page, err := os.ReadFile(filepath.Join(root, pages[0].Path))
 	s.Require().NoError(err)
 	s.Contains(
@@ -186,6 +204,12 @@ func (s *MethodsPublicTestSuite) TestGenerateReference() {
 	s.True(strings.HasPrefix(string(part), "{/* Code generated"), "a partial has no front matter")
 	s.NoFileExists(stale, "a generated page that no command writes is removed")
 	s.FileExists(landing, "a page that a person wrote stays")
+	category, err := os.ReadFile(filepath.Join(root, pages[2].Path))
+	s.Require().NoError(err)
+	s.Equal(pages[2].Text, string(category), "a page with text is the text as it is")
+	s.FileExists(topCategory, "the _category_.json of a reference directory stays")
+	s.NoDirExists(goneArea, "a folder that no page is in now is removed, with its category")
+	s.DirExists(kept, "a folder with a page that a person wrote stays")
 
 	wd, _ := os.Getwd()
 	s.Require().NoError(os.Chdir(root))

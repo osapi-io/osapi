@@ -11,12 +11,12 @@ The behaviors that sysctl calls, and each call that its examples make.
 
 ## Chain
 
-|          |                                                        |
-| -------- | ------------------------------------------------------ |
-| Behavior | [sysctl](../behaviors/sysctl/sysctl.md)                |
-| Chain    | sysctl → managedfile                                   |
-| Calls    | [managedfile](../behaviors/managedfile/managedfile.md) |
-| Used by  | none                                                   |
+|          |                                                                 |
+| -------- | --------------------------------------------------------------- |
+| Behavior | [sysctl](../behaviors/config/sysctl/sysctl.md)                  |
+| Chain    | sysctl → managedfile                                            |
+| Calls    | [managedfile](../behaviors/internal/managedfile/managedfile.md) |
+| Used by  | none                                                            |
 
 ## Every parameter, and which osapi manages (list)
 

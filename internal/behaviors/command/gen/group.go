@@ -89,7 +89,7 @@ var Group = endpoint.Define(
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("command_operations", "Node/Command", "Run a command on target hosts"),
-	endpoint.CommandNotes("The [command behavior](../../../../../reference/behaviors/command/command.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.CommandNotes("The [command behavior](../../../../../reference/behaviors/command/command/command.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Post[ExecRequest, CommandExecResponse]("exec").
 		Handle(HandleExec).
 		ID("PostNodeCommandExec").

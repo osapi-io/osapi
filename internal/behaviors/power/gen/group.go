@@ -84,7 +84,7 @@ var Group = endpoint.Define(
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("power_operations", "Node/Power", "Reboot or shut down the host"),
-	endpoint.CommandNotes("The [power behavior](../../../../../reference/behaviors/power/power.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.CommandNotes("The [power behavior](../../../../../reference/behaviors/node/power/power.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Post[RebootRequest, PowerRebootResponse]("reboot").
 		Handle(HandleReboot).
 		ID("PostNodePowerReboot").

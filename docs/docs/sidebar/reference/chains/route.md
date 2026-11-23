@@ -11,12 +11,12 @@ The behaviors that route calls, and each call that its examples make.
 
 ## Chain
 
-|          |                                            |
-| -------- | ------------------------------------------ |
-| Behavior | [route](../behaviors/route/route.md)       |
-| Chain    | route → netplan → managedfile              |
-| Calls    | [netplan](../behaviors/netplan/netplan.md) |
-| Used by  | none                                       |
+|          |                                                     |
+| -------- | --------------------------------------------------- |
+| Behavior | [route](../behaviors/networking/route/route.md)     |
+| Chain    | route → netplan → managedfile                       |
+| Calls    | [netplan](../behaviors/internal/netplan/netplan.md) |
+| Used by  | none                                                |
 
 ## A route (create)
 

@@ -93,7 +93,7 @@ for how osapi finds the OS family.
 
 ## Permissions
 
-The [power](../reference/behaviors/power/power.md) reference page gives the
+The [power](../reference/behaviors/node/power/power.md) reference page gives the
 permission of each method.
 
 ## Related

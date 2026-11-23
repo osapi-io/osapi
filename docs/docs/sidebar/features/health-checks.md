@@ -131,7 +131,7 @@ or the [API Reference](/gen/api/health-check-api-health) for the REST endpoints.
 
 ## Permissions
 
-The [health](../reference/endpoints/health.md) reference page gives the
+The [health](../reference/endpoints/fleet/health.md) reference page gives the
 permission of each method.
 
 ## Related

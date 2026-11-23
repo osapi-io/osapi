@@ -762,11 +762,12 @@ The double of the provider, from go generate
 
 Use: Run it again after provider.go changes.
 
-### `docs/docs/sidebar/reference/behaviors/<name>/`
+### `docs/docs/sidebar/reference/behaviors/<area>/<name>/`
 
-The docs page of the behavior: the output of osapi behavior get and osapi
-behavior method get, as markdown, from just cli-docs-generate (osapi cli docs
-reference generate).
+The docs page of the behavior, in the folder of its area, or of internal for an
+internal behavior: the output of osapi behavior get and osapi behavior method
+get, as markdown, from just cli-docs-generate (osapi cli docs reference
+generate).
 
 Use: Change the definition, then run just cli-docs-generate. A page that shows
 the wrong thing is fixed in the definition, or in the get command that shows it.

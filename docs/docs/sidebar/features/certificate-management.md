@@ -6,8 +6,8 @@ sidebar_position: 24
 
 osapi reads the certificate authorities (CAs) that a host trusts, and adds and
 removes the CAs that it deploys. The
-[certificate behavior](../reference/behaviors/certificate/certificate.md) does
-this work.
+[certificate behavior](../reference/behaviors/security/certificate/certificate.md)
+does this work.
 
 ## How it works
 
@@ -123,13 +123,13 @@ on a host.
 
 ## Permissions
 
-The [certificate](../reference/behaviors/certificate/certificate.md) reference
-page gives the permission of each method.
+The [certificate](../reference/behaviors/security/certificate/certificate.md)
+reference page gives the permission of each method.
 
 ## Related
 
-- [Behavior reference](../reference/behaviors/certificate/certificate.md): the
-  certificate behavior
+- [Behavior reference](../reference/behaviors/security/certificate/certificate.md):
+  the certificate behavior
 - [CLI Reference](../usage/cli/client/node/certificate/certificate.mdx):
   certificate commands
 - [SDK Reference](../sdk/client/security/certificate.md): Certificate service

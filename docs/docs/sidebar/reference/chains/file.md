@@ -11,12 +11,12 @@ The behaviors that file calls, and each call that its examples make.
 
 ## Chain
 
-|          |                                                                                                 |
-| -------- | ----------------------------------------------------------------------------------------------- |
-| Behavior | [file](../behaviors/file/file.md)                                                               |
-| Chain    | file → (object, managedfile)                                                                    |
-| Calls    | [object](../behaviors/object/object.md), [managedfile](../behaviors/managedfile/managedfile.md) |
-| Used by  | none                                                                                            |
+|          |                                                                                                                   |
+| -------- | ----------------------------------------------------------------------------------------------------------------- |
+| Behavior | [file](../behaviors/config/file/file.md)                                                                          |
+| Chain    | file → (object, managedfile)                                                                                      |
+| Calls    | [object](../behaviors/internal/object/object.md), [managedfile](../behaviors/internal/managedfile/managedfile.md) |
+| Used by  | none                                                                                                              |
 
 ## A deployed file (status)
 

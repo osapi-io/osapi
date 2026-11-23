@@ -22,10 +22,11 @@ For interface and route management details, see
 
 ## How it works
 
-**DNS.** DNS is the [dns behavior](../reference/behaviors/dns/dns.md). A query
-reads the servers and the search domains of an interface through gohai on every
-platform: `resolvectl` on Linux, `resolv.conf` on a host that has no resolvers
-per interface, such as a container, and `scutil` on macOS. An update writes a
+**DNS.** DNS is the
+[dns behavior](../reference/behaviors/networking/dns/dns.md). A query reads the
+servers and the search domains of an interface through gohai on every platform:
+`resolvectl` on Linux, `resolv.conf` on a host that has no resolvers per
+interface, such as a container, and `scutil` on macOS. An update writes a
 Netplan file of the interface's own, `/etc/netplan/osapi-dns-<interface>.yaml`,
 on the Debian family. It validates the file with `netplan generate`, removes it
 again when that fails, and applies it with `netplan apply`. Thus DNS changes
@@ -49,7 +50,7 @@ the configured servers.
 :::
 
 **Ping.** Ping is the `ping` action of the
-[connectivity behavior](../reference/behaviors/connectivity/connectivity.md),
+[connectivity behavior](../reference/behaviors/networking/connectivity/connectivity.md),
 `osapi client node network connectivity ping --address <ip>`. It runs the host's
 `ping`, three echo requests, and reports what came back: the packets sent and
 received, the loss, and the round-trip times. A host that does not answer is
@@ -92,13 +93,13 @@ authentication settings.
 ## Permissions and platforms
 
 The generated page of each behavior gives the permission, the platforms and the
-route of each method: [dns](../reference/behaviors/dns/dns.md),
-[interface](../reference/behaviors/interface/interface.md),
-[route](../reference/behaviors/route/route.md) and
-[connectivity](../reference/behaviors/connectivity/connectivity.md). The pages
-come from the definitions, so they stay true when a method changes, and this
-page does not copy them. [Authentication](authentication.md) tells which
-permissions each role has.
+route of each method: [dns](../reference/behaviors/networking/dns/dns.md),
+[interface](../reference/behaviors/networking/interface/interface.md),
+[route](../reference/behaviors/networking/route/route.md) and
+[connectivity](../reference/behaviors/networking/connectivity/connectivity.md).
+The pages come from the definitions, so they stay true when a method changes,
+and this page does not copy them. [Authentication](authentication.md) tells
+which permissions each role has.
 
 ## Related
 

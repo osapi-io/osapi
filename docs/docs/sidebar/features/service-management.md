@@ -6,13 +6,14 @@ sidebar_position: 25
 
 osapi reads the systemd services of each host. It deploys, removes, starts,
 stops, restarts, enables and disables the services that it deploys itself. It is
-the [service](../reference/behaviors/service/service.md) behavior.
+the [service](../reference/behaviors/services/service/service.md) behavior.
 
 A unit file goes to the fleet in two steps. Upload the file one time with
 `osapi client file upload`. Then deploy it by its name to each host. The agent
 gets the object from the Object Store with the
-[object](../reference/behaviors/object/object.md) building block, and writes it
-with [managedfile](../reference/behaviors/managedfile/managedfile.md). The
+[object](../reference/behaviors/internal/object/object.md) building block, and
+writes it with
+[managedfile](../reference/behaviors/internal/managedfile/managedfile.md). The
 [chain](../reference/chains/service.md) of the behavior shows these calls.
 
 ## How it works
@@ -100,16 +101,17 @@ each host.
 ## Permissions and platforms
 
 The generated page of each behavior gives the permission, the platforms and the
-route of each method: [service](../reference/behaviors/service/service.md),
-[object](../reference/behaviors/object/object.md). The pages come from the
-definitions, so they stay true when a method changes, and this page does not
+route of each method:
+[service](../reference/behaviors/services/service/service.md),
+[object](../reference/behaviors/internal/object/object.md). The pages come from
+the definitions, so they stay true when a method changes, and this page does not
 copy them. [Authentication](authentication.md) tells which permissions each role
 has.
 
 ## Related
 
-- [service](../reference/behaviors/service/service.md): each method, with its
-  input, its output and its examples
+- [service](../reference/behaviors/services/service/service.md): each method,
+  with its input, its output and its examples
 - [CLI Reference](../usage/cli/client/node/service/service.mdx): the service
   commands
 - [SDK Reference](../sdk/client/services/service.md): the service of the SDK

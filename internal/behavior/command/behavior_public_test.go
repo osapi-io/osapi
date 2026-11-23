@@ -35,6 +35,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/command"
 	"github.com/osapi-io/osapi/internal/behavior/host"
@@ -344,11 +345,38 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 
 	s.Equal(
 		map[string]string{
-			reference.Notes: "The [kv behavior](../../../../../../reference/behaviors/kv/kv.md) page tells " +
+			reference.Notes: "The [kv behavior](../../../../../../reference/behaviors/internal/kv/kv.md) page tells " +
 				"where the behavior runs, what it is built on and its settings.",
 		},
 		command.GroupAnnotations(b),
 	)
+}
+
+func (s *BehaviorcmdPublicTestSuite) TestReferencePage() {
+	tests := []struct {
+		name string
+		b    *behavior.Behavior
+		want string
+	}{
+		{
+			name: "when the behavior has an area",
+			b: behavior.Define("disk", "Disks", behavior.Node, behavior.Area(area.Hardware),
+				behavior.Read("get", read)),
+			want: "hardware/disk/disk.md",
+		},
+		{
+			name: "when the behavior is internal and has no area",
+			b: behavior.Define("object", "Objects", behavior.Node, behavior.Internal,
+				behavior.Read("get", read)),
+			want: command.InternalFolder + "/object/object.md",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			s.Equal(tt.want, command.ReferencePage(tt.b))
+		})
+	}
 }
 
 // TestScreen renders the osapi:output marker of a page that a person wrote:

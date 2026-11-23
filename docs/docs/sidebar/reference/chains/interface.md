@@ -11,12 +11,12 @@ The behaviors that interface calls, and each call that its examples make.
 
 ## Chain
 
-|          |                                                  |
-| -------- | ------------------------------------------------ |
-| Behavior | [interface](../behaviors/interface/interface.md) |
-| Chain    | interface → netplan → managedfile                |
-| Calls    | [netplan](../behaviors/netplan/netplan.md)       |
-| Used by  | none                                             |
+|          |                                                             |
+| -------- | ----------------------------------------------------------- |
+| Behavior | [interface](../behaviors/networking/interface/interface.md) |
+| Chain    | interface → netplan → managedfile                           |
+| Calls    | [netplan](../behaviors/internal/netplan/netplan.md)         |
+| Used by  | none                                                        |
 
 ## A static address (create)
 

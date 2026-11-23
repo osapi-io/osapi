@@ -57,17 +57,17 @@ List and get read the kernel, not osapi's records. List returns every parameter
 under `/proc/sys`, as `sysctl -a` does, and get returns any parameter's current
 value, whoever set it. A host has about a thousand parameters.
 
-sysctl is a [behavior](../reference/behaviors/sysctl/sysctl.md). Each entry also
-says whether osapi manages it, and list takes a `--prefix`, such as `net.ipv4`,
-to return one part of the tree.
+sysctl is a [behavior](../reference/behaviors/config/sysctl/sysctl.md). Each
+entry also says whether osapi manages it, and list takes a `--prefix`, such as
+`net.ipv4`, to return one part of the tree.
 
 ## Permissions and platforms
 
 The generated page of each behavior gives the permission, the platforms and the
-route of each method: [sysctl](../reference/behaviors/sysctl/sysctl.md). The
-pages come from the definitions, so they stay true when a method changes, and
-this page does not copy them. [Authentication](authentication.md) tells which
-permissions each role has.
+route of each method: [sysctl](../reference/behaviors/config/sysctl/sysctl.md).
+The pages come from the definitions, so they stay true when a method changes,
+and this page does not copy them. [Authentication](authentication.md) tells
+which permissions each role has.
 
 ## CLI usage
 

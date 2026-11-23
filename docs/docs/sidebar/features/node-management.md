@@ -28,16 +28,16 @@ OSAPI separates agent fleet discovery from node system queries:
 
 ## What it manages
 
-| Resource                                                | Description                                                     |
-| ------------------------------------------------------- | --------------------------------------------------------------- |
-| [Hostname](../reference/behaviors/hostname/hostname.md) | Get the hostname, or set it on Debian                           |
-| Status                                                  | Uptime, OS name and version, kernel, platform info              |
-| [Uptime](../reference/behaviors/uptime/uptime.md)       | The time since the host started                                 |
-| [OS](../reference/behaviors/os/os.md)                   | The distribution and its version                                |
-| [Disk](../reference/behaviors/disk/disk.md)             | The size, used and free space of each local filesystem          |
-| [Memory](../reference/behaviors/memory/memory.md)       | The total, used and free memory                                 |
-| [Load](../reference/behaviors/load/load.md)             | The 1, 5 and 15 minute load averages                            |
-| [System Facts](system-facts.md)                         | Architecture, kernel, FQDN, CPUs, NICs, routes, service/pkg mgr |
+| Resource                                                       | Description                                                     |
+| -------------------------------------------------------------- | --------------------------------------------------------------- |
+| [Hostname](../reference/behaviors/config/hostname/hostname.md) | Get the hostname, or set it on Debian                           |
+| Status                                                         | Uptime, OS name and version, kernel, platform info              |
+| [Uptime](../reference/behaviors/node/uptime/uptime.md)         | The time since the host started                                 |
+| [OS](../reference/behaviors/node/os/os.md)                     | The distribution and its version                                |
+| [Disk](../reference/behaviors/hardware/disk/disk.md)           | The size, used and free space of each local filesystem          |
+| [Memory](../reference/behaviors/hardware/memory/memory.md)     | The total, used and free memory                                 |
+| [Load](../reference/behaviors/node/load/load.md)               | The 1, 5 and 15 minute load averages                            |
+| [System Facts](system-facts.md)                                | Architecture, kernel, FQDN, CPUs, NICs, routes, service/pkg mgr |
 
 ## How it works
 
@@ -48,11 +48,12 @@ and shows it.
 
 ### When part of a status cannot be read
 
-`node status` is the [status behavior](../reference/behaviors/status/status.md).
-It runs six separate reads: hostname, uptime, OS, load, memory and disks. When
-one read fails, the others still return. The response names the failure in
-`errors`, and does not show a zero. A zero value looks the same as a host with
-nothing to report.
+`node status` is the
+[status behavior](../reference/behaviors/node/status/status.md). It runs six
+separate reads: hostname, uptime, OS, load, memory and disks. When one read
+fails, the others still return. The response names the failure in `errors`, and
+does not show a zero. A zero value looks the same as a host with nothing to
+report.
 
 Each item of `errors` is the name of the read and its error:
 
@@ -88,13 +89,13 @@ authentication settings.
 ## Permissions and platforms
 
 The generated page of each behavior gives the permission, the platforms and the
-route of each method: [status](../reference/behaviors/status/status.md),
-[hostname](../reference/behaviors/hostname/hostname.md),
-[uptime](../reference/behaviors/uptime/uptime.md),
-[os](../reference/behaviors/os/os.md),
-[disk](../reference/behaviors/disk/disk.md),
-[memory](../reference/behaviors/memory/memory.md),
-[load](../reference/behaviors/load/load.md). The pages come from the
+route of each method: [status](../reference/behaviors/node/status/status.md),
+[hostname](../reference/behaviors/config/hostname/hostname.md),
+[uptime](../reference/behaviors/node/uptime/uptime.md),
+[os](../reference/behaviors/node/os/os.md),
+[disk](../reference/behaviors/hardware/disk/disk.md),
+[memory](../reference/behaviors/hardware/memory/memory.md),
+[load](../reference/behaviors/node/load/load.md). The pages come from the
 definitions, so they stay true when a method changes, and this page does not
 copy them. [Authentication](authentication.md) tells which permissions each role
 has.

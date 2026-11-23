@@ -48,7 +48,7 @@ var Group = endpoint.Define(
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("os_operations", "Node/Os", "Get the operating system of target hosts"),
-	endpoint.CommandNotes("The [os behavior](../../../../../reference/behaviors/os/os.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.CommandNotes("The [os behavior](../../../../../reference/behaviors/node/os/os.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[GetRequest, OsGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodeOs").

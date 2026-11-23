@@ -5,10 +5,10 @@ sidebar_position: 10
 # Container management
 
 osapi manages the Docker containers and images of a host with two behaviors:
-[docker](../reference/behaviors/docker/docker.md) for the containers and
-[image](../reference/behaviors/image/image.md) for the images. Each operation is
-a job, as each osapi operation is. The controller does not connect to Docker.
-The agent on the host does the work.
+[docker](../reference/behaviors/containers/docker/docker.md) for the containers
+and [image](../reference/behaviors/containers/image/image.md) for the images.
+Each operation is a job, as each osapi operation is. The controller does not
+connect to Docker. The agent on the host does the work.
 
 ## What it does
 
@@ -69,15 +69,15 @@ methods do not need it.
 
 ## Permissions
 
-The [docker](../reference/behaviors/docker/docker.md) and
-[image](../reference/behaviors/image/image.md) reference pages give the
-permission of each method.
+The [docker](../reference/behaviors/containers/docker/docker.md) and
+[image](../reference/behaviors/containers/image/image.md) reference pages give
+the permission of each method.
 
 ## Related
 
-- [docker behavior](../reference/behaviors/docker/docker.md) and
-  [image behavior](../reference/behaviors/image/image.md): each method, its
-  input, its output and its examples
+- [docker behavior](../reference/behaviors/containers/docker/docker.md) and
+  [image behavior](../reference/behaviors/containers/image/image.md): each
+  method, its input, its output and its examples
 - [CLI reference](../usage/cli/client/node/container/container.mdx): the
   container commands
 - [Job System](job-system.md): how asynchronous jobs work

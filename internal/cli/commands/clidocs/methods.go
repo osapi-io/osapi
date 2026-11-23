@@ -106,9 +106,15 @@ var referenceDirs = []string{
 	"docs/docs/sidebar/reference/cli",
 }
 
+// categoryFile is the file that gives a folder of the docs site its label
+// and its place in the sidebar.
+const categoryFile = "_category_.json"
+
 // GenerateReference writes each page of the reference, from the outputs of
 // the commands that show it, and removes each generated page there that no
-// command writes now.
+// command writes now. A _category_.json in a folder under a reference
+// directory is generated too: one that no command writes now is removed,
+// then each folder that is empty.
 func GenerateReference(
 	_ context.Context,
 	d Deps,
@@ -138,10 +144,22 @@ func GenerateReference(
 		written[filepath.Clean(path)] = true
 	}
 	for _, dir := range referenceDirs {
+		top := filepath.Join(root, dir)
+		var folders []string
 		_ = filepath.WalkDir(
-			filepath.Join(root, dir),
+			top,
 			func(path string, e fs.DirEntry, err error) error {
-				if err != nil || e.IsDir() || written[filepath.Clean(path)] {
+				if err != nil || written[filepath.Clean(path)] {
+					return nil
+				}
+				if e.IsDir() {
+					folders = append(folders, path)
+
+					return nil
+				}
+				if e.Name() == categoryFile && filepath.Dir(path) != top {
+					_ = os.Remove(path)
+
 					return nil
 				}
 				if data, err := os.ReadFile(
@@ -154,6 +172,11 @@ func GenerateReference(
 				return nil
 			},
 		)
+		// The walk lists a folder before the folders in it, so the last
+		// is removed first; a folder that is not empty stays.
+		for i := len(folders) - 1; i > 0; i-- {
+			_ = os.Remove(folders[i])
+		}
 	}
 
 	if err := writeTables(root, d.Tables); err != nil {
@@ -214,6 +237,9 @@ func writeTables(
 func page(
 	p Page,
 ) (string, error) {
+	if p.Text != "" {
+		return p.Text, nil
+	}
 	var sb strings.Builder
 	if p.Partial {
 		sb.WriteString(

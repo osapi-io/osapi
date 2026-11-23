@@ -11,12 +11,12 @@ The behaviors that service calls, and each call that its examples make.
 
 ## Chain
 
-|          |                                                                                                 |
-| -------- | ----------------------------------------------------------------------------------------------- |
-| Behavior | [service](../behaviors/service/service.md)                                                      |
-| Chain    | service → (object, managedfile)                                                                 |
-| Calls    | [object](../behaviors/object/object.md), [managedfile](../behaviors/managedfile/managedfile.md) |
-| Used by  | none                                                                                            |
+|          |                                                                                                                   |
+| -------- | ----------------------------------------------------------------------------------------------------------------- |
+| Behavior | [service](../behaviors/services/service/service.md)                                                               |
+| Chain    | service → (object, managedfile)                                                                                   |
+| Calls    | [object](../behaviors/internal/object/object.md), [managedfile](../behaviors/internal/managedfile/managedfile.md) |
+| Used by  | none                                                                                                              |
 
 ## A service that osapi deployed reads by its name (list)
 

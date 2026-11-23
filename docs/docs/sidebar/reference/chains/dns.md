@@ -11,12 +11,12 @@ The behaviors that dns calls, and each call that its examples make.
 
 ## Chain
 
-|          |                                            |
-| -------- | ------------------------------------------ |
-| Behavior | [dns](../behaviors/dns/dns.md)             |
-| Chain    | dns → netplan → managedfile                |
-| Calls    | [netplan](../behaviors/netplan/netplan.md) |
-| Used by  | none                                       |
+|          |                                                     |
+| -------- | --------------------------------------------------- |
+| Behavior | [dns](../behaviors/networking/dns/dns.md)           |
+| Chain    | dns → netplan → managedfile                         |
+| Calls    | [netplan](../behaviors/internal/netplan/netplan.md) |
+| Used by  | none                                                |
 
 ## Set the servers of an interface (update)
 

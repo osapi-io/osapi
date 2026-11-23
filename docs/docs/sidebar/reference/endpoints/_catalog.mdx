@@ -2,15 +2,15 @@
 
 ### Endpoint groups (10)
 
-| NAME                        | AREA  | METHODS                                  | DESCRIPTION                                                         |
-| --------------------------- | ----- | ---------------------------------------- | ------------------------------------------------------------------- |
-| [admission](admission.md)   | fleet | list, get, admit, reject, revoke, delete | The admission of nodes                                              |
-| [agent](agent.md)           | fleet | status, list, get, drain, undrain        | Manage the agents in the fleet: discovery, drain and PKI enrollment |
-| [audit](audit.md)           | audit | list, export, get                        | Read the audit log                                                  |
-| [controller](controller.md) | fleet | status                                   | The controller of the fleet                                         |
-| [facts](facts.md)           | fleet | list                                     | Read the facts that an input can refer to                           |
-| [file](file.md)             | files | list, upload, get, update, delete, stale | Manage the files in the Object Store                                |
-| [health](health.md)         | fleet | liveness, ready, status                  | Check the health of the controller                                  |
-| [job](job.md)               | fleet | list, get, delete, retry                 | Manage the jobs in the queue                                        |
-| [nats](nats.md)             | fleet | status                                   | The NATS server of the fleet                                        |
-| [telemetry](telemetry.md)   | fleet | get                                      | Read telemetry through the controller                               |
+| NAME                              | AREA  | METHODS                                  | DESCRIPTION                                                         |
+| --------------------------------- | ----- | ---------------------------------------- | ------------------------------------------------------------------- |
+| [admission](fleet/admission.md)   | fleet | list, get, admit, reject, revoke, delete | The admission of nodes                                              |
+| [agent](fleet/agent.md)           | fleet | status, list, get, drain, undrain        | Manage the agents in the fleet: discovery, drain and PKI enrollment |
+| [audit](audit/audit.md)           | audit | list, export, get                        | Read the audit log                                                  |
+| [controller](fleet/controller.md) | fleet | status                                   | The controller of the fleet                                         |
+| [facts](fleet/facts.md)           | fleet | list                                     | Read the facts that an input can refer to                           |
+| [file](files/file.md)             | files | list, upload, get, update, delete, stale | Manage the files in the Object Store                                |
+| [health](fleet/health.md)         | fleet | liveness, ready, status                  | Check the health of the controller                                  |
+| [job](fleet/job.md)               | fleet | list, get, delete, retry                 | Manage the jobs in the queue                                        |
+| [nats](fleet/nats.md)             | fleet | status                                   | The NATS server of the fleet                                        |
+| [telemetry](fleet/telemetry.md)   | fleet | get                                      | Read telemetry through the controller                               |

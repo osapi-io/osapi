@@ -132,7 +132,7 @@ var Group = endpoint.Define(
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("ntp_operations", "Node/Ntp", "The NTP servers of chrony, and its sync status"),
-	endpoint.CommandNotes("The [ntp behavior](../../../../../reference/behaviors/ntp/ntp.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.CommandNotes("The [ntp behavior](../../../../../reference/behaviors/config/ntp/ntp.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[GetRequest, NtpGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodeNtp").

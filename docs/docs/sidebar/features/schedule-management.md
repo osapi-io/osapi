@@ -18,8 +18,8 @@ separate, and you can update a script as a new version.
 
 The `schedule` behavior supplies the API, the CLI commands, the SDK service and
 the UI blocks. The
-[behavior reference](../reference/behaviors/schedule/schedule.md) has each
-method, its fields and its examples.
+[behavior reference](../reference/behaviors/config/schedule/schedule.md) has
+each method, its fields and its examples.
 
 ## How it works
 
@@ -196,8 +196,8 @@ family.
 
 ## Permissions
 
-The [schedule](../reference/behaviors/schedule/schedule.md) reference page gives
-the permission of each method.
+The [schedule](../reference/behaviors/config/schedule/schedule.md) reference
+page gives the permission of each method.
 
 ## Naming rules
 
