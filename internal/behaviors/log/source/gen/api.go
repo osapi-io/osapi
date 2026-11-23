@@ -16,7 +16,7 @@ func Routes(
 		{
 			Method:     http.MethodGet,
 			Path:       "/api/node/:hostname/log/source",
-			Permission: "log:read",
+			Permission: "source:read",
 			Handler:    server.Serve(s, Group, "list", HandleList, decodeList),
 		},
 	}

@@ -63,7 +63,7 @@ var Group = endpoint.Define(
 		Handle(HandlePing).
 		ID("PostNodeNetworkConnectivityPing").
 		Describe("Ping an address from the host").
-		Permission("network:execute").
+		Permission("connectivity:execute").
 		Returns("Each target host's result, with whether it changed.").
 		Action("ping").
 		Explain("Sends three ICMP echo requests from the host and reports how many came back, and their round-trip times. A host that does not answer is 100% loss, not an error. It changes nothing, so it reports changed: false. On Linux the agent pings without root when net.ipv4.ping_group_range admits its group.").

@@ -93,9 +93,12 @@ resp, err := c.Docker.RemoveImage(ctx, "_any", "alpine:3.20", false)
 
 ## Permissions
 
-| Operation                   | Permission          |
-| --------------------------- | ------------------- |
-| List, Get, ListImages       | `container:read`    |
-| Create, Remove, RemoveImage | `container:write`   |
-| Start, Stop, Pull           | `container:execute` |
-| Exec                        | `container:exec`    |
+| Operation      | Permission       |
+| -------------- | ---------------- |
+| List, Get      | `docker:read`    |
+| Create, Remove | `docker:write`   |
+| Start, Stop    | `docker:execute` |
+| Exec           | `docker:exec`    |
+| ListImages     | `image:read`     |
+| RemoveImage    | `image:write`    |
+| Pull           | `image:execute`  |

@@ -68,10 +68,10 @@ none.
 
 ### `Under(GroupName)`
 
-Nests the behavior in a group: its routes, commands, directory and the prefix of
-its permissions. Use a constant, such as GroupNetwork; behavior validate refuses
-a group outside KnownGroups, because a misspelled group makes a new route,
-command and permission.
+Nests the behavior in a group: its routes, commands and directory. The
+permissions keep the behavior's name: dns under network needs dns:read. Use a
+constant, such as GroupNetwork; behavior validate refuses a group outside
+KnownGroups, because a misspelled group makes a new route and command.
 
 Use: When the behavior belongs to a group, such as network. Add the group's
 constant to KnownGroups first.
@@ -220,7 +220,7 @@ own it. A fact that gohai does not read is a change to gohai first.
 ### `.PermitAs(verb) on an action`
 
 Makes the action's permission &lt;name&gt;:&lt;verb&gt; in place of
-&lt;name&gt;:execute, such as container:exec with behavior.VerbExec. Thus the
+&lt;name&gt;:execute, such as docker:exec with behavior.VerbExec. Thus the
 action does not share a permission with the other actions of its behavior, which
 the operator role gets. Only the admin role gets the verb: behavior.VerbExec or
 behavior.VerbShell. behavior validate refuses it on a method that is not an

@@ -132,8 +132,8 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 			validateFunc: func(resolved map[string]bool) {
 				for _, p := range []string{
 					string(client.PermHostnameRead),
-					string(client.PermNetworkRead),
-					string(client.PermNetworkWrite),
+					string(client.PermDnsRead),
+					string(client.PermDnsWrite),
 					string(client.PermJobRead),
 					string(client.PermJobWrite),
 					string(client.PermHealthRead),
@@ -157,7 +157,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 			validateFunc: func(resolved map[string]bool) {
 				for _, p := range []string{
 					string(client.PermHostnameRead),
-					string(client.PermNetworkRead),
+					string(client.PermDnsRead),
 					string(client.PermJobRead),
 					string(client.PermHealthRead),
 					string(client.PermFileRead),
@@ -165,7 +165,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 					s.True(resolved[string(p)], "expected permission %s to be present", p)
 				}
 				for _, p := range []string{
-					string(client.PermNetworkWrite),
+					string(client.PermDnsWrite),
 					string(client.PermJobWrite),
 					string(client.PermAuditRead),
 					string(client.PermFileWrite),
@@ -212,8 +212,8 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 					s.True(resolved[string(p)], "expected permission %s to be present", p)
 				}
 				for _, p := range []string{
-					string(client.PermNetworkRead),
-					string(client.PermNetworkWrite),
+					string(client.PermDnsRead),
+					string(client.PermDnsWrite),
 					string(client.PermJobRead),
 					string(client.PermJobWrite),
 					string(client.PermHealthRead),
@@ -237,8 +237,8 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 					s.True(resolved[string(p)], "expected permission %s to be present", p)
 				}
 				for _, p := range []string{
-					string(client.PermNetworkRead),
-					string(client.PermNetworkWrite),
+					string(client.PermDnsRead),
+					string(client.PermDnsWrite),
 					string(client.PermJobRead),
 					string(client.PermJobWrite),
 				} {
@@ -258,7 +258,7 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 				}
 				for _, p := range []string{
 					string(client.PermHostnameRead),
-					string(client.PermNetworkRead),
+					string(client.PermDnsRead),
 				} {
 					s.False(resolved[string(p)], "expected permission %s to be absent", p)
 				}
@@ -278,8 +278,8 @@ func (s *PermissionsPublicTestSuite) TestResolvePermissions() {
 			validateFunc: func(resolved map[string]bool) {
 				for _, p := range []string{
 					string(client.PermHostnameRead),
-					string(client.PermNetworkRead),
-					string(client.PermNetworkWrite),
+					string(client.PermDnsRead),
+					string(client.PermDnsWrite),
 					string(client.PermJobRead),
 					string(client.PermJobWrite),
 					string(client.PermHealthRead),
@@ -366,12 +366,12 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 				)
 				s.Contains(
 					perms,
-					client.PermContainerExecute,
-					"a container's start and stop, and an image pull, are not admin only",
+					client.PermDockerExecute,
+					"a container's start and stop are not admin only",
 				)
 				s.NotContains(
 					perms,
-					client.PermContainerExec,
+					client.PermDockerExec,
 					"a command in a container is admin only",
 				)
 				s.NotContains(perms, client.PermCommandShell)
@@ -408,7 +408,7 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 				s.NotContains(perms, authtoken.Permission("motdperm:write"))
 				s.NotContains(perms, client.PermAuditRead)
 				s.Contains(perms, client.PermAdmissionRead)
-				s.Contains(perms, client.PermLogRead, "read keeps logs, files and processes")
+				s.Contains(perms, client.PermEntryRead, "read keeps logs, files and processes")
 			},
 		},
 		{
@@ -468,7 +468,7 @@ func (s *PermissionsPublicTestSuite) TestRoles() {
 
 func (s *PermissionsPublicTestSuite) TestAdminOnly() {
 	s.True(authtoken.AdminOnly(client.PermCommandShell), "by its verb")
-	s.True(authtoken.AdminOnly(client.PermContainerExec), "by its verb")
+	s.True(authtoken.AdminOnly(client.PermDockerExec), "by its verb")
 	s.True(authtoken.AdminOnly(client.PermCommandExecute), "by its mark")
 	s.False(authtoken.AdminOnly(client.PermPowerExecute), "an execute verb is not admin only")
 	s.True(authtoken.AdminOnly(client.PermAgentWrite), "by its mark")

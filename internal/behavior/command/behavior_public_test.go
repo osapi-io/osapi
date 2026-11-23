@@ -286,7 +286,7 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 		command.Example(b, b.Method("list")),
 	)
 	list := command.Annotations(b, b.Method("list"))
-	s.Equal("store:read", list[reference.Permission])
+	s.Equal("kv:read", list[reference.Permission])
 	out := list[reference.Result]
 	s.True(strings.HasPrefix(
 		out,
@@ -309,7 +309,7 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 	s.Contains(out, "No keys, on one host:\n\n```ansi\n", "an empty list still shows its output")
 
 	create := command.Annotations(b, b.Method("create"))
-	s.Equal("store:write", create[reference.Permission])
+	s.Equal("kv:write", create[reference.Permission])
 	result := create[reference.Result]
 	s.Contains(
 		result,

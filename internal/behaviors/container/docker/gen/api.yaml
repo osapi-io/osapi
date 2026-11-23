@@ -445,7 +445,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - container:read
+            - docker:read
       summary: List the containers of the host
       tags:
         - container_docker_operations
@@ -505,7 +505,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - container:write
+            - docker:write
       summary: Create a container
       tags:
         - container_docker_operations
@@ -561,7 +561,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - container:write
+            - docker:write
       summary: Remove a container
       tags:
         - container_docker_operations
@@ -616,13 +616,13 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - container:read
+            - docker:read
       summary: Get one container
       tags:
         - container_docker_operations
   /api/node/{hostname}/container/docker/{name}/exec:
     post:
-      description: 'Runs docker exec, and answers what the command wrote to standard output and to standard error, and its exit code. A command that exits with a code other than 0 is an answer, not a failure. It changes what the command changes, which osapi cannot tell, so it reports changed: true. Its permission is container:exec, which only the admin role gets, apart from the container:execute of start, stop and image pull. An agent with agent.command.enabled false refuses it, as it refuses a command.'
+      description: 'Runs docker exec, and answers what the command wrote to standard output and to standard error, and its exit code. A command that exits with a code other than 0 is an answer, not a failure. It changes what the command changes, which osapi cannot tell, so it reports changed: true. Its permission is docker:exec, which only the admin role gets, apart from the docker:execute of start and stop. An agent with agent.command.enabled false refuses it, as it refuses a command.'
       operationId: PostNodeContainerDockerExec
       parameters:
         - $ref: '#/components/parameters/Hostname'
@@ -678,7 +678,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - container:exec
+            - docker:exec
       summary: Run a command in a container
       tags:
         - container_docker_operations
@@ -734,7 +734,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - container:execute
+            - docker:execute
       summary: Start a container
       tags:
         - container_docker_operations
@@ -796,7 +796,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - container:execute
+            - docker:execute
       summary: Stop a container
       tags:
         - container_docker_operations

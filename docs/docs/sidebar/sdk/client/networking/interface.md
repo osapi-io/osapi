@@ -126,10 +126,10 @@ for a complete working example.
 
 ## Permissions
 
-| Operation              | Permission      |
-| ---------------------- | --------------- |
-| List, Get              | `network:read`  |
-| Create, Update, Delete | `network:write` |
+| Operation              | Permission        |
+| ---------------------- | ----------------- |
+| List, Get              | `interface:read`  |
+| Create, Update, Delete | `interface:write` |
 
 List and Get run on every platform. Create, Update and Delete run on the Debian
 OS family (Ubuntu, Debian, Raspbian). On other platforms (Darwin, generic

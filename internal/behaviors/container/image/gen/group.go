@@ -127,7 +127,7 @@ var Group = endpoint.Define(
 		Handle(HandleList).
 		ID("GetNodeContainerImage").
 		Describe("List the images of the host").
-		Permission("container:read").
+		Permission("image:read").
 		Returns("Each target host's result.").
 		Explain("Reads each image through gohai's docker collector, which runs docker images. A host whose docker does not answer reports skipped.").
 		Example("--target web-01", "A host with an image").
@@ -137,7 +137,7 @@ var Group = endpoint.Define(
 		Handle(HandlePull).
 		ID("PostNodeContainerImagePull").
 		Describe("Pull an image").
-		Permission("container:execute").
+		Permission("image:execute").
 		Returns("Each target host's result, with whether it changed.").
 		Action("pull").
 		Explain("Runs docker pull, and answers the ID and the size of the image that the host has after it. A pull that gets nothing new, because the host had the image of that reference already, reports changed: false.").
@@ -148,7 +148,7 @@ var Group = endpoint.Define(
 		Handle(HandleDelete).
 		ID("DeleteNodeContainerImage").
 		Describe("Remove an image").
-		Permission("container:write").
+		Permission("image:write").
 		Returns("Each target host's result, with whether it changed.").
 		Explain("Runs docker rmi, with -f when force is set, which removes an image that a container uses. An image that the host does not have reports changed: false.").
 		Example("--target web-01 --image alpine:3.20", "Remove an image").

@@ -60,4 +60,4 @@ for a complete program.
 
 ## Permissions
 
-`log:read`.
+The entries need `entry:read`. The sources need `source:read`.

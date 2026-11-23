@@ -108,7 +108,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindOption,
 			Name: `Under(GroupName)`,
-			Does: "Nests the behavior in a group: its routes, commands, directory and the prefix of its permissions. Use a constant, such as GroupNetwork; behavior validate refuses a group outside KnownGroups, because a misspelled group makes a new route, command and permission.",
+			Does: "Nests the behavior in a group: its routes, commands and directory. The permissions keep the behavior's name: dns under network needs dns:read. Use a constant, such as GroupNetwork; behavior validate refuses a group outside KnownGroups, because a misspelled group makes a new route and command.",
 			When: "When the behavior belongs to a group, such as network. Add the group's constant to KnownGroups first.",
 		},
 		{
@@ -291,7 +291,7 @@ var Spec = guide.Spec{
 			Kind: KindRefine,
 			Name: ".PermitAs(verb) on an action",
 			Does: "Makes the action's permission <name>:<verb> in place of <name>:execute, such as " +
-				"container:exec with behavior.VerbExec. Thus the action does not share a permission " +
+				"docker:exec with behavior.VerbExec. Thus the action does not share a permission " +
 				"with the other actions of its behavior, which the operator role gets. Only the admin " +
 				"role gets the verb: behavior.VerbExec or behavior.VerbShell. behavior validate refuses " +
 				"it on a method that is not an action, and a different verb.",

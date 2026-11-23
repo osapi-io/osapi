@@ -169,7 +169,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - log:read
+            - entry:read
       summary: List the entries of the journal
       tags:
         - log_entry_operations

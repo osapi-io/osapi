@@ -242,7 +242,7 @@ func (s *APIListPublicTestSuite) TestListValidationHTTP() {
 	})
 }
 
-// TestListRBACHTTP sends tokens that do not grant network:read.
+// TestListRBACHTTP sends tokens that do not grant interface:read.
 func (s *APIListPublicTestSuite) TestListRBACHTTP() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
@@ -255,7 +255,7 @@ func (s *APIListPublicTestSuite) TestListRBACHTTP() {
 			WantCode: http.StatusUnauthorized,
 		},
 		{
-			Name: "when the token lacks network:read, it is a 403",
+			Name: "when the token lacks interface:read, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodGet,
 				Path:   "/api/node/server1/network/interface/eth0/route",

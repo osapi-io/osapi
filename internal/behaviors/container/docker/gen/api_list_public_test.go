@@ -208,7 +208,7 @@ func (s *APIListPublicTestSuite) TestListValidationHTTP() {
 	})
 }
 
-// TestListRBACHTTP sends tokens that do not grant container:read.
+// TestListRBACHTTP sends tokens that do not grant docker:read.
 func (s *APIListPublicTestSuite) TestListRBACHTTP() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
@@ -221,7 +221,7 @@ func (s *APIListPublicTestSuite) TestListRBACHTTP() {
 			WantCode: http.StatusUnauthorized,
 		},
 		{
-			Name: "when the token lacks container:read, it is a 403",
+			Name: "when the token lacks docker:read, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodGet,
 				Path:   "/api/node/server1/container/docker",

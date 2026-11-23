@@ -91,7 +91,7 @@ their permissions. No list of roles is kept by hand:
   or a monitor.
 
 A permission with the verb `shell` or `exec` is admin only, such as
-`command:shell` and `container:exec`. So is `command:execute`, which runs any
+`command:shell` and `docker:exec`. So is `command:execute`, which runs any
 command, and so are `user:write` and `schedule:write`, which reach root through
 an account or a cron entry. A method that the DSL marks `AdminOnly` makes its
 permission admin only too, such as `admission:write`, `agent:write` and
@@ -125,8 +125,11 @@ controller:
             - health:read
         netadmin:
           permissions:
-            - network:read
-            - network:write
+            - dns:read
+            - dns:write
+            - interface:read
+            - interface:write
+            - connectivity:execute
             - health:read
 ```
 

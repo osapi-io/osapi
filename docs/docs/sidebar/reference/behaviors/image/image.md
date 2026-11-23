@@ -32,11 +32,11 @@ The Docker images of the host. `osapi behavior get --name image` and
 
 ### Methods (3)
 
-| NAME                     | VERB  | HTTP   | ROUTE                                                            | PERMISSION      | DESCRIPTION                 |
-| ------------------------ | ----- | ------ | ---------------------------------------------------------------- | --------------- | --------------------------- |
-| [list](#method-list)     | read  | GET    | /api/node/&#123;hostname&#125;/container/image                   | container:read  | List the images of the host |
-| [pull](#method-pull)     | write | POST   | /api/node/&#123;hostname&#125;/container/image/pull              | container:write | Pull an image               |
-| [delete](#method-delete) | write | DELETE | /api/node/&#123;hostname&#125;/container/image/&#123;image&#125; | container:write | Remove an image             |
+| NAME                     | VERB  | HTTP   | ROUTE                                                            | PERMISSION  | DESCRIPTION                 |
+| ------------------------ | ----- | ------ | ---------------------------------------------------------------- | ----------- | --------------------------- |
+| [list](#method-list)     | read  | GET    | /api/node/&#123;hostname&#125;/container/image                   | image:read  | List the images of the host |
+| [pull](#method-pull)     | write | POST   | /api/node/&#123;hostname&#125;/container/image/pull              | image:write | Pull an image               |
+| [delete](#method-delete) | write | DELETE | /api/node/&#123;hostname&#125;/container/image/&#123;image&#125; | image:write | Remove an image             |
 
 ### Types (3)
 
@@ -70,7 +70,7 @@ None. Declare them with behavior.Config.
 | Detail      | Reads each image through gohai's docker collector, which runs docker images. A host whose docker does not answer reports skipped. |
 | HTTP        | GET                                                                                                                               |
 | Route       | /api/node/&#123;hostname&#125;/container/image                                                                                    |
-| Permission  | container:read                                                                                                                    |
+| Permission  | image:read                                                                                                                        |
 | Command     | [osapi client node container image list](../../../usage/cli/client/node/container/image/list.md)                                  |
 | Input type  | ListInput                                                                                                                         |
 | Output type | \[]Entry                                                                                                                          |
@@ -104,7 +104,7 @@ None. The method takes no input; its command needs only --target.
 | Detail      | Runs docker pull, and answers the ID and the size of the image that the host has after it. A pull that gets nothing new, because the host had the image of that reference already, reports changed: false. |
 | HTTP        | POST                                                                                                                                                                                                       |
 | Route       | /api/node/&#123;hostname&#125;/container/image/pull                                                                                                                                                        |
-| Permission  | container:execute                                                                                                                                                                                          |
+| Permission  | image:execute                                                                                                                                                                                              |
 | Command     | [osapi client node container image pull](../../../usage/cli/client/node/container/image/pull.md)                                                                                                           |
 | Input type  | PullInput                                                                                                                                                                                                  |
 | Output type | PullResult                                                                                                                                                                                                 |
@@ -140,7 +140,7 @@ None. The method takes no input; its command needs only --target.
 | Detail      | Runs docker rmi, with -f when force is set, which removes an image that a container uses. An image that the host does not have reports changed: false. |
 | HTTP        | DELETE                                                                                                                                                 |
 | Route       | /api/node/&#123;hostname&#125;/container/image/&#123;image&#125;                                                                                       |
-| Permission  | container:write                                                                                                                                        |
+| Permission  | image:write                                                                                                                                            |
 | Command     | [osapi client node container image delete](../../../usage/cli/client/node/container/image/delete.md)                                                   |
 | Input type  | DeleteInput                                                                                                                                            |
 | Output type | Result                                                                                                                                                 |

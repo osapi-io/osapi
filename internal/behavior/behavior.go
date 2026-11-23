@@ -73,7 +73,7 @@ var adminVerbs = []Verb{VerbShell, VerbExec}
 // parameters or DNS resolver settings.
 type Behavior struct {
 	// Name is the behavior's name: the path segment, the CLI command and the
-	// permission prefix when it has no group.
+	// permission prefix. A group does not change the permission prefix.
 	Name string
 	// Doc says what the behavior manages, in one line.
 	Doc string
@@ -162,9 +162,9 @@ var API Option = optionFunc(func(b *Behavior) { b.API = true })
 var CLI Option = optionFunc(func(b *Behavior) { b.CLI = true })
 
 // GroupName is a group that behaviors nest under. The group is a path
-// segment, a CLI command and the prefix of the permissions of each behavior
-// in it. Thus a misspelled group makes a new route, command and permission
-// with no error, and behavior validate refuses a name outside KnownGroups.
+// segment and a CLI command. It is not in a permission: dns under network
+// needs dns:read. Thus a misspelled group makes a new route and command with
+// no error, and behavior validate refuses a name outside KnownGroups.
 type GroupName string
 
 // The groups that behaviors nest under.
@@ -295,21 +295,17 @@ func Define(
 	return b
 }
 
-// Permission is the permission a method needs: the top-level group, or the
-// behavior's name without one, and the verb. sysctl get needs sysctl:read and
-// dns under network needs network:read.
+// Permission is the permission a method needs: the behavior's name and the
+// verb. A group does not change it, so sysctl get needs sysctl:read and dns
+// under network needs dns:read. A child has its parent's permission.
 func (b *Behavior) Permission(
 	v Verb,
 ) client.Permission {
 	if b.Parent != nil {
 		return b.Parent.Permission(v)
 	}
-	prefix := b.Name
-	if b.Group != "" {
-		prefix = b.Group
-	}
 
-	return client.Permission(prefix + ":" + string(v))
+	return client.Permission(b.Name + ":" + string(v))
 }
 
 // Method returns the method with the given name, or nil.
@@ -547,7 +543,7 @@ func (m *Method) Explain(
 }
 
 // PermitAs makes an action's permission <name>:<verb>, in place of
-// <name>:execute, such as container:exec for docker exec. Thus the action
+// <name>:execute, such as docker:exec for docker exec. Thus the action
 // does not share a permission with the other actions of its behavior. The
 // verb is one that only the admin role gets: VerbShell or VerbExec.
 // behavior validate refuses it on a method that is not an action, and a

@@ -69,18 +69,22 @@ methods do not need it.
 
 ## Permissions
 
-| Permission          | Methods                                | Roles                             |
-| ------------------- | -------------------------------------- | --------------------------------- |
-| `container:read`    | docker list and get, image list        | admin, operator, automation, read |
-| `container:write`   | docker create and delete, image delete | admin, automation                 |
-| `container:execute` | docker start and stop, image pull      | admin, operator                   |
-| `container:exec`    | docker exec                            | admin                             |
+| Permission       | Methods                  | Roles                             |
+| ---------------- | ------------------------ | --------------------------------- |
+| `docker:read`    | docker list and get      | admin, operator, automation, read |
+| `docker:write`   | docker create and delete | admin, automation                 |
+| `docker:execute` | docker start and stop    | admin, operator                   |
+| `docker:exec`    | docker exec              | admin                             |
+| `image:read`     | image list               | admin, operator, automation, read |
+| `image:write`    | image delete             | admin, automation                 |
+| `image:execute`  | image pull               | admin, operator                   |
 
-Each action of a behavior has the permission `<name>:execute`. For the container
-behaviors, that is `container:execute`, and the `operator` role has it. docker
-exec runs a command that the caller chooses. Thus it has a permission of its
-own, `container:exec`, and only the `admin` role has it. To give it to a
-different role or token:
+The permission of a behavior in the `container` group has the name of the
+behavior, not the name of the group. Each action of a behavior has the
+permission `<name>:execute`, such as `docker:execute` and `image:execute`. The
+`operator` role has it. docker exec runs a command that the caller chooses. Thus
+it has a permission of its own, `docker:exec`, and only the `admin` role has it.
+To give it to a different role or token:
 
 ```yaml
 controller:
@@ -89,16 +93,19 @@ controller:
       roles:
         container-ops:
           permissions:
-            - container:read
-            - container:write
-            - container:execute
-            - container:exec
+            - docker:read
+            - docker:write
+            - docker:execute
+            - docker:exec
+            - image:read
+            - image:write
+            - image:execute
             - health:read
 ```
 
 ```bash
 osapi token generate -r operator -u user@example.com \
-  -p container:exec
+  -p docker:exec
 ```
 
 ## Related

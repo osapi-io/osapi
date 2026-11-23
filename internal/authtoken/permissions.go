@@ -77,7 +77,7 @@ var builtinPermissions = []Permission{
 
 // adminVerbs are the verbs of a permission that only the admin role gets:
 // to open a shell, and to run a command that the caller gives inside
-// something on the host, such as container:exec. They are the verbs that
+// something on the host, such as docker:exec. They are the verbs that
 // behavior.PermitAs takes.
 var adminVerbs = []string{"shell", "exec"}
 

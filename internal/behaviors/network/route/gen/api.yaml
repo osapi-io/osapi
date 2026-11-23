@@ -289,7 +289,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:write
+            - interface:write
       summary: Drop a route that osapi wrote
       tags:
         - route_operations
@@ -344,7 +344,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:read
+            - interface:read
       summary: List the routes of an interface
       tags:
         - route_operations
@@ -405,7 +405,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:write
+            - interface:write
       summary: Add a static route to an interface
       tags:
         - route_operations
@@ -466,7 +466,7 @@ paths:
           description: An error on the controller.
       security:
         - BearerAuth:
-            - network:write
+            - interface:write
       summary: Change the gateway or the metric of a route
       tags:
         - route_operations

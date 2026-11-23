@@ -79,10 +79,13 @@ for a complete working example.
 
 ## Permissions
 
-| Operation              | Permission      |
-| ---------------------- | --------------- |
-| List                   | `network:read`  |
-| Create, Update, Delete | `network:write` |
+| Operation              | Permission        |
+| ---------------------- | ----------------- |
+| List                   | `interface:read`  |
+| Create, Update, Delete | `interface:write` |
+
+A route is a child of an interface. Thus it has the permissions of the
+interface.
 
 List runs on every platform. Create, Update and Delete run on the Debian OS
 family (Ubuntu, Debian, Raspbian). On other platforms (Darwin, generic Linux),

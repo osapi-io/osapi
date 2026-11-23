@@ -59,7 +59,7 @@ var Group = endpoint.Define(
 		Handle(HandleList).
 		ID("GetNodeLogEntry").
 		Describe("List the entries of the journal").
-		Permission("log:read").
+		Permission("entry:read").
 		Returns("Each target host's result.").
 		Explain("Runs journalctl --output=json, the newest entries last: the last 100 unless lines says, of one unit when unit says, since a time when since says, and at a priority or above when priority says. A priority is its name, such as err or info. The hand-written log domain read the Debian family only; this reads each Linux host that has journald.").
 		Example("--target web-01", "The newest entries").

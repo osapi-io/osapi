@@ -33,9 +33,9 @@ same.
 
 ### Methods (1)
 
-| NAME                 | VERB | HTTP | ROUTE                                     | PERMISSION | DESCRIPTION                     |
-| -------------------- | ---- | ---- | ----------------------------------------- | ---------- | ------------------------------- |
-| [list](#method-list) | read | GET  | /api/node/&#123;hostname&#125;/log/source | log:read   | List the sources of the journal |
+| NAME                 | VERB | HTTP | ROUTE                                     | PERMISSION  | DESCRIPTION                     |
+| -------------------- | ---- | ---- | ----------------------------------------- | ----------- | ------------------------------- |
+| [list](#method-list) | read | GET  | /api/node/&#123;hostname&#125;/log/source | source:read | List the sources of the journal |
 
 ### Types (1)
 
@@ -67,7 +67,7 @@ None. Declare them with behavior.Config.
 | Detail      | Runs journalctl --field=SYSLOG_IDENTIFIER: each syslog identifier that has an entry, once, sorted. A name here is what log entry list takes as unit when the source is a systemd unit. |
 | HTTP        | GET                                                                                                                                                                                    |
 | Route       | /api/node/&#123;hostname&#125;/log/source                                                                                                                                              |
-| Permission  | log:read                                                                                                                                                                               |
+| Permission  | source:read                                                                                                                                                                            |
 | Command     | [osapi client node log source list](../../../usage/cli/client/node/log/source/list.md)                                                                                                 |
 | Input type  | ListInput                                                                                                                                                                              |
 | Output type | \[]Source                                                                                                                                                                              |

@@ -126,7 +126,7 @@ With `--json`, the API's response:
 
 ## Permission
 
-It needs the `network:read` permission. `osapi token roles get --name <role>`
+It needs the `interface:read` permission. `osapi token roles get --name <role>`
 shows what a role grants.
 
 ## Flags

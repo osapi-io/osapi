@@ -16,19 +16,19 @@ func Routes(
 		{
 			Method:     http.MethodGet,
 			Path:       "/api/node/:hostname/network/dns/:interface_name",
-			Permission: "network:read",
+			Permission: "dns:read",
 			Handler:    server.Serve(s, Group, "get", HandleGet, decodeGet),
 		},
 		{
 			Method:     http.MethodPut,
 			Path:       "/api/node/:hostname/network/dns/:interface_name",
-			Permission: "network:write",
+			Permission: "dns:write",
 			Handler:    server.Serve(s, Group, "update", HandleUpdate, decodeUpdate),
 		},
 		{
 			Method:     http.MethodDelete,
 			Path:       "/api/node/:hostname/network/dns/:interface_name",
-			Permission: "network:write",
+			Permission: "dns:write",
 			Handler:    server.Serve(s, Group, "delete", HandleDelete, decodeDelete),
 		},
 	}

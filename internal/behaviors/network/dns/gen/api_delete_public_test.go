@@ -235,7 +235,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteValidationHTTP() {
 	})
 }
 
-// TestDeleteRBACHTTP sends tokens that do not grant network:write.
+// TestDeleteRBACHTTP sends tokens that do not grant dns:write.
 func (s *APIDeletePublicTestSuite) TestDeleteRBACHTTP() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
@@ -249,7 +249,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteRBACHTTP() {
 			WantCode: http.StatusUnauthorized,
 		},
 		{
-			Name: "when the token lacks network:write, it is a 403",
+			Name: "when the token lacks dns:write, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
 				Path:   "/api/node/server1/network/dns/osapi0",

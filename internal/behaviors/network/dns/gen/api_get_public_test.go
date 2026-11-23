@@ -256,7 +256,7 @@ func (s *APIGetPublicTestSuite) TestGetValidationHTTP() {
 	})
 }
 
-// TestGetRBACHTTP sends tokens that do not grant network:read.
+// TestGetRBACHTTP sends tokens that do not grant dns:read.
 func (s *APIGetPublicTestSuite) TestGetRBACHTTP() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
@@ -269,7 +269,7 @@ func (s *APIGetPublicTestSuite) TestGetRBACHTTP() {
 			WantCode: http.StatusUnauthorized,
 		},
 		{
-			Name: "when the token lacks network:read, it is a 403",
+			Name: "when the token lacks dns:read, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodGet,
 				Path:   "/api/node/server1/network/dns/osapi0",

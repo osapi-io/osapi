@@ -131,9 +131,9 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddleware() {
 			setupContextKey: true,
 		},
 		{
-			name:           "read role lacks network:write returns 403",
+			name:           "read role lacks dns:write returns 403",
 			authHeader:     "", // set dynamically
-			requiredScopes: []string{"network:write"},
+			requiredScopes: []string{"dns:write"},
 			expectedStatus: http.StatusForbidden,
 			validateFunc: func(called bool, rec *httptest.ResponseRecorder) {
 				s.False(called)

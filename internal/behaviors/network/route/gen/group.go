@@ -152,7 +152,7 @@ var Group = endpoint.Define(
 		Handle(HandleList).
 		ID("GetNodeNetworkInterfaceRoute").
 		Describe("List the routes of an interface").
-		Permission("network:read").
+		Permission("interface:read").
 		Returns("Each target host's result.").
 		Explain("Reads the routes of the main table that go out of the interface: ip route on Linux, netstat on macOS. proto says where a route came from, such as dhcp, kernel or static. An interface with no routes has none; one the host does not have is not found.").
 		Example("--target web-01 --name eth0", "An interface with routes").
@@ -164,7 +164,7 @@ var Group = endpoint.Define(
 		Handle(HandleCreate).
 		ID("PostNodeNetworkInterfaceRoute").
 		Describe("Add a static route to an interface").
-		Permission("network:write").
+		Permission("interface:write").
 		Returns("Each target host's result, with whether it changed.").
 		Explain("Adds the route to the interface's netplan file, such as /etc/netplan/osapi-osapi0-routes.yaml for osapi0, under a netplan definition that is the interface's own, and applies it. A route osapi already has, the same, does not change; one to the same destination by another gateway or metric is refused: update changes it. A default route is refused: the interface behavior sets the gateway. An interface the host does not have is not found. An interface that a match defines, such as cloud-init's all for en*, is refused, because the route would go on each interface the match takes. It runs on the Debian family, and elsewhere, and in a container, reports skipped.").
 		Example("--target web-01 --name osapi0 --destination 198.51.100.0/24 --via 192.0.2.1", "A route").
@@ -176,7 +176,7 @@ var Group = endpoint.Define(
 		Handle(HandleUpdate).
 		ID("PutNodeNetworkInterfaceRoute").
 		Describe("Change the gateway or the metric of a route").
-		Permission("network:write").
+		Permission("interface:write").
 		Returns("Each target host's result, with whether it changed.").
 		Explain("Writes the route over the one osapi has to the same destination, and applies it. A destination osapi has no route to is not found: create adds it.").
 		Example("--target web-01 --name osapi0 --destination 198.51.100.0/24 --via 192.0.2.2 --metric 10", "A new gateway and metric").
@@ -186,7 +186,7 @@ var Group = endpoint.Define(
 		Handle(HandleDelete).
 		ID("DeleteNodeNetworkInterfaceRoute").
 		Describe("Drop a route that osapi wrote").
-		Permission("network:write").
+		Permission("interface:write").
 		Returns("Each target host's result, with whether it changed.").
 		Explain("Drops the route from the interface's netplan file and applies what is left; the last route removes the file. A route osapi does not have does not change.").
 		Example("--target web-01 --name osapi0 --destination 198.51.100.0/24", "One of two routes").
