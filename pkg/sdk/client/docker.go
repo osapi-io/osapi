@@ -27,397 +27,279 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
-// DockerService provides Docker container management operations.
+// DockerService manages the Docker containers and images of a host.
 type DockerService struct {
 	client *gen.ClientWithResponses
 }
 
-// Create creates a new container on the target host.
+// checked is the error of a response: its status, or a body that is nil.
+func checked(
+	code int,
+	noBody bool,
+	errs ...*gen.ErrorResponse,
+) error {
+	if err := checkError(code, errs...); err != nil {
+		return err
+	}
+	if noBody {
+		return &UnexpectedStatusError{APIError{StatusCode: code, Message: "nil response body"}}
+	}
+
+	return nil
+}
+
+// ptr is a pointer to v, or nil for the zero value, so that an option
+// that is not set is not sent.
+func ptr[T comparable](
+	v T,
+) *T {
+	var zero T
+	if v == zero {
+		return nil
+	}
+
+	return &v
+}
+
+// slicePtr is a pointer to s, or nil when it is empty.
+func slicePtr[T any](
+	s []T,
+) *[]T {
+	if len(s) == 0 {
+		return nil
+	}
+
+	return &s
+}
+
+// mapPtr is a pointer to m, or nil when it is empty.
+func mapPtr(
+	m map[string]string,
+) *map[string]string {
+	if len(m) == 0 {
+		return nil
+	}
+
+	return &m
+}
+
+// List lists the containers of the target. state is running, stopped,
+// all, or empty for all.
+func (s *DockerService) List(
+	ctx context.Context,
+	hostname string,
+	state string,
+) (*Response[Collection[DockerResult]], error) {
+	params := &gen.GetNodeContainerDockerParams{}
+	if state != "" {
+		st := gen.GetNodeContainerDockerParamsState(state)
+		params.State = &st
+	}
+	resp, err := s.client.GetNodeContainerDockerWithResponse(ctx, hostname, params)
+	if err != nil {
+		return nil, fmt.Errorf("docker list: %w", err)
+	}
+	if err := checked(resp.StatusCode(), resp.JSON200 == nil, resp.JSON400, resp.JSON401,
+		resp.JSON403, resp.JSON404, resp.JSON409, resp.JSON500); err != nil {
+		return nil, err
+	}
+
+	return newResponse(collect(resp.JSON200.Results, resp.JSON200.JobId, dockerFromGen),
+		resp.Body, resp.HTTPResponse), nil
+}
+
+// Get reads one container by its name, its ID or the start of its ID.
+func (s *DockerService) Get(
+	ctx context.Context,
+	hostname string,
+	name string,
+) (*Response[Collection[DockerResult]], error) {
+	resp, err := s.client.GetNodeContainerDockerByKeyWithResponse(ctx, hostname, name)
+	if err != nil {
+		return nil, fmt.Errorf("docker get: %w", err)
+	}
+	if err := checked(resp.StatusCode(), resp.JSON200 == nil, resp.JSON400, resp.JSON401,
+		resp.JSON403, resp.JSON404, resp.JSON409, resp.JSON500); err != nil {
+		return nil, err
+	}
+
+	return newResponse(collect(resp.JSON200.Results, resp.JSON200.JobId, dockerFromGen),
+		resp.Body, resp.HTTPResponse), nil
+}
+
+// Create creates a container. A container of that name that the host has
+// already is not made again, and reports changed: false.
 func (s *DockerService) Create(
 	ctx context.Context,
 	hostname string,
 	opts DockerCreateOpts,
-) (*Response[Collection[DockerResult]], error) {
-	body := gen.DockerCreateRequest{
-		Image: opts.Image,
+) (*Response[Collection[DockerActionResult]], error) {
+	body := gen.ContainerDockerCreateRequest{
+		Name:              opts.Name,
+		Image:             opts.Image,
+		ContainerHostname: ptr(opts.Hostname),
+		Dns:               slicePtr(opts.DNS),
+		Command:           slicePtr(opts.Command),
+		Env:               mapPtr(opts.Env),
+		Ports:             slicePtr(opts.Ports),
+		Volumes:           slicePtr(opts.Volumes),
+		AutoStart:         ptr(opts.AutoStart),
 	}
-	if opts.Name != "" {
-		body.Name = &opts.Name
-	}
-	if opts.Hostname != "" {
-		body.Hostname = &opts.Hostname
-	}
-	if len(opts.DNS) > 0 {
-		body.Dns = &opts.DNS
-	}
-	if len(opts.Command) > 0 {
-		body.Command = &opts.Command
-	}
-	if len(opts.Env) > 0 {
-		body.Env = &opts.Env
-	}
-	if len(opts.Ports) > 0 {
-		body.Ports = &opts.Ports
-	}
-	if len(opts.Volumes) > 0 {
-		body.Volumes = &opts.Volumes
-	}
-	if opts.AutoStart != nil {
-		body.AutoStart = opts.AutoStart
-	}
-
 	resp, err := s.client.PostNodeContainerDockerWithResponse(ctx, hostname, body)
 	if err != nil {
 		return nil, fmt.Errorf("docker create: %w", err)
 	}
-
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON500,
-	); err != nil {
+	if err := checked(resp.StatusCode(), resp.JSON200 == nil, resp.JSON400, resp.JSON401,
+		resp.JSON403, resp.JSON404, resp.JSON409, resp.JSON500); err != nil {
 		return nil, err
 	}
 
-	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
-	}
-
-	return newResponse(
-		dockerResultCollectionFromGen(resp.JSON200),
-		resp.Body,
-		resp.HTTPResponse,
-	), nil
+	return newResponse(collect(resp.JSON200.Results, resp.JSON200.JobId, dockerActionFromGen),
+		resp.Body, resp.HTTPResponse), nil
 }
 
-// List lists containers on the target host, optionally filtered by state.
-func (s *DockerService) List(
-	ctx context.Context,
-	hostname string,
-	params *DockerListParams,
-) (*Response[Collection[DockerListResult]], error) {
-	var genParams *gen.GetNodeContainerDockerParams
-	if params != nil {
-		genParams = &gen.GetNodeContainerDockerParams{}
-		if params.State != "" {
-			state := gen.GetNodeContainerDockerParamsState(params.State)
-			genParams.State = &state
-		}
-		if params.Limit > 0 {
-			genParams.Limit = &params.Limit
-		}
-	}
-
-	resp, err := s.client.GetNodeContainerDockerWithResponse(ctx, hostname, genParams)
-	if err != nil {
-		return nil, fmt.Errorf("docker list: %w", err)
-	}
-
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
-
-	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
-	}
-
-	return newResponse(dockerListCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
-}
-
-// Inspect retrieves detailed information about a specific container.
-func (s *DockerService) Inspect(
-	ctx context.Context,
-	hostname string,
-	id string,
-) (*Response[Collection[DockerDetailResult]], error) {
-	resp, err := s.client.GetNodeContainerDockerByIDWithResponse(ctx, hostname, id)
-	if err != nil {
-		return nil, fmt.Errorf("docker inspect: %w", err)
-	}
-
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON404,
-		resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
-
-	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
-	}
-
-	return newResponse(
-		dockerDetailCollectionFromGen(resp.JSON200),
-		resp.Body,
-		resp.HTTPResponse,
-	), nil
-}
-
-// Start starts a stopped container on the target host.
-func (s *DockerService) Start(
-	ctx context.Context,
-	hostname string,
-	id string,
-) (*Response[Collection[DockerActionResult]], error) {
-	resp, err := s.client.PostNodeContainerDockerStartWithResponse(ctx, hostname, id)
-	if err != nil {
-		return nil, fmt.Errorf("docker start: %w", err)
-	}
-
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON404,
-		resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
-
-	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
-	}
-
-	return newResponse(
-		dockerActionCollectionFromGen(resp.JSON200),
-		resp.Body,
-		resp.HTTPResponse,
-	), nil
-}
-
-// Stop stops a running container on the target host.
-func (s *DockerService) Stop(
-	ctx context.Context,
-	hostname string,
-	id string,
-	opts DockerStopOpts,
-) (*Response[Collection[DockerActionResult]], error) {
-	body := gen.DockerStopRequest{}
-	if opts.Timeout > 0 {
-		body.Timeout = &opts.Timeout
-	}
-
-	resp, err := s.client.PostNodeContainerDockerStopWithResponse(ctx, hostname, id, body)
-	if err != nil {
-		return nil, fmt.Errorf("docker stop: %w", err)
-	}
-
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON404,
-		resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
-
-	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
-	}
-
-	return newResponse(
-		dockerActionCollectionFromGen(resp.JSON200),
-		resp.Body,
-		resp.HTTPResponse,
-	), nil
-}
-
-// Remove removes a container from the target host.
+// Remove removes a container, also one that runs.
 func (s *DockerService) Remove(
 	ctx context.Context,
 	hostname string,
-	id string,
-	params *DockerRemoveParams,
+	name string,
 ) (*Response[Collection[DockerActionResult]], error) {
-	var genParams *gen.DeleteNodeContainerDockerByIDParams
-	if params != nil {
-		genParams = &gen.DeleteNodeContainerDockerByIDParams{
-			Force: &params.Force,
-		}
-	}
-
-	resp, err := s.client.DeleteNodeContainerDockerByIDWithResponse(ctx, hostname, id, genParams)
+	resp, err := s.client.DeleteNodeContainerDockerWithResponse(ctx, hostname, name)
 	if err != nil {
 		return nil, fmt.Errorf("docker remove: %w", err)
 	}
-
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON404,
-		resp.JSON500,
-	); err != nil {
+	if err := checked(resp.StatusCode(), resp.JSON200 == nil, resp.JSON400, resp.JSON401,
+		resp.JSON403, resp.JSON404, resp.JSON409, resp.JSON500); err != nil {
 		return nil, err
 	}
 
-	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
-	}
-
-	return newResponse(
-		dockerActionCollectionFromGen(resp.JSON200),
-		resp.Body,
-		resp.HTTPResponse,
-	), nil
+	return newResponse(collect(resp.JSON200.Results, resp.JSON200.JobId, dockerActionFromGen),
+		resp.Body, resp.HTTPResponse), nil
 }
 
-// Exec executes a command inside a running container on the target host.
+// Start starts a container.
+func (s *DockerService) Start(
+	ctx context.Context,
+	hostname string,
+	name string,
+) (*Response[Collection[DockerActionResult]], error) {
+	resp, err := s.client.PostNodeContainerDockerStartWithResponse(ctx, hostname, name)
+	if err != nil {
+		return nil, fmt.Errorf("docker start: %w", err)
+	}
+	if err := checked(resp.StatusCode(), resp.JSON200 == nil, resp.JSON400, resp.JSON401,
+		resp.JSON403, resp.JSON404, resp.JSON409, resp.JSON500); err != nil {
+		return nil, err
+	}
+
+	return newResponse(collect(resp.JSON200.Results, resp.JSON200.JobId, dockerActionFromGen),
+		resp.Body, resp.HTTPResponse), nil
+}
+
+// Stop stops a container, waiting timeout seconds before docker kills it;
+// 0 is docker's default.
+func (s *DockerService) Stop(
+	ctx context.Context,
+	hostname string,
+	name string,
+	timeout int,
+) (*Response[Collection[DockerActionResult]], error) {
+	resp, err := s.client.PostNodeContainerDockerStopWithResponse(ctx, hostname, name,
+		gen.ContainerDockerStopRequest{Timeout: ptr(timeout)})
+	if err != nil {
+		return nil, fmt.Errorf("docker stop: %w", err)
+	}
+	if err := checked(resp.StatusCode(), resp.JSON200 == nil, resp.JSON400, resp.JSON401,
+		resp.JSON403, resp.JSON404, resp.JSON409, resp.JSON500); err != nil {
+		return nil, err
+	}
+
+	return newResponse(collect(resp.JSON200.Results, resp.JSON200.JobId, dockerActionFromGen),
+		resp.Body, resp.HTTPResponse), nil
+}
+
+// Exec runs a command in a container, and answers what it wrote and its
+// exit code.
 func (s *DockerService) Exec(
 	ctx context.Context,
 	hostname string,
-	id string,
+	name string,
 	opts DockerExecOpts,
 ) (*Response[Collection[DockerExecResult]], error) {
-	body := gen.DockerExecRequest{
-		Command: opts.Command,
+	body := gen.ContainerDockerExecRequest{
+		Command:    opts.Command,
+		Env:        mapPtr(opts.Env),
+		WorkingDir: ptr(opts.WorkingDir),
 	}
-	if len(opts.Env) > 0 {
-		body.Env = &opts.Env
-	}
-	if opts.WorkingDir != "" {
-		body.WorkingDir = &opts.WorkingDir
-	}
-
-	resp, err := s.client.PostNodeContainerDockerExecWithResponse(ctx, hostname, id, body)
+	resp, err := s.client.PostNodeContainerDockerExecWithResponse(ctx, hostname, name, body)
 	if err != nil {
 		return nil, fmt.Errorf("docker exec: %w", err)
 	}
-
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON404,
-		resp.JSON500,
-	); err != nil {
+	if err := checked(resp.StatusCode(), resp.JSON200 == nil, resp.JSON400, resp.JSON401,
+		resp.JSON403, resp.JSON404, resp.JSON409, resp.JSON500); err != nil {
 		return nil, err
 	}
 
-	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
-	}
-
-	return newResponse(dockerExecCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
+	return newResponse(collect(resp.JSON200.Results, resp.JSON200.JobId, dockerExecFromGen),
+		resp.Body, resp.HTTPResponse), nil
 }
 
-// ImageRemove removes a container image from the target host.
-func (s *DockerService) RemoveImage(
+// ListImages lists the images of the target.
+func (s *DockerService) ListImages(
 	ctx context.Context,
 	hostname string,
-	imageName string,
-	params *DockerRemoveImageParams,
-) (*Response[Collection[DockerActionResult]], error) {
-	var genParams *gen.DeleteNodeContainerDockerImageParams
-	if params != nil {
-		genParams = &gen.DeleteNodeContainerDockerImageParams{
-			Force: &params.Force,
-		}
-	}
-
-	resp, err := s.client.DeleteNodeContainerDockerImageWithResponse(
-		ctx,
-		hostname,
-		imageName,
-		genParams,
-	)
+) (*Response[Collection[DockerImageResult]], error) {
+	resp, err := s.client.GetNodeContainerImageWithResponse(ctx, hostname)
 	if err != nil {
-		return nil, fmt.Errorf("docker image remove: %w", err)
+		return nil, fmt.Errorf("docker image list: %w", err)
 	}
-
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON500,
-	); err != nil {
+	if err := checked(resp.StatusCode(), resp.JSON200 == nil, resp.JSON400, resp.JSON401,
+		resp.JSON403, resp.JSON404, resp.JSON409, resp.JSON500); err != nil {
 		return nil, err
 	}
 
-	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
-	}
-
-	return newResponse(
-		dockerActionCollectionFromGen(resp.JSON200),
-		resp.Body,
-		resp.HTTPResponse,
-	), nil
+	return newResponse(collect(resp.JSON200.Results, resp.JSON200.JobId, dockerImageFromGen),
+		resp.Body, resp.HTTPResponse), nil
 }
 
-// Pull pulls a container image on the target host.
+// Pull pulls an image, and answers the ID and the size of the image that
+// the host has after it.
 func (s *DockerService) Pull(
 	ctx context.Context,
 	hostname string,
-	opts DockerPullOpts,
+	image string,
 ) (*Response[Collection[DockerPullResult]], error) {
-	body := gen.DockerPullRequest{
-		Image: opts.Image,
-	}
-
-	resp, err := s.client.PostNodeContainerDockerPullWithResponse(ctx, hostname, body)
+	resp, err := s.client.PostNodeContainerImagePullWithResponse(ctx, hostname,
+		gen.ContainerImagePullRequest{Image: image})
 	if err != nil {
 		return nil, fmt.Errorf("docker pull: %w", err)
 	}
-
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
-		resp.JSON500,
-	); err != nil {
+	if err := checked(resp.StatusCode(), resp.JSON200 == nil, resp.JSON400, resp.JSON401,
+		resp.JSON403, resp.JSON404, resp.JSON409, resp.JSON500); err != nil {
 		return nil, err
 	}
 
-	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
+	return newResponse(collect(resp.JSON200.Results, resp.JSON200.JobId, dockerPullFromGen),
+		resp.Body, resp.HTTPResponse), nil
+}
+
+// RemoveImage removes an image; force removes one that a container uses.
+func (s *DockerService) RemoveImage(
+	ctx context.Context,
+	hostname string,
+	image string,
+	force bool,
+) (*Response[Collection[DockerImageRemoveResult]], error) {
+	resp, err := s.client.DeleteNodeContainerImageWithResponse(ctx, hostname, image,
+		gen.ContainerImageDeleteRequest{Force: ptr(force)})
+	if err != nil {
+		return nil, fmt.Errorf("docker image remove: %w", err)
+	}
+	if err := checked(resp.StatusCode(), resp.JSON200 == nil, resp.JSON400, resp.JSON401,
+		resp.JSON403, resp.JSON404, resp.JSON409, resp.JSON500); err != nil {
+		return nil, err
 	}
 
-	return newResponse(dockerPullCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
+	return newResponse(collect(resp.JSON200.Results, resp.JSON200.JobId, dockerImageRemoveFromGen),
+		resp.Body, resp.HTTPResponse), nil
 }

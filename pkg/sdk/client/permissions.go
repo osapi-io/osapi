@@ -22,7 +22,7 @@ package client
 
 // Permission represents a fine-grained resource:verb permission.
 // Permissions use the format "resource:verb" (e.g., "node:read",
-// "docker:execute").
+// "command:execute").
 type Permission string
 
 // Role represents a built-in RBAC role name.

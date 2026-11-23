@@ -8,12 +8,9 @@ import { ResultCard } from "@/components/domain/result-card";
 import { RunLinks } from "@/components/domain/run-links";
 import { traceIdOf } from "@/lib/trace";
 import { CommandBlock } from "@/components/domain/command-block";
-import { DockerBlock } from "@/components/domain/docker-block";
 import { FileUploadBlock } from "@/components/domain/file-upload-block";
 import { SingleInputBlock } from "@/components/domain/single-input-block";
 import { FileDeleteBlock } from "@/components/domain/file-delete-block";
-import { ContainerActionBlock } from "@/components/domain/container-action-block";
-import { DockerExecBlock } from "@/components/domain/docker-exec-block";
 import { ApplyButton } from "@/components/domain/apply-button";
 import { StackBar } from "@/components/domain/stack-bar";
 import { SaveStackDialog } from "@/components/domain/save-stack-dialog";
@@ -30,19 +27,6 @@ import {
   postNodeCommandExec,
   postNodeCommandShell,
 } from "@/sdk/gen/command-execution-api-command-operations/command-execution-api-command-operations";
-import { postNodeContainerDockerExec } from "@/sdk/gen/docker-management-api-docker-exec/docker-management-api-docker-exec";
-import {
-  postNodeContainerDockerPull,
-  deleteNodeContainerDockerImage,
-} from "@/sdk/gen/docker-management-api-docker-image/docker-management-api-docker-image";
-import {
-  postNodeContainerDocker,
-  getNodeContainerDocker,
-  deleteNodeContainerDockerByID,
-  postNodeContainerDockerStart,
-  postNodeContainerDockerStop,
-  getNodeContainerDockerByID,
-} from "@/sdk/gen/docker-management-api-docker-operations/docker-management-api-docker-operations";
 import {
   postFile,
   getFiles,
@@ -121,7 +105,7 @@ const blockIcons: Record<
   "user-list": Users,
   "group-list": UsersRound,
   // Containers
-  "docker-create": Container,
+  "docker-list": Container,
   // Files
   "object-list": FolderOpen,
   "file-status": FileDown,
@@ -266,47 +250,6 @@ export function Configure() {
             });
             break;
           }
-          case "docker-create": {
-            const portsStr = (block.data.ports as string) || "";
-            const volsStr = (block.data.volumes as string) || "";
-            const envStr = (block.data.env as string) || "";
-            const dnsStr = (block.data.dns as string) || "";
-            result = await postNodeContainerDocker(t, {
-              image: block.data.image as string,
-              name: (block.data.name as string) || undefined,
-              hostname: (block.data.hostname as string) || undefined,
-              ports: portsStr
-                ? portsStr.split(",").map((s) => s.trim())
-                : undefined,
-              volumes: volsStr
-                ? volsStr.split(",").map((s) => s.trim())
-                : undefined,
-              env: envStr ? envStr.split(",").map((s) => s.trim()) : undefined,
-              dns: dnsStr ? dnsStr.split(",").map((s) => s.trim()) : undefined,
-            });
-            break;
-          }
-          case "docker-list":
-            result = await getNodeContainerDocker(t);
-            break;
-          case "docker-start":
-            result = await postNodeContainerDockerStart(
-              t,
-              block.data.container_id as string,
-            );
-            break;
-          case "docker-stop":
-            result = await postNodeContainerDockerStop(
-              t,
-              block.data.container_id as string,
-            );
-            break;
-          case "docker-delete":
-            result = await deleteNodeContainerDockerByID(
-              t,
-              block.data.container_id as string,
-            );
-            break;
           case "object-list":
             result = await getFiles();
             break;
@@ -322,32 +265,6 @@ export function Configure() {
           }
           case "object-delete":
             result = await deleteFileByName(block.data.name as string);
-            break;
-          case "docker-exec": {
-            const execCmd = (block.data.command as string).trim().split(/\s+/);
-            result = await postNodeContainerDockerExec(
-              t,
-              block.data.container_id as string,
-              { command: execCmd },
-            );
-            break;
-          }
-          case "docker-pull":
-            result = await postNodeContainerDockerPull(t, {
-              image: block.data.image as string,
-            });
-            break;
-          case "docker-rm-image":
-            result = await deleteNodeContainerDockerImage(
-              t,
-              block.data.image as string,
-            );
-            break;
-          case "docker-inspect":
-            result = await getNodeContainerDockerByID(
-              t,
-              block.data.container_id as string,
-            );
             break;
           case "object-stale":
             result = await getFileStale();
@@ -467,43 +384,6 @@ export function Configure() {
             onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
           />
         );
-      case "docker-create":
-        return (
-          <DockerBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-          />
-        );
-      case "docker-list":
-        return null;
-      case "docker-start":
-        return (
-          <ContainerActionBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            action="start"
-          />
-        );
-      case "docker-stop":
-        return (
-          <ContainerActionBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            action="stop"
-          />
-        );
-      case "docker-delete":
-        return (
-          <ContainerActionBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            action="delete"
-          />
-        );
       case "object-list":
         return null;
       case "object-upload":
@@ -520,45 +400,6 @@ export function Configure() {
             data={block.data}
             onChange={(data) => updateBlockData(block.id, data)}
             onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-          />
-        );
-      case "docker-exec":
-        return (
-          <DockerExecBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-          />
-        );
-      case "docker-pull":
-        return (
-          <SingleInputBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            field="image"
-            label="Image"
-            placeholder="nginx:latest"
-          />
-        );
-      case "docker-rm-image":
-        return (
-          <SingleInputBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            field="image"
-            label="Image Name or ID"
-            placeholder="nginx:latest"
-          />
-        );
-      case "docker-inspect":
-        return (
-          <ContainerActionBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            action="inspect"
           />
         );
       case "object-stale":

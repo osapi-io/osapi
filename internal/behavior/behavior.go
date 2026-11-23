@@ -154,8 +154,13 @@ var CLI Option = optionFunc(func(b *Behavior) { b.CLI = true })
 // with no error, and behavior validate refuses a name outside KnownGroups.
 type GroupName string
 
-// GroupNetwork holds the network behaviors: dns, iface and route.
-const GroupNetwork GroupName = "network"
+// The groups that behaviors nest under.
+const (
+	// GroupNetwork holds the network behaviors: dns, iface and route.
+	GroupNetwork GroupName = "network"
+	// GroupContainer holds the container behaviors: docker and image.
+	GroupContainer GroupName = "container"
+)
 
 // GroupLog holds the journal behaviors: entry and source.
 const GroupLog GroupName = "log"
@@ -163,7 +168,7 @@ const GroupLog GroupName = "log"
 // KnownGroups are the groups that a behavior can be Under. Add a constant
 // here to make a new group.
 func KnownGroups() []GroupName {
-	return []GroupName{GroupNetwork, GroupLog}
+	return []GroupName{GroupNetwork, GroupLog, GroupContainer}
 }
 
 // Under nests a behavior inside a group: Under(GroupNetwork) puts dns at
@@ -186,12 +191,14 @@ const (
 	AreaNetworking AreaName = "networking"
 	AreaSecurity   AreaName = "security"
 	AreaHardware   AreaName = "hardware"
+	AreaContainers AreaName = "containers"
 )
 
 // Areas are the areas of the UI that a served behavior can sit in: the
 // groups of the Configure page's Add Block panel.
 var Areas = []AreaName{
 	AreaServices, AreaSoftware, AreaConfig, AreaNode, AreaNetworking, AreaSecurity, AreaHardware,
+	AreaContainers,
 }
 
 // Area puts a served behavior in an area of the UI: Area(AreaHardware) puts

@@ -19,7 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 // Package main demonstrates container management: pull an image, create
-// a container, list, inspect, exec, stop, and remove.
+// a container, list, get, exec, stop, and remove.
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run docker.go
 package main
@@ -49,64 +49,54 @@ func main() {
 	target := "_all"
 
 	// Pull an image.
-	pull, err := c.Docker.Pull(ctx, target, client.DockerPullOpts{
-		Image: "nginx:alpine",
-	})
+	pull, err := c.Docker.Pull(ctx, target, "alpine:3.20")
 	if err != nil {
 		log.Fatalf("pull: %v", err)
 	}
 
 	for _, r := range pull.Data.Results {
-		fmt.Printf("Pull (%s): image=%s tag=%s size=%d\n",
-			r.Hostname, r.ImageID, r.Tag, r.Size)
+		fmt.Printf("Pull (%s): id=%s size=%d changed=%v\n",
+			r.Hostname, r.ImageID, r.Size, r.Changed)
 	}
 
-	// Create a container.
-	autoStart := true
+	// Create a container, and start it.
+	name := "osapi-example"
 	create, err := c.Docker.Create(ctx, target, client.DockerCreateOpts{
-		Image:     "nginx:alpine",
-		Name:      "osapi-example",
-		AutoStart: &autoStart,
+		Name:      name,
+		Image:     "alpine:3.20",
+		Command:   []string{"sleep", "300"},
+		AutoStart: true,
 	})
 	if err != nil {
 		log.Fatalf("create: %v", err)
 	}
 
-	var containerID string
 	for _, r := range create.Data.Results {
-		containerID = r.ID
-		fmt.Printf("Create (%s): id=%s name=%s state=%s\n",
-			r.Hostname, r.ID, r.Name, r.State)
+		fmt.Printf("Create (%s): id=%s changed=%v\n", r.Hostname, r.ID, r.Changed)
 	}
 
-	// List running containers.
-	list, err := c.Docker.List(ctx, target, &client.DockerListParams{
-		State: "running",
-	})
+	// List the running containers.
+	list, err := c.Docker.List(ctx, target, "running")
 	if err != nil {
 		log.Fatalf("list: %v", err)
 	}
 
 	for _, r := range list.Data.Results {
-		fmt.Printf("\nContainers (%s):\n", r.Hostname)
-		for _, ct := range r.Containers {
-			fmt.Printf("  %s  %s  %s\n", ct.ID[:12], ct.Image, ct.State)
-		}
+		fmt.Printf("Container (%s): %s  %s  %s\n", r.Hostname, r.Name, r.Image, r.State)
 	}
 
-	// Inspect the container.
-	inspect, err := c.Docker.Inspect(ctx, target, containerID)
+	// Get the container.
+	get, err := c.Docker.Get(ctx, target, name)
 	if err != nil {
-		log.Fatalf("inspect: %v", err)
+		log.Fatalf("get: %v", err)
 	}
 
-	for _, r := range inspect.Data.Results {
-		fmt.Printf("\nInspect (%s): id=%s image=%s state=%s\n",
-			r.Hostname, r.ID, r.Image, r.State)
+	for _, r := range get.Data.Results {
+		fmt.Printf("Get (%s): id=%s ports=%v env=%v\n", r.Hostname, r.ID, r.Ports, r.EnvNames)
 	}
 
-	// Exec a command inside the container.
-	exec, err := c.Docker.Exec(ctx, target, containerID, client.DockerExecOpts{
+	// Run a command inside the container.
+	exec, err := c.Docker.Exec(ctx, target, name, client.DockerExecOpts{
 		Command: []string{"cat", "/etc/hostname"},
 	})
 	if err != nil {
@@ -114,52 +104,36 @@ func main() {
 	}
 
 	for _, r := range exec.Data.Results {
-		fmt.Printf("Exec (%s): stdout=%s exit=%d\n",
-			r.Hostname, r.Stdout, r.ExitCode)
+		fmt.Printf("Exec (%s): stdout=%s exit=%d\n", r.Hostname, r.Stdout, r.ExitCode)
 	}
 
 	// Stop the container.
-	stop, err := c.Docker.Stop(ctx, target, containerID, client.DockerStopOpts{
-		Timeout: 5,
-	})
+	stop, err := c.Docker.Stop(ctx, target, name, 5)
 	if err != nil {
 		log.Fatalf("stop: %v", err)
 	}
 
 	for _, r := range stop.Data.Results {
-		fmt.Printf("Stop (%s): id=%s message=%s\n",
-			r.Hostname, r.ID, r.Message)
+		fmt.Printf("Stop (%s): changed=%v\n", r.Hostname, r.Changed)
 	}
 
 	// Remove the container.
-	remove, err := c.Docker.Remove(
-		ctx,
-		target,
-		containerID,
-		&client.DockerRemoveParams{Force: true},
-	)
+	remove, err := c.Docker.Remove(ctx, target, name)
 	if err != nil {
 		log.Fatalf("remove: %v", err)
 	}
 
 	for _, r := range remove.Data.Results {
-		fmt.Printf("Remove (%s): id=%s message=%s\n",
-			r.Hostname, r.ID, r.Message)
+		fmt.Printf("Remove (%s): changed=%v\n", r.Hostname, r.Changed)
 	}
 
 	// Remove the image.
-	imgRemove, err := c.Docker.RemoveImage(
-		ctx,
-		target,
-		"nginx:alpine",
-		&client.DockerRemoveImageParams{Force: true},
-	)
+	imgRemove, err := c.Docker.RemoveImage(ctx, target, "alpine:3.20", false)
 	if err != nil {
 		log.Fatalf("image remove: %v", err)
 	}
 
 	for _, r := range imgRemove.Data.Results {
-		fmt.Printf("ImageRemove (%s): id=%s message=%s\n",
-			r.Hostname, r.ID, r.Message)
+		fmt.Printf("ImageRemove (%s): changed=%v\n", r.Hostname, r.Changed)
 	}
 }

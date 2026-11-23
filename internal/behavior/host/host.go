@@ -47,6 +47,10 @@ type Host struct {
 	Platform behavior.PlatformName
 	// Container is true when the agent runs in a container.
 	Container bool
+	// CommandEnabled is agent.command.enabled: whether the agent runs a
+	// command that a caller supplies. A method that runs one, such as
+	// docker exec, refuses when it is false.
+	CommandEnabled bool
 	// Hostname is the agent's hostname.
 	Hostname string
 	Logger   *slog.Logger
@@ -163,6 +167,15 @@ type Exec interface {
 		args []string,
 		stdin string,
 	) (string, error)
+	// RunPrivilegedCmdFull is RunPrivilegedCmd with the standard output,
+	// the standard error and the exit code apart, for a command whose
+	// caller gets all three, such as docker exec. A command that exits
+	// with a code other than 0 is not an error: err is a failure to run it.
+	RunPrivilegedCmdFull(
+		ctx context.Context,
+		name string,
+		args []string,
+	) (stdout string, stderr string, exitCode int, err error)
 }
 
 // Require is the provider of a behavior that h's behavior declared with

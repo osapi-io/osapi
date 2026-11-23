@@ -23,7 +23,7 @@ osapi has these features to manage Linux systems.
 | 🔒  | [Agent Hardening](agent-hardening.md)          | Least-privilege mode with sudo escalation and capability verification                         |
 | 📋  | [Audit Logging](audit-logging.md)              | Structured API audit trail with 30-day retention                                              |
 | 🔐  | [Authentication & RBAC](authentication.md)     | JWT with fine-grained `resource:verb` permissions                                             |
-| 📦  | [Container Management](container-management.md) | Docker lifecycle, exec, and pull through pluggable runtime drivers                             |
+| 📦  | [Container Management](container-management.md) | Docker containers and images: list, create, start, stop, exec and pull                        |
 | ⏰  | [Schedule Management](schedule-management.md)          | Scheduled task and periodic script management                                              |
 | 🔧  | [Sysctl Management](sysctl-management.md)      | Kernel parameter management via `/etc/sysctl.d/`                                              |
 | 🕐  | [NTP Management](ntp-management.md)            | Chrony NTP server configuration and sync status                                               |

@@ -56,7 +56,6 @@ import (
 	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/provider/command"
-	dockerProv "github.com/osapi-io/osapi/internal/provider/container/docker"
 	fileProv "github.com/osapi-io/osapi/internal/provider/file"
 	diskProv "github.com/osapi-io/osapi/internal/provider/node/disk"
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
@@ -787,29 +786,6 @@ func ExportProviders(
 		"memory": e.memory(),
 		"load":   e.load(),
 	}
-}
-
-// ExportDocker calls hostEnv.docker.
-func ExportDocker(
-	ctx context.Context,
-	log *slog.Logger,
-) dockerProv.Provider {
-	return hostEnv{log: log}.docker(ctx)
-}
-
-// SetDockerNewFn replaces the function that makes the Docker client.
-func SetDockerNewFn(
-	fn func() (dockerProv.Provider, error),
-) {
-	dockerNewFn = fn
-}
-
-// defaultDockerNewFn is the function that makes the Docker client.
-var defaultDockerNewFn = dockerNewFn
-
-// ResetDockerNewFn puts back the function that makes the Docker client.
-func ResetDockerNewFn() {
-	dockerNewFn = defaultDockerNewFn
 }
 
 // SetPlatformFns replaces the functions that tell the platform of the host.

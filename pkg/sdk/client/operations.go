@@ -48,19 +48,6 @@ const (
 	OpCommandShell JobOperation = "command.shell.execute"
 )
 
-// Docker operations.
-const (
-	OpDockerCreate      JobOperation = "docker.create.execute"
-	OpDockerStart       JobOperation = "docker.start.execute"
-	OpDockerStop        JobOperation = "docker.stop.execute"
-	OpDockerRemove      JobOperation = "docker.remove.execute"
-	OpDockerList        JobOperation = "docker.list.get"
-	OpDockerInspect     JobOperation = "docker.inspect.get"
-	OpDockerExec        JobOperation = "docker.exec.execute"
-	OpDockerPull        JobOperation = "docker.pull.execute"
-	OpDockerImageRemove JobOperation = "docker.image-remove.execute"
-)
-
 // User operations.
 const ()
 

@@ -155,19 +155,6 @@ const (
 	OperationCommandShellExecute = client.OpCommandShell
 )
 
-// Docker operations.
-const (
-	OperationDockerCreate      = client.OpDockerCreate
-	OperationDockerStart       = client.OpDockerStart
-	OperationDockerStop        = client.OpDockerStop
-	OperationDockerRemove      = client.OpDockerRemove
-	OperationDockerList        = client.OpDockerList
-	OperationDockerInspect     = client.OpDockerInspect
-	OperationDockerExec        = client.OpDockerExec
-	OperationDockerPull        = client.OpDockerPull
-	OperationDockerImageRemove = client.OpDockerImageRemove
-)
-
 // User operations.
 const ()
 
@@ -289,68 +276,6 @@ type CommandShellData struct {
 	Cwd string `json:"cwd,omitempty"`
 	// Timeout is the timeout in seconds
 	Timeout int `json:"timeout,omitempty"`
-}
-
-// DockerCreateData represents data for docker container creation.
-type DockerCreateData struct {
-	Image     string            `json:"image"`
-	Name      string            `json:"name,omitempty"`
-	Hostname  string            `json:"hostname,omitempty"`
-	DNS       []string          `json:"dns,omitempty"`
-	Command   []string          `json:"command,omitempty"`
-	Env       map[string]string `json:"env,omitempty"`
-	Ports     []PortMapping     `json:"ports,omitempty"`
-	Volumes   []VolumeMapping   `json:"volumes,omitempty"`
-	AutoStart bool              `json:"auto_start,omitempty"`
-}
-
-// PortMapping maps a host port to a container port (job layer).
-// Intentionally duplicated from runtime.PortMapping to keep the job
-// layer decoupled from the provider layer. Both have the same shape.
-type PortMapping struct {
-	Host      int `json:"host"`
-	Container int `json:"container"`
-}
-
-// VolumeMapping maps a host path to a container path (job layer).
-// Intentionally duplicated from runtime.VolumeMapping for the same reason.
-type VolumeMapping struct {
-	Host      string `json:"host"`
-	Container string `json:"container"`
-}
-
-// DockerStopData represents data for stopping a docker container.
-type DockerStopData struct {
-	Timeout *int `json:"timeout,omitempty"`
-}
-
-// DockerRemoveData represents data for removing a docker container.
-type DockerRemoveData struct {
-	Force bool `json:"force,omitempty"`
-}
-
-// DockerListData represents data for listing docker containers.
-type DockerListData struct {
-	State string `json:"state,omitempty"`
-	Limit int    `json:"limit,omitempty"`
-}
-
-// DockerExecData represents data for executing a command in a docker container.
-type DockerExecData struct {
-	Command    []string          `json:"command"`
-	Env        map[string]string `json:"env,omitempty"`
-	WorkingDir string            `json:"working_dir,omitempty"`
-}
-
-// DockerPullData represents data for pulling a docker image.
-type DockerPullData struct {
-	Image string `json:"image"`
-}
-
-// DockerImageRemoveData represents data for removing a docker image.
-type DockerImageRemoveData struct {
-	Image string `json:"image"`
-	Force bool   `json:"force,omitempty"`
 }
 
 // NodeShutdownData represents data for node shutdown/reboot operations

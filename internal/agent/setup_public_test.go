@@ -22,7 +22,6 @@ package agent_test
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"net"
 	"path/filepath"
@@ -36,14 +35,11 @@ import (
 	"github.com/osapi-io/gohai/pkg/gohai/source"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/agent"
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/bus/server"
 	"github.com/osapi-io/osapi/internal/config"
-	dockerProv "github.com/osapi-io/osapi/internal/provider/container/docker"
-	dockermocks "github.com/osapi-io/osapi/internal/provider/container/docker/mocks"
 )
 
 type SetupPublicTestSuite struct {
@@ -57,14 +53,10 @@ func TestSetupPublicTestSuite(
 }
 
 func (s *SetupPublicTestSuite) SetupSubTest() {
-	agent.SetDockerNewFn(func() (dockerProv.Provider, error) {
-		return nil, errors.New("no docker")
-	})
 	agent.SetPlatformFns(func() string { return "rhel" }, func() bool { return false })
 }
 
 func (s *SetupPublicTestSuite) TearDownSubTest() {
-	agent.ResetDockerNewFn()
 	agent.ResetPlatformFns()
 	agent.ResetEmbeddedFS()
 }
@@ -287,60 +279,5 @@ func (s *SetupPublicTestSuite) TestSubComponents() {
 		s.Equal("ok", subs["agent.metrics"].Status)
 		s.Equal("http://127.0.0.1:9091", subs["agent.metrics"].Address)
 		s.Equal("http://vm.example:9091/metrics", subs["agent.metrics"].URL)
-	})
-}
-
-func (s *SetupPublicTestSuite) TestDocker() {
-	tests := []struct {
-		name     string
-		newFn    func(*gomock.Controller) func() (dockerProv.Provider, error)
-		wantNone bool
-	}{
-		{
-			name: "when Docker answers returns the client",
-			newFn: func(ctrl *gomock.Controller) func() (dockerProv.Provider, error) {
-				return func() (dockerProv.Provider, error) {
-					d := dockermocks.NewMockProvider(ctrl)
-					d.EXPECT().Ping(gomock.Any()).Return(nil)
-					return d, nil
-				}
-			},
-		},
-		{
-			name: "when Docker does not answer returns none",
-			newFn: func(ctrl *gomock.Controller) func() (dockerProv.Provider, error) {
-				return func() (dockerProv.Provider, error) {
-					d := dockermocks.NewMockProvider(ctrl)
-					d.EXPECT().Ping(gomock.Any()).Return(errors.New("refused"))
-					return d, nil
-				}
-			},
-			wantNone: true,
-		},
-		{
-			name: "when the client is not made returns none",
-			newFn: func(*gomock.Controller) func() (dockerProv.Provider, error) {
-				return func() (dockerProv.Provider, error) {
-					return nil, errors.New("no docker")
-				}
-			},
-			wantNone: true,
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			agent.SetDockerNewFn(tc.newFn(gomock.NewController(s.T())))
-
-			got := agent.ExportDocker(context.Background(), slog.Default())
-
-			s.Equal(tc.wantNone, got == nil)
-		})
-	}
-
-	s.Run("when the default constructor runs returns a client or none", func() {
-		agent.ResetDockerNewFn()
-
-		_ = agent.ExportDocker(context.Background(), slog.Default())
 	})
 }

@@ -1,0 +1,69 @@
+---
+id: get-node-container-image
+title: "List the images of the host"
+description: "Reads each image through gohai's docker collector, which runs docker images. A host whose docker does not answer reports skipped."
+sidebar_label: "List the images of the host"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "get api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"List the images of the host"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/api/node/{hostname}/container/image"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Reads each image through gohai's docker collector, which runs docker images. A host whose docker does not answer reports skipped.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./get-node-container-image.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./get-node-container-image.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./get-node-container-image.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

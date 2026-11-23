@@ -366,7 +366,7 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 				)
 				s.NotContains(
 					perms,
-					client.PermDockerExecute,
+					"container:execute",
 					"a command in a container is admin only",
 				)
 				s.NotContains(perms, client.PermCommandShell)

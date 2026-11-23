@@ -106,6 +106,23 @@ var natsNamePattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 // cannot be mistaken for a command-line option.
 var containerIDPattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_.-]*$`)
 
+// imageRefPattern matches an image reference as docker takes it, such as
+// alpine:3.20 or ghcr.io/org/app@sha256:..., starting with a letter or
+// digit so the value cannot be mistaken for an option of the docker CLI.
+var imageRefPattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._/:@-]*$`)
+
+// dnsNamePattern matches a hostname as RFC 1123 has it: letters, digits,
+// dots and dashes, starting with a letter or digit.
+var dnsNamePattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9.-]*$`)
+
+// portMappingPattern matches a published port, host:container, such as
+// 8080:80.
+var portMappingPattern = regexp.MustCompile(`^[0-9]{1,5}:[0-9]{1,5}$`)
+
+// volumeMappingPattern matches a bind mount, host:container, each an
+// absolute path, such as /srv/data:/data.
+var volumeMappingPattern = regexp.MustCompile(`^/[^:]*:/[^:]*$`)
+
 // serviceNamePattern matches a service name as the service provider takes
 // it, which it checks again before systemctl runs.
 var serviceNamePattern = regexp.MustCompile(`^[a-zA-Z0-9_@.-]+$`)
@@ -228,6 +245,18 @@ func init() {
 	_ = instance.RegisterValidation("container_id", func(fl validator.FieldLevel) bool {
 		return containerIDPattern.MatchString(fl.Field().String())
 	})
+	_ = instance.RegisterValidation("image_ref", func(fl validator.FieldLevel) bool {
+		return imageRefPattern.MatchString(fl.Field().String())
+	})
+	_ = instance.RegisterValidation("dns_name", func(fl validator.FieldLevel) bool {
+		return dnsNamePattern.MatchString(fl.Field().String())
+	})
+	_ = instance.RegisterValidation("port_mapping", func(fl validator.FieldLevel) bool {
+		return portMappingPattern.MatchString(fl.Field().String())
+	})
+	_ = instance.RegisterValidation("volume_mapping", func(fl validator.FieldLevel) bool {
+		return volumeMappingPattern.MatchString(fl.Field().String())
+	})
 
 	// service_name, unit_name and ssh_fingerprint validate what a path
 	// names: a service, a systemd unit, an SSH key.
@@ -275,6 +304,10 @@ func init() {
 	rule.Register("resource_name", rule.Pattern(resourceNamePattern.String()))
 	rule.Register("nats_name", rule.Pattern(natsNamePattern.String()))
 	rule.Register("container_id", rule.Pattern(containerIDPattern.String()))
+	rule.Register("image_ref", rule.Pattern(imageRefPattern.String()))
+	rule.Register("dns_name", rule.Pattern(dnsNamePattern.String()))
+	rule.Register("port_mapping", rule.Pattern(portMappingPattern.String()))
+	rule.Register("volume_mapping", rule.Pattern(volumeMappingPattern.String()))
 	rule.Register("package_name", rule.Pattern(PackageNamePattern.String()))
 	rule.Register("service_name", rule.Pattern(serviceNamePattern.String()))
 	rule.Register("unit_name", rule.Pattern(unitNamePattern.String()))
@@ -399,6 +432,22 @@ var customHints = map[string]func(ctx context.Context, fe validator.FieldError) 
 			fe.Value(),
 			PackageNamePattern.String(),
 		)
+	},
+	"image_ref": func(_ context.Context, fe validator.FieldError) string {
+		return fmt.Sprintf("%q is not a valid image reference (expected: %s)",
+			fe.Value(), imageRefPattern.String())
+	},
+	"dns_name": func(_ context.Context, fe validator.FieldError) string {
+		return fmt.Sprintf("%q is not a valid hostname (expected: %s)",
+			fe.Value(), dnsNamePattern.String())
+	},
+	"port_mapping": func(_ context.Context, fe validator.FieldError) string {
+		return fmt.Sprintf("%q is not a port mapping host:container (expected: %s)",
+			fe.Value(), portMappingPattern.String())
+	},
+	"volume_mapping": func(_ context.Context, fe validator.FieldError) string {
+		return fmt.Sprintf("%q is not a bind mount host:container of absolute paths (expected: %s)",
+			fe.Value(), volumeMappingPattern.String())
 	},
 	"container_id": func(_ context.Context, fe validator.FieldError) string {
 		return fmt.Sprintf(

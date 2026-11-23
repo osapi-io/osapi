@@ -60,8 +60,8 @@ user. Not with Under: the parent's path is the group.
 
 Puts a served behavior in an area of the UI: the group of the Configure page's
 Add Block panel that its blocks sit in. Use a constant: AreaServices,
-AreaSoftware, AreaConfig, AreaNode, AreaNetworking, AreaSecurity or
-AreaHardware.
+AreaSoftware, AreaConfig, AreaNode, AreaNetworking, AreaSecurity, AreaHardware
+or AreaContainers.
 
 Use: On each behavior with API. behavior validate refuses a served behavior with
 none.
@@ -431,14 +431,23 @@ writes one in place.
 ### `h.Exec`
 
 Runs a program: RunCmd as the agent's user, RunPrivilegedCmd with sudo,
-RunPrivilegedCmdWithStdin for a secret. The tests give a generated mock that
-records each command line and prints what the example says with Prints and
-PrintsAfter; Ran checks a command after. Each program is declared with Runs or
-Sudo.
+RunPrivilegedCmdWithStdin for a secret, RunPrivilegedCmdFull for a command whose
+standard output, standard error and exit code the caller gets, such as docker
+exec. The tests give a generated mock that records each command line and prints
+what the example says with Prints and PrintsAfter; Ran checks a command after.
+Each program is declared with Runs or Sudo.
 
 Use: For a write, such as systemctl start or apt-get install, and for a read of
 what is not a fact of the host, with .NotAFact. A read of a fact goes through
 h.Sources().
+
+### `h.CommandEnabled`
+
+The agent's agent.command.enabled: false refuses each command that a caller
+names. The tests give true.
+
+Use: In a method that runs a command the caller names, such as docker exec:
+refuse the call when it is false, as the command DSL does.
 
 ### `h.Sources()`
 

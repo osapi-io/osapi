@@ -22,7 +22,9 @@ package client_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -35,1385 +37,301 @@ import (
 
 type DockerPublicTestSuite struct {
 	suite.Suite
-
-	ctx context.Context
 }
 
-func (suite *DockerPublicTestSuite) SetupTest() {
-	suite.ctx = context.Background()
+// dockerCall is one method of the DockerService, with what it sends, the row
+// the server answers and the result that the row converts to.
+type dockerCall struct {
+	name   string
+	method string
+	path   string
+	query  string
+	body   string
+	row    string
+	run    func(*client.DockerService) (any, error)
+	want   any
 }
 
-func (suite *DockerPublicTestSuite) TestCreate() {
-	autoStart := true
+func (s *DockerPublicTestSuite) calls() []dockerCall {
+	ctx := context.Background()
 
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		opts         client.DockerCreateOpts
-		validateFunc func(*client.Response[client.Collection[client.DockerResult]], error)
-	}{
+	return []dockerCall{
 		{
-			name: "when creating container returns result",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"web-01","id":"abc123","name":"my-nginx","image":"nginx:latest","state":"running","created":"2026-01-01T00:00:00Z","changed":true}]}`,
-					),
+			name: "docker list", method: http.MethodGet, path: "/api/node/web1/container/docker",
+			query: "state=running",
+			row: `{"hostname":"web1","status":"ok","id":"abc","name":"web","image":"nginx",` +
+				`"state":"running","created":"2026-11-22T10:00:00Z","health":"healthy",` +
+				`"ports":["80/tcp"],"mounts":["/a:/b"],"networks":["bridge"],"env_names":["PATH"]}`,
+			run: func(d *client.DockerService) (any, error) {
+				r, err := d.List(ctx, "web1", "running")
+				return unwrap(r, err)
+			},
+			want: []client.DockerResult{{
+				Hostname: "web1", Status: "ok", ID: "abc", Name: "web", Image: "nginx",
+				State: "running", Created: "2026-11-22T10:00:00Z", Health: "healthy",
+				Ports: []string{"80/tcp"}, Mounts: []string{"/a:/b"}, Networks: []string{"bridge"},
+				EnvNames: []string{"PATH"},
+			}},
+		},
+		{
+			name:   "docker list of all",
+			method: http.MethodGet,
+			path:   "/api/node/web1/container/docker",
+			row:    `{"hostname":"web1","status":"skipped","error":"docker does not answer"}`,
+			run: func(d *client.DockerService) (any, error) {
+				r, err := d.List(ctx, "web1", "")
+				return unwrap(r, err)
+			},
+			want: []client.DockerResult{
+				{Hostname: "web1", Status: "skipped", Error: "docker does not answer"},
+			},
+		},
+		{
+			name: "docker get", method: http.MethodGet, path: "/api/node/web1/container/docker/web",
+			row: `{"hostname":"web1","status":"ok","name":"web"}`,
+			run: func(d *client.DockerService) (any, error) {
+				r, err := d.Get(ctx, "web1", "web")
+				return unwrap(r, err)
+			},
+			want: []client.DockerResult{{Hostname: "web1", Status: "ok", Name: "web"}},
+		},
+		{
+			name:   "docker create",
+			method: http.MethodPost,
+			path:   "/api/node/web1/container/docker",
+			body: `{"auto_start":true,"command":["sleep","1"],"container_hostname":"box","dns":["1.1.1.1"],` +
+				`"env":{"A":"1"},"image":"alpine","name":"web","ports":["80:80"],"volumes":["/a:/b"]}`,
+			row: `{"hostname":"web1","status":"ok","name":"web","id":"abc","changed":true}`,
+			run: func(d *client.DockerService) (any, error) {
+				r, err := d.Create(ctx, "web1", client.DockerCreateOpts{
+					Name: "web", Image: "alpine", Hostname: "box", DNS: []string{"1.1.1.1"},
+					Command: []string{"sleep", "1"}, Env: map[string]string{"A": "1"},
+					Ports: []string{"80:80"}, Volumes: []string{"/a:/b"}, AutoStart: true,
+				})
+				return unwrap(r, err)
+			},
+			want: []client.DockerActionResult{
+				{Hostname: "web1", Status: "ok", Name: "web", ID: "abc", Changed: true},
+			},
+		},
+		{
+			name:   "docker create with no options",
+			method: http.MethodPost,
+			path:   "/api/node/web1/container/docker",
+			body:   `{"image":"alpine","name":"web"}`,
+			row:    `{"hostname":"web1","status":"ok","name":"web"}`,
+			run: func(d *client.DockerService) (any, error) {
+				r, err := d.Create(
+					ctx,
+					"web1",
+					client.DockerCreateOpts{Name: "web", Image: "alpine"},
 				)
+				return unwrap(r, err)
 			},
-			opts: client.DockerCreateOpts{
-				Image: "nginx:latest",
-				Name:  "my-nginx",
+			want: []client.DockerActionResult{{Hostname: "web1", Status: "ok", Name: "web"}},
+		},
+		{
+			name:   "docker remove",
+			method: http.MethodDelete,
+			path:   "/api/node/web1/container/docker/web",
+			row:    `{"hostname":"web1","status":"ok","name":"web","changed":true}`,
+			run: func(d *client.DockerService) (any, error) {
+				r, err := d.Remove(ctx, "web1", "web")
+				return unwrap(r, err)
 			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("web-01", resp.Data.Results[0].Hostname)
-				suite.Equal("abc123", resp.Data.Results[0].ID)
-				suite.Equal("my-nginx", resp.Data.Results[0].Name)
-				suite.Equal("nginx:latest", resp.Data.Results[0].Image)
-				suite.Equal("running", resp.Data.Results[0].State)
-				suite.Equal("2026-01-01T00:00:00Z", resp.Data.Results[0].Created)
-				suite.True(resp.Data.Results[0].Changed)
+			want: []client.DockerActionResult{
+				{Hostname: "web1", Status: "ok", Name: "web", Changed: true},
 			},
 		},
 		{
-			name: "when creating container with all optional fields returns result",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"web-01","id":"def456","name":"my-app","image":"myapp:v1","state":"running","created":"2026-01-01T00:00:00Z","changed":true}]}`,
-					),
-				)
+			name:   "docker start",
+			method: http.MethodPost,
+			path:   "/api/node/web1/container/docker/web/start",
+			row:    `{"hostname":"web1","status":"ok","name":"web"}`,
+			run: func(d *client.DockerService) (any, error) {
+				r, err := d.Start(ctx, "web1", "web")
+				return unwrap(r, err)
 			},
-			opts: client.DockerCreateOpts{
-				Image:     "myapp:v1",
-				Name:      "my-app",
-				Command:   []string{"serve", "--port", "8080"},
-				Env:       []string{"FOO=bar", "BAZ=qux"},
-				Ports:     []string{"8080:80", "443:443"},
-				Volumes:   []string{"/host/data:/data", "/host/config:/config"},
-				AutoStart: &autoStart,
+			want: []client.DockerActionResult{{Hostname: "web1", Status: "ok", Name: "web"}},
+		},
+		{
+			name:   "docker stop",
+			method: http.MethodPost,
+			path:   "/api/node/web1/container/docker/web/stop",
+			body:   `{"timeout":5}`,
+			row:    `{"hostname":"web1","status":"ok","name":"web","changed":true}`,
+			run: func(d *client.DockerService) (any, error) {
+				r, err := d.Stop(ctx, "web1", "web", 5)
+				return unwrap(r, err)
 			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000002", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("def456", resp.Data.Results[0].ID)
-				suite.Equal("my-app", resp.Data.Results[0].Name)
+			want: []client.DockerActionResult{
+				{Hostname: "web1", Status: "ok", Name: "web", Changed: true},
 			},
 		},
 		{
-			name: "when creating container with hostname and dns returns result",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000003","results":[{"hostname":"web-01","id":"ghi789","name":"my-dns","image":"nginx:latest","state":"running","created":"2026-01-01T00:00:00Z","changed":true}]}`,
-					),
-				)
-			},
-			opts: client.DockerCreateOpts{
-				Image:    "nginx:latest",
-				Name:     "my-dns",
-				Hostname: "web-01",
-				DNS:      []string{"8.8.8.8", "8.8.4.4"},
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000003", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("ghi789", resp.Data.Results[0].ID)
-				suite.Equal("my-dns", resp.Data.Results[0].Name)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			opts: client.DockerCreateOpts{
-				Image: "nginx:latest",
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			opts: client.DockerCreateOpts{
-				Image: "nginx:latest",
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "docker create")
-			},
-		},
-		{
-			name: "when server returns 202 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			opts: client.DockerCreateOpts{
-				Image: "nginx:latest",
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
-
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Docker.Create(
-				suite.ctx,
-				"_any",
-				tc.opts,
-			)
-			tc.validateFunc(resp, err)
-		})
-	}
-}
-
-func (suite *DockerPublicTestSuite) TestList() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		params       *client.DockerListParams
-		validateFunc func(*client.Response[client.Collection[client.DockerListResult]], error)
-	}{
-		{
-			name: "when listing containers returns results",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"web-01","containers":[{"id":"abc123","name":"my-nginx","image":"nginx:latest","state":"running","created":"2026-01-01T00:00:00Z"}]}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerListResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("web-01", resp.Data.Results[0].Hostname)
-				suite.Len(resp.Data.Results[0].Containers, 1)
-				suite.Equal("abc123", resp.Data.Results[0].Containers[0].ID)
-				suite.Equal("my-nginx", resp.Data.Results[0].Containers[0].Name)
-			},
-		},
-		{
-			name: "when listing containers with state and limit params returns results",
-			handler: func(w http.ResponseWriter, r *http.Request) {
-				suite.Equal("running", r.URL.Query().Get("state"))
-				suite.Equal("5", r.URL.Query().Get("limit"))
-
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"web-01","containers":[{"id":"abc123","name":"my-nginx","image":"nginx:latest","state":"running","created":"2026-01-01T00:00:00Z"}]}]}`,
-					),
-				)
-			},
-			params: &client.DockerListParams{
-				State: "running",
-				Limit: 5,
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerListResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000002", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerListResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerListResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "docker list")
-			},
-		},
-		{
-			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerListResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
-
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Docker.List(suite.ctx, "_any", tc.params)
-			tc.validateFunc(resp, err)
-		})
-	}
-}
-
-func (suite *DockerPublicTestSuite) TestInspect() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.DockerDetailResult]], error)
-	}{
-		{
-			name: "when inspecting container returns result",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"web-01","id":"abc123","name":"my-nginx","image":"nginx:latest","state":"running","created":"2026-01-01T00:00:00Z","ports":["80/tcp"],"mounts":["/data:/data"],"env":["FOO=bar"],"network_settings":{"ip":"172.17.0.2"},"health":"healthy"}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerDetailResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-
-				r := resp.Data.Results[0]
-				suite.Equal("web-01", r.Hostname)
-				suite.Equal("abc123", r.ID)
-				suite.Equal("my-nginx", r.Name)
-				suite.Equal("nginx:latest", r.Image)
-				suite.Equal("running", r.State)
-				suite.Equal("2026-01-01T00:00:00Z", r.Created)
-				suite.Equal([]string{"80/tcp"}, r.Ports)
-				suite.Equal([]string{"/data:/data"}, r.Mounts)
-				suite.Equal([]string{"FOO=bar"}, r.Env)
-				suite.Equal(map[string]string{"ip": "172.17.0.2"}, r.NetworkSettings)
-				suite.Equal("healthy", r.Health)
-			},
-		},
-		{
-			name: "when server returns 404 returns NotFoundError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusNotFound)
-				_, _ = w.Write([]byte(`{"error":"container not found"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerDetailResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.NotFoundError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusNotFound, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerDetailResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerDetailResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "docker inspect")
-			},
-		},
-		{
-			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerDetailResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
-
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Docker.Inspect(suite.ctx, "_any", "abc123")
-			tc.validateFunc(resp, err)
-		})
-	}
-}
-
-func (suite *DockerPublicTestSuite) TestStart() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.DockerActionResult]], error)
-	}{
-		{
-			name: "when starting container returns result",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"web-01","id":"abc123","message":"container started","changed":true}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerActionResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("web-01", resp.Data.Results[0].Hostname)
-				suite.Equal("abc123", resp.Data.Results[0].ID)
-				suite.Equal("container started", resp.Data.Results[0].Message)
-				suite.True(resp.Data.Results[0].Changed)
-			},
-		},
-		{
-			name: "when server returns 404 returns NotFoundError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusNotFound)
-				_, _ = w.Write([]byte(`{"error":"container not found"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerActionResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.NotFoundError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusNotFound, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerActionResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerActionResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "docker start")
-			},
-		},
-		{
-			name: "when server returns 202 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerActionResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
-
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Docker.Start(suite.ctx, "_any", "abc123")
-			tc.validateFunc(resp, err)
-		})
-	}
-}
-
-func (suite *DockerPublicTestSuite) TestStop() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		opts         client.DockerStopOpts
-		validateFunc func(*client.Response[client.Collection[client.DockerActionResult]], error)
-	}{
-		{
-			name: "when stopping container returns result",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"web-01","id":"abc123","message":"container stopped","changed":true}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerActionResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("web-01", resp.Data.Results[0].Hostname)
-				suite.Equal("abc123", resp.Data.Results[0].ID)
-				suite.Equal("container stopped", resp.Data.Results[0].Message)
-				suite.True(resp.Data.Results[0].Changed)
-			},
-		},
-		{
-			name: "when stopping container with timeout returns result",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"web-01","id":"abc123","message":"container stopped","changed":true}]}`,
-					),
-				)
-			},
-			opts: client.DockerStopOpts{
-				Timeout: 30,
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerActionResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000002", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("abc123", resp.Data.Results[0].ID)
-			},
-		},
-		{
-			name: "when server returns 404 returns NotFoundError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusNotFound)
-				_, _ = w.Write([]byte(`{"error":"container not found"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerActionResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.NotFoundError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusNotFound, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerActionResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerActionResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "docker stop")
-			},
-		},
-		{
-			name: "when server returns 202 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerActionResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
-
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Docker.Stop(
-				suite.ctx,
-				"_any",
-				"abc123",
-				tc.opts,
-			)
-			tc.validateFunc(resp, err)
-		})
-	}
-}
-
-func (suite *DockerPublicTestSuite) TestRemove() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		params       *client.DockerRemoveParams
-		validateFunc func(*client.Response[client.Collection[client.DockerActionResult]], error)
-	}{
-		{
-			name: "when removing container returns result",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"web-01","id":"abc123","message":"container removed","changed":true}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerActionResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("web-01", resp.Data.Results[0].Hostname)
-				suite.Equal("abc123", resp.Data.Results[0].ID)
-				suite.Equal("container removed", resp.Data.Results[0].Message)
-				suite.True(resp.Data.Results[0].Changed)
-			},
-		},
-		{
-			name: "when removing container with force returns result",
-			handler: func(w http.ResponseWriter, r *http.Request) {
-				suite.Equal("true", r.URL.Query().Get("force"))
-
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"web-01","id":"abc123","message":"container removed","changed":true}]}`,
-					),
-				)
-			},
-			params: &client.DockerRemoveParams{
-				Force: true,
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerActionResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000002", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("abc123", resp.Data.Results[0].ID)
-			},
-		},
-		{
-			name: "when server returns 404 returns NotFoundError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusNotFound)
-				_, _ = w.Write([]byte(`{"error":"container not found"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerActionResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.NotFoundError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusNotFound, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerActionResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerActionResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "docker remove")
-			},
-		},
-		{
-			name: "when server returns 202 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerActionResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
-
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Docker.Remove(suite.ctx, "_any", "abc123", tc.params)
-			tc.validateFunc(resp, err)
-		})
-	}
-}
-
-func (suite *DockerPublicTestSuite) TestExec() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		opts         client.DockerExecOpts
-		validateFunc func(*client.Response[client.Collection[client.DockerExecResult]], error)
-	}{
-		{
-			name: "when executing command returns result",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"web-01","stdout":"hello\n","stderr":"","exit_code":0,"changed":true}]}`,
-					),
-				)
-			},
-			opts: client.DockerExecOpts{
-				Command: []string{"echo", "hello"},
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerExecResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("web-01", resp.Data.Results[0].Hostname)
-				suite.Equal("hello\n", resp.Data.Results[0].Stdout)
-				suite.Empty(resp.Data.Results[0].Stderr)
-				suite.Equal(0, resp.Data.Results[0].ExitCode)
-				suite.True(resp.Data.Results[0].Changed)
-			},
-		},
-		{
-			name: "when executing command with env and working dir returns result",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"web-01","stdout":"bar\n","stderr":"","exit_code":0,"changed":true}]}`,
-					),
-				)
-			},
-			opts: client.DockerExecOpts{
-				Command:    []string{"printenv", "FOO"},
-				Env:        []string{"FOO=bar", "BAZ=qux"},
-				WorkingDir: "/app",
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerExecResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000002", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("bar\n", resp.Data.Results[0].Stdout)
-			},
-		},
-		{
-			name: "when server returns 404 returns NotFoundError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusNotFound)
-				_, _ = w.Write([]byte(`{"error":"container not found"}`))
-			},
-			opts: client.DockerExecOpts{
-				Command: []string{"echo", "hello"},
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerExecResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.NotFoundError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusNotFound, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			opts: client.DockerExecOpts{
-				Command: []string{"echo", "hello"},
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerExecResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			opts: client.DockerExecOpts{
-				Command: []string{"echo", "hello"},
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerExecResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "docker exec")
-			},
-		},
-		{
-			name: "when server returns 202 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			opts: client.DockerExecOpts{
-				Command: []string{"echo", "hello"},
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerExecResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
-
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Docker.Exec(
-				suite.ctx,
-				"_any",
-				"abc123",
-				tc.opts,
-			)
-			tc.validateFunc(resp, err)
-		})
-	}
-}
-
-func (suite *DockerPublicTestSuite) TestPull() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.DockerPullResult]], error)
-	}{
-		{
-			name: "when pulling image returns result",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"web-01","image_id":"sha256:abc123","tag":"latest","size":52428800,"changed":true}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerPullResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("web-01", resp.Data.Results[0].Hostname)
-				suite.Equal("sha256:abc123", resp.Data.Results[0].ImageID)
-				suite.Equal("latest", resp.Data.Results[0].Tag)
-				suite.Equal(int64(52428800), resp.Data.Results[0].Size)
-				suite.True(resp.Data.Results[0].Changed)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerPullResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerPullResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "docker pull")
-			},
-		},
-		{
-			name: "when server returns 202 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerPullResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
-			)
-
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Docker.Pull(
-				suite.ctx,
-				"_any",
-				client.DockerPullOpts{
-					Image: "nginx:latest",
+			name:   "docker exec",
+			method: http.MethodPost,
+			path:   "/api/node/web1/container/docker/web/exec",
+			body:   `{"command":["ls"],"env":{"A":"1"},"working_dir":"/tmp"}`,
+			row:    `{"hostname":"web1","status":"ok","stdout":"a","stderr":"b","exit_code":2,"changed":true}`,
+			run: func(d *client.DockerService) (any, error) {
+				r, err := d.Exec(ctx, "web1", "web", client.DockerExecOpts{
+					Command: []string{"ls"}, Env: map[string]string{"A": "1"}, WorkingDir: "/tmp",
+				})
+				return unwrap(r, err)
+			},
+			want: []client.DockerExecResult{
+				{
+					Hostname: "web1",
+					Status:   "ok",
+					Stdout:   "a",
+					Stderr:   "b",
+					ExitCode: 2,
+					Changed:  true,
 				},
-			)
-			tc.validateFunc(resp, err)
+			},
+		},
+		{
+			name:   "docker image list",
+			method: http.MethodGet,
+			path:   "/api/node/web1/container/image",
+			row:    `{"hostname":"web1","status":"ok","id":"91ef","repository":"alpine","tag":"3.20","size":"7.8MB"}`,
+			run: func(d *client.DockerService) (any, error) {
+				r, err := d.ListImages(ctx, "web1")
+				return unwrap(r, err)
+			},
+			want: []client.DockerImageResult{
+				{
+					Hostname:   "web1",
+					Status:     "ok",
+					ID:         "91ef",
+					Repository: "alpine",
+					Tag:        "3.20",
+					Size:       "7.8MB",
+				},
+			},
+		},
+		{
+			name:   "docker pull",
+			method: http.MethodPost,
+			path:   "/api/node/web1/container/image/pull",
+			body:   `{"image":"alpine"}`,
+			row:    `{"hostname":"web1","status":"ok","image":"alpine","image_id":"sha256:x","size":9,"changed":true}`,
+			run: func(d *client.DockerService) (any, error) {
+				r, err := d.Pull(ctx, "web1", "alpine")
+				return unwrap(r, err)
+			},
+			want: []client.DockerPullResult{
+				{
+					Hostname: "web1",
+					Status:   "ok",
+					Image:    "alpine",
+					ImageID:  "sha256:x",
+					Size:     9,
+					Changed:  true,
+				},
+			},
+		},
+		{
+			name:   "docker image remove",
+			method: http.MethodDelete,
+			path:   "/api/node/web1/container/image/alpine",
+			body:   `{}`,
+			row:    `{"hostname":"web1","status":"ok","image":"alpine","changed":true}`,
+			run: func(d *client.DockerService) (any, error) {
+				r, err := d.RemoveImage(ctx, "web1", "alpine", false)
+				return unwrap(r, err)
+			},
+			want: []client.DockerImageRemoveResult{
+				{Hostname: "web1", Status: "ok", Image: "alpine", Changed: true},
+			},
+		},
+	}
+}
+
+// unwrap is the rows of a response, for a comparison of any method's.
+func unwrap[T any](
+	r *client.Response[client.Collection[T]],
+	err error,
+) (any, error) {
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Data.Results, nil
+}
+
+func (s *DockerPublicTestSuite) serve(
+	h http.HandlerFunc,
+) *client.DockerService {
+	srv := httptest.NewServer(h)
+	s.T().Cleanup(srv.Close)
+
+	return client.New(srv.URL, "test-token", client.WithLogger(slog.Default())).Docker
+}
+
+// TestCalls: each method sends its request, and converts each row of the
+// answer.
+func (s *DockerPublicTestSuite) TestCalls() {
+	for _, c := range s.calls() {
+		s.Run(c.name, func() {
+			d := s.serve(func(w http.ResponseWriter, r *http.Request) {
+				s.Equal(c.method, r.Method)
+				s.Equal(c.path, r.URL.Path)
+				s.Equal(c.query, r.URL.RawQuery)
+				if c.body != "" {
+					got, _ := io.ReadAll(r.Body)
+					s.JSONEq(c.body, string(got))
+				}
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[` + c.row + `]}`,
+					),
+				)
+			})
+			got, err := c.run(d)
+			s.Require().NoError(err)
+			s.Equal(c.want, got)
 		})
 	}
 }
 
-func (suite *DockerPublicTestSuite) TestImageRemove() {
-	tests := []struct {
-		name         string
-		handler      http.HandlerFunc
-		serverURL    string
-		params       *client.DockerRemoveImageParams
-		validateFunc func(*client.Response[client.Collection[client.DockerActionResult]], error)
-	}{
-		{
-			name: "when removing image returns result",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"web-01","id":"nginx:latest","message":"image removed","changed":true}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerActionResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("web-01", resp.Data.Results[0].Hostname)
-				suite.Equal("nginx:latest", resp.Data.Results[0].ID)
-				suite.Equal("image removed", resp.Data.Results[0].Message)
-				suite.True(resp.Data.Results[0].Changed)
-			},
-		},
-		{
-			name: "when removing image with force returns result",
-			handler: func(w http.ResponseWriter, r *http.Request) {
-				suite.Equal("true", r.URL.Query().Get("force"))
-
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"web-01","id":"nginx:latest","message":"image removed","changed":true}]}`,
-					),
-				)
-			},
-			params: &client.DockerRemoveImageParams{
-				Force: true,
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerActionResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000002", resp.Data.JobID)
-				suite.Len(resp.Data.Results, 1)
-				suite.Equal("nginx:latest", resp.Data.Results[0].ID)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
+// TestFailures: each method answers a status that is an error, a body that
+// is nil and a request that fails as an error.
+func (s *DockerPublicTestSuite) TestFailures() {
+	for _, c := range s.calls() {
+		s.Run(c.name+" with a 403", func() {
+			d := s.serve(func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusForbidden)
 				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerActionResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name:      "when client HTTP call fails returns error",
-			serverURL: "http://127.0.0.1:0",
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerActionResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-				suite.Contains(err.Error(), "docker image remove")
-			},
-		},
-		{
-			name: "when server returns 202 with no JSON body returns UnexpectedStatusError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.DockerActionResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.UnexpectedStatusError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			var (
-				serverURL string
-				cleanup   func()
+			})
+			_, err := c.run(d)
+			var target *client.AuthError
+			s.True(errors.As(err, &target), "err is %T: %v", err, err)
+		})
+		s.Run(c.name+" with no body", func() {
+			d := s.serve(
+				func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) },
 			)
-
-			if tc.serverURL != "" {
-				serverURL = tc.serverURL
-				cleanup = func() {}
-			} else {
-				server := httptest.NewServer(tc.handler)
-				serverURL = server.URL
-				cleanup = server.Close
-			}
-			defer cleanup()
-
-			sut := client.New(
-				serverURL,
-				"test-token",
-				client.WithLogger(slog.Default()),
-			)
-
-			resp, err := sut.Docker.RemoveImage(
-				suite.ctx,
-				"_any",
-				"nginx:latest",
-				tc.params,
-			)
-			tc.validateFunc(resp, err)
+			_, err := c.run(d)
+			var target *client.UnexpectedStatusError
+			s.True(errors.As(err, &target), "err is %T: %v", err, err)
+		})
+		s.Run(c.name+" that cannot connect", func() {
+			d := client.New("http://127.0.0.1:0", "t", client.WithLogger(slog.Default())).Docker
+			_, err := c.run(d)
+			s.ErrorContains(err, c.name[:len("docker ")])
 		})
 	}
+}
+
+// TestRowsAreJSON: a row converts to the same JSON the server sent.
+func (s *DockerPublicTestSuite) TestRowsAreJSON() {
+	b, err := json.Marshal(client.DockerExecResult{Hostname: "h", Status: "ok"})
+	s.Require().NoError(err)
+	s.JSONEq(`{"hostname":"h","status":"ok","exit_code":0,"changed":false}`, string(b))
 }
 
 func TestDockerPublicTestSuite(

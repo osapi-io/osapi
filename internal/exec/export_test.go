@@ -31,3 +31,14 @@ func SetExecutor(
 
 // ExportStartSpan exposes startSpan for testing.
 var ExportStartSpan = startSpan
+
+// SetSudoProgram replaces the program that RunPrivilegedCmdFull runs a
+// command through, and returns a function that puts it back.
+func SetSudoProgram(
+	name string,
+) func() {
+	old := sudoProgram
+	sudoProgram = name
+
+	return func() { sudoProgram = old }
+}
