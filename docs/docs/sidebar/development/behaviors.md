@@ -150,6 +150,11 @@ behavior.Call(ctx, managedfile.Behavior, managedfile.Update, d.files,
     managedfile.UpdateInput{Path: path, Content: c})
 ```
 
+`osapi behavior create --requires managedfile` writes the `behavior.Requires`,
+the `host.Require` in the builder and a provider field for each behavior that it
+names. You write the calls. Until an example calls managedfile, the tests of the
+new behavior fail the rule `used`, and its message tells you what to add.
+
 `behavior.Call` runs the method inside its own span, so a trace shows
 `behavior.managedfile.update` under `behavior.sysctl.create`. A direct call of
 `managedfile.Update` works, but the trace has no step for it, so the tests of
@@ -400,7 +405,8 @@ and what the platform cannot do yet.
 whose examples and tests miss a line fails CI too. It also runs
 `behavior-scaffold-check`, which makes a behavior with `osapi behavior create`
 in a copy of the checkout and runs its tests. Thus the behavior that you start
-from passes each check.
+from passes each check. It also makes a behavior with `--requires managedfile`,
+and checks that the only test that fails is the rule `used`.
 
 A behavior that replaces a hand-written domain changes the full spec. The API
 contract test, `TestJoinedSpec` in `internal/apicontract`, then fails, and its

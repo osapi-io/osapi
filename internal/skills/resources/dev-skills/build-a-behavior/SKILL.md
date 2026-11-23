@@ -57,7 +57,7 @@ Decide these with the user before you write code. Each answer becomes a declarat
 | Who calls it: operators, or only other behaviors? Would an operator ever call it from the CLI or the API? Is it only a piece of work other behaviors share, such as writing a file or reloading a service? | An operator needs routes, commands and permissions; a building block must not have them. `behavior validate` fails an internal behavior that no behavior requires | `behavior.API` and `behavior.CLI` when an operator calls it, or `behavior.Internal` when only other behaviors do |
 | Which hosts does it run on? | Every other platform reports `skipped`, never fails | `behavior.Platform("debian", ...)` per distribution, `"linux"` for every Linux host without its own, `"darwin"` for macOS |
 | Does one method run on fewer hosts than the others? | That method reports `skipped` elsewhere, and its examples run only there | `.On(behavior.PlatformDebian)` on the method, and `.Sudo` or `.Runs` on the method for a program only it runs. `hostname` is the example |
-| Does part of the work exist as an internal behavior? `behavior list` marks them `(internal)`. | Copying it means two copies of the hard part | `behavior.Requires(that.Behavior)`. Get its provider with `host.Require`, and call each of its methods with `behavior.Call(ctx, that.Behavior, that.Method, provider, in)`, so the trace shows the call as its own step and its input is validated. A direct call fails the tests |
+| Does part of the work exist as an internal behavior? `behavior list` marks them `(internal)`. | Copying it means two copies of the hard part | `behavior create --requires <that>` writes `behavior.Requires(that.Behavior)`, the `host.Require` in the builder and a provider field. You write the calls: call each of its methods with `behavior.Call(ctx, that.Behavior, that.Method, provider, in)`, so the trace shows the call as its own step and its input is validated. A direct call fails the tests |
 | Would a second behavior need part of what this one does? | The rule of two: the second need is when shared work becomes its own behavior | Build that part as an internal behavior first, then require it |
 | Does a value change per call, or stay the same on a host? | A setting is agent config; an input is part of each request | An input field, or a field in `settings.go` |
 | Which input names the thing a call acts on, such as a key or a path? | A trace shows it, so a reader sees what each call changed. `behavior validate` fails a write that records nothing | `.Key("key")`, or `telemetry:"attr"` on a method without a key |
@@ -183,9 +183,16 @@ default route, goes in a unit test of the provider, not in an example.
    with `--group <group>` for a behavior nested under one, such as `network`,
    and `--package <go-package>` when the name is a Go keyword, such as
    `--name package --package packages` (the directory is then that package),
+   and `--requires <behavior>[,<behavior>...]` for each behavior that it is built
+   on, such as `--requires managedfile`,
    then `go generate ./internal/behaviors/<name>/mocks ./internal/behaviors/all`
    (`<group>/<name>` for a grouped one). The
-   result builds, validates and passes every test before you change it.
+   result builds, validates and passes every test before you change it. With
+   `--requires`, one test fails: the examples fail the rule `used` until a
+   provider calls each required behavior with `behavior.Call`. The comment on
+   the provider field in `<platform>.go` has the call to write. Then give the
+   mock of each required provider its expectations in
+   `<platform>_public_test.go`.
 2. Change it in this order, because each depends on the one before:
    `settings.go`, `types.go`, `provider.go` and `<platform>.go`, `methods.go`,
    then `behavior.go`. Use the host only through `host.Host`. Then the fake host can test it. Compare before you act. Then a second run reports `changed: false`. A building block's own fields, such as what `managedfile`

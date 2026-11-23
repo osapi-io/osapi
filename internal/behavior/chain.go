@@ -441,7 +441,7 @@ var ChainSpec = guide.Spec{
 			Kind: KindCompose,
 			Name: "Use a building block",
 			Does: "A building block is an internal behavior that does one generic job, such as writing a file that osapi manages. Its spans, checks and records come with it. \"Building blocks\" lists the ones in this binary.",
-			When: "Before a provider does generic work itself: a managed file, a service reload, a call to an outside API. Require the block with Requires, and call it with Call.",
+			When: "Before a provider does generic work itself: a managed file, a service reload, a call to an outside API. Require the block with Requires, and call it with Call. osapi behavior create --requires <block> writes the Requires, the host.Require and a field of the provider; you write each Call.",
 		},
 		{
 			Kind: KindCompose,

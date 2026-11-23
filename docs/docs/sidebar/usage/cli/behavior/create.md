@@ -17,6 +17,11 @@ two require: add `behavior.Internal` to it then, and `behavior.Requires` to each
 user. `osapi behavior validate` fails an internal behavior that no behavior
 requires.
 
+`--requires` names the behaviors that the new one is built on. For each, it
+writes `behavior.Requires`, the `host.Require` in the builder and a field of the
+provider. You write each `behavior.Call`: until an example calls a required
+behavior, the tests fail the rule `used`.
+
 ```bash
 osapi behavior create [flags]
 ```
@@ -27,6 +32,7 @@ osapi behavior create [flags]
 osapi behavior create --name motd --description "The message shown at login"
 osapi behavior create --name motd --description "The message shown at login" --root ~/src/osapi
 osapi behavior create --group network --name neighbors --description "The host's ARP neighbors"
+osapi behavior create --name ntpconf --description "The NTP config" --requires managedfile
 ```
 
 ## Result
@@ -109,6 +115,7 @@ With `--json`, the command prints:
 | `--group`       | Nest it under a group, such as network: its routes, commands and directory                                           |         |
 | `--name`        | The behavior's name: lowercase letters and digits (required)                                                         |         |
 | `--package`     | The Go package and directory, when it is not the name: package is a Go keyword, so --name package --package packages |         |
+| `--requires`    | Behaviors it is built on, such as managedfile: it writes the Requires, the host.Require and a provider field of each |         |
 | `--root`        | The osapi checkout to write into                                                                                     | `.`     |
 
 ## Global flags

@@ -49,12 +49,18 @@ var scaffoldName = regexp.MustCompile(`^[a-z][a-z0-9]*$`)
 // internal/behaviors/all. It returns the files written, relative to root, the
 // registration last. Everything is rendered and checked before anything is
 // written, so a taken name or a root that is not a checkout writes nothing.
+//
+// requires names registered behaviors that the new one is built on. The
+// scaffold writes the wiring of each one: behavior.Requires in the
+// definition, host.Require in the builder and a field of the provider. The
+// author then writes the behavior.Call of each, which the tests ask for.
 func Scaffold(
 	root string,
 	group string,
 	name string,
 	goPackage string,
 	doc string,
+	requires []string,
 ) ([]string, error) {
 	if !scaffoldName.MatchString(name) {
 		return nil, fmt.Errorf(
@@ -84,6 +90,10 @@ func Scaffold(
 	}
 	if doc == "" || strings.ContainsAny(doc, "\r\n") {
 		return nil, errors.New("description must be one line")
+	}
+	reqs, err := resolveRequires(requires)
+	if err != nil {
+		return nil, err
 	}
 
 	mod, err := os.ReadFile(filepath.Join(root, "go.mod"))
@@ -116,7 +126,10 @@ func Scaffold(
 		data []byte
 	}
 	sources := scaffoldSources(
-		scaffold{group: group, name: name, goPackage: goPackage, path: path, doc: doc},
+		scaffold{
+			group: group, name: name, goPackage: goPackage, path: path, doc: doc,
+			requires: reqs,
+		},
 	)
 	files := make([]file, 0, len(sources)+1)
 	for _, src := range sources {
@@ -141,6 +154,56 @@ func Scaffold(
 	}
 
 	return written, nil
+}
+
+// requirement is a behavior that a new behavior requires, as the scaffold
+// writes its wiring.
+type requirement struct {
+	// name is the behavior's name in the registry.
+	name string
+	// path is the import path of its Go package.
+	path string
+	// pkg is its Go package name.
+	pkg string
+	// fn is the Go function of one of its methods, such as Update, for the
+	// example call in the provider's comment.
+	fn string
+}
+
+// resolveRequires finds each named behavior in the registry. A name that is
+// not registered, or that is given twice, is refused.
+func resolveRequires(
+	names []string,
+) ([]requirement, error) {
+	reqs := make([]requirement, 0, len(names))
+	for i, n := range names {
+		if slices.Contains(names[:i], n) {
+			return nil, fmt.Errorf("requires %q twice: name each behavior once", n)
+		}
+		b := Lookup(n)
+		if b == nil {
+			return nil, fmt.Errorf(
+				"requires %q, which is not a registered behavior: "+
+					"osapi behavior list names each one", n)
+		}
+		if len(b.Methods) == 0 {
+			return nil, fmt.Errorf("requires %q, which has no method to call", n)
+		}
+		// The Go function of a method, such as
+		// github.com/osapi-io/osapi/internal/behaviors/managedfile.Update,
+		// is the package's import path, a dot and the function.
+		fn := b.Methods[0].Func()
+		slash := strings.LastIndex(fn, "/") + 1
+		dot := slash + strings.Index(fn[slash:], ".")
+		reqs = append(reqs, requirement{
+			name: b.Name,
+			path: fn[:dot],
+			pkg:  fn[slash:dot],
+			fn:   fn[dot+1:],
+		})
+	}
+
+	return reqs, nil
 }
 
 // register adds the blank import of the behavior at path, under

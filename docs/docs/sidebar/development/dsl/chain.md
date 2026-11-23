@@ -41,7 +41,8 @@ writing a file that osapi manages. Its spans, checks and records come with it.
 
 Use: Before a provider does generic work itself: a managed file, a service
 reload, a call to an outside API. Require the block with Requires, and call it
-with Call.
+with Call. osapi behavior create --requires &lt;block&gt; writes the Requires,
+the host.Require and a field of the provider; you write each Call.
 
 ### `Make a building block`
 

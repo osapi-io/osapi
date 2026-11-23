@@ -84,6 +84,10 @@ go_slow_checks := "behavior-gen-check go-generate-check docs-gen-check cli-docs-
 # The scaffold must keep up with the checks of behaviortest, as each behavior
 # must. The recipe writes a behavior in a copy of the checkout, generates it,
 # and runs its tests. The checkout itself does not change.
+#
+# It also writes a behavior that requires managedfile. That behavior passes
+# each test but one: its examples fail the rule used until the author writes
+# a call to managedfile, and the message of the rule says so.
 behavior-scaffold-check:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -93,8 +97,21 @@ behavior-scaffold-check:
         --exclude /dist --exclude /examples --exclude /docs/build ./ "$tmp/"
     cd "$tmp"
     go run . behavior create --name scaffoldcheck --description "A scaffold check" >/dev/null
-    go generate ./internal/behaviors/scaffoldcheck/mocks ./internal/behaviors/all
+    go run . behavior create --name scaffoldchain --description "A scaffold check" \
+        --requires managedfile >/dev/null
+    go generate ./internal/behaviors/scaffoldcheck/mocks \
+        ./internal/behaviors/scaffoldchain/mocks ./internal/behaviors/all
     go test -count=1 ./internal/behaviors/scaffoldcheck/...
+    examples='TestBehaviorPublicTestSuite/TestExamples'
+    go test -count=1 -skip "$examples" ./internal/behaviors/scaffoldchain/...
+    if out=$(go test -count=1 -run "$examples" ./internal/behaviors/scaffoldchain 2>&1); then
+        echo "scaffoldchain: its examples pass with no call to managedfile" >&2
+        exit 1
+    fi
+    if ! grep -q "scaffoldchain requires managedfile, and no example calls it" <<<"$out"; then
+        echo "$out" >&2
+        exit 1
+    fi
 
 # Fail when a group that osapi controller endpoint create writes does not pass
 # its tests

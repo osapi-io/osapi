@@ -305,6 +305,18 @@ func (s *MethodsPublicTestSuite) TestCreate() {
 	_, err = behaviordsl.Create(context.Background(), s.deps(),
 		behaviordsl.CreateInput{Name: "Bad", Description: "x", Root: root})
 	s.Error(err)
+
+	got, err = behaviordsl.Create(context.Background(), s.deps(), behaviordsl.CreateInput{
+		Name: "ntpconf", Description: "The NTP config", Requires: []string{"managedfile"},
+	})
+	s.Require().NoError(err, "a required behavior is wired, and its call is a step")
+	s.Contains(got.Next[2].Step, "call managedfile with behavior.Call in "+
+		"internal/behaviors/ntpconf/debian.go")
+
+	_, err = behaviordsl.Create(context.Background(), s.deps(), behaviordsl.CreateInput{
+		Name: "chrony", Description: "x", Requires: []string{"nosuch"},
+	})
+	s.ErrorContains(err, `requires "nosuch", which is not a registered behavior`)
 }
 
 func (s *MethodsPublicTestSuite) TestSpec() {
