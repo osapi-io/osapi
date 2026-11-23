@@ -184,7 +184,7 @@ func groupFile(
 		jen.Qual(endpointPath, "Uses").Index(jen.Qual(dispatchPath, "Deps")).Call(),
 		jen.Qual(endpointPath, "Tag").Call(
 			jen.Lit(b.Tag()),
-			jen.Lit(title(string(b.Placement))+"/"+title(b.Name)), jen.Lit(b.Doc)),
+			jen.Lit(b.Title), jen.Lit(b.Doc)),
 		jen.Qual(endpointPath, "CommandNotes").Call(
 			jen.Lit(command.GroupAnnotations(b)[reference.Notes])),
 	}, methods...)

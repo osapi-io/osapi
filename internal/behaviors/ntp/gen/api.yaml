@@ -477,4 +477,5 @@ paths:
 tags:
   - description: The NTP servers of chrony, and its sync status
     name: ntp_operations
-    x-displayName: Node/Ntp
+    x-displayName: NTP
+    x-osapi-group: ntp

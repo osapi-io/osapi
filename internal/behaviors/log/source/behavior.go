@@ -33,6 +33,7 @@ import (
 // macOS has no journal, and reports skipped.
 var Behavior = behavior.Register(behavior.Define(
 	"source", "The sources that write to the systemd journal",
+	behavior.Title("Log source"),
 	behavior.Node,
 	behavior.Under(behavior.GroupLog),
 	behavior.API,

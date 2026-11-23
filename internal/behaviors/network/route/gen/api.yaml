@@ -545,4 +545,5 @@ paths:
 tags:
   - description: The routes of an interface
     name: route_operations
-    x-displayName: Node/Route
+    x-displayName: Interface route
+    x-osapi-group: route

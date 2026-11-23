@@ -553,3 +553,4 @@ tags:
   - description: Admit, reject and revoke the nodes that ask to join.
     name: admission
     x-displayName: Admission
+    x-osapi-group: admission

@@ -577,4 +577,5 @@ paths:
 tags:
   - description: Kernel parameters, written to sysctl.d files and applied
     name: sysctl_operations
-    x-displayName: Node/Sysctl
+    x-displayName: Sysctl
+    x-osapi-group: sysctl

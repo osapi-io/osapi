@@ -13,22 +13,22 @@ examples make.
 
 ## Behavior
 
-|             |                                                                                                                                    |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Name        | netplan                                                                                                                            |
-| Description | The netplan files osapi writes, validated and applied                                                                              |
-| Placement   | node                                                                                                                               |
-| Internal    | yes                                                                                                                                |
-| API         | no                                                                                                                                 |
-| CLI         | no                                                                                                                                 |
-| Next        | no                                                                                                                                 |
-| Platforms   | debian                                                                                                                             |
-| Sudo        | netplan                                                                                                                            |
-| Runs        | netplan                                                                                                                            |
-| Writes      | /etc/netplan/osapi-\*.yaml                                                                                                         |
-| Keeps state | no                                                                                                                                 |
-| Uses        | [managedfile](../../internal/managedfile/managedfile.md)                                                                           |
-| Used by     | [route](../../networking/route/route.md), [dns](../../networking/dns/dns.md), [interface](../../networking/interface/interface.md) |
+|             |                                                                                                                                              |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | netplan                                                                                                                                      |
+| Description | The netplan files osapi writes, validated and applied                                                                                        |
+| Placement   | node                                                                                                                                         |
+| Internal    | yes                                                                                                                                          |
+| API         | no                                                                                                                                           |
+| CLI         | no                                                                                                                                           |
+| Next        | no                                                                                                                                           |
+| Platforms   | debian                                                                                                                                       |
+| Sudo        | netplan                                                                                                                                      |
+| Runs        | netplan                                                                                                                                      |
+| Writes      | /etc/netplan/osapi-\*.yaml                                                                                                                   |
+| Keeps state | no                                                                                                                                           |
+| Uses        | [managedfile](../../internal/managedfile/managedfile.md)                                                                                     |
+| Used by     | [dns](../../networking/dns/dns.md), [interface](../../networking/interface/interface.md), [route](../../networking/interface/route/route.md) |
 
 ### Methods (3)
 

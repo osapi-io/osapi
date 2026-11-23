@@ -51,6 +51,7 @@ var (
 // Behavior is the image definition.
 var Behavior = behavior.Register(behavior.Define(
 	"image", "The Docker images of the host",
+	behavior.Title("Container image"),
 	behavior.Node,
 	behavior.Under(behavior.GroupContainer),
 	behavior.API,

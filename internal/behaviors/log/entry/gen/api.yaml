@@ -212,4 +212,5 @@ paths:
 tags:
   - description: The entries of the systemd journal
     name: log_entry_operations
-    x-displayName: Node/Entry
+    x-displayName: Log entry
+    x-osapi-group: entry

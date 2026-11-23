@@ -294,7 +294,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Certificate",
+      label: "Certificate",
       link: {
         type: "doc",
         id: "gen/api/certificate-api-certificate-operations",
@@ -334,7 +334,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Command",
+      label: "Command",
       link: {
         type: "doc",
         id: "gen/api/command-api-command-operations",
@@ -356,7 +356,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Docker",
+      label: "Container",
       link: {
         type: "doc",
         id: "gen/api/docker-api-container-docker-operations",
@@ -408,7 +408,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Image",
+      label: "Container image",
       link: {
         type: "doc",
         id: "gen/api/image-api-container-image-operations",
@@ -436,7 +436,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Disk",
+      label: "Disk",
       link: {
         type: "doc",
         id: "gen/api/disk-api-disk-operations",
@@ -452,7 +452,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/File",
+      label: "File",
       link: {
         type: "doc",
         id: "gen/api/file-api-file-operations",
@@ -480,7 +480,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Group",
+      label: "Group",
       link: {
         type: "doc",
         id: "gen/api/group-api-group-operations",
@@ -520,7 +520,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Hostname",
+      label: "Hostname",
       link: {
         type: "doc",
         id: "gen/api/hostname-api-hostname-operations",
@@ -542,7 +542,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Load",
+      label: "Load",
       link: {
         type: "doc",
         id: "gen/api/load-api-load-operations",
@@ -558,7 +558,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Entry",
+      label: "Log entry",
       link: {
         type: "doc",
         id: "gen/api/entry-api-log-entry-operations",
@@ -574,7 +574,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Source",
+      label: "Log source",
       link: {
         type: "doc",
         id: "gen/api/source-api-log-source-operations",
@@ -590,7 +590,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Memory",
+      label: "Memory",
       link: {
         type: "doc",
         id: "gen/api/memory-api-memory-operations",
@@ -606,7 +606,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Connectivity",
+      label: "Connectivity",
       link: {
         type: "doc",
         id: "gen/api/connectivity-api-network-connectivity-operations",
@@ -622,7 +622,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Dns",
+      label: "DNS",
       link: {
         type: "doc",
         id: "gen/api/dns-api-network-dns-operations",
@@ -650,7 +650,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Interface",
+      label: "Interface",
       link: {
         type: "doc",
         id: "gen/api/interface-api-network-interface-operations",
@@ -690,7 +690,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Route",
+      label: "Interface route",
       link: {
         type: "doc",
         id: "gen/api/route-api-route-operations",
@@ -724,7 +724,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Ntp",
+      label: "NTP",
       link: {
         type: "doc",
         id: "gen/api/ntp-api-ntp-operations",
@@ -758,7 +758,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Os",
+      label: "OS",
       link: {
         type: "doc",
         id: "gen/api/os-api-os-operations",
@@ -774,7 +774,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Package",
+      label: "Package",
       link: {
         type: "doc",
         id: "gen/api/package-api-package-operations",
@@ -808,7 +808,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Power",
+      label: "Power",
       link: {
         type: "doc",
         id: "gen/api/power-api-power-operations",
@@ -830,7 +830,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Process",
+      label: "Process",
       link: {
         type: "doc",
         id: "gen/api/process-api-process-operations",
@@ -858,7 +858,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Schedule",
+      label: "Schedule",
       link: {
         type: "doc",
         id: "gen/api/schedule-api-schedule-operations",
@@ -898,7 +898,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Service",
+      label: "Service",
       link: {
         type: "doc",
         id: "gen/api/service-api-service-operations",
@@ -968,35 +968,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Sshkey",
-      link: {
-        type: "doc",
-        id: "gen/api/sshkey-api-sshkey-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/delete-node-user-sshkey",
-          label: "Remove an authorized SSH key of a user",
-          className: "api-method delete",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-node-user-sshkey",
-          label: "List the authorized SSH keys of a user",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-node-user-sshkey",
-          label: "Add an authorized SSH key to a user",
-          className: "api-method post",
-        },
-      ],
-    },
-    {
-      type: "category",
-      label: "Node/Status",
+      label: "Status",
       link: {
         type: "doc",
         id: "gen/api/status-api-status-operations",
@@ -1012,7 +984,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Sysctl",
+      label: "Sysctl",
       link: {
         type: "doc",
         id: "gen/api/sysctl-api-sysctl-operations",
@@ -1052,7 +1024,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Timezone",
+      label: "Timezone",
       link: {
         type: "doc",
         id: "gen/api/timezone-api-timezone-operations",
@@ -1074,7 +1046,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Updatepackages",
+      label: "Package updates",
       link: {
         type: "doc",
         id: "gen/api/updatepackages-api-updatepackages-operations",
@@ -1096,7 +1068,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Uptime",
+      label: "Uptime",
       link: {
         type: "doc",
         id: "gen/api/uptime-api-uptime-operations",
@@ -1112,7 +1084,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/User",
+      label: "User",
       link: {
         type: "doc",
         id: "gen/api/user-api-user-operations",
@@ -1152,6 +1124,34 @@ const sidebar: SidebarsConfig = {
           type: "doc",
           id: "gen/api/post-node-user-passwd",
           label: "Set the password of a user",
+          className: "api-method post",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "User SSH key",
+      link: {
+        type: "doc",
+        id: "gen/api/sshkey-api-sshkey-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/delete-node-user-sshkey",
+          label: "Remove an authorized SSH key of a user",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-user-sshkey",
+          label: "List the authorized SSH keys of a user",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-user-sshkey",
+          label: "Add an authorized SSH key to a user",
           className: "api-method post",
         },
       ],

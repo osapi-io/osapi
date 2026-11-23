@@ -30,6 +30,7 @@ import (
 // not gohai. It runs on the Debian family.
 var Behavior = behavior.Register(behavior.Define(
 	"updatepackages", "The updates the package index has for the host",
+	behavior.Title("Package updates"),
 	behavior.Node,
 	behavior.API,
 	behavior.Area(area.Software),

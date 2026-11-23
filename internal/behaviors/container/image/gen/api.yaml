@@ -423,4 +423,5 @@ paths:
 tags:
   - description: The Docker images of the host
     name: container_image_operations
-    x-displayName: Node/Image
+    x-displayName: Container image
+    x-osapi-group: image

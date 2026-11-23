@@ -142,3 +142,4 @@ tags:
   - description: The controller of the fleet.
     name: controller
     x-displayName: Controller
+    x-osapi-group: controller

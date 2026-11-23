@@ -11,12 +11,12 @@ The behaviors that netplan calls, and each call that its examples make.
 
 ## Chain
 
-|          |                                                                                                                                                                  |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Behavior | [netplan](../../behaviors/internal/netplan/netplan.md)                                                                                                           |
-| Chain    | netplan → managedfile                                                                                                                                            |
-| Calls    | [managedfile](../../behaviors/internal/managedfile/managedfile.md)                                                                                               |
-| Used by  | [route](../../behaviors/networking/route/route.md), [dns](../../behaviors/networking/dns/dns.md), [interface](../../behaviors/networking/interface/interface.md) |
+|          |                                                                                                                                                                            |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Behavior | [netplan](../../behaviors/internal/netplan/netplan.md)                                                                                                                     |
+| Chain    | netplan → managedfile                                                                                                                                                      |
+| Calls    | [managedfile](../../behaviors/internal/managedfile/managedfile.md)                                                                                                         |
+| Used by  | [dns](../../behaviors/networking/dns/dns.md), [interface](../../behaviors/networking/interface/interface.md), [route](../../behaviors/networking/interface/route/route.md) |
 
 ## A new file (update)
 

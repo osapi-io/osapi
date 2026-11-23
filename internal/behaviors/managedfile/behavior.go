@@ -36,6 +36,7 @@ const (
 // Behavior is the managedfile definition.
 var Behavior = behavior.Register(behavior.Define(
 	"managedfile", "Files osapi writes on a host and keeps a record of",
+	behavior.Title("Managed file"),
 	behavior.Node,
 	behavior.Internal,
 	behavior.Platform(behavior.PlatformDebian, newDebian),

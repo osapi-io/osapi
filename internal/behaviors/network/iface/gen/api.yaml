@@ -663,4 +663,5 @@ paths:
 tags:
   - description: The network interfaces of the host
     name: network_interface_operations
-    x-displayName: Node/Interface
+    x-displayName: Interface
+    x-osapi-group: interface

@@ -975,4 +975,5 @@ paths:
 tags:
   - description: The systemd services of the host
     name: service_operations
-    x-displayName: Node/Service
+    x-displayName: Service
+    x-osapi-group: service

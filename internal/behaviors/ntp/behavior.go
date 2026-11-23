@@ -54,6 +54,7 @@ const (
 // managedfile.
 var Behavior = behavior.Register(behavior.Define(
 	"ntp", "The NTP servers of chrony, and its sync status",
+	behavior.Title("NTP"),
 	behavior.Node,
 	behavior.API,
 	behavior.Area(area.Config),

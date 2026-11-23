@@ -27,6 +27,7 @@ import (
 	"reflect"
 	"runtime"
 	"slices"
+	"strings"
 
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/validation"
@@ -78,6 +79,10 @@ type Behavior struct {
 	Name string
 	// Doc says what the behavior manages, in one line.
 	Doc string
+	// Title is the behavior's name as a person reads it: the title of its
+	// pages, its API tag and its blocks in the UI. Define sets it from Name,
+	// capitalized, when the definition does not give one with Title.
+	Title string
 	// Placement is where the work runs.
 	Placement Placement
 	// Group nests the behavior under another path and command, such as
@@ -205,6 +210,16 @@ func Area(
 	return optionFunc(func(b *Behavior) { b.Area = name })
 }
 
+// Title gives a behavior the title that a person reads, such as "Package
+// updates" for updatepackages, when its capitalized name does not read well:
+// an initialism such as DNS, two words, a group such as Container image, or
+// the parent of a behavior that Of nests, such as User SSH key.
+func Title(
+	title string,
+) Option {
+	return optionFunc(func(b *Behavior) { b.Title = title })
+}
+
 // Of puts a behavior's items under an item of parent: Of(user.Behavior)
 // puts sshkey at /api/node/{hostname}/user/{name}/sshkey and
 // `osapi client node user sshkey`. Each input of the behavior has the
@@ -270,6 +285,9 @@ func Define(
 	}
 	for _, m := range b.Methods {
 		m.owner = b
+	}
+	if b.Title == "" && name != "" {
+		b.Title = strings.ToUpper(name[:1]) + name[1:]
 	}
 
 	return b

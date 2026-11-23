@@ -148,8 +148,8 @@ var Group = endpoint.Define(
 	endpoint.Area(area.Networking),
 	endpoint.Prefix("node/{hostname}/network/interface/{name}"),
 	endpoint.Uses[dispatch.Deps](),
-	endpoint.Tag("route_operations", "Node/Route", "The routes of an interface"),
-	endpoint.CommandNotes("The [route behavior](../../../../../../../reference/behaviors/networking/route/route.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Tag("route_operations", "Interface route", "The routes of an interface"),
+	endpoint.CommandNotes("The [route behavior](../../../../../../../reference/behaviors/networking/interface/route/route.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[ListRequest, NetworkInterfaceRouteCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeNetworkInterfaceRoute").

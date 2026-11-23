@@ -290,16 +290,16 @@ func (s *ModelPublicTestSuite) TestNewErrors() {
 			want: "GetJobs: the operation has no tag of the spec",
 		},
 		{
-			name: "when a tag has no x-displayName",
+			name: "when a tag has no x-osapi-group",
 			edit: func(text string) string {
-				return strings.Replace(text, "    x-displayName: Job\n", "", 1)
+				return strings.Replace(text, "    x-osapi-group: job\n", "", 1)
 			},
-			want: "tag Job_API has no x-displayName",
+			want: "tag Job_API has no x-osapi-group",
 		},
 		{
 			name: "when a path has no segment of its group",
 			edit: func(text string) string {
-				return strings.Replace(text, "x-displayName: Job\n", "x-displayName: Work\n", 1)
+				return strings.Replace(text, "x-osapi-group: job\n", "x-osapi-group: work\n", 1)
 			},
 			want: "has no segment work",
 		},

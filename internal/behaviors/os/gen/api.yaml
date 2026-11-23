@@ -164,4 +164,5 @@ paths:
 tags:
   - description: Get the operating system of target hosts
     name: os_operations
-    x-displayName: Node/Os
+    x-displayName: OS
+    x-osapi-group: os

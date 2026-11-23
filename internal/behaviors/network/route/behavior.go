@@ -150,6 +150,7 @@ func refuse(
 // call, as ip route add and ip route del do.
 var Behavior = behavior.Register(behavior.Define(
 	"route", "The routes of an interface",
+	behavior.Title("Interface route"),
 	behavior.Node,
 	behavior.API,
 	behavior.Area(area.Networking),

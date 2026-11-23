@@ -410,4 +410,5 @@ paths:
 tags:
   - description: The authorized SSH keys of a user
     name: sshkey_operations
-    x-displayName: Node/Sshkey
+    x-displayName: User SSH key
+    x-osapi-group: sshkey

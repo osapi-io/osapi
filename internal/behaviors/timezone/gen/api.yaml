@@ -283,4 +283,5 @@ paths:
 tags:
   - description: The timezone of the host
     name: timezone_operations
-    x-displayName: Node/Timezone
+    x-displayName: Timezone
+    x-osapi-group: timezone

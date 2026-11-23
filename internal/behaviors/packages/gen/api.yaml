@@ -471,4 +471,5 @@ paths:
 tags:
   - description: The packages installed on the host
     name: package_operations
-    x-displayName: Node/Package
+    x-displayName: Package
+    x-osapi-group: package

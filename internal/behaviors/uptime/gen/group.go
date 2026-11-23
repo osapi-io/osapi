@@ -48,7 +48,7 @@ var Group = endpoint.Define(
 	endpoint.Area(area.Node),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
-	endpoint.Tag("uptime_operations", "Node/Uptime", "Get the uptime of target hosts"),
+	endpoint.Tag("uptime_operations", "Uptime", "Get the uptime of target hosts"),
 	endpoint.CommandNotes("The [uptime behavior](../../../../../reference/behaviors/node/uptime/uptime.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[GetRequest, UptimeGetResponse]("get").
 		Handle(HandleGet).

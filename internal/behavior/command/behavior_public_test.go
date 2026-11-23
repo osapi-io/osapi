@@ -244,11 +244,6 @@ func (s *BehaviorcmdPublicTestSuite) TestTable() {
 	}
 }
 
-func (s *BehaviorcmdPublicTestSuite) TestTitle() {
-	s.Equal("DNS", command.Title(behavior.Define("dns", "x")), "an initialism is in capitals")
-	s.Equal("Sysctl", command.Title(behavior.Define("sysctl", "x")))
-}
-
 func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 	b := behavior.Define(
 		"kv",
@@ -353,28 +348,41 @@ func (s *BehaviorcmdPublicTestSuite) TestDocs() {
 }
 
 func (s *BehaviorcmdPublicTestSuite) TestReferencePage() {
+	parent := behavior.Define("person", "People", behavior.Node, behavior.Area(area.Security),
+		behavior.Read("get", read))
 	tests := []struct {
-		name string
-		b    *behavior.Behavior
-		want string
+		name   string
+		b      *behavior.Behavior
+		want   string
+		wantUp string
 	}{
 		{
 			name: "when the behavior has an area",
 			b: behavior.Define("disk", "Disks", behavior.Node, behavior.Area(area.Hardware),
 				behavior.Read("get", read)),
-			want: "hardware/disk/disk.md",
+			want:   "hardware/disk/disk.md",
+			wantUp: "../../",
 		},
 		{
 			name: "when the behavior is internal and has no area",
 			b: behavior.Define("object", "Objects", behavior.Node, behavior.Internal,
 				behavior.Read("get", read)),
-			want: command.InternalFolder + "/object/object.md",
+			want:   command.InternalFolder + "/object/object.md",
+			wantUp: "../../",
+		},
+		{
+			name: "when Of nests the behavior, its folder is in its parent's",
+			b: behavior.Define("key", "Keys", behavior.Node, behavior.Area(area.Security),
+				behavior.Of(parent), behavior.Read("get", read)),
+			want:   "security/person/key/key.md",
+			wantUp: "../../../",
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			s.Equal(tt.want, command.ReferencePage(tt.b))
+			s.Equal(tt.wantUp, command.ReferenceUp(tt.b))
 		})
 	}
 }

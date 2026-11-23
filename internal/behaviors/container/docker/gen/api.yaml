@@ -886,4 +886,5 @@ paths:
 tags:
   - description: The Docker containers of the host
     name: container_docker_operations
-    x-displayName: Node/Docker
+    x-displayName: Container
+    x-osapi-group: docker

@@ -51,6 +51,7 @@ const (
 // Debian family.
 var Behavior = behavior.Register(behavior.Define(
 	"dns", "The DNS resolvers of each interface of the host",
+	behavior.Title("DNS"),
 	behavior.Node,
 	behavior.API,
 	behavior.Area(area.Networking),

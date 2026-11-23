@@ -52,6 +52,7 @@ var (
 // runs on each Linux host; macOS has no journal, and reports skipped.
 var Behavior = behavior.Register(behavior.Define(
 	"entry", "The entries of the systemd journal",
+	behavior.Title("Log entry"),
 	behavior.Node,
 	behavior.Under(behavior.GroupLog),
 	behavior.API,

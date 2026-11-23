@@ -506,3 +506,4 @@ tags:
   - description: Operations related to the job queue.
     name: job_operations
     x-displayName: Job
+    x-osapi-group: job

@@ -55,7 +55,7 @@ var Group = endpoint.Define(
 	endpoint.Area(area.Logs),
 	endpoint.Prefix("node/{hostname}/log"),
 	endpoint.Uses[dispatch.Deps](),
-	endpoint.Tag("log_entry_operations", "Node/Entry", "The entries of the systemd journal"),
+	endpoint.Tag("log_entry_operations", "Log entry", "The entries of the systemd journal"),
 	endpoint.CommandNotes("The [entry behavior](../../../../../../reference/behaviors/logs/entry/entry.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[ListRequest, LogEntryCollectionResponse]("list").
 		Handle(HandleList).

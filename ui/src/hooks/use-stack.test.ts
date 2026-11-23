@@ -86,3 +86,26 @@ describe("the areas of the panel", () => {
     expect(BLOCK_AREAS.find((a) => a.name === "logs")?.label).toBe("Logs");
   });
 });
+
+describe("the categories of an area", () => {
+  const labels = (area: string) =>
+    BLOCK_AREAS.find((a) => a.name === area)?.categories.map((c) => c.label);
+
+  test("are labeled by the behavior's title", () => {
+    expect(labels("software")).toContain("Package updates");
+    expect(labels("containers")).toEqual(["Container", "Container image"]);
+  });
+
+  test("put a nested behavior after its parent, as the CLI does", () => {
+    const security = labels("security") ?? [];
+    expect(security.indexOf("User SSH key")).toBe(security.indexOf("User") + 1);
+    const networking = labels("networking") ?? [];
+    expect(networking.indexOf("Interface route")).toBe(
+      networking.indexOf("Interface") + 1,
+    );
+  });
+
+  test("of a hand-written block are labeled by the block", () => {
+    expect(labels("objectstore")).toEqual(["File", "File deploy"]);
+  });
+});

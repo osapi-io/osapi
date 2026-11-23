@@ -204,6 +204,36 @@ func (s *BehaviorPublicTestSuite) TestDefine() {
 	}
 }
 
+func (s *BehaviorPublicTestSuite) TestTitle() {
+	tests := []struct {
+		name string
+		b    *behavior.Behavior
+		want string
+	}{
+		{
+			name: "when the definition gives no title, it is the name with a capital",
+			b:    behavior.Define("sysctl", "x"),
+			want: "Sysctl",
+		},
+		{
+			name: "when the definition gives a title",
+			b:    behavior.Define("updatepackages", "x", behavior.Title("Package updates")),
+			want: "Package updates",
+		},
+		{
+			name: "when the behavior has no name",
+			b:    behavior.Define("", "x"),
+			want: "",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, tc.b.Title)
+		})
+	}
+}
+
 func (s *BehaviorPublicTestSuite) TestPermissionVerb() {
 	b := top()
 	tests := []struct {

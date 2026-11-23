@@ -20,7 +20,7 @@ route of the interface has proto `dhcp`. `primary` is true when the interface
 has the default route. `list` leaves out the loopback.
 
 Routes are the
-[route behavior](../reference/behaviors/networking/route/route.md), under an
+[route behavior](../reference/behaviors/networking/interface/route/route.md), under an
 interface: `osapi client node network interface route`. `list` reads the routes
 of the main table that go out of the interface, through gohai on every platform:
 `ip route` on Linux, and `netstat` on macOS. A route has its destination,
@@ -94,7 +94,7 @@ The DNS behavior also supports delete: it removes the interface's own
 The generated page of each behavior gives the permission, the platforms and the
 route of each method: [dns](../reference/behaviors/networking/dns/dns.md),
 [interface](../reference/behaviors/networking/interface/interface.md),
-[route](../reference/behaviors/networking/route/route.md). The pages come from
+[route](../reference/behaviors/networking/interface/route/route.md). The pages come from
 the definitions, so they stay true when a method changes, and this page does not
 copy them. [Authentication](authentication.md) tells which permissions each role
 has.

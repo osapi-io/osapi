@@ -280,4 +280,5 @@ paths:
 tags:
   - description: Get or set the hostname of target hosts
     name: hostname_operations
-    x-displayName: Node/Hostname
+    x-displayName: Hostname
+    x-osapi-group: hostname

@@ -39,6 +39,7 @@ type ListOutput struct {
 type Summary struct {
 	Name     string    `json:"name"`
 	Group    string    `json:"group,omitempty"`
+	Of       string    `json:"of,omitempty"`
 	Area     area.Name `json:"area,omitempty"`
 	Methods  []string  `json:"methods"`
 	Doc      string    `json:"doc"                label:"Description"`
@@ -58,6 +59,7 @@ type GetOutput struct {
 	Doc        string             `                 json:"doc"             label:"Description"`
 	Placement  behavior.Placement `                 json:"placement"`
 	Group      string             `                 json:"group,omitempty"`
+	Of         string             `                 json:"of,omitempty"`
 	Area       area.Name          `                 json:"area,omitempty"`
 	Internal   bool               `                 json:"internal"`
 	API        bool               `                 json:"api"             label:"API"`

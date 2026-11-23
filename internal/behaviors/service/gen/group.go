@@ -261,7 +261,7 @@ var Group = endpoint.Define(
 	endpoint.Area(area.Services),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
-	endpoint.Tag("service_operations", "Node/Service", "The systemd services of the host"),
+	endpoint.Tag("service_operations", "Service", "The systemd services of the host"),
 	endpoint.CommandNotes("The [service behavior](../../../../../reference/behaviors/services/service/service.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[ListRequest, ServiceCollectionResponse]("list").
 		Handle(HandleList).

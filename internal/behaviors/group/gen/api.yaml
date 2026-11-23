@@ -567,4 +567,5 @@ paths:
 tags:
   - description: The groups of the host
     name: group_operations
-    x-displayName: Node/Group
+    x-displayName: Group
+    x-osapi-group: group

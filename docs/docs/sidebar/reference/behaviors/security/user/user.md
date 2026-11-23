@@ -11,23 +11,23 @@ The users of the host. `osapi behavior get --name user` and
 
 ## Behavior
 
-|             |                                           |
-| ----------- | ----------------------------------------- |
-| Name        | user                                      |
-| Description | The users of the host                     |
-| Placement   | node                                      |
-| Area        | security                                  |
-| Internal    | no                                        |
-| API         | yes                                       |
-| CLI         | yes                                       |
-| Next        | no                                        |
-| Platforms   | debian, linux, darwin                     |
-| Sudo        | none                                      |
-| Runs        | none                                      |
-| Writes      | none                                      |
-| Keeps state | no                                        |
-| Uses        | none                                      |
-| Used by     | [sshkey](../../security/sshkey/sshkey.md) |
+|             |                                                |
+| ----------- | ---------------------------------------------- |
+| Name        | user                                           |
+| Description | The users of the host                          |
+| Placement   | node                                           |
+| Area        | security                                       |
+| Internal    | no                                             |
+| API         | yes                                            |
+| CLI         | yes                                            |
+| Next        | no                                             |
+| Platforms   | debian, linux, darwin                          |
+| Sudo        | none                                           |
+| Runs        | none                                           |
+| Writes      | none                                           |
+| Keeps state | no                                             |
+| Uses        | none                                           |
+| Used by     | [sshkey](../../security/user/sshkey/sshkey.md) |
 
 ### Methods (6)
 

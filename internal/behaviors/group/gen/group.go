@@ -155,7 +155,7 @@ var Group = endpoint.Define(
 	endpoint.Area(area.Security),
 	endpoint.Prefix("node/{hostname}"),
 	endpoint.Uses[dispatch.Deps](),
-	endpoint.Tag("group_operations", "Node/Group", "The groups of the host"),
+	endpoint.Tag("group_operations", "Group", "The groups of the host"),
 	endpoint.CommandNotes("The [group behavior](../../../../../reference/behaviors/security/group/group.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Get[ListRequest, GroupCollectionResponse]("list").
 		Handle(HandleList).
