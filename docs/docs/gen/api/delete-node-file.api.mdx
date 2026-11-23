@@ -1,0 +1,69 @@
+---
+id: delete-node-file
+title: "Remove a file that osapi deployed"
+description: "Removes the file and keeps its record, marked undeployed, so status reports missing. A path that osapi did not deploy, or deleted already, does not change and reports changed: false. The object stays in the object store."
+sidebar_label: "Remove a file that osapi deployed"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "delete api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Remove a file that osapi deployed"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"delete"}
+  path={"/api/node/{hostname}/file"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Removes the file and keeps its record, marked undeployed, so status reports missing. A path that osapi did not deploy, or deleted already, does not change and reports changed: false. The object stays in the object store.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./delete-node-file.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./delete-node-file.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./delete-node-file.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

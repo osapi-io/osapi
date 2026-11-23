@@ -1,0 +1,69 @@
+---
+id: get-node-file
+title: "Show whether a deployed file holds what osapi wrote"
+description: "Compares the file on the host with the record that osapi keeps of what it deployed: in-sync when they agree, drifted when something changed the file, and missing when osapi did not deploy the path, undeployed it, or the file is gone."
+sidebar_label: "Show whether a deployed file holds what osapi wrote"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "get api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Show whether a deployed file holds what osapi wrote"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/api/node/{hostname}/file"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Compares the file on the host with the record that osapi keeps of what it deployed: in-sync when they agree, drifted when something changed the file, and missing when osapi did not deploy the path, undeployed it, or the file is gone.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./get-node-file.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./get-node-file.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./get-node-file.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

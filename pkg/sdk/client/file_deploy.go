@@ -47,7 +47,8 @@ type FileDeployOpts struct {
 	// Path is the destination path on the target filesystem (required).
 	Path string
 
-	// ContentType is ContentRaw or ContentTemplate (required).
+	// ContentType is ContentRaw or ContentTemplate. The object's own when
+	// empty.
 	ContentType ContentType
 
 	// Mode is the file permission mode (e.g., "0644"). Optional.
@@ -59,8 +60,9 @@ type FileDeployOpts struct {
 	// Group is the file owner group. Optional.
 	Group string
 
-	// Vars are template variables when ContentType is "template". Optional.
-	Vars map[string]any
+	// Vars are template variables when ContentType is "template", as .Vars.
+	// Optional.
+	Vars map[string]string
 
 	// Target specifies the host: "_any", "_all", hostname, or
 	// label ("group:web").
@@ -87,10 +89,14 @@ func (s *FileDeployService) Deploy(
 	ctx context.Context,
 	req FileDeployOpts,
 ) (*Response[Collection[FileDeployResult]], error) {
-	body := gen.FileDeployRequest{
-		ObjectName:  req.ObjectName,
-		Path:        req.Path,
-		ContentType: gen.FileDeployRequestContentType(req.ContentType),
+	body := gen.FileUpdateRequest{
+		ObjectName: req.ObjectName,
+		Path:       req.Path,
+	}
+
+	if req.ContentType != "" {
+		ct := gen.FileUpdateRequestContentType(req.ContentType)
+		body.ContentType = &ct
 	}
 
 	if req.Mode != "" {
@@ -109,7 +115,7 @@ func (s *FileDeployService) Deploy(
 		body.Vars = &req.Vars
 	}
 
-	resp, err := s.client.PostNodeFileDeployWithResponse(ctx, req.Target, body)
+	resp, err := s.client.PutNodeFileWithResponse(ctx, req.Target, body)
 	if err != nil {
 		return nil, fmt.Errorf("file deploy: %w", err)
 	}
@@ -119,6 +125,8 @@ func (s *FileDeployService) Deploy(
 		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
+		resp.JSON404,
+		resp.JSON409,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
@@ -139,11 +147,11 @@ func (s *FileDeployService) Undeploy(
 	ctx context.Context,
 	req FileUndeployOpts,
 ) (*Response[Collection[FileUndeployResult]], error) {
-	body := gen.FileUndeployRequest{
+	body := gen.FileDeleteRequest{
 		Path: req.Path,
 	}
 
-	resp, err := s.client.PostNodeFileUndeployWithResponse(ctx, req.Target, body)
+	resp, err := s.client.DeleteNodeFileWithResponse(ctx, req.Target, body)
 	if err != nil {
 		return nil, fmt.Errorf("file undeploy: %w", err)
 	}
@@ -153,6 +161,8 @@ func (s *FileDeployService) Undeploy(
 		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
+		resp.JSON404,
+		resp.JSON409,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
@@ -178,9 +188,9 @@ func (s *FileDeployService) Status(
 	target string,
 	path string,
 ) (*Response[Collection[FileStatusResult]], error) {
-	params := &gen.GetNodeFileStatusParams{Path: path}
+	params := &gen.GetNodeFileParams{Path: path}
 
-	resp, err := s.client.GetNodeFileStatusWithResponse(ctx, target, params)
+	resp, err := s.client.GetNodeFileWithResponse(ctx, target, params)
 	if err != nil {
 		return nil, fmt.Errorf("file status: %w", err)
 	}
@@ -190,6 +200,8 @@ func (s *FileDeployService) Status(
 		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
+		resp.JSON404,
+		resp.JSON409,
 		resp.JSON500,
 	); err != nil {
 		return nil, err

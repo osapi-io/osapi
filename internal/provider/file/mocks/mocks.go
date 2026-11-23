@@ -45,11 +45,5 @@ func NewDefaultMockProvider(
 		Path:    "/etc/mock/file.conf",
 	}, nil).AnyTimes()
 
-	mock.EXPECT().Status(gomock.Any(), gomock.Any()).Return(&file.StatusResult{
-		Path:   "/etc/mock/file.conf",
-		Status: "in-sync",
-		SHA256: "abc123def456",
-	}, nil).AnyTimes()
-
 	return mock
 }

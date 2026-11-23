@@ -11,7 +11,6 @@ import { SearchBox } from "@/components/ui/search-box";
 import type {
   CommandResultItem,
   DockerResponse,
-  FileDeployResult,
   FileInfo,
   FileUploadResponse,
 } from "@/sdk/gen/schemas";
@@ -228,7 +227,7 @@ function CommandResult({
 }
 
 // ---------------------------------------------------------------------------
-// Host-level results (file-deploy, docker)
+// Host-level results (docker)
 // ---------------------------------------------------------------------------
 
 function HostResultRow({
@@ -708,7 +707,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
   }
 
   // File list
-  if (type === "file-list" && "files" in data) {
+  if (type === "object-list" && "files" in data) {
     const files = (data as { files: FileInfo[] }).files;
     return (
       <ResultShell
@@ -732,7 +731,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
               <IconButton
                 icon={Trash2}
                 variant="danger"
-                onClick={() => onAction("file-delete", f.name)}
+                onClick={() => onAction("object-delete", f.name)}
                 title={`Delete ${f.name}`}
                 className="ml-auto"
               />
@@ -743,7 +742,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
     );
   }
 
-  if (type === "file-upload" && "name" in data && "sha256" in data) {
+  if (type === "object-upload" && "name" in data && "sha256" in data) {
     return <FileUploadResult data={data as unknown as FileUploadResponse} />;
   }
 
@@ -787,29 +786,6 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
   // Docker list — expanded with search
   if (type === "docker-list" && Array.isArray(data.results)) {
     return <DockerListResult data={data} />;
-  }
-
-  // File deploy/undeploy/status
-  if (
-    (type === "file-deploy" ||
-      type === "file-undeploy" ||
-      type === "file-status") &&
-    Array.isArray(data.results)
-  ) {
-    const results = data.results as FileDeployResult[];
-    return (
-      <CollectionResult
-        jobId={data.job_id as string | undefined}
-        label={type.replace("file-", "")}
-        results={results.map((r) => ({
-          hostname: r.hostname,
-          status: hostStatus(r),
-          changed: r.changed,
-          error: r.error,
-        }))}
-        data={data}
-      />
-    );
   }
 
   // DNS delete / interface CRUD / route CRUD — generic collection results
@@ -949,7 +925,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
   }
 
   // File stale — list of stale deployments
-  if (type === "file-stale" && Array.isArray(data.stale)) {
+  if (type === "object-stale" && Array.isArray(data.stale)) {
     type StaleEntry = {
       object_name: string;
       hostname: string;

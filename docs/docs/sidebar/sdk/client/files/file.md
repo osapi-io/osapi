@@ -89,9 +89,9 @@ resp, err := client.FileDeploy.Deploy(ctx, client.FileDeployOpts{
     ObjectName:  "app.conf.tmpl",
     Path:        "/etc/app/config.yaml",
     ContentType: "template",
-    Vars: map[string]any{
-        "port":  8080,
-        "debug": false,
+    Vars: map[string]string{
+        "port":  "8080",
+        "debug": "false",
     },
     Target: "_all",
 })
@@ -141,4 +141,4 @@ for a complete working example.
 ## Permissions
 
 Object Store operations require `file:read` (list, get) or `file:write` (upload,
-delete). Deploy requires `file:write`. Status requires `file:read`.
+delete). Deploy and undeploy require `file:write`. Status requires `file:read`.

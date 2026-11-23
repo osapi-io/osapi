@@ -601,22 +601,6 @@ func ExportGetCommandProvider(
 	return nil
 }
 
-// ExportGetFileProvider returns the first fileProv.Provider found in the
-// registry for testing.
-func ExportGetFileProvider(
-	a *Agent,
-) fileProv.Provider {
-	if a.registry == nil {
-		return nil
-	}
-	for _, p := range a.registry.AllProviders() {
-		if v, ok := p.(fileProv.Provider); ok {
-			return v
-		}
-	}
-	return nil
-}
-
 // GetAgentCachedFacts returns the agent's cachedFacts field for testing.
 func GetAgentCachedFacts(
 	a *Agent,

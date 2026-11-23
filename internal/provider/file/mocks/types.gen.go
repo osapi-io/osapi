@@ -56,21 +56,6 @@ func (mr *MockProviderMockRecorder) Deploy(ctx, req any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Deploy", reflect.TypeOf((*MockProvider)(nil).Deploy), ctx, req)
 }
 
-// Status mocks base method.
-func (m *MockProvider) Status(ctx context.Context, req file.StatusRequest) (*file.StatusResult, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Status", ctx, req)
-	ret0, _ := ret[0].(*file.StatusResult)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Status indicates an expected call of Status.
-func (mr *MockProviderMockRecorder) Status(ctx, req any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Status", reflect.TypeOf((*MockProvider)(nil).Status), ctx, req)
-}
-
 // Undeploy mocks base method.
 func (m *MockProvider) Undeploy(ctx context.Context, req file.UndeployRequest) (*file.UndeployResult, error) {
 	m.ctrl.T.Helper()

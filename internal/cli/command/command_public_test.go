@@ -144,7 +144,7 @@ func (s *CommandPublicTestSuite) TestOutput() {
 				PrintJSON: func(body []byte) { printed = string(body) },
 			}))
 
-			command.Output(g.name, tc.method, input{Name: "web"}, tc.answer)
+			command.Output(g, tc.method, input{Name: "web"}, tc.answer)
 
 			tc.validateFunc(printed, gotErr)
 		})

@@ -67,7 +67,7 @@ The behaviors that service calls, and each call that its examples make.
 | service create        | name=app object=app.service                                                            | changed=true name=app                                                        |
 | └─ managedfile get    | path=/etc/systemd/system/osapi-app.service                                             | error: /etc/systemd/system/osapi-app.service: not managed                    |
 | └─ object get         | name=app.service                                                                       | content=&lt;8 lines&gt; content_type=raw name=app.service sha256=f1f13ddd26… |
-| └─ managedfile update | content=&lt;8 lines&gt; metadata=&#123;"object":"app.service"&#125; mode=0644 path=/e… | changed=true path=/etc/systemd/system/osapi-app.service                      |
+| └─ managedfile update | content=&lt;8 lines&gt; metadata=&#123;"object":"app.service"&#125; mode=0644 object=… | changed=true path=/etc/systemd/system/osapi-app.service                      |
 
 ## A unit file that has the content (create)
 
@@ -76,7 +76,7 @@ The behaviors that service calls, and each call that its examples make.
 | service create        | name=app object=app.service                                                            | changed=false name=app                                                           |
 | └─ managedfile get    | path=/etc/systemd/system/osapi-app.service                                             | metadata=&#123;"object":"app.service"&#125; path=/etc/systemd/system/osapi-app.… |
 | └─ object get         | name=app.service                                                                       | content=&lt;8 lines&gt; content_type=raw name=app.service sha256=f1f13ddd26…     |
-| └─ managedfile update | content=&lt;8 lines&gt; metadata=&#123;"object":"app.service"&#125; mode=0644 path=/e… | changed=false path=/etc/systemd/system/osapi-app.service                         |
+| └─ managedfile update | content=&lt;8 lines&gt; metadata=&#123;"object":"app.service"&#125; mode=0644 object=… | changed=false path=/etc/systemd/system/osapi-app.service                         |
 
 ## A new unit file (update)
 
@@ -85,7 +85,7 @@ The behaviors that service calls, and each call that its examples make.
 | service update        | name=app object=app-v2.service                                                         | changed=true name=app                                                            |
 | └─ managedfile get    | path=/etc/systemd/system/osapi-app.service                                             | metadata=&#123;"object":"app.service"&#125; path=/etc/systemd/system/osapi-app.… |
 | └─ object get         | name=app-v2.service                                                                    | content=&lt;9 lines&gt; content_type=raw name=app-v2.service sha256=a67ff5f…     |
-| └─ managedfile update | content=&lt;9 lines&gt; metadata=&#123;"object":"app-v2.service"&#125; mode=0644 path… | changed=true path=/etc/systemd/system/osapi-app.service                          |
+| └─ managedfile update | content=&lt;9 lines&gt; metadata=&#123;"object":"app-v2.service"&#125; mode=0644 obje… | changed=true path=/etc/systemd/system/osapi-app.service                          |
 
 ## Remove a service (delete)
 

@@ -34,7 +34,6 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/mocks"
 	commandMocks "github.com/osapi-io/osapi/internal/provider/command/mocks"
-	fileMocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
 	diskMocks "github.com/osapi-io/osapi/internal/provider/node/disk/mocks"
 	hostMocks "github.com/osapi-io/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/osapi-io/osapi/internal/provider/node/load/mocks"
@@ -73,7 +72,6 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 	loadMock := loadMocks.NewDefaultMockProvider(s.mockCtrl)
 
 	commandMock := commandMocks.NewDefaultMockProvider(s.mockCtrl)
-	fMock := fileMocks.NewDefaultMockProvider(s.mockCtrl)
 
 	s.testAgent = newTestAgent(newTestAgentParams{
 		appFs:           appFs,
@@ -86,7 +84,6 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 		memoryProvider:  memMock,
 		loadProvider:    loadMock,
 		commandProvider: commandMock,
-		fileProvider:    fMock,
 		processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
 	})
 }
@@ -135,44 +132,6 @@ func (s *ProcessorPublicTestSuite) TestProcessJobOperation() {
 				decodeErr := json.Unmarshal(result, &response)
 				s.NoError(decodeErr)
 				s.Contains(response, "stdout")
-			},
-		},
-		{
-			name: "successful file deploy operation",
-			jobRequest: job.Request{
-				Type:      job.TypeModify,
-				Category:  "file",
-				Operation: "deploy.execute",
-				Data: json.RawMessage(
-					`{"object_name":"app.conf","path":"/etc/mock/file.conf","content_type":"raw"}`,
-				),
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Equal(true, response["changed"])
-			},
-		},
-		{
-			name: "successful file status operation",
-			jobRequest: job.Request{
-				Type:      job.TypeQuery,
-				Category:  "file",
-				Operation: "status.get",
-				Data:      json.RawMessage(`{"path":"/etc/mock/file.conf"}`),
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Equal("in-sync", response["status"])
 			},
 		},
 		{
@@ -263,13 +222,6 @@ func (s *ProcessorPublicTestSuite) TestProviderFactoryMethods() {
 		{
 			name:        "getCommandProvider",
 			getProvider: func() interface{} { return agent.ExportGetCommandProvider(s.testAgent) },
-			validateFunc: func(provider interface{}) {
-				s.NotNil(provider)
-			},
-		},
-		{
-			name:        "getFileProvider",
-			getProvider: func() interface{} { return agent.ExportGetFileProvider(s.testAgent) },
 			validateFunc: func(provider interface{}) {
 				s.NotNil(provider)
 			},

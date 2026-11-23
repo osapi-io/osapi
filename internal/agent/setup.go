@@ -335,8 +335,6 @@ func buildRegistry(
 		commandProvider,
 	)
 
-	r.Register("file", NewFileProcessor(e.files, e.log), e.files)
-
 	r.Register(
 		"docker",
 		NewDockerProcessor(dockerProvider, cfg.Agent.Command.Enabled, e.log),

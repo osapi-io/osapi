@@ -134,7 +134,7 @@ const HAND_BLOCK_TYPES: BlockType[] = [
 
   // ── Files ──────────────────────────────────────────────────────────────────
   {
-    type: "file-list",
+    type: "object-list",
     label: "List",
     description: "List files in object store",
     category: "file",
@@ -142,42 +142,21 @@ const HAND_BLOCK_TYPES: BlockType[] = [
     readyOnAdd: true,
   },
   {
-    type: "file-upload",
+    type: "object-upload",
     label: "Upload",
     description: "Upload to object store",
     category: "file",
     group: "files",
   },
   {
-    type: "file-deploy",
-    label: "Deploy",
-    description: "Deploy file to hosts",
-    category: "file-deploy",
-    group: "files",
-  },
-  {
-    type: "file-undeploy",
-    label: "Undeploy",
-    description: "Remove deployed file",
-    category: "file-deploy",
-    group: "files",
-  },
-  {
-    type: "file-status",
-    label: "Status",
-    description: "Check deploy status",
-    category: "file-deploy",
-    group: "files",
-  },
-  {
-    type: "file-delete",
+    type: "object-delete",
     label: "Delete",
     description: "Delete file from object store",
     category: "file",
     group: "files",
   },
   {
-    type: "file-stale",
+    type: "object-stale",
     label: "Stale",
     description: "Check for stale deployments",
     category: "file-deploy",

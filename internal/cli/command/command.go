@@ -353,9 +353,9 @@ func child(
 	return nil
 }
 
-// GroupPrinter prints the answer of method of group, and is true, or is
+// GroupPrinter prints the answer of method of group g, and is true, or is
 // false for a group that it does not print.
-type GroupPrinter func(group string, method string, answer []byte) bool
+type GroupPrinter func(g Group, method string, answer []byte) bool
 
 // PrintsGroups adds p, which prints a kind of group. The behavior runtime
 // adds the result table of each behavior.
@@ -377,14 +377,16 @@ func Groups() []Group {
 	return out
 }
 
-// lookup is the command of the method of the registered group with the
-// name, and its group, or nil.
+// lookup is the command of the method of the registered group g, and its
+// group, or nil. Two groups can have one name, such as the controller's
+// file endpoints and the file behavior under node, so a group that is a
+// pointer is found by its identity, and another by its name.
 func lookup(
-	group string,
+	group Group,
 	name string,
 ) (Group, Command) {
 	for _, g := range Groups() {
-		if g.GroupName() != group {
+		if !same(g, group) {
 			continue
 		}
 		for _, c := range g.Commands() {
@@ -397,13 +399,27 @@ func lookup(
 	return nil, nil
 }
 
+// same reports whether a and b are one group: the same pointer, or, for a
+// group that is not a pointer, the same name.
+func same(
+	a Group,
+	b Group,
+) bool {
+	va, vb := reflect.ValueOf(a), reflect.ValueOf(b)
+	if va.Kind() == reflect.Pointer && vb.Kind() == reflect.Pointer {
+		return va.Pointer() == vb.Pointer()
+	}
+
+	return a.GroupName() == b.GroupName()
+}
+
 // Output prints the answer of method of group, to the input in. With --json
 // it prints the body as it came, or, for a method that answered with no
 // body, its key and what it did. Without it, a group that a GroupPrinter
 // prints, such as a behavior, prints its way, and each other method prints
 // from its output type.
 func Output(
-	group string,
+	group Group,
 	method string,
 	in any,
 	answer []byte,
@@ -436,7 +452,7 @@ func Output(
 // derived prints the answer from the output type of the method, or as it
 // came for a method that is not registered.
 func derived(
-	group string,
+	group Group,
 	name string,
 	in any,
 	answer []byte,

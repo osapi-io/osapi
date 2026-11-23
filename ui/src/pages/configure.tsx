@@ -9,7 +9,6 @@ import { RunLinks } from "@/components/domain/run-links";
 import { traceIdOf } from "@/lib/trace";
 import { CommandBlock } from "@/components/domain/command-block";
 import { DockerBlock } from "@/components/domain/docker-block";
-import { FileBlock } from "@/components/domain/file-block";
 import { FileUploadBlock } from "@/components/domain/file-upload-block";
 import { SingleInputBlock } from "@/components/domain/single-input-block";
 import { FileDeleteBlock } from "@/components/domain/file-delete-block";
@@ -57,11 +56,6 @@ import {
   postNodeUserSSHKey,
   deleteNodeUserSSHKey,
 } from "@/sdk/gen/user-ssh-key-management-api-user-operations/user-ssh-key-management-api-user-operations";
-import {
-  postNodeFileDeploy,
-  postNodeFileUndeploy,
-  getNodeFileStatus,
-} from "@/sdk/gen/node-file-operations-api-node-file-operations/node-file-operations-api-node-file-operations";
 import {
   getAuditLogs,
   getAuditLogByID,
@@ -136,8 +130,8 @@ const blockIcons: Record<
   // Containers
   "docker-create": Container,
   // Files
-  "file-list": FolderOpen,
-  "file-deploy": FileDown,
+  "object-list": FolderOpen,
+  "file-status": FileDown,
   // Command
   command: Terminal,
   // Node
@@ -238,17 +232,6 @@ export function Configure() {
     }
   }, []);
 
-  const getUpstreamObjects = (blockIndex: number) => {
-    const names: string[] = [];
-    for (let i = 0; i < blockIndex; i++) {
-      const b = blocks[i];
-      if (b.type === "file-upload" && b.data.name) {
-        names.push(b.data.name as string);
-      }
-    }
-    return names;
-  };
-
   const handleApply = useCallback(async () => {
     setApplying(true);
 
@@ -331,10 +314,10 @@ export function Configure() {
               block.data.container_id as string,
             );
             break;
-          case "file-list":
+          case "object-list":
             result = await getFiles();
             break;
-          case "file-upload": {
+          case "object-upload": {
             const file = block.data._file as globalThis.File;
             result = await postFile({
               name: block.data.name as string,
@@ -344,29 +327,7 @@ export function Configure() {
             });
             break;
           }
-          case "file-deploy": {
-            const ct = (block.data.content_type as string) || "raw";
-            result = await postNodeFileDeploy(t, {
-              object_name: block.data.object_name as string,
-              path: block.data.path as string,
-              mode: (block.data.mode as string) || "0644",
-              owner: (block.data.owner as string) || undefined,
-              group: (block.data.group as string) || undefined,
-              content_type: ct as "raw" | "template",
-            });
-            break;
-          }
-          case "file-undeploy":
-            result = await postNodeFileUndeploy(t, {
-              path: block.data.path as string,
-            });
-            break;
-          case "file-status":
-            result = await getNodeFileStatus(t, {
-              path: block.data.path as string,
-            });
-            break;
-          case "file-delete":
+          case "object-delete":
             result = await deleteFileByName(block.data.name as string);
             break;
           case "docker-exec": {
@@ -395,7 +356,7 @@ export function Configure() {
               block.data.container_id as string,
             );
             break;
-          case "file-stale":
+          case "object-stale":
             result = await getFileStale();
             break;
           case "command-shell":
@@ -505,9 +466,7 @@ export function Configure() {
     itemRefs: blockRefs,
   });
 
-  const renderBlockForm = (block: (typeof blocks)[0], index: number) => {
-    const upstream = getUpstreamObjects(index);
-
+  const renderBlockForm = (block: (typeof blocks)[0]) => {
     const behaviorDef = BEHAVIOR_BLOCKS[block.type as BehaviorBlockType];
     if (behaviorDef) {
       return (
@@ -567,9 +526,9 @@ export function Configure() {
             action="delete"
           />
         );
-      case "file-list":
+      case "object-list":
         return null;
-      case "file-upload":
+      case "object-upload":
         return (
           <FileUploadBlock
             data={block.data}
@@ -577,33 +536,12 @@ export function Configure() {
             onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
           />
         );
-      case "file-deploy":
-        return (
-          <FileBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            upstreamObjects={upstream}
-          />
-        );
-      case "file-delete":
+      case "object-delete":
         return (
           <FileDeleteBlock
             data={block.data}
             onChange={(data) => updateBlockData(block.id, data)}
             onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-          />
-        );
-      case "file-undeploy":
-      case "file-status":
-        return (
-          <SingleInputBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            field="path"
-            label="File Path"
-            placeholder="/etc/myapp/config.yaml"
           />
         );
       case "docker-exec":
@@ -645,7 +583,7 @@ export function Configure() {
             action="inspect"
           />
         );
-      case "file-stale":
+      case "object-stale":
         return null;
       case "command-shell":
         return (
@@ -711,7 +649,7 @@ export function Configure() {
   const handleResultAction = useCallback(
     async (action: string, name: string) => {
       try {
-        if (action === "file-delete") {
+        if (action === "object-delete") {
           await deleteFileByName(name);
         }
       } catch {
@@ -742,7 +680,7 @@ export function Configure() {
         onRemove={() => removeBlock(block.id)}
         onFocusCard={() => setFocusedId(block.id)}
       >
-        {renderBlockForm(block, i)}
+        {renderBlockForm(block)}
       </BlockCard>,
     );
     // The job and the trace of the call, also for a call that failed.

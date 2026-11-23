@@ -29,7 +29,7 @@ const MOCK_STACKS: Stack[] = [
     description: "Upload logrotate script then create a cron to run it nightly",
     blocks: [
       {
-        type: "file-upload",
+        type: "object-upload",
         label: "Upload",
         description: "Upload to object store",
         target: "_all",
@@ -57,15 +57,15 @@ const MOCK_STACKS: Stack[] = [
     description: "Upload a config template and deploy it to all hosts",
     blocks: [
       {
-        type: "file-upload",
+        type: "object-upload",
         label: "Upload",
         description: "Upload to object store",
         target: "_all",
         data: { name: "app.conf", content_type: "template" },
       },
       {
-        type: "file-deploy",
-        label: "Deploy",
+        type: "file-update",
+        label: "Update",
         description: "Deploy file to hosts",
         target: "_all",
         data: {
@@ -126,7 +126,7 @@ const MOCK_STACKS: Stack[] = [
     description: "List files, crons, and containers on all hosts",
     blocks: [
       {
-        type: "file-list",
+        type: "object-list",
         label: "List",
         description: "List files in object store",
         target: "_all",
@@ -157,7 +157,7 @@ const MOCK_STACKS: Stack[] = [
     description: "Upload backup script and schedule it to run daily",
     blocks: [
       {
-        type: "file-upload",
+        type: "object-upload",
         label: "Upload",
         description: "Upload to object store",
         target: "_all",
@@ -192,15 +192,15 @@ const MOCK_STACKS: Stack[] = [
     description: "Upload, deploy, then verify the file landed correctly",
     blocks: [
       {
-        type: "file-upload",
+        type: "object-upload",
         label: "Upload",
         description: "Upload to object store",
         target: "_all",
         data: { name: "motd", content_type: "raw" },
       },
       {
-        type: "file-deploy",
-        label: "Deploy",
+        type: "file-update",
+        label: "Update",
         description: "Deploy file to hosts",
         target: "_all",
         data: {
@@ -236,7 +236,7 @@ const MOCK_STACKS: Stack[] = [
         data: { name: "log-rotate" },
       },
       {
-        type: "file-delete",
+        type: "object-delete",
         label: "Delete",
         description: "Delete file from object store",
         target: "_all",
@@ -254,14 +254,14 @@ const MOCK_STACKS: Stack[] = [
       "Remove a deployed file from hosts then delete from object store",
     blocks: [
       {
-        type: "file-undeploy",
-        label: "Undeploy",
+        type: "file-delete",
+        label: "Delete",
         description: "Remove deployed file",
         target: "_all",
         data: { path: "/etc/myapp/app.conf" },
       },
       {
-        type: "file-delete",
+        type: "object-delete",
         label: "Delete",
         description: "Delete file from object store",
         target: "_all",

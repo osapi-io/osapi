@@ -35,6 +35,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/cli"
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
 // Flag is one CLI flag derived from an input field.
@@ -253,12 +254,17 @@ func init() {
 // printResults prints the answer of a behavior's method as its result
 // table, and is false for a group that is not a behavior.
 func printResults(
-	group string,
+	g clicommand.Group,
 	method string,
 	answer []byte,
 ) bool {
-	b := behavior.Lookup(group)
+	b := behavior.Lookup(g.GroupName())
 	if b == nil || b.Method(method) == nil {
+		return false
+	}
+	// A group with the behavior's name that is not its group, such as the
+	// controller's file endpoints beside the file behavior, is not it.
+	if eg, ok := g.(*endpoint.Group); ok && eg != behavior.GroupOf(b) {
 		return false
 	}
 	Print(b, method, json.RawMessage(answer), clicommand.TraceID())

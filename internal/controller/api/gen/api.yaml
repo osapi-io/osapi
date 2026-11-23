@@ -59,9 +59,6 @@ tags:
   - name: Docker_Management_API_docker_image
     x-displayName: Node/Docker/Image
     description: Docker image operations on a target node.
-  - name: Node_File_Operations_API_node_file_operations
-    x-displayName: Node/File
-    description: File deploy, undeploy, and status operations on a target node.
   - name: User_SSH_Key_Management_API_user_operations
     x-displayName: Node/User
     description: User account management on a target node.
@@ -71,6 +68,9 @@ tags:
   - description: Get the disk usage of target hosts
     name: Disk_API_disk_operations
     x-displayName: Node/Disk
+  - description: Files of the object store, deployed to the host
+    name: File_API_file_operations
+    x-displayName: Node/File
   - description: The groups of the host
     name: Group_API_group_operations
     x-displayName: Node/Group
@@ -2584,155 +2584,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/file/deploy:
-    servers: []
-    post:
-      operationId: PostNodeFileDeploy
-      summary: Deploy a file from Object Store to the host
-      tags:
-        - Node_File_Operations_API_node_file_operations
-      security:
-        - BearerAuth:
-            - file:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FileDeployRequest'
-      responses:
-        '200':
-          description: File deploy job accepted.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FileDeployCollectionResponse'
-        '400':
-          description: Invalid input.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/file/undeploy:
-    servers: []
-    post:
-      operationId: PostNodeFileUndeploy
-      summary: Remove a deployed file from the host filesystem
-      tags:
-        - Node_File_Operations_API_node_file_operations
-      security:
-        - BearerAuth:
-            - file:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FileUndeployRequest'
-      responses:
-        '200':
-          description: File undeploy job accepted.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FileUndeployCollectionResponse'
-        '400':
-          description: Invalid input.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/file/status:
-    servers: []
-    get:
-      operationId: GetNodeFileStatus
-      summary: Check deployment status of a file on the host
-      tags:
-        - Node_File_Operations_API_node_file_operations
-      security:
-        - BearerAuth:
-            - file:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - name: path
-          in: query
-          required: true
-          description: Filesystem path to check.
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1
-          schema:
-            type: string
-      responses:
-        '200':
-          description: File status.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FileStatusCollectionResponse'
-        '400':
-          description: Invalid input.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /api/node/{hostname}/user/{name}/ssh-key:
     servers: []
     get:
@@ -3272,6 +3123,216 @@ paths:
       summary: Get the disk usage of the host
       tags:
         - Disk_API_disk_operations
+  /api/node/{hostname}/file:
+    servers: []
+    delete:
+      description: >-
+        Removes the file and keeps its record, marked undeployed, so status
+        reports missing. A path that osapi did not deploy, or deleted already,
+        does not change and reports changed: false. The object stays in the
+        object store.
+      operationId: DeleteNodeFile
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileDeleteRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileDeleteResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            The host does not have what the request names, such as the object of
+            a deploy.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - file:write
+      summary: Remove a file that osapi deployed
+      tags:
+        - File_API_file_operations
+    get:
+      description: >-
+        Compares the file on the host with the record that osapi keeps of what
+        it deployed: in-sync when they agree, drifted when something changed the
+        file, and missing when osapi did not deploy the path, undeployed it, or
+        the file is gone.
+      operationId: GetNodeFile
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - description: Absolute path of the file on the host
+          in: query
+          name: path
+          required: true
+          schema:
+            pattern: ^/
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,startswith=/
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStatusResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            The host does not have what the request names, such as the object of
+            a deploy.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - file:read
+      summary: Show whether a deployed file holds what osapi wrote
+      tags:
+        - File_API_file_operations
+    put:
+      description: >-
+        Writes the object at the path with its mode and ownership, and keeps a
+        record of it. A template object, or content_type template, is rendered
+        first with .Facts, .Vars and .Hostname. A file that holds the content,
+        mode and owner already does not change and reports changed: false. osapi
+        client file stale list shows the deployments whose object changed since.
+      operationId: PutNodeFile
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileUpdateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUpdateResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            The host does not have what the request names, such as the object of
+            a deploy.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - file:write
+      summary: Deploy an object of the object store to a path
+      tags:
+        - File_API_file_operations
   /api/node/{hostname}/group:
     servers: []
     get:
@@ -9766,168 +9827,6 @@ components:
             $ref: '#/components/schemas/DockerPullResultItem'
       required:
         - results
-    FileDeployRequest:
-      type: object
-      properties:
-        object_name:
-          type: string
-          description: Name of the file in the Object Store.
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1,max=255
-        path:
-          type: string
-          description: Destination path on the target filesystem.
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1
-        mode:
-          type: string
-          pattern: ^[0-7]{3,4}$
-          description: File permission mode as three or four octal digits (e.g., "0644").
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,file_mode
-        owner:
-          type: string
-          description: File owner user.
-        group:
-          type: string
-          description: File owner group.
-        content_type:
-          type: string
-          description: Content type — "raw" or "template".
-          enum:
-            - raw
-            - template
-          x-oapi-codegen-extra-tags:
-            validate: required,oneof=raw template
-        vars:
-          type: object
-          description: Template variables when content_type is "template".
-          additionalProperties: true
-      required:
-        - object_name
-        - path
-        - content_type
-    FileDeployResult:
-      type: object
-      properties:
-        hostname:
-          type: string
-          description: The agent that processed the job.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        changed:
-          type: boolean
-          description: Whether the file was actually written.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    FileDeployCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/FileDeployResult'
-      required:
-        - results
-    FileStatusResult:
-      type: object
-      properties:
-        hostname:
-          type: string
-          description: The agent that processed the job.
-        path:
-          type: string
-          description: The filesystem path.
-        status:
-          type: string
-          description: File state — "in-sync", "drifted", or "missing".
-        sha256:
-          type: string
-          description: Current SHA-256 of the file on disk.
-        changed:
-          type: boolean
-          description: Whether the operation modified system state.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-    FileStatusCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/FileStatusResult'
-      required:
-        - results
-    FileUndeployRequest:
-      type: object
-      properties:
-        path:
-          type: string
-          description: Filesystem path to undeploy.
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1
-      required:
-        - path
-    FileUndeployResult:
-      type: object
-      properties:
-        hostname:
-          type: string
-          description: The agent that processed the job.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        changed:
-          type: boolean
-          description: Whether the file was actually removed.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    FileUndeployCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/FileUndeployResult'
-      required:
-        - results
     SSHKeyAddRequest:
       type: object
       required:
@@ -10291,6 +10190,211 @@ components:
           type: array
       required:
         - results
+      type: object
+    FileDeleteRequest:
+      properties:
+        path:
+          description: Absolute path of the file on the host
+          pattern: ^/
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,startswith=/
+      required:
+        - path
+      type: object
+    FileDeleteResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/FileDeleteResult'
+          type: array
+      required:
+        - results
+      type: object
+    FileDeleteResult:
+      properties:
+        changed:
+          description: Whether the host changed
+          type: boolean
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        path:
+          description: Absolute path of the file
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
+      type: object
+    FileStatus:
+      properties:
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        path:
+          description: Absolute path of the file
+          type: string
+        sha256:
+          description: SHA-256 of the file on the host, when it is there
+          type: string
+        state:
+          description: in-sync, drifted or missing
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
+      type: object
+    FileStatusResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/FileStatus'
+          type: array
+      required:
+        - results
+      type: object
+    FileUpdateRequest:
+      properties:
+        content_type:
+          description: >-
+            How the object is written: raw as it is, or template rendered with
+            .Facts, .Vars and .Hostname; the object's own when empty
+          enum:
+            - raw
+            - template
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,oneof=raw template
+        group:
+          description: Group that owns the file; left as written when empty
+          pattern: ^[a-z_][a-z0-9_-]*\$?$
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,account_name
+        mode:
+          description: >-
+            Permissions in octal, such as 0644; when empty, a file keeps its
+            mode and a new file gets 0644
+          pattern: ^[0-7]{3,4}$
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,file_mode
+        object_name:
+          description: The object of the object store, from osapi client file list
+          maxLength: 255
+          minLength: 1
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,max=255
+        owner:
+          description: User that owns the file; left as written when empty
+          pattern: ^[a-z_][a-z0-9_-]*\$?$
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,account_name
+        path:
+          description: Absolute path of the file on the host
+          pattern: ^/
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,startswith=/
+        vars:
+          additionalProperties:
+            type: string
+          description: Variables of a template, as .Vars, each as key=value
+          type: object
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
+      required:
+        - object_name
+        - path
+      type: object
+    FileUpdateResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/FileUpdateResult'
+          type: array
+      required:
+        - results
+      type: object
+    FileUpdateResult:
+      properties:
+        changed:
+          description: Whether the host changed
+          type: boolean
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        path:
+          description: Absolute path of the file
+          type: string
+        sha256:
+          description: SHA-256 of the content that the file holds
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
       type: object
     GroupAccount:
       properties:
@@ -13521,9 +13625,6 @@ x-tagGroups:
       - Docker_Management_API_docker_operations
       - Docker_Management_API_docker_exec
       - Docker_Management_API_docker_image
-  - name: Node File Operations API
-    tags:
-      - Node_File_Operations_API_node_file_operations
   - name: User SSH Key Management API
     tags:
       - User_SSH_Key_Management_API_user_operations
@@ -13533,6 +13634,9 @@ x-tagGroups:
   - name: Disk API
     tags:
       - Disk_API_disk_operations
+  - name: File API
+    tags:
+      - File_API_file_operations
   - name: Group API
     tags:
       - Group_API_group_operations

@@ -61,32 +61,34 @@ type FileChanged struct {
 	SHA256  string `json:"sha256"`
 }
 
-// FileDeployResult represents the result of a file deploy operation for a
-// single host in a collection response.
+// FileDeployResult is the deploy of one file on one host. A host that failed
+// or skipped has a row with its status and no file.
 type FileDeployResult struct {
 	Hostname string `json:"hostname"`
 	Status   string `json:"status"`
+	Path     string `json:"path,omitempty"`
+	SHA256   string `json:"sha256,omitempty"`
 	Changed  bool   `json:"changed"`
 	Error    string `json:"error,omitempty"`
 }
 
-// FileUndeployResult represents the result of a file undeploy operation for a
-// single host in a collection response.
+// FileUndeployResult is the undeploy of one file on one host.
 type FileUndeployResult struct {
 	Hostname string `json:"hostname"`
 	Status   string `json:"status"`
+	Path     string `json:"path,omitempty"`
 	Changed  bool   `json:"changed"`
 	Error    string `json:"error,omitempty"`
 }
 
-// FileStatusResult represents the result of a file status check for a single
-// host in a collection response.
+// FileStatusResult is one deployed file on one host against what osapi
+// wrote: State is in-sync, drifted or missing.
 type FileStatusResult struct {
 	Hostname string `json:"hostname"`
+	Status   string `json:"status"`
 	Path     string `json:"path,omitempty"`
-	Status   string `json:"status,omitempty"`
+	State    string `json:"state,omitempty"`
 	SHA256   string `json:"sha256,omitempty"`
-	Changed  bool   `json:"changed"`
 	Error    string `json:"error,omitempty"`
 }
 
@@ -154,16 +156,17 @@ func fileMetadataFromGen(
 	}
 }
 
-// fileDeployCollectionFromGen converts a gen.FileDeployCollectionResponse to
-// a Collection[FileDeployResult].
+// fileDeployCollectionFromGen converts the rows of a deploy.
 func fileDeployCollectionFromGen(
-	g *gen.FileDeployCollectionResponse,
+	g *gen.FileUpdateResponse,
 ) Collection[FileDeployResult] {
 	results := make([]FileDeployResult, 0, len(g.Results))
 	for _, r := range g.Results {
 		results = append(results, FileDeployResult{
 			Hostname: r.Hostname,
 			Status:   string(r.Status),
+			Path:     derefString(r.Path),
+			SHA256:   derefString(r.Sha256),
 			Changed:  derefBool(r.Changed),
 			Error:    derefString(r.Error),
 		})
@@ -177,16 +180,16 @@ func fileDeployCollectionFromGen(
 	return c
 }
 
-// fileUndeployCollectionFromGen converts a gen.FileUndeployCollectionResponse
-// to a Collection[FileUndeployResult].
+// fileUndeployCollectionFromGen converts the rows of an undeploy.
 func fileUndeployCollectionFromGen(
-	g *gen.FileUndeployCollectionResponse,
+	g *gen.FileDeleteResponse,
 ) Collection[FileUndeployResult] {
 	results := make([]FileUndeployResult, 0, len(g.Results))
 	for _, r := range g.Results {
 		results = append(results, FileUndeployResult{
 			Hostname: r.Hostname,
 			Status:   string(r.Status),
+			Path:     derefString(r.Path),
 			Changed:  derefBool(r.Changed),
 			Error:    derefString(r.Error),
 		})
@@ -200,26 +203,20 @@ func fileUndeployCollectionFromGen(
 	return c
 }
 
-// fileStatusCollectionFromGen converts a gen.FileStatusCollectionResponse to a
-// Collection[FileStatusResult].
+// fileStatusCollectionFromGen converts the rows of a status.
 func fileStatusCollectionFromGen(
-	g *gen.FileStatusCollectionResponse,
+	g *gen.FileStatusResponse,
 ) Collection[FileStatusResult] {
 	results := make([]FileStatusResult, 0, len(g.Results))
 	for _, r := range g.Results {
-		item := FileStatusResult{
+		results = append(results, FileStatusResult{
 			Hostname: r.Hostname,
+			Status:   string(r.Status),
 			Path:     derefString(r.Path),
-			Status:   derefString(r.Status),
-			Changed:  derefBool(r.Changed),
+			State:    derefString(r.State),
+			SHA256:   derefString(r.Sha256),
 			Error:    derefString(r.Error),
-		}
-
-		if r.Sha256 != nil {
-			item.SHA256 = *r.Sha256
-		}
-
-		results = append(results, item)
+		})
 	}
 
 	c := Collection[FileStatusResult]{Results: results}

@@ -94,7 +94,7 @@ func Run[In any](
 		resp = client.NewResponse(data, []byte(data))
 	}
 	clicommand.SetTraceID(resp.TraceID())
-	clicommand.Output(g.Name, method, in, resp.RawJSON())
+	clicommand.Output(g, method, in, resp.RawJSON())
 }
 
 // Build is the request that sends in to method m of g: the key in the path,

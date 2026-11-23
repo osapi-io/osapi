@@ -400,34 +400,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/File",
-      link: {
-        type: "doc",
-        id: "gen/api/node-file-operations-api-node-file-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/post-node-file-deploy",
-          label: "Deploy a file from Object Store to the host",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-node-file-undeploy",
-          label: "Remove a deployed file from the host filesystem",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-node-file-status",
-          label: "Check deployment status of a file on the host",
-          className: "api-method get",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Node/User",
       link: {
         type: "doc",
@@ -507,6 +479,34 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/get-node-disk",
           label: "Get the disk usage of the host",
           className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/File",
+      link: {
+        type: "doc",
+        id: "gen/api/file-api-file-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/delete-node-file",
+          label: "Remove a file that osapi deployed",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-file",
+          label: "Show whether a deployed file holds what osapi wrote",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-file",
+          label: "Deploy an object of the object store to a path",
+          className: "api-method put",
         },
       ],
     },

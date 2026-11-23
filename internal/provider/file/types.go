@@ -54,24 +54,6 @@ type DeployResult struct {
 	Path string `json:"path"`
 }
 
-// StatusRequest contains parameters for checking file status.
-type StatusRequest struct {
-	// Path is the filesystem path to check.
-	Path string `json:"path"`
-}
-
-// StatusResult contains the result of a file status check.
-type StatusResult struct {
-	// Path is the filesystem path that was checked.
-	Path string `json:"path"`
-	// Status indicates the file state: "in-sync", "drifted", or "missing".
-	Status string `json:"status"`
-	// SHA256 is the current SHA-256 hash of the file on disk, if present.
-	SHA256 string `json:"sha256,omitempty"`
-	// Changed indicates whether system state was modified.
-	Changed bool `json:"changed"`
-}
-
 // UndeployRequest contains parameters for removing a deployed file from disk.
 type UndeployRequest struct {
 	// Path is the filesystem path to undeploy.
@@ -100,12 +82,6 @@ type Provider interface {
 		ctx context.Context,
 		req UndeployRequest,
 	) (*UndeployResult, error)
-	// Status checks the current state of a deployed file against its
-	// expected SHA-256 from the file-state KV.
-	Status(
-		ctx context.Context,
-		req StatusRequest,
-	) (*StatusResult, error)
 }
 
 // Deployer is the narrow interface for providers that deploy files

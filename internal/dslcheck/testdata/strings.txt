@@ -139,7 +139,6 @@ command.LocalMethod.Sub(segment string)	identity	a name that the registry, the r
 command.Long(text string)	free text	prose for a page or a message
 command.Lookup(path string)	identity	a command path
 command.Method(name string)	identity	a name that the registry, the route or the command path holds
-command.Output(group string)	identity	a name that the registry, the route or the command path holds
 command.Output(method string)	identity	a name that the registry, the route or the command path holds
 command.Problem.Fix string	boundary	a record that a check or a chain prints
 command.Problem.Group string	boundary	a record that a check or a chain prints

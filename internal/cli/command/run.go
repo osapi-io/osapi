@@ -100,7 +100,7 @@ func Run(
 	if err != nil {
 		return fmt.Errorf("encode %s %s: %w", g.Name, method, err)
 	}
-	Output(g.Name, method, in, body)
+	Output(g, method, in, body)
 
 	return failed
 }
