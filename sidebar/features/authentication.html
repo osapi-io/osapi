@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Authentication &amp; RBAC | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/authentication"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Authentication &amp; RBAC | OSAPI"><meta data-rh="true" name="description" content="OSAPI uses JWT bearer tokens for authentication and fine-grained resource:verb"><meta data-rh="true" property="og:description" content="OSAPI uses JWT bearer tokens for authentication and fine-grained resource:verb"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/authentication"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/authentication" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/authentication" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Authentication & RBAC","item":"https://osapi-io.github.io/osapi/sidebar/features/authentication"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.ee2257e7.css">
-<script src="/osapi/assets/js/runtime~main.09181f15.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.e60ec6d0.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.ed3fa410.js" defer="defer"></script>
 </head>
 <body>
@@ -26,12 +26,14 @@ invalid.</p>
 <p>The key must have 32 characters or more. A shorter value fails the config
 validation when osapi starts. Make one with <code>openssl rand -hex 32</code>.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="token-structure">Token structure<a href="#token-structure" class="hash-link" aria-label="Direct link to Token structure" title="Direct link to Token structure" translate="no">​</a></h3>
-<p>A token carries three pieces of authorization data:</p>
+<p>A token carries four pieces of authorization data:</p>
 <ul>
 <li class=""><strong>Roles</strong> (<code>roles</code> claim, required): one or more of <code>admin</code>, <code>write</code> and
 <code>read</code></li>
 <li class=""><strong>Permissions</strong> (<code>permissions</code> claim, optional): direct <code>resource:verb</code>
 permissions. They replace the permissions of the roles</li>
+<li class=""><strong>Targets</strong> (<code>targets</code> claim, optional): the hosts that the token can act on,
+as hostnames and labels. Refer to <a href="#target-scope" class="">Target scope</a></li>
 <li class=""><strong>Subject</strong> (<code>sub</code> claim): the identity of the user, for the audit log</li>
 </ul>
 <p>Generate tokens with the CLI. Refer to
@@ -41,6 +43,28 @@ permissions. They replace the permissions of the roles</li>
 <p>When a request arrives, the middleware resolves the caller&#x27;s effective
 permissions:</p>
 <!-- -->
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="target-scope">Target scope<a href="#target-scope" class="hash-link" aria-label="Direct link to Target scope" title="Direct link to Target scope" translate="no">​</a></h3>
+<p>A role applies to each host. To give a team access to its own hosts only, give
+its token a target scope:</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi token generate </span><span class="token parameter variable" style="color:#6b5cff">--subject</span><span class="token plain"> team-web </span><span class="token parameter variable" style="color:#6b5cff">--roles</span><span class="token plain"> operator </span><span class="token punctuation" style="color:#8a8a8a">\</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    </span><span class="token parameter variable" style="color:#6b5cff">-t</span><span class="token plain"> group:web </span><span class="token parameter variable" style="color:#6b5cff">-t</span><span class="token plain"> web-01</span><br></div></code></pre></div></div>
+<p>Each target of the scope is a hostname, such as <code>web-01</code>, or a label, such as
+<code>group:web</code>. <code>_all</code>, <code>_any</code> and <code>_local</code> cannot be in a scope. A token without
+targets acts on each host.</p>
+<p>The controller compares the target of each request with the scope:</p>
+<ul>
+<li class="">A label target is in the scope when the scope has the same label, or a label
+above it. <code>group:web</code> covers <code>group:web</code> and <code>group:web.dev</code>. It does not
+cover <code>group:webapp</code>.</li>
+<li class="">A host target is in the scope when the scope names the host. It is also in the
+scope when the agent of the host has a label that the scope covers.</li>
+<li class=""><code>_all</code> and <code>_any</code> are never in a scope, because they reach hosts outside it.</li>
+</ul>
+<p>A request to a target outside the scope gets <code>403 Forbidden</code>, and no job goes to
+a host. A retry of a job must name a target in the scope, because a retry
+without a target goes to <code>_any</code>. The audit log records the scope of the token
+with each entry, and the UI shows it on the Roles page and in each audit entry.</p>
+<p>The scope limits where a token acts. It does not limit what the token reads from
+the controller, such as the jobs and the audit log.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="roles-and-permissions">Roles and permissions<a href="#roles-and-permissions" class="hash-link" aria-label="Direct link to Roles and permissions" title="Direct link to Roles and permissions" translate="no">​</a></h2>
 <p>There are six built-in roles, one for each kind of person or program that uses
 osapi: <code>admin</code>, <code>operator</code>, <code>automation</code>, <code>auditor</code>, <code>read</code> and <code>observer</code>. A
@@ -111,6 +135,6 @@ commands</li>
 <li class=""><a class="" href="/osapi/category/api">API Reference</a>: REST API documentation</li>
 <li class=""><a class="" href="/osapi/sidebar/usage/configuration">Configuration</a>: full configuration reference</li>
 <li class=""><a class="" href="/osapi/sidebar/architecture">Architecture</a>: system design overview</li>
-</ul></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/system-facts"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">System facts</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/notifications"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Notifications</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#how-it-works" class="table-of-contents__link toc-highlight">How it works</a><ul><li><a href="#jwt-signing" class="table-of-contents__link toc-highlight">JWT signing</a></li><li><a href="#token-structure" class="table-of-contents__link toc-highlight">Token structure</a></li><li><a href="#permission-resolution" class="table-of-contents__link toc-highlight">Permission resolution</a></li></ul></li><li><a href="#roles-and-permissions" class="table-of-contents__link toc-highlight">Roles and permissions</a><ul><li><a href="#custom-roles" class="table-of-contents__link toc-highlight">Custom roles</a></li></ul></li><li><a href="#configuration" class="table-of-contents__link toc-highlight">Configuration</a></li><li><a href="#agent-level-authentication-pki" class="table-of-contents__link toc-highlight">Agent-Level authentication (PKI)</a></li><li><a href="#related" class="table-of-contents__link toc-highlight">Related</a></li></ul></div></div></div></div></main></div></div></div></div>
+</ul></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/system-facts"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">System facts</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/notifications"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Notifications</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#how-it-works" class="table-of-contents__link toc-highlight">How it works</a><ul><li><a href="#jwt-signing" class="table-of-contents__link toc-highlight">JWT signing</a></li><li><a href="#token-structure" class="table-of-contents__link toc-highlight">Token structure</a></li><li><a href="#permission-resolution" class="table-of-contents__link toc-highlight">Permission resolution</a></li><li><a href="#target-scope" class="table-of-contents__link toc-highlight">Target scope</a></li></ul></li><li><a href="#roles-and-permissions" class="table-of-contents__link toc-highlight">Roles and permissions</a><ul><li><a href="#custom-roles" class="table-of-contents__link toc-highlight">Custom roles</a></li></ul></li><li><a href="#configuration" class="table-of-contents__link toc-highlight">Configuration</a></li><li><a href="#agent-level-authentication-pki" class="table-of-contents__link toc-highlight">Agent-Level authentication (PKI)</a></li><li><a href="#related" class="table-of-contents__link toc-highlight">Related</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
