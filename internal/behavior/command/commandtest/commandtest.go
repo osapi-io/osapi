@@ -99,6 +99,12 @@ func reset(
 		}
 		if list, ok := f.Value.(pflag.SliceValue); ok {
 			_ = list.Replace(nil)
+		} else if f.Value.Type() == "stringToString" {
+			// A map flag adds each Set to what it holds, and has no Replace:
+			// give the flag a new, empty value.
+			fresh := pflag.NewFlagSet(f.Name, pflag.ContinueOnError)
+			fresh.StringToString(f.Name, nil, "")
+			f.Value = fresh.Lookup(f.Name).Value
 		} else {
 			_ = f.Value.Set(f.DefValue)
 		}

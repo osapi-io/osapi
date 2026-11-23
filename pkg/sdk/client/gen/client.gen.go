@@ -1083,46 +1083,22 @@ func (e ScheduleCreateRequestContentType) Valid() bool {
 
 // Defines values for ScheduleCreateRequestInterval.
 const (
-	ScheduleCreateRequestIntervalDaily   ScheduleCreateRequestInterval = "daily"
-	ScheduleCreateRequestIntervalHourly  ScheduleCreateRequestInterval = "hourly"
-	ScheduleCreateRequestIntervalMonthly ScheduleCreateRequestInterval = "monthly"
-	ScheduleCreateRequestIntervalWeekly  ScheduleCreateRequestInterval = "weekly"
+	Daily   ScheduleCreateRequestInterval = "daily"
+	Hourly  ScheduleCreateRequestInterval = "hourly"
+	Monthly ScheduleCreateRequestInterval = "monthly"
+	Weekly  ScheduleCreateRequestInterval = "weekly"
 )
 
 // Valid indicates whether the value is a known member of the ScheduleCreateRequestInterval enum.
 func (e ScheduleCreateRequestInterval) Valid() bool {
 	switch e {
-	case ScheduleCreateRequestIntervalDaily:
+	case Daily:
 		return true
-	case ScheduleCreateRequestIntervalHourly:
+	case Hourly:
 		return true
-	case ScheduleCreateRequestIntervalMonthly:
+	case Monthly:
 		return true
-	case ScheduleCreateRequestIntervalWeekly:
-		return true
-	default:
-		return false
-	}
-}
-
-// Defines values for ScheduleEntryInterval.
-const (
-	ScheduleEntryIntervalDaily   ScheduleEntryInterval = "daily"
-	ScheduleEntryIntervalHourly  ScheduleEntryInterval = "hourly"
-	ScheduleEntryIntervalMonthly ScheduleEntryInterval = "monthly"
-	ScheduleEntryIntervalWeekly  ScheduleEntryInterval = "weekly"
-)
-
-// Valid indicates whether the value is a known member of the ScheduleEntryInterval enum.
-func (e ScheduleEntryInterval) Valid() bool {
-	switch e {
-	case ScheduleEntryIntervalDaily:
-		return true
-	case ScheduleEntryIntervalHourly:
-		return true
-	case ScheduleEntryIntervalMonthly:
-		return true
-	case ScheduleEntryIntervalWeekly:
+	case Weekly:
 		return true
 	default:
 		return false
@@ -1153,24 +1129,24 @@ func (e ScheduleEntryStatus) Valid() bool {
 	}
 }
 
-// Defines values for ScheduleMutationResultStatus.
+// Defines values for ScheduleResultStatus.
 const (
-	ScheduleMutationResultStatusFailed  ScheduleMutationResultStatus = "failed"
-	ScheduleMutationResultStatusOk      ScheduleMutationResultStatus = "ok"
-	ScheduleMutationResultStatusSkipped ScheduleMutationResultStatus = "skipped"
-	ScheduleMutationResultStatusTimeout ScheduleMutationResultStatus = "timeout"
+	ScheduleResultStatusFailed  ScheduleResultStatus = "failed"
+	ScheduleResultStatusOk      ScheduleResultStatus = "ok"
+	ScheduleResultStatusSkipped ScheduleResultStatus = "skipped"
+	ScheduleResultStatusTimeout ScheduleResultStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the ScheduleMutationResultStatus enum.
-func (e ScheduleMutationResultStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the ScheduleResultStatus enum.
+func (e ScheduleResultStatus) Valid() bool {
 	switch e {
-	case ScheduleMutationResultStatusFailed:
+	case ScheduleResultStatusFailed:
 		return true
-	case ScheduleMutationResultStatusOk:
+	case ScheduleResultStatusOk:
 		return true
-	case ScheduleMutationResultStatusSkipped:
+	case ScheduleResultStatusSkipped:
 		return true
-	case ScheduleMutationResultStatusTimeout:
+	case ScheduleResultStatusTimeout:
 		return true
 	default:
 		return false
@@ -4016,144 +3992,141 @@ type SSHKeyMutationResponse struct {
 // ScheduleCollectionResponse defines model for ScheduleCollectionResponse.
 type ScheduleCollectionResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
 	Results []ScheduleEntry     `json:"results"`
 }
 
 // ScheduleCreateRequest defines model for ScheduleCreateRequest.
 type ScheduleCreateRequest struct {
-	// ContentType Content type: "raw" or "template". When "template", the file content is rendered through Go text/template with agent facts and user-supplied vars.
+	// ContentType The content type: raw, or template to render the object with the agent's facts and vars; the object's own when empty
 	ContentType *ScheduleCreateRequestContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
 
-	// Interval Periodic interval (hourly, daily, weekly, monthly). Places the script in /etc/cron.{interval}/. Mutually exclusive with schedule — provide exactly one.
+	// Interval The interval of a script in /etc/cron.daily and the like; give it or schedule
 	Interval *ScheduleCreateRequestInterval `json:"interval,omitempty" validate:"required_without=Schedule,excluded_with=Schedule,omitempty,oneof=hourly daily weekly monthly"`
 
-	// Name Name for the scheduled entry. Used as the file name under /etc/cron.d/ or /etc/cron.{interval}/.
+	// Name The entry, and its file name, such as backup
 	Name string `json:"name" validate:"required,max=64,resource_name"`
 
-	// Object Name of the uploaded file in the object store to deploy as the scheduled entry content.
-	Object string `json:"object" validate:"required,min=1"`
+	// Object The object that holds the entry, from osapi client file upload
+	Object string `json:"object" validate:"required,min=1,max=255"`
 
-	// Schedule Cron schedule expression (e.g., "*/5 * * * *"). Mutually exclusive with interval — provide exactly one.
+	// Schedule A cron expression, such as */5 * * * *; give it or interval
 	Schedule *string `json:"schedule,omitempty" validate:"required_without=Interval,excluded_with=Interval,omitempty,cron_schedule"`
 
-	// User User to run the command as. Only applies when using schedule (cron.d entries include a user field).
-	User *string `json:"user,omitempty"`
+	// User The user the entry runs as
+	User *string `json:"user,omitempty" validate:"omitempty,account_name"`
 
-	// Vars Template variables. Only used when content_type is "template".
-	Vars *map[string]interface{} `json:"vars,omitempty"`
+	// Vars The vars of a template, as key=value
+	Vars *map[string]string `json:"vars,omitempty" validate:"omitempty"`
 }
 
-// ScheduleCreateRequestContentType Content type: "raw" or "template". When "template", the file content is rendered through Go text/template with agent facts and user-supplied vars.
+// ScheduleCreateRequestContentType The content type: raw, or template to render the object with the agent's facts and vars; the object's own when empty
 type ScheduleCreateRequestContentType string
 
-// ScheduleCreateRequestInterval Periodic interval (hourly, daily, weekly, monthly). Places the script in /etc/cron.{interval}/. Mutually exclusive with schedule — provide exactly one.
+// ScheduleCreateRequestInterval The interval of a script in /etc/cron.daily and the like; give it or schedule
 type ScheduleCreateRequestInterval string
 
 // ScheduleCreateResponse defines model for ScheduleCreateResponse.
 type ScheduleCreateResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID      `json:"job_id,omitempty"`
-	Results []ScheduleMutationResult `json:"results"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []ScheduleResult    `json:"results"`
 }
 
 // ScheduleDeleteResponse defines model for ScheduleDeleteResponse.
 type ScheduleDeleteResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID      `json:"job_id,omitempty"`
-	Results []ScheduleMutationResult `json:"results"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []ScheduleResult    `json:"results"`
 }
 
-// ScheduleEntry A scheduled entry.
+// ScheduleEntry defines model for ScheduleEntry.
 type ScheduleEntry struct {
-	// Error Error message if the agent failed to retrieve this entry.
+	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
-	// Hostname Hostname of the agent that reported this entry.
+	// Hostname Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
-	// Interval Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.
-	Interval *ScheduleEntryInterval `json:"interval,omitempty"`
+	// Interval Its interval, for a script in /etc/cron.daily and the like
+	Interval *string `json:"interval,omitempty"`
 
-	// Name Scheduled entry name.
+	// Name The entry
 	Name *string `json:"name,omitempty"`
 
-	// Object Object store name for the deployed content.
+	// Object The object it was deployed from
 	Object *string `json:"object,omitempty"`
 
-	// Schedule Cron schedule expression. Present for /etc/cron.d/ entries.
+	// Schedule Its cron expression, for an entry in /etc/cron.d
 	Schedule *string `json:"schedule,omitempty"`
 
-	// Source Where the entry lives: "cron.d", "hourly", "daily", "weekly", or "monthly".
+	// Source Where its file is: cron.d, or the interval
 	Source *string `json:"source,omitempty"`
 
 	// Status The status of the operation for this host.
-	Status ScheduleEntryStatus `json:"status"`
+	Status ScheduleEntryStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
 
-	// User User the scheduled entry runs as.
+	// User The user it runs as
 	User *string `json:"user,omitempty"`
 }
-
-// ScheduleEntryInterval Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries.
-type ScheduleEntryInterval string
 
 // ScheduleEntryStatus The status of the operation for this host.
 type ScheduleEntryStatus string
 
-// ScheduleGetResponse Collection response for a single scheduled entry get operation.
+// ScheduleGetResponse defines model for ScheduleGetResponse.
 type ScheduleGetResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
 	Results []ScheduleEntry     `json:"results"`
 }
 
-// ScheduleMutationResult Result of a cron create, update, or delete operation for one host.
-type ScheduleMutationResult struct {
-	// Changed Whether the operation modified system state.
+// ScheduleResult defines model for ScheduleResult.
+type ScheduleResult struct {
+	// Changed Whether the host changed
 	Changed *bool `json:"changed,omitempty"`
 
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
-	// Hostname Hostname of the agent that processed this operation.
+	// Hostname Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
-	// Name Scheduled entry name.
+	// Name The entry
 	Name *string `json:"name,omitempty"`
 
 	// Status The status of the operation for this host.
-	Status ScheduleMutationResultStatus `json:"status"`
+	Status ScheduleResultStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
 }
 
-// ScheduleMutationResultStatus The status of the operation for this host.
-type ScheduleMutationResultStatus string
+// ScheduleResultStatus The status of the operation for this host.
+type ScheduleResultStatus string
 
 // ScheduleUpdateRequest defines model for ScheduleUpdateRequest.
 type ScheduleUpdateRequest struct {
-	// ContentType Content type: "raw" or "template".
+	// ContentType The content type, raw or template; the object's own when empty
 	ContentType *ScheduleUpdateRequestContentType `json:"content_type,omitempty" validate:"omitempty,oneof=raw template"`
 
-	// Object New object to deploy (redeploy with updated content).
-	Object *string `json:"object,omitempty" validate:"omitempty,min=1"`
+	// Object The object to deploy; the entry's own when empty
+	Object *string `json:"object,omitempty" validate:"omitempty,min=1,max=255"`
 
-	// Schedule Cron schedule expression (e.g., "*/5 * * * *").
+	// Schedule A new cron expression; the entry's own when empty
 	Schedule *string `json:"schedule,omitempty" validate:"omitempty,cron_schedule"`
 
-	// User User to run the command as.
-	User *string `json:"user,omitempty"`
+	// User The user the entry runs as; the entry's own when empty
+	User *string `json:"user,omitempty" validate:"omitempty,account_name"`
 
-	// Vars Template variables.
-	Vars *map[string]interface{} `json:"vars,omitempty"`
+	// Vars The vars of a template, as key=value
+	Vars *map[string]string `json:"vars,omitempty" validate:"omitempty"`
 }
 
-// ScheduleUpdateRequestContentType Content type: "raw" or "template".
+// ScheduleUpdateRequestContentType The content type, raw or template; the object's own when empty
 type ScheduleUpdateRequestContentType string
 
 // ScheduleUpdateResponse defines model for ScheduleUpdateResponse.
 type ScheduleUpdateResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID      `json:"job_id,omitempty"`
-	Results []ScheduleMutationResult `json:"results"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []ScheduleResult    `json:"results"`
 }
 
 // ServiceCollectionResponse defines model for ServiceCollectionResponse.
@@ -5602,8 +5575,8 @@ type ClientInterface interface {
 	// DeleteNodeSchedule request
 	DeleteNodeSchedule(ctx context.Context, hostname Hostname, name ScheduleName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetNodeScheduleByName request
-	GetNodeScheduleByName(ctx context.Context, hostname Hostname, name ScheduleName, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetNodeScheduleByKey request
+	GetNodeScheduleByKey(ctx context.Context, hostname Hostname, name ScheduleName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PutNodeScheduleWithBody request with any body
 	PutNodeScheduleWithBody(ctx context.Context, hostname Hostname, name ScheduleName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -7174,8 +7147,8 @@ func (c *Client) DeleteNodeSchedule(ctx context.Context, hostname Hostname, name
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetNodeScheduleByName(ctx context.Context, hostname Hostname, name ScheduleName, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetNodeScheduleByNameRequest(c.Server, hostname, name)
+func (c *Client) GetNodeScheduleByKey(ctx context.Context, hostname Hostname, name ScheduleName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeScheduleByKeyRequest(c.Server, hostname, name)
 	if err != nil {
 		return nil, err
 	}
@@ -11613,8 +11586,8 @@ func NewDeleteNodeScheduleRequest(server string, hostname Hostname, name Schedul
 	return req, nil
 }
 
-// NewGetNodeScheduleByNameRequest generates requests for GetNodeScheduleByName
-func NewGetNodeScheduleByNameRequest(server string, hostname Hostname, name ScheduleName) (*http.Request, error) {
+// NewGetNodeScheduleByKeyRequest generates requests for GetNodeScheduleByKey
+func NewGetNodeScheduleByKeyRequest(server string, hostname Hostname, name ScheduleName) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -13442,8 +13415,8 @@ type ClientWithResponsesInterface interface {
 	// DeleteNodeScheduleWithResponse request
 	DeleteNodeScheduleWithResponse(ctx context.Context, hostname Hostname, name ScheduleName, reqEditors ...RequestEditorFn) (*DeleteNodeScheduleResponse, error)
 
-	// GetNodeScheduleByNameWithResponse request
-	GetNodeScheduleByNameWithResponse(ctx context.Context, hostname Hostname, name ScheduleName, reqEditors ...RequestEditorFn) (*GetNodeScheduleByNameResponse, error)
+	// GetNodeScheduleByKeyWithResponse request
+	GetNodeScheduleByKeyWithResponse(ctx context.Context, hostname Hostname, name ScheduleName, reqEditors ...RequestEditorFn) (*GetNodeScheduleByKeyResponse, error)
 
 	// PutNodeScheduleWithBodyWithResponse request with any body
 	PutNodeScheduleWithBodyWithResponse(ctx context.Context, hostname Hostname, name ScheduleName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutNodeScheduleResponse, error)
@@ -16667,6 +16640,8 @@ type GetNodeScheduleResponse struct {
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -16701,6 +16676,8 @@ type PostNodeScheduleResponse struct {
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -16764,7 +16741,7 @@ func (r DeleteNodeScheduleResponse) ContentType() string {
 	return ""
 }
 
-type GetNodeScheduleByNameResponse struct {
+type GetNodeScheduleByKeyResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ScheduleGetResponse
@@ -16777,7 +16754,7 @@ type GetNodeScheduleByNameResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetNodeScheduleByNameResponse) Status() string {
+func (r GetNodeScheduleByKeyResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -16785,7 +16762,7 @@ func (r GetNodeScheduleByNameResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetNodeScheduleByNameResponse) StatusCode() int {
+func (r GetNodeScheduleByKeyResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -16793,7 +16770,7 @@ func (r GetNodeScheduleByNameResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetNodeScheduleByNameResponse) ContentType() string {
+func (r GetNodeScheduleByKeyResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -18997,13 +18974,13 @@ func (c *ClientWithResponses) DeleteNodeScheduleWithResponse(ctx context.Context
 	return ParseDeleteNodeScheduleResponse(rsp)
 }
 
-// GetNodeScheduleByNameWithResponse request returning *GetNodeScheduleByNameResponse
-func (c *ClientWithResponses) GetNodeScheduleByNameWithResponse(ctx context.Context, hostname Hostname, name ScheduleName, reqEditors ...RequestEditorFn) (*GetNodeScheduleByNameResponse, error) {
-	rsp, err := c.GetNodeScheduleByName(ctx, hostname, name, reqEditors...)
+// GetNodeScheduleByKeyWithResponse request returning *GetNodeScheduleByKeyResponse
+func (c *ClientWithResponses) GetNodeScheduleByKeyWithResponse(ctx context.Context, hostname Hostname, name ScheduleName, reqEditors ...RequestEditorFn) (*GetNodeScheduleByKeyResponse, error) {
+	rsp, err := c.GetNodeScheduleByKey(ctx, hostname, name, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetNodeScheduleByNameResponse(rsp)
+	return ParseGetNodeScheduleByKeyResponse(rsp)
 }
 
 // PutNodeScheduleWithBodyWithResponse request with arbitrary body returning *PutNodeScheduleResponse
@@ -24910,6 +24887,20 @@ func ParseGetNodeScheduleResponse(rsp *http.Response) (*GetNodeScheduleResponse,
 		}
 		response.JSON403 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -24963,6 +24954,20 @@ func ParsePostNodeScheduleResponse(rsp *http.Response) (*PostNodeScheduleRespons
 			return nil, err
 		}
 		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
@@ -25044,15 +25049,15 @@ func ParseDeleteNodeScheduleResponse(rsp *http.Response) (*DeleteNodeScheduleRes
 	return response, nil
 }
 
-// ParseGetNodeScheduleByNameResponse parses an HTTP response from a GetNodeScheduleByNameWithResponse call
-func ParseGetNodeScheduleByNameResponse(rsp *http.Response) (*GetNodeScheduleByNameResponse, error) {
+// ParseGetNodeScheduleByKeyResponse parses an HTTP response from a GetNodeScheduleByKeyWithResponse call
+func ParseGetNodeScheduleByKeyResponse(rsp *http.Response) (*GetNodeScheduleByKeyResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetNodeScheduleByNameResponse{
+	response := &GetNodeScheduleByKeyResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

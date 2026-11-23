@@ -10,7 +10,6 @@ import {
 import { SearchBox } from "@/components/ui/search-box";
 import type {
   CommandResultItem,
-  ScheduleMutationResult,
   DockerResponse,
   FileDeployResult,
   FileInfo,
@@ -229,7 +228,7 @@ function CommandResult({
 }
 
 // ---------------------------------------------------------------------------
-// Host-level results (cron, file-deploy, docker)
+// Host-level results (file-deploy, docker)
 // ---------------------------------------------------------------------------
 
 function HostResultRow({
@@ -363,99 +362,6 @@ function ListSearchBar({
         autoFocus={false}
       />
     </div>
-  );
-}
-
-// Cron list
-function ScheduleListResult({
-  data,
-  onAction,
-}: {
-  data: Record<string, unknown>;
-  onAction?: (action: string, name: string) => void;
-}) {
-  const { search, setSearch } = useListSearch();
-  type ScheduleListEntry = {
-    hostname?: string;
-    status?: string;
-    name?: string;
-    schedule?: string;
-    object?: string;
-    source?: string;
-    error?: string;
-  };
-  const entries = data.results as ScheduleListEntry[];
-  const byHost = new Map<string, ScheduleListEntry[]>();
-  for (const e of entries) {
-    const h = e.hostname ?? "unknown";
-    if (!byHost.has(h)) byHost.set(h, []);
-    byHost.get(h)!.push(e);
-  }
-  const totalEntries = entries.filter((e) => e.name).length;
-  return (
-    <ResultShell
-      jobId={data.job_id as string | undefined}
-      label="cron list"
-      data={data}
-    >
-      <ListSearchBar
-        search={search}
-        setSearch={setSearch}
-        hasItems={totalEntries > 0}
-      />
-      {[...byHost.entries()].map(([hostname, items]) => {
-        const hostEntry = items[0];
-        const isSkipped = hostEntry?.status === "skipped";
-        const hostError = !isSkipped && items.find((e) => e.error && !e.name);
-        const allCronEntries = isSkipped ? [] : items.filter((e) => e.name);
-        const scheduleEntries = allCronEntries.filter((e) =>
-          matches(search, e.name, e.schedule, e.object, e.source),
-        );
-        if (search && scheduleEntries.length === 0 && !isSkipped && !hostError)
-          return null;
-        return (
-          <div
-            key={hostname}
-            className="border-b border-border/50 last:border-0"
-          >
-            <HostGroupHeader
-              hostname={hostname}
-              status={isSkipped ? "skipped" : hostError ? "failed" : "ok"}
-              detail={
-                isSkipped
-                  ? "skipped"
-                  : `${allCronEntries.length} entr${allCronEntries.length !== 1 ? "ies" : "y"}`
-              }
-            />
-            {hostError && (
-              <HostError>{(hostError as ScheduleListEntry).error}</HostError>
-            )}
-            {scheduleEntries.map((e, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-4 border-b border-border/30 px-4 py-2 pl-9 last:border-0"
-              >
-                <KeyValue label="name" value={e.name} variant="strong" />
-                <KeyValue label="schedule" value={e.schedule} />
-                {e.object && (
-                  <KeyValue label="object" value={e.object} variant="accent" />
-                )}
-                {e.source && <KeyValue label="source" value={e.source} />}
-                {onAction && e.name && (
-                  <IconButton
-                    icon={Trash2}
-                    variant="danger"
-                    onClick={() => onAction("cron-delete", e.name!)}
-                    title={`Delete ${e.name}`}
-                    className="ml-auto"
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-        );
-      })}
-    </ResultShell>
   );
 }
 
@@ -927,33 +833,6 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
     return <FileUploadResult data={data as unknown as FileUploadResponse} />;
   }
 
-  // Cron create/delete — mutation results
-  if (
-    (type === "cron-create" || type === "cron-delete") &&
-    Array.isArray(data.results)
-  ) {
-    const results = data.results as ScheduleMutationResult[];
-    return (
-      <CollectionResult
-        jobId={data.job_id as string | undefined}
-        label={type === "cron-create" ? "cron create" : "cron delete"}
-        results={results.map((r) => ({
-          hostname: r.hostname,
-          status: hostStatus(r),
-          changed: r.changed,
-          error: r.error,
-          extra: r.name ? <Text variant="muted">{r.name}</Text> : undefined,
-        }))}
-        data={data}
-      />
-    );
-  }
-
-  // Cron list — expanded with search
-  if (type === "cron-list" && Array.isArray(data.results)) {
-    return <ScheduleListResult data={data} onAction={onAction} />;
-  }
-
   // Docker create/start/stop/delete/pull/rm-image — action results
   if (
     (type === "docker-create" ||
@@ -1049,63 +928,6 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
           status: hostStatus(r),
           changed: r.changed,
           error: r.error,
-        }))}
-        data={data}
-      />
-    );
-  }
-
-  // Cron get — per-host single entry
-  if (type === "cron-get" && Array.isArray(data.results)) {
-    type ScheduleGetEntry = {
-      hostname?: string;
-      status?: string;
-      name?: string;
-      schedule?: string;
-      object?: string;
-      error?: string;
-    };
-    const entries = data.results as ScheduleGetEntry[];
-    return (
-      <CollectionResult
-        jobId={data.job_id as string | undefined}
-        label="cron get"
-        results={entries.map((r) => ({
-          hostname: r.hostname,
-          status: hostStatus(r),
-          error: r.error,
-          extra: r.name ? (
-            <span className="flex items-center gap-1.5">
-              <Text>{r.name}</Text>
-              {r.schedule && <Text variant="muted">{r.schedule}</Text>}
-            </span>
-          ) : undefined,
-        }))}
-        data={data}
-      />
-    );
-  }
-
-  // Cron update — mutation results
-  if (type === "cron-update" && Array.isArray(data.results)) {
-    type ScheduleUpdateEntry = {
-      hostname?: string;
-      status?: string;
-      name?: string;
-      changed?: boolean;
-      error?: string;
-    };
-    const results = data.results as ScheduleUpdateEntry[];
-    return (
-      <CollectionResult
-        jobId={data.job_id as string | undefined}
-        label="cron update"
-        results={results.map((r) => ({
-          hostname: r.hostname,
-          status: hostStatus(r),
-          changed: r.changed,
-          error: r.error,
-          extra: r.name ? <Text variant="muted">{r.name}</Text> : undefined,
         }))}
         data={data}
       />

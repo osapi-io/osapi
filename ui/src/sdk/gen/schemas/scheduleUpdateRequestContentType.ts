@@ -6,7 +6,7 @@
  */
 
 /**
- * Content type: "raw" or "template".
+ * The content type, raw or template; the object's own when empty
  */
 export type ScheduleUpdateRequestContentType = typeof ScheduleUpdateRequestContentType[keyof typeof ScheduleUpdateRequestContentType];
 

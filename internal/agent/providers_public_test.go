@@ -53,7 +53,7 @@ var gohaiReads = map[string]bool{
 
 func (s *ProvidersPublicTestSuite) TestProviders() {
 	areas := []string{
-		"host", "disk", "memory", "load", "cron",
+		"host", "disk", "memory", "load",
 	}
 
 	tests := []struct {
@@ -79,14 +79,6 @@ func (s *ProvidersPublicTestSuite) TestProviders() {
 			buckets:   true,
 			want:      "Debian",
 			except:    map[string]string{},
-		},
-		{
-			name:     "when Debian has no file buckets leaves out what needs them",
-			platform: "debian",
-			want:     "Debian",
-			except: map[string]string{
-				"cron": "Linux",
-			},
 		},
 		{
 			name:     "when the host is macOS uses the Darwin providers",

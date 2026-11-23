@@ -469,7 +469,7 @@ func (suite *SchedulePublicTestSuite) TestScheduleCreate() {
 				Schedule:    "0 1 * * *",
 				Object:      "/usr/bin/template-job.sh",
 				ContentType: "template",
-				Vars:        map[string]any{"env": "prod"},
+				Vars:        map[string]string{"env": "prod"},
 			},
 			validateFunc: func(
 				resp *client.Response[client.Collection[client.ScheduleMutationResult]],
@@ -699,7 +699,7 @@ func (suite *SchedulePublicTestSuite) TestScheduleUpdate() {
 			opts: client.ScheduleUpdateOpts{
 				Object:      "/usr/bin/new-template.sh",
 				ContentType: "template",
-				Vars:        map[string]any{"region": "us-east"},
+				Vars:        map[string]string{"region": "us-east"},
 			},
 			validateFunc: func(
 				resp *client.Response[client.Collection[client.ScheduleMutationResult]],

@@ -68,7 +68,7 @@ func (s *ScheduleService) Get(
 	hostname string,
 	name string,
 ) (*Response[Collection[ScheduleEntryResult]], error) {
-	resp, err := s.client.GetNodeScheduleByNameWithResponse(ctx, hostname, name)
+	resp, err := s.client.GetNodeScheduleByKeyWithResponse(ctx, hostname, name)
 	if err != nil {
 		return nil, fmt.Errorf("cron get: %w", err)
 	}

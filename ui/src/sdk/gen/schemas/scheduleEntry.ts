@@ -4,29 +4,25 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { ScheduleEntryInterval } from './scheduleEntryInterval';
 import type { ScheduleEntryStatus } from './scheduleEntryStatus';
 
-/**
- * A scheduled entry.
- */
 export interface ScheduleEntry {
-  /** Hostname of the agent that reported this entry. */
+  /** Error message if the agent failed. */
+  error?: string;
+  /** Hostname of the agent that produced this result. */
   hostname: string;
+  /** Its interval, for a script in /etc/cron.daily and the like */
+  interval?: string;
+  /** The entry */
+  name?: string;
+  /** The object it was deployed from */
+  object?: string;
+  /** Its cron expression, for an entry in /etc/cron.d */
+  schedule?: string;
+  /** Where its file is: cron.d, or the interval */
+  source?: string;
   /** The status of the operation for this host. */
   status: ScheduleEntryStatus;
-  /** Scheduled entry name. */
-  name?: string;
-  /** Object store name for the deployed content. */
-  object?: string;
-  /** Cron schedule expression. Present for /etc/cron.d/ entries. */
-  schedule?: string;
-  /** Periodic interval (hourly, daily, weekly, monthly). Present for /etc/cron.{interval}/ entries. */
-  interval?: ScheduleEntryInterval;
-  /** Where the entry lives: "cron.d", "hourly", "daily", "weekly", or "monthly". */
-  source?: string;
-  /** User the scheduled entry runs as. */
+  /** The user it runs as */
   user?: string;
-  /** Error message if the agent failed to retrieve this entry. */
-  error?: string;
 }

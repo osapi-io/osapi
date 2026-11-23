@@ -62,7 +62,7 @@ type ScheduleCreateOpts struct {
 	// ContentType is "raw" or "template" (optional, defaults to raw).
 	ContentType string
 	// Vars contains template variables (optional).
-	Vars map[string]any
+	Vars map[string]string
 }
 
 // ScheduleUpdateOpts contains options for updating a cron entry.
@@ -76,7 +76,7 @@ type ScheduleUpdateOpts struct {
 	// ContentType is "raw" or "template" (optional).
 	ContentType string
 	// Vars contains template variables (optional).
-	Vars map[string]any
+	Vars map[string]string
 }
 
 // cronEntryCollectionFromGen converts a gen.ScheduleCollectionResponse

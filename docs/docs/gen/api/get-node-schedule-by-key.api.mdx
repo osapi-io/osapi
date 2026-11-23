@@ -1,0 +1,69 @@
+---
+id: get-node-schedule-by-key
+title: "Get one cron entry that osapi deployed"
+description: "Reads the entry from /etc/cron.d, then from each interval directory. An entry that osapi did not deploy is not found."
+sidebar_label: "Get one cron entry that osapi deployed"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "get api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Get one cron entry that osapi deployed"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/api/node/{hostname}/schedule/{name}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Reads the entry from /etc/cron.d, then from each interval directory. An entry that osapi did not deploy is not found.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./get-node-schedule-by-key.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./get-node-schedule-by-key.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./get-node-schedule-by-key.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

@@ -9,18 +9,29 @@ import type { ScheduleCreateRequestInterval } from './scheduleCreateRequestInter
 import type { ScheduleCreateRequestVars } from './scheduleCreateRequestVars';
 
 export interface ScheduleCreateRequest {
-  /** Name for the scheduled entry. Used as the file name under /etc/cron.d/ or /etc/cron.{interval}/. */
-  name: string;
-  /** Name of the uploaded file in the object store to deploy as the scheduled entry content. */
-  object: string;
-  /** Cron schedule expression (e.g., "*\/5 * * * *"). Mutually exclusive with interval — provide exactly one. */
-  schedule?: string;
-  /** Periodic interval (hourly, daily, weekly, monthly). Places the script in /etc/cron.{interval}/. Mutually exclusive with schedule — provide exactly one. */
-  interval?: ScheduleCreateRequestInterval;
-  /** User to run the command as. Only applies when using schedule (cron.d entries include a user field). */
-  user?: string;
-  /** Content type: "raw" or "template". When "template", the file content is rendered through Go text/template with agent facts and user-supplied vars. */
+  /** The content type: raw, or template to render the object with the agent's facts and vars; the object's own when empty */
   content_type?: ScheduleCreateRequestContentType;
-  /** Template variables. Only used when content_type is "template". */
+  /** The interval of a script in /etc/cron.daily and the like; give it or schedule */
+  interval?: ScheduleCreateRequestInterval;
+  /**
+     * The entry, and its file name, such as backup
+     * @maxLength 64
+     * @pattern ^[a-zA-Z0-9_-]+$
+     */
+  name: string;
+  /**
+     * The object that holds the entry, from osapi client file upload
+     * @minLength 1
+     * @maxLength 255
+     */
+  object: string;
+  /** A cron expression, such as *\/5 * * * *; give it or interval */
+  schedule?: string;
+  /**
+     * The user the entry runs as
+     * @pattern ^[a-z_][a-z0-9_-]*\$?$
+     */
+  user?: string;
+  /** The vars of a template, as key=value */
   vars?: ScheduleCreateRequestVars;
 }

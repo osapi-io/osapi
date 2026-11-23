@@ -409,6 +409,15 @@ Use: To choose what a builder returns. A builder that cannot manage the host,
 such as a writer in a container, returns the reader, or ErrUnsupported so the
 methods report skipped.
 
+### `h.Facts`
+
+The facts that the agent collected last, by their JSON names, as a func that
+returns them. A template that the provider renders with behavior.Render reads
+them as .Facts. The tests give none, so a template example reads only its vars.
+
+Use: Only to render a template that a person uploaded. A value that the provider
+uses itself comes from a gohai collector.
+
 ### `h.FS`
 
 The filesystem of the host, an avfs.VFS. The agent gives the real one. The tests

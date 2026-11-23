@@ -8,14 +8,21 @@ import type { ScheduleUpdateRequestContentType } from './scheduleUpdateRequestCo
 import type { ScheduleUpdateRequestVars } from './scheduleUpdateRequestVars';
 
 export interface ScheduleUpdateRequest {
-  /** New object to deploy (redeploy with updated content). */
-  object?: string;
-  /** Cron schedule expression (e.g., "*\/5 * * * *"). */
-  schedule?: string;
-  /** User to run the command as. */
-  user?: string;
-  /** Content type: "raw" or "template". */
+  /** The content type, raw or template; the object's own when empty */
   content_type?: ScheduleUpdateRequestContentType;
-  /** Template variables. */
+  /**
+     * The object to deploy; the entry's own when empty
+     * @minLength 1
+     * @maxLength 255
+     */
+  object?: string;
+  /** A new cron expression; the entry's own when empty */
+  schedule?: string;
+  /**
+     * The user the entry runs as; the entry's own when empty
+     * @pattern ^[a-z_][a-z0-9_-]*\$?$
+     */
+  user?: string;
+  /** The vars of a template, as key=value */
   vars?: ScheduleUpdateRequestVars;
 }

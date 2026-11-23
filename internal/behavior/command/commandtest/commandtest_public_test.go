@@ -27,6 +27,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/behavior/command/commandtest"
 	_ "github.com/osapi-io/osapi/internal/behaviors/network/dns/gen"
+	_ "github.com/osapi-io/osapi/internal/behaviors/schedule/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/sysctl/gen"
 )
 
@@ -80,6 +81,22 @@ func (s *CommandtestPublicTestSuite) TestFlagsDoNotCarryOver() {
 	})
 	s.Equal("/api/node/server1/network/dns/eth1", second.Path)
 	s.Equal(`{"search_domains":["corp.example"]}`, second.Body)
+}
+
+// TestMapFlagsDoNotCarryOver: a map flag adds each value to what it holds,
+// so the vars of the first command line are not in the second.
+func (s *CommandtestPublicTestSuite) TestMapFlagsDoNotCarryOver() {
+	first := commandtest.Sent(s.T(), []string{
+		"node", "schedule", "update", "--target", "server1", "--name", "backup",
+		"--vars", "env=prod",
+	})
+	s.Equal(`{"vars":{"env":"prod"}}`, first.Body)
+
+	second := commandtest.Sent(s.T(), []string{
+		"node", "schedule", "update", "--target", "server1", "--name", "backup",
+		"--schedule", "0 3 * * *",
+	})
+	s.Equal(`{"schedule":"0 3 * * *"}`, second.Body)
 }
 
 func TestCommandtestPublicTestSuite(

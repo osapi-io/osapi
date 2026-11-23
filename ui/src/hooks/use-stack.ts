@@ -29,42 +29,6 @@ export interface BlockGroup {
 const HAND_BLOCK_TYPES: BlockType[] = [
   // ── Services ──────────────────────────────────────────────────────────────
   {
-    type: "cron-create",
-    label: "Create",
-    description: "Create a cron job",
-    category: "cron",
-    group: "services",
-  },
-  {
-    type: "cron-list",
-    label: "List",
-    description: "List cron jobs",
-    category: "cron",
-    group: "services",
-    readyOnAdd: true,
-  },
-  {
-    type: "cron-delete",
-    label: "Delete",
-    description: "Delete a cron job",
-    category: "cron",
-    group: "services",
-  },
-  {
-    type: "cron-get",
-    label: "Get",
-    description: "Get cron job details",
-    category: "cron",
-    group: "services",
-  },
-  {
-    type: "cron-update",
-    label: "Update",
-    description: "Update a cron job",
-    category: "cron",
-    group: "services",
-  },
-  {
     type: "power-reboot",
     label: "Reboot",
     description: "Reboot the host",
@@ -328,7 +292,6 @@ export const ALL_BLOCK_TYPES: BlockType[] = [
 // title does not read well.
 const categoryNames: Record<string, string> = {
   updatepackages: "Package Index",
-  cron: "Cron",
   ntp: "NTP",
   power: "Power",
   process: "Process",

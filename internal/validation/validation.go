@@ -257,6 +257,11 @@ func init() {
 	// spec validates what the server does. A tag without one fails schema
 	// generation rather than being dropped.
 	rule.Register("sysctl_key", rule.Pattern(sysctlKeyPattern.String()))
+	// required_without and excluded_with tie one field to another, which the
+	// schema of one field cannot say. The server checks them, and an example's
+	// .Fails proves each.
+	rule.Register("required_without", rule.None)
+	rule.Register("excluded_with", rule.None)
 	rule.Register(
 		"interface_name",
 		rule.Pattern(

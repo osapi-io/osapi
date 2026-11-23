@@ -66,7 +66,7 @@ resp, err := c.Schedule.Create(ctx, "web-01", client.ScheduleCreateOpts{
     Object:      "db-backup-template",
     User:        "postgres",
     ContentType: "template",
-    Vars:        map[string]any{"db_name": "production"},
+    Vars:        map[string]string{"db_name": "production"},
 })
 
 // Update the schedule and object
@@ -91,7 +91,10 @@ resp, err := c.Schedule.Delete(ctx, "web-01", "backup-daily")
 | List, Get              | `schedule:read`  |
 | Create, Update, Delete | `schedule:write` |
 
+Only the `admin` role has `schedule:write`. A cron entry runs a command as its
+user, and that user can be root.
+
 Schedule management is supported on the Debian OS family (Ubuntu, Debian,
-Raspbian). On unsupported platforms (Darwin, generic Linux), operations return
-`status: skipped`. Refer to [Platform Detection](../../platform/detection.md)
-for details.
+Raspbian). On platforms that are not supported (Darwin, generic Linux),
+operations return `status: skipped`. Refer to
+[Platform Detection](../../platform/detection.md) for details.

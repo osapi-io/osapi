@@ -428,46 +428,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Schedule",
-      link: {
-        type: "doc",
-        id: "gen/api/schedule-management-api-schedule-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/get-node-schedule",
-          label: "List all scheduled entries",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-node-schedule",
-          label: "Create a scheduled entry",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-node-schedule-by-name",
-          label: "Get a scheduled entry",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/put-node-schedule",
-          label: "Update a scheduled entry",
-          className: "api-method put",
-        },
-        {
-          type: "doc",
-          id: "gen/api/delete-node-schedule",
-          label: "Delete a scheduled entry",
-          className: "api-method delete",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Node/User",
       link: {
         type: "doc",
@@ -961,6 +921,46 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/post-node-process-signal",
           label: "Send a signal to a process",
           className: "api-method post",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Schedule",
+      link: {
+        type: "doc",
+        id: "gen/api/schedule-api-schedule-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-schedule",
+          label: "List the cron entries that osapi deployed",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-schedule",
+          label: "Deploy a cron entry",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-node-schedule",
+          label: "Remove a cron entry that osapi deployed",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-schedule-by-key",
+          label: "Get one cron entry that osapi deployed",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-schedule",
+          label: "Deploy a cron entry that osapi deployed again",
+          className: "api-method put",
         },
       ],
     },

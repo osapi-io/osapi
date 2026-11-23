@@ -223,6 +223,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindHost,
+			Name: "h.Facts",
+			Does: "The facts that the agent collected last, by their JSON names, as a func that returns them. A template that the provider renders with behavior.Render reads them as .Facts. The tests give none, so a template example reads only its vars.",
+			When: "Only to render a template that a person uploaded. A value that the provider uses itself comes from a gohai collector.",
+		},
+		{
+			Kind: KindHost,
 			Name: "h.FS",
 			Does: "The filesystem of the host, an avfs.VFS. The agent gives the real one. The tests give an in-memory one, so an example says the files before the call with Exists and Links, and the files after it with Wrote and Removed.",
 			When: "For each file that the provider reads or writes itself, never the os package. A file that osapi owns goes through managedfile; atomicfile.Write writes one in place.",

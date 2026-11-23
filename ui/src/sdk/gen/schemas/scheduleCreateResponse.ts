@@ -4,10 +4,10 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { ScheduleMutationResult } from './scheduleMutationResult';
+import type { ScheduleResult } from './scheduleResult';
 
 export interface ScheduleCreateResponse {
   /** The job ID used to process this request. */
   job_id?: string;
-  results: ScheduleMutationResult[];
+  results: ScheduleResult[];
 }

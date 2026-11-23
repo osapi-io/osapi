@@ -6,9 +6,6 @@
  */
 import type { ScheduleEntry } from './scheduleEntry';
 
-/**
- * Collection response for a single scheduled entry get operation.
- */
 export interface ScheduleGetResponse {
   /** The job ID used to process this request. */
   job_id?: string;

@@ -43,6 +43,7 @@ import (
 	"github.com/osapi-io/osapi/internal/exec"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/internal/provider/command"
 	fileProv "github.com/osapi-io/osapi/internal/provider/file"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
@@ -312,7 +313,6 @@ func buildRegistry(
 	userProvider := e.user()
 	commandProvider := command.New(e.log, e.exec)
 	dockerProvider := e.docker(ctx)
-	cronProvider := e.cron()
 
 	r := NewProviderRegistry()
 
@@ -343,10 +343,12 @@ func buildRegistry(
 		dockerProvider,
 	)
 
-	r.Register("schedule", NewScheduleProcessor(cronProvider, e.log), cronProvider)
-
 	// Behaviors run beside the categories above.
 	// Each builds its own provider for this platform from what it declares.
+	// The agent's facts reach a behavior's provider through facts, which
+	// WireProviderFacts sets when the agent is made, as for the providers
+	// above.
+	facts := &provider.FactsAware{}
 	behaviorProviders := BuildBehaviorProviders(host.Host{
 		Platform:        behavior.PlatformName(e.platform),
 		Container:       e.container,
@@ -357,12 +359,13 @@ func buildRegistry(
 		FileState:       e.fileState,
 		FileStateBucket: e.fileStateBucket,
 		Objects:         e.objects,
+		Facts:           facts.Facts,
 		Now:             time.Now,
 	}, e.log)
 	r.Register(
 		job.CategoryBehavior,
 		NewBehaviorProcessor(behaviorProviders, e.log),
-		behaviorProviders.All()...,
+		append(behaviorProviders.All(), facts)...,
 	)
 
 	return r

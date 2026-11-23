@@ -808,7 +808,6 @@ func ExportProviders(
 		"disk":   e.disk(),
 		"memory": e.memory(),
 		"load":   e.load(),
-		"cron":   e.cron(),
 		"user":   e.user(),
 	}
 }

@@ -68,15 +68,6 @@ const (
 	OpDockerImageRemove JobOperation = "docker.image-remove.execute"
 )
 
-// Schedule/Cron operations.
-const (
-	OpScheduleList   JobOperation = "schedule.cron.list"
-	OpScheduleGet    JobOperation = "schedule.cron.get"
-	OpScheduleCreate JobOperation = "schedule.cron.create"
-	OpScheduleUpdate JobOperation = "schedule.cron.update"
-	OpScheduleDelete JobOperation = "schedule.cron.delete"
-)
-
 // User operations.
 const (
 	OpUserList           JobOperation = "node.user.list"

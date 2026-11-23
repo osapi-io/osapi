@@ -69,6 +69,10 @@ type Host struct {
 	// Required are the providers of the behaviors this one requires, by
 	// behavior name, built for the same host. Require reads one.
 	Required map[string]any
+	// Facts are the agent's facts, by their JSON names, for a template that a
+	// provider renders with behavior.Render. The agent gives the facts it
+	// collected last; a test gives none, or fixed ones. Nil is no facts.
+	Facts func() map[string]any
 	// Now is the host's clock. The agent gives time.Now; a test gives a
 	// fixed time, so an example that reads the time, such as an uptime from
 	// the boot time, has one answer. Time reads it.
