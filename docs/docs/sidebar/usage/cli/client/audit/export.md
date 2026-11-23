@@ -48,7 +48,21 @@ With `--json`, the API's response:
       "source_ip": "10.0.0.5",
       "operation_id": "UpdateSysctl",
       "trace_id": "26e448c9dbe1c4a8d216a98c675079c9",
-      "job_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+      "job_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+      "steps": [
+        {
+          "hostname": "web-01",
+          "steps": [
+            {
+              "behavior": "managedfile",
+              "method": "update",
+              "changed": true,
+              "duration_ms": 31
+            }
+          ]
+        }
+      ],
+      "chain": ["web-01: managedfile update (changed)"]
     },
     {
       "id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",

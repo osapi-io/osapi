@@ -462,6 +462,10 @@ func (c *Client) publishAndWait(
 
 			endCollectSpan(colSpan, 1, map[string]*job.Response{response.Hostname: &response})
 
+			// The audit entry of the request records the chain of the
+			// job, also when the job failed on the host.
+			audit.RecordSteps(ctx, jobID, response.Hostname, response.Steps)
+
 			return jobID, &response, nil
 		}
 	}
@@ -696,6 +700,7 @@ func (c *Client) publishAndCollect(
 			)
 
 			responses[hostname] = &response
+			audit.RecordSteps(ctx, jobID, hostname, response.Steps)
 
 			// Return early when all expected agents have responded.
 			if len(expectedHostnames) > 0 && len(responses) >= len(expectedHostnames) {

@@ -37,9 +37,11 @@ import (
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.uber.org/mock/gomock"
 
+	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
+	sdkclient "github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // registrationJSON returns a minimal agent registration JSON for the given hostname.
@@ -2079,4 +2081,64 @@ func (s *ClientPublicTestSuite) TestModifyBroadcastWithAgentKeyStoreEnforcing() 
 			tt.validateFunc(responses)
 		})
 	}
+}
+
+// TestAuditRecordsSteps covers the steps that a dispatch gives the audit
+// entry of its request: the steps of each host that answers, also when the job
+// failed on the host.
+func (s *ClientPublicTestSuite) TestAuditRecordsSteps() {
+	failedResp := `{"status":"failed","error":"permission denied","hostname":"server1",` +
+		`"steps":[{"behavior":"managedfile","method":"update","error":"denied","duration_ms":3}]}`
+	host1Resp := `{"status":"completed","hostname":"server1",` +
+		`"steps":[{"behavior":"managedfile","method":"update","duration_ms":3}]}`
+	host2Resp := `{"status":"completed","hostname":"server2"}`
+
+	s.Run("a job that failed on its host", func() {
+		setupPublishAndWaitMocks(
+			s.mockCtrl,
+			s.mockNATSClient,
+			s.mockNATSClient,
+			"jobs.modify.host.server1",
+			failedResp,
+			nil,
+		)
+		ctx := audit.WithJobIDSink(s.ctx)
+
+		_, _, err := s.jobsClient.Modify(
+			ctx, "server1", "node", job.OperationType("node.sysctl.update"), nil,
+		)
+
+		s.Error(err)
+		s.Equal([]audit.HostSteps{{
+			Hostname: "server1",
+			Steps: []sdkclient.Step{
+				{Behavior: "managedfile", Method: "update", Error: "denied", DurationMS: 3},
+			},
+		}}, audit.StepsFrom(ctx))
+	})
+
+	s.Run("a broadcast records the steps of each host that made a call", func() {
+		setupRegistryKV(s.mockCtrl, s.mockNATSClient, []string{"server1", "server2"})
+		c := s.newClientWithRegistry()
+		setupPublishAndCollectMocks(
+			s.mockCtrl,
+			s.mockNATSClient,
+			s.mockNATSClient,
+			"jobs.modify._all",
+			&publishAndCollectMockOpts{responseEntries: []string{host1Resp, host2Resp}},
+		)
+		ctx := audit.WithJobIDSink(s.ctx)
+
+		_, _, err := c.ModifyBroadcast(
+			ctx, "_all", "node", job.OperationType("node.sysctl.update"), nil,
+		)
+
+		s.NoError(err)
+		s.Equal([]audit.HostSteps{{
+			Hostname: "server1",
+			Steps: []sdkclient.Step{
+				{Behavior: "managedfile", Method: "update", DurationMS: 3},
+			},
+		}}, audit.StepsFrom(ctx))
+	})
 }

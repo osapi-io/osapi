@@ -114,11 +114,12 @@ span of a step that failed has the error status.
 
 ### The audit log
 
-The [audit entry](audit-logging.md) of the request has the `job_id` and the
-`trace_id`. It does not have the chain. To see the chain of an audit entry, read
-its job with `osapi client job get --id <job_id>`.
-[osapi#1193](https://github.com/osapi-io/osapi/issues/1193) tracks the chain in
-the audit entry.
+The [audit entry](audit-logging.md) of the request records the chain. `steps`
+has the tree of each host, and `chain` has one line for each host.
+`osapi client audit get` prints the `Chain:` line, and the audit view of the UI
+shows the tree. The entry has the steps of each host that answered before the
+request returned, also when a step failed. The job has the steps of a host that
+answered after the request returned.
 
 ## When a step fails
 

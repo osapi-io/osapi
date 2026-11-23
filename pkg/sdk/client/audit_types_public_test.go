@@ -114,6 +114,43 @@ func (s *AuditTypesPublicTestSuite) TestAuditEntryFromGen() {
 			},
 		},
 		{
+			name: "when Steps and Chain are populated",
+			input: gen.AuditEntry{
+				Id:           testUUID,
+				Timestamp:    now,
+				User:         "admin@example.com",
+				Roles:        []string{"admin"},
+				Method:       "PUT",
+				Path:         "/api/node/web-01/sysctl/net.ipv4.ip_forward",
+				ResponseCode: 200,
+				DurationMs:   42,
+				SourceIp:     "192.168.1.100",
+				Steps: &[]struct {
+					Hostname string     `json:"hostname"`
+					Steps    []gen.Step `json:"steps"`
+				}{{
+					Hostname: "web-01",
+					Steps: []gen.Step{{
+						Behavior:   "managedfile",
+						Method:     "update",
+						DurationMs: 31,
+					}},
+				}},
+				Chain: &[]string{"web-01: managedfile update"},
+			},
+			validateFunc: func(a client.AuditEntry) {
+				s.Equal([]client.HostSteps{{
+					Hostname: "web-01",
+					Steps: []client.Step{{
+						Behavior:   "managedfile",
+						Method:     "update",
+						DurationMS: 31,
+					}},
+				}}, a.Steps)
+				s.Equal([]string{"web-01: managedfile update"}, a.Chain)
+			},
+		},
+		{
 			name: "when TraceId is nil",
 			input: gen.AuditEntry{
 				Id:           testUUID,

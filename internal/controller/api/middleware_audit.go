@@ -75,7 +75,8 @@ func auditMiddleware(
 			}
 
 			// The sink collects the job ID the handler's dispatch creates, which
-			// the job client fills in as it publishes.
+			// the job client fills in as it publishes, and the steps of each
+			// host that answers the job.
 			c.SetRequest(c.Request().WithContext(
 				audit.WithJobIDSink(c.Request().Context()),
 			))
@@ -111,6 +112,7 @@ func auditMiddleware(
 				ResponseCode: responseCode,
 				DurationMs:   time.Since(start).Milliseconds(),
 				JobID:        audit.JobIDFrom(c.Request().Context()),
+				Steps:        audit.StepsFrom(c.Request().Context()),
 
 				RequestSummary: summary,
 			}

@@ -46,6 +46,8 @@ Each audit entry contains:
 | `trace_id`        | OpenTelemetry trace ID (when tracing is enabled) |
 | `job_id`          | The job the request created, when it created one |
 | `request_summary` | What the request asked for, redacted (see below) |
+| `steps`           | The step tree of the job, for each host          |
+| `chain`           | The steps of each host on one line               |
 
 ### What the request asked for
 
@@ -72,6 +74,27 @@ as JSON. osapi replaces the values of sensitive fields with `[redacted]`.
 `job_id` connects an entry to the status timeline of its job. Thus "who asked
 for this" and "what the agents did" are one trail, not two. A request that makes
 no job has no `job_id`.
+
+### The chain of the job
+
+`steps` and `chain` record the [behavior chain](behavior-chains.md) of the job:
+the calls of other behaviors that the method made on each host. `steps` is the
+tree of each host. `chain` is the same tree on one line for each host, as
+`osapi client job get` prints it:
+
+```text
+Chain:      web-01: managedfile update (changed)
+```
+
+The job client gives the steps to the entry when it collects the response of a
+host. The entry records the steps also when a step failed, and the job failed on
+the host. A broadcast records the steps of each host that answered before the
+request returned. A host that answers after the request returned, such as after
+a timeout, is not in the entry. Its steps are in the job. A method that calls no
+other behavior has no `steps` and no `chain`.
+
+The entry keeps the steps for the time that it keeps the entry. Thus the chain
+of an entry stays after the job expires from the job bucket.
 
 ## Viewing audit logs
 

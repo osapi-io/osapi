@@ -20,7 +20,11 @@
 
 package audit
 
-import "time"
+import (
+	"time"
+
+	"github.com/osapi-io/osapi/pkg/sdk/client"
+)
 
 // The sample answers of the examples, which the docs page of each command
 // shows as the CLI prints them.
@@ -38,7 +42,19 @@ var (
 		OperationID:  "UpdateSysctl",
 		TraceID:      "26e448c9dbe1c4a8d216a98c675079c9",
 		JobID:        "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+		Steps: []HostSteps{{
+			Hostname: "web-01",
+			Steps: []client.Step{{
+				Behavior:   "managedfile",
+				Method:     "update",
+				Changed:    &sampleChanged,
+				DurationMS: 31,
+			}},
+		}},
+		Chain: []string{"web-01: managedfile update (changed)"},
 	}
+
+	sampleChanged = true
 
 	sampleList = ListAuditResponse{
 		TotalItems: 2,

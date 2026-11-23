@@ -7,20 +7,10 @@ import { KVList } from "@/components/ui/kv-list";
 import { DataTable } from "@/components/ui/data-table";
 import { SectionLabel } from "@/components/ui/section-label";
 import { Text } from "@/components/ui/text";
-import {
-  formatDuration,
-  formatDurationMs,
-  formatTime,
-  summarize,
-} from "@/lib/format";
-import { hostSteps, stepRows } from "@/lib/steps";
-import type { Step } from "@/sdk/gen/schemas";
-import {
-  ChevronDown,
-  ChevronRight,
-  CornerDownRight,
-  Loader2,
-} from "lucide-react";
+import { formatDuration, formatTime, summarize } from "@/lib/format";
+import { hostSteps } from "@/lib/steps";
+import { ChainSection } from "@/components/domain/step-tree";
+import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import { statusVariant } from "@/lib/status";
 
 // Shared state between inline pill + panel for the same job ID
@@ -201,40 +191,6 @@ function ObjectKV({ v }: { v: unknown }) {
 }
 
 /**
- * StepTree is the calls that a method made on one host: each step as
- * behavior.method, under the step that called it, with whether it changed
- * the host, its error and how long it ran.
- */
-function StepTree({ steps }: { steps: Step[] }) {
-  return (
-    <ul className="space-y-0.5 text-xs">
-      {stepRows(steps).map(({ depth, step }, i) => (
-        <li
-          key={i}
-          className="flex items-center gap-2"
-          style={{ paddingLeft: `${depth * 1.25}rem` }}
-        >
-          {depth > 0 && (
-            <CornerDownRight className="h-3 w-3 shrink-0 text-text-muted/60" />
-          )}
-          <span className="font-mono text-text">
-            {step.behavior}.{step.method}
-          </span>
-          {step.error ? (
-            <span className="text-status-error">failed: {step.error}</span>
-          ) : (
-            step.changed && <span className="text-status-applied">changed</span>
-          )}
-          <span className="text-text-muted">
-            {formatDurationMs(step.duration_ms)}
-          </span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-/**
  * JobView is one job, as osapi client job get prints it: the job, its
  * request, the agents' responses and states, the chain of calls on each
  * host, the timeline and the result.
@@ -247,7 +203,6 @@ export function JobView({ job }: { job: JobDetailResponse }) {
   const count = (status: string) =>
     states.filter((s) => s.status === status).length;
   const skipped = count("skipped");
-  const chains = hostSteps(job);
 
   return (
     <div className="space-y-3">
@@ -312,32 +267,7 @@ export function JobView({ job }: { job: JobDetailResponse }) {
         </div>
       )}
 
-      {chains.length > 0 ? (
-        <div>
-          <SectionLabel>Chain</SectionLabel>
-          <div className="space-y-2">
-            {chains.map((c) => (
-              <div key={c.hostname}>
-                <Text variant="mono-muted" size="xs" as="p" className="mb-0.5">
-                  {c.hostname}
-                </Text>
-                <StepTree steps={c.steps} />
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : (
-        (job.chain ?? []).length > 0 && (
-          <div>
-            <SectionLabel>Chain</SectionLabel>
-            {job.chain?.map((line) => (
-              <Text key={line} variant="mono" size="xs" as="p">
-                {line}
-              </Text>
-            ))}
-          </div>
-        )
-      )}
+      <ChainSection hosts={hostSteps(job)} lines={job.chain} />
 
       {states.length > 0 && (
         <div>

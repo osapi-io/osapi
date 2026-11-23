@@ -19,7 +19,11 @@
 // DEALINGS IN THE SOFTWARE.
 package audit
 
-import "time"
+import (
+	"time"
+
+	"github.com/osapi-io/osapi/pkg/sdk/client"
+)
 
 // ListInput is a page of the audit log.
 type ListInput struct {
@@ -56,19 +60,28 @@ type AuditEntryResponse struct { //nolint:revive // the schema name is part of t
 
 // AuditEntry is the record of one request.
 type AuditEntry struct { //nolint:revive // the schema name is part of the API
-	_              struct{}  `title:"Audit entry"`
-	ID             string    `                    json:"id"                        doc:"Unique identifier for the audit entry."                                                                        example:"550e8400-e29b-41d4-a716-446655440000" validate:"uuid"`
-	Timestamp      time.Time `                    json:"timestamp"                 doc:"When the request was processed."                                                                               example:"2026-02-21T10:30:00Z"`
-	User           string    `                    json:"user"                      doc:"Authenticated user (JWT subject)."                                                                             example:"ops@example.com"`
-	Roles          []string  `                    json:"roles"                     doc:"Roles from the JWT token."                                                                                                                                                    table:"-"`
-	Targets        []string  `                    json:"targets,omitempty"         doc:"The target scope of the JWT token, absent when the token acts on each host."                                                                                                  table:"-"`
-	Method         string    `                    json:"method"                    doc:"HTTP method."                                                                                                  example:"GET"`
-	Path           string    `                    json:"path"                      doc:"Request URL path."                                                                                             example:"/node/hostname"`
-	ResponseCode   int       `                    json:"response_code"             doc:"HTTP response status code."                                                                                    example:"200"                                                            label:"Status"`
-	DurationMs     int64     `                    json:"duration_ms"               doc:"Request duration in milliseconds."                                                                             example:"42"                                                             label:"Duration"  render:"duration=ms"`
-	SourceIP       string    `                    json:"source_ip"                 doc:"Client IP address."                                                                                            example:"192.168.1.100"                                        table:"-"`
-	OperationID    string    `                    json:"operation_id,omitempty"    doc:"OpenAPI operation ID."                                                                                         example:"GetNodeHostname"                                      table:"-" label:"Operation"`
-	TraceID        string    `                    json:"trace_id,omitempty"        doc:"OpenTelemetry trace ID for correlation."                                                                       example:"4bf92f3577b34da6a3ce929d0e0e4736"                                                 render:"short=16"`
-	JobID          string    `                    json:"job_id,omitempty"          doc:"The job this request created, absent when it created none. Joins the entry to that job's own status timeline." example:"7c9e6679-7425-40de-944b-e07fc1f90ae7"                 table:"-"`
-	RequestSummary string    `                    json:"request_summary,omitempty" doc:"What the request asked for, with sensitive values replaced. Recorded for methods that change something."                                                                      table:"-"`
+	_              struct{}    `title:"Audit entry"`
+	ID             string      `                    json:"id"                        doc:"Unique identifier for the audit entry."                                                                                                                                        example:"550e8400-e29b-41d4-a716-446655440000" validate:"uuid"`
+	Timestamp      time.Time   `                    json:"timestamp"                 doc:"When the request was processed."                                                                                                                                               example:"2026-02-21T10:30:00Z"`
+	User           string      `                    json:"user"                      doc:"Authenticated user (JWT subject)."                                                                                                                                             example:"ops@example.com"`
+	Roles          []string    `                    json:"roles"                     doc:"Roles from the JWT token."                                                                                                                                                                                                                    table:"-"`
+	Targets        []string    `                    json:"targets,omitempty"         doc:"The target scope of the JWT token, absent when the token acts on each host."                                                                                                                                                                  table:"-"`
+	Method         string      `                    json:"method"                    doc:"HTTP method."                                                                                                                                                                  example:"GET"`
+	Path           string      `                    json:"path"                      doc:"Request URL path."                                                                                                                                                             example:"/node/hostname"`
+	ResponseCode   int         `                    json:"response_code"             doc:"HTTP response status code."                                                                                                                                                    example:"200"                                                            label:"Status"`
+	DurationMs     int64       `                    json:"duration_ms"               doc:"Request duration in milliseconds."                                                                                                                                             example:"42"                                                             label:"Duration"  render:"duration=ms"`
+	SourceIP       string      `                    json:"source_ip"                 doc:"Client IP address."                                                                                                                                                            example:"192.168.1.100"                                        table:"-"`
+	OperationID    string      `                    json:"operation_id,omitempty"    doc:"OpenAPI operation ID."                                                                                                                                                         example:"GetNodeHostname"                                      table:"-" label:"Operation"`
+	TraceID        string      `                    json:"trace_id,omitempty"        doc:"OpenTelemetry trace ID for correlation."                                                                                                                                       example:"4bf92f3577b34da6a3ce929d0e0e4736"                                                 render:"short=16"`
+	JobID          string      `                    json:"job_id,omitempty"          doc:"The job this request created, absent when it created none. Joins the entry to that job's own status timeline."                                                                 example:"7c9e6679-7425-40de-944b-e07fc1f90ae7"                 table:"-"`
+	RequestSummary string      `                    json:"request_summary,omitempty" doc:"What the request asked for, with sensitive values replaced. Recorded for methods that change something."                                                                                                                                      table:"-"`
+	Steps          []HostSteps `                    json:"steps,omitempty"           doc:"The calls of other behaviors that the method of the job made, for each host that answered before the request returned, also when one failed. Absent when no host made a call."                                                                                            render:"-"`
+	Chain          []string    `                    json:"chain,omitempty"           doc:"The steps on one line for each host, such as web-01: managedfile update (changed)."                                                                                                                                                           table:"-"`
+}
+
+// HostSteps are the calls of other behaviors that the method of the job made
+// on one host, in place in the spec.
+type HostSteps = struct {
+	Hostname string        `json:"hostname" doc:"The host that answered the job."`
+	Steps    []client.Step `json:"steps"    doc:"The calls, in the order that the method made them."`
 }

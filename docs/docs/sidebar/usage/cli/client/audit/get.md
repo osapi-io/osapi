@@ -37,6 +37,7 @@ $ osapi client audit get --id 550e8400-e29b-41d4-a716-446655440000
   [38;2;10;143;176mOperation:[0m  UpdateSysctl
   [38;2;10;143;176mTrace ID:[0m   26e448c9dbe1c4a8d216a98c675079c9
   [38;2;10;143;176mJob ID:[0m     7c9e6679-7425-40de-944b-e07fc1f90ae7
+  [38;2;10;143;176mChain:[0m      web-01: managedfile update (changed)
 ```
 
 With `--json`, the API's response:
@@ -55,7 +56,21 @@ With `--json`, the API's response:
     "source_ip": "10.0.0.5",
     "operation_id": "UpdateSysctl",
     "trace_id": "26e448c9dbe1c4a8d216a98c675079c9",
-    "job_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+    "job_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+    "steps": [
+      {
+        "hostname": "web-01",
+        "steps": [
+          {
+            "behavior": "managedfile",
+            "method": "update",
+            "changed": true,
+            "duration_ms": 31
+          }
+        ]
+      }
+    ],
+    "chain": ["web-01: managedfile update (changed)"]
   }
 }
 ```
