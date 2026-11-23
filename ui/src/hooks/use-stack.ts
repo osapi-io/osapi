@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { BEHAVIOR_BLOCKS } from "@/lib/blocks.gen";
+import type { HandBlockType } from "@/lib/permissions";
 
 export type BlockStatus =
   "unchecked" | "pending" | "ready" | "applying" | "applied" | "error";
@@ -26,25 +27,10 @@ export interface BlockGroup {
   categories: BlockCategory[];
 }
 
-const HAND_BLOCK_TYPES: BlockType[] = [
-  // ── Services ──────────────────────────────────────────────────────────────
-  {
-    type: "power-reboot",
-    label: "Reboot",
-    description: "Reboot the host",
-    category: "power",
-    group: "node",
-  },
-  {
-    type: "power-shutdown",
-    label: "Shutdown",
-    description: "Shutdown the host",
-    category: "power",
-    group: "node",
-  },
-
-  // ── Networking ─────────────────────────────────────────────────────────────
-
+// The blocks that are not a behavior's. Each has an operation in
+// BLOCK_OPERATIONS, which gives its permission: a type with none fails the
+// type check here.
+const HAND_BLOCK_TYPES: (BlockType & { type: HandBlockType })[] = [
   // ── Files ──────────────────────────────────────────────────────────────────
   {
     type: "object-list",
@@ -77,7 +63,7 @@ const HAND_BLOCK_TYPES: BlockType[] = [
     readyOnAdd: true,
   },
 
-  // ── Hardware ───────────────────────────────────────────────────────────────
+  // ── Audit ──────────────────────────────────────────────────────────────────
   {
     type: "audit-list",
     label: "List",

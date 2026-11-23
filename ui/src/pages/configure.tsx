@@ -40,7 +40,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Text } from "@/components/ui/text";
 import { Chip } from "@/components/ui/chip";
 import { useAuth } from "@/hooks/use-auth";
-import { BLOCK_PERMISSIONS } from "@/lib/permissions";
+import { BLOCK_PERMISSIONS, blockAllowed } from "@/lib/permissions";
 import { BEHAVIOR_BLOCKS, type BehaviorBlockType } from "@/lib/blocks.gen";
 import { runBehavior } from "@/lib/behavior-block";
 import { BehaviorBlockForm } from "@/components/domain/behavior-block-form";
@@ -535,7 +535,7 @@ export function Configure() {
                   <div className="flex flex-wrap gap-1.5">
                     {cat.types.map((bt) => {
                       const perm = BLOCK_PERMISSIONS[bt.type];
-                      const allowed = perm ? can(perm) : true;
+                      const allowed = blockAllowed(bt.type, can);
                       return (
                         <Chip
                           key={bt.type}
@@ -544,7 +544,11 @@ export function Configure() {
                             addBlockAndFocus(bt);
                           }}
                           disabled={!allowed}
-                          title={allowed ? bt.description : `Requires ${perm}`}
+                          title={
+                            allowed
+                              ? bt.description
+                              : `Requires ${perm ?? "a permission that is not known"}`
+                          }
                         >
                           {bt.label}
                           {!allowed && (
