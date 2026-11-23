@@ -7,11 +7,13 @@ import (
 
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/commands/skill"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
 var skillListCmd = &cobra.Command{
-	Args:    cobra.NoArgs,
-	Example: "  osapi skill list\n  osapi skill list --json",
+	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi skill list\n\x1b[1;38;2;0;213;255mSkills (3):\x1b[0m\n  \x1b[38;2;10;143;176mNAME              \x1b[0m\x1b[38;2;10;143;176mINSTALLED BY INIT\x1b[0m\n  \x1b[1mbuild-a-behavior\x1b[0m  no\n  \x1b[1mosapi\x1b[0m             yes\n  \x1b[1mosapi-operations\x1b[0m  yes\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"items\": [\n    {\n      \"name\": \"build-a-behavior\",\n      \"description\": \"Build or change an osapi behavior.\",\n      \"init\": false,\n      \"references\": [\n        \"references/services.md\"\n      ]\n    },\n    {\n      \"name\": \"osapi\",\n      \"description\": \"Operate a fleet of hosts through osapi.\",\n      \"init\": true,\n      \"references\": [\n        \"references/behaviors.md\",\n        \"references/targets.md\"\n      ]\n    },\n    {\n      \"name\": \"osapi-operations\",\n      \"description\": \"Run and configure the components of osapi.\",\n      \"init\": true,\n      \"references\": [\n        \"references/config.md\",\n        \"references/tokens.md\"\n      ]\n    }\n  ]\n}\n```"},
+	Args:        cobra.NoArgs,
+	Example:     "  osapi skill list\n  osapi skill list --json",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		return clicommand.Run(cmd, skill.Group, "list", skill.ListInput{})
 	},
@@ -20,9 +22,10 @@ var skillListCmd = &cobra.Command{
 }
 
 var skillGetCmd = &cobra.Command{
-	Args:    cobra.NoArgs,
-	Example: "  osapi skill get --name build-a-behavior\n  osapi skill get --name build-a-behavior --reference references/services.md",
-	Long:    "It prints the file as it is. `--json` has the name, the reference and the\ncontent.",
+	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi skill get --name build-a-behavior\n---\nname: build-a-behavior\ndescription: Build or change an osapi behavior.\n---\n\n# Build a behavior\n\nA behavior is the typed definition under internal/behaviors/<name>/.\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"name\": \"build-a-behavior\",\n  \"content\": \"---\\nname: build-a-behavior\\ndescription: Build or change an osapi behavior.\\n---\\n\\n# Build a behavior\\n\\nA behavior is the typed definition under internal/behaviors/\\u003cname\\u003e/.\\n\"\n}\n```"},
+	Args:        cobra.NoArgs,
+	Example:     "  osapi skill get --name build-a-behavior\n  osapi skill get --name build-a-behavior --reference references/services.md",
+	Long:        "It prints the file as it is. `--json` has the name, the reference and the\ncontent.",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		name, _ := cmd.Flags().GetString("name")
 		reference, _ := cmd.Flags().GetString("reference")

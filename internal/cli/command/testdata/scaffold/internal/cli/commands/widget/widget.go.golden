@@ -36,10 +36,15 @@ var Group = command.Register(command.Define(
 	command.Method[ListInput, WidgetList]("list").
 		Short("List the widget items").
 		Example("").
+		Prints(WidgetList{
+			Items: []WidgetItem{{Name: "example"}},
+			Total: 1,
+		}).
 		Handle(List),
 	command.Method[GetInput, WidgetItem]("get").
 		Short("Get one widget item").
 		Example("--name example").
+		Prints(WidgetItem{Name: "example"}).
 		Fails("no name", GetInput{}).
 		Fails("a name over 255 characters", GetInput{Name: strings.Repeat("a", 256)}).
 		Handle(Get),

@@ -114,6 +114,12 @@ The design is `components/osapi/commands.md` in osapi-io/specs. Read it first.
 - A rule that the standard tags cannot say is a custom rule. Declare it with
   `rule.Declare`, with its check and its message.
 - `--json` prints the output of the method. Do not make a second shape for it.
+- Give each method that prints a body a `.Prints(sample)` after the example
+  that it shows: a value of its output type, in `samples.go` of the group, with
+  each time in UTC. The CLI page shows the sample as the CLI prints it, and as
+  JSON for `--json`. validate fails a method with no `.Prints`. A method with
+  no body needs none: its page shows its one line for each example. A process
+  prints no output, so it needs none.
 - A command that runs until a signal, such as `nats server start`, is
   `command.Process("start").Setup(fn)`. `internal/cli/commands/controllercmd`
   is a complete one:

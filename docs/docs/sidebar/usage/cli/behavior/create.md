@@ -29,6 +29,78 @@ osapi behavior create --name motd --description "The message shown at login" --r
 osapi behavior create --group network --name neighbors --description "The host's ARP neighbors"
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi behavior create --name motd --description "The message shown at login"
+[1;38;2;0;213;255mBehavior:[0m
+  [38;2;10;143;176mName:[0m  motd
+
+[1;38;2;255;0;255mFiles (6):[0m
+  [38;2;176;48;176mPATH[0m
+  internal/behaviors/motd/behavior.go
+  internal/behaviors/motd/behavior_public_test.go
+  internal/behaviors/motd/debian.go
+  internal/behaviors/motd/methods.go
+  internal/behaviors/motd/provider.go
+  internal/behaviors/all/all.go
+
+[1;38;2;255;209;0mNext (5):[0m
+  [38;2;176;143;0mSTEP[0m
+  go generate ./internal/behaviors/motd/mocks ./internal/behaviors/all
+  change the types, the provider and the examples in internal/behaviors/motd
+  go generate ./internal/behaviors/all
+  osapi behavior validate
+  just test
+```
+
+With `--json`, the command prints:
+
+```json
+{
+  "name": "motd",
+  "files": [
+    {
+      "path": "internal/behaviors/motd/behavior.go"
+    },
+    {
+      "path": "internal/behaviors/motd/behavior_public_test.go"
+    },
+    {
+      "path": "internal/behaviors/motd/debian.go"
+    },
+    {
+      "path": "internal/behaviors/motd/methods.go"
+    },
+    {
+      "path": "internal/behaviors/motd/provider.go"
+    },
+    {
+      "path": "internal/behaviors/all/all.go"
+    }
+  ],
+  "next": [
+    {
+      "step": "go generate ./internal/behaviors/motd/mocks ./internal/behaviors/all"
+    },
+    {
+      "step": "change the types, the provider and the examples in internal/behaviors/motd"
+    },
+    {
+      "step": "go generate ./internal/behaviors/all"
+    },
+    {
+      "step": "osapi behavior validate"
+    },
+    {
+      "step": "just test"
+    }
+  ]
+}
+```
+
 ## Flags
 
 | Flag            | Description                                                                                                          | Default |

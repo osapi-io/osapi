@@ -37,6 +37,7 @@ var Group = command.Register(command.Define(
 	command.Method[GenerateInput, GenerateOutput]("generate").
 		Short("Generate a new token").
 		Example("--subject user123 --roles=read").
+		Prints(sampleGenerate).
 		Example("--subject svc@example.com --roles=read \\\n    -p status:read -p health:read").
 		Fails("no roles", GenerateInput{Subject: "ops"}).
 		Fails("no subject", GenerateInput{Roles: []string{"read"}}).
@@ -55,17 +56,20 @@ var Group = command.Register(command.Define(
 			"one. `admin` and `write` grant both, and `read` grants the read permission.\n"+
 			"Use this list, not a table in the docs.").
 		Example("").
+		Prints(sampleRoles).
 		Example("--json").
 		Handle(Roles),
 	command.Method[RoleInput, Role]("get").
 		Sub("roles").
 		Short("Show a role and each permission it grants").
 		Example("--name admin").
+		Prints(sampleRole).
 		Fails("no name", RoleInput{}).
 		Handle(RoleGet),
 	command.Method[ValidateInput, Claims]("validate").
 		Short("Validate a token for authenticity and claims").
 		Example("--token eyJhbGciOiJIUzI1NiIs...").
+		Prints(sampleClaims).
 		Fails("no token", ValidateInput{}).
 		Handle(Validate),
 ))

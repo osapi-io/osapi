@@ -18,6 +18,23 @@ osapi client agent drain [flags]
 osapi client agent drain --hostname web-01
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi client agent drain --hostname web-01
+[ok] web-01 draining
+
+  [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+```
+
+With `--json`, the command prints:
+
+```json
+{ "hostname": "web-01", "result": "draining" }
+```
+
 ## Permission
 
 It needs the `agent:write` permission. `osapi token roles get --name <role>`

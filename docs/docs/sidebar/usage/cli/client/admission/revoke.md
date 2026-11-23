@@ -15,6 +15,23 @@ osapi client admission revoke [flags]
 osapi client admission revoke --machine-id d530664edc1c431eb5ef1e9dfd6617a5
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi client admission revoke --machine-id d530664edc1c431eb5ef1e9dfd6617a5
+[ok] d530664edc1c431eb5ef1e9dfd6617a5 revoked
+
+  [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+```
+
+With `--json`, the command prints:
+
+```json
+{ "machine_id": "d530664edc1c431eb5ef1e9dfd6617a5", "result": "revoked" }
+```
+
 ## Permission
 
 It needs the `admission:write` permission. `osapi token roles get --name <role>`

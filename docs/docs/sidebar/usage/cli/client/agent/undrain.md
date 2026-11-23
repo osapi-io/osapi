@@ -15,6 +15,23 @@ osapi client agent undrain [flags]
 osapi client agent undrain --hostname web-01
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi client agent undrain --hostname web-01
+[ok] web-01 ready
+
+  [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+```
+
+With `--json`, the command prints:
+
+```json
+{ "hostname": "web-01", "result": "ready" }
+```
+
 ## Permission
 
 It needs the `agent:write` permission. `osapi token roles get --name <role>`

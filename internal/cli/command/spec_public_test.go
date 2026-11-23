@@ -97,6 +97,7 @@ var notDSL = map[string]bool{
 	"Now":                          true,
 	"SetNow":                       true,
 	"Derive":                       true,
+	"Done":                         true,
 	"Columns":                      true,
 	"Format:Column":                true,
 	"FormatKV:Column":              true,

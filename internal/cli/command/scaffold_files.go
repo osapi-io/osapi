@@ -175,11 +175,19 @@ func (sc groupScaffold) groupFile() *jen.File {
 			Call(jen.Lit("list")).
 			Add(next("Short", jen.Lit("List the "+sc.name+" items"))).
 			Add(next("Example", jen.Lit(""))).
+			Add(next("Prints", jen.Id(sc.typeName("List")).Values(jen.Dict{
+				jen.Id("Items"): jen.Index().Id(sc.typeName("Item")).Values(
+					jen.Values(jen.Dict{jen.Id("Name"): jen.Lit("example")})),
+				jen.Id("Total"): jen.Lit(1),
+			}))).
 			Add(next("Handle", jen.Id("List"))),
 		c("Method").Index(jen.List(jen.Id("GetInput"), jen.Id(sc.typeName("Item")))).
 			Call(jen.Lit("get")).
 			Add(next("Short", jen.Lit("Get one "+sc.name+" item"))).
 			Add(next("Example", jen.Lit("--name example"))).
+			Add(next("Prints", jen.Id(sc.typeName("Item")).Values(jen.Dict{
+				jen.Id("Name"): jen.Lit("example"),
+			}))).
 			Add(next("Fails", jen.Lit("no name"), jen.Id("GetInput").Values())).
 			Add(next("Fails", jen.Lit("a name over 255 characters"),
 				jen.Id("GetInput").Values(jen.Dict{

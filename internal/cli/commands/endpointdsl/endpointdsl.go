@@ -51,6 +51,7 @@ var Group = command.Register(command.Define(
 	command.Method[ListInput, ListOutput]("list").
 		Short("List the endpoint groups this binary has").
 		Example("").
+		Prints(sampleList).
 		Example("--json").
 		Handle(List),
 	command.Method[GetInput, GetOutput]("get").
@@ -58,6 +59,7 @@ var Group = command.Register(command.Define(
 		Long("`osapi controller endpoint openapi get` prints the group's part of the\n"+
 			"OpenAPI spec.").
 		Example("--name agent").
+		Prints(sampleGet).
 		Example("--name agent --json").
 		Fails("no name", GetInput{}).
 		Handle(Get),
@@ -69,6 +71,7 @@ var Group = command.Register(command.Define(
 			"output. `osapi behavior method get` shows a method of a behavior the same\n"+
 			"way.").
 		Example("--name agent --method drain").
+		Prints(sampleMethod).
 		Example("--name agent --method drain --json").
 		Fails("no name", MethodInput{Method: "list"}).
 		Fails("no method", MethodInput{Name: "agent"}).
@@ -80,6 +83,7 @@ var Group = command.Register(command.Define(
 			"hand-written spec of the group to compare the prose. `TestEndpointParity`\n"+
 			"compares the rest.").
 		Example("--name agent").
+		Prints(sampleOpenAPI).
 		Fails("no name", GetInput{}).
 		Handle(OpenAPIGet),
 	command.Method[CreateInput, CreateOutput]("create").
@@ -91,6 +95,7 @@ var Group = command.Register(command.Define(
 			"prints. While its `Deps` is empty, the controller needs no wiring.\n"+
 			"`osapi controller endpoint spec get` lists each part of the DSL.").
 		Example(`--name trace --description "The traces of the controller"`).
+		Prints(sampleCreate).
 		Fails("no name", CreateInput{Description: "x"}).
 		Fails("no description", CreateInput{Name: "x"}).
 		Handle(Create),
@@ -102,6 +107,7 @@ var Group = command.Register(command.Define(
 			"agrees with the build that you run. Read it before you write a group, then\n"+
 			"check the result with `osapi controller endpoint validate`.").
 		Example("").
+		Prints(sampleSpec).
 		Example("--json").
 		Handle(Spec),
 	command.Method[ValidateInput, ValidateOutput]("validate").
@@ -111,6 +117,7 @@ var Group = command.Register(command.Define(
 			"spec get` describes each part of a group.\n\n"+
 			"The rules:\n\n"+endpoint.Checks.Help()).
 		Example("").
+		Prints(sampleValidate).
 		Example("--json").
 		Handle(Validate),
 ))

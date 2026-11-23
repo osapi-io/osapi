@@ -38,5 +38,6 @@ var Group = command.Register(command.Define(
 			"controller. If no key exists, the command makes a new key pair. Then it\n"+
 			"shows the fingerprint.").
 		Example("").
+		Prints(sampleFingerprint).
 		Handle(Fingerprint),
 ))

@@ -46,6 +46,7 @@ var Group = command.Register(command.Define(
 			"last one. A building block, with `Internal`, is in the list for the\n"+
 			"behaviors that call it.").
 		Example("").
+		Prints(sampleList).
 		Example("--json").
 		Handle(List),
 	command.Method[GetInput, GetOutput]("get").
@@ -56,6 +57,7 @@ var Group = command.Register(command.Define(
 			"has them in full, under `runs`. An input field tagged `secret` shows as\n"+
 			"`[redacted]`.").
 		Example("--name dns").
+		Prints(sampleGet).
 		Example("--name dns --json").
 		Fails("no name", GetInput{}).
 		Handle(Get),
@@ -67,6 +69,7 @@ var Group = command.Register(command.Define(
 			"`go test` checks the ones that need a run of the examples.\n\n"+
 			"The rules:\n\n"+behavior.ChainChecks.Help()).
 		Example("").
+		Prints(sampleValidate).
 		Example("--json").
 		Handle(Validate),
 	command.Method[SpecInput, SpecOutput]("get").
@@ -77,6 +80,7 @@ var Group = command.Register(command.Define(
 			"before a behavior requires another, then check the result with `osapi\n"+
 			"behavior chain validate`.").
 		Example("").
+		Prints(sampleSpec).
 		Example("--json").
 		Handle(Spec),
 ))

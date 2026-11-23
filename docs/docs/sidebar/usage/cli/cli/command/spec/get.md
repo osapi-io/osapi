@@ -18,6 +18,44 @@ osapi cli command spec get
 osapi cli command spec get --json
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi cli command spec get
+[1;38;2;0;213;255mDefinition:[0m
+  Register(Define(name, doc, options...))
+    Declares a group of local commands and adds it to the registry. A local
+    command runs in the CLI process and calls no API, such as osapi token
+    generate. Its command is osapi <name>, and doc is its help.
+    Use: One time, in <group>.go under internal/cli/commands/<group>: var
+    Group = command.Register(command.Define(...)). Add its import to
+    internal/cli/commands/all. A command that calls the API is an endpoint
+    or a behavior, not a local command.
+```
+
+With `--json`, the command prints:
+
+```json
+{
+  "kinds": [
+    {
+      "kind": "definition",
+      "title": "Definition",
+      "terms": [
+        {
+          "kind": "definition",
+          "name": "Register(Define(name, doc, options...))",
+          "does": "Declares a group of local commands and adds it to the registry. A local command runs in the CLI process and calls no API, such as osapi token generate. Its command is osapi \u003cname\u003e, and doc is its help.",
+          "when": "One time, in \u003cgroup\u003e.go under internal/cli/commands/\u003cgroup\u003e: var Group = command.Register(command.Define(...)). Add its import to internal/cli/commands/all. A command that calls the API is an endpoint or a behavior, not a local command."
+        }
+      ]
+    }
+  ]
+}
+```
+
 ## Global flags
 
 | Flag               | Description                  | Default                 |

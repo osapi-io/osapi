@@ -158,6 +158,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindRefine,
+			Name: `.Prints(sample)`,
+			Does: "Gives the last Example its output: a value of the method's output type, which the CLI page shows as the CLI prints it, and as JSON for --json. The page of a method with no output shows its one line for each example, from the example's flags, with no Prints.",
+			When: "After the Example that it shows, on each method that prints a body and is not a process: validate fails one with no Prints. Put the sample in samples.go of the group, with each time in UTC.",
+		},
+		{
+			Kind: KindRefine,
 			Name: `.Sub("segment")`,
 			Does: "Puts the command under a command of its own in the group: osapi <group> <segment> <method>, such as token roles list. The method's identity is its segment and its name, so a group can have get and spec get.",
 			When: "When the command is about a noun of the group: the noun is the Sub, and the method is the verb.",
@@ -416,7 +422,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindGenerated,
 			Name: "docs/docs/sidebar/usage/cli/",
-			Does: "The CLI pages, from just cli-docs-generate. The page of a local command comes from .Short, .Long, .Example and each input field's doc.",
+			Does: "The CLI pages, from just cli-docs-generate. The page of a local command comes from .Short, .Long, .Example, .Prints and each input field's doc.",
 			When: "Change the definition, then generate. Do not write a CLI page by hand.",
 		},
 	},

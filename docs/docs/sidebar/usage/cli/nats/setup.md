@@ -22,6 +22,30 @@ osapi nats setup
 osapi nats setup -f /etc/osapi/osapi.yaml
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi nats setup -f /etc/osapi/osapi.yaml
+[1;38;2;0;213;255mNATS:[0m
+  [38;2;10;143;176mHost:[0m       localhost
+  [38;2;10;143;176mPort:[0m       4222
+  [38;2;10;143;176mNamespace:[0m  osapi
+  [38;2;10;143;176mAuth:[0m       none
+```
+
+With `--json`, the command prints:
+
+```json
+{
+  "host": "localhost",
+  "port": 4222,
+  "namespace": "osapi",
+  "auth": "none"
+}
+```
+
 ## Global flags
 
 | Flag               | Description                  | Default                 |

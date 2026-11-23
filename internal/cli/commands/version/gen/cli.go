@@ -7,12 +7,14 @@ import (
 
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/commands/version"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
 var versionVersionCmd = &cobra.Command{
-	Args:    cobra.NoArgs,
-	Example: "  osapi version\n  osapi version --json",
-	Long:    "The build of this binary: the version that each component reports, the\ncommit and the tree it was built from, and the Go that built it.",
+	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi version\n\x1b[1;38;2;0;213;255mVersion:\x1b[0m\n  \x1b[38;2;10;143;176mVersion:\x1b[0m   v1.4.0\n  \x1b[38;2;10;143;176mCommit:\x1b[0m    e4a8b2dc5f0c7a1b9d3e6f2a8c4b0d7e1f5a9c3b\n  \x1b[38;2;10;143;176mTree:\x1b[0m      clean\n  \x1b[38;2;10;143;176mBuilt:\x1b[0m     2026-01-14T18:22:05Z\n  \x1b[38;2;10;143;176mBuilt by:\x1b[0m  goreleaser\n  \x1b[38;2;10;143;176mGo:\x1b[0m        go1.27.3\n  \x1b[38;2;10;143;176mPlatform:\x1b[0m  linux/amd64\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"version\": \"v1.4.0\",\n  \"commit\": \"e4a8b2dc5f0c7a1b9d3e6f2a8c4b0d7e1f5a9c3b\",\n  \"tree_state\": \"clean\",\n  \"build_date\": \"2026-01-14T18:22:05Z\",\n  \"built_by\": \"goreleaser\",\n  \"go_version\": \"go1.27.3\",\n  \"platform\": \"linux/amd64\",\n  \"compiler\": \"gc\",\n  \"module_checksum\": \"h1:Qm3a8Zt0n2Jv5k7XqW1yR4sB6cD9eF0gH2iJ3kL5mN8=\"\n}\n```"},
+	Args:        cobra.NoArgs,
+	Example:     "  osapi version\n  osapi version --json",
+	Long:        "The build of this binary: the version that each component reports, the\ncommit and the tree it was built from, and the Go that built it.",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		return clicommand.Run(cmd, version.Group, "version", version.Input{})
 	},

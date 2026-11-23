@@ -20,6 +20,24 @@ osapi cli docs reference generate
 osapi cli docs reference generate --root ~/src/osapi
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi cli docs reference generate
+[1;38;2;0;213;255mReference:[0m
+  [38;2;10;143;176mPages:[0m  73
+```
+
+With `--json`, the command prints:
+
+```json
+{
+  "pages": 73
+}
+```
+
 ## Flags
 
 | Flag     | Description                  | Default |

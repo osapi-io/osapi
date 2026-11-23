@@ -1091,3 +1091,52 @@ func Derive(
 ) error {
 	return derive(p, g, m, in, answer)
 }
+
+// Done is what method m of g prints for an example with flags, when m
+// answers with no body: the input that the flags give, for the one line
+// that Derive prints, and the JSON that --json prints. ok is false for a
+// method that answers with a body, whose example needs a sample output.
+func Done(
+	g Group,
+	m Command,
+	flags string,
+) (any, []byte, bool) {
+	t := m.Output()
+	if t == nil || t.Kind() == reflect.Pointer || !answersNothing(t) {
+		return nil, nil, false
+	}
+	in := exampleInput(m.Input(), flags)
+	body, _ := json.Marshal(map[string]string{keyName(m): keyOf(g, m, in), "result": said(m)})
+
+	return in, body, true
+}
+
+// exampleInput is the input of type t that flags give: each string field
+// that a --flag value or --flag=value names.
+func exampleInput(
+	t reflect.Type,
+	flags string,
+) any {
+	v := reflect.New(t).Elem()
+	if t.Kind() != reflect.Struct {
+		return v.Interface()
+	}
+	words := strings.Fields(flags)
+	for i, w := range words {
+		name, ok := strings.CutPrefix(w, "--")
+		if !ok {
+			continue
+		}
+		name, value, eq := strings.Cut(name, "=")
+		if !eq && i+1 < len(words) && !strings.HasPrefix(words[i+1], "-") {
+			value = words[i+1]
+		}
+		for _, f := range structFields(t) {
+			if FlagName(f) == name && f.Type.Kind() == reflect.String {
+				v.FieldByIndex(f.Index).SetString(strings.Trim(value, `"'`))
+			}
+		}
+	}
+
+	return v.Interface()
+}

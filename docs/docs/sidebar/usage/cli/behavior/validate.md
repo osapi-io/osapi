@@ -208,6 +208,26 @@ osapi behavior validate
 osapi behavior validate --json
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi behavior validate
+[1;38;2;0;213;255mValidation:[0m
+  [38;2;10;143;176mBehaviors:[0m  33
+  [38;2;10;143;176mValid:[0m      yes
+```
+
+With `--json`, the command prints:
+
+```json
+{
+  "behaviors": 33,
+  "valid": true
+}
+```
+
 ## Global flags
 
 | Flag               | Description                  | Default                 |

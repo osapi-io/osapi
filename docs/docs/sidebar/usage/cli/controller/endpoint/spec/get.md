@@ -18,6 +18,43 @@ osapi controller endpoint spec get
 osapi controller endpoint spec get --json
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi controller endpoint spec get
+[1;38;2;0;213;255mDefinition:[0m
+  Register(Define(name, doc, options...))
+    Declares the group and adds it to the registry. The commands and the
+    tests read the registry. Each path of the group starts /api/<name>.
+    Use: One time, in <group>.go under
+    internal/controller/endpoints/<group>: var Group =
+    endpoint.Register(endpoint.Define(...)). Add its import to
+    internal/controller/endpoints/all.
+```
+
+With `--json`, the command prints:
+
+```json
+{
+  "kinds": [
+    {
+      "kind": "definition",
+      "title": "Definition",
+      "terms": [
+        {
+          "kind": "definition",
+          "name": "Register(Define(name, doc, options...))",
+          "does": "Declares the group and adds it to the registry. The commands and the tests read the registry. Each path of the group starts /api/\u003cname\u003e.",
+          "when": "One time, in \u003cgroup\u003e.go under internal/controller/endpoints/\u003cgroup\u003e: var Group = endpoint.Register(endpoint.Define(...)). Add its import to internal/controller/endpoints/all."
+        }
+      ]
+    }
+  ]
+}
+```
+
 ## Global flags
 
 | Flag               | Description                  | Default                 |

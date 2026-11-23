@@ -15,6 +15,23 @@ osapi client admission reject [flags]
 osapi client admission reject --machine-id d530664edc1c431eb5ef1e9dfd6617a5 --reason "unknown host"
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi client admission reject --machine-id d530664edc1c431eb5ef1e9dfd6617a5 --reason "unknown host"
+[ok] d530664edc1c431eb5ef1e9dfd6617a5 rejected
+
+  [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+```
+
+With `--json`, the command prints:
+
+```json
+{ "machine_id": "d530664edc1c431eb5ef1e9dfd6617a5", "result": "rejected" }
+```
+
 ## Permission
 
 It needs the `admission:write` permission. `osapi token roles get --name <role>`

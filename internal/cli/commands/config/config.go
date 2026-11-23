@@ -47,6 +47,7 @@ var Group = command.Register(command.Define(
 			"Passwords, signing keys and tokens print as `********`. `--json` carries the\n"+
 			"type, the default, the rules and the description of each key as well.").
 		Example("").
+		Prints(sampleList).
 		Example("-f ./osapi.yaml --json").
 		Handle(List),
 	command.Method[GetInput, GetOutput]("get").
@@ -55,6 +56,7 @@ var Group = command.Register(command.Define(
 			"variable, the type, the default, the rules and the description. An\n"+
 			"environment variable wins over the file.").
 		Example("--key controller.api.port").
+		Prints(sampleGet).
 		Example("--key agent.labels -f ./osapi.yaml --json").
 		Fails("no key", GetInput{}).
 		Handle(Get),
@@ -66,6 +68,7 @@ var Group = command.Register(command.Define(
 			"about one key), `message` and `fix`. `osapi config list` shows each key,\n"+
 			"with its type, rule and default.\n\nThe rules:\n\n"+osapiconfig.Checks.Help()).
 		Example("").
+		Prints(sampleValidate).
 		Example("-f ./osapi.yaml --json").
 		Handle(Validate),
 ))

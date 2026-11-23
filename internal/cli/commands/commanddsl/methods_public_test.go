@@ -77,8 +77,9 @@ var (
 	widget = command.Register(command.Define("zzwidget", "Widgets",
 		command.Uses[struct{}](),
 		command.Method[widgetIn, widgetOut]("get").Short("Get a widget").
-			Example("--name a").Fails("no name", widgetIn{}).Handle(widgetGet),
-		command.Method[struct{}, []widgetOut]("list").Short("List widgets").Handle(widgetList),
+			Example("--name a").Prints(widgetOut{}).Fails("no name", widgetIn{}).Handle(widgetGet),
+		command.Method[struct{}, []widgetOut]("list").Short("List widgets").
+			Example("").Prints([]widgetOut{}).Handle(widgetList),
 	))
 	root = &cobra.Command{Use: "osapi"}
 
@@ -92,6 +93,7 @@ var (
 			Example("--name a").Fails("no name", widgetIn{}).
 			Handle(func(context.Context, struct{}, widgetIn) (struct{}, error) { return struct{}{}, nil }),
 		command.Method[struct{}, widgetOut]("get").Sub("keys").Short("Get a key").Example("").
+			Prints(widgetOut{}).
 			Handle(func(context.Context, struct{}, struct{}) (widgetOut, error) { return widgetOut{}, nil }),
 	))
 )

@@ -7,12 +7,14 @@ import (
 
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/commands/config"
+	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
 var configListCmd = &cobra.Command{
-	Args:    cobra.NoArgs,
-	Example: "  osapi config list\n  osapi config list -f ./osapi.yaml --json",
-	Long:    "Each value shows where it came from: `env`, `file`, `default` or `unset`.\nThe file and the environment are read the way `osapi start` reads them.\nWithout a config file, the values are the defaults and the environment.\nPasswords, signing keys and tokens print as `********`. `--json` carries the\ntype, the default, the rules and the description of each key as well.",
+	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi config list\n\x1b[1;38;2;0;213;255mSettings (3):\x1b[0m\n  \x1b[38;2;10;143;176mKEY                                  \x1b[0m\x1b[38;2;10;143;176mVALUE     \x1b[0m\x1b[38;2;10;143;176mSOURCE   \x1b[0m\x1b[38;2;10;143;176mENV\x1b[0m\n  controller.api.port                  8080      file     OSAPI_CONTROLLER_API_PORT\n  controller.api.security.signing_key  ********  env      OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEY\n  nats.server.port                     4222      default  OSAPI_NATS_SERVER_PORT\n  \x1b[38;2;10;143;176mFile:\x1b[0m  /etc/osapi/osapi.yaml\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"file\": \"/etc/osapi/osapi.yaml\",\n  \"items\": [\n    {\n      \"name\": \"controller.api.port\",\n      \"value\": 8080,\n      \"source\": \"file\",\n      \"env\": \"OSAPI_CONTROLLER_API_PORT\",\n      \"type\": \"int\",\n      \"default\": 8080,\n      \"validate\": \"min=1,max=65535\",\n      \"doc\": \"Port the REST API server listens on.\"\n    },\n    {\n      \"name\": \"controller.api.security.signing_key\",\n      \"value\": \"********\",\n      \"source\": \"env\",\n      \"env\": \"OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEY\",\n      \"type\": \"string\",\n      \"secret\": true\n    },\n    {\n      \"name\": \"nats.server.port\",\n      \"value\": 4222,\n      \"source\": \"default\",\n      \"env\": \"OSAPI_NATS_SERVER_PORT\",\n      \"type\": \"int\",\n      \"default\": 4222\n    }\n  ]\n}\n```"},
+	Args:        cobra.NoArgs,
+	Example:     "  osapi config list\n  osapi config list -f ./osapi.yaml --json",
+	Long:        "Each value shows where it came from: `env`, `file`, `default` or `unset`.\nThe file and the environment are read the way `osapi start` reads them.\nWithout a config file, the values are the defaults and the environment.\nPasswords, signing keys and tokens print as `********`. `--json` carries the\ntype, the default, the rules and the description of each key as well.",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		return clicommand.Run(cmd, config.Group, "list", config.ListInput{})
 	},
@@ -21,9 +23,10 @@ var configListCmd = &cobra.Command{
 }
 
 var configGetCmd = &cobra.Command{
-	Args:    cobra.NoArgs,
-	Example: "  osapi config get --key controller.api.port\n  osapi config get --key agent.labels -f ./osapi.yaml --json",
-	Long:    "It shows the value in effect and where it came from, the environment\nvariable, the type, the default, the rules and the description. An\nenvironment variable wins over the file.",
+	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi config get --key controller.api.port\n\x1b[1;38;2;0;213;255mConfig:\x1b[0m\n  \x1b[38;2;176;48;176mFile:\x1b[0m  /etc/osapi/osapi.yaml\n\n\x1b[1;38;2;255;0;255mSetting:\x1b[0m\n  \x1b[38;2;176;48;176mKey:\x1b[0m          controller.api.port\n  \x1b[38;2;176;48;176mValue:\x1b[0m        8080\n  \x1b[38;2;176;48;176mSource:\x1b[0m       file\n  \x1b[38;2;176;48;176mEnv:\x1b[0m          OSAPI_CONTROLLER_API_PORT\n  \x1b[38;2;176;48;176mType:\x1b[0m         int\n  \x1b[38;2;176;48;176mDefault:\x1b[0m      8080\n  \x1b[38;2;176;48;176mValidate:\x1b[0m     min=1,max=65535\n  \x1b[38;2;176;48;176mDescription:\x1b[0m  Port the REST API server listens on.\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"file\": \"/etc/osapi/osapi.yaml\",\n  \"setting\": {\n    \"name\": \"controller.api.port\",\n    \"value\": 8080,\n    \"source\": \"file\",\n    \"env\": \"OSAPI_CONTROLLER_API_PORT\",\n    \"type\": \"int\",\n    \"default\": 8080,\n    \"validate\": \"min=1,max=65535\",\n    \"doc\": \"Port the REST API server listens on.\"\n  }\n}\n```"},
+	Args:        cobra.NoArgs,
+	Example:     "  osapi config get --key controller.api.port\n  osapi config get --key agent.labels -f ./osapi.yaml --json",
+	Long:        "It shows the value in effect and where it came from, the environment\nvariable, the type, the default, the rules and the description. An\nenvironment variable wins over the file.",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		key, _ := cmd.Flags().GetString("key")
 
@@ -34,9 +37,10 @@ var configGetCmd = &cobra.Command{
 }
 
 var configValidateCmd = &cobra.Command{
-	Args:    cobra.NoArgs,
-	Example: "  osapi config validate\n  osapi config validate -f ./osapi.yaml --json",
-	Long:    "The command starts nothing. It exits 1 when the config is not valid, and\nlists each problem with its rule, the key and the message, then the fix of\neach rule. Each problem in `--json` has `rule`, `key` (when the problem is\nabout one key), `message` and `fix`. `osapi config list` shows each key,\nwith its type, rule and default.\n\nThe rules:\n\n- `file`: The config file exists, and osapi can read it. Fix: Give the path with -f, or put the file at /etc/osapi/osapi.yaml. Check that the user that runs osapi can read it.\n- `parse`: The file is YAML, and each value has the type of its key. Fix: Correct the YAML at the line that the message names. osapi config list shows the type of each key.\n- `value`: Each value passes the validate rule of its key, with the defaults and the environment applied. Fix: Set the key to a value that its rule allows. osapi config get --key <key> shows its rule, type and default.\n- `setting`: Each setting of a behavior, under behaviors.<name>, passes its validate rule. Fix: Set the key to a value that its rule allows. osapi behavior get --name <name> lists the settings of the behavior.\n- `bucket`: Each NATS bucket has its own name. A shared bucket mixes the keys of two roles. Fix: Give one of the two keys that the message names a different bucket.\n",
+	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi config validate\n\x1b[1;38;2;0;213;255mConfig:\x1b[0m\n  \x1b[38;2;10;143;176mFile:\x1b[0m   /etc/osapi/osapi.yaml\n  \x1b[38;2;10;143;176mValid:\x1b[0m  yes\n\n\x1b[1;38;2;255;0;255mProblems (0):\x1b[0m\n  \x1b[38;2;138;138;138mNone.\x1b[0m\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"file\": \"/etc/osapi/osapi.yaml\",\n  \"valid\": true,\n  \"problems\": []\n}\n```"},
+	Args:        cobra.NoArgs,
+	Example:     "  osapi config validate\n  osapi config validate -f ./osapi.yaml --json",
+	Long:        "The command starts nothing. It exits 1 when the config is not valid, and\nlists each problem with its rule, the key and the message, then the fix of\neach rule. Each problem in `--json` has `rule`, `key` (when the problem is\nabout one key), `message` and `fix`. `osapi config list` shows each key,\nwith its type, rule and default.\n\nThe rules:\n\n- `file`: The config file exists, and osapi can read it. Fix: Give the path with -f, or put the file at /etc/osapi/osapi.yaml. Check that the user that runs osapi can read it.\n- `parse`: The file is YAML, and each value has the type of its key. Fix: Correct the YAML at the line that the message names. osapi config list shows the type of each key.\n- `value`: Each value passes the validate rule of its key, with the defaults and the environment applied. Fix: Set the key to a value that its rule allows. osapi config get --key <key> shows its rule, type and default.\n- `setting`: Each setting of a behavior, under behaviors.<name>, passes its validate rule. Fix: Set the key to a value that its rule allows. osapi behavior get --name <name> lists the settings of the behavior.\n- `bucket`: Each NATS bucket has its own name. A shared bucket mixes the keys of two roles. Fix: Give one of the two keys that the message names a different bucket.\n",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		return clicommand.Run(cmd, config.Group, "validate", config.ValidateInput{})
 	},

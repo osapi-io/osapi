@@ -22,6 +22,7 @@ package commandgen
 
 import (
 	"encoding/json"
+	"slices"
 	"strings"
 	"time"
 
@@ -50,50 +51,79 @@ func (docsPrinter) Time(
 	return t.UTC().Format("2006-01-02 15:04:05")
 }
 
-// Outputs are the outputs of the examples of m that Prints gave one: for
-// each, the command line and what the CLI prints for it, in a fenced ansi
-// block, then the API's response as --json prints it. line is the command
+// Outputs are the outputs of the examples of m: each example that Prints
+// gave one, or, for a method that answers with no body, each example
+// without --json. For each, the command line and what the CLI prints for
+// it, in a fenced ansi block, then what --json prints. line is the command
 // with its group, such as osapi client agent list.
 func Outputs(
 	g command.Group,
 	m command.Command,
 	line string,
 ) string {
-	var sections []string
+	_, local := g.(*command.LocalGroup)
+	jsonDoc := "With `--json`, the API's response:"
+	if local {
+		jsonDoc = "With `--json`, the command prints:"
+	}
+	sections := make([]string, 0, len(m.Examples()))
 	for _, ex := range m.Examples() {
-		if ex.Output == nil {
+		var in any
+		var answer, body []byte
+		switch {
+		case ex.Output != nil:
+			// An output is a value of a Go type, which always encodes.
+			answer, _ = json.Marshal(ex.Output)
+			body, _ = json.MarshalIndent(ex.Output, "", "  ")
+		case !slices.Contains(strings.Fields(ex.Flags), "--json"):
+			i, done, ok := command.Done(g, m, ex.Flags)
+			if !ok {
+				continue
+			}
+			in, body = i, done
+		default:
 			continue
 		}
-		// An output is a value of a Go type, which always encodes.
-		answer, _ := json.Marshal(ex.Output)
-		body, _ := json.MarshalIndent(ex.Output, "", "  ")
-		printed := screen(g, m, answer)
+		printed := screen(g, m, in, answer, !local)
+		said := jsonDoc
+		if in != nil {
+			// A method with no body answers nothing: the CLI writes the JSON.
+			said = "With `--json`, the command prints:"
+		}
 		doc := ex.Doc
 		if doc == "" {
 			doc = "The command prints"
 		}
 		cmd := strings.TrimRight(line+" "+ex.Flags, " ")
 		sections = append(sections, doc+":\n\n```ansi\n$ "+cmd+"\n"+printed+"\n```\n\n"+
-			"With `--json`, the API's response:\n\n```json\n"+string(body)+"\n```")
+			said+"\n\n```json\n"+string(body)+"\n```")
 	}
 
 	return strings.Join(sections, "\n\n")
 }
 
-// screen is what the CLI prints for answer, the JSON of m's output.
+// screen is what the CLI prints for answer, the JSON of m's output, to the
+// input in. traced is true for a command that calls the API, which ends
+// with the trace of its call.
 func screen(
 	g command.Group,
 	m command.Command,
+	in any,
 	answer []byte,
+	traced bool,
 ) string {
 	command.SetNow(ExampleNow)
 	defer command.SetNow(time.Time{})
 	printed := cli.Capture(func() {
-		cli.PrintTraceID(ExampleTraceID)
-		if err := command.Derive(docsPrinter{}, g, m, nil, answer); err != nil {
+		if traced {
+			cli.PrintTraceID(ExampleTraceID)
+		}
+		if err := command.Derive(docsPrinter{}, g, m, in, answer); err != nil {
 			panic("example output of " + g.GroupName() + " " + m.MethodName() + ": " + err.Error())
 		}
-		cli.FlushTraceID()
+		if traced {
+			cli.FlushTraceID()
+		}
 	})
 
 	return strings.Trim(printed, "\n")

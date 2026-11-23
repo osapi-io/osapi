@@ -26,6 +26,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osapi-io/osapi/internal/cli/command"
 	commandgen "github.com/osapi-io/osapi/internal/cli/command/gen"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
@@ -80,6 +81,43 @@ func (s *OutputsPublicTestSuite) TestOutputs() {
 			}
 		})
 	}
+}
+
+func (s *OutputsPublicTestSuite) TestOutputsLocal() {
+	g := command.Define("zzlocalout", "Local",
+		command.Method[noIn, node]("get").Example("").Prints(node{Name: "web-01"}))
+	got := ansi.ReplaceAllString(commandgen.Outputs(g, g.Methods[0], "osapi zzlocalout get"), "")
+	s.Contains(got, "web-01")
+	s.Contains(got, "With `--json`, the command prints:")
+	s.NotContains(got, "trace", "a local command calls no API, so it has no trace")
+}
+
+func (s *OutputsPublicTestSuite) TestOutputsNoBody() {
+	type drainIn struct {
+		Hostname string `json:"hostname" in:"path"`
+	}
+	g := endpoint.Define("zznobody", "No body",
+		endpoint.Post[drainIn, struct{}]("drain").
+			Says("draining").
+			Example("--hostname web-01").
+			Example("--hostname web-01 --json"),
+	)
+	got := ansi.ReplaceAllString(
+		commandgen.Outputs(g, g.Methods[0], "osapi client zznobody drain"),
+		"",
+	)
+	s.Contains(got, "$ osapi client zznobody drain --hostname web-01\n")
+	s.Contains(got, "web-01 draining")
+	s.Contains(got, "trace "+commandgen.ExampleTraceID)
+	s.Contains(
+		got,
+		"With `--json`, the command prints:\n\n```json\n{\"hostname\":\"web-01\",\"result\":\"draining\"}",
+	)
+	s.NotContains(
+		got,
+		"--hostname web-01 --json",
+		"an example with --json shows no output of its own",
+	)
 }
 
 func (s *OutputsPublicTestSuite) TestOutputsNone() {

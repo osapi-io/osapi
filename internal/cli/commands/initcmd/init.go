@@ -44,6 +44,7 @@ var Group = command.Register(command.Define(
 			"Thus the agent does not read a skill about operations that the binary does\n"+
 			"not have now.").
 		Example("").
+		Prints(sampleInit).
 		Example("--tool claude --tool codex").
 		Example("--path ./ops-repo --json").
 		Fails("an unknown tool", Input{Tools: []string{"vim"}}).

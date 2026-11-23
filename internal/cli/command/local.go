@@ -315,6 +315,7 @@ type LocalMethod struct {
 	sub, short, long string
 	says             string
 	process          bool
+	unprinted        bool
 	keys             []string
 	examples         []Example
 	refusals         []Refusal
@@ -402,6 +403,24 @@ func (m *LocalMethod) Example(
 	doc ...string,
 ) *LocalMethod {
 	m.examples = append(m.examples, Example{Flags: flags, Doc: strings.Join(doc, " ")})
+
+	return m
+}
+
+// Prints gives the last Example its output: what the command prints, a
+// value of the method's output type. The docs page of the command shows it
+// as the CLI prints it, and as JSON for --json. validate refuses a value of
+// another type, Prints before an Example, and a method with output that no
+// example Prints.
+func (m *LocalMethod) Prints(
+	out any,
+) *LocalMethod {
+	if len(m.examples) == 0 {
+		m.unprinted = true
+
+		return m
+	}
+	m.examples[len(m.examples)-1].Output = out
 
 	return m
 }

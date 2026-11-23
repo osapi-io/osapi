@@ -20,6 +20,26 @@ osapi cli docs dsl generate
 osapi cli docs dsl generate --dir /tmp/dsl
 ```
 
+## Result
+
+The command prints:
+
+```ansi
+$ osapi cli docs dsl generate
+[1;38;2;0;213;255mDSL reference:[0m
+  [38;2;10;143;176mDir:[0m    docs/docs/sidebar/development/dsl
+  [38;2;10;143;176mPages:[0m  7
+```
+
+With `--json`, the command prints:
+
+```json
+{
+  "dir": "docs/docs/sidebar/development/dsl",
+  "pages": 7
+}
+```
+
 ## Flags
 
 | Flag    | Description                | Default                             |
