@@ -58,6 +58,9 @@ type Client struct {
 	// targetResolver resolves a target (hostname or machine ID) to the
 	// value used for NATS subject routing. When nil, the target is used as-is.
 	targetResolver func(ctx context.Context, target string) string
+	// consumers looks up and removes a consumer whose deliver policy
+	// changed. Nil when the client does not make consumers.
+	consumers ConsumerStore
 	// agentKeyStore verifies agent responses against the key recorded when
 	// the agent was accepted. Nil when the controller is not enforcing, in
 	// which case responses are handled exactly as they were before
@@ -88,6 +91,10 @@ type Options struct {
 	// TargetResolver resolves hostname targets to machine IDs for NATS
 	// subject routing. When nil, targets are used as-is.
 	TargetResolver func(ctx context.Context, target string) string
+	// Consumers looks up and removes a consumer, so CreateOrUpdateConsumer
+	// can make again a consumer whose deliver policy changed. When nil, a
+	// refused update is returned as is.
+	Consumers ConsumerStore
 }
 
 // New creates a new jobs client using an existing NATS client.
@@ -115,6 +122,7 @@ func New(
 		JSONMarshalFn:  json.Marshal,
 		pkiSigner:      opts.PKISigner,
 		targetResolver: opts.TargetResolver,
+		consumers:      opts.Consumers,
 	}, nil
 }
 

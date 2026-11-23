@@ -412,11 +412,17 @@ func (a *Agent) createConsumer(
 		replayPolicy = jetstream.ReplayInstantPolicy
 	}
 
+	// A consumer gets only the jobs that come after NATS makes it. A new
+	// consumer, such as one of a new host or a new label, thus does not run
+	// the jobs that the stream kept from before it existed. A durable
+	// consumer keeps its position, so an agent that starts again gets the
+	// jobs that came while it was gone. NATS does not change the deliver
+	// policy of a consumer that exists.
 	consumerConfig := jetstream.ConsumerConfig{
 		Durable:           consumerName,
 		FilterSubject:     filterSubject,
 		AckPolicy:         jetstream.AckExplicitPolicy,
-		DeliverPolicy:     jetstream.DeliverAllPolicy,
+		DeliverPolicy:     jetstream.DeliverNewPolicy,
 		MaxDeliver:        a.appConfig.Agent.Consumer.MaxDeliver,
 		AckWait:           ackWait,
 		BackOff:           backOff,

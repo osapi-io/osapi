@@ -198,11 +198,45 @@ func (c *Client) GetJobData(
 }
 
 // CreateOrUpdateConsumer creates or updates a JetStream consumer.
+//
+// NATS refuses to change the deliver policy of a consumer that exists. When
+// the update fails and the existing consumer has a different deliver policy,
+// such as a consumer that an earlier build made, the client removes it and
+// makes it again with consumerConfig. Thus an upgraded agent gets its
+// consumers without a person. The new consumer starts at its own deliver
+// policy, not at the position of the old one.
 func (c *Client) CreateOrUpdateConsumer(
 	ctx context.Context,
 	streamName string,
 	consumerConfig jetstream.ConsumerConfig,
 ) error {
+	err := c.natsClient.ConsumerCreateOrUpdate(ctx, streamName, consumerConfig)
+	if err == nil || c.consumers == nil {
+		return err
+	}
+
+	name := consumerConfig.Durable
+	existing, lookupErr := c.consumers.Consumer(ctx, streamName, name)
+	if lookupErr != nil {
+		return err
+	}
+	old := existing.CachedInfo().Config.DeliverPolicy
+	if old == consumerConfig.DeliverPolicy {
+		return err
+	}
+
+	if err := c.consumers.DeleteConsumer(ctx, streamName, name); err != nil {
+		return fmt.Errorf("delete consumer %s to change its deliver policy: %w", name, err)
+	}
+
+	c.logger.Warn(
+		"made the consumer again with a new deliver policy",
+		slog.String("stream", streamName),
+		slog.String("consumer", name),
+		slog.String("old_deliver_policy", old.String()),
+		slog.String("new_deliver_policy", consumerConfig.DeliverPolicy.String()),
+	)
+
 	return c.natsClient.ConsumerCreateOrUpdate(ctx, streamName, consumerConfig)
 }
 

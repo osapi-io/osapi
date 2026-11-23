@@ -506,7 +506,7 @@ func (s *ConsumerPublicTestSuite) TestCreateConsumer() {
 						s.Equal("test-consumer", cfg.Durable)
 						s.Equal("jobs.query._any", cfg.FilterSubject)
 						s.Equal(jetstream.AckExplicitPolicy, cfg.AckPolicy)
-						s.Equal(jetstream.DeliverAllPolicy, cfg.DeliverPolicy)
+						s.Equal(jetstream.DeliverNewPolicy, cfg.DeliverPolicy)
 						s.Equal(3, cfg.MaxDeliver)
 						s.Equal(30*time.Second, cfg.AckWait)
 						s.Len(cfg.BackOff, 3)

@@ -72,9 +72,16 @@ does not keep its old consumers in the stream. An agent that starts again in
 that time continues with the same consumers. The agent sets the threshold each
 time it starts, so a consumer that had no threshold gets it.
 
-Keep the threshold at or above `nats.stream.max_age`. A new consumer gets each
-job that is in the stream. When the threshold is longer than the stream keeps a
-job, that is only the jobs that came while the agent was gone.
+A new consumer gets only the jobs that come after NATS makes it. Thus a new host
+or a new label does not run the jobs that the stream kept from before. An agent
+that starts again with the same consumers gets the jobs that came while it was
+gone. Keep the threshold at or above `nats.stream.max_age`. Then the consumer of
+an agent that was gone stays while the stream keeps a job for it.
+
+NATS does not change the deliver policy of a consumer that exists. When the
+agent finds a consumer with a different deliver policy, such as one that an
+earlier version made, it removes the consumer, makes it again and logs a
+warning. Thus an upgraded agent gets its consumers with no operator action.
 
 If the agent cannot make or bind a consumer, for example when the stream has its
 maximum number of consumers, it reports the `ConsumersUnavailable` condition and

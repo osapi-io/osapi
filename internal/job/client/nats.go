@@ -56,5 +56,12 @@ type NATSClient interface {
 	) (<-chan jetstream.KeyValueEntry, error)
 }
 
+// ConsumerStore looks up and removes a JetStream consumer. The JetStream
+// API of a *natsclient.Client (its ExtJS) is one.
+type ConsumerStore interface {
+	Consumer(ctx context.Context, stream string, consumer string) (jetstream.Consumer, error)
+	DeleteConsumer(ctx context.Context, stream string, consumer string) error
+}
+
 // Ensure natsclient.Client implements NATSClient interface.
 var _ NATSClient = (*natsclient.Client)(nil)

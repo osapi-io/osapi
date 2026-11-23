@@ -628,20 +628,31 @@ func (s *AgentPublicTestSuite) TestHasJobResponse() {
 }
 
 func (s *AgentPublicTestSuite) TestCreateOrUpdateConsumer() {
+	refused := errors.New("deliver policy can not be updated")
+	cfg := jetstream.ConsumerConfig{
+		Durable:       "test-consumer",
+		DeliverPolicy: jetstream.DeliverNewPolicy,
+	}
+	existing := func(policy jetstream.DeliverPolicy) jetstream.Consumer {
+		c := jobmocks.NewMockConsumer(s.mockCtrl)
+		c.EXPECT().CachedInfo().Return(&jetstream.ConsumerInfo{
+			Config: jetstream.ConsumerConfig{DeliverPolicy: policy},
+		})
+
+		return c
+	}
+
 	tests := []struct {
-		name           string
-		streamName     string
-		consumerConfig jetstream.ConsumerConfig
-		setupMocks     func()
-		validateFunc   func(error)
+		name         string
+		withStore    bool
+		setupMocks   func(store *jobmocks.MockConsumerStore)
+		validateFunc func(error)
 	}{
 		{
-			name:           "successful consumer creation",
-			streamName:     "test-stream",
-			consumerConfig: jetstream.ConsumerConfig{Name: "test-consumer"},
-			setupMocks: func() {
+			name: "successful consumer creation",
+			setupMocks: func(_ *jobmocks.MockConsumerStore) {
 				s.mockNATSClient.EXPECT().
-					ConsumerCreateOrUpdate(gomock.Any(), "test-stream", jetstream.ConsumerConfig{Name: "test-consumer"}).
+					ConsumerCreateOrUpdate(gomock.Any(), "test-stream", cfg).
 					Return(nil)
 			},
 			validateFunc: func(err error) {
@@ -649,28 +660,128 @@ func (s *AgentPublicTestSuite) TestCreateOrUpdateConsumer() {
 			},
 		},
 		{
-			name:           "consumer creation error",
-			streamName:     "test-stream",
-			consumerConfig: jetstream.ConsumerConfig{Name: "test-consumer"},
-			setupMocks: func() {
+			name: "consumer creation error without a consumer store",
+			setupMocks: func(_ *jobmocks.MockConsumerStore) {
 				s.mockNATSClient.EXPECT().
-					ConsumerCreateOrUpdate(gomock.Any(), "test-stream", jetstream.ConsumerConfig{Name: "test-consumer"}).
+					ConsumerCreateOrUpdate(gomock.Any(), "test-stream", cfg).
 					Return(errors.New("consumer creation failed"))
 			},
 			validateFunc: func(err error) {
-				s.Error(err)
-				s.Contains(err.Error(), "consumer creation failed")
+				s.ErrorContains(err, "consumer creation failed")
+			},
+		},
+		{
+			name:      "when the deliver policy changed the consumer is made again",
+			withStore: true,
+			setupMocks: func(store *jobmocks.MockConsumerStore) {
+				gomock.InOrder(
+					s.mockNATSClient.EXPECT().
+						ConsumerCreateOrUpdate(gomock.Any(), "test-stream", cfg).
+						Return(refused),
+					store.EXPECT().
+						Consumer(gomock.Any(), "test-stream", "test-consumer").
+						Return(existing(jetstream.DeliverAllPolicy), nil),
+					store.EXPECT().
+						DeleteConsumer(gomock.Any(), "test-stream", "test-consumer").
+						Return(nil),
+					s.mockNATSClient.EXPECT().
+						ConsumerCreateOrUpdate(gomock.Any(), "test-stream", cfg).
+						Return(nil),
+				)
+			},
+			validateFunc: func(err error) {
+				s.NoError(err)
+			},
+		},
+		{
+			name:      "when the consumer is made again and the create fails",
+			withStore: true,
+			setupMocks: func(store *jobmocks.MockConsumerStore) {
+				gomock.InOrder(
+					s.mockNATSClient.EXPECT().
+						ConsumerCreateOrUpdate(gomock.Any(), "test-stream", cfg).
+						Return(refused),
+					store.EXPECT().
+						Consumer(gomock.Any(), "test-stream", "test-consumer").
+						Return(existing(jetstream.DeliverAllPolicy), nil),
+					store.EXPECT().
+						DeleteConsumer(gomock.Any(), "test-stream", "test-consumer").
+						Return(nil),
+					s.mockNATSClient.EXPECT().
+						ConsumerCreateOrUpdate(gomock.Any(), "test-stream", cfg).
+						Return(errors.New("create failed")),
+				)
+			},
+			validateFunc: func(err error) {
+				s.ErrorContains(err, "create failed")
+			},
+		},
+		{
+			name:      "when the delete of the old consumer fails",
+			withStore: true,
+			setupMocks: func(store *jobmocks.MockConsumerStore) {
+				s.mockNATSClient.EXPECT().
+					ConsumerCreateOrUpdate(gomock.Any(), "test-stream", cfg).
+					Return(refused)
+				store.EXPECT().
+					Consumer(gomock.Any(), "test-stream", "test-consumer").
+					Return(existing(jetstream.DeliverAllPolicy), nil)
+				store.EXPECT().
+					DeleteConsumer(gomock.Any(), "test-stream", "test-consumer").
+					Return(errors.New("delete failed"))
+			},
+			validateFunc: func(err error) {
+				s.ErrorContains(err, "delete consumer test-consumer to change its deliver policy")
+				s.ErrorContains(err, "delete failed")
+			},
+		},
+		{
+			name:      "when the deliver policy is the same the error is returned",
+			withStore: true,
+			setupMocks: func(store *jobmocks.MockConsumerStore) {
+				s.mockNATSClient.EXPECT().
+					ConsumerCreateOrUpdate(gomock.Any(), "test-stream", cfg).
+					Return(errors.New("max consumers"))
+				store.EXPECT().
+					Consumer(gomock.Any(), "test-stream", "test-consumer").
+					Return(existing(jetstream.DeliverNewPolicy), nil)
+			},
+			validateFunc: func(err error) {
+				s.ErrorContains(err, "max consumers")
+			},
+		},
+		{
+			name:      "when the consumer lookup fails the error is returned",
+			withStore: true,
+			setupMocks: func(store *jobmocks.MockConsumerStore) {
+				s.mockNATSClient.EXPECT().
+					ConsumerCreateOrUpdate(gomock.Any(), "test-stream", cfg).
+					Return(errors.New("max consumers"))
+				store.EXPECT().
+					Consumer(gomock.Any(), "test-stream", "test-consumer").
+					Return(nil, jetstream.ErrConsumerNotFound)
+			},
+			validateFunc: func(err error) {
+				s.ErrorContains(err, "max consumers")
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			tt.setupMocks()
+			store := jobmocks.NewMockConsumerStore(s.mockCtrl)
+			jobsClient := s.jobsClient
+			if tt.withStore {
+				var err error
+				jobsClient, err = client.New(slog.Default(), s.mockNATSClient, &client.Options{
+					JobsBucket: "jobs",
+					Consumers:  store,
+				})
+				s.Require().NoError(err)
+			}
+			tt.setupMocks(store)
 
-			tt.validateFunc(
-				s.jobsClient.CreateOrUpdateConsumer(s.ctx, tt.streamName, tt.consumerConfig),
-			)
+			tt.validateFunc(jobsClient.CreateOrUpdateConsumer(s.ctx, "test-stream", cfg))
 		})
 	}
 }
