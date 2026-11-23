@@ -23,6 +23,7 @@ package validation
 import (
 	"context"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -363,4 +364,93 @@ func ResolveTarget(
 	}
 
 	return target
+}
+
+// ScopeEntry reports whether s can be an entry of a token's target scope: a
+// hostname, such as web-01, or a label, such as group:web. _all, _any and
+// _local cannot: a scope names hosts, and those name each host.
+func ScopeEntry(
+	s string,
+) bool {
+	if i := strings.IndexByte(s, ':'); i >= 0 {
+		return i > 0 && i < len(s)-1 && isValidLabelFormat(s[:i], s[i+1:])
+	}
+
+	return !strings.HasPrefix(s, "_") && dnsNamePattern.MatchString(s)
+}
+
+// InScope reports whether a token whose target scope is scope may send work
+// to target. An empty scope covers each target. A scoped token never covers
+// _all or _any, because those reach hosts outside the scope.
+//
+// A label target, such as group:web.dev, is in the scope when a label of the
+// scope is the same label or a prefix of it, as group:web is. A host target
+// is in the scope when the scope names the host, or when the agent that the
+// target resolves to has a label that a label of the scope covers.
+func InScope(
+	ctx context.Context,
+	target string,
+	scope []string,
+) bool {
+	if len(scope) == 0 {
+		return true
+	}
+
+	if target == "_any" || target == "_all" {
+		return false
+	}
+
+	if i := strings.IndexByte(target, ':'); i >= 0 {
+		key, value := target[:i], target[i+1:]
+		for _, s := range scope {
+			if sk, sv, ok := strings.Cut(s, ":"); ok && sk == key && labelCovers(sv, value) {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	if slices.Contains(scope, target) {
+		return true
+	}
+
+	if agentLister == nil {
+		return false
+	}
+
+	agents, err := getAgents(ctx, spanResolve, target)
+	if err != nil {
+		return false
+	}
+
+	machineID := ResolveTarget(ctx, target)
+	for _, a := range agents {
+		if a.MachineID != machineID || !resolvable(a) {
+			continue
+		}
+		if slices.Contains(scope, a.Hostname) {
+			return true
+		}
+		for _, s := range scope {
+			sk, sv, ok := strings.Cut(s, ":")
+			if !ok {
+				continue
+			}
+			if av, has := a.Labels[sk]; has && labelCovers(sv, av) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+// labelCovers reports whether the label value scope covers value: the same
+// value, or a value under it, as web covers web.dev.
+func labelCovers(
+	scope string,
+	value string,
+) bool {
+	return value == scope || strings.HasPrefix(value, scope+".")
 }

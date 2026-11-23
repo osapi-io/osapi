@@ -65,7 +65,7 @@ func token(
 	roles []string,
 	perms ...string,
 ) string {
-	t, _ := authtoken.New(slog.Default()).Generate(signingKey, roles, "test", perms)
+	t, _ := authtoken.New(slog.Default()).Generate(signingKey, roles, "test", perms, nil)
 
 	return t
 }

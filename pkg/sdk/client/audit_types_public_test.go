@@ -70,6 +70,7 @@ func (s *AuditTypesPublicTestSuite) TestAuditEntryFromGen() {
 				Timestamp:    now,
 				User:         "admin@example.com",
 				Roles:        []string{"admin", "write"},
+				Targets:      &[]string{"group:web"},
 				Method:       "GET",
 				Path:         "/api/v1/node/web-01",
 				ResponseCode: 200,
@@ -82,6 +83,7 @@ func (s *AuditTypesPublicTestSuite) TestAuditEntryFromGen() {
 				s.Equal(now, a.Timestamp)
 				s.Equal("admin@example.com", a.User)
 				s.Equal([]string{"admin", "write"}, a.Roles)
+				s.Equal([]string{"group:web"}, a.Targets)
 				s.Equal("GET", a.Method)
 				s.Equal("/api/v1/node/web-01", a.Path)
 				s.Equal(200, a.ResponseCode)

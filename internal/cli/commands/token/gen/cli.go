@@ -13,13 +13,14 @@ import (
 var tokenGenerateCmd = &cobra.Command{
 	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi token generate --subject user123 --roles=read\n\x1b[1;38;2;0;213;255mToken:\x1b[0m\n  \x1b[38;2;10;143;176mToken:\x1b[0m    eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwicm9sZXMiOlsicmVhZCJdfQ.Xq3a8Zt0n2Jv5k7XqW1yR4sB6cD9eF0gH2iJ3kL5mN8\n  \x1b[38;2;10;143;176mSubject:\x1b[0m  user123\n  \x1b[38;2;10;143;176mRoles:\x1b[0m    read\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwicm9sZXMiOlsicmVhZCJdfQ.Xq3a8Zt0n2Jv5k7XqW1yR4sB6cD9eF0gH2iJ3kL5mN8\",\n  \"subject\": \"user123\",\n  \"roles\": [\n    \"read\"\n  ]\n}\n```"},
 	Args:        cobra.NoArgs,
-	Example:     "  osapi token generate --subject user123 --roles=read\n  osapi token generate --subject svc@example.com --roles=read \\\n    -p status:read -p health:read",
+	Example:     "  osapi token generate --subject user123 --roles=read\n  osapi token generate --subject svc@example.com --roles=read \\\n    -p status:read -p health:read\n  osapi token generate --subject team-web --roles=operator \\\n    -t group:web -t web-01",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		roles, _ := cmd.Flags().GetStringSlice("roles")
 		subject, _ := cmd.Flags().GetString("subject")
 		permissions, _ := cmd.Flags().GetStringSlice("permissions")
+		targets, _ := cmd.Flags().GetStringSlice("targets")
 
-		return clicommand.Run(cmd, token.Group, "generate", token.GenerateInput{Roles: roles, Subject: subject, Permissions: permissions})
+		return clicommand.Run(cmd, token.Group, "generate", token.GenerateInput{Roles: roles, Subject: subject, Permissions: permissions, Targets: targets})
 	},
 	Short: "Generate a new token",
 	Use:   "generate",
@@ -75,6 +76,7 @@ func init() {
 	tokenGenerateCmd.Flags().StringP("subject", "u", "", "Subject for the token (e.g., user ID or unique identifier)")
 	_ = tokenGenerateCmd.MarkFlagRequired("subject")
 	tokenGenerateCmd.Flags().StringSliceP("permissions", "p", nil, "Direct permissions, which override the roles; osapi token roles get --name admin lists each one")
+	tokenGenerateCmd.Flags().StringSliceP("targets", "t", nil, "Hosts the token may act on: hostnames and labels, such as group:web; without it, each host")
 	tokenRolesGetCmd.Flags().String("name", "", "The role, such as admin, or a custom role of the config")
 	_ = tokenRolesGetCmd.MarkFlagRequired("name")
 	tokenValidateCmd.Flags().StringP("token", "t", "", "The Token string")

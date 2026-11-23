@@ -41,18 +41,18 @@ func (m *MockTokens) EXPECT() *MockTokensMockRecorder {
 }
 
 // Generate mocks base method.
-func (m *MockTokens) Generate(signingKey string, roles []string, subject string, permissions []string) (string, error) {
+func (m *MockTokens) Generate(signingKey string, roles []string, subject string, permissions, targets []string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Generate", signingKey, roles, subject, permissions)
+	ret := m.ctrl.Call(m, "Generate", signingKey, roles, subject, permissions, targets)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Generate indicates an expected call of Generate.
-func (mr *MockTokensMockRecorder) Generate(signingKey, roles, subject, permissions any) *gomock.Call {
+func (mr *MockTokensMockRecorder) Generate(signingKey, roles, subject, permissions, targets any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Generate", reflect.TypeOf((*MockTokens)(nil).Generate), signingKey, roles, subject, permissions)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Generate", reflect.TypeOf((*MockTokens)(nil).Generate), signingKey, roles, subject, permissions, targets)
 }
 
 // Validate mocks base method.

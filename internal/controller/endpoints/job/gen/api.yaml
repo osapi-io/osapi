@@ -456,7 +456,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: Forbidden - Insufficient permissions
+          description: Insufficient permissions, or a target outside the token's target scope.
         "404":
           content:
             application/json:

@@ -55,6 +55,7 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 		jobID        string
 		subject      string
 		roles        []string
+		targets      []string
 		storeErr     error
 		wantWrite    bool
 		setupReq     func(req *http.Request) *http.Request
@@ -73,6 +74,18 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 				s.Equal("/api/node/hostname", entry.Path)
 				s.Equal(http.StatusOK, entry.ResponseCode)
 				s.Equal([]string{"admin"}, entry.Roles)
+				s.Empty(entry.Targets)
+			},
+		},
+		{
+			name:      "the target scope of the token is recorded",
+			path:      "/api/node/web-01/hostname",
+			subject:   "team-web",
+			roles:     []string{"operator"},
+			targets:   []string{"group:web"},
+			wantWrite: true,
+			validateFunc: func(entry audit.Entry) {
+				s.Equal([]string{"group:web"}, entry.Targets)
 			},
 		},
 		{
@@ -266,6 +279,7 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 				if tt.subject != "" {
 					c.Set(api.ContextKeySubject, tt.subject)
 					c.Set(api.ContextKeyRoles, tt.roles)
+					c.Set(api.ContextKeyTargets, tt.targets)
 				}
 
 				if c.Request().Body != nil {

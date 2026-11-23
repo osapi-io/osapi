@@ -35,5 +35,9 @@ type Token struct {
 type CustomClaims struct {
 	Roles       []string `json:"roles"                 validate:"required,dive,required"`
 	Permissions []string `json:"permissions,omitempty"`
+	// Targets are the hosts that the token may act on: hostnames and
+	// labels, such as web-01 or group:web. A token without targets acts on
+	// each host.
+	Targets []string `json:"targets,omitempty" validate:"omitempty,dive,target_scope"`
 	jwt.RegisteredClaims
 }

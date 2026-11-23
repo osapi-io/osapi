@@ -81,7 +81,7 @@ func (s *AllPublicTestSuite) TestRefusals() {
 			}
 		}
 	}
-	token, err := authtoken.New(slog.Default()).Generate(key, []string{"admin"}, "test", perms)
+	token, err := authtoken.New(slog.Default()).Generate(key, []string{"admin"}, "test", perms, nil)
 	s.Require().NoError(err)
 
 	// Each group gets an empty Deps: the API refuses each input before a

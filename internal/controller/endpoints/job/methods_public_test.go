@@ -324,9 +324,42 @@ func (s *MethodsPublicTestSuite) TestRetry() {
 	tests := []struct {
 		name         string
 		target       string
+		scope        []string
 		setup        func()
 		validateFunc func(jobgroup.CreateJobResponse, error)
 	}{
+		{
+			name:  "when a scoped token retries without a target, it is ErrOutOfScope",
+			scope: []string{"group:web"},
+			setup: func() {},
+			validateFunc: func(_ jobgroup.CreateJobResponse, err error) {
+				s.ErrorIs(err, jobgroup.ErrOutOfScope)
+				s.ErrorContains(err, "_any")
+			},
+		},
+		{
+			name:   "when a scoped token retries to a target outside its scope, it is ErrOutOfScope",
+			target: "group:db",
+			scope:  []string{"group:web"},
+			setup:  func() {},
+			validateFunc: func(_ jobgroup.CreateJobResponse, err error) {
+				s.ErrorIs(err, jobgroup.ErrOutOfScope)
+			},
+		},
+		{
+			name:   "when a scoped token retries to a target in its scope, the job is sent",
+			target: "group:web.dev",
+			scope:  []string{"group:web"},
+			setup: func() {
+				s.jobs.EXPECT().
+					RetryJob(gomock.Any(), jobID, "group:web.dev").
+					Return(&client.CreateJobResult{JobID: newJobID}, nil)
+			},
+			validateFunc: func(got jobgroup.CreateJobResponse, err error) {
+				s.Require().NoError(err)
+				s.Equal(newJobID, got.JobID)
+			},
+		},
 		{
 			name:   "when the job is there, it answers the new job",
 			target: "web-01",
@@ -386,7 +419,8 @@ func (s *MethodsPublicTestSuite) TestRetry() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			tc.setup()
-			tc.validateFunc(jobgroup.Retry(context.Background(), s.deps(), jobgroup.RetryInput{
+			ctx := authtoken.WithTargets(context.Background(), tc.scope)
+			tc.validateFunc(jobgroup.Retry(ctx, s.deps(), jobgroup.RetryInput{
 				ID: jobID, Body: jobgroup.RetryJobRequest{TargetHostname: tc.target},
 			}))
 		})
@@ -396,7 +430,18 @@ func (s *MethodsPublicTestSuite) TestRetry() {
 func token(
 	perms ...string,
 ) string {
-	t, _ := authtoken.New(slog.Default()).Generate(signingKey, []string{"read"}, "test", perms)
+	t, _ := authtoken.New(slog.Default()).Generate(signingKey, []string{"read"}, "test", perms, nil)
+
+	return t
+}
+
+// scopedToken is a token with perms that may act only on targets.
+func scopedToken(
+	targets []string,
+	perms ...string,
+) string {
+	t, _ := authtoken.New(slog.Default()).
+		Generate(signingKey, []string{"read"}, "test", perms, targets)
 
 	return t
 }
@@ -539,6 +584,14 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 			},
 			wantCode: http.StatusCreated,
 			wantLoc:  "/api/job/" + newJobID,
+		},
+		{
+			name:     "when a scoped token retries to _any, it is a 403",
+			method:   http.MethodPost,
+			path:     "/api/job/" + jobID + "/retry",
+			token:    scopedToken([]string{"group:web"}, "job:write"),
+			setup:    func() {},
+			wantCode: http.StatusForbidden,
 		},
 		{
 			name:     "when the retry's target is not a valid target, it is a 400",

@@ -179,6 +179,7 @@ schema AuditEntry.request_summary = string
 schema AuditEntry.response_code! = integer
 schema AuditEntry.roles! = [string]
 schema AuditEntry.source_ip! = string
+schema AuditEntry.targets = [string]
 schema AuditEntry.timestamp! = string/date-time
 schema AuditEntry.trace_id = string
 schema AuditEntry.user! = string

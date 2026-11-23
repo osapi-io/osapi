@@ -165,6 +165,7 @@ func toEntry(
 		Timestamp:      e.Timestamp,
 		User:           e.User,
 		Roles:          e.Roles,
+		Targets:        e.Targets,
 		Method:         e.Method,
 		Path:           e.Path,
 		OperationID:    e.OperationID,

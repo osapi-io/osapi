@@ -36,6 +36,7 @@ import (
 const (
 	ContextKeySubject = "auth.subject"
 	ContextKeyRoles   = "auth.roles"
+	ContextKeyTargets = "auth.targets"
 )
 
 // TokenValidator parses and validates JWT tokens.
@@ -57,8 +58,23 @@ func ScopeMiddleware(
 	return StrictHandlerFunc(
 		func(ctx *echo.Context, request interface{}) (response interface{}, err error) {
 			// handle runs the handler, then marks that it has its answer, so the
-			// encode of the response after it is a span of its own.
+			// encode of the response after it is a span of its own. A route
+			// with a host in its path runs only when the host is in the
+			// token's target scope.
 			handle := func() (interface{}, error) {
+				target := ctx.Param("hostname")
+				if target != "" && !authtoken.InScope(ctx.Request().Context(), target) {
+					errMsg := fmt.Sprintf(
+						"Target %q is outside the token's target scope: %v",
+						target,
+						authtoken.TargetsFrom(ctx.Request().Context()),
+					)
+					return nil, ctx.JSON(http.StatusForbidden, endpoint.ErrorResponse{
+						Error:  errMsg,
+						Reason: endpoint.ReasonForbidden,
+					})
+				}
+
 				response, err := handler(ctx, request)
 				respspan.Handled(ctx)
 
@@ -85,6 +101,10 @@ func ScopeMiddleware(
 			// Inject user identity into context for handlers and audit logging.
 			ctx.Set(ContextKeySubject, claims.Subject)
 			ctx.Set(ContextKeyRoles, claims.Roles)
+			ctx.Set(ContextKeyTargets, claims.Targets)
+			ctx.SetRequest(ctx.Request().WithContext(
+				authtoken.WithTargets(ctx.Request().Context(), claims.Targets),
+			))
 
 			requiredScopes, ok := ctx.Get(contextKey).([]string)
 			if !ok || len(requiredScopes) == 0 {

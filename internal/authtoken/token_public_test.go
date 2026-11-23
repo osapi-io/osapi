@@ -50,7 +50,7 @@ func (s *AuthTokenPublicTestSuite) TestNew() {
 }
 
 func (s *AuthTokenPublicTestSuite) TestGenerate() {
-	tokenString, err := s.token.Generate(s.signingKey, []string{"admin"}, "test-subject", nil)
+	tokenString, err := s.token.Generate(s.signingKey, []string{"admin"}, "test-subject", nil, nil)
 
 	s.NoError(err)
 	s.NotEmpty(tokenString)
@@ -68,7 +68,7 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 		{
 			name: "valid token",
 			tokenFunc: func() string {
-				t, _ := s.token.Generate(s.signingKey, []string{"admin"}, "test-subject", nil)
+				t, _ := s.token.Generate(s.signingKey, []string{"admin"}, "test-subject", nil, nil)
 				return t
 			},
 			signingKey:  s.signingKey,
@@ -80,9 +80,35 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 			},
 		},
 		{
+			name: "when the token has a target scope, it is in the claims",
+			tokenFunc: func() string {
+				t, _ := s.token.Generate(
+					s.signingKey, []string{"operator"}, "team-web", nil,
+					[]string{"group:web", "web-01"},
+				)
+				return t
+			},
+			signingKey: s.signingKey,
+			validateFunc: func(claims *authtoken.CustomClaims) {
+				s.Equal([]string{"group:web", "web-01"}, claims.Targets)
+			},
+		},
+		{
+			name: "when a target of the scope is _all, the token is refused",
+			tokenFunc: func() string {
+				t, _ := s.token.Generate(
+					s.signingKey, []string{"operator"}, "team-web", nil, []string{"_all"},
+				)
+				return t
+			},
+			signingKey:  s.signingKey,
+			expectError: true,
+			errContains: "Targets",
+		},
+		{
 			name: "wrong signing key",
 			tokenFunc: func() string {
-				t, _ := s.token.Generate(s.signingKey, []string{"read"}, "test-subject", nil)
+				t, _ := s.token.Generate(s.signingKey, []string{"read"}, "test-subject", nil, nil)
 				return t
 			},
 			signingKey:  "wrong-key",
@@ -209,7 +235,7 @@ func (s *AuthTokenPublicTestSuite) TestGenerateAndValidateRoundTrip() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			tokenString, err := s.token.Generate(s.signingKey, tt.roles, tt.subject, nil)
+			tokenString, err := s.token.Generate(s.signingKey, tt.roles, tt.subject, nil, nil)
 			s.NoError(err)
 			s.NotEmpty(tokenString)
 

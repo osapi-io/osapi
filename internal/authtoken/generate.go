@@ -27,16 +27,19 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-// Generate generates a signed JWT with the given roles and optional permissions.
+// Generate generates a signed JWT with the given roles, optional permissions
+// and optional target scope.
 func (t *Token) Generate(
 	signingKey string,
 	roles []string,
 	subject string,
 	permissions []string,
+	targets []string,
 ) (string, error) {
 	claims := CustomClaims{
 		Roles:       roles,
 		Permissions: permissions,
+		Targets:     targets,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer: "osapi",
 			// NOTE(retr0h):

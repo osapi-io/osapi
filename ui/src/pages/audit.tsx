@@ -54,6 +54,7 @@ function AuditDetail({ entry }: { entry: AuditEntry }) {
         pairs={[
           ["User", entry.user],
           ["Roles", entry.roles.join(", ") || "-"],
+          ["Targets", entry.targets?.join(", ") || "each host"],
           ["Source IP", entry.source_ip],
           ["Operation", entry.operation_id || "-"],
           ["Method", entry.method],

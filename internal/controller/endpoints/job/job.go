@@ -33,6 +33,8 @@ var (
 	ErrNotFound = errors.New("job not found")
 	// ErrNoOperation is a job with no operation to run again.
 	ErrNoOperation = errors.New("job has no operation data")
+	// ErrOutOfScope is a retry to a target outside the token's target scope.
+	ErrOutOfScope = errors.New("target is outside the token's target scope")
 )
 
 // Group is the job group's definition.
@@ -100,5 +102,7 @@ var Group = endpoint.Register(endpoint.Define(
 			endpoint.NotFound(ErrNotFound, "Job not found."),
 			endpoint.Invalid(ErrNoOperation,
 				"Invalid request parameters, or a job with no operation data to run again."),
+			endpoint.Forbidden(ErrOutOfScope,
+				"Insufficient permissions, or a target outside the token's target scope."),
 		),
 ))

@@ -68,12 +68,13 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 			name: "when the token is signed, it is the answer with what it carries",
 			in: token.GenerateInput{
 				Roles: []string{"read"}, Subject: "ops", Permissions: []string{"trace:read"},
+				Targets: []string{"group:web"},
 			},
 			setup: func() {
 				s.config.EXPECT().CustomRoles().Return(nil, nil)
 				s.config.EXPECT().SigningKey().Return(key)
 				s.tokens.EXPECT().
-					Generate(key, []string{"read"}, "ops", []string{"trace:read"}).
+					Generate(key, []string{"read"}, "ops", []string{"trace:read"}, []string{"group:web"}).
 					Return("signed", nil)
 			},
 			validateFunc: func(got token.GenerateOutput, err error) {
@@ -81,6 +82,7 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 				s.Equal(token.GenerateOutput{
 					Token: "signed", Subject: "ops",
 					Roles: []string{"read"}, Permissions: []string{"trace:read"},
+					Targets: []string{"group:web"},
 				}, got)
 			},
 		},
@@ -90,7 +92,7 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 			setup: func() {
 				s.config.EXPECT().CustomRoles().Return(nil, nil)
 				s.config.EXPECT().SigningKey().Return("")
-				s.tokens.EXPECT().Generate("", []string{"read"}, "ops", nil).
+				s.tokens.EXPECT().Generate("", []string{"read"}, "ops", nil, nil).
 					Return("", errors.New("no key"))
 			},
 			validateFunc: func(_ token.GenerateOutput, err error) {
@@ -104,7 +106,7 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 				s.config.EXPECT().CustomRoles().
 					Return(authtoken.CustomRoles{"security": {"audit:read"}}, nil)
 				s.config.EXPECT().SigningKey().Return(key)
-				s.tokens.EXPECT().Generate(key, []string{"security"}, "ops", nil).
+				s.tokens.EXPECT().Generate(key, []string{"security"}, "ops", nil, nil).
 					Return("signed", nil)
 			},
 			validateFunc: func(got token.GenerateOutput, err error) {
@@ -277,6 +279,7 @@ func (s *MethodsPublicTestSuite) TestValidate() {
 				s.tokens.EXPECT().Validate("jwt", key).Return(&authtoken.CustomClaims{
 					Roles:       []string{"read"},
 					Permissions: []string{"trace:read", "audit:read"},
+					Targets:     []string{"group:web"},
 					RegisteredClaims: jwt.RegisteredClaims{
 						Subject:   "ops",
 						Audience:  jwt.ClaimStrings{"osapi"},
@@ -291,6 +294,7 @@ func (s *MethodsPublicTestSuite) TestValidate() {
 					Subject:              "ops",
 					Roles:                []string{"read"},
 					Permissions:          []string{"trace:read", "audit:read"},
+					Targets:              []string{"group:web"},
 					EffectivePermissions: []string{"audit:read", "trace:read"},
 					Audience:             []string{"osapi"},
 					IssuedAt:             issued,

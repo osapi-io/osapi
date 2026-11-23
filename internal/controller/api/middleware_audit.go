@@ -89,6 +89,7 @@ func auditMiddleware(
 			}
 
 			roles, _ := c.Get(ContextKeyRoles).([]string)
+			targets, _ := c.Get(ContextKeyTargets).([]string)
 
 			// v5 returns the bare http.ResponseWriter from Response().
 			// UnwrapResponse recovers Echo's wrapper, which is what
@@ -103,6 +104,7 @@ func auditMiddleware(
 				Timestamp:    start,
 				User:         subject,
 				Roles:        roles,
+				Targets:      targets,
 				Method:       c.Request().Method,
 				Path:         path,
 				SourceIP:     c.RealIP(),

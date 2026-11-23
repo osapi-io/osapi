@@ -24,9 +24,10 @@ import "time"
 
 // GenerateInput is what a new token carries.
 type GenerateInput struct {
-	Roles       []string `json:"roles"       short:"r" validate:"required"                  doc:"Roles for the token: built-in, or a custom role of the config"`
-	Subject     string   `json:"subject"     short:"u" validate:"required"                  doc:"Subject for the token (e.g., user ID or unique identifier)"`
-	Permissions []string `json:"permissions" short:"p" validate:"omitempty,dive,permission" doc:"Direct permissions, which override the roles; osapi token roles get --name admin lists each one"`
+	Roles       []string `json:"roles"       short:"r" validate:"required"                    doc:"Roles for the token: built-in, or a custom role of the config"`
+	Subject     string   `json:"subject"     short:"u" validate:"required"                    doc:"Subject for the token (e.g., user ID or unique identifier)"`
+	Permissions []string `json:"permissions" short:"p" validate:"omitempty,dive,permission"   doc:"Direct permissions, which override the roles; osapi token roles get --name admin lists each one"`
+	Targets     []string `json:"targets"     short:"t" validate:"omitempty,dive,target_scope" doc:"Hosts the token may act on: hostnames and labels, such as group:web; without it, each host"`
 }
 
 // GenerateOutput is a new token, with what it carries.
@@ -35,6 +36,7 @@ type GenerateOutput struct {
 	Subject     string   `json:"subject"`
 	Roles       []string `json:"roles"`
 	Permissions []string `json:"permissions,omitempty"`
+	Targets     []string `json:"targets,omitempty"`
 }
 
 // RolesInput is the input of roles list, which has none.
@@ -73,6 +75,8 @@ type Claims struct {
 	Subject     string   `json:"subject"`
 	Roles       []string `json:"roles"`
 	Permissions []string `json:"permissions,omitempty"`
+	// Targets are the hosts the token may act on; none is each host.
+	Targets []string `json:"targets,omitempty"`
 	// EffectivePermissions are what the roles and the permissions grant,
 	// sorted.
 	EffectivePermissions []string  `json:"effective_permissions"`
