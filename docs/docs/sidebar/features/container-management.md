@@ -69,17 +69,18 @@ methods do not need it.
 
 ## Permissions
 
-| Permission          | Methods                                 | Roles                             |
-| ------------------- | --------------------------------------- | --------------------------------- |
-| `container:read`    | docker list and get, image list         | admin, operator, automation, read |
-| `container:write`   | docker create and delete, image delete  | admin, automation                 |
-| `container:execute` | docker start, stop and exec, image pull | admin                             |
+| Permission          | Methods                                | Roles                             |
+| ------------------- | -------------------------------------- | --------------------------------- |
+| `container:read`    | docker list and get, image list        | admin, operator, automation, read |
+| `container:write`   | docker create and delete, image delete | admin, automation                 |
+| `container:execute` | docker start and stop, image pull      | admin, operator                   |
+| `container:exec`    | docker exec                            | admin                             |
 
 Each action of a behavior has the permission `<name>:execute`. For the container
-behaviors, that is `container:execute`, the permission of docker exec too.
-docker exec runs a command that the caller chooses, so only the `admin` role has
-`container:execute`. Thus only `admin` starts and stops containers and pulls
-images. To give it to a different role or token:
+behaviors, that is `container:execute`, and the `operator` role has it. docker
+exec runs a command that the caller chooses. Thus it has a permission of its
+own, `container:exec`, and only the `admin` role has it. To give it to a
+different role or token:
 
 ```yaml
 controller:
@@ -91,12 +92,13 @@ controller:
             - container:read
             - container:write
             - container:execute
+            - container:exec
             - health:read
 ```
 
 ```bash
-osapi token generate -r automation -u user@example.com \
-  -p container:execute
+osapi token generate -r operator -u user@example.com \
+  -p container:exec
 ```
 
 ## Related

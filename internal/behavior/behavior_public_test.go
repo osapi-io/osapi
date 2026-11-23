@@ -490,6 +490,11 @@ func (s *BehaviorPublicTestSuite) TestAdminRole() {
 			name: "when a shell action, only the admin role gets its verb",
 			m:    behavior.Action("shell", set).Shell(), want: behavior.VerbShell, wantAdmin: true,
 		},
+		{
+			name: "when an exec action, only the admin role gets its verb",
+			m:    behavior.Action("exec", set).PermitAs(behavior.VerbExec),
+			want: behavior.VerbExec, wantAdmin: true,
+		},
 	}
 	for _, tc := range tests {
 		s.Run(tc.name, func() {

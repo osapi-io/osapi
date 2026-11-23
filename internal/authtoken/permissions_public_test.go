@@ -364,9 +364,14 @@ func (s *PermissionsPublicTestSuite) TestRolePermissions() {
 					client.PermCommandExecute,
 					"an arbitrary command is admin only",
 				)
+				s.Contains(
+					perms,
+					client.PermContainerExecute,
+					"a container's start and stop, and an image pull, are not admin only",
+				)
 				s.NotContains(
 					perms,
-					"container:execute",
+					client.PermContainerExec,
 					"a command in a container is admin only",
 				)
 				s.NotContains(perms, client.PermCommandShell)
@@ -463,6 +468,7 @@ func (s *PermissionsPublicTestSuite) TestRoles() {
 
 func (s *PermissionsPublicTestSuite) TestAdminOnly() {
 	s.True(authtoken.AdminOnly(client.PermCommandShell), "by its verb")
+	s.True(authtoken.AdminOnly(client.PermContainerExec), "by its verb")
 	s.True(authtoken.AdminOnly(client.PermCommandExecute), "a hand-written domain says so")
 	s.False(authtoken.AdminOnly(client.PermPowerExecute), "an execute verb is not admin only")
 	s.True(authtoken.AdminOnly(client.PermAgentWrite), "by its mark")

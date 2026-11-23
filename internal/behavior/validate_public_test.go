@@ -509,6 +509,21 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 			wantRules: []string{behavior.RuleVerb},
 		},
 		{
+			name: "when an action takes a permission verb that only the admin role gets",
+			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
+				behavior.Action("exec", set).Key("key").Describe("Exec").
+					PermitAs(behavior.VerbExec),
+			),
+		},
+		{
+			name: "when an action takes a permission verb that other roles get",
+			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
+				behavior.Action("exec", set).Key("key").Describe("Exec").
+					PermitAs(behavior.VerbWrite),
+			),
+			wantRules: []string{behavior.RuleVerb},
+		},
+		{
 			name: "when a write records nothing on its span",
 			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
 				behavior.Write("create", set).Describe("Create"),

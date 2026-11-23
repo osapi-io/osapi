@@ -52,7 +52,7 @@ func Routes(
 		{
 			Method:     http.MethodPost,
 			Path:       "/api/node/:hostname/container/docker/:name/exec",
-			Permission: "container:execute",
+			Permission: "container:exec",
 			Handler:    server.Serve(s, Group, "exec", HandleExec, decodeExec),
 		},
 	}

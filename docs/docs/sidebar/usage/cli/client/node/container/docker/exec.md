@@ -5,10 +5,10 @@ Run a command in a container.
 Runs docker exec, and answers what the command wrote to standard output and to
 standard error, and its exit code. A command that exits with a code other than 0
 is an answer, not a failure. It changes what the command changes, which osapi
-cannot tell, so it reports changed: true. Only the admin role may run it, and an
-agent with agent.command.enabled false refuses it, as it refuses a command. Its
-permission, container:execute, is also the permission of start, stop and image
-pull, so only the admin role runs those too.
+cannot tell, so it reports changed: true. Its permission is container:exec,
+which only the admin role gets, apart from the container:execute of start, stop
+and image pull. An agent with agent.command.enabled false refuses it, as it
+refuses a command.
 
 ```bash
 osapi client node container docker exec [flags]
@@ -84,8 +84,8 @@ The command fails in these cases:
 
 ## Permission
 
-It needs the `container:execute` permission.
-`osapi token roles get --name <role>` shows what a role grants.
+It needs the `container:exec` permission. `osapi token roles get --name <role>`
+shows what a role grants.
 
 ## Flags
 

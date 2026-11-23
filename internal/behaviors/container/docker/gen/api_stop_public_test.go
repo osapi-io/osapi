@@ -34,7 +34,7 @@ func (s *APIStopPublicTestSuite) TestStop() {
 				Path:   "/api/node/server1/container/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
 				"docker.stop",
@@ -54,7 +54,7 @@ func (s *APIStopPublicTestSuite) TestStop() {
 				Path:   "/api/node/_all/container/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"_all",
 				"docker.stop",
@@ -76,7 +76,7 @@ func (s *APIStopPublicTestSuite) TestStop() {
 				Path:   "/api/node/server1/container/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
 				"docker.stop",
@@ -96,7 +96,7 @@ func (s *APIStopPublicTestSuite) TestStop() {
 				Path:   "/api/node/_all/container/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"_all",
 				"docker.stop",
@@ -118,7 +118,7 @@ func (s *APIStopPublicTestSuite) TestStop() {
 				Path:   "/api/node/server1/container/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
 				"docker.stop",
@@ -138,7 +138,7 @@ func (s *APIStopPublicTestSuite) TestStop() {
 				Path:   "/api/node/server1/container/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
 				"docker.stop",
@@ -158,7 +158,7 @@ func (s *APIStopPublicTestSuite) TestStop() {
 				Path:   "/api/node/server1/container/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
 				"docker.stop",
@@ -178,7 +178,7 @@ func (s *APIStopPublicTestSuite) TestStop() {
 				Path:   "/api/node/server1/container/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
 				"docker.stop",
@@ -196,7 +196,7 @@ func (s *APIStopPublicTestSuite) TestStop() {
 				Path:   "/api/node/_all/container/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"_all",
 				"docker.stop",
@@ -214,7 +214,7 @@ func (s *APIStopPublicTestSuite) TestStop() {
 				Path:   "/api/node/server1/container/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
 				"docker.stop",
@@ -239,7 +239,7 @@ func (s *APIStopPublicTestSuite) TestStopValidationHTTP() {
 				Path:   "/api/node/nowhere/container/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
-			Token:    servertest.Admin,
+			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -249,7 +249,7 @@ func (s *APIStopPublicTestSuite) TestStopValidationHTTP() {
 				Path:   "/api/node//container/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
-			Token:    servertest.Admin,
+			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -259,7 +259,7 @@ func (s *APIStopPublicTestSuite) TestStopValidationHTTP() {
 				Path:   "/api/node/server1/container/docker/osapitest/stop",
 				Body:   `{`,
 			},
-			Token:    servertest.Admin,
+			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -269,7 +269,7 @@ func (s *APIStopPublicTestSuite) TestStopValidationHTTP() {
 				Path:   "/api/node/server1/container/docker/osapitest/stop",
 				Body:   `{"timeout":[]}`,
 			},
-			Token:    servertest.Admin,
+			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -279,7 +279,7 @@ func (s *APIStopPublicTestSuite) TestStopValidationHTTP() {
 				Path:   "/api/node/server1/container/docker/-f/stop",
 				Body:   `{"name":"-f"}`,
 			},
-			Token:    servertest.Admin,
+			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -289,7 +289,7 @@ func (s *APIStopPublicTestSuite) TestStopValidationHTTP() {
 				Path:   "/api/node/server1/container/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":301}`,
 			},
-			Token:    servertest.Admin,
+			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -299,7 +299,7 @@ func (s *APIStopPublicTestSuite) TestStopValidationHTTP() {
 				Path:   "/api/node/server1/container/docker/osapitest/stop",
 				Body:   `{"name":"osapitest","timeout":-1}`,
 			},
-			Token:    servertest.Admin,
+			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
 		},
 	})
@@ -336,16 +336,6 @@ func (s *APIStopPublicTestSuite) TestStopRBACHTTP() {
 				Body:   `{"name":"osapitest","timeout":1}`,
 			},
 			Token:    servertest.Read,
-			WantCode: http.StatusForbidden,
-		},
-		{
-			Name: "when the token has the write role, it is a 403: the method is admin only",
-			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/stop",
-				Body:   `{"name":"osapitest","timeout":1}`,
-			},
-			Token:    servertest.Write,
 			WantCode: http.StatusForbidden,
 		},
 		{

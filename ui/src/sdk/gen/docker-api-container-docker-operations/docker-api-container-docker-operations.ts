@@ -381,7 +381,7 @@ export const getPostNodeContainerDockerExecUrl = (hostname: string,
 }
 
 /**
- * Runs docker exec, and answers what the command wrote to standard output and to standard error, and its exit code. A command that exits with a code other than 0 is an answer, not a failure. It changes what the command changes, which osapi cannot tell, so it reports changed: true. Only the admin role may run it, and an agent with agent.command.enabled false refuses it, as it refuses a command. Its permission, container:execute, is also the permission of start, stop and image pull, so only the admin role runs those too.
+ * Runs docker exec, and answers what the command wrote to standard output and to standard error, and its exit code. A command that exits with a code other than 0 is an answer, not a failure. It changes what the command changes, which osapi cannot tell, so it reports changed: true. Its permission is container:exec, which only the admin role gets, apart from the container:execute of start, stop and image pull. An agent with agent.command.enabled false refuses it, as it refuses a command.
  * @summary Run a command in a container
  */
 export const postNodeContainerDockerExec = async (hostname: string,

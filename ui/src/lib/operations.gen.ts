@@ -84,7 +84,7 @@ export const OPERATION_PERMISSIONS = {
   postNodeCommandExec: "command:execute",
   postNodeCommandShell: "command:shell",
   postNodeContainerDocker: "container:write",
-  postNodeContainerDockerExec: "container:execute",
+  postNodeContainerDockerExec: "container:exec",
   postNodeContainerDockerStart: "container:execute",
   postNodeContainerDockerStop: "container:execute",
   postNodeContainerImagePull: "container:execute",

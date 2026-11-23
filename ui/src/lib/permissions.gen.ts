@@ -48,6 +48,7 @@ export type Permission =
   | "container:read"
   | "container:write"
   | "container:execute"
+  | "container:exec"
   | "network:execute"
   | "admission:read"
   | "admission:write"
@@ -104,6 +105,7 @@ export const ALL_PERMISSIONS: Permission[] = [
   "container:read",
   "container:write",
   "container:execute",
+  "container:exec",
   "network:execute",
   "admission:read",
   "admission:write",
@@ -163,6 +165,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "container:read",
     "container:write",
     "container:execute",
+    "container:exec",
     "network:execute",
     "admission:read",
     "admission:write",
@@ -201,6 +204,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "updatepackages:read",
     "uptime:read",
     "container:read",
+    "container:execute",
     "network:execute",
     "admission:read",
     "agent:read",

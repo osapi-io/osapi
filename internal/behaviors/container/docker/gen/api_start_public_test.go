@@ -34,7 +34,7 @@ func (s *APIStartPublicTestSuite) TestStart() {
 				Path:   "/api/node/server1/container/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
 				"docker.start",
@@ -51,7 +51,7 @@ func (s *APIStartPublicTestSuite) TestStart() {
 				Path:   "/api/node/_all/container/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"_all",
 				"docker.start",
@@ -70,7 +70,7 @@ func (s *APIStartPublicTestSuite) TestStart() {
 				Path:   "/api/node/server1/container/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
 				"docker.start",
@@ -87,7 +87,7 @@ func (s *APIStartPublicTestSuite) TestStart() {
 				Path:   "/api/node/_all/container/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"_all",
 				"docker.start",
@@ -106,7 +106,7 @@ func (s *APIStartPublicTestSuite) TestStart() {
 				Path:   "/api/node/server1/container/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
 				"docker.start",
@@ -123,7 +123,7 @@ func (s *APIStartPublicTestSuite) TestStart() {
 				Path:   "/api/node/server1/container/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
 				"docker.start",
@@ -140,7 +140,7 @@ func (s *APIStartPublicTestSuite) TestStart() {
 				Path:   "/api/node/server1/container/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
 				"docker.start",
@@ -157,7 +157,7 @@ func (s *APIStartPublicTestSuite) TestStart() {
 				Path:   "/api/node/server1/container/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
 				"docker.start",
@@ -172,7 +172,7 @@ func (s *APIStartPublicTestSuite) TestStart() {
 				Path:   "/api/node/_all/container/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"_all",
 				"docker.start",
@@ -187,7 +187,7 @@ func (s *APIStartPublicTestSuite) TestStart() {
 				Path:   "/api/node/server1/container/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token: servertest.Admin,
+			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
 				"docker.start",
@@ -209,7 +209,7 @@ func (s *APIStartPublicTestSuite) TestStartValidationHTTP() {
 				Path:   "/api/node/nowhere/container/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token:    servertest.Admin,
+			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -219,7 +219,7 @@ func (s *APIStartPublicTestSuite) TestStartValidationHTTP() {
 				Path:   "/api/node//container/docker/osapitest/start",
 				Body:   `{"name":"osapitest"}`,
 			},
-			Token:    servertest.Admin,
+			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -229,7 +229,7 @@ func (s *APIStartPublicTestSuite) TestStartValidationHTTP() {
 				Path:   "/api/node/server1/container/docker/-f/start",
 				Body:   `{"name":"-f"}`,
 			},
-			Token:    servertest.Admin,
+			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
 		},
 	})
@@ -266,16 +266,6 @@ func (s *APIStartPublicTestSuite) TestStartRBACHTTP() {
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token:    servertest.Read,
-			WantCode: http.StatusForbidden,
-		},
-		{
-			Name: "when the token has the write role, it is a 403: the method is admin only",
-			Request: servertest.Request{
-				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/start",
-				Body:   `{"name":"osapitest"}`,
-			},
-			Token:    servertest.Write,
 			WantCode: http.StatusForbidden,
 		},
 		{
