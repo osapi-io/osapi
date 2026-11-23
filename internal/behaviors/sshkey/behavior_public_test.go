@@ -18,19 +18,35 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package cmd
+package sshkey_test
 
 import (
-	"github.com/spf13/cobra"
+	"testing"
+
+	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
+	"github.com/osapi-io/osapi/internal/behaviors/sshkey"
 )
 
-// clientNodeUserCmd is the user group: the user behavior's commands join
-// it, beside the hand-written ssh-key commands.
-var clientNodeUserCmd = &cobra.Command{
-	Use:   "user",
-	Short: "The users of the host",
+type BehaviorPublicTestSuite struct {
+	suite.Suite
 }
 
-func init() {
-	clientNodeCmd.AddCommand(clientNodeUserCmd)
+func (s *BehaviorPublicTestSuite) TestBehavior() {
+	s.Same(sshkey.Behavior, behavior.Lookup("sshkey"))
+	s.Empty(behavior.ValidateBehavior(sshkey.Behavior))
+}
+
+// TestExamples runs every example and refusal on a fake host with each
+// platform's provider, through the methods, and checks what each changes.
+func (s *BehaviorPublicTestSuite) TestExamples() {
+	behaviortest.Run(s.T(), sshkey.Behavior)
+}
+
+func TestBehaviorPublicTestSuite(
+	t *testing.T,
+) {
+	suite.Run(t, new(BehaviorPublicTestSuite))
 }

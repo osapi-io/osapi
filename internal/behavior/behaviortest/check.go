@@ -272,11 +272,25 @@ func prepare(
 				h.outputs[g.Command] = g.Content
 			}
 		case behavior.GivenCall:
-			m := methodFor(b, g.Input)
+			// After names a method of the behavior, or of its parent: a
+			// user that the keys of a user need.
+			m, on := methodFor(b, g.Input), p
+			if m == nil && b.Parent != nil {
+				if m = methodFor(b.Parent, g.Input); m != nil {
+					on, err = host.Build(b.Parent, h.Host)
+					if err != nil {
+						return nil, nil, fmt.Sprintf(
+							"no provider of %s on the fake host: %v",
+							b.Parent.Name,
+							err,
+						)
+					}
+				}
+			}
 			if m == nil {
 				return nil, nil, fmt.Sprintf("no method takes %T, the input After names", g.Input)
 			}
-			if _, err := call(m, p, g.Input); err != nil {
+			if _, err := call(m, on, g.Input); err != nil {
 				return nil, nil, fmt.Sprintf("After %s failed: %v", m.Name, err)
 			}
 		}

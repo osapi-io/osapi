@@ -18,46 +18,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package user
+package sshkey
 
-import (
-	"context"
+import "github.com/osapi-io/osapi/internal/behavior/host"
 
-	"github.com/osapi-io/osapi/internal/provider"
-)
+// NewReader is newReader, for the tests of what the reader refuses.
+var NewReader = func(h host.Host) (Provider, error) { return newReader(h) }
 
-// Linux implements the Provider interface for generic Linux.
-// All methods return ErrUnsupported; use the Debian provider for
-// Debian-family systems.
-type Linux struct{}
-
-// NewLinuxProvider factory to create a new Linux instance.
-func NewLinuxProvider() *Linux {
-	return &Linux{}
-}
-
-// ListKeys returns ErrUnsupported on generic Linux.
-func (l *Linux) ListKeys(
-	_ context.Context,
-	_ string,
-) ([]SSHKey, error) {
-	return nil, provider.ErrUnsupported
-}
-
-// AddKey returns ErrUnsupported on generic Linux.
-func (l *Linux) AddKey(
-	_ context.Context,
-	_ string,
-	_ SSHKey,
-) (*SSHKeyResult, error) {
-	return nil, provider.ErrUnsupported
-}
-
-// RemoveKey returns ErrUnsupported on generic Linux.
-func (l *Linux) RemoveKey(
-	_ context.Context,
-	_ string,
-	_ string,
-) (*SSHKeyResult, error) {
-	return nil, provider.ErrUnsupported
-}
+// Fingerprint is fingerprint, for its test.
+var Fingerprint = fingerprint

@@ -25,6 +25,7 @@ import (
 	_ "github.com/osapi-io/osapi/internal/behaviors/process/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/schedule/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/service/gen"
+	_ "github.com/osapi-io/osapi/internal/behaviors/sshkey/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/status/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/sysctl/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/timezone/gen"

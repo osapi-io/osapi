@@ -18,42 +18,37 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package user
+package sshkey
 
-import (
-	"context"
+import "context"
 
-	"github.com/osapi-io/osapi/internal/validation"
-)
-
-// validateHostname validates a hostname path parameter using the shared
-// validator. Returns the error message and false if invalid.
-//
-// This exists because oapi-codegen does not generate validate tags on
-// path parameters in strict-server mode (upstream limitation).
-func validateHostname(
+// List is the keys of a user.
+func List(
 	ctx context.Context,
-	hostname string,
-) (string, bool) {
-	return validation.Var(ctx, hostname, "required,min=1,valid_target")
+	p Provider,
+	in ListInput,
+) ([]Key, error) {
+	return p.Keys(ctx, in.Name)
 }
 
-// validateName validates a user or group name path parameter using the
-// shared validator. Returns the error message and false if invalid.
-//
-// This exists because oapi-codegen does not generate validate tags on
-// path parameters in strict-server mode (upstream limitation).
-func validateName(
+// Create adds a key to a user.
+func Create(
 	ctx context.Context,
-	name string,
-) (string, bool) {
-	return validation.Var(ctx, name, "required,account_name")
+	p Provider,
+	in CreateInput,
+) (Result, error) {
+	fp, changed, err := p.Add(ctx, in.Name, in.Key)
+
+	return Result{Fingerprint: fp, Changed: changed}, err
 }
 
-// validateFingerprint validates the fingerprint path parameter. It is the fingerprint the user provider computes.
-func validateFingerprint(
+// Delete removes a key of a user.
+func Delete(
 	ctx context.Context,
-	fingerprint string,
-) (string, bool) {
-	return validation.Var(ctx, fingerprint, "required,ssh_fingerprint")
+	p Provider,
+	in DeleteInput,
+) (Result, error) {
+	changed, err := p.Remove(ctx, in.Name, in.Fingerprint)
+
+	return Result{Fingerprint: in.Fingerprint, Changed: changed}, err
 }

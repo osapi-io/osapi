@@ -168,11 +168,9 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 						if g.Kind != behavior.GivenCall {
 							continue
 						}
-						for _, before := range b.Methods {
-							if before.In == reflect.TypeOf(g.Input) {
-								s.results(commandLine(b, before, g.Input))
-							}
-						}
+						on, before := methodFor(b, g.Input)
+						s.Require().NotNil(before, "no method takes %T", g.Input)
+						s.results(commandLine(on, before, g.Input))
 					}
 
 					want, _ := behavior.Changed(ex.Output)
@@ -209,12 +207,39 @@ func (s *BehaviorSmokeSuite) refreshIndex() {
 	s.results(commandLine(b, m, reflect.New(m.In).Elem().Interface()))
 }
 
+// methodFor is the method whose input type is input's, and its behavior:
+// one of b, or of b's parent, as After can name.
+func methodFor(
+	b *behavior.Behavior,
+	input any,
+) (*behavior.Behavior, *behavior.Method) {
+	for _, on := range []*behavior.Behavior{b, b.Parent} {
+		if on == nil {
+			continue
+		}
+		for _, m := range on.Methods {
+			if m.In == reflect.TypeOf(input) {
+				return on, m
+			}
+		}
+	}
+
+	return nil, nil
+}
+
+// item is an input that names an item, and the behavior whose delete
+// removes it.
+type item struct {
+	b     *behavior.Behavior
+	input any
+}
+
 // made is what a write example can leave on the target: the items that its
-// input and its Given calls name, which the behavior's delete removes, and
-// the objects that it uploaded.
+// input and its Given calls name, which their behavior's delete removes, and
+// the objects that it uploaded. The example's own item is first, so a key
+// goes before the user that it is under.
 type made struct {
-	b       *behavior.Behavior
-	inputs  []any
+	items   []item
 	objects []string
 }
 
@@ -223,11 +248,15 @@ func madeBy(
 	b *behavior.Behavior,
 	ex behavior.Example,
 ) made {
-	m := made{b: b, inputs: []any{ex.Input}}
+	m := made{items: []item{{b, ex.Input}}}
 	for _, g := range ex.Given {
 		switch g.Kind {
 		case behavior.GivenCall:
-			m.inputs = append(m.inputs, g.Input)
+			on, _ := methodFor(b, g.Input)
+			if on == nil {
+				on = b
+			}
+			m.items = append(m.items, item{on, g.Input})
 		case behavior.GivenObject:
 			m.objects = append(m.objects, g.Path)
 		}
@@ -242,8 +271,8 @@ func madeBy(
 func (s *BehaviorSmokeSuite) remove(
 	m made,
 ) {
-	for _, in := range m.inputs {
-		s.reset(m.b, in)
+	for _, it := range m.items {
+		s.reset(it.b, it.input)
 	}
 	for _, name := range m.objects {
 		_, stderr, code := runCLI("client", "file", "delete", "--name", name)
@@ -259,11 +288,11 @@ func (s *BehaviorSmokeSuite) leftNothing(
 	all []made,
 ) {
 	for _, m := range all {
-		for _, in := range m.inputs {
-			for _, r := range s.deleteResults(m.b, in) {
+		for _, it := range m.items {
+			for _, r := range s.deleteResults(it.b, it.input) {
 				if r["status"] == "ok" {
 					s.Equal(false, r["changed"],
-						"%s %v was left on the target", m.b.Name, in)
+						"%s %v was left on the target", it.b.Name, it.input)
 				}
 			}
 		}

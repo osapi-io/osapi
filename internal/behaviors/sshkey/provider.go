@@ -18,26 +18,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package user provides user and group API handlers.
-package user
+package sshkey
 
-import (
-	"log/slog"
+import "context"
 
-	"github.com/osapi-io/osapi/internal/controller/api/node/user/gen"
-	"github.com/osapi-io/osapi/internal/job/client"
-)
-
-// ensure that we've conformed to the `StrictServerInterface` with a compile-time check
-var _ gen.StrictServerInterface = (*User)(nil)
-
-// New factory to create a new instance.
-func New(
-	logger *slog.Logger,
-	jobClient client.JobClient,
-) *User {
-	return &User{
-		JobClient: jobClient,
-		logger:    logger.With(slog.String("subsystem", "controller.user")),
-	}
+// Provider reads and changes the authorized SSH keys of a user.
+type Provider interface {
+	// Keys is the keys of the user's authorized_keys. A user that the host
+	// does not have is not found; one with no file has none.
+	Keys(ctx context.Context, name string) ([]Key, error)
+	// Add appends the key line to the user's authorized_keys, and returns
+	// its fingerprint. A key that the file has already is unchanged.
+	Add(ctx context.Context, name string, line string) (string, bool, error)
+	// Remove drops each line of the key with the fingerprint.
+	Remove(ctx context.Context, name string, fingerprint string) (bool, error)
 }
