@@ -98,6 +98,8 @@ func (s *CommandService) Exec(
 		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
+		resp.JSON404,
+		resp.JSON409,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
@@ -110,7 +112,11 @@ func (s *CommandService) Exec(
 		}}
 	}
 
-	return newResponse(commandCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
+	return newResponse(
+		commandCollectionFromGen(resp.JSON200.Results, resp.JSON200.JobId),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }
 
 // Shell executes a command through /bin/sh -c with shell features
@@ -141,6 +147,8 @@ func (s *CommandService) Shell(
 		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
+		resp.JSON404,
+		resp.JSON409,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
@@ -153,5 +161,9 @@ func (s *CommandService) Shell(
 		}}
 	}
 
-	return newResponse(commandCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
+	return newResponse(
+		commandCollectionFromGen(resp.JSON200.Results, resp.JSON200.JobId),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
 }

@@ -272,7 +272,8 @@ INF preflight checks done
   no change.
 - **`command exec` and `command shell`.** These endpoints run commands that the
   user gives, with all the privileges of the agent. `exec` needs the
-  `command:execute` RBAC permission. `shell` also needs `command:shell`.
+  `command:execute` RBAC permission. `shell` needs `command:shell`. Only the
+  admin role gets each of them.
 - **Docker reads.** The docker and image behaviors read through gohai, which
   runs `docker version`, `docker ps`, `docker inspect` and `docker images` as
   the agent's user. Thus the `osapi` user must be able to use the Docker socket,

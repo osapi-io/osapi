@@ -4,7 +4,9 @@ sidebar_position: 3
 
 # Command execution
 
-osapi can run any command on managed hosts. Command execution goes through the
+osapi can run any command on managed hosts. The
+[command behavior](../reference/behaviors/command/command.md) supplies the
+command execution operations. Command execution goes through the
 [job system](job-system.md). Thus the API server does not run commands. The
 agents run them.
 
@@ -25,7 +27,8 @@ quickly, or when you need shell syntax.
 
 The two operations take a working directory and a timeout (30 seconds by
 default, 300 seconds at most). The results have stdout, stderr, the exit code
-and the duration.
+and the duration. A command that exits with a code that is not zero is a result,
+not an error. The API refuses a command that starts with `-`.
 
 ## How it works
 
@@ -39,9 +42,8 @@ Command execution uses the same request flow as all osapi operations:
 
 You can target one host, broadcast to all hosts with `_all`, or target a label.
 Refer to [CLI Reference](../usage/cli/client/node/command/command.mdx) for usage
-and examples, or the
-[API Reference](/gen/api/command-execution-api-command-operations) for the REST
-endpoints.
+and examples, or the [API Reference](/gen/api/command-api-command-operations)
+for the REST endpoints.
 
 ## Fact references
 
@@ -88,7 +90,8 @@ shell access:
   redirects, and expansion).
 
 Only the built-in `admin` role includes either permission by default. No other
-built-in role does.
+built-in role does. `exec` is an admin-only action. `shell` has the `shell`
+verb, and only the admin role gets a permission with that verb.
 
 > **Upgrade note.** A custom role or token that has only `command:execute`
 > cannot use the `shell` endpoint now. It also needs `command:shell`. Add
@@ -126,9 +129,9 @@ agent:
     enabled: true
 ```
 
-When it is off, a job fails with `command execution is disabled on this agent`.
-Refer to [Configuration](../usage/configuration.md) for NATS, agent and
-authentication settings.
+When it is off, each `exec` and `shell` job fails with an error that names
+`agent.command.enabled`. Refer to [Configuration](../usage/configuration.md) for
+NATS, agent and authentication settings.
 
 ## Permissions
 
@@ -145,7 +148,7 @@ Grant them to other roles or tokens explicitly when needed.
 - [CLI Reference](../usage/cli/client/node/command/command.mdx): command
   execution commands (exec, shell)
 - [System Facts](system-facts.md): available `@fact.*` references
-- [API Reference](/gen/api/command-execution-api-command-operations): REST API
+- [API Reference](/gen/api/command-api-command-operations): REST API
   documentation
 - [Job System](job-system.md): how async job processing works
 - [Authentication & RBAC](authentication.md): permissions and roles

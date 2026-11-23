@@ -1,18 +1,7 @@
 import { useState } from "react";
-import {
-  ChevronDown,
-  ChevronRight,
-  Code,
-  Trash2,
-  Copy,
-  Check,
-} from "lucide-react";
+import { Code, Trash2, Copy, Check } from "lucide-react";
 import { SearchBox } from "@/components/ui/search-box";
-import type {
-  CommandResultItem,
-  FileInfo,
-  FileUploadResponse,
-} from "@/sdk/gen/schemas";
+import type { FileInfo, FileUploadResponse } from "@/sdk/gen/schemas";
 import { JobDetail } from "@/components/domain/job-detail";
 import { CodeBlock } from "@/components/ui/code-block";
 import { KeyValue } from "@/components/ui/key-value";
@@ -143,85 +132,6 @@ function ResultShell({
       {children}
       <RawJsonToggle data={data} />
     </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Command
-// ---------------------------------------------------------------------------
-
-function CommandHostRow({ host }: { host: CommandResultItem }) {
-  const [expanded, setExpanded] = useState(true);
-  const status = hostStatus(host);
-  const hasOutput = host.stdout || host.stderr || host.error;
-
-  return (
-    <div className="border-b border-border/50 last:border-0">
-      <button
-        onClick={() => hasOutput && setExpanded(!expanded)}
-        className="flex w-full items-center gap-2 px-4 py-2 text-left"
-      >
-        <StatusIcon status={status} />
-        <Text className="font-medium">{host.hostname}</Text>
-        <div className="ml-auto flex items-center gap-2">
-          {host.duration_ms !== undefined && (
-            <Text variant="muted">{formatDurationMs(host.duration_ms)}</Text>
-          )}
-          <Text
-            variant={
-              status === "ok"
-                ? "mono-primary"
-                : status === "skipped"
-                  ? "muted"
-                  : "error"
-            }
-            className={status === "ok" ? undefined : "font-mono"}
-          >
-            {status === "skipped"
-              ? "skipped"
-              : host.error
-                ? "error"
-                : `exit ${host.exit_code ?? 0}`}
-          </Text>
-          {hasOutput &&
-            (expanded ? (
-              <ChevronDown className="h-3 w-3 text-text-muted" />
-            ) : (
-              <ChevronRight className="h-3 w-3 text-text-muted" />
-            ))}
-        </div>
-      </button>
-      {expanded && hasOutput && (
-        <div className="px-4 pb-2">
-          {host.error && <CodeBlock variant="error">{host.error}</CodeBlock>}
-          {host.stdout && <CodeBlock variant="stdout">{host.stdout}</CodeBlock>}
-          {host.stderr && (
-            <CodeBlock variant="stderr" className="mt-1">
-              {host.stderr}
-            </CodeBlock>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function CommandResult({
-  data,
-}: {
-  data: { job_id?: string; results: CommandResultItem[] };
-}) {
-  return (
-    <ResultShell
-      jobId={data.job_id}
-      label=""
-      summary={<ResultSummary outcomes={data.results.map(hostOutcome)} />}
-      data={data}
-    >
-      {data.results.map((host, i) => (
-        <CommandHostRow key={i} host={host} />
-      ))}
-    </ResultShell>
   );
 }
 
@@ -592,19 +502,6 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
       <GenericRowsResult
         data={data}
         def={BEHAVIOR_BLOCKS[type as BehaviorBlockType]}
-      />
-    );
-  }
-
-  if (
-    (type === "command" || type === "command-shell") &&
-    Array.isArray(data.results)
-  ) {
-    return (
-      <CommandResult
-        data={
-          data as unknown as { job_id?: string; results: CommandResultItem[] }
-        }
       />
     );
   }

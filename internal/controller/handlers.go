@@ -33,7 +33,6 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/admission"
-	commandAPI "github.com/osapi-io/osapi/internal/controller/api/node/command"
 	uihandler "github.com/osapi-io/osapi/internal/controller/api/ui"
 	endpointserver "github.com/osapi-io/osapi/internal/controller/endpoint/server"
 	admissionEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/admission"
@@ -114,7 +113,6 @@ func handlers(
 			dispatch.Deps{JobClient: d.jobs},
 		)...,
 	)
-	handlers = append(handlers, commandAPI.Handler(d.log, d.jobs, signingKey, customRoles)...)
 
 	if d.cfg.Controller.UI.UIEnabled() {
 		// The embedded assets are under dist/ in the ui package. fs.Sub fails

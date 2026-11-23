@@ -44,7 +44,6 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/provider"
-	"github.com/osapi-io/osapi/internal/provider/command"
 	fileProv "github.com/osapi-io/osapi/internal/provider/file"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
@@ -308,8 +307,6 @@ func buildRegistry(
 	memoryProvider memory.Provider,
 	loadProvider load.Provider,
 ) *ProviderRegistry {
-	commandProvider := command.New(e.log, e.exec)
-
 	r := NewProviderRegistry()
 
 	r.Register(
@@ -319,12 +316,6 @@ func buildRegistry(
 		diskProvider,
 		memoryProvider,
 		loadProvider,
-	)
-
-	r.Register(
-		"command",
-		NewCommandProcessor(commandProvider, cfg.Agent.Command.Enabled, e.log),
-		commandProvider,
 	)
 
 	// Behaviors run beside the categories above.

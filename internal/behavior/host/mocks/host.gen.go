@@ -13,6 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	exec "github.com/osapi-io/osapi/internal/exec"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -53,6 +54,21 @@ func (m *MockExec) RunCmd(ctx context.Context, name string, args []string) (stri
 func (mr *MockExecMockRecorder) RunCmd(ctx, name, args any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunCmd", reflect.TypeOf((*MockExec)(nil).RunCmd), ctx, name, args)
+}
+
+// RunCmdFull mocks base method.
+func (m *MockExec) RunCmdFull(ctx context.Context, name string, args []string, cwd string, timeout int) (*exec.CmdResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RunCmdFull", ctx, name, args, cwd, timeout)
+	ret0, _ := ret[0].(*exec.CmdResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RunCmdFull indicates an expected call of RunCmdFull.
+func (mr *MockExecMockRecorder) RunCmdFull(ctx, name, args, cwd, timeout any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunCmdFull", reflect.TypeOf((*MockExec)(nil).RunCmdFull), ctx, name, args, cwd, timeout)
 }
 
 // RunPrivilegedCmd mocks base method.

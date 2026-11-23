@@ -266,9 +266,12 @@ func prepare(
 			_ = h.FS.Symlink(g.Content, g.Path)
 			h.setup = false
 		case behavior.GivenOutput:
-			if g.After != "" {
+			switch {
+			case g.ExitCode != 0:
+				h.exits[g.Command] = g.ExitCode
+			case g.After != "":
 				h.later = append(h.later, g)
-			} else {
+			default:
 				h.outputs[g.Command] = g.Content
 			}
 		case behavior.GivenCall:

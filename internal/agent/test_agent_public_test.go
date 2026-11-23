@@ -32,7 +32,6 @@ import (
 	"github.com/osapi-io/osapi/internal/exec"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
-	"github.com/osapi-io/osapi/internal/provider/command"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
@@ -52,7 +51,6 @@ type newTestAgentParams struct {
 	diskProvider    disk.Provider
 	memoryProvider  memory.Provider
 	loadProvider    load.Provider
-	commandProvider command.Provider
 	processProvider process.Provider
 	execManager     exec.Manager
 	registryBucket  string
@@ -91,12 +89,6 @@ func newTestAgent(
 		func(context.Context, job.Request) (json.RawMessage, error) {
 			return json.RawMessage(`{"packets_sent":3,"packets_received":3,"packet_loss":0}`), nil
 		},
-	)
-
-	registry.Register(
-		"command",
-		agent.NewCommandProcessor(p.commandProvider, true, logger),
-		p.commandProvider,
 	)
 
 	return agent.New(

@@ -78,8 +78,6 @@ var builtinPermissions = []Permission{
 	"file:write",
 	"health:read",
 	"trace:read",
-	"command:execute",
-	"command:shell",
 	"power:execute",
 	"log:read",
 }
@@ -90,13 +88,12 @@ var adminVerbs = []string{"shell"}
 
 // builtinAdminOnly are the permissions of the hand-written domains that only
 // the admin role gets, because each reaches root directly: an arbitrary
-// command (command:execute). The user and sshkey behaviors
-// mark their writes AdminOnly, for an account or an SSH key (user:write).
-// A behavior or a group that takes one over marks its methods AdminOnly,
-// and Check fails until it does.
-var builtinAdminOnly = []Permission{
-	"command:execute",
-}
+// command. None is left: each domain that reaches root is a behavior, and
+// marks its methods AdminOnly, such as command exec (command:execute) and the
+// writes of user and sshkey (user:write). A behavior or a group that takes
+// over a hand-written domain marks its methods AdminOnly, and Check fails
+// until it does.
+var builtinAdminOnly = []Permission{}
 
 // declared is a permission that something needs: a hand-written domain, a
 // method of an endpoint group, or a method of a behavior.

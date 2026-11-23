@@ -94,24 +94,24 @@ func (e CertificateResultStatus) Valid() bool {
 	}
 }
 
-// Defines values for CommandResultItemStatus.
+// Defines values for CommandResultStatus.
 const (
-	CommandResultItemStatusFailed  CommandResultItemStatus = "failed"
-	CommandResultItemStatusOk      CommandResultItemStatus = "ok"
-	CommandResultItemStatusSkipped CommandResultItemStatus = "skipped"
-	CommandResultItemStatusTimeout CommandResultItemStatus = "timeout"
+	CommandResultStatusFailed  CommandResultStatus = "failed"
+	CommandResultStatusOk      CommandResultStatus = "ok"
+	CommandResultStatusSkipped CommandResultStatus = "skipped"
+	CommandResultStatusTimeout CommandResultStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the CommandResultItemStatus enum.
-func (e CommandResultItemStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the CommandResultStatus enum.
+func (e CommandResultStatus) Valid() bool {
 	switch e {
-	case CommandResultItemStatusFailed:
+	case CommandResultStatusFailed:
 		return true
-	case CommandResultItemStatusOk:
+	case CommandResultStatusOk:
 		return true
-	case CommandResultItemStatusSkipped:
+	case CommandResultStatusSkipped:
 		return true
-	case CommandResultItemStatusTimeout:
+	case CommandResultStatusTimeout:
 		return true
 	default:
 		return false
@@ -2000,66 +2000,73 @@ type Check struct {
 
 // CommandExecRequest defines model for CommandExecRequest.
 type CommandExecRequest struct {
-	// Args Command arguments.
-	Args *[]string `json:"args,omitempty"`
+	// Args Its arguments, each one word, such as -la /tmp
+	Args *[]string `json:"args,omitempty" validate:"omitempty"`
 
-	// Command The executable name or path.
-	Command string `json:"command" validate:"required,min=1"`
+	// Command The program, a name on the agent's PATH or a path, such as ls
+	Command string `json:"command" validate:"required,min=1,startsnotwith=-"`
 
-	// Cwd Working directory for the command.
-	Cwd *string `json:"cwd,omitempty"`
+	// Cwd The directory to run it in; the agent's own when empty
+	Cwd *string `json:"cwd,omitempty" validate:"omitempty"`
 
-	// Timeout Timeout in seconds (default 30, max 300).
+	// Timeout Seconds to let it run before it is stopped, up to 300; 30 when 0
 	Timeout *int `json:"timeout,omitempty" validate:"omitempty,min=1,max=300"`
 }
 
-// CommandResultCollectionResponse defines model for CommandResultCollectionResponse.
-type CommandResultCollectionResponse struct {
+// CommandExecResponse defines model for CommandExecResponse.
+type CommandExecResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []CommandResultItem `json:"results"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []CommandResult     `json:"results"`
 }
 
-// CommandResultItem defines model for CommandResultItem.
-type CommandResultItem struct {
-	// Changed Whether the command modified system state.
+// CommandResult defines model for CommandResult.
+type CommandResult struct {
+	// Changed Whether the host changed: true, since a command can change anything
 	Changed *bool `json:"changed,omitempty"`
 
-	// DurationMs Execution time in milliseconds.
+	// DurationMs How long it ran, in milliseconds
 	DurationMs *int64 `json:"duration_ms,omitempty"`
 
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
-	// ExitCode Exit code of the command.
+	// ExitCode Its exit code
 	ExitCode *int `json:"exit_code,omitempty"`
 
-	// Hostname The hostname of the agent that executed the command.
+	// Hostname Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
 	// Status The status of the operation for this host.
-	Status CommandResultItemStatus `json:"status"`
+	Status CommandResultStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
 
-	// Stderr Standard error output of the command.
+	// Stderr What it wrote to standard error
 	Stderr *string `json:"stderr,omitempty"`
 
-	// Stdout Standard output of the command.
+	// Stdout What it wrote to standard output
 	Stdout *string `json:"stdout,omitempty"`
 }
 
-// CommandResultItemStatus The status of the operation for this host.
-type CommandResultItemStatus string
+// CommandResultStatus The status of the operation for this host.
+type CommandResultStatus string
 
 // CommandShellRequest defines model for CommandShellRequest.
 type CommandShellRequest struct {
-	// Command The full shell command string.
-	Command string `json:"command" validate:"required,min=1"`
+	// Command The command line, which /bin/sh -c reads, such as ls -la /tmp | grep log
+	Command string `json:"command" validate:"required,min=1,startsnotwith=-"`
 
-	// Cwd Working directory for the command.
-	Cwd *string `json:"cwd,omitempty"`
+	// Cwd The directory to run it in; the agent's own when empty
+	Cwd *string `json:"cwd,omitempty" validate:"omitempty"`
 
-	// Timeout Timeout in seconds (default 30, max 300).
+	// Timeout Seconds to let it run before it is stopped, up to 300; 30 when 0
 	Timeout *int `json:"timeout,omitempty" validate:"omitempty,min=1,max=300"`
+}
+
+// CommandShellResponse defines model for CommandShellResponse.
+type CommandShellResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []CommandResult     `json:"results"`
 }
 
 // ComponentEntry defines model for ComponentEntry.
@@ -14885,10 +14892,12 @@ func (r PutNodeCertificateResponse) ContentType() string {
 type PostNodeCommandExecResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *CommandResultCollectionResponse
+	JSON200      *CommandExecResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -14919,10 +14928,12 @@ func (r PostNodeCommandExecResponse) ContentType() string {
 type PostNodeCommandShellResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *CommandResultCollectionResponse
+	JSON200      *CommandShellResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -21645,7 +21656,7 @@ func ParsePostNodeCommandExecResponse(rsp *http.Response) (*PostNodeCommandExecR
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest CommandResultCollectionResponse
+		var dest CommandExecResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -21671,6 +21682,20 @@ func ParsePostNodeCommandExecResponse(rsp *http.Response) (*PostNodeCommandExecR
 			return nil, err
 		}
 		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
@@ -21699,7 +21724,7 @@ func ParsePostNodeCommandShellResponse(rsp *http.Response) (*PostNodeCommandShel
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest CommandResultCollectionResponse
+		var dest CommandShellResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -21725,6 +21750,20 @@ func ParsePostNodeCommandShellResponse(rsp *http.Response) (*PostNodeCommandShel
 			return nil, err
 		}
 		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

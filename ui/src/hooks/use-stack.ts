@@ -77,22 +77,6 @@ const HAND_BLOCK_TYPES: BlockType[] = [
     readyOnAdd: true,
   },
 
-  // ── Command ────────────────────────────────────────────────────────────────
-  {
-    type: "command",
-    label: "Execute",
-    description: "Run a command on hosts",
-    category: "command",
-    group: "command",
-  },
-  {
-    type: "command-shell",
-    label: "Shell",
-    description: "Run a shell command on hosts",
-    category: "command",
-    group: "command",
-  },
-
   // ── Hardware ───────────────────────────────────────────────────────────────
   {
     type: "audit-list",

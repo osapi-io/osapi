@@ -59,6 +59,13 @@ func (p probe) run(
 		out, _, code, err := p.h.Exec.RunPrivilegedCmdFull(ctx, "tee", []string{"/y"})
 
 		return fmt.Sprintf("%s code=%d", out, code), err
+	case "fullcmd":
+		out, err := p.h.Exec.RunCmdFull(ctx, "any-program", []string{"x"}, "/tmp", 5)
+		if err != nil {
+			return "", err
+		}
+
+		return fmt.Sprintf("%s exit=%d", out.Stdout, out.ExitCode), nil
 	case "store":
 		if _, err := kv.KVPut(ctx, "file-state", "a", []byte("1")); err != nil {
 			return "", err
@@ -114,6 +121,16 @@ func (s *FakeHostPublicTestSuite) TestFakeHost() {
 			options: []behavior.HostOption{behavior.Ran("tee", "/y")},
 		},
 		{
+			name: "when a program of Runs(AnyProgram) runs in full, its output and exit code answer",
+			in:   probeIn{Op: "fullcmd"},
+			want: "out exit=2",
+			options: []behavior.HostOption{
+				behavior.Prints("any-program x", "out"),
+				behavior.Exits("any-program x", 2),
+				behavior.Ran("any-program", "x"),
+			},
+		},
+		{
 			name: "when a value is put, put again and read",
 			in:   probeIn{Op: "store"},
 			want: "a=2 rev=2 zero=true",
@@ -132,6 +149,7 @@ func (s *FakeHostPublicTestSuite) TestFakeHost() {
 					return probe{h: h}, nil
 				}),
 				behavior.Sudo("tee"),
+				behavior.Runs(behavior.AnyProgram),
 				behavior.KeepsState,
 				behavior.Read("get", probeHost).Describe("Probe").
 					Example("A probe", tc.in, probeOut{Seen: tc.want}, tc.options...),

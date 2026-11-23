@@ -75,6 +75,7 @@ func (s *BehaviorSmokeSuite) results(
 		Results []map[string]any `json:"results"`
 	}
 	s.Require().NoError(parseJSON(stdout, &body), stdout)
+	skipIfCommandOff(s.T(), stdout)
 	for _, r := range body.Results {
 		s.Contains([]any{"ok", "skipped"}, r["status"], "%s: %v", strings.Join(args, " "), r)
 	}
@@ -89,6 +90,9 @@ func (s *BehaviorSmokeSuite) TestPrograms() {
 	for _, b := range behavior.All() {
 		sudo, runs := b.Programs(behavior.PlatformName(family.Detect()))
 		for _, p := range append(sudo, runs...) {
+			if p == behavior.AnyProgram {
+				continue
+			}
 			_, err := exec.LookPath(p)
 			s.NoError(err,
 				"%s runs %s, which this host lacks: install its package on the CI "+
