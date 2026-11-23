@@ -81,4 +81,13 @@ var StartLogs = []command.LogLine{
 			slog.String("addr", "0.0.0.0:9091"),
 		},
 	},
+	{
+		Level: slog.LevelInfo,
+		Msg:   "http(s) server started",
+		Attrs: []slog.Attr{
+			slog.String("component", "agent"),
+			slog.String("subsystem", "metrics"),
+			slog.String("address", "[::]:9091"),
+		},
+	},
 }

@@ -75,10 +75,28 @@ var StartLogs = []command.LogLine{
 	},
 	{
 		Level: slog.LevelInfo,
+		Msg:   "http(s) server started",
+		Attrs: []slog.Attr{
+			slog.String("component", "controller"),
+			slog.String("subsystem", "metrics"),
+			slog.String("address", "[::]:9090"),
+		},
+	},
+	{
+		Level: slog.LevelInfo,
 		Msg:   "starting server",
 		Attrs: []slog.Attr{
 			slog.String("component", "controller"),
 			slog.String("subsystem", "controller.api"),
+		},
+	},
+	{
+		Level: slog.LevelInfo,
+		Msg:   "http(s) server started",
+		Attrs: []slog.Attr{
+			slog.String("component", "controller"),
+			slog.String("subsystem", "controller.api"),
+			slog.String("address", "[::]:8080"),
 		},
 	},
 	{

@@ -28,6 +28,7 @@ $ osapi agent start
 [2m10:00AM[0m [92mINF[0m registered in agent registry [2mcomponent=[0magent [2msubsystem=[0magent.heartbeat [2mmachine_id=[0md530664edc1c431eb5ef1e9dfd6617a5 [2mhostname=[0mweb-03 [2mkey=[0magents.d530664edc1c431eb5ef1e9dfd6617a5 [2mttl=[0m30s
 [2m10:00AM[0m [92mINF[0m node agent started successfully [2mcomponent=[0magent [2msubsystem=[0magent
 [2m10:00AM[0m [92mINF[0m metrics server started [2mcomponent=[0magent [2msubsystem=[0mmetrics [2maddr=[0m0.0.0.0:9091
+[2m10:00AM[0m [92mINF[0m http(s) server started [2mcomponent=[0magent [2msubsystem=[0mmetrics [2maddress=[0m[::]:9091
 ```
 
 With `--json`, the command prints:
@@ -38,6 +39,7 @@ With `--json`, the command prints:
 {"time":"2026-01-15T10:00:00Z","level":"INFO","msg":"registered in agent registry","component":"agent","subsystem":"agent.heartbeat","machine_id":"d530664edc1c431eb5ef1e9dfd6617a5","hostname":"web-03","key":"agents.d530664edc1c431eb5ef1e9dfd6617a5","ttl":"30s"}
 {"time":"2026-01-15T10:00:00Z","level":"INFO","msg":"node agent started successfully","component":"agent","subsystem":"agent"}
 {"time":"2026-01-15T10:00:00Z","level":"INFO","msg":"metrics server started","component":"agent","subsystem":"metrics","addr":"0.0.0.0:9091"}
+{"time":"2026-01-15T10:00:00Z","level":"INFO","msg":"http(s) server started","component":"agent","subsystem":"metrics","address":"[::]:9091"}
 ```
 
 ## Flags

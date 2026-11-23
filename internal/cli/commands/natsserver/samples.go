@@ -58,6 +58,15 @@ var StartLogs = []command.LogLine{
 	},
 	{
 		Level: slog.LevelInfo,
+		Msg:   "http(s) server started",
+		Attrs: []slog.Attr{
+			slog.String("component", "nats"),
+			slog.String("subsystem", "metrics"),
+			slog.String("address", "[::]:9092"),
+		},
+	},
+	{
+		Level: slog.LevelInfo,
 		Msg:   "registered in component registry",
 		Attrs: []slog.Attr{
 			slog.String("component", "nats"),
