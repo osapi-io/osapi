@@ -806,13 +806,13 @@ func ExportProviders(
 	}
 
 	return map[string]any{
-		"host":        e.host(),
-		"disk":        e.disk(),
-		"memory":      e.memory(),
-		"load":        e.load(),
-		"cron":        e.cron(),
-		"process":     e.process(),
-		"user":        e.user(),
+		"host":    e.host(),
+		"disk":    e.disk(),
+		"memory":  e.memory(),
+		"load":    e.load(),
+		"cron":    e.cron(),
+		"process": e.process(),
+		"user":    e.user(),
 	}
 }
 
