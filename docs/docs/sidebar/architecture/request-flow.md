@@ -65,6 +65,22 @@ for `group:web`, `group:web.dev` and `group:web.dev.us-east`. An agent can have
 up to five labels. Each prefix of each label is a JetStream consumer. Thus a
 large fleet with many labels needs an external NATS cluster.
 
+Each consumer is durable, and its name has the machine ID of the agent. NATS
+removes a consumer that has no fetch for `agent.consumer.inactive_threshold`, 24
+hours by default. Thus a host that gets a new machine ID, such as a rebuilt VM,
+does not keep its old consumers in the stream. An agent that starts again in
+that time continues with the same consumers. The agent sets the threshold each
+time it starts, so a consumer that had no threshold gets it.
+
+Keep the threshold at or above `nats.stream.max_age`. A new consumer gets each
+job that is in the stream. When the threshold is longer than the stream keeps a
+job, that is only the jobs that came while the agent was gone.
+
+If the agent cannot make or bind a consumer, for example when the stream has its
+maximum number of consumers, it reports the `ConsumersUnavailable` condition and
+tries again each 10 seconds. Refer to
+[Agent lifecycle](../features/agent-lifecycle.md#node-conditions).
+
 ## The job
 
 The controller writes the job to a KV bucket, and the job stays there. The

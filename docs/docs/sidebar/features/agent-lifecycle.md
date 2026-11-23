@@ -14,17 +14,24 @@ A condition is a boolean that compares a value with a limit. The agent
 calculates the conditions at each heartbeat (10 seconds). They show if something
 is wrong. The operator does not need to read the raw metrics.
 
-| Condition        | Default Threshold    | Data Source      |
-| ---------------- | -------------------- | ---------------- |
-| `MemoryPressure` | Memory used > 90%    | Heartbeat memory |
-| `HighLoad`       | Load1 > 2x CPU count | Heartbeat load   |
-| `DiskPressure`   | Any disk > 90% used  | Heartbeat disk   |
+| Condition              | Default Threshold                      | Data Source      |
+| ---------------------- | -------------------------------------- | ---------------- |
+| `MemoryPressure`       | Memory used > 90%                      | Heartbeat memory |
+| `HighLoad`             | Load1 > 2x CPU count                   | Heartbeat load   |
+| `DiskPressure`         | Any disk > 90% used                    | Heartbeat disk   |
+| `ConsumersUnavailable` | A job consumer cannot be made or bound | Job consumers    |
 
 The agent evaluates each condition at each heartbeat, and keeps:
 
 - **Reason**: an explanation for a person, for example "memory 94% used,
   15.1/16.0 GB"
 - **LastTransitionTime**: the last time that the condition started or stopped
+
+`ConsumersUnavailable` holds while a JetStream consumer of the agent does not
+run, for example when the stream has its maximum number of consumers. The reason
+gives the number of consumers and the error of one of them. The agent logs the
+error and tries again each 10 seconds. While the condition holds, the agent can
+miss jobs, and a broadcast can show a `timeout` row for it.
 
 The API and the CLI show only the conditions that hold now. A condition that
 does not hold is not in the answer. The notifier uses the full list of the

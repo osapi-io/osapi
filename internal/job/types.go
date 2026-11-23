@@ -328,6 +328,9 @@ const (
 	ConditionHighLoad       = client.ConditionHighLoad
 	ConditionDiskPressure   = client.ConditionDiskPressure
 	ConditionDrainStuck     = client.ConditionDrainStuck
+	// ConditionConsumersUnavailable is set while a job consumer of the
+	// agent cannot be created or bound.
+	ConditionConsumersUnavailable = client.ConditionConsumersUnavailable
 )
 
 // Agent state constants re-exported from the SDK.

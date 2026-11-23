@@ -798,14 +798,17 @@ func (e NetworkInterfaceRouteResultStatus) Valid() bool {
 
 // Defines values for NodeConditionType.
 const (
-	DiskPressure   NodeConditionType = "DiskPressure"
-	HighLoad       NodeConditionType = "HighLoad"
-	MemoryPressure NodeConditionType = "MemoryPressure"
+	ConsumersUnavailable NodeConditionType = "ConsumersUnavailable"
+	DiskPressure         NodeConditionType = "DiskPressure"
+	HighLoad             NodeConditionType = "HighLoad"
+	MemoryPressure       NodeConditionType = "MemoryPressure"
 )
 
 // Valid indicates whether the value is a known member of the NodeConditionType enum.
 func (e NodeConditionType) Valid() bool {
 	switch e {
+	case ConsumersUnavailable:
+		return true
 	case DiskPressure:
 		return true
 	case HighLoad:
@@ -3569,7 +3572,7 @@ type NetworkInterfaceUpdateResponse struct {
 type NodeCondition struct {
 	LastTransitionTime time.Time         `json:"last_transition_time"`
 	Reason             *string           `json:"reason,omitempty"`
-	Type               NodeConditionType `json:"type" validate:"oneof=MemoryPressure HighLoad DiskPressure"`
+	Type               NodeConditionType `json:"type" validate:"oneof=MemoryPressure HighLoad DiskPressure ConsumersUnavailable"`
 }
 
 // NodeConditionType defines model for NodeCondition.Type.

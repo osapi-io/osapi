@@ -271,9 +271,10 @@ components:
             - MemoryPressure
             - HighLoad
             - DiskPressure
+            - ConsumersUnavailable
           type: string
           x-oapi-codegen-extra-tags:
-            validate: oneof=MemoryPressure HighLoad DiskPressure
+            validate: oneof=MemoryPressure HighLoad DiskPressure ConsumersUnavailable
       required:
         - type
         - last_transition_time
