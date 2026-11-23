@@ -203,6 +203,10 @@ paths:
       summary: Get the timezone of the host
       tags:
         - timezone_operations
+      x-osapi-examples:
+        - doc: A Linux host on UTC
+          input:
+            hostname: web-01
       x-osapi-method: get
     put:
       description: 'Sets the timezone with timedatectl set-timezone. A host that already has the timezone does not change and reports changed: false. It runs on the Debian family only, and elsewhere reports skipped.'
@@ -264,6 +268,15 @@ paths:
       summary: Set the timezone of the host
       tags:
         - timezone_operations
+      x-osapi-examples:
+        - doc: Set a new timezone
+          input:
+            hostname: web-01
+            timezone: America/New_York
+        - doc: A host that already has the timezone
+          input:
+            hostname: web-01
+            timezone: UTC
       x-osapi-method: update
 tags:
   - description: The timezone of the host

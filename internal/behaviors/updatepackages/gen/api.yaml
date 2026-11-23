@@ -191,6 +191,10 @@ paths:
       summary: List the packages the index has newer versions of
       tags:
         - updatepackages_operations
+      x-osapi-examples:
+        - doc: Two updates
+          input:
+            hostname: web-01
       x-osapi-method: list
     put:
       description: 'Runs apt-get update. It reports changed: true when the Release file of a repository under /var/lib/apt/lists changed, and changed: false when each repository was unchanged.'
@@ -246,6 +250,10 @@ paths:
       summary: Refresh the package index
       tags:
         - updatepackages_operations
+      x-osapi-examples:
+        - doc: The repositories are unchanged since the last refresh
+          input:
+            hostname: web-01
       x-osapi-method: update
 tags:
   - description: The updates the package index has for the host

@@ -615,6 +615,14 @@ var globalFlags = map[string]bool{
 	"j": true, "d": true, "f": true, "h": true,
 }
 
+// GlobalFlag reports whether name, without its dashes, is a flag that the
+// root command adds to each command, such as json.
+func GlobalFlag(
+	name string,
+) bool {
+	return globalFlags[name]
+}
+
 // exampleFlagProblems are the flags that an example of m names and the
 // command does not have: its input's flags, and the flag of each key that
 // its Flag names.

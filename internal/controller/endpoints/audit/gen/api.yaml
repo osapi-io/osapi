@@ -277,6 +277,21 @@ paths:
       summary: List audit log entries
       tags:
         - audit
+      x-osapi-examples:
+        - doc: List audit log entries
+          input: {}
+        - doc: List audit log entries, with --limit 10 --offset 20
+          input:
+            limit: 10
+            offset: 20
+        - doc: List audit log entries, with --writes --user ops@example.com
+          input:
+            user: ops@example.com
+            writes: true
+        - doc: List audit log entries, with --operation hostname --status 403
+          input:
+            operation: hostname
+            status: 403
       x-osapi-method: list
   /api/audit/{id}:
     get:
@@ -341,6 +356,10 @@ paths:
       summary: Get a single audit log entry
       tags:
         - audit
+      x-osapi-examples:
+        - doc: Get a single audit log entry
+          input:
+            id: 550e8400-e29b-41d4-a716-446655440000
       x-osapi-method: get
   /api/audit/export:
     get:
@@ -383,6 +402,9 @@ paths:
       summary: Export all audit log entries
       tags:
         - audit
+      x-osapi-examples:
+        - doc: Export all audit log entries
+          input: {}
       x-osapi-method: export
 tags:
   - description: Audit log endpoints for viewing API activity.

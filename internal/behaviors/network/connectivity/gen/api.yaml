@@ -179,6 +179,15 @@ paths:
       summary: Ping an address from the host
       tags:
         - network_connectivity_operations
+      x-osapi-examples:
+        - doc: A host that answers
+          input:
+            address: 127.0.0.1
+            hostname: web-01
+        - doc: A host that does not answer
+          input:
+            address: 192.0.2.1
+            hostname: web-01
       x-osapi-method: ping
 tags:
   - description: Whether the host reaches an address, by ICMP ping

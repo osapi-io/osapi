@@ -33,6 +33,29 @@ what the generator writes.
 | `types.gen.go`           | The types that more than one service has                  |
 | `services.gen.go`        | The struct that holds each service, which `Client` embeds |
 
+## The examples and the pages are generated
+
+The same `go generate` run writes a program for each service,
+`examples/sdk/client/<service>.go`. The program calls each method with the input
+of each example of the method's definition. The endpoint layer puts these inputs
+in the spec, in the `x-osapi-examples` extension of each operation: it reads the
+flags of each CLI example into the parameters and the body. Give the name of an
+example to run it, such as `go run network_dns.go update`. `examples-check`
+compiles each program.
+
+`just sdk-docs-generate` writes the reference pages under
+`docs/docs/sidebar/sdk/client`, one for each service, and the table of services
+in `client.md`. A page has the methods of the service from the SDK's source,
+with their signatures and doc comments, the permission of each method from the
+spec, the code of each example, and the types. `just generate` runs it after
+`go generate`.
+
+`sdk-gen-check` fails when an example or a page is not what the generator
+writes. To change one, change the definition, then run `just generate`.
+`file_upload.go` in `examples/sdk/client` is the only example that a person
+writes: it calls `File.Upload`, `File.Update` and `File.GetChanged`, which the
+generator does not write.
+
 ## Names
 
 The generator takes each name from the spec. It does not keep a list of names.

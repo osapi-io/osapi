@@ -23,18 +23,25 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 )
 
-type MainTestSuite struct {
+// genSuite has a root with the test spec, and the helpers of the suites of
+// the generator. It has no tests of its own.
+type genSuite struct {
 	suite.Suite
 
 	root string
 }
 
-func (s *MainTestSuite) SetupTest() {
+type MainTestSuite struct {
+	genSuite
+}
+
+func (s *genSuite) SetupTest() {
 	s.root = s.T().TempDir()
 	spec, err := os.ReadFile("sdkmodel/testdata/spec.yaml")
 	s.Require().NoError(err)
@@ -48,7 +55,7 @@ func (s *MainTestSuite) SetupTest() {
 	)
 }
 
-func (s *MainTestSuite) write(
+func (s *genSuite) write(
 	rel string,
 	text string,
 ) {
@@ -57,7 +64,7 @@ func (s *MainTestSuite) write(
 	s.Require().NoError(os.WriteFile(path, []byte(text), 0o644))
 }
 
-func (s *MainTestSuite) read(
+func (s *genSuite) read(
 	rel string,
 ) string {
 	data, err := os.ReadFile(filepath.Join(s.root, dir, rel))
@@ -67,7 +74,7 @@ func (s *MainTestSuite) read(
 }
 
 func (s *MainTestSuite) TestRun() {
-	s.Require().NoError(run(s.root))
+	s.Require().NoError(generate(s.root, false))
 
 	tests := []struct {
 		name         string
@@ -132,14 +139,14 @@ func (s *MainTestSuite) TestRun() {
 
 func (s *MainTestSuite) TestRunErrors() {
 	s.Run("when the spec is not there", func() {
-		s.Error(run(filepath.Join(s.root, "none")))
+		s.Error(generate(filepath.Join(s.root, "none"), false))
 	})
 	s.Run("when the spec is not a model", func() {
 		s.write("internal/controller/api/gen/api.yaml",
 			"openapi: 3.0.0\ninfo: {title: t, version: '1'}\npaths:\n"+
 				"  /api/x:\n    get:\n      operationId: X\n      tags: [Nope]\n"+
 				"      responses: {'200': {description: ok}}\n")
-		s.ErrorContains(run(s.root), "no tag of the spec")
+		s.ErrorContains(generate(s.root, false), "no tag of the spec")
 	})
 }
 
@@ -147,4 +154,13 @@ func TestMainTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(MainTestSuite))
+}
+
+// replaceOnce is text with the first old replaced by repl.
+func replaceOnce(
+	text string,
+	old string,
+	repl string,
+) string {
+	return strings.Replace(text, old, repl, 1)
 }

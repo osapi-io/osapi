@@ -132,6 +132,6 @@ method.
   certificate behavior
 - [CLI Reference](../usage/cli/client/node/certificate/certificate.mdx):
   certificate commands
-- [SDK Reference](../sdk/client/security/certificate.md): Certificate service
+- [SDK Reference](../sdk/client/node/certificate.md): Certificate service
 - [Platform Detection](../sdk/platform/detection.md): OS family detection
 - [Configuration](../usage/configuration.md): full configuration reference

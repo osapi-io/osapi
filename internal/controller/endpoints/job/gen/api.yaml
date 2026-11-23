@@ -299,6 +299,13 @@ paths:
       summary: List jobs
       tags:
         - job_operations
+      x-osapi-examples:
+        - doc: List jobs
+          input: {}
+        - doc: List jobs, with --status completed --limit 3
+          input:
+            limit: 3
+            status: completed
       x-osapi-method: list
   /api/job/{id}:
     delete:
@@ -353,6 +360,10 @@ paths:
       summary: Delete a job
       tags:
         - job_operations
+      x-osapi-examples:
+        - doc: Delete a job
+          input:
+            id: 550e8400-e29b-41d4-a716-446655440000
       x-osapi-method: delete
     get:
       description: Retrieve details of a specific job by its ID. A job whose target is outside the target scope of the token is not found.
@@ -410,6 +421,10 @@ paths:
       summary: Get job detail
       tags:
         - job_operations
+      x-osapi-examples:
+        - doc: Get job detail
+          input:
+            id: 550e8400-e29b-41d4-a716-446655440000
       x-osapi-method: get
   /api/job/{id}/retry:
     post:
@@ -478,6 +493,10 @@ paths:
       summary: Retry a job
       tags:
         - job_operations
+      x-osapi-examples:
+        - doc: Retry a job
+          input:
+            id: 550e8400-e29b-41d4-a716-446655440000
       x-osapi-method: retry
 tags:
   - description: Operations related to the job queue.

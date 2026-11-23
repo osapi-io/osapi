@@ -133,6 +133,9 @@ paths:
       summary: Show the health of the NATS server
       tags:
         - nats
+      x-osapi-examples:
+        - doc: Show the health of the NATS server
+          input: {}
       x-osapi-method: status
 tags:
   - description: The NATS server of the fleet.

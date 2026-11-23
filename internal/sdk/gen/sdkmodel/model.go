@@ -27,6 +27,7 @@
 package sdkmodel
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"slices"
@@ -40,6 +41,11 @@ import (
 // the method in its group, such as get or drain. The endpoint layer writes
 // it.
 const MethodExtension = "x-osapi-method"
+
+// ExamplesExtension is the extension of an operation of the spec that has
+// the examples of its method, each with its doc and its input. The endpoint
+// layer writes it.
+const ExamplesExtension = "x-osapi-examples"
 
 // Model is the SDK that the spec describes.
 type Model struct {
@@ -59,6 +65,9 @@ type Service struct {
 	Doc string
 	// Methods are the service's methods, in the order of their paths.
 	Methods []*Method
+	// Node is true for a group of a node, whose paths start with
+	// /api/node/, and false for a group of the controller.
+	Node bool
 }
 
 // Method is one operation of the spec.
@@ -95,6 +104,18 @@ type Method struct {
 	Result *TypeRef
 	// Statuses are the status codes that the spec declares, in order.
 	Statuses []int
+	// Examples are the examples of the method's definition, in their
+	// order.
+	Examples []*Example
+}
+
+// Example is one example of a method: a call with an input.
+type Example struct {
+	// Doc says what the example shows.
+	Doc string `json:"doc"`
+	// Input is the value of each parameter and each property of the body
+	// that the example sets, by its name in the spec.
+	Input map[string]any `json:"input"`
 }
 
 // Target is the parameter of the path that names the hosts, hostname, or
@@ -312,6 +333,7 @@ func (b *builder) services() ([]*Service, error) {
 			continue
 		}
 		s.Name = group[s]
+		s.Node = node[s]
 		names[s.Name] = append(names[s.Name], s)
 		out = append(out, s)
 	}
@@ -394,6 +416,15 @@ func (b *builder) method(
 		Path:        path,
 		Summary:     op.Summary,
 		Description: op.Description,
+	}
+	if raw, ok := op.Extensions[ExamplesExtension]; ok {
+		data, err := json.Marshal(raw)
+		if err == nil {
+			err = json.Unmarshal(data, &m.Examples)
+		}
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", ExamplesExtension, err)
+		}
 	}
 	if op.Security != nil {
 		for _, req := range *op.Security {

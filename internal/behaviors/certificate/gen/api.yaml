@@ -297,6 +297,10 @@ paths:
       summary: List the certificate authorities that the host trusts
       tags:
         - certificate_operations
+      x-osapi-examples:
+        - doc: A Debian host with a system CA
+          input:
+            hostname: web-01
       x-osapi-method: list
     post:
       description: 'Writes the PEM of the object as a file with the osapi- prefix, such as osapi-internal-ca.crt for internal-ca, in the family''s local directory: /usr/local/share/ca-certificates on the Debian family, /etc/pki/trust/anchors on SUSE, /etc/pki/ca-trust/source/anchors on RHEL and Fedora. Then it rebuilds the trust store: with update-ca-certificates on the Debian family and SUSE, and with update-ca-trust on the others. Alpine reports skipped. A CA that osapi deployed already with the same content does not change and reports changed: false. A file of that name that osapi did not write is refused. macOS reports skipped.'
@@ -358,6 +362,12 @@ paths:
       summary: Add a certificate authority to the trust store
       tags:
         - certificate_operations
+      x-osapi-examples:
+        - doc: Add a CA
+          input:
+            hostname: web-01
+            name: internal-ca
+            object: internal-ca.pem
       x-osapi-method: create
   /api/node/{hostname}/certificate/{name}:
     delete:
@@ -415,6 +425,11 @@ paths:
       summary: Remove a certificate authority that osapi deployed
       tags:
         - certificate_operations
+      x-osapi-examples:
+        - doc: Remove a CA
+          input:
+            hostname: web-01
+            name: internal-ca
       x-osapi-method: delete
     get:
       description: Reads one CA from the same list, by the name that list gives it. A CA that the host does not trust is not found. A name with a slash, such as a system CA of the Debian family, is in list only.
@@ -471,6 +486,15 @@ paths:
       summary: Get one certificate authority
       tags:
         - certificate_operations
+      x-osapi-examples:
+        - doc: A CA that osapi deployed, by the name it was deployed with
+          input:
+            hostname: web-01
+            name: internal-ca
+        - doc: A CA of a Mac
+          input:
+            hostname: web-01
+            name: osapi example CA
       x-osapi-method: get
     put:
       description: Writes the CA from the object, or from the one that it was deployed from when the object is empty, and rebuilds the trust store when the file changed. A CA that osapi did not deploy is not found. macOS reports skipped.
@@ -533,6 +557,16 @@ paths:
       summary: Write a certificate authority that osapi deployed again
       tags:
         - certificate_operations
+      x-osapi-examples:
+        - doc: Write a CA from a new object
+          input:
+            hostname: web-01
+            name: internal-ca
+            object: internal-ca-2.pem
+        - doc: The object that it was deployed from
+          input:
+            hostname: web-01
+            name: internal-ca
       x-osapi-method: update
 tags:
   - description: The certificate authorities that the host trusts

@@ -248,6 +248,11 @@ paths:
       summary: Drop the DNS resolvers osapi set on an interface
       tags:
         - network_dns_operations
+      x-osapi-examples:
+        - doc: An interface osapi set
+          input:
+            hostname: web-01
+            interface_name: osapi0
       x-osapi-method: delete
     get:
       description: 'Reads the servers and the search domains of the interface: resolvectl on Linux, with resolv.conf on a host that has no resolvers per interface, such as a container, and scutil on macOS.'
@@ -304,6 +309,15 @@ paths:
       summary: Get the DNS resolvers of an interface
       tags:
         - network_dns_operations
+      x-osapi-examples:
+        - doc: An interface with servers and a domain
+          input:
+            hostname: web-01
+            interface_name: osapi0
+        - doc: A Mac
+          input:
+            hostname: web-01
+            interface_name: en0
       x-osapi-method: get
     put:
       description: Writes a netplan file of the interface's own, such as /etc/netplan/osapi-dns-eth0.yaml for eth0, under the netplan definition that matches the interface, and applies it. A definition that matches several interfaces, such as cloud-init's all for en*, gives each of them the resolvers. An empty list keeps the interface's servers or domains, and an interface with no resolvers yet starts from none. override_dhcp drops the servers DHCP gives. It runs on the Debian family, and elsewhere, and in a container, reports skipped.
@@ -366,6 +380,20 @@ paths:
       summary: Set the DNS resolvers of an interface
       tags:
         - network_dns_operations
+      x-osapi-examples:
+        - doc: Set the servers of an interface
+          input:
+            hostname: web-01
+            interface_name: osapi0
+            servers:
+              - 9.9.9.9
+        - doc: Set the search domains, and keep the servers
+          input:
+            hostname: web-01
+            interface_name: osapi0
+            override_dhcp: true
+            search_domains:
+              - corp.example
       x-osapi-method: update
 tags:
   - description: The DNS resolvers of each interface of the host

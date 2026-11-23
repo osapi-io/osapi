@@ -369,6 +369,10 @@ paths:
       summary: List the services of the host
       tags:
         - service_operations
+      x-osapi-examples:
+        - doc: A service that osapi deployed reads by its name
+          input:
+            hostname: web-01
       x-osapi-method: list
     post:
       description: 'Gets the object from the object store and writes it as the unit file of the service, such as /etc/systemd/system/osapi-app.service for app, then reloads systemd. A unit file at that path that osapi did not write, such as the agent''s own osapi-agent.service, is refused. A unit file that already has the content does not change. The service does not start: start and enable are their own actions.'
@@ -430,6 +434,12 @@ paths:
       summary: Deploy a service
       tags:
         - service_operations
+      x-osapi-examples:
+        - doc: Deploy a unit file
+          input:
+            hostname: web-01
+            name: app
+            object: app.service
       x-osapi-method: create
   /api/node/{hostname}/service/{name}:
     delete:
@@ -487,6 +497,15 @@ paths:
       summary: Remove a service that osapi deployed
       tags:
         - service_operations
+      x-osapi-examples:
+        - doc: Remove a service
+          input:
+            hostname: web-01
+            name: app
+        - doc: A unit file that osapi did not deploy
+          input:
+            hostname: web-01
+            name: agent
       x-osapi-method: delete
     get:
       description: Reads one service from the same list, by its name with .service or without it. A service that osapi deployed reads by the name it was deployed with, such as app, as its writes take it, or by its unit's name, osapi-app. A service that systemd has not loaded is not found.
@@ -543,6 +562,23 @@ paths:
       summary: Get one service
       tags:
         - service_operations
+      x-osapi-examples:
+        - doc: A running service
+          input:
+            hostname: web-01
+            name: ssh
+        - doc: A name with .service
+          input:
+            hostname: web-01
+            name: ssh.service
+        - doc: A service that osapi deployed, by the name it was deployed with
+          input:
+            hostname: web-01
+            name: app
+        - doc: A service that osapi deployed, by its unit's name
+          input:
+            hostname: web-01
+            name: osapi-app
       x-osapi-method: get
     put:
       description: Writes the object as the unit file of a service that osapi deployed, then reloads systemd when the file changed. A service that osapi did not deploy is not found.
@@ -605,6 +641,12 @@ paths:
       summary: Deploy a new unit file for a service
       tags:
         - service_operations
+      x-osapi-examples:
+        - doc: A new unit file
+          input:
+            hostname: web-01
+            name: app
+            object: app-v2.service
       x-osapi-method: update
   /api/node/{hostname}/service/{name}/disable:
     post:
@@ -662,6 +704,11 @@ paths:
       summary: Make a service that osapi deployed not start at boot
       tags:
         - service_operations
+      x-osapi-examples:
+        - doc: Disable the service
+          input:
+            hostname: web-01
+            name: app
       x-osapi-method: disable
   /api/node/{hostname}/service/{name}/enable:
     post:
@@ -719,6 +766,15 @@ paths:
       summary: Make a service that osapi deployed start at boot
       tags:
         - service_operations
+      x-osapi-examples:
+        - doc: Enable the service
+          input:
+            hostname: web-01
+            name: app
+        - doc: A unit with no [Install] section
+          input:
+            hostname: web-01
+            name: static
       x-osapi-method: enable
   /api/node/{hostname}/service/{name}/restart:
     post:
@@ -776,6 +832,11 @@ paths:
       summary: Restart a service that osapi deployed
       tags:
         - service_operations
+      x-osapi-examples:
+        - doc: Restart the service
+          input:
+            hostname: web-01
+            name: app
       x-osapi-method: restart
   /api/node/{hostname}/service/{name}/start:
     post:
@@ -833,6 +894,11 @@ paths:
       summary: Start a service that osapi deployed
       tags:
         - service_operations
+      x-osapi-examples:
+        - doc: Start the service
+          input:
+            hostname: web-01
+            name: app
       x-osapi-method: start
   /api/node/{hostname}/service/{name}/stop:
     post:
@@ -890,6 +956,11 @@ paths:
       summary: Stop a service that osapi deployed
       tags:
         - service_operations
+      x-osapi-examples:
+        - doc: Stop the service
+          input:
+            hostname: web-01
+            name: app
       x-osapi-method: stop
 tags:
   - description: The systemd services of the host

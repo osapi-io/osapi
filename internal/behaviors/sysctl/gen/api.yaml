@@ -291,6 +291,18 @@ paths:
       summary: List the kernel's parameters and which osapi manages
       tags:
         - sysctl_operations
+      x-osapi-examples:
+        - doc: Every parameter, and which osapi manages
+          input:
+            hostname: web-01
+        - doc: One part of the tree
+          input:
+            hostname: web-01
+            prefix: net.ipv4
+        - doc: A managed parameter the kernel does not have right now
+          input:
+            hostname: web-01
+            prefix: net.bridge
       x-osapi-method: list
     post:
       description: 'Writes osapi-net.ipv4.ip_forward.conf for net.ipv4.ip_forward to behaviors.sysctl.dir, /etc/sysctl.d by default, and applies it with sysctl -p. It fails when sysctl -p fails, because the value is not set. A second run with the same value changes nothing and reports changed: false. If the kernel has a different value, for example after a failed apply, it applies the value again.'
@@ -352,6 +364,12 @@ paths:
       summary: Manage a kernel parameter and apply it
       tags:
         - sysctl_operations
+      x-osapi-examples:
+        - doc: Turn on IP forwarding
+          input:
+            hostname: web-01
+            key: net.ipv4.ip_forward
+            value: "1"
       x-osapi-method: create
   /api/node/{hostname}/sysctl/{key}:
     delete:
@@ -409,6 +427,11 @@ paths:
       summary: Stop the management of a kernel parameter
       tags:
         - sysctl_operations
+      x-osapi-examples:
+        - doc: Remove a parameter
+          input:
+            hostname: web-01
+            key: vm.swappiness
       x-osapi-method: delete
     get:
       operationId: GetNodeSysctlByKey
@@ -464,6 +487,19 @@ paths:
       summary: Get a kernel parameter's current value, and whether osapi manages it
       tags:
         - sysctl_operations
+      x-osapi-examples:
+        - doc: A parameter osapi manages
+          input:
+            hostname: web-01
+            key: vm.swappiness
+        - doc: A value of several fields
+          input:
+            hostname: web-01
+            key: net.ipv4.ping_group_range
+        - doc: A managed parameter the kernel does not have right now
+          input:
+            hostname: web-01
+            key: net.bridge.bridge-nf-call-iptables
       x-osapi-method: get
     put:
       description: 'The same as create, addressed by the parameter: osapi manages the parameter from then on whether it did before or not. Setting the value it already has reports changed: false.'
@@ -526,6 +562,12 @@ paths:
       summary: Set a kernel parameter, manage it, and apply it
       tags:
         - sysctl_operations
+      x-osapi-examples:
+        - doc: Lower swappiness
+          input:
+            hostname: web-01
+            key: vm.swappiness
+            value: "10"
       x-osapi-method: update
 tags:
   - description: Kernel parameters, written to sysctl.d files and applied

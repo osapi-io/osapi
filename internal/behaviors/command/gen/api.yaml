@@ -234,6 +234,23 @@ paths:
       summary: Run a program with its arguments
       tags:
         - command_operations
+      x-osapi-examples:
+        - doc: Print a word
+          input:
+            args:
+              - hello
+            command: echo
+            hostname: web-01
+        - doc: A program that exits non-zero
+          input:
+            command: "false"
+            hostname: web-01
+        - doc: In a directory, for at most 5 seconds
+          input:
+            command: "true"
+            cwd: /tmp
+            hostname: web-01
+            timeout: 5
       x-osapi-method: exec
   /api/node/{hostname}/command/shell:
     post:
@@ -296,6 +313,15 @@ paths:
       summary: Run a command line through /bin/sh -c
       tags:
         - command_operations
+      x-osapi-examples:
+        - doc: A pipe
+          input:
+            command: echo hello | tr a-z A-Z
+            hostname: web-01
+        - doc: A command line that exits non-zero
+          input:
+            command: exit 3
+            hostname: web-01
       x-osapi-method: shell
 tags:
   - description: Run a command on target hosts

@@ -188,6 +188,12 @@ paths:
       summary: List admission records
       tags:
         - admission
+      x-osapi-examples:
+        - doc: List admission records
+          input: {}
+        - doc: List admission records, with --state pending
+          input:
+            state: pending
       x-osapi-method: list
   /api/admission/{machine_id}:
     delete:
@@ -249,6 +255,10 @@ paths:
       summary: Delete a machine
       tags:
         - admission
+      x-osapi-examples:
+        - doc: Delete a machine
+          input:
+            machine_id: d530664edc1c431eb5ef1e9dfd6617a5
       x-osapi-method: delete
     get:
       description: Returns one machine's admission record by machine ID.
@@ -313,6 +323,10 @@ paths:
       summary: Get a machine's admission record
       tags:
         - admission
+      x-osapi-examples:
+        - doc: Get a machine's admission record
+          input:
+            machine_id: d530664edc1c431eb5ef1e9dfd6617a5
       x-osapi-method: get
   /api/admission/{machine_id}/admit:
     post:
@@ -386,6 +400,11 @@ paths:
       summary: Admit a pending machine
       tags:
         - admission
+      x-osapi-examples:
+        - doc: Admit a pending machine
+          input:
+            fingerprint: SHA256:1f53dea6...
+            machine_id: d530664edc1c431eb5ef1e9dfd6617a5
       x-osapi-method: admit
   /api/admission/{machine_id}/reject:
     post:
@@ -453,6 +472,11 @@ paths:
       summary: Reject a pending machine
       tags:
         - admission
+      x-osapi-examples:
+        - doc: Reject a pending machine
+          input:
+            machine_id: d530664edc1c431eb5ef1e9dfd6617a5
+            reason: unknown host
       x-osapi-method: reject
   /api/admission/{machine_id}/revoke:
     post:
@@ -514,6 +538,10 @@ paths:
       summary: Revoke an admitted machine
       tags:
         - admission
+      x-osapi-examples:
+        - doc: Revoke an admitted machine
+          input:
+            machine_id: d530664edc1c431eb5ef1e9dfd6617a5
       x-osapi-method: revoke
 tags:
   - description: Admit, reject and revoke the nodes that ask to join.

@@ -472,6 +472,14 @@ paths:
       summary: List the containers of the host
       tags:
         - container_docker_operations
+      x-osapi-examples:
+        - doc: A host with a container
+          input:
+            hostname: web-01
+        - doc: Only the stopped ones
+          input:
+            hostname: web-01
+            state: stopped
       x-osapi-method: list
     post:
       description: 'Runs docker create, which pulls the image when the host does not have it. The environment goes on docker''s standard input, not in its arguments, which each user of the host can read. auto_start starts the container once it is made. A container of the name that the host has already is not made again, and reports changed: false.'
@@ -533,6 +541,15 @@ paths:
       summary: Create a container
       tags:
         - container_docker_operations
+      x-osapi-examples:
+        - doc: Create a container
+          input:
+            command:
+              - sleep
+              - "300"
+            hostname: web-01
+            image: alpine:3.20
+            name: osapitest
       x-osapi-method: create
   /api/node/{hostname}/container/docker/{name}:
     delete:
@@ -590,6 +607,11 @@ paths:
       summary: Remove a container
       tags:
         - container_docker_operations
+      x-osapi-examples:
+        - doc: Remove a container
+          input:
+            hostname: web-01
+            name: osapitest
       x-osapi-method: delete
     get:
       description: Reads one container by its name, its ID or the start of its ID. A container that the host does not have is not found.
@@ -646,6 +668,11 @@ paths:
       summary: Get one container
       tags:
         - container_docker_operations
+      x-osapi-examples:
+        - doc: A container
+          input:
+            hostname: web-01
+            name: osapitest
       x-osapi-method: get
   /api/node/{hostname}/container/docker/{name}/exec:
     post:
@@ -709,6 +736,14 @@ paths:
       summary: Run a command in a container
       tags:
         - container_docker_operations
+      x-osapi-examples:
+        - doc: Run a command
+          input:
+            command:
+              - echo
+              - hello
+            hostname: web-01
+            name: osapitest
       x-osapi-method: exec
   /api/node/{hostname}/container/docker/{name}/start:
     post:
@@ -766,6 +801,11 @@ paths:
       summary: Start a container
       tags:
         - container_docker_operations
+      x-osapi-examples:
+        - doc: Start a container
+          input:
+            hostname: web-01
+            name: osapitest
       x-osapi-method: start
   /api/node/{hostname}/container/docker/{name}/stop:
     post:
@@ -829,6 +869,12 @@ paths:
       summary: Stop a container
       tags:
         - container_docker_operations
+      x-osapi-examples:
+        - doc: Stop a container
+          input:
+            hostname: web-01
+            name: osapitest
+            timeout: 1
       x-osapi-method: stop
 tags:
   - description: The Docker containers of the host

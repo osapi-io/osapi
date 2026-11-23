@@ -277,6 +277,10 @@ paths:
       summary: List the images of the host
       tags:
         - container_image_operations
+      x-osapi-examples:
+        - doc: A host with an image
+          input:
+            hostname: web-01
       x-osapi-method: list
   /api/node/{hostname}/container/image/{image}:
     delete:
@@ -340,6 +344,11 @@ paths:
       summary: Remove an image
       tags:
         - container_image_operations
+      x-osapi-examples:
+        - doc: Remove an image
+          input:
+            hostname: web-01
+            image: alpine:3.20
       x-osapi-method: delete
   /api/node/{hostname}/container/image/pull:
     post:
@@ -402,6 +411,11 @@ paths:
       summary: Pull an image
       tags:
         - container_image_operations
+      x-osapi-examples:
+        - doc: Pull an image
+          input:
+            hostname: web-01
+            image: alpine:3.20
       x-osapi-method: pull
 tags:
   - description: The Docker images of the host

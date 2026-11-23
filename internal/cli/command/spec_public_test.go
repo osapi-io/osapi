@@ -60,6 +60,7 @@ var notDSL = map[string]bool{
 	"ConfigKeys":                   true,
 	"Check":                        true,
 	"FlagName":                     true,
+	"GlobalFlag":                   true,
 	"Validate":                     true,
 	"Scaffold":                     true,
 	"Refusals":                     true,

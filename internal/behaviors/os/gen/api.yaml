@@ -155,6 +155,10 @@ paths:
       summary: Get the operating system of the host
       tags:
         - os_operations
+      x-osapi-examples:
+        - doc: An Ubuntu host
+          input:
+            hostname: web-01
       x-osapi-method: get
 tags:
   - description: Get the operating system of target hosts

@@ -20,7 +20,11 @@ paths:
     get:
       operationId: GetNodeNetworkDnsByKey
       x-osapi-method: get
+      x-osapi-examples:
+        - doc: An interface
+          input: {hostname: web-01, interface_name: eth0}
       summary: Get the DNS resolvers of an interface
+      description: Reads the resolvers of the interface.
       tags: [Dns_API]
       security:
         - BearerAuth: [dns:read]
@@ -44,6 +48,9 @@ paths:
     put:
       operationId: PutNodeNetworkDns
       x-osapi-method: update
+      x-osapi-examples:
+        - doc: Override DHCP
+          input: {hostname: web-01, interface_name: eth0, override_dhcp: true}
       tags: [Dns_API]
       parameters:
         - $ref: '#/components/parameters/Hostname'
@@ -89,6 +96,9 @@ paths:
     get:
       operationId: GetNodeFile
       x-osapi-method: status
+      x-osapi-examples:
+        - doc: A file
+          input: {hostname: web-01, path: /etc/hosts}
       tags: [NodeFile_API]
       parameters:
         - $ref: '#/components/parameters/Hostname'
@@ -106,6 +116,11 @@ paths:
     get:
       operationId: GetJobs
       x-osapi-method: list
+      x-osapi-examples:
+        - doc: Every job
+          input: {}
+        - doc: Three jobs
+          input: {limit: 3, all: true}
       tags: [Job_API]
       parameters:
         - name: limit
@@ -125,6 +140,9 @@ paths:
     delete:
       operationId: DeleteJobByID
       x-osapi-method: delete
+      x-osapi-examples:
+        - doc: A job
+          input: {id: 550e8400-e29b-41d4-a716-446655440000}
       tags: [Job_API]
       parameters:
         - name: id

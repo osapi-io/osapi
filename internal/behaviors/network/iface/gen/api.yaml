@@ -376,6 +376,10 @@ paths:
       summary: List the network interfaces of the host
       tags:
         - network_interface_operations
+      x-osapi-examples:
+        - doc: A Linux host
+          input:
+            hostname: web-01
       x-osapi-method: list
   /api/node/{hostname}/network/interface/{name}:
     delete:
@@ -433,6 +437,11 @@ paths:
       summary: Drop the config osapi has of a network interface
       tags:
         - network_interface_operations
+      x-osapi-examples:
+        - doc: An interface osapi configures
+          input:
+            hostname: web-01
+            name: osapi0
       x-osapi-method: delete
     get:
       description: Reads the interface as list does.
@@ -489,6 +498,15 @@ paths:
       summary: Get a network interface of the host
       tags:
         - network_interface_operations
+      x-osapi-examples:
+        - doc: An interface with a DHCP address
+          input:
+            hostname: web-01
+            name: eth0
+        - doc: A Mac
+          input:
+            hostname: web-01
+            name: en0
       x-osapi-method: get
     post:
       description: 'Writes a netplan file of the interface''s own, such as /etc/netplan/osapi-osapi0.yaml for osapi0, under a netplan definition that is the interface''s own, and applies it. An interface the host does not have is not found. dhcp4 and dhcp6 are false unless given, so the interface has only the addresses given. An interface that a match defines, such as cloud-init''s all for en*, is refused, because the config would change each interface the match takes, now and later. An interface osapi already configures does not change: update replaces its config. It runs on the Debian family, and elsewhere, and in a container, reports skipped.'
@@ -551,6 +569,23 @@ paths:
       summary: Configure a network interface
       tags:
         - network_interface_operations
+      x-osapi-examples:
+        - doc: A static address
+          input:
+            addresses:
+              - 10.0.1.5/24
+            hostname: web-01
+            name: osapi0
+        - doc: Each setting
+          input:
+            addresses:
+              - 2001:db8::5/64
+            dhcp6: true
+            hostname: web-01
+            mac_address: 52:54:00:aa:bb:cc
+            mtu: 9000
+            name: osapi0
+            wakeonlan: true
       x-osapi-method: create
     put:
       description: 'Writes the interface''s netplan file over the one osapi has, as create writes it, and applies it. An interface osapi does not configure is not found: create configures it.'
@@ -613,6 +648,12 @@ paths:
       summary: Change the config osapi has of a network interface
       tags:
         - network_interface_operations
+      x-osapi-examples:
+        - doc: Move an interface to DHCP
+          input:
+            dhcp4: true
+            hostname: web-01
+            name: osapi0
       x-osapi-method: update
 tags:
   - description: The network interfaces of the host

@@ -78,7 +78,7 @@ test: linux-tune
 # a job. A check added here runs on a laptop and in CI, with no change to the
 # workflow.
 go_quick_checks := "just-fmt-check docs-fmt-check react-fmt-check react-unit react-generate-check go-mod-check go-pkg-check"
-go_slow_checks := "behavior-gen-check go-generate-check docs-gen-check cli-docs-gen-check behavior-scaffold-check endpoint-scaffold-check command-scaffold-check behavior-cover-check go-fmt-check go-vet examples-check spec-client-check"
+go_slow_checks := "behavior-gen-check go-generate-check docs-gen-check cli-docs-gen-check behavior-scaffold-check endpoint-scaffold-check command-scaffold-check behavior-cover-check go-fmt-check go-vet examples-check spec-client-check sdk-gen-check"
 
 # Fail when a behavior that osapi behavior create writes does not pass its tests
 #
@@ -351,6 +351,34 @@ behavior-gen-check:
         exit 1
     fi
 
+# Write the SDK's reference pages under docs/ from the spec and the SDK's
+# source, and format them as the site formatter does. go generate writes the
+# SDK first, so the pages show its methods.
+sdk-docs-generate:
+    just _docs-bun-install
+    go run ./internal/sdk/gen --docs
+    cd docs && bun run prettier docs/sidebar/sdk/client --write --config prettier.config.js --ignore-path .prettierignore > /dev/null
+
+# The SDK's examples and its reference pages are generated from the full spec,
+# from the examples of each method's definition, and from the SDK's source. A
+# method that changed without just generate leaves an example that calls the
+# old shape, or a page that shows it: both went stale by hand before (#1008,
+# #1013). Regenerate them and fail when one changed.
+sdk-gen-check:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    generated() {
+        find examples/sdk/client docs/docs/sidebar/sdk/client -type f -print | sort | xargs shasum
+    }
+    before=$(generated)
+    go generate ./pkg/sdk/client
+    just sdk-docs-generate
+    if [ "$before" != "$(generated)" ]; then
+        diff <(echo "$before") <(generated) || true
+        echo "the SDK's examples or pages are stale: run just generate and commit the result" >&2
+        exit 1
+    fi
+
 # go generate writes the full spec in internal/behaviors/all, which comes
 # before pkg/sdk/client, where internal/sdk/gen writes the SDK's typed
 # services from it. So one run leaves nothing stale.
@@ -358,6 +386,7 @@ behavior-gen-check:
 # Generate code
 generate:
     just go-generate
+    just sdk-docs-generate
     just cli-docs-generate
     just docs-generate
     just react-generate

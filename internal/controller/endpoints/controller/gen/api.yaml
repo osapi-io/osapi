@@ -133,6 +133,9 @@ paths:
       summary: Show the health of the controller
       tags:
         - controller
+      x-osapi-examples:
+        - doc: Show the health of the controller
+          input: {}
       x-osapi-method: status
 tags:
   - description: The controller of the fleet.

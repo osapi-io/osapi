@@ -149,6 +149,15 @@ func (b *builder) operation(
 		// generator names each typed method from it.
 		Extensions: map[string]any{MethodExtension: m.Name},
 	}
+	// The examples of the method, as the input that each one sends. The
+	// SDK's generator writes a program that calls the method with each one.
+	examples, err := specExamples(m)
+	if err != nil {
+		return nil, err
+	}
+	if len(examples) > 0 {
+		op.Extensions[ExamplesExtension] = examples
+	}
 	if perm := g.Permission(m); perm != "" {
 		op.Security = &openapi3.SecurityRequirements{{bearer: []string{string(perm)}}}
 	} else {
