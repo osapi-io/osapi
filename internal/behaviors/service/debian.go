@@ -172,6 +172,7 @@ func (d *debian) Deploy(
 			Content:  obj.Content,
 			Mode:     "0644",
 			Metadata: map[string]string{"object": u.Object},
+			Object:   u.Object,
 		})
 	if err != nil || !result.Changed {
 		return false, err

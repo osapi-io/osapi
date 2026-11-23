@@ -24,13 +24,19 @@ import "io/fs"
 
 // UpdateInput is a file to write and keep a record of.
 type UpdateInput struct {
-	Path     string            `json:"path"     validate:"required,startswith=/"  doc:"Absolute path of the file"                                                telemetry:"attr"`
+	Path     string            `json:"path"     validate:"required,startswith=/"  doc:"Absolute path of the file"                                                                      telemetry:"attr"`
 	Content  string            `json:"content"  validate:"required"               doc:"The file's whole content"`
-	Mode     string            `json:"mode"     validate:"omitempty,file_mode"    doc:"Permissions in octal, such as 0600; 0644 when empty"`
+	Mode     string            `json:"mode"     validate:"omitempty,file_mode"    doc:"Permissions in octal, such as 0600; when empty, a file keeps its mode and a new file gets 0644"`
 	Owner    string            `json:"owner"    validate:"omitempty,account_name" doc:"User that owns the file; left as written when empty"`
 	Group    string            `json:"group"    validate:"omitempty,account_name" doc:"Group that owns the file; left as written when empty"`
 	Secret   bool              `json:"secret"   validate:"omitempty"              doc:"The content is a secret: its record keeps no checksum of it"`
 	Metadata map[string]string `json:"metadata" validate:"omitempty"              doc:"What the caller keeps in the file's record, such as the setting it holds"`
+	// Object is the object of the object store that the content came from,
+	// which the controller's stale check compares with the object now.
+	Object string `json:"object" validate:"omitempty" doc:"The object of the object store that the content came from; empty when it came from no object"`
+	// ContentType is how the content was made from the object: as it is, or
+	// rendered as a template.
+	ContentType string `json:"content_type" validate:"omitempty,oneof=raw template" doc:"How the content was made from its object: raw or template"`
 }
 
 // DeleteInput is a file to stop managing.
@@ -61,7 +67,8 @@ type Record struct {
 type File struct {
 	Path    string
 	Content []byte
-	// Mode is the file's permissions; 0644 when zero.
+	// Mode is the file's permissions. Zero keeps the mode of a file that is
+	// there, and gives a new file 0644.
 	Mode fs.FileMode
 	// Owner and Group own the file when set, applied with chown.
 	Owner string
@@ -70,4 +77,8 @@ type File struct {
 	// secret's could be recovered by guessing.
 	Secret   bool
 	Metadata map[string]string
+	// Object and ContentType are where the content came from, for the
+	// record.
+	Object      string
+	ContentType string
 }

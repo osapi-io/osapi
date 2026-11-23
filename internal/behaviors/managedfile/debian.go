@@ -85,9 +85,14 @@ func (d *debian) Write(
 	ctx context.Context,
 	f File,
 ) (bool, error) {
+	// No mode keeps the mode of a file that is there: 0644 could give more
+	// access than somebody set. Only a new file gets 0644.
 	mode := f.Mode
 	if mode == 0 {
 		mode = 0o644
+		if info, err := d.fs.Stat(f.Path); err == nil {
+			mode = info.Mode().Perm()
+		}
 	}
 
 	changed := false
@@ -122,12 +127,14 @@ func (d *debian) Write(
 	}
 
 	state := State{
-		Path:       f.Path,
-		Mode:       fmt.Sprintf("%04o", mode.Perm()),
-		Owner:      f.Owner,
-		Group:      f.Group,
-		DeployedAt: time.Now().UTC().Format(time.RFC3339),
-		Metadata:   f.Metadata,
+		ObjectName:  f.Object,
+		ContentType: f.ContentType,
+		Path:        f.Path,
+		Mode:        fmt.Sprintf("%04o", mode.Perm()),
+		Owner:       f.Owner,
+		Group:       f.Group,
+		DeployedAt:  time.Now().UTC().Format(time.RFC3339),
+		Metadata:    f.Metadata,
 	}
 	if !f.Secret {
 		state.SHA256 = checksum(f.Content)
