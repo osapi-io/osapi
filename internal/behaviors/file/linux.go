@@ -46,8 +46,8 @@ type linux struct {
 	hostname string
 }
 
-// newLinux is the provider on each Linux host. It uses the providers of the
-// behaviors it requires.
+// newLinux is the provider on each Linux host and on macOS. It uses the
+// providers of the behaviors it requires.
 func newLinux(
 	h host.Host,
 ) (Provider, error) {

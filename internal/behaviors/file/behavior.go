@@ -61,6 +61,9 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Requires(object.Behavior),
 	behavior.Requires(managedfile.Behavior),
 	behavior.Platform(behavior.PlatformLinux, newLinux),
+	// macOS deploys the same way: managedfile reads the owner there with
+	// BSD stat.
+	behavior.Platform(behavior.PlatformDarwin, newLinux),
 	// It writes the path its caller names.
 	behavior.Writes("*"),
 	behavior.Read("status", GetStatus).

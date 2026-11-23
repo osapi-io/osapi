@@ -29,6 +29,7 @@ import (
 	"fmt"
 	"maps"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -52,7 +53,13 @@ type debian struct {
 	bucket   string
 	exec     host.Exec
 	hostname string
+	// stat are the arguments of stat that print a file's owner and group
+	// as owner:group: GNU's on Linux, BSD's on macOS.
+	stat []string
 }
+
+// gnuStat are the arguments of GNU stat that print owner:group.
+var gnuStat = []string{"-c", "%U:%G"}
 
 // NewDebian is the provider for a filesystem and a file state store. The
 // hand-written domains that write managed files build one with it.
@@ -63,7 +70,9 @@ func NewDebian(
 	exec host.Exec,
 	hostname string,
 ) Provider {
-	return &debian{fs: fs, state: state, bucket: bucket, exec: exec, hostname: hostname}
+	return &debian{
+		fs: fs, state: state, bucket: bucket, exec: exec, hostname: hostname, stat: gnuStat,
+	}
 }
 
 // newDebian is the provider on Debian and its family. It needs the file state
@@ -192,7 +201,7 @@ func (d *debian) own(
 		return false, nil
 	}
 
-	out, err := d.exec.RunCmd(ctx, "stat", []string{"-c", "%U:%G", "--", f.Path})
+	out, err := d.exec.RunCmd(ctx, "stat", append(slices.Clone(d.stat), "--", f.Path))
 	if err != nil {
 		return false, fmt.Errorf("read ownership: %w", err)
 	}

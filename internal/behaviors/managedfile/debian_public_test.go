@@ -77,6 +77,19 @@ func (s *DebianPublicTestSuite) TestNewDebian() {
 				FileState: providermocks.NewMockFileState(gomock.NewController(s.T())),
 			},
 		},
+		{
+			name:    "when a Mac has no file state store, it declines",
+			h:       host.Host{Platform: "darwin"},
+			wantErr: behavior.ErrUnsupported,
+		},
+		{
+			name: "when a Mac has one, it builds",
+			h: host.Host{
+				Platform:  "darwin",
+				FS:        memfs.New(),
+				FileState: providermocks.NewMockFileState(gomock.NewController(s.T())),
+			},
+		},
 	}
 
 	for _, tc := range tests {

@@ -22,7 +22,7 @@ Files of the object store, deployed to the host.
 | API         | yes                                                                         |
 | CLI         | yes                                                                         |
 | Next        | no                                                                          |
-| Platforms   | linux                                                                       |
+| Platforms   | linux, darwin                                                               |
 | Sudo        | none                                                                        |
 | Runs        | none                                                                        |
 | Writes      | \*                                                                          |

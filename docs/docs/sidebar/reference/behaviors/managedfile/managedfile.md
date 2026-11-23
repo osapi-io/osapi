@@ -21,7 +21,7 @@ same.
 | API         | no                                                                                                                                                                                                                                  |
 | CLI         | no                                                                                                                                                                                                                                  |
 | Next        | no                                                                                                                                                                                                                                  |
-| Platforms   | debian, linux                                                                                                                                                                                                                       |
+| Platforms   | debian, linux, darwin                                                                                                                                                                                                               |
 | Sudo        | chown                                                                                                                                                                                                                               |
 | Runs        | stat                                                                                                                                                                                                                                |
 | Writes      | \*                                                                                                                                                                                                                                  |
@@ -126,14 +126,15 @@ None. Declare them with behavior.Config.
 | path    | string  | Absolute path of the file |
 | changed | boolean | Whether the host changed  |
 
-### Examples (4)
+### Examples (5)
 
-| EXAMPLE                               | INPUT                                                                                                                                                | OUTPUT                                     |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| A new file                            | path=/etc/osapi/example.conf, content=on , mode=, owner=, group=, secret=false, metadata=&lt;nil&gt;, object=, content_type=, object_sha256=         | path=/etc/osapi/example.conf, changed=true |
-| A secret only root reads              | path=/etc/myapp/token, content=s3cret , mode=0600, owner=root, group=root, secret=true, metadata=&lt;nil&gt;, object=, content_type=, object_sha256= | path=/etc/myapp/token, changed=true        |
-| A file whose mode was changed by hand | path=/etc/osapi/example.conf, content=on , mode=0600, owner=, group=, secret=false, metadata=&lt;nil&gt;, object=, content_type=, object_sha256=     | path=/etc/osapi/example.conf, changed=true |
-| A file edited by hand                 | path=/etc/osapi/example.conf, content=on , mode=, owner=, group=, secret=false, metadata=&lt;nil&gt;, object=, content_type=, object_sha256=         | path=/etc/osapi/example.conf, changed=true |
+| EXAMPLE                               | INPUT                                                                                                                                                 | OUTPUT                                     |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| A new file                            | path=/etc/osapi/example.conf, content=on , mode=, owner=, group=, secret=false, metadata=&lt;nil&gt;, object=, content_type=, object_sha256=          | path=/etc/osapi/example.conf, changed=true |
+| A secret only root reads              | path=/etc/myapp/token, content=s3cret , mode=0600, owner=root, group=root, secret=true, metadata=&lt;nil&gt;, object=, content_type=, object_sha256=  | path=/etc/myapp/token, changed=true        |
+| A secret only root reads, on a Mac    | path=/etc/myapp/token, content=s3cret , mode=0600, owner=root, group=wheel, secret=true, metadata=&lt;nil&gt;, object=, content_type=, object_sha256= | path=/etc/myapp/token, changed=true        |
+| A file whose mode was changed by hand | path=/etc/osapi/example.conf, content=on , mode=0600, owner=, group=, secret=false, metadata=&lt;nil&gt;, object=, content_type=, object_sha256=      | path=/etc/osapi/example.conf, changed=true |
+| A file edited by hand                 | path=/etc/osapi/example.conf, content=on , mode=, owner=, group=, secret=false, metadata=&lt;nil&gt;, object=, content_type=, object_sha256=          | path=/etc/osapi/example.conf, changed=true |
 
 ## Method delete
 

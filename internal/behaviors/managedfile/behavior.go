@@ -42,6 +42,9 @@ var Behavior = behavior.Register(behavior.Define(
 	// The file writes are the same on each Linux family, so certificate can
 	// write a CA on RHEL and Fedora too.
 	behavior.Platform(behavior.PlatformLinux, newDebian),
+	// macOS writes and records files the same way, and reads the owner
+	// with BSD stat.
+	behavior.Platform(behavior.PlatformDarwin, newDarwin),
 	behavior.Sudo("chown"),
 	behavior.Runs("stat"),
 	// It writes the path its caller names. Each behavior that requires it
@@ -85,10 +88,23 @@ var Behavior = behavior.Register(behavior.Define(
 				Owner: "root", Group: "root", Secret: true,
 			},
 			Result{Path: token, Changed: true},
+			behavior.OnPlatform(behavior.PlatformDebian, behavior.PlatformLinux),
 			behavior.Prints("stat -c %U:%G -- "+token, "osapi:osapi"),
 			behavior.PrintsAfter("chown -- root:root "+token, "stat -c %U:%G -- "+token, "root:root"),
 			behavior.Wrote(token, "s3cret\n"),
 			behavior.Ran("chown", "--", "root:root", token),
+		).
+		Example("A secret only root reads, on a Mac",
+			UpdateInput{
+				Path: token, Content: "s3cret\n", Mode: "0600",
+				Owner: "root", Group: "wheel", Secret: true,
+			},
+			Result{Path: token, Changed: true},
+			behavior.OnPlatform(behavior.PlatformDarwin),
+			behavior.Prints("stat -f %Su:%Sg -- "+token, "osapi:staff"),
+			behavior.PrintsAfter("chown -- root:wheel "+token, "stat -f %Su:%Sg -- "+token, "root:wheel"),
+			behavior.Wrote(token, "s3cret\n"),
+			behavior.Ran("chown", "--", "root:wheel", token),
 		).
 		Fails("A mode that is not octal",
 			UpdateInput{Path: path, Content: "on\n", Mode: "rw-------"}, "invalid mode").
