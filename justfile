@@ -82,7 +82,7 @@ test: linux-tune
 # (`just go-ci-checks`): the quick checks share one job, and each slow check is
 # a job. A check added here runs on a laptop and in CI, with no change to the
 # workflow.
-go_quick_checks := "just-fmt-check docs-fmt-check react-fmt-check go-mod-check go-pkg-check"
+go_quick_checks := "just-fmt-check docs-fmt-check react-fmt-check react-generate-check go-mod-check go-pkg-check"
 go_slow_checks := "behavior-gen-check go-generate-check docs-gen-check cli-docs-gen-check behavior-scaffold-check endpoint-scaffold-check command-scaffold-check behavior-cover-check go-fmt-check go-vet examples-check spec-client-check"
 
 # Fail when a behavior that osapi behavior create writes does not pass its tests
@@ -275,6 +275,27 @@ go-generate-check:
     if [ "$before" != "$(generated)" ]; then
         diff <(echo "$before") <(generated) || true
         echo "generated code is stale: run go generate ./... and commit the result" >&2
+        exit 1
+    fi
+
+# Fail when the UI client that orval writes is not what is committed
+#
+# orval writes ui/src/sdk/gen from the joined spec. go generate does not run
+# orval, so go-generate-check does not find a stale UI client. An orval bump
+# that changes the output went to main twice with the old client (#686,
+# #1150). The check reads the committed joined spec, which behavior-gen-check
+# holds fresh. orval takes under a second, so the check is a quick one.
+react-generate-check:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    generated() {
+        find {{ react_dir }}/src/sdk/gen -type f -print 2>/dev/null | sort | xargs shasum
+    }
+    before=$(generated)
+    just react-generate > /dev/null
+    if [ "$before" != "$(generated)" ]; then
+        diff <(echo "$before") <(generated) || true
+        echo "the UI client is stale: run just react-generate and commit the result" >&2
         exit 1
     fi
 
