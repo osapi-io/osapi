@@ -20,10 +20,30 @@
 
 package sshkey
 
-import "github.com/osapi-io/osapi/internal/behavior/host"
+import (
+	"context"
+
+	"github.com/osapi-io/gohai/pkg/gohai/source"
+
+	"github.com/osapi-io/osapi/internal/behavior/host"
+)
 
 // NewReader is newReader, for the tests of what the reader refuses.
 var NewReader = func(h host.Host) (Provider, error) { return newReader(h) }
 
 // Fingerprint is fingerprint, for its test.
 var Fingerprint = fingerprint
+
+// SetCollectSSH replaces gohai's ssh collector, and returns a func that puts
+// it back.
+func SetCollectSSH(
+	fn func(context.Context, source.Sources) (any, error),
+) func() {
+	old := collectSSH
+	collectSSH = fn
+
+	return func() { collectSSH = old }
+}
+
+// KeysOf is keysOf, for its test.
+var KeysOf = keysOf

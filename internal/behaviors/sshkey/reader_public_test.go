@@ -22,10 +22,12 @@ package sshkey_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osapi-io/gohai/pkg/gohai/source"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	"github.com/osapi-io/osapi/internal/behaviors/sshkey"
@@ -46,6 +48,44 @@ func (s *ReaderPublicTestSuite) TestWrites() {
 	s.ErrorIs(err, behavior.ErrUnsupported)
 	_, err = p.Remove(ctx, "alice", "SHA256:x")
 	s.ErrorIs(err, behavior.ErrUnsupported)
+}
+
+func (s *ReaderPublicTestSuite) TestKeysOf() {
+	tests := []struct {
+		name    string
+		collect func(context.Context, source.Sources) (any, error)
+		wantErr string
+	}{
+		{
+			name: "when gohai's ssh collector fails, the error is returned",
+			collect: func(context.Context, source.Sources) (any, error) {
+				return nil, errors.New("read failed")
+			},
+			wantErr: "read failed",
+		},
+		{
+			name: "when gohai's ssh collector gives no info, there are no keys",
+			collect: func(context.Context, source.Sources) (any, error) {
+				return nil, nil
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			restore := sshkey.SetCollectSSH(tc.collect)
+			defer restore()
+
+			keys, err := sshkey.KeysOf(context.Background(), source.Sources{}, "alice")
+			if tc.wantErr != "" {
+				s.ErrorContains(err, tc.wantErr)
+
+				return
+			}
+			s.NoError(err)
+			s.Empty(keys)
+		})
+	}
 }
 
 func (s *ReaderPublicTestSuite) TestFingerprint() {
