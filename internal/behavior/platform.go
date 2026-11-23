@@ -282,10 +282,15 @@ func (b *Behavior) resolve(
 
 // Programs are the programs b runs on platform, with sudo and without: the
 // behavior's own, and each method's that runs there, once each. An empty
-// platform is every platform.
+// platform is every platform. A behavior that declares providers and has
+// none for platform runs nothing there, so it needs no program there: an
+// agent on Fedora does not ask for the apt-get of a Debian-only behavior.
 func (b *Behavior) Programs(
 	platform PlatformName,
 ) (sudo []string, runs []string) {
+	if platform != "" && len(b.Platforms) > 0 && b.resolve(platform) == nil {
+		return nil, nil
+	}
 	add := func(to []string, programs []string) []string {
 		for _, p := range programs {
 			if !slices.Contains(to, p) {
