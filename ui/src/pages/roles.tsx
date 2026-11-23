@@ -7,7 +7,8 @@ import { SectionLabel } from "@/components/ui/section-label";
 import { DataTable } from "@/components/ui/data-table";
 import { Text } from "@/components/ui/text";
 import { useAuth } from "@/hooks/use-auth";
-import { ROLES, ALL_PERMISSIONS, BLOCK_PERMISSIONS } from "@/lib/permissions";
+import { ROLES, ALL_PERMISSIONS, type Permission } from "@/lib/permissions";
+import { catalogIndex } from "@/lib/catalog-index";
 import { Shield, Check, X } from "lucide-react";
 
 // Group permissions by resource
@@ -125,42 +126,37 @@ export function Roles() {
         />
       </div>
 
-      {/* Block permissions */}
+      {/* Step permissions */}
       <div className="mb-6">
-        <SectionLabel>Block Permissions</SectionLabel>
+        <SectionLabel>Step Permissions</SectionLabel>
         <Text variant="muted" as="p" className="mb-2">
-          Required permission for each Configure block type
+          The permission that each step of a plan needs
         </Text>
         <DataTable
-          rows={Object.entries(BLOCK_PERMISSIONS)}
-          getRowKey={([block]) => block}
+          rows={catalogIndex.steps.filter((d) => d.permission)}
+          getRowKey={(d) => d.run}
           columns={[
             {
-              header: "Block",
-              cell: ([block]) => (
-                <span className="font-mono text-text">{block}</span>
-              ),
+              header: "Step",
+              cell: (d) => <span className="font-mono text-text">{d.run}</span>,
             },
             {
               header: "Permission",
-              cell: ([, perm]) => (
-                <span className="font-mono text-text-muted">{perm}</span>
+              cell: (d) => (
+                <span className="font-mono text-text-muted">
+                  {d.permission}
+                </span>
               ),
             },
             ...ROLES.map((r) => ({
               header: r.label,
               align: "center" as const,
-              cell: ([, perm]: [
-                string,
-                (typeof BLOCK_PERMISSIONS)[keyof typeof BLOCK_PERMISSIONS],
-              ]) => {
-                const has = r.permissions.has(perm);
-                return has ? (
+              cell: (d: (typeof catalogIndex.steps)[number]) =>
+                r.permissions.has(d.permission as Permission) ? (
                   <Check className="mx-auto h-3.5 w-3.5 text-primary" />
                 ) : (
                   <X className="mx-auto h-3.5 w-3.5 text-text-muted/30" />
-                );
-              },
+                ),
             })),
           ]}
         />

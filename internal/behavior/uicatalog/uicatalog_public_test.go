@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package uiblocks_test
+package uicatalog_test
 
 import (
 	"context"
@@ -28,7 +28,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/behavior"
-	"github.com/osapi-io/osapi/internal/behavior/uiblocks"
+	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
+	"github.com/osapi-io/osapi/internal/behavior/uicatalog"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all"
 )
 
@@ -69,13 +70,18 @@ func write(context.Context, provider, itemIn) (row, error) { return row{}, nil }
 
 func none(context.Context, provider, *int) (string, error) { return "", nil }
 
-type BlocksPublicTestSuite struct {
+func build(any) (provider, error) { return provider{}, nil }
+
+// noRuns is a registry whose examples call nothing.
+func noRuns(*behavior.Behavior) []behaviortest.ChainRun { return nil }
+
+type CatalogPublicTestSuite struct {
 	suite.Suite
 }
 
-// TestBlocksLeaveOutWhatTheStepSets: the form of a block has no field that
-// the method's .Before step sets.
-func (s *BlocksPublicTestSuite) TestBlocksLeaveOutWhatTheStepSets() {
+// TestCatalogLeavesOutWhatTheStepSets: the form of a method has no field
+// that the method's .Before step sets.
+func (s *CatalogPublicTestSuite) TestCatalogLeavesOutWhatTheStepSets() {
 	type pwIn struct {
 		Password string `json:"password" doc:"The password" secret:"true"`
 		Hash     string `json:"hash"     doc:"The hash"                   before:"set"`
@@ -85,36 +91,91 @@ func (s *BlocksPublicTestSuite) TestBlocksLeaveOutWhatTheStepSets() {
 			return struct{}{}, nil
 		}),
 	)
-	got := uiblocks.Blocks([]*behavior.Behavior{b})
+	got := uicatalog.Catalog([]*behavior.Behavior{b}, noRuns)
 	s.Require().Len(got, 1)
-	s.Require().Len(got[0].Fields, 1)
-	s.Equal("password", got[0].Fields[0].Name)
+	s.Require().Len(got[0].Methods[0].Fields, 1)
+	s.Equal("password", got[0].Methods[0].Fields[0].Name)
 }
 
-func (s *BlocksPublicTestSuite) TestBlocks() {
-	b := behavior.Define("item", "Items", behavior.Node, behavior.API, behavior.Area("hardware"),
-		behavior.Read("list", read),
-		behavior.Write("update", write).Key("name"),
-		behavior.Read("get", none),
-	)
+func (s *CatalogPublicTestSuite) TestCatalog() {
 	inner := behavior.Define(
 		"inner",
-		"x",
+		"Inner items",
 		behavior.Node,
 		behavior.Internal,
 		behavior.Read("list", read),
 	)
+	b := behavior.Define(
+		"item",
+		"Items",
+		behavior.Node,
+		behavior.API,
+		behavior.Area("hardware"),
+		behavior.Requires(inner),
+		behavior.Platform[any, provider](behavior.PlatformDebian, build),
+		behavior.Platform[any, provider](behavior.PlatformDarwin, build),
+		behavior.Read("list", read).
+			Example("Lists the items", itemIn{Name: "a"}, []row{{Name: "a"}}),
+		behavior.Write("update", write).Key("name").On(behavior.PlatformDebian),
+		behavior.Read("get", none),
+		behavior.Action("restart", write).Disrupts("It stops the item"),
+		behavior.Write("signal", write).PermitAs(behavior.VerbExecute),
+	)
+	child := behavior.Define("part", "Parts", behavior.Node, behavior.API, behavior.Of(b),
+		behavior.Read("list", read),
+	)
+	cliOnly := behavior.Define("tool", "A tool", behavior.Node, behavior.CLI,
+		behavior.Read("list", read),
+	)
+	runs := func(bh *behavior.Behavior) []behaviortest.ChainRun {
+		if bh != b {
+			return nil
+		}
+		step := func(name, method string, steps ...*behavior.Step) *behavior.Step {
+			return &behavior.Step{Behavior: name, Method: method, Steps: steps}
+		}
 
-	got := uiblocks.Blocks([]*behavior.Behavior{b, inner})
-	s.Require().Len(got, 3, "an internal behavior has no block")
+		return []behaviortest.ChainRun{
+			{Method: "update", Root: step("item", "update",
+				step("inner", "list"), step("inner", "list", step("deep", "get")))},
+			{Method: "update", Root: step("item", "update",
+				step("inner", "list", step("deep", "set")), step("other", "get"))},
+		}
+	}
 
-	list := got[0]
-	s.Equal("item-list", list.Type)
+	got := uicatalog.Catalog([]*behavior.Behavior{b, inner, child, cliOnly}, runs)
+	s.Require().Len(got, 3, "a behavior that only the CLI has is not in the catalog")
+
+	item := got[0]
+	s.Equal("item", item.Name)
+	s.Equal("Item", item.Title)
+	s.Equal("hardware", item.Area)
+	s.Equal("Items", item.Doc)
+	s.False(item.Internal)
+	s.Empty(item.Parent)
+	s.Equal([]string{"debian", "darwin"}, item.Platforms)
+	s.Equal([]string{"inner"}, item.Uses)
+	s.Equal([]string{}, item.UsedBy)
+	s.Equal("item → inner", item.Chain)
+	s.Require().Len(item.Methods, 5)
+
+	list := item.Methods[0]
+	s.Equal("list", list.Name)
+	s.Equal("read", list.Kind)
 	s.Equal("GET", list.HTTPMethod)
 	s.Equal("/api/node/{hostname}/item", list.Path)
 	s.Equal("item:read", list.Permission)
-	s.False(list.Write)
-	s.Equal([]uiblocks.Field{
+	s.Equal([]string{"debian", "darwin"}, list.Platforms)
+	s.Equal("itemIn { name*, mode, count, on, tags, labels, token }", list.Input)
+	s.Equal("[]row { name, changed, size, usage, disks, tags, ptr, hidden }", list.Output)
+	s.Equal([]uicatalog.Example{
+		{Doc: "Lists the items", Input: map[string]any{
+			"name": "a", "mode": "", "count": float64(0), "on": false, "tags": nil,
+			"labels": nil, "token": "[redacted]",
+		}, Output: []row{{Name: "a"}}},
+	}, list.Examples, "an example's secret is redacted")
+	s.Equal([]uicatalog.Call{}, list.Calls, "a method whose examples call nothing has no calls")
+	s.Equal([]uicatalog.Field{
 		{Name: "name", In: "query", Kind: "string", Required: true, Doc: "The item"},
 		{Name: "mode", In: "query", Kind: "string", Doc: "The mode", Options: []string{"a", "b"}},
 		{Name: "count", In: "query", Kind: "number", Doc: "How many"},
@@ -123,11 +184,10 @@ func (s *BlocksPublicTestSuite) TestBlocks() {
 		{Name: "labels", In: "query", Kind: "object", Doc: "Labels"},
 		{Name: "token", In: "query", Kind: "string", Doc: "A secret", Secret: true},
 	}, list.Fields)
-	s.Equal("hardware", list.Area)
-	total := []uiblocks.Column{
+	total := []uicatalog.Column{
 		{Name: "total", Label: "Total", Doc: "Total bytes", Render: "bytes", Kind: "value"},
 	}
-	s.Equal([]uiblocks.Column{
+	s.Equal([]uicatalog.Column{
 		{Name: "name", Label: "Name", Doc: "The item", Kind: "value"},
 		{Name: "changed", Label: "Changed", Doc: "Whether the host changed", Kind: "value"},
 		{Name: "size", Label: "Bytes", Doc: "Its size", Render: "bytes", Kind: "value"},
@@ -137,33 +197,60 @@ func (s *BlocksPublicTestSuite) TestBlocks() {
 		{Name: "ptr", Label: "Ptr", Doc: "A pointer", Kind: "object", Columns: total},
 	}, list.Columns, "the CLI's columns: labels, render tags, nested objects and lists; render:\"-\" is left out")
 
-	update := got[1]
+	update := item.Methods[1]
+	s.Equal("write", update.Kind)
 	s.Equal("PUT", update.HTTPMethod)
-	s.True(update.Write)
+	s.Equal([]string{"debian"}, update.Platforms, "On limits the platforms")
 	s.Equal("path", update.Fields[0].In, "the key goes in the path")
 	s.Equal("body", update.Fields[1].In, "a write's other fields go in the body")
+	s.Equal([]uicatalog.Call{
+		{Behavior: "inner", Method: "list", Calls: []uicatalog.Call{
+			{Behavior: "deep", Method: "get"},
+			{Behavior: "deep", Method: "set"},
+		}},
+		{Behavior: "other", Method: "get"},
+	}, update.Calls, "the calls of each example, merged, each once, in the order that they first ran")
 
-	s.Empty(got[2].Fields, "an input that is not a struct has no fields")
-	s.Empty(got[2].Columns, "an output that is not a struct has no columns")
+	get := item.Methods[2]
+	s.Empty(get.Fields, "an input that is not a struct has no fields")
+	s.Empty(get.Columns, "an output that is not a struct has no columns")
 
-	ts := uiblocks.TypeScript(got)
-	s.Contains(ts, `"item-list": {"type":"item-list"`)
-	s.Contains(ts, `export type BehaviorName = "item";`)
+	restart := item.Methods[3]
+	s.Equal("action", restart.Kind)
+	s.True(restart.Disruptive)
+	s.Equal("It stops the item", restart.Disruption)
+	s.Equal("item:execute", restart.Permission)
+
+	s.Equal("action", item.Methods[4].Kind, "the verb of the permission decides the kind")
+
+	in := got[1]
+	s.True(in.Internal)
+	s.Equal([]string{}, in.UsedBy, "used by reads the registry, which these are not in")
+	s.Empty(in.Methods[0].Path, "an internal behavior has no route")
+	s.Empty(in.Methods[0].Permission, "an internal behavior has no permission")
+	s.Equal([]string{}, in.Platforms)
+
+	s.Equal("item", got[2].Parent)
+
+	ts := uicatalog.TypeScript(got)
+	s.Contains(ts, `export const CATALOG: readonly CatalogBehavior[] = [`)
+	s.Contains(ts, `  {"name":"item","title":"Item","area":"hardware"`)
+	s.Contains(ts, `export type BehaviorName = "item" | "inner" | "part";`)
 	s.Contains(ts, "export const AREAS = [\n  {\"name\":\"services\",\"label\":\"Services\"},\n")
 	s.Contains(ts, "  {\"name\":\"fleet\",\"label\":\"Fleet\"},\n] as const;\n")
 	s.Contains(ts, `export type AreaName = (typeof AREAS)[number]["name"];`)
 }
 
 // TestFileIsCurrent: the UI's file is what the registry makes.
-func (s *BlocksPublicTestSuite) TestFileIsCurrent() {
-	ts := uiblocks.TypeScript(uiblocks.Blocks(behavior.All()))
-	file, err := os.ReadFile("../../../" + uiblocks.File)
+func (s *CatalogPublicTestSuite) TestFileIsCurrent() {
+	ts := uicatalog.TypeScript(uicatalog.Catalog(behavior.All(), behaviortest.Chains))
+	file, err := os.ReadFile("../../../" + uicatalog.File)
 	s.Require().NoError(err)
 	s.Equal(ts, string(file), "run go generate ./internal/behaviors/all")
 }
 
-func TestBlocksPublicTestSuite(
+func TestCatalogPublicTestSuite(
 	t *testing.T,
 ) {
-	suite.Run(t, new(BlocksPublicTestSuite))
+	suite.Run(t, new(CatalogPublicTestSuite))
 }

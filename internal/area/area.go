@@ -18,8 +18,9 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package area is the areas that group the operations of osapi: the tabs of
-// the UI's Configure page, the folders of the SDK's pages and of the
+// Package area is the areas that group the operations of osapi: the
+// sections of the UI's Behaviors page and of its list of steps on the Plans
+// page, the folders of the SDK's pages and of the
 // reference pages of the behaviors, the chains and the endpoints, and the
 // sections of the docs site's SDK and Behaviors menus. Each behavior and each endpoint
 // group declares one. The spec carries the area of each operation and the

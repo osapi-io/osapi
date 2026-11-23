@@ -10,6 +10,8 @@ interface SearchBoxProps {
   placeholder?: string;
   autoFocus?: boolean;
   className?: string;
+  /** The width of the field, which is narrow unless a page widens it. */
+  inputClassName?: string;
 }
 
 export function SearchBox({
@@ -19,6 +21,7 @@ export function SearchBox({
   placeholder = "Search...",
   autoFocus = true,
   className,
+  inputClassName = "w-32",
 }: SearchBoxProps) {
   const ref = useRef<HTMLInputElement>(null);
 
@@ -42,7 +45,10 @@ export function SearchBox({
         autoComplete="off"
         data-1p-ignore
         data-lpignore="true"
-        className="w-32 bg-transparent text-xs text-text outline-none placeholder:text-text-muted/60"
+        className={cn(
+          "bg-transparent text-xs text-text outline-none placeholder:text-text-muted/60",
+          inputClassName,
+        )}
       />
       <IconButton icon={X} variant="ghost" size="sm" onClick={onClose} />
     </div>

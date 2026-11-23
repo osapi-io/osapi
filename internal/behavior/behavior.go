@@ -200,8 +200,8 @@ func Under(
 }
 
 // Area puts a served behavior in an area, one of area.All:
-// Area(area.Hardware) puts disk's blocks under Hardware in the Configure
-// page's Add Block panel, and its SDK page under Hardware. behavior validate
+// Area(area.Hardware) puts disk under Hardware on the UI's Behaviors page,
+// and its SDK page under Hardware. behavior validate
 // refuses a behavior with API and no area, or an area that is not one of
 // area.All.
 func Area(

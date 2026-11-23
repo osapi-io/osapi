@@ -7,8 +7,6 @@ import {
   ROLE_PERMISSIONS,
   type Permission,
 } from "./permissions.gen";
-import { OPERATION_PERMISSIONS, type OperationId } from "./operations.gen";
-import { BEHAVIOR_BLOCKS } from "./blocks.gen";
 
 export { ALL_PERMISSIONS, type Permission };
 
@@ -88,69 +86,21 @@ export function hasAnyPermission(
 }
 
 // ---------------------------------------------------------------------------
-// Block → operation → permission
-//
-// Each block names the operation that it calls. Its permission is that
-// operation's, from the scopes of the spec in operations.gen.ts. Thus a
-// block cannot check another permission than the API asks for, and an
-// operation that is renamed or removed fails the type check here.
+// A step's permission
 // ---------------------------------------------------------------------------
 
-export const BLOCK_OPERATIONS = {
-  "object-list": "getFiles",
-  "object-upload": "postFile",
-  "object-delete": "deleteFileByName",
-  "object-stale": "getFileStale",
-} as const satisfies Record<string, OperationId>;
-
 /**
- * A block that is not a behavior's: it must have an operation in
- * BLOCK_OPERATIONS, so it cannot be in the panel with no permission.
+ * Whether a role that has the permissions that can accepts may run a step
+ * that needs permission. A step with no permission that the UI knows is
+ * refused, not allowed: the UI cannot tell what the API will ask for.
  */
-export type HandBlockType = keyof typeof BLOCK_OPERATIONS;
-
-export const BLOCK_PERMISSIONS: Record<string, Permission> = Object.fromEntries(
-  [
-    ...Object.entries(BLOCK_OPERATIONS).map(([block, op]) => [
-      block,
-      OPERATION_PERMISSIONS[op],
-    ]),
-    // A behavior block's permission is its method's, from blocks.gen.ts.
-    ...Object.values(BEHAVIOR_BLOCKS).map((def) => [def.type, def.permission]),
-  ],
-);
-
-/**
- * Whether a role that has the permissions that can accepts may use a block.
- * A block with no known permission is refused, not allowed: the panel
- * cannot tell what the API will ask for.
- */
-export function blockAllowed(
-  type: string,
+export function permitted(
+  permission: string | undefined,
   can: (permission: Permission) => boolean,
 ): boolean {
-  const perm = BLOCK_PERMISSIONS[type];
-  return perm !== undefined && can(perm);
-}
-
-/**
- * What a block does to a host: a read changes nothing, a write changes what
- * the host is configured to be, and an action makes something happen, such
- * as a restart or a reboot. It is the verb of the block's permission, as the
- * behavior DSL gives it: read, write, or a verb of an action (execute, shell
- * or exec).
- */
-export type BlockKind = "read" | "write" | "action";
-
-export const blockKindLabels: Record<BlockKind, string> = {
-  read: "Read",
-  write: "Write",
-  action: "Action",
-};
-
-export function blockKind(type: string): BlockKind | undefined {
-  const perm = BLOCK_PERMISSIONS[type];
-  if (perm === undefined) return undefined;
-  const verb = perm.slice(perm.indexOf(":") + 1);
-  return verb === "read" ? "read" : verb === "write" ? "write" : "action";
+  return (
+    permission !== undefined &&
+    (ALL_PERMISSIONS as readonly string[]).includes(permission) &&
+    can(permission as Permission)
+  );
 }

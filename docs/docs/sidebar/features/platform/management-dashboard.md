@@ -11,8 +11,11 @@ The dashboard provides a visual interface for fleet management:
 - **Dashboard**: an overview of the fleet health, with agent cards (machine ID,
   fingerprint, version, scheduling state), the component status, JetStream
   metrics and node conditions
-- **Configure**: a builder that puts operations together from blocks, and
-  applies the changes to the targets
+- **Behaviors**: what osapi manages on a host, by area. The page of each
+  behavior shows its methods, their permissions, platforms and chains, and their
+  examples.
+- **Plans**: steps that run in order. Each step is a method of a behavior with
+  its target and its input. A plan exports as YAML.
 - **Admin**: the audit log with export, the job queue with retry and delete, PKI
   enrollment (accept, reject and remove agents) and an RBAC reference (admin
   only)
@@ -38,7 +41,7 @@ token with `osapi token generate` and paste it on the sign-in page. The token's
 | Role     | Access                                             |
 | -------- | -------------------------------------------------- |
 | Admin    | Full access including Audit, Jobs, and role switch |
-| Operator | Dashboard + Configure (block operations)           |
+| Operator | Dashboard, Behaviors and Plans                     |
 | Viewer   | Dashboard only (read-only)                         |
 
 ## Architecture

@@ -52,7 +52,7 @@ act on the hosts of a target. The services of the controller act on the
 controller itself.
 
 The pages are in a folder for each area, such as Networking or Fleet. The UI's
-Configure page has the same areas, in the same order. Each behavior and each
+Behaviors page has the same areas, in the same order. Each behavior and each
 endpoint group declares its area in Go, and `internal/area` gives the label and
 the order of each area. The spec carries them, and the generator reads them from
 the spec.

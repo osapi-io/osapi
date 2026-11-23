@@ -3,44 +3,44 @@ import { Kbd } from "@/components/ui/kbd";
 import { Text } from "@/components/ui/text";
 import { Play, Loader2, RotateCcw, X } from "lucide-react";
 
-interface ApplyButtonProps {
-  /** What the stack is, or after Apply what the run did: 12 applied: 11 ok. */
+interface RunBarProps {
+  /** What the plan is, or after Run what the run did: 3 ran: 3 ok. */
   summary: string;
   ready: boolean;
-  applying: boolean;
-  hasApplied: boolean;
-  onApply: () => void;
+  running: boolean;
+  hasRun: boolean;
+  onRun: () => void;
   onReset: () => void;
   onClear: () => void;
 }
 
 /**
- * ApplyButton is the bar under the stack, pinned to the bottom of the
- * window, so Apply is in reach however long the stack is. After Apply it
- * keeps the stack and its results, says what the run did, and offers Clear
- * to start over and Run again, which makes the stack ready to apply again.
+ * RunBar is the bar under the plan, pinned to the bottom of the window, so
+ * Run is in reach however long the plan is. After a run it keeps the steps
+ * and their results, says what the run did, and offers Clear to start over
+ * and Run again, which makes the plan ready to run again.
  */
-export function ApplyButton({
+export function RunBar({
   summary,
   ready,
-  applying,
-  hasApplied,
-  onApply,
+  running,
+  hasRun,
+  onRun,
   onReset,
   onClear,
-}: ApplyButtonProps) {
+}: RunBarProps) {
   return (
     <div className="sticky bottom-0 z-20 mt-6 flex items-center justify-end gap-3 border-t border-border bg-background/90 py-3 backdrop-blur-xl">
       <Text variant="muted" size="sm" className="mr-auto">
         {summary}
       </Text>
-      {hasApplied && (
+      {hasRun && (
         <Button variant="ghost" size="md" onClick={onClear}>
           <X className="h-4 w-4" />
           Clear
         </Button>
       )}
-      {hasApplied && (
+      {hasRun && (
         <Button variant="ghost" size="md" onClick={onReset}>
           <RotateCcw className="h-4 w-4" />
           Run again
@@ -49,18 +49,18 @@ export function ApplyButton({
       <Button
         variant="primary"
         size="lg"
-        disabled={!ready || applying}
-        onClick={onApply}
+        disabled={!ready || running}
+        onClick={onRun}
       >
-        {applying ? (
+        {running ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            Applying...
+            Running...
           </>
         ) : (
           <>
             <Play className="h-4 w-4" />
-            Apply
+            Run
             <Kbd className="ml-1">⌘↵</Kbd>
           </>
         )}

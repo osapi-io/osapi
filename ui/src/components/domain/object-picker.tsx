@@ -8,11 +8,11 @@ interface ObjectPickerProps {
   label: string;
   value: string;
   onChange: (value: string) => void;
-  /** Object names from upstream upload blocks in the stack */
+  /** Object names from upload steps earlier in the plan */
   upstreamObjects?: string[];
 }
 
-/** ObjectPicker picks an object of the file store, or one an upload block above makes. */
+/** ObjectPicker picks an object of the file store, or one an upload step above makes. */
 export function ObjectPicker({
   id,
   label,
@@ -57,7 +57,7 @@ export function ObjectPicker({
       )}
       {upstreamObjects.includes(value) && !selected && (
         <p className="text-[10px] text-accent-light">
-          Will use object from upload block above
+          Uses the file of an upload step above
         </p>
       )}
     </Picker>

@@ -18,7 +18,7 @@ const groups: Record<
   label: { heading: "Labels", icon: Tag },
 };
 
-/** TargetPicker picks the target of a block: _all, _any, a host or a label. */
+/** TargetPicker picks the target of a step: _all, _any, a host or a label. */
 export function TargetPicker({
   value,
   onChange,
