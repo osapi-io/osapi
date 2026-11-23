@@ -78,7 +78,7 @@ The behaviors that certificate calls, and each call that its examples make.
 | certificate create    | name=internal-ca object=internal-ca.pem                                                | changed=true name=internal-ca                                                |
 | └─ managedfile get    | path=/etc/pki/trust/anchors/osapi-internal-ca.crt                                      | error: /etc/pki/trust/anchors/osapi-internal-ca.crt: not managed             |
 | └─ object get         | name=internal-ca.pem                                                                   | content=&lt;12 lines&gt; content_type=raw name=internal-ca.pem sha256=333ed… |
-| └─ managedfile update | content=&lt;12 lines&gt; metadata=&#123;"object":"internal-ca.pem"&#125; mode=0644 pa… | changed=true path=/etc/pki/trust/anchors/osapi-internal-ca.crt               |
+| └─ managedfile update | content=&lt;12 lines&gt; metadata=&#123;"object":"internal-ca.pem"&#125; mode=0644 ob… | changed=true path=/etc/pki/trust/anchors/osapi-internal-ca.crt               |
 
 ## A CA that osapi deployed with the same content (create)
 
