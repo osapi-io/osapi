@@ -6,8 +6,9 @@ sidebar_position: 9
 
 osapi has an embedded management dashboard. It is a React single-page
 application. The same host and port as the REST API serve it. It shows the fleet
-health, the agents and the jobs, and it lets you put operations together from
-blocks. You do not need to deploy a different frontend.
+health, the agents and the jobs. It shows the behaviors that osapi manages, and
+it runs plans: steps that are methods of those behaviors. You do not need to
+deploy a different frontend.
 
 This page tells what an operator controls: the setting that disables the UI, the
 roles that control what it shows, and the pages. The
@@ -51,16 +52,18 @@ A permission has the form `resource:verb`, as in the Go model of osapi, for
 example `agent:read`, `file:write`, `command:execute` and `docker:execute`. The
 UI's list of permissions and the permissions of each role are in
 `ui/src/lib/permissions.gen.ts`, which `go generate ./internal/behaviors/all`
-writes from the Go model. Do not edit it. `BLOCK_PERMISSIONS`
-(`ui/src/lib/permissions.ts`) gives the permission that each Configure block
-needs, and TypeScript refuses a permission that the generated list does not
-have. The UI shows a block without permission in gray, with a lock icon.
+writes from the Go model. Do not edit it. The permission of each method comes
+from the catalog of the behaviors, `ui/src/lib/catalog.gen.ts`, which the same
+command writes. The UI shows a method that your role cannot run as faint, with a
+lock icon, and you cannot add it to a plan. The controller makes the same check
+on each request.
 
 ## Pages
 
-The routes are in `ui/src/App.tsx`. The navbar has Dashboard and Configure. The
-Admin menu has Audit Log, Admission, Jobs, Roles and Traces. A page that needs a
-permission that the session does not have shows that the permission is missing.
+The routes are in `ui/src/App.tsx`. The navbar has Dashboard, Behaviors and
+Plans. The Admin menu has Audit Log, Admission, Jobs, Roles and Traces. A page
+that needs a permission that the session does not have shows that the permission
+is missing.
 
 ### Dashboard (`/`)
 
@@ -74,22 +77,66 @@ An overview of the fleet health:
 - agent cards with the status, conditions and labels, and drain and undrain
   actions
 
-### Configure (`/configure`)
+### Behaviors (`/behaviors`)
 
-A builder that puts operations together from blocks:
+The catalog of what osapi manages on a host, by area:
 
-- The Add Block panel has a tab for each area that has blocks, in the order of
-  `area.All` in Go: Services, Software, Config, Node, Logs, Networking,
-  Security, Containers, Object Store, Command and Hardware. The Audit and Fleet
-  areas have no blocks, so they have no tab.
-- In a tab, the blocks of each behavior are in a category with the title of the
-  behavior, such as Package updates. A behavior under another behavior, such as
-  User SSH key, comes after its parent.
-- The RBAC permissions control the blocks. A block that the session cannot run
-  is gray, with a lock icon.
-- Each block has a target picker (`_all`, `_any`, a hostname, labels).
-- Apply runs the blocks in sequence, with a spinner for each block, and shows
-  the results. A result links to its job and its trace.
+- a section for each area, such as Networking or Security, in the order of the
+  SDK and the docs site
+- a row for each behavior: its title, its name, what it manages, the behaviors
+  that it calls, and a mark for each method: `R` for a read, `W` for a write and
+  `A` for an action
+- a faint mark for a method that your role cannot run, and a lock on a behavior
+  whose methods your role cannot run
+- a filter, which takes the name of a behavior or a method, such as `dns update`
+- the internal behaviors last. Only other behaviors call them, so a plan cannot
+  run them.
+
+### A behavior (`/behaviors/<name>`)
+
+One behavior, as `osapi behavior get` and `osapi behavior chain get` print it:
+its area, its platforms, and the behaviors that it calls and that call it. Each
+method has:
+
+- its input and output types, with each required field marked `*`, and its route
+- its permission, and whether your role has it
+- the platforms that it runs on
+- its chain: the calls that it makes to other behaviors, such as `dns.update`,
+  then `netplan.update`, then `managedfile.update`
+- its examples, with their input and output
+- **Add to plan**, which adds the method to the plan as a step
+
+A link such as `/behaviors/dns#update` opens the page at the method.
+
+### Plans (`/plans/new`)
+
+A plan is a list of steps that run in order. Each step is a method of a
+behavior, with its target and its input. This is the shape of a step of a
+workflow file: `run`, `target` and `with`.
+
+- The list at the left has each area, then each behavior, then the methods of
+  the behavior. Click a method to add it as a step. The filter opens each
+  behavior that matches.
+- A step card has the title of its behavior and its method, such as
+  `DNS · Update`, the input and output types, and the behaviors that it calls.
+- A read starts with the target `_all`. A write or an action starts with no
+  target. It is pending, and Run does not run it, until you pick its hosts.
+- The form shows the doc of each field. A field with fixed values is a select,
+  and a list is a field of tags.
+- Above the steps, a preflight shows each permission that the plan needs and
+  whether your role has it. It also shows each host where a method does not run,
+  such as a Debian-only write on a macOS host, and the steps that wait for input
+  or a target.
+- **Run** runs each step that can run, in order, and continues after a step
+  fails. Each result shows its job and its trace, the rows that the method
+  returned, and the chain of calls on each host.
+- **Export YAML** shows the plan as a workflow file. The UI does not save a
+  plan. Copy the YAML to keep it.
+- The steps of the Object Store area, such as an upload, run on the controller
+  and take no target.
+
+The plan stays while you move between pages. Thus you can add methods from the
+page of each behavior, then open Plans.
 
 ### Audit Log (`/admin/audit`)
 
@@ -109,13 +156,13 @@ admitted machine.
 
 The job queue and its history, with a status filter. You can retry or delete a
 job. `/admin/jobs/:id` shows the detail of one job above the list, such as the
-job of a block's result on the Configure page.
+job of a step's result on the Plans page.
 
 ### Roles (`/admin/roles`)
 
 An RBAC reference: the current session with a role badge, a table of the role
-definitions, the full permission matrix and the table of block permissions.
-`/roles` goes to this page.
+definitions, the full permission matrix and the permission of each step of a
+plan.
 
 ### Traces (`/admin/traces`)
 

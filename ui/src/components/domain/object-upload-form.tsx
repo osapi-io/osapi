@@ -1,36 +1,25 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Dropdown } from "@/components/ui/dropdown";
 import { Text } from "@/components/ui/text";
-import type { BlockStatus } from "@/hooks/use-stack";
 import { Upload } from "lucide-react";
 
-interface FileUploadBlockProps {
+interface ObjectUploadFormProps {
   data: Record<string, unknown>;
   onChange: (data: Record<string, unknown>) => void;
-  onStatusChange: (status: BlockStatus) => void;
 }
 
-export function FileUploadBlock({
-  data,
-  onChange,
-  onStatusChange,
-}: FileUploadBlockProps) {
+/**
+ * ObjectUploadForm is the form of an upload to the object store: the file,
+ * the name to keep it under, and whether it is raw or a template. The step
+ * is ready when it has a file and a name.
+ */
+export function ObjectUploadForm({ data, onChange }: ObjectUploadFormProps) {
   const name = (data.name as string) || "";
   const contentType = (data.content_type as string) || "raw";
   const fileName = (data._file_name as string) || "";
-  const prevStatus = useRef<BlockStatus | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
-
-  useEffect(() => {
-    const isReady = name.trim() !== "" && data._file != null;
-    const next: BlockStatus = isReady ? "ready" : "pending";
-    if (next !== prevStatus.current) {
-      prevStatus.current = next;
-      onStatusChange(next);
-    }
-  }, [name, data._file, onStatusChange]);
 
   const update = (field: string, value: string) => {
     onChange({ ...data, [field]: value });
@@ -89,7 +78,7 @@ export function FileUploadBlock({
       <div className="grid grid-cols-2 gap-3">
         <Input
           id="upload-name"
-          label="Object Name"
+          label="Name"
           placeholder="my-config"
           value={name}
           onChange={(e) => update("name", e.target.value)}

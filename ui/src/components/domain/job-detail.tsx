@@ -194,7 +194,7 @@ function ObjectKV({ v }: { v: unknown }) {
  * JobView is one job, as osapi client job get prints it: the job, its
  * request, the agents' responses and states, the chain of calls on each
  * host, the timeline and the result.
- * The Jobs page and a Configure result's job panel both show it.
+ * The Jobs page and the job panel of a step's result on the Plans page both show it.
  */
 export function JobView({ job }: { job: JobDetailResponse }) {
   // The API sorts both by hostname.

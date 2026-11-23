@@ -12,17 +12,21 @@ import { CollapsibleSection } from "@/components/ui/collapsible-section";
 import { IconButton } from "@/components/ui/icon-button";
 import { HostGroupHeader } from "@/components/domain/host-group-header";
 import { ResultSummary } from "@/components/domain/result-summary";
-import { hostOutcome, hostOutcomes } from "@/lib/outcome";
+import { hostOutcomes } from "@/lib/outcome";
 import { formatBytes, formatDurationMs, formatTime } from "@/lib/format";
-import { BEHAVIOR_BLOCKS, type BehaviorBlockType } from "@/lib/blocks.gen";
 import {
   hasValue,
-  type BehaviorBlockColumn,
-  type BehaviorBlockDef,
-} from "@/lib/behavior-block";
+  type CatalogColumn,
+  type CatalogMethod,
+} from "@/lib/catalog";
 
 interface ResultCardProps {
-  type: string;
+  /** The step that ran, behavior.method: dns.update. */
+  run: string;
+  /** The method of a behavior that ran, from the catalog. */
+  method?: CatalogMethod;
+  /** The title of the method's behavior, such as DNS. */
+  title?: string;
   result: unknown;
   onAction?: (action: string, name: string) => void;
 }
@@ -38,16 +42,6 @@ function HostError({ children }: { children: React.ReactNode }) {
       {children}
     </Text>
   );
-}
-
-/** Derive status from a result that has the status field. */
-function hostStatus(r: {
-  status?: string;
-  error?: string;
-}): "ok" | "failed" | "skipped" {
-  if (r.status === "skipped") return "skipped";
-  if (r.status === "failed" || r.error) return "failed";
-  return "ok";
 }
 
 function ChangedLabel({ changed }: { changed?: boolean }) {
@@ -136,78 +130,6 @@ function ResultShell({
 }
 
 // ---------------------------------------------------------------------------
-// Host-level results
-// ---------------------------------------------------------------------------
-
-function HostResultRow({
-  hostname,
-  status = "ok",
-  changed,
-  error,
-  extra,
-}: {
-  hostname?: string;
-  status?: "ok" | "failed" | "skipped";
-  changed?: boolean;
-  error?: string;
-  extra?: React.ReactNode;
-}) {
-  return (
-    <div className="border-b border-border/50 px-4 py-2 last:border-0">
-      <div className="flex items-center gap-2">
-        <StatusIcon status={status} />
-        <Text className="font-medium">{hostname ?? "-"}</Text>
-        {status === "skipped" && (
-          <Text variant="muted" className="font-mono">
-            skipped
-          </Text>
-        )}
-        {extra}
-        <div className="ml-auto">
-          <ChangedLabel changed={changed} />
-        </div>
-      </div>
-      {error && status !== "skipped" && (
-        <Text variant="error" as="p" className="mt-1 pl-5">
-          {error}
-        </Text>
-      )}
-    </div>
-  );
-}
-
-function CollectionResult({
-  jobId,
-  label,
-  results,
-  data,
-}: {
-  jobId?: string;
-  label: string;
-  results: {
-    hostname?: string;
-    status?: "ok" | "failed" | "skipped";
-    changed?: boolean;
-    error?: string;
-    extra?: React.ReactNode;
-  }[];
-  data: unknown;
-}) {
-  return (
-    <ResultShell
-      jobId={jobId}
-      label={label}
-      summary={<ResultSummary outcomes={results.map(hostOutcome)} />}
-      data={data}
-    >
-      {results.map((r, i) => (
-        <HostResultRow key={i} {...r} />
-      ))}
-    </ResultShell>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // File Upload (single result, no hosts)
 // ---------------------------------------------------------------------------
 
@@ -277,13 +199,12 @@ function ListSearchBar({
 // Router
 // ---------------------------------------------------------------------------
 
-/** A field of the rows that a behavior block answers, from blocks.gen.ts. */
 /**
  * A value as the CLI's output shows it, by its column's render tag: bytes
  * as a size, a time in the one time format, milliseconds as a duration, and
  * short=N cut to N characters. A list is joined.
  */
-function formatCell(c: BehaviorBlockColumn, v: unknown): string {
+function formatCell(c: CatalogColumn, v: unknown): string {
   if (Array.isArray(v)) return v.map((x) => formatCell(c, x)).join(", ");
   if (v !== null && typeof v === "object") return objectText(c, v);
   const r = c.render ?? "";
@@ -302,7 +223,7 @@ function formatCell(c: BehaviorBlockColumn, v: unknown): string {
 }
 
 /** An object as one line, each field by its label: Total 1.9 GB, Used 227 MB. */
-function objectText(c: BehaviorBlockColumn, v: object): string {
+function objectText(c: CatalogColumn, v: object): string {
   const cols = c.columns ?? [];
   const o = v as Record<string, unknown>;
   if (cols.length === 0) {
@@ -321,7 +242,7 @@ function objectText(c: BehaviorBlockColumn, v: object): string {
  * such as the disks of a host, the items of the list: 4 disks.
  */
 function countOf(
-  def: BehaviorBlockDef,
+  def: CatalogMethod,
   rows: readonly Record<string, unknown>[],
 ): string {
   const shown = def.columns.filter((c) => c.name !== "changed");
@@ -335,7 +256,7 @@ function countOf(
 }
 
 /** The text of every value of a row, for the search. */
-function rowText(cols: readonly BehaviorBlockColumn[], r: object): string[] {
+function rowText(cols: readonly CatalogColumn[], r: object): string[] {
   const o = r as Record<string, unknown>;
   return cols.map((c) => (hasValue(o[c.name]) ? formatCell(c, o[c.name]) : ""));
 }
@@ -346,7 +267,7 @@ function Pairs({
   item,
   strongFirst,
 }: {
-  cols: readonly BehaviorBlockColumn[];
+  cols: readonly CatalogColumn[];
   item: Record<string, unknown>;
   strongFirst?: boolean;
 }) {
@@ -367,16 +288,19 @@ function Pairs({
 }
 
 /**
- * The result of a behavior block: the rows that its method answers, one per
+ * The result of a method of a behavior: the rows that its method answers, one per
  * item, grouped by host, with a column for each field of the output. A host
  * that failed or was skipped is a header without rows.
  */
 function GenericRowsResult({
   data,
   def,
+  noun,
 }: {
   data: Record<string, unknown>;
-  def: BehaviorBlockDef;
+  def: CatalogMethod;
+  /** What the rows are, as the summary line names them: dns get. */
+  noun: string;
 }) {
   const { search, setSearch } = useListSearch();
   type Row = Record<string, unknown> & {
@@ -406,7 +330,6 @@ function GenericRowsResult({
   }
   const shown = def.columns.filter((c) => c.name !== "changed");
   const total = hosts.reduce((n, h) => n + h.rows.length, 0);
-  const noun = `${def.title.toLowerCase()} ${def.method}`;
   return (
     <ResultShell
       jobId={data.job_id as string | undefined}
@@ -443,7 +366,7 @@ function GenericRowsResult({
                   ? "skipped"
                   : failed
                     ? "failed"
-                    : def.write
+                    : def.httpMethod !== "GET"
                       ? changed
                         ? "changed"
                         : "unchanged"
@@ -453,7 +376,7 @@ function GenericRowsResult({
             {host.error && host.status !== "skipped" && (
               <HostError>{host.error}</HostError>
             )}
-            {!def.write &&
+            {!(def.httpMethod !== "GET") &&
               visible.map((r, i) => (
                 <div
                   key={i}
@@ -491,23 +414,30 @@ function GenericRowsResult({
   );
 }
 
-export function ResultCard({ type, result, onAction }: ResultCardProps) {
+export function ResultCard({
+  run,
+  method,
+  title,
+  result,
+  onAction,
+}: ResultCardProps) {
   if (!result) return null;
   const data = result as Record<string, unknown>;
 
-  // A behavior block shows its rows as the CLI does, from the columns of
-  // its method's output: no behavior has a card of its own.
-  if (type in BEHAVIOR_BLOCKS) {
+  // A method of a behavior shows its rows as the CLI does, from the columns
+  // of its output: no behavior has a card of its own.
+  if (method) {
     return (
       <GenericRowsResult
         data={data}
-        def={BEHAVIOR_BLOCKS[type as BehaviorBlockType]}
+        def={method}
+        noun={`${(title ?? run).toLowerCase()} ${method.name}`}
       />
     );
   }
 
   // File list
-  if (type === "object-list" && "files" in data) {
+  if (run === "objectstore.list" && "files" in data) {
     const files = (data as { files: FileInfo[] }).files;
     return (
       <ResultShell
@@ -531,7 +461,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
               <IconButton
                 icon={Trash2}
                 variant="danger"
-                onClick={() => onAction("object-delete", f.name)}
+                onClick={() => onAction("objectstore.delete", f.name)}
                 title={`Delete ${f.name}`}
                 className="ml-auto"
               />
@@ -542,84 +472,12 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
     );
   }
 
-  if (type === "object-upload" && "name" in data && "sha256" in data) {
+  if (run === "objectstore.upload" && "name" in data && "sha256" in data) {
     return <FileUploadResult data={data as unknown as FileUploadResponse} />;
   }
 
-  // DNS delete / interface CRUD / route CRUD — generic collection results
-  if (
-    [
-      "dns-delete",
-      "interface-get",
-      "interface-create",
-      "interface-update",
-      "interface-delete",
-      "route-create",
-      "route-update",
-      "route-delete",
-    ].includes(type) &&
-    Array.isArray(data.results)
-  ) {
-    const label = type.replace("-", " ");
-    const results = data.results as {
-      hostname?: string;
-      status?: string;
-      changed?: boolean;
-      error?: string;
-    }[];
-    return (
-      <CollectionResult
-        jobId={data.job_id as string | undefined}
-        label={label}
-        results={results.map((r) => ({
-          hostname: r.hostname,
-          status: hostStatus(r),
-          changed: r.changed,
-          error: r.error,
-        }))}
-        data={data}
-      />
-    );
-  }
-
-  // Config operations (sysctl, timezone, hostname)
-  if (
-    [
-      "sysctl-get",
-      "sysctl-set",
-      "sysctl-update",
-      "sysctl-delete",
-      "timezone-get",
-      "timezone-set",
-      "hostname-get",
-      "hostname-set",
-    ].includes(type) &&
-    Array.isArray(data.results)
-  ) {
-    const label = type.replace("-", " ");
-    const results = data.results as {
-      hostname?: string;
-      status?: string;
-      changed?: boolean;
-      error?: string;
-    }[];
-    return (
-      <CollectionResult
-        jobId={data.job_id as string | undefined}
-        label={label}
-        results={results.map((r) => ({
-          hostname: r.hostname,
-          status: hostStatus(r),
-          changed: r.changed,
-          error: r.error,
-        }))}
-        data={data}
-      />
-    );
-  }
-
   // File stale — list of stale deployments
-  if (type === "object-stale" && Array.isArray(data.stale)) {
+  if (run === "objectstore.stale" && Array.isArray(data.stale)) {
     type StaleEntry = {
       object_name: string;
       hostname: string;

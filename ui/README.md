@@ -6,13 +6,14 @@ SDK.
 
 <p align="center">
   <a href="asset/dashboard.png"><img src="asset/dashboard.png" width="400" alt="Dashboard"></a>
-  <a href="asset/configure.png"><img src="asset/configure.png" width="400" alt="Configure"></a>
 </p>
 
 - **Dashboard:** fleet health, the controller's and NATS's components, streams,
   buckets and an agent per card, with drain and undrain.
-- **Configure:** an operation builder, one block per operation, each with its
-  own target and result.
+- **Behaviors:** what osapi manages on a host, by area, with a page for each
+  behavior: its methods, their permissions, platforms, chains and examples.
+- **Plans:** steps that run in order, each a method of a behavior with its own
+  target, input and result. A plan exports as YAML.
 - **Its client** is generated from osapi's OpenAPI spec by
   [orval](https://orval.dev/), into `src/sdk/gen/`.
 

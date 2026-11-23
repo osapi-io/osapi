@@ -23,5 +23,5 @@ package all
 //go:generate go run ../../behavior/gen --root ../../..
 //go:generate go run ../../behavior/gen/group --root ../../..
 //go:generate go run ../../authtoken/gen --root ../../..
-//go:generate go run ../../behavior/uiblocks/gen --root ../../..
+//go:generate go run ../../behavior/uicatalog/gen --root ../../..
 //go:generate go run ../../cli/gen --root ../../..

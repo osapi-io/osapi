@@ -1,18 +1,18 @@
 import { useCallback, type RefObject } from "react";
 
 /**
- * Returns a callback that focuses a block, after a short delay so React has
- * rendered it: its first input, or the card itself for a block with no
- * input, such as a List. Focus brings the block into view, so a person sees
- * the block that they just added, however long the stack is.
+ * Returns a callback that focuses a step, after a short delay so React has
+ * rendered it: its first input, or the card itself for a step with no
+ * input, such as a list. Focus brings the step into view, so a person sees
+ * the step that they just added, however long the plan is.
  */
-export function useBlockFocus(
-  blockRefs: RefObject<Map<string, HTMLElement> | null>,
+export function useStepFocus(
+  stepRefs: RefObject<Map<string, HTMLElement> | null>,
 ) {
   return useCallback(
     (id: string) => {
       setTimeout(() => {
-        const el = blockRefs.current?.get(id);
+        const el = stepRefs.current?.get(id);
         if (!el) return;
         el.scrollIntoView({ behavior: "smooth", block: "center" });
         const input = el.querySelector(
@@ -27,6 +27,6 @@ export function useBlockFocus(
         }
       }, 50);
     },
-    [blockRefs],
+    [stepRefs],
   );
 }

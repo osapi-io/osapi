@@ -96,7 +96,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindOption,
 			Name: `Title("Package updates")`,
-			Does: "Gives the behavior the title that a person reads: the title of its reference and chain pages, the name of its API tag and of its category of blocks in the UI. Without it, the title is the name with a capital letter, such as Sysctl.",
+			Does: "Gives the behavior the title that a person reads: the title of its reference and chain pages, the name of its API tag, and its name on the UI's Behaviors page and on its steps of a plan. Without it, the title is the name with a capital letter, such as Sysctl.",
 			When: "When the name does not read well with a capital letter: an initialism such as DNS, two words such as Package updates, a group such as Container image, or a behavior that Of nests, which names its parent, such as User SSH key.",
 		},
 		{
@@ -108,7 +108,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindOption,
 			Name: `Area(area.Name)`,
-			Does: "Puts a served behavior in an area, one of area.All: the tab of the Configure page's Add Block panel that its blocks sit in, the folder of its SDK page, of its reference page and of its chain's page, and its section of the docs site's SDK and Behaviors menus. Use a constant of package area, such as area.Config or area.Hardware. area.All has the label and the order of each area.",
+			Does: "Puts a served behavior in an area, one of area.All: its section of the UI's Behaviors page and of the list of steps of the Plans page, the folder of its SDK page, of its reference page and of its chain's page, and its section of the docs site's SDK and Behaviors menus. Use a constant of package area, such as area.Config or area.Hardware. area.All has the label and the order of each area.",
 			When: "On each behavior with API. behavior validate refuses a served behavior with none.",
 		},
 		{

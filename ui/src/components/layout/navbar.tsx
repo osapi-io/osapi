@@ -2,7 +2,8 @@ import { useState, useRef, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Activity,
-  Settings,
+  BookOpen,
+  ListChecks,
   ShieldCheck,
   LogOut,
   FileText,
@@ -21,7 +22,8 @@ import { useOutsideClick } from "@/hooks/use-outside-click";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: Activity },
-  { to: "/configure", label: "Configure", icon: Settings },
+  { to: "/behaviors", label: "Behaviors", icon: BookOpen },
+  { to: "/plans/new", label: "Plans", icon: ListChecks },
 ];
 
 // Each link shows to a user with its permission. A link without one shows to
@@ -63,7 +65,11 @@ export function Navbar() {
       </Link>
       <div className="flex gap-1">
         {navItems.map((item) => {
-          const active = location.pathname === item.to;
+          // A behavior's page is under Behaviors, and each plan under Plans.
+          const active =
+            item.to === "/"
+              ? location.pathname === "/"
+              : location.pathname.startsWith(item.to.replace(/\/new$/, ""));
           return (
             <Link
               key={item.to}

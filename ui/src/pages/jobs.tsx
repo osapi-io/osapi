@@ -54,7 +54,7 @@ const STATUS_OPTIONS = [
 ];
 
 // LinkedJob is the job that /admin/jobs/:id names, such as the job of a
-// block's result on the Configure page: its detail, above the list, whether
+// step's result on the Plans page: its detail, above the list, whether
 // or not the job is on the page of the list that shows.
 function LinkedJob({ id }: { id: string }) {
   const [job, setJob] = useState<JobDetailResponse | null>(null);

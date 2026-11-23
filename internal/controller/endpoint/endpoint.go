@@ -95,9 +95,8 @@ func (f optionFunc) apply(
 	f(g)
 }
 
-// Area puts the group's operations in an area, one of area.All: the tab of
-// the UI's Configure page, the folder of the SDK's page and its section of
-// the docs site's SDK menu. endpoint validate refuses a group with none.
+// Area puts the group's operations in an area, one of area.All: the folder
+// of the SDK's page and its section of the docs site's SDK menu. endpoint validate refuses a group with none.
 func Area(
 	name area.Name,
 ) Option {

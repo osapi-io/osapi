@@ -1,10 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { ALL_BLOCK_TYPES } from "@/hooks/use-stack";
+import { catalogIndex } from "@/lib/catalog-index";
 import {
-  BLOCK_PERMISSIONS,
-  blockAllowed,
   getRoleByName,
   hasPermission,
+  permitted,
   type Permission,
 } from "@/lib/permissions";
 
@@ -14,33 +13,36 @@ const canAs = (name: string) => {
   return (p: Permission) => hasPermission(role, p);
 };
 
-describe("blockAllowed", () => {
-  test("a read-only role sees command exec and ping disabled", () => {
+const permissionOf = (run: string) => catalogIndex.step(run)?.permission;
+
+describe("permitted", () => {
+  test("a read-only role cannot run command exec or ping", () => {
     const can = canAs("read");
-    expect(blockAllowed("command-exec", can)).toBe(false);
-    expect(blockAllowed("connectivity-ping", can)).toBe(false);
-    expect(blockAllowed("dns-get", can)).toBe(true);
+    expect(permitted(permissionOf("command.exec"), can)).toBe(false);
+    expect(permitted(permissionOf("connectivity.ping"), can)).toBe(false);
+    expect(permitted(permissionOf("dns.get"), can)).toBe(true);
   });
 
-  test("the admin role may use command exec and ping", () => {
+  test("the admin role may run command exec and ping", () => {
     const can = canAs("admin");
-    expect(blockAllowed("command-exec", can)).toBe(true);
-    expect(blockAllowed("connectivity-ping", can)).toBe(true);
+    expect(permitted(permissionOf("command.exec"), can)).toBe(true);
+    expect(permitted(permissionOf("connectivity.ping"), can)).toBe(true);
   });
 
-  test("a block with no known permission is disabled, not allowed", () => {
-    expect(blockAllowed("no-such-block", () => true)).toBe(false);
+  test("a step with no known permission is refused, not allowed", () => {
+    expect(permitted(undefined, () => true)).toBe(false);
+    expect(permitted("nothing:read", () => true)).toBe(false);
   });
 
-  test("each block in the panel has a permission", () => {
-    const missing = ALL_BLOCK_TYPES.filter(
-      (bt) => BLOCK_PERMISSIONS[bt.type] === undefined,
-    ).map((bt) => bt.type);
+  test("each step of a plan has a permission that the UI knows", () => {
+    const missing = catalogIndex.steps
+      .filter((d) => !permitted(d.permission, () => true))
+      .map((d) => d.run);
     expect(missing).toEqual([]);
   });
 
-  test("each block is in the panel once", () => {
-    const types = ALL_BLOCK_TYPES.map((bt) => bt.type);
-    expect(types.length).toBe(new Set(types).size);
+  test("each step is in the list once", () => {
+    const runs = catalogIndex.steps.map((d) => d.run);
+    expect(runs.length).toBe(new Set(runs).size);
   });
 });

@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Command gen writes the UI's behavior blocks, with every behavior
+// Command gen writes the UI's catalog of the behaviors, with every behavior
 // registered. go generate ./internal/behaviors/all runs it.
 package main
 
@@ -29,7 +29,8 @@ import (
 	"path/filepath"
 
 	"github.com/osapi-io/osapi/internal/behavior"
-	"github.com/osapi-io/osapi/internal/behavior/uiblocks"
+	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
+	"github.com/osapi-io/osapi/internal/behavior/uicatalog"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all"
 )
 
@@ -37,8 +38,8 @@ func main() {
 	root := flag.String("root", ".", "The root of the osapi repository")
 	flag.Parse()
 
-	ts := uiblocks.TypeScript(uiblocks.Blocks(behavior.All()))
-	if err := os.WriteFile(filepath.Join(*root, uiblocks.File), []byte(ts), 0o644); err != nil {
+	ts := uicatalog.TypeScript(uicatalog.Catalog(behavior.All(), behaviortest.Chains))
+	if err := os.WriteFile(filepath.Join(*root, uicatalog.File), []byte(ts), 0o644); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}

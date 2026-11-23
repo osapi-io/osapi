@@ -130,10 +130,10 @@ func (s *HandlerPublicTestSuite) TestRegister() {
 			},
 		},
 		{
-			name:   "serves index.html for SPA client-side route /configure",
+			name:   "serves index.html for SPA client-side route /plans/new",
 			distFS: populatedFS(),
 			method: http.MethodGet,
-			path:   "/configure",
+			path:   "/plans/new",
 			validateFunc: func(rec *httptest.ResponseRecorder) {
 				s.Equal(http.StatusOK, rec.Code)
 				s.Contains(rec.Body.String(), "<html>app</html>")

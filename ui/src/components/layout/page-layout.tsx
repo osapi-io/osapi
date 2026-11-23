@@ -27,14 +27,25 @@ export function PageLayout({ children }: PageLayoutProps) {
             },
           ]
         : []),
-      ...(pathname !== "/configure"
+      ...(pathname !== "/behaviors"
         ? [
             {
-              id: "nav:config",
-              name: "config",
-              description: "Go to Configure",
+              id: "nav:behaviors",
+              name: "behaviors",
+              description: "Go to Behaviors",
               category: "navigate",
-              action: () => navigate("/configure"),
+              action: () => navigate("/behaviors"),
+            },
+          ]
+        : []),
+      ...(pathname !== "/plans/new"
+        ? [
+            {
+              id: "nav:plans",
+              name: "plans",
+              description: "Go to Plans",
+              category: "navigate",
+              action: () => navigate("/plans/new"),
             },
           ]
         : []),
