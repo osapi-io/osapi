@@ -2,7 +2,8 @@
 
 Get job details and status.
 
-Retrieve details of a specific job by its ID.
+Retrieve details of a specific job by its ID. A job whose target is outside the
+target scope of the token is not found.
 
 ```bash
 osapi client job get [flags]

@@ -68,7 +68,7 @@ export const getGetAuditLogsUrl = (params?: GetAuditLogsParams,) => {
 }
 
 /**
- * Returns a paginated list of audit log entries, newest first.
+ * Returns a paginated list of audit log entries, newest first. A token with a target scope gets only the entries of requests to a target in its scope, and the total includes only those entries.
  * @summary List audit log entries
  */
 export const getAuditLogs = async (params?: GetAuditLogsParams, options?: Parameters<typeof apiFetch>[1]): Promise<getAuditLogsResponse> => {
@@ -136,7 +136,7 @@ export const getGetAuditLogByIDUrl = (id: string,) => {
 }
 
 /**
- * Returns a single audit log entry by ID.
+ * Returns a single audit log entry by ID. An entry of a request to a target outside the target scope of the token is not found.
  * @summary Get a single audit log entry
  */
 export const getAuditLogByID = async (id: string, options?: Parameters<typeof apiFetch>[1]): Promise<getAuditLogByIDResponse> => {
@@ -194,7 +194,7 @@ export const getGetAuditExportUrl = () => {
 }
 
 /**
- * Returns all audit log entries without pagination for export.
+ * Returns all audit log entries without pagination for export. A token with a target scope gets only the entries of requests to a target in its scope.
  * @summary Export all audit log entries
  */
 export const getAuditExport = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getAuditExportResponse> => {

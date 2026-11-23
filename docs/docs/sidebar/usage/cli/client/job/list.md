@@ -2,7 +2,9 @@
 
 List jobs.
 
-Retrieve jobs, optionally filtered by status.
+Retrieve jobs, optionally filtered by status. A token with a target scope gets
+only the jobs whose target is in its scope, and the counts include only those
+jobs.
 
 ```bash
 osapi client job list [flags]

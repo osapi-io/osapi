@@ -18,7 +18,7 @@ var jobListCmd = &cobra.Command{
 	},
 	Args:    cobra.NoArgs,
 	Example: "  osapi client job list\n  osapi client job list --status completed --limit 3",
-	Long:    "Retrieve jobs, optionally filtered by status.",
+	Long:    "Retrieve jobs, optionally filtered by status. A token with a target scope gets only the jobs whose target is in its scope, and the counts include only those jobs.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		status, _ := cmd.Flags().GetString("status")
 		limit, _ := cmd.Flags().GetInt("limit")
@@ -37,7 +37,7 @@ var jobGetCmd = &cobra.Command{
 	},
 	Args:    cobra.NoArgs,
 	Example: "  osapi client job get --id 550e8400-e29b-41d4-a716-446655440000",
-	Long:    "Retrieve details of a specific job by its ID.",
+	Long:    "Retrieve details of a specific job by its ID. A job whose target is outside the target scope of the token is not found.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		id, _ := cmd.Flags().GetString("id")
 

@@ -237,18 +237,18 @@ func (mr *MockJobClientMockRecorder) ListAgents(ctx any) *gomock.Call {
 }
 
 // ListJobs mocks base method.
-func (m *MockJobClient) ListJobs(ctx context.Context, statusFilter string, limit, offset int) (*client0.ListJobsResult, error) {
+func (m *MockJobClient) ListJobs(ctx context.Context, statusFilter string, limit, offset int, keep func(string) bool) (*client0.ListJobsResult, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListJobs", ctx, statusFilter, limit, offset)
+	ret := m.ctrl.Call(m, "ListJobs", ctx, statusFilter, limit, offset, keep)
 	ret0, _ := ret[0].(*client0.ListJobsResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListJobs indicates an expected call of ListJobs.
-func (mr *MockJobClientMockRecorder) ListJobs(ctx, statusFilter, limit, offset any) *gomock.Call {
+func (mr *MockJobClientMockRecorder) ListJobs(ctx, statusFilter, limit, offset, keep any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListJobs", reflect.TypeOf((*MockJobClient)(nil).ListJobs), ctx, statusFilter, limit, offset)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListJobs", reflect.TypeOf((*MockJobClient)(nil).ListJobs), ctx, statusFilter, limit, offset, keep)
 }
 
 // Modify mocks base method.

@@ -39,6 +39,7 @@ type Jobs interface {
 		statusFilter string,
 		limit int,
 		offset int,
+		keep func(target string) bool,
 	) (*client.ListJobsResult, error)
 	GetJobStatus(ctx context.Context, jobID string) (*job.QueuedJob, error)
 	DeleteJob(ctx context.Context, jobID string) error

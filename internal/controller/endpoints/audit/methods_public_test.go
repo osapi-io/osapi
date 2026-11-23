@@ -63,6 +63,19 @@ var (
 	}
 )
 
+// scope is a target scope, and web, all and short are entries of requests
+// to a target in it, to _all, and to the bare path of a node.
+var (
+	scope = []string{"group:web"}
+	web   = auditstore.Entry{
+		ID: "web", Method: "GET", Path: "/api/node/group:web.dev/hostname",
+	}
+	all = auditstore.Entry{
+		ID: "all", Method: "GET", Path: "/api/node/_all/hostname",
+	}
+	short = auditstore.Entry{ID: "short", Method: "GET", Path: "/api/node/group:web"}
+)
+
 type MethodsPublicTestSuite struct {
 	suite.Suite
 
@@ -93,6 +106,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 	tests := []struct {
 		name         string
 		in           audit.ListInput
+		scope        []string
 		noStore      bool
 		setup        func()
 		validateFunc func(audit.ListAuditResponse, error)
@@ -217,11 +231,41 @@ func (s *MethodsPublicTestSuite) TestList() {
 				s.ErrorContains(errors.Unwrap(err), "nats: timeout")
 			},
 		},
+		{
+			name:  "when the token is scoped, it reads the whole log and counts only the entries in its scope",
+			in:    audit.ListInput{Limit: 1},
+			scope: scope,
+			setup: func() {
+				s.store.EXPECT().ListAll(gomock.Any()).
+					Return([]auditstore.Entry{full, web, bare, all, short}, nil)
+			},
+			validateFunc: func(got audit.ListAuditResponse, err error) {
+				s.Require().NoError(err)
+				s.Equal(2, got.TotalItems, "only the entries for group:web and its children")
+				s.Require().Len(got.Items, 1)
+				s.Equal("web", got.Items[0].ID)
+			},
+		},
+		{
+			name:  "when the token is scoped and the caller filters, both apply",
+			in:    audit.ListInput{Operation: "hostname"},
+			scope: scope,
+			setup: func() {
+				s.store.EXPECT().ListAll(gomock.Any()).
+					Return([]auditstore.Entry{web, all, short}, nil)
+			},
+			validateFunc: func(got audit.ListAuditResponse, err error) {
+				s.Require().NoError(err)
+				s.Equal(1, got.TotalItems)
+				s.Equal("web", got.Items[0].ID)
+			},
+		},
 	}
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			tc.setup()
-			tc.validateFunc(audit.List(context.Background(), s.deps(!tc.noStore), tc.in))
+			ctx := authtoken.WithTargets(context.Background(), tc.scope)
+			tc.validateFunc(audit.List(ctx, s.deps(!tc.noStore), tc.in))
 		})
 	}
 }
@@ -229,6 +273,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 func (s *MethodsPublicTestSuite) TestExport() {
 	tests := []struct {
 		name         string
+		scope        []string
 		noStore      bool
 		setup        func()
 		validateFunc func(audit.ListAuditResponse, error)
@@ -272,12 +317,28 @@ func (s *MethodsPublicTestSuite) TestExport() {
 				s.EqualError(err, "failed to list all audit entries")
 			},
 		},
+		{
+			name:  "when the token is scoped, it answers only the entries in its scope",
+			scope: scope,
+			setup: func() {
+				s.store.EXPECT().ListAll(gomock.Any()).
+					Return([]auditstore.Entry{full, web, bare, all, short}, nil)
+			},
+			validateFunc: func(got audit.ListAuditResponse, err error) {
+				s.Require().NoError(err)
+				s.Equal(2, got.TotalItems)
+				s.Require().Len(got.Items, 2)
+				s.Equal("web", got.Items[0].ID)
+				s.Equal("short", got.Items[1].ID)
+			},
+		},
 	}
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			tc.setup()
+			ctx := authtoken.WithTargets(context.Background(), tc.scope)
 			tc.validateFunc(
-				audit.Export(context.Background(), s.deps(!tc.noStore), audit.ExportInput{}),
+				audit.Export(ctx, s.deps(!tc.noStore), audit.ExportInput{}),
 			)
 		})
 	}
@@ -286,6 +347,7 @@ func (s *MethodsPublicTestSuite) TestExport() {
 func (s *MethodsPublicTestSuite) TestGet() {
 	tests := []struct {
 		name         string
+		scope        []string
 		noStore      bool
 		setup        func()
 		validateFunc func(audit.AuditEntryResponse, error)
@@ -328,12 +390,44 @@ func (s *MethodsPublicTestSuite) TestGet() {
 				s.EqualError(err, "failed to get audit entry")
 			},
 		},
+		{
+			name:  "when a scoped token gets an entry in its scope, it answers it",
+			scope: scope,
+			setup: func() {
+				s.store.EXPECT().Get(gomock.Any(), entryID).Return(&web, nil)
+			},
+			validateFunc: func(got audit.AuditEntryResponse, err error) {
+				s.Require().NoError(err)
+				s.Equal("web", got.Entry.ID)
+			},
+		},
+		{
+			name:  "when a scoped token gets an entry for _all, it is ErrNotFound",
+			scope: scope,
+			setup: func() {
+				s.store.EXPECT().Get(gomock.Any(), entryID).Return(&all, nil)
+			},
+			validateFunc: func(_ audit.AuditEntryResponse, err error) {
+				s.ErrorIs(err, audit.ErrNotFound)
+			},
+		},
+		{
+			name:  "when a scoped token gets an entry with no target, it is ErrNotFound",
+			scope: scope,
+			setup: func() {
+				s.store.EXPECT().Get(gomock.Any(), entryID).Return(&bare, nil)
+			},
+			validateFunc: func(_ audit.AuditEntryResponse, err error) {
+				s.ErrorIs(err, audit.ErrNotFound)
+			},
+		},
 	}
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			tc.setup()
+			ctx := authtoken.WithTargets(context.Background(), tc.scope)
 			tc.validateFunc(
-				audit.Get(context.Background(), s.deps(!tc.noStore), audit.GetInput{ID: entryID}),
+				audit.Get(ctx, s.deps(!tc.noStore), audit.GetInput{ID: entryID}),
 			)
 		})
 	}

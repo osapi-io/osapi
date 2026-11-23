@@ -53,7 +53,8 @@ var Group = endpoint.Register(endpoint.Define(
 		Handle(List).
 		ID("GetJobs").
 		Describe("List jobs").
-		Explain("Retrieve jobs, optionally filtered by status.").
+		Explain("Retrieve jobs, optionally filtered by status. A token with a target scope gets "+
+			"only the jobs whose target is in its scope, and the counts include only those jobs.").
 		Returns("A list of jobs.").
 		Command("List jobs", "").
 		Example("").
@@ -64,23 +65,27 @@ var Group = endpoint.Register(endpoint.Define(
 		Handle(Get).
 		ID("GetJobByID").
 		Describe("Get job detail").
-		Explain("Retrieve details of a specific job by its ID.").
+		Explain("Retrieve details of a specific job by its ID. A job whose target is outside the "+
+			"target scope of the token is not found.").
 		Returns("The job details.").
 		Command("Get job details and status", "").
 		Example("--id 550e8400-e29b-41d4-a716-446655440000").
 		Prints(sampleDetail).
-		Errors(endpoint.NotFound(ErrNotFound, "Job not found.")),
+		Errors(endpoint.NotFound(ErrNotFound,
+			"Job not found, or its target is outside the token's target scope.")),
 	endpoint.Delete[DeleteInput, struct{}]("delete").
 		Fails("an ID that is not a UUID", DeleteInput{ID: "not-a-uuid"}).
 		Handle(Delete).
 		ID("DeleteJobByID").
 		Describe("Delete a job").
-		Explain("Delete a specific job by its ID.").
+		Explain("Delete a specific job by its ID. A job whose target is outside the target "+
+			"scope of the token is not found.").
 		Returns("Job deleted successfully. No content returned.").
 		Status(http.StatusNoContent).
 		Command("Delete a job", "The job goes from storage permanently.").
 		Example("--id 550e8400-e29b-41d4-a716-446655440000").
-		Errors(endpoint.NotFound(ErrNotFound, "Job not found.")),
+		Errors(endpoint.NotFound(ErrNotFound,
+			"Job not found, or its target is outside the token's target scope.")),
 	endpoint.Post[RetryInput, CreateJobResponse]("retry").
 		Fails("an ID that is not a UUID", RetryInput{ID: "not-a-uuid"}).
 		Fails("a target that is not a hostname, a label or _any or _all", RetryInput{ID: "7c9e6679-7425-40de-944b-e07fc1f90ae7", Body: RetryJobRequest{TargetHostname: "web 01!"}}).
@@ -99,7 +104,8 @@ var Group = endpoint.Register(endpoint.Define(
 		Example("--id 550e8400-e29b-41d4-a716-446655440000").
 		Prints(sampleRetry).
 		Errors(
-			endpoint.NotFound(ErrNotFound, "Job not found."),
+			endpoint.NotFound(ErrNotFound,
+				"Job not found, or its target is outside the token's target scope."),
 			endpoint.Invalid(ErrNoOperation,
 				"Invalid request parameters, or a job with no operation data to run again."),
 			endpoint.Forbidden(ErrOutOfScope,

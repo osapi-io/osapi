@@ -136,7 +136,7 @@ openapi: 3.0.0
 paths:
   /api/audit:
     get:
-      description: Returns a paginated list of audit log entries, newest first.
+      description: Returns a paginated list of audit log entries, newest first. A token with a target scope gets only the entries of requests to a target in its scope, and the total includes only those entries.
       operationId: GetAuditLogs
       parameters:
         - description: Maximum number of entries to return.
@@ -235,7 +235,7 @@ paths:
         - audit
   /api/audit/{id}:
     get:
-      description: Returns a single audit log entry by ID.
+      description: Returns a single audit log entry by ID. An entry of a request to a target outside the target scope of the token is not found.
       operationId: GetAuditLogByID
       parameters:
         - description: The audit entry ID.
@@ -277,7 +277,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: Audit entry not found.
+          description: Audit entry not found, or its target is outside the token's target scope.
         "500":
           content:
             application/json:
@@ -298,7 +298,7 @@ paths:
         - audit
   /api/audit/export:
     get:
-      description: Returns all audit log entries without pagination for export.
+      description: Returns all audit log entries without pagination for export. A token with a target scope gets only the entries of requests to a target in its scope.
       operationId: GetAuditExport
       responses:
         "200":

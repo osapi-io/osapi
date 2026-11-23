@@ -73,7 +73,7 @@ export const getGetTraceUrl = (id: string,
 }
 
 /**
- * Returns each span of a trace, read from the tracing backend at telemetry.tracing.url. The backend gets the spans a few seconds after the request, so a trace of a request that just ran can be not found yet.
+ * Returns each span of a trace, read from the tracing backend at telemetry.tracing.url. The backend gets the spans a few seconds after the request, so a trace of a request that just ran can be not found yet. A token with a target scope gets a trace only when each target that the trace records is in its scope.
  * @summary Get the spans of a trace
  */
 export const getTrace = async (id: string,

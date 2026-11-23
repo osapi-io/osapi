@@ -55,7 +55,7 @@ var auditGetCmd = &cobra.Command{
 	},
 	Args:    cobra.NoArgs,
 	Example: "  osapi client audit get --id 550e8400-e29b-41d4-a716-446655440000\n  osapi client audit get --id 550e8400-e29b-41d4-a716-446655440000 --json",
-	Long:    "Returns a single audit log entry by ID.",
+	Long:    "Returns a single audit log entry by ID. An entry of a request to a target outside the target scope of the token is not found.",
 	Run: func(cmd *cobra.Command, _ []string) {
 		id, _ := cmd.Flags().GetString("id")
 

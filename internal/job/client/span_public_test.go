@@ -188,7 +188,7 @@ func (s *SpanPublicTestSuite) TestReads() {
 			name: "when the list reads its page records how many jobs it has",
 			span: "job.list",
 			call: func(c *client.Client, ctx context.Context) error {
-				_, err := c.ListJobs(ctx, "failed", 10, 0)
+				_, err := c.ListJobs(ctx, "failed", 10, 0, nil)
 				return err
 			},
 			validate: func(span sdktrace.ReadOnlySpan) {
@@ -202,7 +202,7 @@ func (s *SpanPublicTestSuite) TestReads() {
 			span:    "job.list",
 			keysErr: errKV,
 			call: func(c *client.Client, ctx context.Context) error {
-				_, err := c.ListJobs(ctx, "", 10, 0)
+				_, err := c.ListJobs(ctx, "", 10, 0, nil)
 				return err
 			},
 			validate: func(span sdktrace.ReadOnlySpan) {

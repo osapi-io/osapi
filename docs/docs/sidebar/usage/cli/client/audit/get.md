@@ -2,7 +2,8 @@
 
 Get a single audit log entry.
 
-Returns a single audit log entry by ID.
+Returns a single audit log entry by ID. An entry of a request to a target
+outside the target scope of the token is not found.
 
 ```bash
 osapi client audit get [flags]

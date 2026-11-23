@@ -136,6 +136,9 @@ reference.
 All audit endpoints require the `audit:read` permission. Only the `admin` role
 includes this permission by default.
 
+A token with a target scope sees only the entries of requests to a target in its
+scope. Refer to [Target scope](authentication.md#target-scope).
+
 ## Related
 
 - [CLI Reference](../usage/cli/client/audit/audit.mdx): audit commands (list,

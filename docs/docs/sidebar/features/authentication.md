@@ -91,8 +91,20 @@ a host. A retry of a job must name a target in the scope, because a retry
 without a target goes to `_any`. The audit log records the scope of the token
 with each entry, and the UI shows it on the Roles page and in each audit entry.
 
-The scope limits where a token acts. It does not limit what the token reads from
-the controller, such as the jobs and the audit log.
+The scope also limits what the token reads of the jobs, the traces and the audit
+log. The token sees a record only when the target of the record is in the scope:
+
+- A job: its target, such as `group:web.dev` or `web-01`.
+- An audit entry: the `{hostname}` of a `/api/node/{hostname}/` request. An
+  entry of a request with no target, such as a read of the jobs, has no target.
+- A trace: each `osapi.target` that its spans record. The token sees the trace
+  only when a span records a target, and each target is in the scope.
+
+A record with no target, or with the target `_all` or `_any`, is hidden from a
+scoped token. A list leaves out each record that the token does not see, and its
+counts include only the records that the token sees. A get, a delete or a retry
+of a hidden record gets `404 Not Found`, the same as a record that does not
+exist. A token without targets sees each record.
 
 ## Roles and permissions
 
