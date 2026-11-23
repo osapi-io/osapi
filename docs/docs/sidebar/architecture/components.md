@@ -92,7 +92,7 @@ changes the host then fails with a permission error. The operation does not do
 something that you do not expect. To let the agent change the host, run it as
 root, or enable `agent.privilege_escalation`. Privilege escalation runs only the
 writes through sudo, with a fixed sudoers drop-in.
-[Agent hardening](../features/agent-hardening.md) gives the entries.
+[Agent hardening](../features/platform/agent-hardening.md) gives the entries.
 
 ## What each process needs
 

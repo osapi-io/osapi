@@ -413,4 +413,5 @@ tags:
   - description: Audit log endpoints for viewing API activity.
     name: audit
     x-displayName: Audit
+    x-osapi-area: audit
     x-osapi-group: audit

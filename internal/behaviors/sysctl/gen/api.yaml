@@ -578,4 +578,5 @@ tags:
   - description: Kernel parameters, written to sysctl.d files and applied
     name: sysctl_operations
     x-displayName: Sysctl
+    x-osapi-area: config
     x-osapi-group: sysctl

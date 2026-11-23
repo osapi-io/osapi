@@ -568,4 +568,5 @@ tags:
   - description: The groups of the host
     name: group_operations
     x-displayName: Group
+    x-osapi-area: security
     x-osapi-group: group

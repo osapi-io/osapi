@@ -466,4 +466,5 @@ tags:
   - description: Files of the object store, deployed to the host
     name: file_operations
     x-displayName: File
+    x-osapi-area: config
     x-osapi-group: file

@@ -261,4 +261,5 @@ tags:
   - description: The updates the package index has for the host
     name: updatepackages_operations
     x-displayName: Package updates
+    x-osapi-area: software
     x-osapi-group: updatepackages

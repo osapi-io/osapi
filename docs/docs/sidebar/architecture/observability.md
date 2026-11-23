@@ -55,7 +55,7 @@ together with the Go runtime and process metrics. Watch these metrics first:
 | `osapi_behavior_changes_total`                 | Agent      | How often a write changed a host           |
 | `osapi_nats_client_operation_duration_seconds` | All        | Slow or failed calls to NATS, by bucket    |
 
-[Metrics](../features/metrics.md) lists each metric and its labels.
+[Metrics](../features/platform/metrics.md) lists each metric and its labels.
 
 ## Logs
 
@@ -110,9 +110,9 @@ bucket.
 ## Design details
 
 - [Observability in the specifications](https://github.com/osapi-io/specs/blob/main/components/osapi/observability.md)
-- [Distributed tracing](../features/distributed-tracing.md),
-  [Metrics](../features/metrics.md),
-  [Health checks](../features/health-checks.md),
-  [Notifications](../features/notifications.md) and
-  [Agent lifecycle](../features/agent-lifecycle.md) tell how to configure each
-  one.
+- [Distributed tracing](../features/platform/distributed-tracing.md),
+  [Metrics](../features/platform/metrics.md),
+  [Health checks](../features/platform/health-checks.md),
+  [Notifications](../features/platform/notifications.md) and
+  [Agent lifecycle](../features/platform/agent-lifecycle.md) tell how to
+  configure each one.

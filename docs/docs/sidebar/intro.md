@@ -11,10 +11,14 @@ title: Home
 
 # Give your agent a fleet, not a shell
 
-osapi manages Linux hosts through typed operations, not through a login. Each
-operation is a **behavior**: one thing on a host, defined one time, with a fixed
-input and output. osapi checks each change before it puts the change on the
-queue. A second run changes nothing, and osapi records each change.
+osapi manages Linux and macOS hosts through typed operations, not through a
+login. Each operation is a **behavior**: one thing on a host, defined one time,
+with a fixed input and output. osapi checks each change before it puts the
+change on the queue. A second run changes nothing, and osapi records each
+change. Most behaviors run on Linux and on macOS. Some run only on Linux, such
+as sysctl and the systemd journal. The
+[reference page](reference/behaviors/behaviors.mdx) of each behavior gives its
+platforms.
 
 An agent uses osapi through the skills that `osapi init` installs. The agent
 does not guess commands. It asks osapi which behaviors exist, and what each one
@@ -171,8 +175,8 @@ does not run on its platform.
   its definition
 - [Working with an agent](usage/agents.md): `osapi init`, the skills, and the
   prompts
-- [Features](features/node-management.md): what OSAPI can manage and how each
-  feature works
+- [Features](features/features.mdx): what OSAPI can manage and how each feature
+  works
 - [Architecture](architecture/architecture.md): how the three processes (NATS,
   API server, agent) work together
 - [Configuration](usage/configuration.md): full `osapi.yaml` reference

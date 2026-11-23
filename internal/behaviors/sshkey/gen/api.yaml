@@ -411,4 +411,5 @@ tags:
   - description: The authorized SSH keys of a user
     name: sshkey_operations
     x-displayName: User SSH key
+    x-osapi-area: security
     x-osapi-group: sshkey

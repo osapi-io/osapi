@@ -660,4 +660,5 @@ tags:
   - description: The cron entries that osapi deploys
     name: schedule_operations
     x-displayName: Schedule
+    x-osapi-area: config
     x-osapi-group: schedule

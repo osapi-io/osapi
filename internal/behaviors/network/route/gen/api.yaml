@@ -546,4 +546,5 @@ tags:
   - description: The routes of an interface
     name: route_operations
     x-displayName: Interface route
+    x-osapi-area: networking
     x-osapi-group: route

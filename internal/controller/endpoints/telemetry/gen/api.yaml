@@ -239,4 +239,5 @@ tags:
   - description: Telemetry endpoints, such as the spans of a trace.
     name: telemetry
     x-displayName: Telemetry
+    x-osapi-area: fleet
     x-osapi-group: telemetry

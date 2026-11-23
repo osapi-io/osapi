@@ -976,4 +976,5 @@ tags:
   - description: The systemd services of the host
     name: service_operations
     x-displayName: Service
+    x-osapi-area: services
     x-osapi-group: service

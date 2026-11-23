@@ -403,4 +403,5 @@ tags:
   - description: The processes of the host
     name: process_operations
     x-displayName: Process
+    x-osapi-area: node
     x-osapi-group: process

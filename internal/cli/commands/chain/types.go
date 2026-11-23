@@ -29,10 +29,11 @@ import (
 // ListInput is the input of list, which has none.
 type ListInput struct{}
 
-// ListOutput is each chain.
+// ListOutput is each behavior in a chain: each one that calls others, which
+// has a chain page, and each one that only others call.
 type ListOutput struct {
-	_     struct{}  `title:"Chains"`
-	Items []Summary `               json:"items"`
+	_     struct{}  `title:"Behaviors in a chain"`
+	Items []Summary `                             json:"items"`
 }
 
 // Summary is one behavior in a chain: the tree of the behaviors that it

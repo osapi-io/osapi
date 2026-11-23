@@ -108,4 +108,5 @@ tags:
   - description: Fact key discovery for @fact. references.
     name: facts
     x-displayName: Facts
+    x-osapi-area: fleet
     x-osapi-group: facts

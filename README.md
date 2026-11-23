@@ -6,7 +6,7 @@
   </picture>
 </p>
 
-<p align="center">Typed, repeatable operations for Linux hosts.</p>
+<p align="center">Typed, repeatable operations for Linux and macOS hosts.</p>
 
 <p align="center">
   <a href="https://github.com/osapi-io/osapi/releases/latest"><img alt="release" src="https://img.shields.io/github/release/osapi-io/osapi.svg?style=for-the-badge"></a>
@@ -20,16 +20,17 @@
   <a href="https://conventionalcommits.org"><img alt="conventional commits" src="https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=for-the-badge"></a>
   <img alt="openapi initiative" src="https://img.shields.io/badge/openapiinitiative-%23000000.svg?style=for-the-badge&logo=openapiinitiative&logoColor=white">
   <img alt="Linux" src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black">
+  <img alt="macOS" src="https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white">
   <img alt="gitHub commit activity" src="https://img.shields.io/github/commit-activity/m/osapi-io/osapi?style=for-the-badge">
   <a href="https://pkg.go.dev/github.com/osapi-io/osapi"><img alt="go reference" src="https://img.shields.io/badge/go-reference-00ADD8?style=for-the-badge&logo=go&logoColor=white"></a>
 </p>
 
 # Give your agent a fleet, not a shell
 
-osapi lets an AI agent manage Linux hosts through typed operations, not through
-a login. Each operation is a behavior: one thing on a host, defined one time,
-with a fixed input and output. osapi checks each request before it queues it. A
-second run changes nothing. Each change is recorded.
+osapi lets an AI agent manage Linux and macOS hosts through typed operations,
+not through a login. Each operation is a behavior: one thing on a host, defined
+one time, with a fixed input and output. osapi checks each request before it
+queues it. A second run changes nothing. Each change is recorded.
 
 The agent does not guess commands. It asks osapi what exists, and osapi answers
 with the behaviors that this binary has. No model runs at run time. The same

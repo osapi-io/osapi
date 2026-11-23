@@ -92,9 +92,15 @@ const doc = (p: Page): Item => ({
   docId: p.docId
 });
 
-// featureItems are the feature pages, without their index.
+// featureItems are the feature pages, without their index: a section for
+// each folder of sidebar/features, an area or the platform, in the order of
+// its _category_.json, with the pages of the folder by title.
 export function featureItems(): Item[] {
-  return pages('sidebar/features', ['features']).map(doc);
+  return folders('sidebar/features').flatMap((f, i) => [
+    ...(i > 0 ? [separator] : []),
+    header(f.label),
+    ...pages(`sidebar/features/${f.name}`).map(doc)
+  ]);
 }
 
 // sdkItems are the pages of the SDK: the client's overview, then a section

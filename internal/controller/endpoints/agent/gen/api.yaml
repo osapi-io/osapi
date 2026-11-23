@@ -653,4 +653,5 @@ tags:
   - description: Operations related to agent discovery and details.
     name: agent_operations
     x-displayName: Agent
+    x-osapi-area: fleet
     x-osapi-group: agent
