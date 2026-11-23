@@ -46,26 +46,6 @@ type PreflightResult struct {
 	Fatal  bool
 }
 
-// sudoCommands lists binaries the hand-written domains run with sudo. A
-// behavior declares its own with behavior.Sudo; requiredSudo adds them.
-var sudoCommands = []string{
-	"systemctl",
-	"sysctl",
-	"timedatectl",
-	"chronyc",
-	"useradd",
-	"usermod",
-	"userdel",
-	"groupadd",
-	"groupdel",
-	"gpasswd",
-	"chown",
-	"apt-get",
-	"shutdown",
-	"netplan",
-	"chpasswd",
-}
-
 // requiredCapabilities maps Linux capability names to their bit positions
 // in the CapEff bitmask.
 var requiredCapabilities = map[string]int{
@@ -288,12 +268,12 @@ func readCapEff() (uint64, error) {
 	return 0, fmt.Errorf("CapEff not found in %s", procStatusPath)
 }
 
-// requiredSudo is every program the agent runs with sudo: the hand-written
-// domains', then each registered behavior's, without repeats.
+// requiredSudo is each program that a registered behavior declares with
+// behavior.Sudo on the platform, without repeats.
 func requiredSudo(
 	platform string,
 ) []string {
-	all := slices.Clone(sudoCommands)
+	var all []string
 	for _, b := range behavior.All() {
 		sudo, _ := b.Programs(behavior.PlatformName(platform))
 		for _, p := range sudo {

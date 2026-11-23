@@ -229,6 +229,7 @@ func (s *PreflightPublicTestSuite) TestRunPreflight() {
 		sudoErr   error
 		capEff    string
 		installed []string
+		sudo      []string
 		behaviors func()
 		wantOK    bool
 		wantFail  []string
@@ -240,6 +241,7 @@ func (s *PreflightPublicTestSuite) TestRunPreflight() {
 			sudoOut:   sudoListNarrow,
 			capEff:    "000000000000102f",
 			installed: []string{"sysctl", "systemctl", "timedatectl"},
+			sudo:      []string{"sysctl", "systemctl", "timedatectl"},
 			wantOK:    true,
 			wantPass:  []string{"sudo", "sudo:sysctl", "sudo:systemctl", "sudo:timedatectl"},
 		},
@@ -248,6 +250,7 @@ func (s *PreflightPublicTestSuite) TestRunPreflight() {
 			sudoOut:   sudoListNarrow,
 			capEff:    "000000000000102f",
 			installed: []string{"sysctl"},
+			sudo:      []string{"sysctl", "systemctl", "chronyc"},
 			wantOK:    true,
 			wantNone:  []string{"sudo:chronyc", "sudo:systemctl"},
 		},
@@ -256,6 +259,7 @@ func (s *PreflightPublicTestSuite) TestRunPreflight() {
 			sudoOut:   sudoListNarrow,
 			capEff:    "000000000000102f",
 			installed: []string{"sysctl", "useradd"},
+			sudo:      []string{"sysctl", "useradd"},
 			wantOK:    true,
 			wantFail:  []string{"sudo:useradd"},
 			wantPass:  []string{"sudo:sysctl"},
@@ -265,6 +269,7 @@ func (s *PreflightPublicTestSuite) TestRunPreflight() {
 			sudoOut:   sudoListAll,
 			capEff:    "000000000000102f",
 			installed: []string{"useradd", "chronyc"},
+			sudo:      []string{"useradd", "chronyc"},
 			wantOK:    true,
 			wantPass:  []string{"sudo:useradd", "sudo:chronyc"},
 		},
@@ -273,6 +278,7 @@ func (s *PreflightPublicTestSuite) TestRunPreflight() {
 			sudoOut:   sudoListOdd,
 			capEff:    "000000000000102f",
 			installed: []string{"sysctl", "systemctl"},
+			sudo:      []string{"sysctl", "systemctl"},
 			wantOK:    true,
 			wantPass:  []string{"sudo:sysctl"},
 			wantFail:  []string{"sudo:systemctl"},
@@ -282,6 +288,7 @@ func (s *PreflightPublicTestSuite) TestRunPreflight() {
 			sudoErr:   fmt.Errorf("exit status 1"),
 			capEff:    "000000000000102f",
 			installed: []string{"sysctl"},
+			sudo:      []string{"sysctl"},
 			wantOK:    false,
 			wantFail:  []string{"sudo"},
 			wantNone:  []string{"sudo:sysctl"},
@@ -291,8 +298,19 @@ func (s *PreflightPublicTestSuite) TestRunPreflight() {
 			sudoOut:   sudoListNarrow,
 			capEff:    "0000000000000000",
 			installed: []string{"sysctl"},
+			sudo:      []string{"sysctl"},
 			wantOK:    true,
 			wantFail:  []string{"cap:CAP_NET_ADMIN"},
+		},
+		{
+			name:      "when no behavior declares an installed program, it is not checked",
+			sudoOut:   sudoListNarrow,
+			capEff:    "000000000000102f",
+			installed: []string{"sysctl", "systemctl", "useradd"},
+			sudo:      []string{"sysctl"},
+			wantOK:    true,
+			wantPass:  []string{"sudo:sysctl"},
+			wantNone:  []string{"sudo:systemctl", "sudo:useradd"},
 		},
 		{
 			name:      "when a behavior declares a sudo program, it is checked once",
@@ -312,6 +330,11 @@ func (s *PreflightPublicTestSuite) TestRunPreflight() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			if len(tc.sudo) > 0 {
+				behavior.Register(behavior.Define("preflight", "Preflight", behavior.Node,
+					behavior.Sudo(tc.sudo...),
+				))
+			}
 			if tc.behaviors != nil {
 				tc.behaviors()
 			}
