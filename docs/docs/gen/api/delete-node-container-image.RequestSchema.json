@@ -1,0 +1,1 @@
+{"title":"Body","body":{"content":{"application/json":{"schema":{"properties":{"force":{"description":"Remove it also when a container uses it","type":"boolean","x-oapi-codegen-extra-tags":{"validate":"omitempty"}}},"type":"object","title":"ContainerImageDeleteRequest"}}},"required":true}}

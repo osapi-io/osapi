@@ -45,72 +45,6 @@ const HAND_BLOCK_TYPES: BlockType[] = [
 
   // ── Networking ─────────────────────────────────────────────────────────────
 
-  // ── Containers ─────────────────────────────────────────────────────────────
-  {
-    type: "docker-create",
-    label: "Create",
-    description: "Create a container",
-    category: "docker",
-    group: "containers",
-  },
-  {
-    type: "docker-list",
-    label: "List",
-    description: "List containers",
-    category: "docker",
-    group: "containers",
-    readyOnAdd: true,
-  },
-  {
-    type: "docker-start",
-    label: "Start",
-    description: "Start a container",
-    category: "docker",
-    group: "containers",
-  },
-  {
-    type: "docker-stop",
-    label: "Stop",
-    description: "Stop a container",
-    category: "docker",
-    group: "containers",
-  },
-  {
-    type: "docker-delete",
-    label: "Delete",
-    description: "Delete a container",
-    category: "docker",
-    group: "containers",
-  },
-  {
-    type: "docker-exec",
-    label: "Exec",
-    description: "Execute a command in a container",
-    category: "docker",
-    group: "containers",
-  },
-  {
-    type: "docker-pull",
-    label: "Pull",
-    description: "Pull a container image",
-    category: "docker",
-    group: "containers",
-  },
-  {
-    type: "docker-rm-image",
-    label: "Remove Image",
-    description: "Remove a container image",
-    category: "docker",
-    group: "containers",
-  },
-  {
-    type: "docker-inspect",
-    label: "Inspect",
-    description: "Inspect a container",
-    category: "docker",
-    group: "containers",
-  },
-
   // ── Files ──────────────────────────────────────────────────────────────────
   {
     type: "object-list",
@@ -215,7 +149,6 @@ const categoryNames: Record<string, string> = {
   user: "User",
   group: "Group",
   certificate: "Certificate",
-  docker: "Docker",
   file: "File",
   "file-deploy": "File Deploy",
   command: "Command",

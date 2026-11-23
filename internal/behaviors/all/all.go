@@ -25,6 +25,8 @@ package all
 import (
 	// Each import registers its behavior.
 	_ "github.com/osapi-io/osapi/internal/behaviors/certificate"
+	_ "github.com/osapi-io/osapi/internal/behaviors/container/docker"
+	_ "github.com/osapi-io/osapi/internal/behaviors/container/image"
 	_ "github.com/osapi-io/osapi/internal/behaviors/disk"
 	_ "github.com/osapi-io/osapi/internal/behaviors/file"
 	_ "github.com/osapi-io/osapi/internal/behaviors/group"

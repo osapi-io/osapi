@@ -135,20 +135,6 @@ func (s *ProcessorPublicTestSuite) TestProcessJobOperation() {
 			},
 		},
 		{
-			name: "docker category routes to docker processor",
-			jobRequest: job.Request{
-				Type:      job.TypeModify,
-				Category:  "docker",
-				Operation: "create.execute",
-				Data:      json.RawMessage(`{"image":"nginx:latest"}`),
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.Error(err)
-				s.Contains(err.Error(), "docker runtime not available")
-				s.Nil(result)
-			},
-		},
-		{
 			name: "unsupported job category",
 			jobRequest: job.Request{
 				Type:      job.TypeQuery,

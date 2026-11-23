@@ -10,7 +10,6 @@ import {
 import { SearchBox } from "@/components/ui/search-box";
 import type {
   CommandResultItem,
-  DockerResponse,
   FileInfo,
   FileUploadResponse,
 } from "@/sdk/gen/schemas";
@@ -227,7 +226,7 @@ function CommandResult({
 }
 
 // ---------------------------------------------------------------------------
-// Host-level results (docker)
+// Host-level results
 // ---------------------------------------------------------------------------
 
 function HostResultRow({
@@ -361,100 +360,6 @@ function ListSearchBar({
         autoFocus={false}
       />
     </div>
-  );
-}
-
-// Docker list
-function DockerListResult({ data }: { data: Record<string, unknown> }) {
-  const { search, setSearch } = useListSearch();
-  type DockerHost = {
-    hostname: string;
-    status?: string;
-    containers?: {
-      id?: string;
-      name?: string;
-      image?: string;
-      state?: string;
-    }[];
-    error?: string;
-  };
-  const hosts = data.results as DockerHost[];
-  const totalContainers = hosts.reduce(
-    (n, h) => n + (h.containers?.length ?? 0),
-    0,
-  );
-  return (
-    <ResultShell
-      jobId={data.job_id as string | undefined}
-      label={`${totalContainers} container${totalContainers !== 1 ? "s" : ""}`}
-      data={data}
-    >
-      <ListSearchBar
-        search={search}
-        setSearch={setSearch}
-        hasItems={totalContainers > 0}
-      />
-      {hosts.map((host) => {
-        const allContainers = host.containers ?? [];
-        const containers = allContainers.filter((c) =>
-          matches(search, c.name, c.id, c.image, c.state),
-        );
-        if (
-          search &&
-          containers.length === 0 &&
-          !host.error &&
-          host.status !== "skipped"
-        )
-          return null;
-        return (
-          <div
-            key={host.hostname}
-            className="border-b border-border/50 last:border-0"
-          >
-            <HostGroupHeader
-              hostname={host.hostname}
-              status={
-                host.status === "skipped"
-                  ? "skipped"
-                  : host.error
-                    ? "failed"
-                    : "ok"
-              }
-              detail={
-                host.status === "skipped"
-                  ? "skipped"
-                  : `${allContainers.length} container${allContainers.length !== 1 ? "s" : ""}`
-              }
-            />
-            {host.error && host.status !== "skipped" && (
-              <HostError>{host.error}</HostError>
-            )}
-            {host.status !== "skipped" &&
-              containers.map((c, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-4 border-b border-border/30 px-4 py-2 pl-9 last:border-0"
-                >
-                  <KeyValue
-                    label="name"
-                    value={c.name || c.id?.slice(0, 12)}
-                    variant="strong"
-                  />
-                  {c.image && <KeyValue label="image" value={c.image} />}
-                  {c.state && (
-                    <KeyValue
-                      label="state"
-                      value={c.state}
-                      variant={c.state === "running" ? "accent" : "default"}
-                      className="ml-auto"
-                    />
-                  )}
-                </div>
-              ))}
-          </div>
-        );
-      })}
-    </ResultShell>
   );
 }
 
@@ -692,9 +597,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
   }
 
   if (
-    (type === "command" ||
-      type === "command-shell" ||
-      type === "docker-exec") &&
+    (type === "command" || type === "command-shell") &&
     Array.isArray(data.results)
   ) {
     return (
@@ -744,48 +647,6 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
 
   if (type === "object-upload" && "name" in data && "sha256" in data) {
     return <FileUploadResult data={data as unknown as FileUploadResponse} />;
-  }
-
-  // Docker create/start/stop/delete/pull/rm-image — action results
-  if (
-    (type === "docker-create" ||
-      type === "docker-start" ||
-      type === "docker-stop" ||
-      type === "docker-delete" ||
-      type === "docker-pull" ||
-      type === "docker-rm-image") &&
-    Array.isArray(data.results)
-  ) {
-    const results = data.results as DockerResponse[];
-    return (
-      <CollectionResult
-        jobId={data.job_id as string | undefined}
-        label={type.replace("docker-", "")}
-        results={results.map((r) => ({
-          hostname: r.hostname,
-          status: hostStatus(r),
-          changed: r.changed,
-          error: r.error,
-          extra: (
-            <span className="flex items-center gap-1.5">
-              {r.name && <Text>{r.name}</Text>}
-              {r.image && <Text variant="muted">{r.image}</Text>}
-              {r.state && (
-                <Text variant={r.state === "running" ? "primary" : "muted"}>
-                  {r.state}
-                </Text>
-              )}
-            </span>
-          ),
-        }))}
-        data={data}
-      />
-    );
-  }
-
-  // Docker list — expanded with search
-  if (type === "docker-list" && Array.isArray(data.results)) {
-    return <DockerListResult data={data} />;
   }
 
   // DNS delete / interface CRUD / route CRUD — generic collection results
@@ -854,43 +715,6 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
           status: hostStatus(r),
           changed: r.changed,
           error: r.error,
-        }))}
-        data={data}
-      />
-    );
-  }
-
-  // Docker inspect — per-host container detail
-  if (type === "docker-inspect" && Array.isArray(data.results)) {
-    type DockerDetailEntry = {
-      hostname: string;
-      status?: string;
-      id?: string;
-      name?: string;
-      image?: string;
-      state?: string;
-      error?: string;
-    };
-    const results = data.results as DockerDetailEntry[];
-    return (
-      <CollectionResult
-        jobId={data.job_id as string | undefined}
-        label="inspect"
-        results={results.map((r) => ({
-          hostname: r.hostname,
-          status: hostStatus(r),
-          error: r.error,
-          extra: (
-            <span className="flex items-center gap-1.5">
-              {r.name && <Text>{r.name}</Text>}
-              {r.image && <Text variant="muted">{r.image}</Text>}
-              {r.state && (
-                <Text variant={r.state === "running" ? "primary" : "muted"}>
-                  {r.state}
-                </Text>
-              )}
-            </span>
-          ),
         }))}
         data={data}
       />

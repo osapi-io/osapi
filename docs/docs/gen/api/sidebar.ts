@@ -316,90 +316,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Docker",
-      link: {
-        type: "doc",
-        id: "gen/api/docker-management-api-docker-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/post-node-container-docker",
-          label: "Create a container",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-node-container-docker",
-          label: "List containers",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-node-container-docker-by-id",
-          label: "Inspect a container",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/delete-node-container-docker-by-id",
-          label: "Remove a container",
-          className: "api-method delete",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-node-container-docker-start",
-          label: "Start a container",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-node-container-docker-stop",
-          label: "Stop a container",
-          className: "api-method post",
-        },
-      ],
-    },
-    {
-      type: "category",
-      label: "Node/Docker/Exec",
-      link: {
-        type: "doc",
-        id: "gen/api/docker-management-api-docker-exec",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/post-node-container-docker-exec",
-          label: "Execute a command in a container",
-          className: "api-method post",
-        },
-      ],
-    },
-    {
-      type: "category",
-      label: "Node/Docker/Image",
-      link: {
-        type: "doc",
-        id: "gen/api/docker-management-api-docker-image",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/delete-node-container-docker-image",
-          label: "Remove a container image",
-          className: "api-method delete",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-node-container-docker-pull",
-          label: "Pull a container image",
-          className: "api-method post",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Node/Certificate",
       link: {
         type: "doc",
@@ -435,6 +351,86 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/put-node-certificate",
           label: "Write a certificate authority that osapi deployed again",
           className: "api-method put",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Docker",
+      link: {
+        type: "doc",
+        id: "gen/api/docker-api-container-docker-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-container-docker",
+          label: "List the containers of the host",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-container-docker",
+          label: "Create a container",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-node-container-docker",
+          label: "Remove a container",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-container-docker-by-key",
+          label: "Get one container",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-container-docker-exec",
+          label: "Run a command in a container",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-container-docker-start",
+          label: "Start a container",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-container-docker-stop",
+          label: "Stop a container",
+          className: "api-method post",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Image",
+      link: {
+        type: "doc",
+        id: "gen/api/image-api-container-image-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-container-image",
+          label: "List the images of the host",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-node-container-image",
+          label: "Remove an image",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-container-image-pull",
+          label: "Pull an image",
+          className: "api-method post",
         },
       ],
     },

@@ -147,7 +147,7 @@ const MOCK_STACKS: Stack[] = [
         data: {},
       },
     ],
-    permissions: ["file:read", "schedule:read", "docker:read"],
+    permissions: ["file:read", "schedule:read", "container:read"],
     createdAt: "2026-03-12T09:00:00Z",
     updatedAt: "2026-03-12T09:00:00Z",
   },

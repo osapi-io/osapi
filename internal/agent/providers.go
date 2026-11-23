@@ -21,7 +21,6 @@
 package agent
 
 import (
-	"context"
 	"log/slog"
 
 	"github.com/osapi-io/osapi/internal/behavior/host"
@@ -31,19 +30,12 @@ import (
 	"github.com/avfs/avfs"
 
 	"github.com/osapi-io/osapi/internal/exec"
-	dockerProv "github.com/osapi-io/osapi/internal/provider/container/docker"
 	fileProv "github.com/osapi-io/osapi/internal/provider/file"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
 	"github.com/osapi-io/osapi/internal/provider/node/memory"
 )
-
-// dockerNewFn makes the Docker client (injectable for testing). docker checks
-// the error before it uses the client.
-var dockerNewFn = func() (dockerProv.Provider, error) {
-	return dockerProv.New()
-}
 
 // hostEnv is what the providers of a host are made from. Each method returns
 // the provider of one area for platform: "debian", "darwin", or any other
@@ -79,24 +71,4 @@ func (e hostEnv) memory() memory.Provider {
 
 func (e hostEnv) load() load.Provider {
 	return load.New()
-}
-
-// docker returns the Docker provider, or nil if Docker does not answer. The
-// agent runs without the docker operations then.
-func (e hostEnv) docker(
-	ctx context.Context,
-) dockerProv.Provider {
-	c, err := dockerNewFn()
-	if err != nil {
-		e.log.Info("Docker client creation failed, docker operations disabled",
-			slog.String("error", err.Error()))
-		return nil
-	}
-	if err := c.Ping(ctx); err != nil {
-		e.log.Info("Docker not available, docker operations disabled",
-			slog.String("error", err.Error()))
-		return nil
-	}
-
-	return c
 }

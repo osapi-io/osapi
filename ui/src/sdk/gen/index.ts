@@ -7,9 +7,7 @@ export * from './connectivity-api-network-connectivity-operations/connectivity-a
 export * from './controller-api-controller/controller-api-controller';
 export * from './disk-api-disk-operations/disk-api-disk-operations';
 export * from './dns-api-network-dns-operations/dns-api-network-dns-operations';
-export * from './docker-management-api-docker-exec/docker-management-api-docker-exec';
-export * from './docker-management-api-docker-image/docker-management-api-docker-image';
-export * from './docker-management-api-docker-operations/docker-management-api-docker-operations';
+export * from './docker-api-container-docker-operations/docker-api-container-docker-operations';
 export * from './entry-api-log-entry-operations/entry-api-log-entry-operations';
 export * from './facts-api-facts/facts-api-facts';
 export * from './file-api-file-operations/file-api-file-operations';
@@ -17,6 +15,7 @@ export * from './file-management-api-file-operations/file-management-api-file-op
 export * from './group-api-group-operations/group-api-group-operations';
 export * from './health-check-api-health/health-check-api-health';
 export * from './hostname-api-hostname-operations/hostname-api-hostname-operations';
+export * from './image-api-container-image-operations/image-api-container-image-operations';
 export * from './interface-api-network-interface-operations/interface-api-network-interface-operations';
 export * from './job-management-api-job-operations/job-management-api-job-operations';
 export * from './load-api-load-operations/load-api-load-operations';

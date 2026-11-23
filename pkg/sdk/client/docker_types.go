@@ -21,133 +21,75 @@
 package client
 
 import (
+	openapi_types "github.com/oapi-codegen/runtime/types"
+
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
 // DockerCreateOpts contains options for creating a container.
 type DockerCreateOpts struct {
-	// Image is the container image reference (required).
-	Image string
-	// Name is an optional container name.
+	// Name is the container's name. Required.
 	Name string
-	// Hostname sets the container hostname.
-	Hostname string
-	// DNS sets custom DNS servers for the container.
-	DNS []string
-	// Command overrides the image's default command.
-	Command []string
-	// Env is environment variables in KEY=VALUE format.
-	Env []string
-	// Ports is port mappings in host_port:container_port format.
-	Ports []string
-	// Volumes is volume mounts in host_path:container_path format.
-	Volumes []string
-	// AutoStart starts the container after creation (default true).
-	AutoStart *bool
-}
-
-// DockerStopOpts contains options for stopping a container.
-type DockerStopOpts struct {
-	// Timeout is seconds to wait before killing. Zero uses default.
-	Timeout int
-}
-
-// DockerListParams contains parameters for listing containers.
-type DockerListParams struct {
-	// State filters by state: "running", "stopped", "all".
-	State string
-	// Limit caps the number of results.
-	Limit int
-}
-
-// DockerRemoveParams contains parameters for removing a container.
-type DockerRemoveParams struct {
-	// Force forces removal of a running container.
-	Force bool
-}
-
-// DockerPullOpts contains options for pulling an image.
-type DockerPullOpts struct {
-	// Image is the image reference to pull (required).
+	// Image is the image reference, such as alpine:3.20. Required.
 	Image string
-}
-
-// DockerRemoveImageParams contains parameters for removing an image.
-type DockerRemoveImageParams struct {
-	// Force forces removal even if the image is in use.
-	Force bool
-}
-
-// DockerExecOpts contains options for executing a command in a container.
-type DockerExecOpts struct {
-	// Command is the command and arguments to execute (required).
+	// Hostname is the hostname inside the container.
+	Hostname string
+	// DNS is the DNS servers of the container.
+	DNS []string
+	// Command replaces the image's command.
 	Command []string
-	// Env is additional environment variables in KEY=VALUE format.
-	Env []string
-	// WorkingDir is the working directory inside the container.
+	// Env is the container's environment. Its values go to docker on
+	// standard input and are never returned.
+	Env map[string]string
+	// Ports is the port mappings, each host_port:container_port.
+	Ports []string
+	// Volumes is the bind mounts, each /host/path:/container/path.
+	Volumes []string
+	// AutoStart starts the container once it is made.
+	AutoStart bool
+}
+
+// DockerExecOpts contains options for running a command in a container.
+type DockerExecOpts struct {
+	// Command is the command and its arguments. Required.
+	Command []string
+	// Env is the command's environment.
+	Env map[string]string
+	// WorkingDir is the absolute directory the command runs in.
 	WorkingDir string
 }
 
-// DockerResult represents a docker container create result from a single agent.
+// DockerResult is one container on one host, from a list or a get. A host
+// that failed or skipped has a row with its status and no container.
 type DockerResult struct {
-	Hostname string `json:"hostname"`
-	Status   string `json:"status"`
-	ID       string `json:"id,omitempty"`
-	Name     string `json:"name,omitempty"`
-	Image    string `json:"image,omitempty"`
-	State    string `json:"state,omitempty"`
-	Created  string `json:"created,omitempty"`
-	Changed  bool   `json:"changed"`
-	Error    string `json:"error,omitempty"`
+	Hostname string   `json:"hostname"`
+	Status   string   `json:"status"`
+	ID       string   `json:"id,omitempty"`
+	Name     string   `json:"name,omitempty"`
+	Image    string   `json:"image,omitempty"`
+	State    string   `json:"state,omitempty"`
+	Created  string   `json:"created,omitempty"`
+	Health   string   `json:"health,omitempty"`
+	Ports    []string `json:"ports,omitempty"`
+	Mounts   []string `json:"mounts,omitempty"`
+	Networks []string `json:"networks,omitempty"`
+	EnvNames []string `json:"env_names,omitempty"`
+	Error    string   `json:"error,omitempty"`
 }
 
-// DockerListResult represents a docker container list result from a single agent.
-type DockerListResult struct {
-	Hostname   string              `json:"hostname"`
-	Status     string              `json:"status"`
-	Containers []DockerSummaryItem `json:"containers,omitempty"`
-	Changed    bool                `json:"changed"`
-	Error      string              `json:"error,omitempty"`
-}
-
-// DockerSummaryItem represents a brief docker container summary.
-type DockerSummaryItem struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
-	Image   string `json:"image"`
-	State   string `json:"state"`
-	Created string `json:"created"`
-}
-
-// DockerDetailResult represents a docker container inspect result from a single agent.
-type DockerDetailResult struct {
-	Hostname        string            `json:"hostname"`
-	Status          string            `json:"status"`
-	ID              string            `json:"id,omitempty"`
-	Name            string            `json:"name,omitempty"`
-	Image           string            `json:"image,omitempty"`
-	State           string            `json:"state,omitempty"`
-	Created         string            `json:"created,omitempty"`
-	Ports           []string          `json:"ports,omitempty"`
-	Mounts          []string          `json:"mounts,omitempty"`
-	Env             []string          `json:"env,omitempty"`
-	NetworkSettings map[string]string `json:"network_settings,omitempty"`
-	Health          string            `json:"health,omitempty"`
-	Changed         bool              `json:"changed"`
-	Error           string            `json:"error,omitempty"`
-}
-
-// DockerActionResult represents a docker container lifecycle action result from a single agent.
+// DockerActionResult is the result of a create, a remove, a start or a stop
+// on one host.
 type DockerActionResult struct {
 	Hostname string `json:"hostname"`
 	Status   string `json:"status"`
+	Name     string `json:"name,omitempty"`
 	ID       string `json:"id,omitempty"`
-	Message  string `json:"message,omitempty"`
 	Changed  bool   `json:"changed"`
 	Error    string `json:"error,omitempty"`
 }
 
-// DockerExecResult represents a docker container exec result from a single agent.
+// DockerExecResult is what a command in a container wrote, and its exit
+// code, on one host.
 type DockerExecResult struct {
 	Hostname string `json:"hostname"`
 	Status   string `json:"status"`
@@ -158,193 +100,108 @@ type DockerExecResult struct {
 	Error    string `json:"error,omitempty"`
 }
 
-// DockerPullResult represents a docker image pull result from a single agent.
+// DockerImageResult is one image on one host, from an image list.
+type DockerImageResult struct {
+	Hostname   string `json:"hostname"`
+	Status     string `json:"status"`
+	ID         string `json:"id,omitempty"`
+	Repository string `json:"repository,omitempty"`
+	Tag        string `json:"tag,omitempty"`
+	Size       string `json:"size,omitempty"`
+	Error      string `json:"error,omitempty"`
+}
+
+// DockerPullResult is the image that a pull left on one host.
 type DockerPullResult struct {
 	Hostname string `json:"hostname"`
 	Status   string `json:"status"`
+	Image    string `json:"image,omitempty"`
 	ImageID  string `json:"image_id,omitempty"`
-	Tag      string `json:"tag,omitempty"`
-	Size     int64  `json:"size"`
+	Size     int64  `json:"size,omitempty"`
 	Changed  bool   `json:"changed"`
 	Error    string `json:"error,omitempty"`
 }
 
-// dockerResultCollectionFromGen converts a gen.DockerResultCollectionResponse
-// to a Collection[DockerResult].
-func dockerResultCollectionFromGen(
-	g *gen.DockerResultCollectionResponse,
-) Collection[DockerResult] {
-	results := make([]DockerResult, 0, len(g.Results))
-	for _, r := range g.Results {
-		results = append(results, DockerResult{
-			Hostname: r.Hostname,
-			Status:   string(r.Status),
-			ID:       derefString(r.Id),
-			Name:     derefString(r.Name),
-			Image:    derefString(r.Image),
-			State:    derefString(r.State),
-			Created:  derefString(r.Created),
-			Changed:  derefBool(r.Changed),
-			Error:    derefString(r.Error),
-		})
+// DockerImageRemoveResult is the result of an image remove on one host.
+type DockerImageRemoveResult struct {
+	Hostname string `json:"hostname"`
+	Status   string `json:"status"`
+	Image    string `json:"image,omitempty"`
+	Changed  bool   `json:"changed"`
+	Error    string `json:"error,omitempty"`
+}
+
+// collect converts the rows of a response with conv.
+func collect[G, R any](
+	rows []G,
+	jobID *openapi_types.UUID,
+	conv func(G) R,
+) Collection[R] {
+	results := make([]R, 0, len(rows))
+	for _, r := range rows {
+		results = append(results, conv(r))
 	}
 
-	return Collection[DockerResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
+	return Collection[R]{Results: results, JobID: jobIDFromGen(jobID)}
+}
+
+func dockerFromGen(
+	r gen.ContainerDockerEntry,
+) DockerResult {
+	return DockerResult{
+		Hostname: r.Hostname, Status: string(r.Status),
+		ID: derefString(r.Id), Name: derefString(r.Name), Image: derefString(r.Image),
+		State: derefString(r.State), Created: derefString(r.Created), Health: derefString(r.Health),
+		Ports: derefStringSlice(r.Ports), Mounts: derefStringSlice(r.Mounts),
+		Networks: derefStringSlice(r.Networks), EnvNames: derefStringSlice(r.EnvNames),
+		Error: derefString(r.Error),
 	}
 }
 
-// dockerListCollectionFromGen converts a gen.DockerListCollectionResponse
-// to a Collection[DockerListResult].
-func dockerListCollectionFromGen(
-	g *gen.DockerListCollectionResponse,
-) Collection[DockerListResult] {
-	results := make([]DockerListResult, 0, len(g.Results))
-	for _, r := range g.Results {
-		item := DockerListResult{
-			Hostname: r.Hostname,
-			Status:   string(r.Status),
-			Changed:  derefBool(r.Changed),
-			Error:    derefString(r.Error),
-		}
-
-		if r.Containers != nil {
-			containers := make([]DockerSummaryItem, 0, len(*r.Containers))
-			for _, c := range *r.Containers {
-				containers = append(containers, DockerSummaryItem{
-					ID:      derefString(c.Id),
-					Name:    derefString(c.Name),
-					Image:   derefString(c.Image),
-					State:   derefString(c.State),
-					Created: derefString(c.Created),
-				})
-			}
-
-			item.Containers = containers
-		}
-
-		results = append(results, item)
-	}
-
-	return Collection[DockerListResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
+func dockerActionFromGen(
+	r gen.ContainerDockerResult,
+) DockerActionResult {
+	return DockerActionResult{
+		Hostname: r.Hostname, Status: string(r.Status), Name: derefString(r.Name),
+		ID: derefString(r.Id), Changed: derefBool(r.Changed), Error: derefString(r.Error),
 	}
 }
 
-// dockerDetailCollectionFromGen converts a gen.DockerDetailCollectionResponse
-// to a Collection[DockerDetailResult].
-func dockerDetailCollectionFromGen(
-	g *gen.DockerDetailCollectionResponse,
-) Collection[DockerDetailResult] {
-	results := make([]DockerDetailResult, 0, len(g.Results))
-	for _, r := range g.Results {
-		item := DockerDetailResult{
-			Hostname: r.Hostname,
-			Status:   string(r.Status),
-			ID:       derefString(r.Id),
-			Name:     derefString(r.Name),
-			Image:    derefString(r.Image),
-			State:    derefString(r.State),
-			Created:  derefString(r.Created),
-			Health:   derefString(r.Health),
-			Changed:  derefBool(r.Changed),
-			Error:    derefString(r.Error),
-		}
-
-		if r.Ports != nil {
-			item.Ports = *r.Ports
-		}
-
-		if r.Mounts != nil {
-			item.Mounts = *r.Mounts
-		}
-
-		if r.Env != nil {
-			item.Env = *r.Env
-		}
-
-		if r.NetworkSettings != nil {
-			item.NetworkSettings = *r.NetworkSettings
-		}
-
-		results = append(results, item)
-	}
-
-	return Collection[DockerDetailResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
+func dockerExecFromGen(
+	r gen.ContainerDockerExecResult,
+) DockerExecResult {
+	return DockerExecResult{
+		Hostname: r.Hostname, Status: string(r.Status), Stdout: derefString(r.Stdout),
+		Stderr: derefString(r.Stderr), ExitCode: derefInt(r.ExitCode),
+		Changed: derefBool(r.Changed), Error: derefString(r.Error),
 	}
 }
 
-// dockerActionCollectionFromGen converts a gen.DockerActionCollectionResponse
-// to a Collection[DockerActionResult].
-func dockerActionCollectionFromGen(
-	g *gen.DockerActionCollectionResponse,
-) Collection[DockerActionResult] {
-	results := make([]DockerActionResult, 0, len(g.Results))
-	for _, r := range g.Results {
-		results = append(results, DockerActionResult{
-			Hostname: r.Hostname,
-			Status:   string(r.Status),
-			ID:       derefString(r.Id),
-			Message:  derefString(r.Message),
-			Changed:  derefBool(r.Changed),
-			Error:    derefString(r.Error),
-		})
-	}
-
-	return Collection[DockerActionResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
+func dockerImageFromGen(
+	r gen.ContainerImageEntry,
+) DockerImageResult {
+	return DockerImageResult{
+		Hostname: r.Hostname, Status: string(r.Status), ID: derefString(r.Id),
+		Repository: derefString(r.Repository), Tag: derefString(r.Tag),
+		Size: derefString(r.Size), Error: derefString(r.Error),
 	}
 }
 
-// dockerExecCollectionFromGen converts a gen.DockerExecCollectionResponse
-// to a Collection[DockerExecResult].
-func dockerExecCollectionFromGen(
-	g *gen.DockerExecCollectionResponse,
-) Collection[DockerExecResult] {
-	results := make([]DockerExecResult, 0, len(g.Results))
-	for _, r := range g.Results {
-		results = append(results, DockerExecResult{
-			Hostname: r.Hostname,
-			Status:   string(r.Status),
-			Stdout:   derefString(r.Stdout),
-			Stderr:   derefString(r.Stderr),
-			ExitCode: derefInt(r.ExitCode),
-			Changed:  derefBool(r.Changed),
-			Error:    derefString(r.Error),
-		})
-	}
-
-	return Collection[DockerExecResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
+func dockerPullFromGen(
+	r gen.ContainerImagePullResult,
+) DockerPullResult {
+	return DockerPullResult{
+		Hostname: r.Hostname, Status: string(r.Status), Image: derefString(r.Image),
+		ImageID: derefString(r.ImageId), Size: derefInt64(r.Size),
+		Changed: derefBool(r.Changed), Error: derefString(r.Error),
 	}
 }
 
-// dockerPullCollectionFromGen converts a gen.DockerPullCollectionResponse
-// to a Collection[DockerPullResult].
-func dockerPullCollectionFromGen(
-	g *gen.DockerPullCollectionResponse,
-) Collection[DockerPullResult] {
-	results := make([]DockerPullResult, 0, len(g.Results))
-	for _, r := range g.Results {
-		results = append(results, DockerPullResult{
-			Hostname: r.Hostname,
-			Status:   string(r.Status),
-			ImageID:  derefString(r.ImageId),
-			Tag:      derefString(r.Tag),
-			Size:     derefInt64(r.Size),
-			Changed:  derefBool(r.Changed),
-			Error:    derefString(r.Error),
-		})
-	}
-
-	return Collection[DockerPullResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
+func dockerImageRemoveFromGen(
+	r gen.ContainerImageResult,
+) DockerImageRemoveResult {
+	return DockerImageRemoveResult{
+		Hostname: r.Hostname, Status: string(r.Status), Image: derefString(r.Image),
+		Changed: derefBool(r.Changed), Error: derefString(r.Error),
 	}
 }

@@ -37,14 +37,14 @@ func (s *DockerService) Create(
     ctx context.Context,
     hostname string,
     body gen.DockerCreateRequest,    // consumer must import gen
-) (*Response[Collection[DockerResult]], error)
+) (*Response[Collection[DockerActionResult]], error)
 
 // GOOD — SDK-defined type wraps gen internally
 func (s *DockerService) Create(
     ctx context.Context,
     hostname string,
     opts DockerCreateOpts,           // SDK type, no gen import needed
-) (*Response[Collection[DockerResult]], error)
+) (*Response[Collection[DockerActionResult]], error)
 ```
 
 Inside the method, build the `gen.*` request from the SDK type. Map zero values

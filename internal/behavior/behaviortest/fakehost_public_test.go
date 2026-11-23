@@ -55,6 +55,10 @@ func (p probe) run(
 	switch op {
 	case "stdin":
 		return p.h.Exec.RunPrivilegedCmdWithStdin(ctx, "tee", []string{"/x"}, "secret")
+	case "full":
+		out, _, code, err := p.h.Exec.RunPrivilegedCmdFull(ctx, "tee", []string{"/y"})
+
+		return fmt.Sprintf("%s code=%d", out, code), err
 	case "store":
 		if _, err := kv.KVPut(ctx, "file-state", "a", []byte("1")); err != nil {
 			return "", err
@@ -102,6 +106,12 @@ func (s *FakeHostPublicTestSuite) TestFakeHost() {
 			name:    "when a command is given input, it is recorded",
 			in:      probeIn{Op: "stdin"},
 			options: []behavior.HostOption{behavior.Ran("tee", "/x")},
+		},
+		{
+			name:    "when a command's output is given apart, it is recorded",
+			in:      probeIn{Op: "full"},
+			want:    " code=0",
+			options: []behavior.HostOption{behavior.Ran("tee", "/y")},
 		},
 		{
 			name: "when a value is put, put again and read",

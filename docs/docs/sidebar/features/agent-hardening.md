@@ -95,6 +95,9 @@ osapi ALL=(root) NOPASSWD: /usr/sbin/update-ca-certificates
 
 # Power management
 osapi ALL=(root) NOPASSWD: /sbin/shutdown *
+
+# Containers and images
+osapi ALL=(root) NOPASSWD: /usr/bin/docker *
 ```
 
 Validate the file with `sudo visudo -c -f /etc/sudoers.d/osapi-agent` before you
@@ -239,6 +242,8 @@ INF preflight checks done
 | `update-ca-certificates`   | Certificate |
 | `shutdown -r/-h`           | Power       |
 | `sh -c "echo … chpasswd"`  | User        |
+| `docker create/start/…`    | Docker      |
+| `docker pull/rmi`          | Image       |
 
 ### Read operations (use `RunCmd`)
 
@@ -268,5 +273,8 @@ INF preflight checks done
 - **`command exec` and `command shell`.** These endpoints run commands that the
   user gives, with all the privileges of the agent. `exec` needs the
   `command:execute` RBAC permission. `shell` also needs `command:shell`.
-- **Docker provider.** It connects to the Docker API socket. It does not run
-  system commands. The `osapi` user must be in the `docker` group.
+- **Docker reads.** The docker and image behaviors read through gohai, which
+  runs `docker version`, `docker ps`, `docker inspect` and `docker images` as
+  the agent's user. Thus the `osapi` user must be able to use the Docker socket,
+  usually as a member of the `docker` group. Otherwise, each read reports
+  `skipped`.

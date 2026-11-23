@@ -55,6 +55,15 @@ type Manager interface {
 		stdin string,
 	) (string, error)
 
+	// RunPrivilegedCmdFull runs a command through sudo when privilege
+	// escalation is on, with the standard output, the standard error and
+	// the exit code apart.
+	RunPrivilegedCmdFull(
+		ctx context.Context,
+		name string,
+		args []string,
+	) (string, string, int, error)
+
 	// RunCmdFull executes a command with separate stdout/stderr capture,
 	// an optional working directory, and a timeout in seconds.
 	RunCmdFull(

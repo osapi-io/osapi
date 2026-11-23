@@ -134,15 +134,18 @@ func newHost(
 	h.declare(b, platform)
 	ctrl := gomock.NewController(h)
 	h.Host = host.Host{
-		Platform:  platform,
-		Hostname:  Hostname,
-		Logger:    slog.New(slog.NewTextHandler(io.Discard, nil)),
-		FS:        h.filesystem(),
-		Exec:      h.commands(ctrl),
-		FileState: fileState{h: h, ctrl: ctrl},
-		Objects:   objects{h: h},
-		Now:       func() time.Time { return Now },
-		Resolver:  noNames(ctrl),
+		Platform: platform,
+		Hostname: Hostname,
+		// The examples run on an agent that runs a caller's command, as the
+		// integration test's agent does; docker exec needs it.
+		CommandEnabled: true,
+		Logger:         slog.New(slog.NewTextHandler(io.Discard, nil)),
+		FS:             h.filesystem(),
+		Exec:           h.commands(ctrl),
+		FileState:      fileState{h: h, ctrl: ctrl},
+		Objects:        objects{h: h},
+		Now:            func() time.Time { return Now },
+		Resolver:       noNames(ctrl),
 	}
 
 	return h
@@ -354,6 +357,15 @@ func (h *fakeHost) commands(
 			h.check(name, true)
 
 			return run(ctx, name, args)
+		}).
+		AnyTimes()
+
+	m.EXPECT().RunPrivilegedCmdFull(gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, name string, args []string) (string, string, int, error) {
+			h.check(name, true)
+			out, err := run(ctx, name, args)
+
+			return out, "", 0, err
 		}).
 		AnyTimes()
 

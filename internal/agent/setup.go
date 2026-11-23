@@ -160,7 +160,6 @@ func Setup(
 		loadProvider,
 		process.New(),
 		buildRegistry(
-			ctx,
 			e,
 			cfg,
 			hostProvider,
@@ -302,7 +301,6 @@ func subComponents(
 // buildRegistry makes the processor of each job category, with the providers
 // of e, and registers each one.
 func buildRegistry(
-	ctx context.Context,
 	e hostEnv,
 	cfg config.Config,
 	hostProvider nodeHost.Provider,
@@ -311,7 +309,6 @@ func buildRegistry(
 	loadProvider load.Provider,
 ) *ProviderRegistry {
 	commandProvider := command.New(e.log, e.exec)
-	dockerProvider := e.docker(ctx)
 
 	r := NewProviderRegistry()
 
@@ -330,12 +327,6 @@ func buildRegistry(
 		commandProvider,
 	)
 
-	r.Register(
-		"docker",
-		NewDockerProcessor(dockerProvider, cfg.Agent.Command.Enabled, e.log),
-		dockerProvider,
-	)
-
 	// Behaviors run beside the categories above.
 	// Each builds its own provider for this platform from what it declares.
 	// The agent's facts reach a behavior's provider through facts, which
@@ -343,12 +334,15 @@ func buildRegistry(
 	// above.
 	facts := &provider.FactsAware{}
 	behaviorProviders := BuildBehaviorProviders(host.Host{
-		Platform:        behavior.PlatformName(e.platform),
-		Container:       e.container,
-		Hostname:        e.hostname,
-		Logger:          e.log,
-		FS:              e.fs,
-		Exec:            e.exec,
+		Platform:  behavior.PlatformName(e.platform),
+		Container: e.container,
+		Hostname:  e.hostname,
+		Logger:    e.log,
+		FS:        e.fs,
+		Exec:      e.exec,
+		// A method that runs a caller's command, such as docker exec, reads
+		// this, as the command processor does.
+		CommandEnabled:  cfg.Agent.Command.Enabled,
 		FileState:       e.fileState,
 		FileStateBucket: e.fileStateBucket,
 		Objects:         e.objects,

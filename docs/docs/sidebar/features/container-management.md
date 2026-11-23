@@ -4,142 +4,107 @@ sidebar_position: 10
 
 # Container management
 
-osapi manages containers on target hosts through runtime drivers that you can
-replace. Container operations use the [job system](job-system.md). Thus the API
-server does not connect to the container runtime. The agents do all the work.
+osapi manages the Docker containers and images of a host with two behaviors:
+[docker](../reference/behaviors/docker/docker.md) for the containers and
+[image](../reference/behaviors/image/image.md) for the images. Each operation is
+a job, as each osapi operation is. The controller does not connect to Docker.
+The agent on the host does the work.
 
 ## What it does
 
-| Operation | Description                                    |
-| --------- | ---------------------------------------------- |
-| Create    | Make a new container from an image             |
-| List      | List containers, with an optional state filter |
-| Inspect   | Get the details of a container                 |
-| Start     | Start a stopped container                      |
-| Stop      | Stop a running container                       |
-| Remove    | Remove a container                             |
-| Exec      | Run a command in a running container           |
-| Pull      | Pull a container image to the host             |
+| Behavior | Method | Description                              |
+| -------- | ------ | ---------------------------------------- |
+| docker   | list   | List the containers, with a state filter |
+| docker   | get    | Get one container by its name or its ID  |
+| docker   | create | Create a container from an image         |
+| docker   | delete | Remove a container                       |
+| docker   | start  | Start a container                        |
+| docker   | stop   | Stop a container                         |
+| docker   | exec   | Run a command in a container             |
+| image    | list   | List the images                          |
+| image    | pull   | Pull an image                            |
+| image    | delete | Remove an image                          |
 
-**Create** makes a new container from an image. As options, it takes a name,
-environment variables, port mappings and volume mounts. By default, the
-container starts immediately after osapi makes it (`auto_start: true`).
+**list** and **get** read each container through gohai's docker collector. A
+container has its ID, name, image, state, creation time, health, ports, bind
+mounts and networks. Its environment shows only the names of the variables.
+osapi never returns their values.
 
-**List** returns the containers on the target host, with a state filter
-(`running`, `stopped` or `all`). Each result has the container ID, name, image,
-state and creation time.
+**create** makes a container from an image, with a name, a hostname, DNS
+servers, an environment, port mappings and bind mounts. It does not start the
+container unless `auto_start` is set. The environment goes to docker on its
+standard input, not in its arguments. A container of the same name that the host
+has already is not made again, and reports `changed: false`.
 
-**Inspect** gets the details of one container: the port mappings, volume mounts,
-environment variables, network settings and health check status.
+**start** and **stop** report `changed: false` when the container is already in
+that state. **stop** waits `timeout` seconds before docker kills the container.
 
-**Start** and **Stop** control the lifecycle of a container. Stop accepts an
-optional timeout (10 seconds by default). After the timeout, it kills the
-container.
+**delete** removes a container, also one that runs.
 
-**Remove** deletes a container from the host. Use `--force` to remove a running
-container. Then you do not need to stop it first.
+**exec** runs a command in a container. It returns the standard output, the
+standard error and the exit code. An exit code that is not 0 is a result, not a
+failure.
 
-**Exec** runs a command in a running container. It returns stdout, stderr and
-the exit code. As options, it takes environment variables and a working
-directory.
-
-**Pull** downloads a container image to the host. It returns the image ID, tag
-and size.
+**pull** pulls an image. It returns the image ID and its size in bytes. A pull
+that gets no new image reports `changed: false`.
 
 ## How it works
 
-Container operations use the same request flow as all osapi operations:
-
-1. The CLI or an API client sends a request to the API server.
-1. The API server makes a job and publishes it to NATS.
-1. An agent receives the job. It runs the container operation through the
-   runtime driver, and writes the result back to NATS KV.
-1. The API server collects the result and returns it to the client.
+Each method runs on the agent. Reads go through gohai, which runs
+`docker version`, `docker ps` and `docker inspect`. Writes run the docker CLI
+with sudo. A host where `docker version` does not answer reports `skipped`.
 
 You can target one host, broadcast to all hosts with `_all`, or target a label.
-Refer to the [CLI Reference](../usage/cli/client/node/container/container.mdx)
-for usage and examples, or to the
-[API Reference](/gen/api/docker-management-api-docker-operations) for the REST
-endpoints.
-
-### Runtime drivers
-
-osapi uses a runtime driver interface for container operations. The agent finds
-the runtime on the host automatically and selects the correct driver.
-
-| Driver | Detection                                             | Status  |
-| ------ | ----------------------------------------------------- | ------- |
-| Docker | Looks for the Docker socket at `/var/run/docker.sock` | Default |
-
-The Docker driver connects to the Docker daemon through its Unix socket. You do
-not need more configuration. If Docker is installed and the agent can use the
-socket, container operations work automatically.
+Refer to the [CLI reference](../usage/cli/client/node/container/container.mdx)
+for usage and examples.
 
 ## Configuration
 
-Container management uses the general job system. It needs no section of its own
-in `osapi.yaml`.
+The behaviors need no section of their own in `osapi.yaml`. The agent's user
+must be able to run `docker` with sudo.
 
-The Docker runtime driver finds the Docker socket at `/var/run/docker.sock`
-automatically. Make sure that the agent process can read and write the socket.
-Usually, you add the agent user to the `docker` group.
-
-Refer to [Configuration](../usage/configuration.md) for the NATS, agent and
-authentication settings.
+**exec is off by default.** The agent refuses each exec until you set
+`agent.command.enabled: true`, the same setting as command execution. The other
+methods do not need it.
 
 ## Permissions
 
-Container operations need `docker:*` permissions. The `admin` role has
-`docker:read`, `docker:write` and `docker:execute`, which runs a command in a
-container. `automation` has `docker:read` and `docker:write`. `operator` and
-`read` have only `docker:read`. Refer to the [API reference](/category/api) for
-the permission of each endpoint.
+| Permission          | Methods                                 | Roles                             |
+| ------------------- | --------------------------------------- | --------------------------------- |
+| `container:read`    | docker list and get, image list         | admin, operator, automation, read |
+| `container:write`   | docker create and delete, image delete  | admin, automation                 |
+| `container:execute` | docker start, stop and exec, image pull | admin                             |
 
-Container exec is a privileged operation, like command execution. **It is off by
-default.** The agent refuses each exec job until you set
-`agent.command.enabled: true`, the same setting as command execution. The other
-container operations do not need it. By default, only the `admin` role has
-`docker:execute`. When necessary, give it to other roles or tokens:
+Each action of a behavior has the permission `<name>:execute`. For the container
+behaviors, that is `container:execute`, the permission of docker exec too.
+docker exec runs a command that the caller chooses, so only the `admin` role has
+`container:execute`. Thus only `admin` starts and stops containers and pulls
+images. To give it to a different role or token:
 
 ```yaml
 controller:
   api:
     security:
       roles:
-        docker-ops:
+        container-ops:
           permissions:
-            - docker:read
-            - docker:write
-            - docker:execute
+            - container:read
+            - container:write
+            - container:execute
             - health:read
 ```
 
-Or give it directly on a token:
-
 ```bash
-osapi token generate -r write -u user@example.com \
-  -p docker:execute
+osapi token generate -r automation -u user@example.com \
+  -p container:execute
 ```
-
-## Orchestrator
-
-You can put container operations together as a DAG with [osapi-orchestrator][].
-Refer to the
-[Docker operations](https://github.com/osapi-io/osapi-orchestrator/blob/main/docs/operations/docker/)
-and the
-[docker.go example](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/docker.go)
-for a full container lifecycle: pull, create, start, exec, inspect, stop, remove
-and image-remove.
-
-[osapi-orchestrator]: https://github.com/osapi-io/osapi-orchestrator
 
 ## Related
 
-- [CLI Reference](../usage/cli/client/node/container/container.mdx): the
+- [docker behavior](../reference/behaviors/docker/docker.md) and
+  [image behavior](../reference/behaviors/image/image.md): each method, its
+  input, its output and its examples
+- [CLI reference](../usage/cli/client/node/container/container.mdx): the
   container commands
-- [API Reference](/gen/api/docker-management-api-docker-operations): the REST
-  API
 - [Job System](job-system.md): how asynchronous jobs work
 - [Authentication & RBAC](authentication.md): permissions and roles
-- [Architecture](../architecture/architecture.md): an overview of the system
-  design
