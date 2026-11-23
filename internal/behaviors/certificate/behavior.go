@@ -64,6 +64,7 @@ const (
 	rhelSys   = "/usr/share/pki/ca-trust-source/anchors/Example_Root.pem"
 	debPath   = "/usr/local/share/ca-certificates/osapi-internal-ca.crt"
 	rhelPath  = "/etc/pki/ca-trust/source/anchors/osapi-internal-ca.crt"
+	susePath  = "/etc/pki/trust/anchors/osapi-internal-ca.crt"
 
 	systemKeychain = "/System/Library/Keychains/SystemRootCertificates.keychain"
 	localKeychain  = "/Library/Keychains/System.keychain"
@@ -96,6 +97,11 @@ var (
 		Subject: subject, Fingerprint: fingerprint, NotAfter: notAfter,
 		Managed: true, Object: "internal-ca.pem",
 	}
+	suseManaged = Entry{
+		Name: "internal-ca", Path: susePath, Source: "local", Enabled: true,
+		Subject: subject, Fingerprint: fingerprint, NotAfter: notAfter,
+		Managed: true, Object: "internal-ca.pem",
+	}
 	macRoot = Entry{
 		Name: "osapi example CA", Path: systemKeychain, Source: "system", Enabled: true,
 		Subject: subject, Fingerprint: fingerprint, NotAfter: notAfter,
@@ -124,16 +130,21 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Requires(object.Behavior),
 	behavior.Requires(managedfile.Behavior),
 	behavior.Platform(behavior.PlatformDebian, newWriter),
+	behavior.Platform(behavior.PlatformSUSE, newWriter),
 	behavior.Platform(behavior.PlatformLinux, newWriter),
 	behavior.Platform(behavior.PlatformDarwin, newReader),
 	behavior.RunsOnPlatform(behavior.PlatformDarwin, "security"),
-	// Each family rebuilds its trust store with its own program. On linux,
-	// the RHEL family, Fedora and Arch run update-ca-trust.
+	// Each family rebuilds its trust store with its own program: the Debian
+	// family and SUSE run update-ca-certificates, each its own. On linux, the
+	// RHEL family, Fedora and Arch run update-ca-trust. osapi does not
+	// support Alpine: it reads only there.
 	behavior.SudoOnPlatform(behavior.PlatformDebian, "update-ca-certificates"),
+	behavior.SudoOnPlatform(behavior.PlatformSUSE, "update-ca-certificates"),
 	behavior.SudoOnPlatform(behavior.PlatformLinux, "update-ca-trust"),
 	behavior.Writes(
 		"/usr/local/share/ca-certificates/osapi-*.crt",
 		"/etc/pki/ca-trust/source/anchors/osapi-*.crt",
+		"/etc/pki/trust/anchors/osapi-*.crt",
 		"/etc/ca-certificates/trust-source/anchors/osapi-*.crt",
 	),
 	behavior.Validator("ca_name", caNameRE.MatchString,
@@ -160,6 +171,10 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.OnPlatform(behavior.PlatformLinux),
 			behavior.Exists(rhelSys, pem),
 		).
+		Example("A CA that osapi deployed on SUSE", ListInput{}, []Entry{suseManaged},
+			behavior.OnPlatform(behavior.PlatformSUSE),
+			stored, deployed,
+		).
 		Example("A Mac", ListInput{}, []Entry{macRoot},
 			behavior.OnPlatform(behavior.PlatformDarwin),
 			behavior.Prints("security find-certificate -a -p "+systemKeychain, pem),
@@ -180,6 +195,11 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.OnPlatform(behavior.PlatformLinux),
 			stored, deployed,
 		).
+		Example("A CA that osapi deployed on SUSE",
+			GetInput{Name: "internal-ca"}, suseManaged,
+			behavior.OnPlatform(behavior.PlatformSUSE),
+			stored, deployed,
+		).
 		Example("A CA of a Mac", GetInput{Name: "osapi example CA"}, macRoot,
 			behavior.OnPlatform(behavior.PlatformDarwin),
 			behavior.Prints("security find-certificate -a -p "+systemKeychain, pem),
@@ -189,14 +209,15 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A name with a %, which an encoded slash has", GetInput{Name: "mozilla%2FExample_Root"}, "ca_name").
 		Fails("A name of 256 characters", GetInput{Name: strings.Repeat("a", 256)}, "max"),
 	behavior.Write("create", Create).
-		On(behavior.PlatformDebian, behavior.PlatformLinux).
+		On(behavior.PlatformDebian, behavior.PlatformSUSE, behavior.PlatformLinux).
 		Describe("Add a certificate authority to the trust store").
 		Explain("Writes the PEM of the object as a file with the osapi- prefix, such as "+
 			"osapi-internal-ca.crt for internal-ca, in the family's local "+
 			"directory: /usr/local/share/ca-certificates on the Debian family, "+
-			"/etc/pki/ca-trust/source/anchors on RHEL and Fedora. Then it rebuilds the "+
-			"trust store with update-ca-certificates or update-ca-trust. SUSE and Alpine "+
-			"report skipped. A CA that osapi "+
+			"/etc/pki/trust/anchors on SUSE, /etc/pki/ca-trust/source/anchors on RHEL "+
+			"and Fedora. Then it rebuilds the trust store: with update-ca-certificates "+
+			"on the Debian family and SUSE, and with update-ca-trust on the others. "+
+			"Alpine reports skipped. A CA that osapi "+
 			"deployed already with the same content does not change and reports changed: "+
 			"false. A file of that name that osapi did not write is refused. macOS "+
 			"reports skipped.").
@@ -214,6 +235,13 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.Wrote(rhelPath, pem),
 			behavior.Ran("update-ca-trust"),
 		).
+		Example("Add a CA on SUSE", CreateInput{Name: "internal-ca", Object: "internal-ca.pem"},
+			Result{Name: "internal-ca", Changed: true},
+			behavior.OnPlatform(behavior.PlatformSUSE),
+			stored,
+			behavior.Wrote(susePath, pem),
+			behavior.Ran("update-ca-certificates"),
+		).
 		Example("A CA that osapi deployed with the same content",
 			CreateInput{Name: "internal-ca", Object: "internal-ca.pem"},
 			Result{Name: "internal-ca"},
@@ -222,13 +250,14 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A file that osapi did not write", CreateInput{Name: "internal-ca", Object: "internal-ca.pem"},
 			"osapi did not deploy it",
 			stored, behavior.Exists(debPath, pem), behavior.Exists(rhelPath, pem),
+			behavior.Exists(susePath, pem),
 		).
 		Fails("A name that is an option", CreateInput{Name: "-r", Object: "internal-ca.pem"},
 			"not a valid name").
 		Fails("No object", CreateInput{Name: "internal-ca"}, "required").
 		Fails("A name with a space", CreateInput{Name: "a b", Object: "internal-ca.pem"}, "resource_name"),
 	behavior.Write("update", Update).Key("name").
-		On(behavior.PlatformDebian, behavior.PlatformLinux).
+		On(behavior.PlatformDebian, behavior.PlatformSUSE, behavior.PlatformLinux).
 		Describe("Write a certificate authority that osapi deployed again").
 		Explain("Writes the CA from the object, or from the one that it was deployed from "+
 			"when the object is empty, and rebuilds the trust store when the file "+
@@ -248,6 +277,14 @@ var Behavior = behavior.Register(behavior.Define(
 			behavior.Wrote(rhelPath, pem2),
 			behavior.Ran("update-ca-trust"),
 		).
+		Example("Write a CA from a new object on SUSE",
+			UpdateInput{Name: "internal-ca", Object: "internal-ca-2.pem"},
+			Result{Name: "internal-ca", Changed: true},
+			behavior.OnPlatform(behavior.PlatformSUSE),
+			stored, stored2, deployed,
+			behavior.Wrote(susePath, pem2),
+			behavior.Ran("update-ca-certificates"),
+		).
 		Example("The object that it was deployed from", UpdateInput{Name: "internal-ca"},
 			Result{Name: "internal-ca"},
 			stored, deployed,
@@ -256,11 +293,12 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A name that is an option", UpdateInput{Name: "-r"}, "not a valid name").
 		Fails("A name with a space", UpdateInput{Name: "a b"}, "resource_name"),
 	behavior.Write("delete", Delete).Key("name").
-		On(behavior.PlatformDebian, behavior.PlatformLinux).
+		On(behavior.PlatformDebian, behavior.PlatformSUSE, behavior.PlatformLinux).
 		Describe("Remove a certificate authority that osapi deployed").
 		Explain("Removes the file of the CA and rebuilds the trust store: with "+
-			"update-ca-certificates --fresh on the Debian family, which removes the links "+
-			"of the CA from /etc/ssl/certs, and update-ca-trust on the RHEL family. A CA that osapi "+
+			"update-ca-certificates --fresh on the Debian family and SUSE, which removes "+
+			"the links of the CA from /etc/ssl/certs, and update-ca-trust on the RHEL "+
+			"family. A CA that osapi "+
 			"did not deploy does not change and reports changed: false: a system CA is "+
 			"not osapi's to remove. macOS reports skipped.").
 		Example("Remove a CA", DeleteInput{Name: "internal-ca"},
@@ -276,6 +314,13 @@ var Behavior = behavior.Register(behavior.Define(
 			stored, deployed,
 			behavior.Removed(rhelPath),
 			behavior.Ran("update-ca-trust"),
+		).
+		Example("Remove a CA on SUSE", DeleteInput{Name: "internal-ca"},
+			Result{Name: "internal-ca", Changed: true},
+			behavior.OnPlatform(behavior.PlatformSUSE),
+			stored, deployed,
+			behavior.Removed(susePath),
+			behavior.Ran("update-ca-certificates --fresh"),
 		).
 		Example("A CA that osapi did not deploy", DeleteInput{Name: "internal-ca"},
 			Result{Name: "internal-ca"},

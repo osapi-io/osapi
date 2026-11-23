@@ -106,7 +106,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 			},
 		},
 		{
-			name: "when a provider runs a program with sudo, the behavior lists it",
+			name: "when the providers run a program with sudo, the behavior lists it once",
 			in:   behaviordsl.GetInput{Name: "certificate"},
 			validateFunc: func(got behaviordsl.GetOutput, err error) {
 				s.Require().NoError(err)

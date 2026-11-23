@@ -196,7 +196,12 @@ type PlatformName string
 // KnownPlatforms are the platforms that a behavior can name. Add a constant
 // here before a behavior names a new family of gohai.
 func KnownPlatforms() []PlatformName {
-	return []PlatformName{PlatformLinux, PlatformDarwin, PlatformDebian}
+	return []PlatformName{
+		PlatformLinux,
+		PlatformDarwin,
+		PlatformDebian,
+		PlatformSUSE,
+	}
 }
 
 // The platforms a behavior can name.
@@ -211,6 +216,9 @@ const (
 	// PlatformDebian is the Debian family, as gohai names it: Debian,
 	// Ubuntu, Raspbian, Linux Mint and the others of Ohai's table.
 	PlatformDebian PlatformName = family.Debian
+	// PlatformSUSE is the SUSE family, as gohai names it: openSUSE, SLES,
+	// SLED and SLE Micro.
+	PlatformSUSE PlatformName = family.SUSE
 )
 
 // Provider builds b's provider for platform with h, the host.Host the agent

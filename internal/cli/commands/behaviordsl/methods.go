@@ -465,13 +465,19 @@ func OpenAPIGet(
 }
 
 // sudoOf is each program b runs with sudo on every platform, then each that
-// one platform's provider runs with it.
+// one platform's provider runs with it, once each: the providers of several
+// platforms can run the same program, such as update-ca-certificates on
+// debian and suse.
 func sudoOf(
 	b *behavior.Behavior,
 ) []string {
 	out := append([]string{}, b.Sudo...)
 	for _, ps := range b.ProviderSudo {
-		out = append(out, ps.Programs...)
+		for _, p := range ps.Programs {
+			if !slices.Contains(out, p) {
+				out = append(out, p)
+			}
+		}
 	}
 
 	return out

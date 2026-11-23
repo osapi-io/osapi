@@ -130,6 +130,40 @@ func (s *APIListPublicTestSuite) TestList() {
 			WantBody: `{"job_id":"job-1","results":[{"enabled":true,"fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","hostname":"server1","managed":false,"name":"anchors/Example_Root","not_after":"2126-10-29T23:38:01Z","path":"/usr/share/pki/ca-trust-source/anchors/Example_Root.pem","source":"system","status":"ok","subject":"CN=osapi example CA,O=osapi"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
 		},
 		{
+			Name: "when the example \"A CA that osapi deployed on SUSE\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/certificate",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"certificate.list",
+				certificate.ListInput{},
+				servertest.Completed("server1", `[{"name":"internal-ca","path":"/etc/pki/trust/anchors/osapi-internal-ca.crt","source":"local","enabled":true,"subject":"CN=osapi example CA,O=osapi","fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","not_after":"2126-10-29T23:38:01Z","managed":true,"object":"internal-ca.pem"}]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"enabled":true,"fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","hostname":"server1","managed":true,"name":"internal-ca","not_after":"2126-10-29T23:38:01Z","object":"internal-ca.pem","path":"/etc/pki/trust/anchors/osapi-internal-ca.crt","source":"local","status":"ok","subject":"CN=osapi example CA,O=osapi"}]}`,
+		},
+		{
+			Name: "when the example \"A CA that osapi deployed on SUSE\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/certificate",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"certificate.list",
+				certificate.ListInput{},
+				servertest.Completed("server1", `[{"name":"internal-ca","path":"/etc/pki/trust/anchors/osapi-internal-ca.crt","source":"local","enabled":true,"subject":"CN=osapi example CA,O=osapi","fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","not_after":"2126-10-29T23:38:01Z","managed":true,"object":"internal-ca.pem"}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"enabled":true,"fingerprint":"6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312","hostname":"server1","managed":true,"name":"internal-ca","not_after":"2126-10-29T23:38:01Z","object":"internal-ca.pem","path":"/etc/pki/trust/anchors/osapi-internal-ca.crt","source":"local","status":"ok","subject":"CN=osapi example CA,O=osapi"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
 			Name: "when the example \"A Mac\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
