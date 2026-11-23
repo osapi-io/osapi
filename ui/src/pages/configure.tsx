@@ -14,8 +14,6 @@ import { SingleInputBlock } from "@/components/domain/single-input-block";
 import { FileDeleteBlock } from "@/components/domain/file-delete-block";
 import { ContainerActionBlock } from "@/components/domain/container-action-block";
 import { DockerExecBlock } from "@/components/domain/docker-exec-block";
-import { UserSSHKeyBlock } from "@/components/domain/user-ssh-key-block";
-import { UserRemoveKeyBlock } from "@/components/domain/user-remove-key-block";
 import { ApplyButton } from "@/components/domain/apply-button";
 import { StackBar } from "@/components/domain/stack-bar";
 import { SaveStackDialog } from "@/components/domain/save-stack-dialog";
@@ -51,11 +49,6 @@ import {
   deleteFileByName,
   getFileStale,
 } from "@/sdk/gen/file-management-api-file-operations/file-management-api-file-operations";
-import {
-  getNodeUserSSHKey,
-  postNodeUserSSHKey,
-  deleteNodeUserSSHKey,
-} from "@/sdk/gen/user-ssh-key-management-api-user-operations/user-ssh-key-management-api-user-operations";
 import {
   getAuditLogs,
   getAuditLogByID,
@@ -364,21 +357,6 @@ export function Configure() {
               command: block.data.command as string,
             });
             break;
-          case "user-list-keys":
-            result = await getNodeUserSSHKey(t, block.data.name as string);
-            break;
-          case "user-add-key":
-            result = await postNodeUserSSHKey(t, block.data.name as string, {
-              key: block.data.key as string,
-            });
-            break;
-          case "user-remove-key":
-            result = await deleteNodeUserSSHKey(
-              t,
-              block.data.name as string,
-              block.data.fingerprint as string,
-            );
-            break;
           case "audit-list":
             result = await getAuditLogs();
             break;
@@ -594,33 +572,6 @@ export function Configure() {
             field="command"
             label="Shell Command"
             placeholder="echo hello | tee /tmp/out.txt"
-          />
-        );
-      case "user-list-keys":
-        return (
-          <SingleInputBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            field="name"
-            label="Username"
-            placeholder="deploy"
-          />
-        );
-      case "user-add-key":
-        return (
-          <UserSSHKeyBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-          />
-        );
-      case "user-remove-key":
-        return (
-          <UserRemoveKeyBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
           />
         );
       case "audit-list":

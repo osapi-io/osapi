@@ -4,10 +4,10 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { SSHKeyMutationEntry } from './sSHKeyMutationEntry';
+import type { UserSshkeyKey } from './userSshkeyKey';
 
-export interface SSHKeyMutationResponse {
+export interface UserSshkeyCollectionResponse {
   /** The job ID used to process this request. */
   job_id?: string;
-  results: SSHKeyMutationEntry[];
+  results: UserSshkeyKey[];
 }

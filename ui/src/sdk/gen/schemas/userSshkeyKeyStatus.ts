@@ -8,10 +8,10 @@
 /**
  * The status of the operation for this host.
  */
-export type SSHKeyMutationEntryStatus = typeof SSHKeyMutationEntryStatus[keyof typeof SSHKeyMutationEntryStatus];
+export type UserSshkeyKeyStatus = typeof UserSshkeyKeyStatus[keyof typeof UserSshkeyKeyStatus];
 
 
-export const SSHKeyMutationEntryStatus = {
+export const UserSshkeyKeyStatus = {
   ok: 'ok',
   failed: 'failed',
   skipped: 'skipped',
