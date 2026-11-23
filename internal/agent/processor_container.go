@@ -23,6 +23,7 @@ package agent
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -30,6 +31,12 @@ import (
 
 	"github.com/osapi-io/osapi/internal/job"
 	dockerProv "github.com/osapi-io/osapi/internal/provider/container/docker"
+)
+
+// ErrCommandDisabled is the error of a docker exec job on an agent where
+// agent.command.enabled is false: it runs a command the caller supplies.
+var ErrCommandDisabled = errors.New(
+	"command execution is disabled on this agent: set agent.command.enabled to true to allow it",
 )
 
 // NewDockerProcessor returns a ProcessorFunc that handles docker-related operations.

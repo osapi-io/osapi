@@ -322,7 +322,8 @@ func MissingPrograms(
 	for _, b := range behavior.All() {
 		_, runs := b.Programs(behavior.PlatformName(platform))
 		for _, p := range runs {
-			if slices.Contains(missing, p) {
+			// A behavior that runs the program its caller names needs none.
+			if p == behavior.AnyProgram || slices.Contains(missing, p) {
 				continue
 			}
 			if _, err := lookPath(p); err != nil {

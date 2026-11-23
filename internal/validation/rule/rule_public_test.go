@@ -127,6 +127,21 @@ func (s *RulePublicTestSuite) TestApply() {
 			},
 		},
 		{
+			name: "when the tag has startsnotwith, the first character is any other",
+			tag:  "startsnotwith=-",
+			validateFunc: func(g *got, _ bool, err error) {
+				s.NoError(err)
+				s.Equal(`^[^-]`, g.pattern)
+			},
+		},
+		{
+			name: "when startsnotwith has more than one character, it is an error",
+			tag:  "startsnotwith=--",
+			validateFunc: func(_ *got, _ bool, err error) {
+				s.EqualError(err, "validate startsnotwith=--: the spec shows one character only")
+			},
+		},
+		{
 			name: "when a bound is not a number, it is an error",
 			tag:  "max=lots",
 			validateFunc: func(_ *got, _ bool, err error) {

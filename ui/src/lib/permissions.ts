@@ -118,7 +118,6 @@ export const BLOCK_OPERATIONS: Record<string, OperationId> = {
   "docker-pull": "postNodeContainerDockerPull",
   "docker-rm-image": "deleteNodeContainerDockerImage",
   "docker-inspect": "getNodeContainerDockerByID",
-  "command-shell": "postNodeCommandShell",
   "ntp-get": "getNodeNtp",
   "ntp-set": "postNodeNtp",
   "ntp-update": "putNodeNtp",

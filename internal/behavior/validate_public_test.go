@@ -495,6 +495,13 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 			wantRules: []string{behavior.RuleVerb},
 		},
 		{
+			name: "when a write that is not an action runs a shell",
+			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
+				behavior.Write("update", set).Key("key").Describe("Update").Shell(),
+			),
+			wantRules: []string{behavior.RuleVerb},
+		},
+		{
 			name: "when a write records nothing on its span",
 			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
 				behavior.Write("create", set).Describe("Create"),

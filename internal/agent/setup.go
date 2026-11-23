@@ -27,6 +27,8 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/spf13/viper"
+
 	"github.com/osapi-io/osapi/internal/behavior"
 
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
@@ -43,7 +45,6 @@ import (
 	"github.com/osapi-io/osapi/internal/exec"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
-	"github.com/osapi-io/osapi/internal/provider/command"
 	fileProv "github.com/osapi-io/osapi/internal/provider/file"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
@@ -315,7 +316,6 @@ func buildRegistry(
 	userProvider := e.user()
 	logProvider := e.logs()
 	pingProvider := e.ping()
-	commandProvider := command.New(e.log, e.exec)
 	dockerProvider := e.docker(ctx)
 	cronProvider := e.cron()
 	certificateProvider := e.certificate()
@@ -349,12 +349,6 @@ func buildRegistry(
 		pingProvider,
 	)
 
-	r.Register(
-		"command",
-		NewCommandProcessor(commandProvider, cfg.Agent.Command.Enabled, e.log),
-		commandProvider,
-	)
-
 	r.Register("file", NewFileProcessor(e.files, e.log), e.files)
 
 	r.Register(
@@ -384,7 +378,7 @@ func buildRegistry(
 		FileStateBucket: e.fileStateBucket,
 		Objects:         e.objects,
 		Now:             time.Now,
-	}, e.log)
+	}, e.log, viper.GetBool)
 	r.Register(
 		job.CategoryBehavior,
 		NewBehaviorProcessor(behaviorProviders, e.log),

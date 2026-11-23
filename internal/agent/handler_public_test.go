@@ -46,7 +46,6 @@ import (
 	"github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/provider"
-	commandMocks "github.com/osapi-io/osapi/internal/provider/command/mocks"
 	fileMocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
 	"github.com/osapi-io/osapi/internal/provider/network/ping"
 	pingMocks "github.com/osapi-io/osapi/internal/provider/network/ping/mocks"
@@ -117,7 +116,6 @@ func (s *HandlerPublicTestSuite) SetupTest() {
 		memoryProvider:  memoryMocks.NewDefaultMockProvider(s.mockCtrl),
 		loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
 		pingProvider:    pingMock,
-		commandProvider: commandMocks.NewDefaultMockProvider(s.mockCtrl),
 		fileProvider:    fileMocks.NewDefaultMockProvider(s.mockCtrl),
 		processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
 	})

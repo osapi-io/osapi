@@ -143,6 +143,16 @@ func Apply(
 			t.Enum(strings.Fields(param))
 		case name == "startswith":
 			t.Pattern("^" + regexp.QuoteMeta(param))
+		case name == "startsnotwith":
+			// A pattern without lookahead, which not each regex engine has,
+			// holds only one character.
+			if len([]rune(param)) != 1 {
+				return false, fmt.Errorf(
+					"validate startsnotwith=%s: the spec shows one character only",
+					param,
+				)
+			}
+			t.Pattern("^[^" + regexp.QuoteMeta(param) + "]")
 		case formats[name] != "":
 			t.Format(formats[name])
 		default:

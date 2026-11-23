@@ -35,6 +35,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/internal/agent"
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"gopkg.in/yaml.v3"
 )
@@ -402,15 +403,15 @@ func runAgainst(
 	return code
 }
 
-// skipIfCommandOff skips a command test when the agent has
-// agent.command.enabled off, as the lab's agents do. The suite's own agent
-// has it on.
-func skipIfCommandOff(
+// skipIfOff skips a test of a behavior that the agent's config turns off,
+// as the lab's agents turn command off with agent.command.enabled. The
+// suite's own agent has it on.
+func skipIfOff(
 	t *testing.T,
 	output string,
 ) {
 	t.Helper()
-	if strings.Contains(output, "command execution is disabled") {
-		t.Skip("the agent has agent.command.enabled off")
+	if strings.Contains(output, agent.ErrBehaviorOff.Error()) {
+		t.Skip("the agent turns this behavior off: " + output)
 	}
 }

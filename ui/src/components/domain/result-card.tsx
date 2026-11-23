@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { SearchBox } from "@/components/ui/search-box";
 import type {
-  CommandResultItem,
+  CommandResult as CommandHost,
   ScheduleMutationResult,
   DockerResponse,
   FileDeployResult,
@@ -153,7 +153,7 @@ function ResultShell({
 // Command
 // ---------------------------------------------------------------------------
 
-function CommandHostRow({ host }: { host: CommandResultItem }) {
+function CommandHostRow({ host }: { host: CommandHost }) {
   const [expanded, setExpanded] = useState(true);
   const status = hostStatus(host);
   const hasOutput = host.stdout || host.stderr || host.error;
@@ -212,7 +212,7 @@ function CommandHostRow({ host }: { host: CommandResultItem }) {
 function CommandResult({
   data,
 }: {
-  data: { job_id?: string; results: CommandResultItem[] };
+  data: { job_id?: string; results: CommandHost[] };
 }) {
   return (
     <ResultShell
@@ -1112,26 +1112,25 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
 
   // A behavior block shows its rows as the CLI does, from the columns of
   // its method's output: no behavior has a card of its own.
-  if (type in BEHAVIOR_BLOCKS) {
-    return (
-      <GenericRowsResult
-        data={data}
-        def={BEHAVIOR_BLOCKS[type as BehaviorBlockType]}
-      />
-    );
-  }
-
+  // A command's rows show its output as text, not as table cells.
   if (
-    (type === "command" ||
+    (type === "command-exec" ||
       type === "command-shell" ||
       type === "docker-exec") &&
     Array.isArray(data.results)
   ) {
     return (
       <CommandResult
-        data={
-          data as unknown as { job_id?: string; results: CommandResultItem[] }
-        }
+        data={data as unknown as { job_id?: string; results: CommandHost[] }}
+      />
+    );
+  }
+
+  if (type in BEHAVIOR_BLOCKS) {
+    return (
+      <GenericRowsResult
+        data={data}
+        def={BEHAVIOR_BLOCKS[type as BehaviorBlockType]}
       />
     );
   }

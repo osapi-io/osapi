@@ -38,6 +38,7 @@ import (
 	"github.com/avfs/avfs"
 
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/exec"
 )
 
 // Host is one agent's host, as a provider builder sees it.
@@ -159,6 +160,17 @@ type Exec interface {
 		args []string,
 		stdin string,
 	) (string, error)
+	// RunCmdFull runs name with args as the agent's own user, in cwd when it
+	// is not empty, for at most timeout seconds, and returns its standard
+	// output, standard error, exit code and duration apart. A program that
+	// exits non-zero is a result, not an error.
+	RunCmdFull(
+		ctx context.Context,
+		name string,
+		args []string,
+		cwd string,
+		timeout int,
+	) (*exec.CmdResult, error)
 }
 
 // Require is the provider of a behavior that h's behavior declared with

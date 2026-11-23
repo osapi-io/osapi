@@ -34,6 +34,10 @@ import (
 	"github.com/osapi-io/osapi/internal/provider"
 )
 
+// ErrBehaviorOff is the error of each method of a behavior that the agent's
+// config turns off, as EnabledBy names the key.
+var ErrBehaviorOff = errors.New("this behavior is off on this agent")
+
 // BehaviorProviders are the providers the agent built for every registered
 // behavior on its platform, as each declares them with behavior.Platform.
 type BehaviorProviders struct {
@@ -45,10 +49,12 @@ type BehaviorProviders struct {
 // BuildBehaviorProviders builds each behavior's provider for host's platform
 // once, at startup, and logs the outcome. A behavior with no provider on this
 // platform has its methods skipped; one whose provider failed to build has
-// them fail with that error.
+// them fail with that error. A behavior declared with EnabledBy whose key
+// enabled reports false has its methods fail with ErrBehaviorOff.
 func BuildBehaviorProviders(
 	h host.Host,
 	logger *slog.Logger,
+	enabled func(key string) bool,
 ) *BehaviorProviders {
 	logger = logger.With(slog.String("subsystem", "agent.behavior"))
 	if h.Logger == nil {
@@ -61,6 +67,18 @@ func BuildBehaviorProviders(
 		failed:   map[string]error{},
 	}
 	for _, b := range behavior.All() {
+		if b.EnabledBy != "" && !enabled(b.EnabledBy) {
+			bp.failed[b.Name] = fmt.Errorf(
+				"%w: set %s to true to allow %s",
+				ErrBehaviorOff,
+				b.EnabledBy,
+				b.Name,
+			)
+			logger.Info("behavior is off on this agent; its methods fail",
+				slog.String("behavior", b.Name), slog.String("key", b.EnabledBy))
+
+			continue
+		}
 		p, err := host.Build(b, h)
 		switch {
 		case errors.Is(err, provider.ErrUnsupported) || (err == nil && p == nil):

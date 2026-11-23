@@ -267,6 +267,7 @@ INF preflight checks done
   no change.
 - **`command exec` and `command shell`.** These endpoints run commands that the
   user gives, with all the privileges of the agent. `exec` needs the
-  `command:execute` RBAC permission. `shell` also needs `command:shell`.
+  `command:execute` RBAC permission. `shell` needs `command:shell`. Only the
+  admin role gets each of them.
 - **Docker provider.** It connects to the Docker API socket. It does not run
   system commands. The `osapi` user must be in the `docker` group.

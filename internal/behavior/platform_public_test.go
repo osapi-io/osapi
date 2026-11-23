@@ -222,6 +222,13 @@ func (s *PlatformPublicTestSuite) TestOn() {
 	}
 }
 
+func (s *PlatformPublicTestSuite) TestEnabledBy() {
+	s.Empty(behavior.Define("hostname", "Hostname", behavior.Node).EnabledBy)
+	s.Equal("agent.command.enabled",
+		behavior.Define("command", "Command", behavior.Node,
+			behavior.EnabledBy("agent.command.enabled")).EnabledBy)
+}
+
 func (s *PlatformPublicTestSuite) TestPrograms() {
 	b := behavior.Define("hostname", "Hostname", behavior.Node,
 		behavior.Sudo("tee"), behavior.Runs("sysctl"),

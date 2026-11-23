@@ -6,14 +6,18 @@
  */
 
 export interface CommandExecRequest {
-  /** The executable name or path. */
-  command: string;
-  /** Command arguments. */
+  /** Its arguments, each one word, such as -la /tmp */
   args?: string[];
-  /** Working directory for the command. */
+  /**
+     * The program, a name on the agent's PATH or a path, such as ls
+     * @minLength 1
+     * @pattern ^[^-]
+     */
+  command: string;
+  /** The directory to run it in; the agent's own when empty */
   cwd?: string;
   /**
-     * Timeout in seconds (default 30, max 300).
+     * Seconds to let it run before it is stopped, up to 300; 30 when 0
      * @minimum 1
      * @maximum 300
      */

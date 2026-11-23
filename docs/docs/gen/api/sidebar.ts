@@ -328,28 +328,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Command",
-      link: {
-        type: "doc",
-        id: "gen/api/command-execution-api-command-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/post-node-command-exec",
-          label: "Execute a command",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-node-command-shell",
-          label: "Execute a shell command",
-          className: "api-method post",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Node/Docker",
       link: {
         type: "doc",
@@ -689,6 +667,28 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/delete-node-user-ssh-key",
           label: "Remove SSH authorized key",
           className: "api-method delete",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Command",
+      link: {
+        type: "doc",
+        id: "gen/api/command-api-command-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/post-node-command-exec",
+          label: "Run a program with its arguments",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-command-shell",
+          label: "Run a command line through /bin/sh -c",
+          className: "api-method post",
         },
       ],
     },

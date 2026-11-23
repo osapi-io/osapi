@@ -6,12 +6,16 @@
  */
 
 export interface CommandShellRequest {
-  /** The full shell command string. */
+  /**
+     * The command line, which /bin/sh -c reads, such as ls -la /tmp | grep log
+     * @minLength 1
+     * @pattern ^[^-]
+     */
   command: string;
-  /** Working directory for the command. */
+  /** The directory to run it in; the agent's own when empty */
   cwd?: string;
   /**
-     * Timeout in seconds (default 30, max 300).
+     * Seconds to let it run before it is stopped, up to 300; 30 when 0
      * @minimum 1
      * @maximum 300
      */

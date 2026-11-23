@@ -50,9 +50,6 @@ tags:
   - name: Certificate_Management_API_certificate_operations
     x-displayName: Node/Certificate
     description: CA certificate management on a target node.
-  - name: Command_Execution_API_command_operations
-    x-displayName: Node/Command
-    description: Command execution on a target node.
   - name: Docker_Management_API_docker_operations
     x-displayName: Node/Docker
     description: Docker lifecycle operations on a target node.
@@ -86,6 +83,9 @@ tags:
   - name: User_Management_API_user_operations
     x-displayName: Node/User
     description: User account management on a target node.
+  - description: Run a command on target hosts
+    name: Command_API_command_operations
+    x-displayName: Node/Command
   - description: Get the disk usage of target hosts
     name: Disk_API_disk_operations
     x-displayName: Node/Disk
@@ -2142,112 +2142,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Error deleting CA certificate.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/command/exec:
-    servers: []
-    post:
-      summary: Execute a command
-      description: >
-        Execute a command directly without a shell. This is the safer option as
-        it does not interpret shell metacharacters.
-      tags:
-        - Command_Execution_API_command_operations
-      operationId: PostNodeCommandExec
-      security:
-        - BearerAuth:
-            - command:execute
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      requestBody:
-        description: The command to execute.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandExecRequest'
-      responses:
-        '200':
-          description: Command execution accepted.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandResultCollectionResponse'
-        '400':
-          description: Invalid request payload.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error executing command.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/command/shell:
-    servers: []
-    post:
-      summary: Execute a shell command
-      description: >
-        Execute a command through /bin/sh -c. Supports shell features like
-        pipes, redirects, and variable expansion.
-      tags:
-        - Command_Execution_API_command_operations
-      operationId: PostNodeCommandShell
-      security:
-        - BearerAuth:
-            - command:shell
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      requestBody:
-        description: The shell command to execute.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CommandShellRequest'
-      responses:
-        '200':
-          description: Shell command execution accepted.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommandResultCollectionResponse'
-        '400':
-          description: Invalid request payload.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error executing shell command.
           content:
             application/json:
               schema:
@@ -4384,6 +4278,148 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /api/node/{hostname}/command/exec:
+    servers: []
+    post:
+      description: >-
+        Runs the program with its arguments, each one word, with no shell
+        between them: a ; or a | in an argument is that character. It answers
+        with standard output and standard error apart, the exit code and the
+        duration. A program that exits non-zero is a result, not an error. Only
+        the admin role may run it, and the agent runs it only where
+        agent.command.enabled is true.
+      operationId: PostNodeCommandExec
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandExecRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandExecResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            The host does not have what the request names, such as the object of
+            a deploy.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - command:execute
+      summary: Run a program with its arguments
+      tags:
+        - Command_API_command_operations
+  /api/node/{hostname}/command/shell:
+    servers: []
+    post:
+      description: >-
+        Runs the command line through /bin/sh -c, so pipes, redirects and
+        variables work. It answers as exec does. Its permission is
+        command:shell, apart from exec's command:execute: a token that may run a
+        program may not open a shell. Only the admin role gets it.
+      operationId: PostNodeCommandShell
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandShellRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandShellResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            The host does not have what the request names, such as the object of
+            a deploy.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - command:shell
+      summary: Run a command line through /bin/sh -c
+      tags:
+        - Command_API_command_operations
   /api/node/{hostname}/disk:
     servers: []
     get:
@@ -8940,110 +8976,6 @@ components:
             $ref: '#/components/schemas/CertificateCAMutationEntry'
       required:
         - results
-    CommandExecRequest:
-      type: object
-      properties:
-        command:
-          type: string
-          description: The executable name or path.
-          example: ls
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1
-        args:
-          type: array
-          description: Command arguments.
-          items:
-            type: string
-          example:
-            - '-la'
-            - /tmp
-        cwd:
-          type: string
-          description: Working directory for the command.
-          example: /tmp
-        timeout:
-          type: integer
-          description: Timeout in seconds (default 30, max 300).
-          minimum: 1
-          maximum: 300
-          default: 30
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=1,max=300
-      required:
-        - command
-    CommandShellRequest:
-      type: object
-      properties:
-        command:
-          type: string
-          description: The full shell command string.
-          example: ls -la /tmp | grep log
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1
-        cwd:
-          type: string
-          description: Working directory for the command.
-          example: /tmp
-        timeout:
-          type: integer
-          description: Timeout in seconds (default 30, max 300).
-          minimum: 1
-          maximum: 300
-          default: 30
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=1,max=300
-      required:
-        - command
-    CommandResultItem:
-      type: object
-      properties:
-        hostname:
-          type: string
-          description: The hostname of the agent that executed the command.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        stdout:
-          type: string
-          description: Standard output of the command.
-        stderr:
-          type: string
-          description: Standard error output of the command.
-        exit_code:
-          type: integer
-          description: Exit code of the command.
-        duration_ms:
-          type: integer
-          format: int64
-          description: Execution time in milliseconds.
-        changed:
-          type: boolean
-          description: Whether the command modified system state.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    CommandResultCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/CommandResultItem'
-      required:
-        - results
     DockerCreateRequest:
       type: object
       properties:
@@ -10813,6 +10745,133 @@ components:
             $ref: '#/components/schemas/SSHKeyMutationEntry'
       required:
         - results
+    CommandExecRequest:
+      properties:
+        args:
+          description: Its arguments, each one word, such as -la /tmp
+          items:
+            type: string
+          type: array
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
+        command:
+          description: The program, a name on the agent's PATH or a path, such as ls
+          minLength: 1
+          pattern: ^[^-]
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,startsnotwith=-
+        cwd:
+          description: The directory to run it in; the agent's own when empty
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
+        timeout:
+          description: Seconds to let it run before it is stopped, up to 300; 30 when 0
+          maximum: 300
+          minimum: 1
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,max=300
+      required:
+        - command
+      type: object
+    CommandExecResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/CommandResult'
+          type: array
+      required:
+        - results
+      type: object
+    CommandResult:
+      properties:
+        changed:
+          description: 'Whether the host changed: true, since a command can change anything'
+          type: boolean
+        duration_ms:
+          description: How long it ran, in milliseconds
+          format: int64
+          type: integer
+        error:
+          description: Error message if the agent failed.
+          type: string
+        exit_code:
+          description: Its exit code
+          type: integer
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+        stderr:
+          description: What it wrote to standard error
+          type: string
+        stdout:
+          description: What it wrote to standard output
+          type: string
+      required:
+        - hostname
+        - status
+      type: object
+    CommandShellRequest:
+      properties:
+        command:
+          description: >-
+            The command line, which /bin/sh -c reads, such as ls -la /tmp | grep
+            log
+          minLength: 1
+          pattern: ^[^-]
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1,startsnotwith=-
+        cwd:
+          description: The directory to run it in; the agent's own when empty
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
+        timeout:
+          description: Seconds to let it run before it is stopped, up to 300; 30 when 0
+          maximum: 300
+          minimum: 1
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,max=300
+      required:
+        - command
+      type: object
+    CommandShellResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/CommandResult'
+          type: array
+      required:
+        - results
+      type: object
     Disk:
       properties:
         free:
@@ -13016,9 +13075,6 @@ x-tagGroups:
   - name: Certificate Management API
     tags:
       - Certificate_Management_API_certificate_operations
-  - name: Command Execution API
-    tags:
-      - Command_Execution_API_command_operations
   - name: Docker Management API
     tags:
       - Docker_Management_API_docker_operations
@@ -13048,6 +13104,9 @@ x-tagGroups:
   - name: User Management API
     tags:
       - User_Management_API_user_operations
+  - name: Command API
+    tags:
+      - Command_API_command_operations
   - name: Disk API
     tags:
       - Disk_API_disk_operations

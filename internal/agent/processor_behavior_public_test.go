@@ -97,6 +97,11 @@ func (s *ProcessorBehaviorPublicTestSuite) SetupTest() {
 		behavior.Platform("darwin", build(english{}, nil)),
 		behavior.Read("get", greet),
 	))
+	behavior.Register(behavior.Define("gated", "Off unless its key is true", behavior.Node,
+		behavior.EnabledBy("agent.gated.enabled"),
+		behavior.Platform("test", build(english{}, nil)),
+		behavior.Read("get", greet),
+	))
 	behavior.Register(behavior.Define("declined", "Declines this host", behavior.Node,
 		behavior.Platform("test", build(english{}, provider.ErrUnsupported)),
 		behavior.Read("get", greet),
@@ -108,9 +113,13 @@ func (s *ProcessorBehaviorPublicTestSuite) TearDownTest() {
 }
 
 func (s *ProcessorBehaviorPublicTestSuite) TestBuildBehaviorProviders() {
-	providers := agent.BuildBehaviorProviders(host.Host{Platform: "test"}, slog.Default())
+	providers := agent.BuildBehaviorProviders(
+		host.Host{Platform: "test"},
+		slog.Default(),
+		func(key string) bool { return key != "agent.gated.enabled" },
+	)
 
-	s.Equal([]any{english{}}, providers.All())
+	s.Equal([]any{english{}}, providers.All(), "a behavior that is off has no provider")
 }
 
 func (s *ProcessorBehaviorPublicTestSuite) TestNewBehaviorProcessor() {
@@ -150,6 +159,11 @@ func (s *ProcessorBehaviorPublicTestSuite) TestNewBehaviorProcessor() {
 			wantErr:   "unknown method",
 		},
 		{
+			name:      "when the behavior's config key is false, its methods fail with the key",
+			operation: "gated.get",
+			wantErr:   "this behavior is off on this agent: set agent.gated.enabled to true to allow gated",
+		},
+		{
 			name:      "when the provider failed to build",
 			operation: "broken.get",
 			wantErr:   "broken provider on test: no socket",
@@ -184,7 +198,11 @@ func (s *ProcessorBehaviorPublicTestSuite) TestNewBehaviorProcessor() {
 	}
 
 	process := agent.NewBehaviorProcessor(
-		agent.BuildBehaviorProviders(host.Host{Platform: "test"}, slog.Default()),
+		agent.BuildBehaviorProviders(
+			host.Host{Platform: "test"},
+			slog.Default(),
+			func(key string) bool { return key != "agent.gated.enabled" },
+		),
 		slog.Default(),
 	)
 

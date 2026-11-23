@@ -44,12 +44,6 @@ const (
 	OpNetworkPingDo JobOperation = "network.ping.do"
 )
 
-// Command operations — execute arbitrary commands on agents.
-const (
-	OpCommandExec  JobOperation = "command.exec.execute"
-	OpCommandShell JobOperation = "command.shell.execute"
-)
-
 // File operations — manage file deployments and status.
 const (
 	OpFileDeploy    JobOperation = "file.deploy.execute"

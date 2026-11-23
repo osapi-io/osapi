@@ -9,8 +9,6 @@ export type Permission =
   | "file:write"
   | "health:read"
   | "trace:read"
-  | "command:execute"
-  | "command:shell"
   | "docker:read"
   | "docker:write"
   | "docker:execute"
@@ -26,6 +24,8 @@ export type Permission =
   | "log:read"
   | "certificate:read"
   | "certificate:write"
+  | "command:execute"
+  | "command:shell"
   | "disk:read"
   | "group:read"
   | "group:write"
@@ -63,8 +63,6 @@ export const ALL_PERMISSIONS: Permission[] = [
   "file:write",
   "health:read",
   "trace:read",
-  "command:execute",
-  "command:shell",
   "docker:read",
   "docker:write",
   "docker:execute",
@@ -80,6 +78,8 @@ export const ALL_PERMISSIONS: Permission[] = [
   "log:read",
   "certificate:read",
   "certificate:write",
+  "command:execute",
+  "command:shell",
   "disk:read",
   "group:read",
   "group:write",
@@ -120,8 +120,6 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "file:write",
     "health:read",
     "trace:read",
-    "command:execute",
-    "command:shell",
     "docker:read",
     "docker:write",
     "docker:execute",
@@ -137,6 +135,8 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "log:read",
     "certificate:read",
     "certificate:write",
+    "command:execute",
+    "command:shell",
     "disk:read",
     "group:read",
     "group:write",

@@ -2,7 +2,7 @@ export * from './admission-api-admission/admission-api-admission';
 export * from './agent-management-api-agent-operations/agent-management-api-agent-operations';
 export * from './audit-log-api-audit/audit-log-api-audit';
 export * from './certificate-management-api-certificate-operations/certificate-management-api-certificate-operations';
-export * from './command-execution-api-command-operations/command-execution-api-command-operations';
+export * from './command-api-command-operations/command-api-command-operations';
 export * from './controller-api-controller/controller-api-controller';
 export * from './disk-api-disk-operations/disk-api-disk-operations';
 export * from './dns-api-network-dns-operations/dns-api-network-dns-operations';

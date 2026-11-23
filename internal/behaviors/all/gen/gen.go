@@ -5,6 +5,7 @@
 package gen
 
 import (
+	_ "github.com/osapi-io/osapi/internal/behaviors/command/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/disk/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/group/gen"
 	_ "github.com/osapi-io/osapi/internal/behaviors/hostname/gen"

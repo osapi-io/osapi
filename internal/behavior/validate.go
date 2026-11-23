@@ -497,6 +497,13 @@ func ValidateBehavior(
 			add(m.Name, RuleVerb, ".Always is for an action, such as restart; a create, update or "+
 				"delete compares the host with its input and changes nothing when they agree")
 		}
+		if m.UsesShell && !m.Action {
+			add(
+				m.Name,
+				RuleVerb,
+				".Shell is for an action that runs a shell command line, such as command shell",
+			)
+		}
 		// The examples are the command lines on the CLI page of the method,
 		// and the generated tests send each one. The tests also check each
 		// output, so an example of the wrong type fails.

@@ -102,7 +102,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindOption,
 			Name: `Area(AreaName)`,
-			Does: "Puts a served behavior in an area of the UI: the group of the Configure page's Add Block panel that its blocks sit in. Use a constant: AreaServices, AreaSoftware, AreaConfig, AreaNode, AreaNetworking, AreaSecurity or AreaHardware.",
+			Does: "Puts a served behavior in an area of the UI: the group of the Configure page's Add Block panel that its blocks sit in. Use a constant: AreaServices, AreaSoftware, AreaConfig, AreaNode, AreaNetworking, AreaSecurity, AreaCommand or AreaHardware.",
 			When: "On each behavior with API. behavior validate refuses a served behavior with none.",
 		},
 		{
@@ -138,8 +138,14 @@ var Spec = guide.Spec{
 		{
 			Kind: KindOption,
 			Name: "Runs(programs...)",
-			Does: "Lists the programs that the providers run without sudo. The agent warns when one is not installed.",
-			When: "For each program that does not need root.",
+			Does: "Lists the programs that the providers run without sudo. The agent warns when one is not installed. Runs(behavior.AnyProgram), \"*\", is each program: the agent and the integration test look for none.",
+			When: "For each program that does not need root. AnyProgram only for a behavior that runs the program its caller names, such as command.",
+		},
+		{
+			Kind: KindOption,
+			Name: `EnabledBy("agent.command.enabled")`,
+			Does: "Turns the behavior on only where the agent config key, a bool, is true. Where it is false, the agent fails each method with an error that names the key.",
+			When: "For a behavior that an operator must allow on each agent, such as one that runs any command.",
 		},
 		{
 			Kind: KindOption,
@@ -224,7 +230,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindHost,
 			Name: "h.Exec",
-			Does: "Runs a program: RunCmd as the agent's user, RunPrivilegedCmd with sudo, RunPrivilegedCmdWithStdin for a secret. The tests give a generated mock that records each command line and prints what the example says with Prints and PrintsAfter; Ran checks a command after. Each program is declared with Runs or Sudo.",
+			Does: "Runs a program: RunCmd as the agent's user, RunPrivilegedCmd with sudo, RunPrivilegedCmdWithStdin for a secret, RunCmdFull for a command whose output, error output and exit code the caller gets apart. The tests give a generated mock that records each command line and prints what the example says with Prints and PrintsAfter; Ran checks a command after. Each program is declared with Runs or Sudo.",
 			When: "For a write, such as systemctl start or apt-get install, and for a read of what is not a fact of the host, with .NotAFact. A read of a fact goes through h.Sources().",
 		},
 		{
@@ -268,6 +274,12 @@ var Spec = guide.Spec{
 			Name: "collector.NewWith(h.Sources())",
 			Does: "Reads the facts of the host through gohai, such as services.NewWith(h.Sources()).Collect(ctx, nil). Sources gives gohai the host's filesystem and commands, so the tests run it on the fake host.",
 			When: "For each read of a fact of the host: its packages, services, interfaces, routes, disks. A provider runs h.Exec for writes, and reads with it only what is not a fact, with .NotAFact.",
+		},
+		{
+			Kind: KindRefine,
+			Name: ".Shell() on an action",
+			Does: "Makes the action's permission <name>:shell in place of <name>:execute. Only the admin role gets a shell permission. behavior validate refuses it on a method that is not an action.",
+			When: "For an action that runs a shell command line, such as command shell.",
 		},
 		{
 			Kind: KindRefine,
@@ -355,6 +367,12 @@ var Spec = guide.Spec{
 			Name: `PrintsAfter("after", "command", "output")`,
 			Does: "Says what a command prints after another command has run.",
 			When: "For state that a program keeps, not a file.",
+		},
+		{
+			Kind: KindExample,
+			Name: `Exits("command", 1)`,
+			Does: "Says the exit code of a command on the fake host, as RunCmdFull returns it. A command with no Exits exits 0.",
+			When: "For a method that answers with the exit code of the command it runs, such as command exec.",
 		},
 		{
 			Kind: KindExample,

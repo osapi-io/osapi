@@ -4,6 +4,7 @@
 # Categories: identity, free text, program, path pattern, fixture, boundary, checked.
 behavior.Action(name string)	identity	a name that the registry, the route or the command path holds
 behavior.Behavior.Doc string	free text	prose for a page or a message
+behavior.Behavior.EnabledBy string	identity	an agent config key, such as agent.command.enabled; the test of each behavior that declares it checks that it is a bool key
 behavior.Behavior.Group string	checked	set only by Under, which takes a GroupName; validate checks KnownGroups
 behavior.Behavior.Method(name string)	identity	a name that the registry, the route or the command path holds
 behavior.Behavior.Name string	identity	a name that the registry, the route or the command path holds
@@ -18,12 +19,14 @@ behavior.Define(name string)	identity	a name that the registry, the route or the
 behavior.Effect.Command string	fixture	what an example sets up or expects
 behavior.Effect.Content string	fixture	what an example sets up or expects
 behavior.Effect.Path string	fixture	what an example sets up or expects
+behavior.EnabledBy(key string)	identity	an agent config key, such as agent.command.enabled; the test of each behavior that declares it checks that it is a bool key
 behavior.Example.Doc string	free text	prose for a page or a message
 behavior.Exists(content string)	fixture	what an example sets up or expects
 behavior.Exists(path string)	path pattern	a path or a path.Match pattern
 behavior.ExistsAfter(after string)	fixture	what an example sets up or expects
 behavior.ExistsAfter(content string)	fixture	what an example sets up or expects
 behavior.ExistsAfter(path string)	path pattern	a path or a path.Match pattern
+behavior.Exits(command string)	fixture	what an example sets up or expects
 behavior.Given.After string	fixture	what an example sets up or expects
 behavior.Given.Command string	fixture	what an example sets up or expects
 behavior.Given.Content string	fixture	what an example sets up or expects

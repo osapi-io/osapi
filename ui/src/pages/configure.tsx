@@ -8,7 +8,6 @@ import { ResultCard } from "@/components/domain/result-card";
 import { RunLinks } from "@/components/domain/run-links";
 import { traceIdOf } from "@/lib/trace";
 import { ScheduleBlock } from "@/components/domain/schedule-block";
-import { CommandBlock } from "@/components/domain/command-block";
 import { DockerBlock } from "@/components/domain/docker-block";
 import { FileBlock } from "@/components/domain/file-block";
 import { FileUploadBlock } from "@/components/domain/file-upload-block";
@@ -45,10 +44,6 @@ import {
   getNodeScheduleByName,
   putNodeSchedule,
 } from "@/sdk/gen/schedule-management-api-schedule-operations/schedule-management-api-schedule-operations";
-import {
-  postNodeCommandExec,
-  postNodeCommandShell,
-} from "@/sdk/gen/command-execution-api-command-operations/command-execution-api-command-operations";
 import { postNodeContainerDockerExec } from "@/sdk/gen/docker-management-api-docker-exec/docker-management-api-docker-exec";
 import {
   postNodeContainerDockerPull,
@@ -194,7 +189,7 @@ const blockIcons: Record<
   "file-list": FolderOpen,
   "file-deploy": FileDown,
   // Command
-  command: Terminal,
+  "command-exec": Terminal,
   // Node
   "status-get": Monitor,
   "load-get": Gauge,
@@ -363,15 +358,6 @@ export function Configure() {
                 undefined,
             });
             break;
-          case "command": {
-            const argsStr = (block.data.args as string) || "";
-            result = await postNodeCommandExec(t, {
-              command: block.data.command as string,
-              args: argsStr ? argsStr.split(" ") : undefined,
-              cwd: (block.data.cwd as string) || undefined,
-            });
-            break;
-          }
           case "docker-create": {
             const portsStr = (block.data.ports as string) || "";
             const volsStr = (block.data.volumes as string) || "";
@@ -479,11 +465,6 @@ export function Configure() {
             break;
           case "file-stale":
             result = await getFileStale();
-            break;
-          case "command-shell":
-            result = await postNodeCommandShell(t, {
-              command: block.data.command as string,
-            });
             break;
           case "ping":
             result = await postNodeNetworkPing(t, {
@@ -772,14 +753,6 @@ export function Configure() {
             upstreamObjects={upstream}
           />
         );
-      case "command":
-        return (
-          <CommandBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-          />
-        );
       case "docker-create":
         return (
           <DockerBlock
@@ -897,17 +870,6 @@ export function Configure() {
         );
       case "file-stale":
         return null;
-      case "command-shell":
-        return (
-          <SingleInputBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            field="command"
-            label="Shell Command"
-            placeholder="echo hello | tee /tmp/out.txt"
-          />
-        );
       case "ping":
         return (
           <SingleInputBlock

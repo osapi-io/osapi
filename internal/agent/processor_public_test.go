@@ -34,7 +34,6 @@ import (
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/mocks"
-	commandMocks "github.com/osapi-io/osapi/internal/provider/command/mocks"
 	fileMocks "github.com/osapi-io/osapi/internal/provider/file/mocks"
 	"github.com/osapi-io/osapi/internal/provider/network/ping"
 	pingMocks "github.com/osapi-io/osapi/internal/provider/network/ping/mocks"
@@ -89,7 +88,6 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 		PacketLoss:      0,
 	}, nil).AnyTimes()
 
-	commandMock := commandMocks.NewDefaultMockProvider(s.mockCtrl)
 	fMock := fileMocks.NewDefaultMockProvider(s.mockCtrl)
 
 	s.testAgent = newTestAgent(newTestAgentParams{
@@ -103,7 +101,6 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 		memoryProvider:  memMock,
 		loadProvider:    loadMock,
 		pingProvider:    pingMock,
-		commandProvider: commandMock,
 		fileProvider:    fMock,
 		processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
 	})
@@ -135,42 +132,6 @@ func (s *ProcessorPublicTestSuite) TestProcessJobOperation() {
 				decodeErr := json.Unmarshal(result, &response)
 				s.NoError(decodeErr)
 				s.Equal(false, response["changed"])
-			},
-		},
-		{
-			name: "successful command exec operation",
-			jobRequest: job.Request{
-				Type:      job.TypeModify,
-				Category:  "command",
-				Operation: "exec.execute",
-				Data:      json.RawMessage(`{"command":"ls","args":["-la"]}`),
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Contains(response, "stdout")
-			},
-		},
-		{
-			name: "successful command shell operation",
-			jobRequest: job.Request{
-				Type:      job.TypeModify,
-				Category:  "command",
-				Operation: "shell.execute",
-				Data:      json.RawMessage(`{"command":"echo hello"}`),
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Contains(response, "stdout")
 			},
 		},
 		{
@@ -359,15 +320,14 @@ func (s *ProcessorPublicTestSuite) TestNetworkOperations() {
 					Do(gomock.Any(), "8.8.8.8").
 					Return(nil, errors.New("ping timeout"))
 				return newTestAgent(newTestAgentParams{
-					appFs:           memfs.New(),
-					appConfig:       config.Config{},
-					jobClient:       s.mockJobClient,
-					hostProvider:    hostMocks.NewPlainMockProvider(s.mockCtrl),
-					diskProvider:    diskMocks.NewPlainMockProvider(s.mockCtrl),
-					memoryProvider:  memoryMocks.NewPlainMockProvider(s.mockCtrl),
-					loadProvider:    loadMocks.NewPlainMockProvider(s.mockCtrl),
-					pingProvider:    pingMock,
-					commandProvider: commandMocks.NewPlainMockProvider(s.mockCtrl),
+					appFs:          memfs.New(),
+					appConfig:      config.Config{},
+					jobClient:      s.mockJobClient,
+					hostProvider:   hostMocks.NewPlainMockProvider(s.mockCtrl),
+					diskProvider:   diskMocks.NewPlainMockProvider(s.mockCtrl),
+					memoryProvider: memoryMocks.NewPlainMockProvider(s.mockCtrl),
+					loadProvider:   loadMocks.NewPlainMockProvider(s.mockCtrl),
+					pingProvider:   pingMock,
 				})
 			},
 			validateFunc: func(result json.RawMessage, err error) {
@@ -439,13 +399,6 @@ func (s *ProcessorPublicTestSuite) TestProviderFactoryMethods() {
 		{
 			name:        "getPingProvider",
 			getProvider: func() interface{} { return agent.ExportGetPingProvider(s.testAgent) },
-			validateFunc: func(provider interface{}) {
-				s.NotNil(provider)
-			},
-		},
-		{
-			name:        "getCommandProvider",
-			getProvider: func() interface{} { return agent.ExportGetCommandProvider(s.testAgent) },
 			validateFunc: func(provider interface{}) {
 				s.NotNil(provider)
 			},

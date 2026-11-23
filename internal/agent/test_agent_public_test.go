@@ -29,7 +29,6 @@ import (
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/exec"
 	"github.com/osapi-io/osapi/internal/job/client"
-	"github.com/osapi-io/osapi/internal/provider/command"
 	dockerProv "github.com/osapi-io/osapi/internal/provider/container/docker"
 	fileProv "github.com/osapi-io/osapi/internal/provider/file"
 	"github.com/osapi-io/osapi/internal/provider/network/ping"
@@ -56,7 +55,6 @@ type newTestAgentParams struct {
 	memoryProvider  memory.Provider
 	loadProvider    load.Provider
 	pingProvider    ping.Provider
-	commandProvider command.Provider
 	fileProvider    fileProv.Provider
 	dockerProvider  dockerProv.Provider
 	cronProvider    cronProv.Provider
@@ -104,12 +102,6 @@ func newTestAgent(
 		"network",
 		agent.NewNetworkProcessor(p.pingProvider, logger),
 		p.pingProvider,
-	)
-
-	registry.Register(
-		"command",
-		agent.NewCommandProcessor(p.commandProvider, true, logger),
-		p.commandProvider,
 	)
 
 	registry.Register(

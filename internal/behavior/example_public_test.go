@@ -112,6 +112,13 @@ func (s *ExamplePublicTestSuite) TestHostOptions() {
 			}},
 		},
 		{
+			name:   "when Exits gives a command's exit code",
+			option: behavior.Exits("false", 1),
+			want: behavior.Example{Given: []behavior.Given{
+				{Kind: behavior.GivenOutput, Command: "false", ExitCode: 1},
+			}},
+		},
+		{
 			name:   "when ExistsAfter gives a file's content once a command has run",
 			option: behavior.ExistsAfter("groupadd -- dev", "/etc/group", "dev:x:1:\n"),
 			want: behavior.Example{Given: []behavior.Given{

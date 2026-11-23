@@ -21,6 +21,8 @@
 package client
 
 import (
+	openapi_types "github.com/oapi-codegen/runtime/types"
+
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
@@ -36,12 +38,13 @@ type CommandResult struct {
 	DurationMs int64  `json:"duration_ms"`
 }
 
-// commandCollectionFromGen converts a gen.CommandResultCollectionResponse to a Collection[CommandResult].
+// commandCollectionFromGen converts the rows of an exec or a shell.
 func commandCollectionFromGen(
-	g *gen.CommandResultCollectionResponse,
+	rows []gen.CommandResult,
+	jobID *openapi_types.UUID,
 ) Collection[CommandResult] {
-	results := make([]CommandResult, 0, len(g.Results))
-	for _, r := range g.Results {
+	results := make([]CommandResult, 0, len(rows))
+	for _, r := range rows {
 		results = append(results, CommandResult{
 			Hostname:   r.Hostname,
 			Status:     string(r.Status),
@@ -56,6 +59,6 @@ func commandCollectionFromGen(
 
 	return Collection[CommandResult]{
 		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
+		JobID:   jobIDFromGen(jobID),
 	}
 }

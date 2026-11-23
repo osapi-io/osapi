@@ -55,7 +55,6 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/provider"
-	"github.com/osapi-io/osapi/internal/provider/command"
 	dockerProv "github.com/osapi-io/osapi/internal/provider/container/docker"
 	fileProv "github.com/osapi-io/osapi/internal/provider/file"
 	"github.com/osapi-io/osapi/internal/provider/network/ping"
@@ -606,22 +605,6 @@ func ExportGetPingProvider(
 	}
 	for _, p := range a.registry.AllProviders() {
 		if v, ok := p.(ping.Provider); ok {
-			return v
-		}
-	}
-	return nil
-}
-
-// ExportGetCommandProvider returns the first command.Provider found in the
-// registry for testing.
-func ExportGetCommandProvider(
-	a *Agent,
-) command.Provider {
-	if a.registry == nil {
-		return nil
-	}
-	for _, p := range a.registry.AllProviders() {
-		if v, ok := p.(command.Provider); ok {
 			return v
 		}
 	}

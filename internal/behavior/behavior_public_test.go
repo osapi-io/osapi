@@ -444,6 +444,33 @@ func (s *BehaviorPublicTestSuite) TestAdminOnly() {
 	assert.True(s.T(), behavior.Write("update", set).AdminOnly().Admin)
 }
 
+func (s *BehaviorPublicTestSuite) TestPermissionVerb() {
+	tests := []struct {
+		name      string
+		m         *behavior.Method
+		want      behavior.Verb
+		wantAdmin bool
+	}{
+		{name: "when a read", m: behavior.Read("get", get), want: behavior.VerbRead},
+		{name: "when a write", m: behavior.Write("update", set), want: behavior.VerbWrite},
+		{name: "when an action", m: behavior.Action("exec", set), want: behavior.VerbExecute},
+		{
+			name: "when an admin-only action", m: behavior.Action("exec", set).AdminOnly(),
+			want: behavior.VerbExecute, wantAdmin: true,
+		},
+		{
+			name: "when a shell action, only the admin role gets its verb",
+			m:    behavior.Action("shell", set).Shell(), want: behavior.VerbShell, wantAdmin: true,
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, tc.m.PermissionVerb())
+			s.Equal(tc.wantAdmin, tc.m.AdminRole())
+		})
+	}
+}
+
 func (s *BehaviorPublicTestSuite) TestProviderType() {
 	assert.Equal(s.T(), "fakeProvider", behavior.Read("get", get).ProviderType().Name())
 }
