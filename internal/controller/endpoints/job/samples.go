@@ -20,6 +20,8 @@
 
 package job
 
+import "github.com/osapi-io/osapi/pkg/sdk/client"
+
 // The sample answers of the examples, which the docs page of each command
 // shows as the CLI prints them.
 var (
@@ -41,7 +43,11 @@ var (
 		Responses: []Response{{
 			Hostname: "web-01", Status: "completed", Changed: &sampleChanged,
 			Data: map[string]any{"key": "net.ipv4.ip_forward", "changed": true},
+			Steps: []client.Step{{
+				Behavior: "managedfile", Method: "update", Changed: &sampleChanged, DurationMS: 1,
+			}},
 		}},
+		Chain:       []string{"web-01: managedfile update (changed)"},
 		AgentStates: []AgentState{{Hostname: "web-01", Status: "completed", Duration: "184ms"}},
 		Timeline: []TimelineEvent{
 			{Timestamp: "2026-01-15T09:58:12Z", Event: "submitted", Message: "job created"},
