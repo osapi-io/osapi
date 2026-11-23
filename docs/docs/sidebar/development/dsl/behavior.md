@@ -123,6 +123,16 @@ ask for them on that platform only.
 Use: For a program that only one platform has, such as vm_stat or sw_vers on
 darwin.
 
+### `SudoOnPlatform(platform, programs...)`
+
+Lists the programs that the provider declared for one platform runs with sudo.
+They hold on each host that this provider serves, so linux does not hold on
+debian when the behavior declares a debian provider. The agent and the
+integration test ask for them there only.
+
+Use: For a program that each platform's provider runs in its own way, such as
+update-ca-certificates on debian and update-ca-trust on linux.
+
 ### `RunsIfPresent(programs...)`
 
 Lists the programs that the providers run only when the host has them. The fake
@@ -1435,3 +1445,17 @@ name,size,alloc,free,health,altroot. On darwin: Prints for zpool list -H -o
 name,size,alloc,free,health,altroot. With content, it reads more under those
 paths. gohai collector get --name zpools shows it in full; zpools is its
 package.
+
+### `ca_certificates`
+
+Returns certificates. Build it with cacertificates.NewWith(h.Sources()).
+
+Use: An example's fake host gives, on debian: Exists for
+/etc/ca-certificates.conf, /usr/local/share/ca-certificates,
+/usr/share/ca-certificates. On rhel: Exists for
+/etc/pki/ca-trust/source/anchors, /usr/share/pki/ca-trust-source. On darwin:
+Prints for security find-certificate -a -p /Library/Keychains/System.keychain;
+security find-certificate -a -p
+/System/Library/Keychains/SystemRootCertificates.keychain. With content, it
+reads more under those paths. gohai collector get --name ca_certificates shows
+it in full; cacertificates is its package.

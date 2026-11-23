@@ -87,9 +87,7 @@ func main() {
 		if r.Error != "" {
 			fmt.Printf("  %s: ERROR %s\n", r.Hostname, r.Error)
 		} else {
-			for _, cert := range r.Certificates {
-				fmt.Printf("  %s: %s (source=%s)\n", r.Hostname, cert.Name, cert.Source)
-			}
+			fmt.Printf("  %s: %s (source=%s managed=%v)\n", r.Hostname, r.Name, r.Source, r.Managed)
 		}
 	}
 

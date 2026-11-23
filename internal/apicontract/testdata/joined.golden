@@ -1,7 +1,7 @@
 op DELETE /api/admission/{machine_id} id=DeleteMachine tags=[Admission_API_admission] auth=BearerAuth:admission:write params=[path:machine_id!:string] body= responses=[204=- 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
 op DELETE /api/file/{name} id=DeleteFileByName tags=[File_Management_API_file_operations] auth=BearerAuth:file:write params=[path:name!:string] body= responses=[204=- 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
 op DELETE /api/job/{id} id=DeleteJobByID tags=[Job_Management_API_job_operations] auth=BearerAuth:job:write params=[path:id!:string/uuid] body= responses=[204=- 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op DELETE /api/node/{hostname}/certificate/ca/{name} id=DeleteNodeCertificateCa tags=[Certificate_Management_API_certificate_operations] auth=BearerAuth:certificate:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:CertificateCAMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op DELETE /api/node/{hostname}/certificate/{name} id=DeleteNodeCertificate tags=[Certificate_API_certificate_operations] auth=BearerAuth:certificate:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:CertificateDeleteResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op DELETE /api/node/{hostname}/container/docker/image/{image} id=DeleteNodeContainerDockerImage tags=[Docker_Management_API_docker_image] auth=BearerAuth:docker:write params=[path:hostname!:string path:image!:string query:force:boolean] body= responses=[200=application/json:DockerActionCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op DELETE /api/node/{hostname}/container/docker/{id} id=DeleteNodeContainerDockerByID tags=[Docker_Management_API_docker_operations] auth=BearerAuth:docker:write params=[path:hostname!:string path:id!:string query:force:boolean] body= responses=[200=application/json:DockerActionCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op DELETE /api/node/{hostname}/group/{name} id=DeleteNodeGroup tags=[Group_API_group_operations] auth=BearerAuth:group:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:GroupDeleteResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -34,7 +34,8 @@ op GET /api/health/status id=GetHealthStatus tags=[Health_Check_API_health] auth
 op GET /api/job id=GetJobs tags=[Job_Management_API_job_operations] auth=BearerAuth:job:read params=[query:limit:integer query:offset:integer query:status:string(submitted|processing|completed|failed|partial_failure)] body= responses=[200=application/json:ListJobsResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/job/{id} id=GetJobByID tags=[Job_Management_API_job_operations] auth=BearerAuth:job:read params=[path:id!:string/uuid] body= responses=[200=application/json:JobDetailResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/nats/status id=GetNATSStatus tags=[NATS_API_nats] auth=BearerAuth:health:read params=[] body= responses=[200=application/json:ComponentList 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op GET /api/node/{hostname}/certificate/ca id=GetNodeCertificateCa tags=[Certificate_Management_API_certificate_operations] auth=BearerAuth:certificate:read params=[path:hostname!:string] body= responses=[200=application/json:CertificateCACollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op GET /api/node/{hostname}/certificate id=GetNodeCertificate tags=[Certificate_API_certificate_operations] auth=BearerAuth:certificate:read params=[path:hostname!:string] body= responses=[200=application/json:CertificateCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op GET /api/node/{hostname}/certificate/{name} id=GetNodeCertificateByKey tags=[Certificate_API_certificate_operations] auth=BearerAuth:certificate:read params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:CertificateGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/container/docker id=GetNodeContainerDocker tags=[Docker_Management_API_docker_operations] auth=BearerAuth:docker:read params=[path:hostname!:string query:limit:integer query:state:string(running|stopped|all)] body= responses=[200=application/json:DockerListCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/container/docker/{id} id=GetNodeContainerDockerByID tags=[Docker_Management_API_docker_operations] auth=BearerAuth:docker:read params=[path:hostname!:string path:id!:string] body= responses=[200=application/json:DockerDetailCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/disk id=GetNodeDisk tags=[Disk_API_disk_operations] auth=BearerAuth:disk:read params=[path:hostname!:string] body= responses=[200=application/json:DiskGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -77,7 +78,7 @@ op POST /api/agent/{hostname}/drain id=DrainAgent tags=[Agent_Management_API_age
 op POST /api/agent/{hostname}/undrain id=UndrainAgent tags=[Agent_Management_API_agent_operations] auth=BearerAuth:agent:write params=[path:hostname!:string] body= responses=[204=- 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op POST /api/file id=PostFile tags=[File_Management_API_file_operations] auth=BearerAuth:file:write params=[] body=multipart/form-data:{content_type:string(raw|template),file!:string/binary,name!:string}! responses=[200=application/json:FileUploadResponse 201=application/json:FileUploadResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
 op POST /api/job/{id}/retry id=RetryJobByID tags=[Job_Management_API_job_operations] auth=BearerAuth:job:write params=[path:id!:string/uuid] body=application/json:RetryJobRequest responses=[201=application/json:CreateJobResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op POST /api/node/{hostname}/certificate/ca id=PostNodeCertificateCa tags=[Certificate_Management_API_certificate_operations] auth=BearerAuth:certificate:write params=[path:hostname!:string] body=application/json:CertificateCACreateRequest! responses=[200=application/json:CertificateCAMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op POST /api/node/{hostname}/certificate id=PostNodeCertificate tags=[Certificate_API_certificate_operations] auth=BearerAuth:certificate:write params=[path:hostname!:string] body=application/json:CertificateCreateRequest! responses=[200=application/json:CertificateCreateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op POST /api/node/{hostname}/command/exec id=PostNodeCommandExec tags=[Command_Execution_API_command_operations] auth=BearerAuth:command:execute params=[path:hostname!:string] body=application/json:CommandExecRequest! responses=[200=application/json:CommandResultCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op POST /api/node/{hostname}/command/shell id=PostNodeCommandShell tags=[Command_Execution_API_command_operations] auth=BearerAuth:command:shell params=[path:hostname!:string] body=application/json:CommandShellRequest! responses=[200=application/json:CommandResultCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op POST /api/node/{hostname}/container/docker id=PostNodeContainerDocker tags=[Docker_Management_API_docker_operations] auth=BearerAuth:docker:write params=[path:hostname!:string] body=application/json:DockerCreateRequest! responses=[200=application/json:DockerResultCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -108,7 +109,7 @@ op POST /api/node/{hostname}/user id=PostNodeUser tags=[User_Management_API_user
 op POST /api/node/{hostname}/user/{name}/password id=PostNodeUserPassword tags=[User_Management_API_user_operations] auth=BearerAuth:user:write params=[path:hostname!:string path:name!:string] body=application/json:UserPasswordRequest! responses=[200=application/json:UserMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op POST /api/node/{hostname}/user/{name}/ssh-key id=PostNodeUserSSHKey tags=[User_Management_API_user_operations] auth=BearerAuth:user:write params=[path:hostname!:string path:name!:string] body=application/json:SSHKeyAddRequest! responses=[200=application/json:SSHKeyMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op PUT /api/file/{name} id=PutFileByName tags=[File_Management_API_file_operations] auth=BearerAuth:file:write params=[path:name!:string] body=multipart/form-data:{content_type:string(raw|template),file!:string/binary}! responses=[200=application/json:FileUploadResponse 201=application/json:FileUploadResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse 503=application/json:ErrorResponse]
-op PUT /api/node/{hostname}/certificate/ca/{name} id=PutNodeCertificateCa tags=[Certificate_Management_API_certificate_operations] auth=BearerAuth:certificate:write params=[path:hostname!:string path:name!:string] body=application/json:CertificateCAUpdateRequest! responses=[200=application/json:CertificateCAMutationResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op PUT /api/node/{hostname}/certificate/{name} id=PutNodeCertificate tags=[Certificate_API_certificate_operations] auth=BearerAuth:certificate:write params=[path:hostname!:string path:name!:string] body=application/json:CertificateUpdateRequest! responses=[200=application/json:CertificateUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op PUT /api/node/{hostname}/group/{name} id=PutNodeGroup tags=[Group_API_group_operations] auth=BearerAuth:group:write params=[path:hostname!:string path:name!:string] body=application/json:GroupUpdateRequest! responses=[200=application/json:GroupUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op PUT /api/node/{hostname}/hostname id=PutNodeHostname tags=[Hostname_API_hostname_operations] auth=BearerAuth:hostname:write params=[path:hostname!:string] body=application/json:HostnameUpdateRequest! responses=[200=application/json:HostnameUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op PUT /api/node/{hostname}/network/dns/{interface_name} id=PutNodeNetworkDns tags=[Dns_API_network_dns_operations] auth=BearerAuth:network:write params=[path:hostname!:string path:interface_name!:string] body=application/json:NetworkDnsUpdateRequest! responses=[200=application/json:NetworkDnsUpdateResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -183,25 +184,36 @@ schema AuditEntryResponse.entry! = AuditEntry
 schema Averages.15min! = number/double
 schema Averages.1min! = number/double
 schema Averages.5min! = number/double
-schema CertificateCACollectionResponse.job_id = string/uuid
-schema CertificateCACollectionResponse.results! = [CertificateCAEntry]
-schema CertificateCACreateRequest.name! = string
-schema CertificateCACreateRequest.object! = string
-schema CertificateCAEntry.certificates = [CertificateCAInfo]
-schema CertificateCAEntry.error = string
-schema CertificateCAEntry.hostname! = string
-schema CertificateCAEntry.status! = string(ok|failed|skipped|timeout)
-schema CertificateCAInfo.name = string
-schema CertificateCAInfo.object = string
-schema CertificateCAInfo.source = string(system|custom)
-schema CertificateCAMutationEntry.changed = boolean
-schema CertificateCAMutationEntry.error = string
-schema CertificateCAMutationEntry.hostname! = string
-schema CertificateCAMutationEntry.name = string
-schema CertificateCAMutationEntry.status! = string(ok|failed|skipped|timeout)
-schema CertificateCAMutationResponse.job_id = string/uuid
-schema CertificateCAMutationResponse.results! = [CertificateCAMutationEntry]
-schema CertificateCAUpdateRequest.object! = string
+schema CertificateCollectionResponse.job_id = string/uuid
+schema CertificateCollectionResponse.results! = [CertificateEntry]
+schema CertificateCreateRequest.name! = string
+schema CertificateCreateRequest.object! = string
+schema CertificateCreateResponse.job_id = string/uuid
+schema CertificateCreateResponse.results! = [CertificateResult]
+schema CertificateDeleteResponse.job_id = string/uuid
+schema CertificateDeleteResponse.results! = [CertificateResult]
+schema CertificateEntry.enabled = boolean
+schema CertificateEntry.error = string
+schema CertificateEntry.fingerprint = string
+schema CertificateEntry.hostname! = string
+schema CertificateEntry.managed = boolean
+schema CertificateEntry.name = string
+schema CertificateEntry.not_after = string
+schema CertificateEntry.object = string
+schema CertificateEntry.path = string
+schema CertificateEntry.source = string
+schema CertificateEntry.status! = string(ok|failed|skipped|timeout)
+schema CertificateEntry.subject = string
+schema CertificateGetResponse.job_id = string/uuid
+schema CertificateGetResponse.results! = [CertificateEntry]
+schema CertificateResult.changed = boolean
+schema CertificateResult.error = string
+schema CertificateResult.hostname! = string
+schema CertificateResult.name = string
+schema CertificateResult.status! = string(ok|failed|skipped|timeout)
+schema CertificateUpdateRequest.object = string
+schema CertificateUpdateResponse.job_id = string/uuid
+schema CertificateUpdateResponse.results! = [CertificateResult]
 schema Check.error = string
 schema Check.name! = string
 schema Check.status! = string
@@ -975,7 +987,7 @@ schema UserUpdateRequest.shell = string
 tag Admission_API_admission
 tag Agent_Management_API_agent_operations
 tag Audit_Log_API_audit
-tag Certificate_Management_API_certificate_operations
+tag Certificate_API_certificate_operations
 tag Command_Execution_API_command_operations
 tag Connectivity_API_network_connectivity_operations
 tag Controller_API_controller

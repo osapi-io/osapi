@@ -47,9 +47,6 @@ tags:
   - description: Telemetry endpoints, such as the spans of a trace.
     name: Telemetry_API_telemetry
     x-displayName: Telemetry
-  - name: Certificate_Management_API_certificate_operations
-    x-displayName: Node/Certificate
-    description: CA certificate management on a target node.
   - name: Command_Execution_API_command_operations
     x-displayName: Node/Command
     description: Command execution on a target node.
@@ -74,6 +71,9 @@ tags:
   - name: User_Management_API_user_operations
     x-displayName: Node/User
     description: User account management on a target node.
+  - description: The certificate authorities that the host trusts
+    name: Certificate_API_certificate_operations
+    x-displayName: Node/Certificate
   - description: Get the disk usage of target hosts
     name: Disk_API_disk_operations
     x-displayName: Node/Disk
@@ -1951,204 +1951,6 @@ paths:
       summary: Get the spans of a trace
       tags:
         - Telemetry_API_telemetry
-  /api/node/{hostname}/certificate/ca:
-    servers: []
-    get:
-      summary: List all CA certificates
-      description: |
-        List all CA certificates on the target node.
-      tags:
-        - Certificate_Management_API_certificate_operations
-      operationId: GetNodeCertificateCa
-      security:
-        - BearerAuth:
-            - certificate:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      responses:
-        '200':
-          description: List of CA certificates.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CertificateCACollectionResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error listing CA certificates.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    post:
-      summary: Create a CA certificate
-      description: |
-        Install a new CA certificate on the target node.
-      tags:
-        - Certificate_Management_API_certificate_operations
-      operationId: PostNodeCertificateCa
-      security:
-        - BearerAuth:
-            - certificate:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      requestBody:
-        description: CA certificate creation parameters.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CertificateCACreateRequest'
-      responses:
-        '200':
-          description: CA certificate created.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CertificateCAMutationResponse'
-        '400':
-          description: Invalid request payload.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error creating CA certificate.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/certificate/ca/{name}:
-    servers: []
-    put:
-      summary: Update a CA certificate
-      description: |
-        Update an existing CA certificate on the target node.
-      tags:
-        - Certificate_Management_API_certificate_operations
-      operationId: PutNodeCertificateCa
-      security:
-        - BearerAuth:
-            - certificate:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/CertName'
-      requestBody:
-        description: CA certificate update parameters.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CertificateCAUpdateRequest'
-      responses:
-        '200':
-          description: CA certificate updated.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CertificateCAMutationResponse'
-        '400':
-          description: Invalid request payload.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: CA certificate not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error updating CA certificate.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    delete:
-      summary: Delete a CA certificate
-      description: |
-        Delete a CA certificate from the target node.
-      tags:
-        - Certificate_Management_API_certificate_operations
-      operationId: DeleteNodeCertificateCa
-      security:
-        - BearerAuth:
-            - certificate:write
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/CertName'
-      responses:
-        '200':
-          description: CA certificate deleted.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CertificateCAMutationResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error deleting CA certificate.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /api/node/{hostname}/command/exec:
     servers: []
     post:
@@ -3820,6 +3622,332 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /api/node/{hostname}/certificate:
+    servers: []
+    get:
+      description: >-
+        Lists each CA of the trust store through gohai: the distribution's and
+        the local ones on Linux, from the family's directories, and the system
+        keychains on macOS, each with its subject, fingerprint and expiry. A CA
+        that osapi deployed reads by the name that it was deployed with, not its
+        file's osapi- name, and is managed.
+      operationId: GetNodeCertificate
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateCollectionResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            The host does not have what the request names, such as the object of
+            a deploy.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - certificate:read
+      summary: List the certificate authorities that the host trusts
+      tags:
+        - Certificate_API_certificate_operations
+    post:
+      description: >-
+        Writes the PEM of the object as a file with the osapi- prefix, such as
+        osapi-internal-ca.crt for internal-ca, in the family's local directory:
+        /usr/local/share/ca-certificates on the Debian family,
+        /etc/pki/ca-trust/source/anchors on RHEL and Fedora. Then it rebuilds
+        the trust store with update-ca-certificates or update-ca-trust. SUSE and
+        Alpine report skipped. A CA that osapi deployed already with the same
+        content does not change and reports changed: false. A file of that name
+        that osapi did not write is refused. macOS reports skipped.
+      operationId: PostNodeCertificate
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CertificateCreateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateCreateResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            The host does not have what the request names, such as the object of
+            a deploy.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - certificate:write
+      summary: Add a certificate authority to the trust store
+      tags:
+        - Certificate_API_certificate_operations
+  /api/node/{hostname}/certificate/{name}:
+    servers: []
+    delete:
+      description: >-
+        Removes the file of the CA and rebuilds the trust store. A CA that osapi
+        did not deploy does not change and reports changed: false: a system CA
+        is not osapi's to remove. macOS reports skipped.
+      operationId: DeleteNodeCertificate
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/CertificateName'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateDeleteResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host has no certificate with that name.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - certificate:write
+      summary: Remove a certificate authority that osapi deployed
+      tags:
+        - Certificate_API_certificate_operations
+    get:
+      description: >-
+        Reads one CA from the same list, by the name that list gives it. A CA
+        that the host does not trust is not found. A name with a slash, such as
+        a system CA of the Debian family, is in list only.
+      operationId: GetNodeCertificateByKey
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/CertificateName'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateGetResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host has no certificate with that name.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - certificate:read
+      summary: Get one certificate authority
+      tags:
+        - Certificate_API_certificate_operations
+    put:
+      description: >-
+        Writes the CA from the object, or from the one that it was deployed from
+        when the object is empty, and rebuilds the trust store when the file
+        changed. A CA that osapi did not deploy is not found. macOS reports
+        skipped.
+      operationId: PutNodeCertificate
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - $ref: '#/components/parameters/CertificateName'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CertificateUpdateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateUpdateResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The host has no certificate with that name.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - certificate:write
+      summary: Write a certificate authority that osapi deployed again
+      tags:
+        - Certificate_API_certificate_operations
   /api/node/{hostname}/disk:
     servers: []
     get:
@@ -8884,136 +9012,6 @@ components:
         - status
         - attributes
       type: object
-    CertificateCACreateRequest:
-      type: object
-      required:
-        - name
-        - object
-      properties:
-        name:
-          type: string
-          description: Certificate name (used as filename).
-          example: internal-corp-ca
-          x-oapi-codegen-extra-tags:
-            validate: required,resource_name
-        object:
-          type: string
-          description: Object Store reference for the PEM file.
-          example: corp-ca.pem
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1
-    CertificateCAUpdateRequest:
-      type: object
-      required:
-        - object
-      properties:
-        object:
-          type: string
-          description: Object Store reference for the new PEM file.
-          example: corp-ca-v2.pem
-          x-oapi-codegen-extra-tags:
-            validate: required,min=1
-    CertificateCAInfo:
-      type: object
-      description: A CA certificate entry.
-      properties:
-        name:
-          type: string
-          description: Certificate name.
-        source:
-          type: string
-          enum:
-            - system
-            - custom
-          description: >
-            Where the certificate originated: "system" for
-            distribution-provided, "custom" for user-installed.
-        object:
-          type: string
-          description: Object store name for the deployed content.
-    CertificateCAEntry:
-      type: object
-      description: List result for CA certificates on one host.
-      properties:
-        hostname:
-          type: string
-          description: Hostname of the agent that reported this entry.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        certificates:
-          type: array
-          items:
-            $ref: '#/components/schemas/CertificateCAInfo'
-          description: List of CA certificates on this host.
-        error:
-          type: string
-          description: Error message if the agent failed to retrieve certificates.
-      required:
-        - hostname
-        - status
-    CertificateCAMutationEntry:
-      type: object
-      description: >-
-        Result of a CA certificate create, update, or delete operation for one
-        host.
-      properties:
-        hostname:
-          type: string
-          description: Hostname of the agent that processed this operation.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        name:
-          type: string
-          description: Certificate name.
-        changed:
-          type: boolean
-          description: Whether the operation modified system state.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    CertificateCACollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/CertificateCAEntry'
-      required:
-        - results
-    CertificateCAMutationResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/CertificateCAMutationEntry'
-      required:
-        - results
     CommandExecRequest:
       type: object
       properties:
@@ -10493,6 +10491,202 @@ components:
             $ref: '#/components/schemas/SSHKeyMutationEntry'
       required:
         - results
+    CertificateCollectionResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/CertificateEntry'
+          type: array
+      required:
+        - results
+      type: object
+    CertificateCreateRequest:
+      properties:
+        name:
+          description: >-
+            The name of the CA, such as internal-ca, which osapi writes as
+            osapi-internal-ca.crt
+          pattern: ^[a-zA-Z0-9_-]+$
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,resource_name
+        object:
+          description: >-
+            The object of the Object Store that has the PEM of the CA, as osapi
+            client file upload stored it
+          minLength: 1
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required,min=1
+      required:
+        - name
+        - object
+      type: object
+    CertificateCreateResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/CertificateResult'
+          type: array
+      required:
+        - results
+      type: object
+    CertificateDeleteResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/CertificateResult'
+          type: array
+      required:
+        - results
+      type: object
+    CertificateEntry:
+      properties:
+        enabled:
+          description: >-
+            Whether the host trusts it: false for a system CA that the trust
+            store turns off
+          type: boolean
+        error:
+          description: Error message if the agent failed.
+          type: string
+        fingerprint:
+          description: The SHA-256 of the certificate, in hex
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        managed:
+          description: Whether osapi deployed it, and its writes change it
+          type: boolean
+        name:
+          description: >-
+            The CA: the name it was deployed with for a CA that osapi deployed,
+            else its file's name
+          type: string
+        not_after:
+          description: When it expires
+          type: string
+        object:
+          description: The object that osapi deployed it from
+          type: string
+        path:
+          description: The file, or on macOS the keychain, that has it
+          type: string
+        source:
+          description: >-
+            system for a CA of the distribution, local for one an administrator
+            added
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+        subject:
+          description: >-
+            Its subject, such as CN=ISRG Root X1,O=Internet Security Research
+            Group,C=US
+          type: string
+      required:
+        - hostname
+        - status
+      type: object
+    CertificateGetResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/CertificateEntry'
+          type: array
+      required:
+        - results
+      type: object
+    CertificateResult:
+      properties:
+        changed:
+          description: Whether the host changed
+          type: boolean
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        name:
+          description: The CA
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
+      type: object
+    CertificateUpdateRequest:
+      properties:
+        object:
+          description: The object that has the PEM; the one it was deployed from when empty
+          minLength: 1
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1
+      type: object
+    CertificateUpdateResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/CertificateResult'
+          type: array
+      required:
+        - results
+      type: object
     Disk:
       properties:
         free:
@@ -12924,19 +13118,6 @@ components:
         type: string
       x-oapi-codegen-extra-tags:
         validate: required,min=1,valid_target
-    CertName:
-      name: name
-      in: path
-      required: true
-      description: >
-        Certificate name. Must contain only alphanumeric characters,
-        underscores, and hyphens.
-      x-oapi-codegen-extra-tags:
-        validate: required,resource_name
-      schema:
-        type: string
-        minLength: 1
-        pattern: ^[a-zA-Z0-9_-]+$
     DockerId:
       name: id
       in: path
@@ -13002,6 +13183,16 @@ components:
         type: string
         minLength: 1
         pattern: ^SHA256:[A-Za-z0-9+/]+=*$
+    CertificateName:
+      description: The CA that osapi deployed, such as internal-ca
+      in: path
+      name: name
+      required: true
+      schema:
+        pattern: ^[a-zA-Z0-9_-]+$
+        type: string
+      x-oapi-codegen-extra-tags:
+        validate: required,resource_name
     GroupName:
       description: The group to remove, such as developers
       in: path
@@ -13106,9 +13297,6 @@ x-tagGroups:
   - name: Telemetry API
     tags:
       - Telemetry_API_telemetry
-  - name: Certificate Management API
-    tags:
-      - Certificate_Management_API_certificate_operations
   - name: Command Execution API
     tags:
       - Command_Execution_API_command_operations
@@ -13129,6 +13317,9 @@ x-tagGroups:
   - name: User Management API
     tags:
       - User_Management_API_user_operations
+  - name: Certificate API
+    tags:
+      - Certificate_API_certificate_operations
   - name: Disk API
     tags:
       - Disk_API_disk_operations

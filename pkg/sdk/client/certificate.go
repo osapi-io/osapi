@@ -27,17 +27,18 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
-// CertificateService provides CA certificate management operations.
+// CertificateService reads the certificate authorities that a host trusts,
+// and adds and removes the ones that osapi deploys.
 type CertificateService struct {
 	client *gen.ClientWithResponses
 }
 
-// List lists all CA certificates on the target host.
+// List lists all CAs on the target host.
 func (s *CertificateService) List(
 	ctx context.Context,
 	hostname string,
-) (*Response[Collection[CertificateCAResult]], error) {
-	resp, err := s.client.GetNodeCertificateCaWithResponse(ctx, hostname)
+) (*Response[Collection[CertificateInfoResult]], error) {
+	resp, err := s.client.GetNodeCertificateWithResponse(ctx, hostname)
 	if err != nil {
 		return nil, fmt.Errorf("certificate list: %w", err)
 	}
@@ -47,6 +48,8 @@ func (s *CertificateService) List(
 		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
+		resp.JSON404,
+		resp.JSON409,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
@@ -60,24 +63,61 @@ func (s *CertificateService) List(
 	}
 
 	return newResponse(
-		certificateCACollectionFromGen(resp.JSON200),
+		certificateInfoCollectionFromGen(resp.JSON200.Results, resp.JSON200.JobId),
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
 }
 
-// Create creates a new CA certificate on the target host.
+// Get retrieves a single CA by name on the target host.
+func (s *CertificateService) Get(
+	ctx context.Context,
+	hostname string,
+	name string,
+) (*Response[Collection[CertificateInfoResult]], error) {
+	resp, err := s.client.GetNodeCertificateByKeyWithResponse(ctx, hostname, name)
+	if err != nil {
+		return nil, fmt.Errorf("certificate get: %w", err)
+	}
+
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON400,
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON404,
+		resp.JSON409,
+		resp.JSON500,
+	); err != nil {
+		return nil, err
+	}
+
+	if resp.JSON200 == nil {
+		return nil, &UnexpectedStatusError{APIError{
+			StatusCode: resp.StatusCode(),
+			Message:    "nil response body",
+		}}
+	}
+
+	return newResponse(
+		certificateInfoCollectionFromGen(resp.JSON200.Results, resp.JSON200.JobId),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
+}
+
+// Create creates a CA on the target host.
 func (s *CertificateService) Create(
 	ctx context.Context,
 	hostname string,
 	opts CertificateCreateOpts,
-) (*Response[Collection[CertificateCAMutationResult]], error) {
-	body := gen.CertificateCACreateRequest{
+) (*Response[Collection[CertificateMutationResult]], error) {
+	body := gen.CertificateCreateRequest{
 		Name:   opts.Name,
 		Object: opts.Object,
 	}
 
-	resp, err := s.client.PostNodeCertificateCaWithResponse(ctx, hostname, body)
+	resp, err := s.client.PostNodeCertificateWithResponse(ctx, hostname, body)
 	if err != nil {
 		return nil, fmt.Errorf("certificate create: %w", err)
 	}
@@ -87,6 +127,8 @@ func (s *CertificateService) Create(
 		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
+		resp.JSON404,
+		resp.JSON409,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
@@ -100,24 +142,26 @@ func (s *CertificateService) Create(
 	}
 
 	return newResponse(
-		certificateCAMutationCollectionFromGen(resp.JSON200),
+		certificateMutationCollectionFromGen(resp.JSON200.Results, resp.JSON200.JobId),
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
 }
 
-// Update updates an existing CA certificate on the target host.
+// Update updates a CA on the target host.
 func (s *CertificateService) Update(
 	ctx context.Context,
 	hostname string,
 	name string,
 	opts CertificateUpdateOpts,
-) (*Response[Collection[CertificateCAMutationResult]], error) {
-	body := gen.CertificateCAUpdateRequest{
-		Object: opts.Object,
+) (*Response[Collection[CertificateMutationResult]], error) {
+	body := gen.CertificateUpdateRequest{}
+
+	if opts.Object != "" {
+		body.Object = &opts.Object
 	}
 
-	resp, err := s.client.PutNodeCertificateCaWithResponse(ctx, hostname, name, body)
+	resp, err := s.client.PutNodeCertificateWithResponse(ctx, hostname, name, body)
 	if err != nil {
 		return nil, fmt.Errorf("certificate update: %w", err)
 	}
@@ -128,6 +172,7 @@ func (s *CertificateService) Update(
 		resp.JSON401,
 		resp.JSON403,
 		resp.JSON404,
+		resp.JSON409,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
@@ -141,19 +186,19 @@ func (s *CertificateService) Update(
 	}
 
 	return newResponse(
-		certificateCAMutationCollectionFromGen(resp.JSON200),
+		certificateMutationCollectionFromGen(resp.JSON200.Results, resp.JSON200.JobId),
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
 }
 
-// Delete deletes a CA certificate on the target host.
+// Delete removes a CA on the target host.
 func (s *CertificateService) Delete(
 	ctx context.Context,
 	hostname string,
 	name string,
-) (*Response[Collection[CertificateCAMutationResult]], error) {
-	resp, err := s.client.DeleteNodeCertificateCaWithResponse(ctx, hostname, name)
+) (*Response[Collection[CertificateMutationResult]], error) {
+	resp, err := s.client.DeleteNodeCertificateWithResponse(ctx, hostname, name)
 	if err != nil {
 		return nil, fmt.Errorf("certificate delete: %w", err)
 	}
@@ -163,6 +208,8 @@ func (s *CertificateService) Delete(
 		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
+		resp.JSON404,
+		resp.JSON409,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
@@ -176,7 +223,7 @@ func (s *CertificateService) Delete(
 	}
 
 	return newResponse(
-		certificateCAMutationCollectionFromGen(resp.JSON200),
+		certificateMutationCollectionFromGen(resp.JSON200.Results, resp.JSON200.JobId),
 		resp.Body,
 		resp.HTTPResponse,
 	), nil

@@ -330,29 +330,13 @@ var GroupInfoCollectionFromGen = groupInfoCollectionFromGen
 // groupMutationCollectionFromGen for testing.
 var GroupMutationCollectionFromGen = groupMutationCollectionFromGen
 
-// PackageInfoCollectionFromList exposes the private
-// certificateCACollectionFromGen for testing.
-func CertificateCACollectionFromGen(
-	input *gen.CertificateCACollectionResponse,
-) Collection[CertificateCAResult] {
-	return certificateCACollectionFromGen(input)
-}
+// CertificateInfoCollectionFromGen exposes the private
+// certificateInfoCollectionFromGen for testing.
+var CertificateInfoCollectionFromGen = certificateInfoCollectionFromGen
 
-// CertificateCAInfoFromGen exposes the private
-// certificateCAInfoFromGen for testing.
-func CertificateCAInfoFromGen(
-	input gen.CertificateCAInfo,
-) CertificateCA {
-	return certificateCAInfoFromGen(input)
-}
-
-// CertificateCAMutationCollectionFromGen exposes the private
-// certificateCAMutationCollectionFromGen for testing.
-func CertificateCAMutationCollectionFromGen(
-	input *gen.CertificateCAMutationResponse,
-) Collection[CertificateCAMutationResult] {
-	return certificateCAMutationCollectionFromGen(input)
-}
+// CertificateMutationCollectionFromGen exposes the private
+// certificateMutationCollectionFromGen for testing.
+var CertificateMutationCollectionFromGen = certificateMutationCollectionFromGen
 
 // ExportNewResponse exposes newResponse for testing.
 func ExportNewResponse[T any](

@@ -813,7 +813,6 @@ func ExportProviders(
 		"cron":        e.cron(),
 		"process":     e.process(),
 		"user":        e.user(),
-		"certificate": e.certificate(),
 	}
 }
 

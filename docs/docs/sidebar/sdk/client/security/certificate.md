@@ -4,24 +4,26 @@ sidebar_position: 7
 
 # Certificate
 
-CA certificate management on target hosts. Certificates are deployed as PEM
-files from the Object Store and installed into the system trust store.
+The certificate authorities (CAs) that a host trusts. `List` and `Get` read each
+CA of the trust store on each platform. `Create`, `Update` and `Delete` change
+only the CAs that osapi deploys, from PEM objects in the Object Store.
 
 ## Methods
 
-| Method                              | Description                      |
-| ----------------------------------- | -------------------------------- |
-| `List(ctx, hostname)`               | List all CA certificates         |
-| `Create(ctx, hostname, opts)`       | Deploy a custom CA certificate   |
-| `Update(ctx, hostname, name, opts)` | Redeploy a custom CA certificate |
-| `Delete(ctx, hostname, name)`       | Remove a custom CA certificate   |
+| Method                              | Description                       |
+| ----------------------------------- | --------------------------------- |
+| `List(ctx, hostname)`               | List the CAs that the host trusts |
+| `Get(ctx, hostname, name)`          | Get one CA                        |
+| `Create(ctx, hostname, opts)`       | Add a CA to the trust store       |
+| `Update(ctx, hostname, name, opts)` | Write a CA that osapi deployed    |
+| `Delete(ctx, hostname, name)`       | Remove a CA that osapi deployed   |
 
 ## Request Types
 
 | Type                    | Fields                             |
 | ----------------------- | ---------------------------------- |
 | `CertificateCreateOpts` | Name (required), Object (required) |
-| `CertificateUpdateOpts` | Object (required)                  |
+| `CertificateUpdateOpts` | Object (the deployed one if empty) |
 
 ## Usage
 
@@ -30,13 +32,15 @@ import "github.com/osapi-io/osapi/pkg/sdk/client"
 
 c := client.New("http://localhost:8080", token)
 
-// List all CA certificates
+// List the CAs that the host trusts
 resp, err := c.Certificate.List(ctx, "web-01")
+// Each result is one CA on one host.
 for _, r := range resp.Data.Results {
-    for _, cert := range r.Certificates {
-        fmt.Printf("%s source=%s\n", cert.Name, cert.Source)
-    }
+    fmt.Printf("%s: %s source=%s managed=%v\n", r.Hostname, r.Name, r.Source, r.Managed)
 }
+
+// Get one CA
+resp, err := c.Certificate.Get(ctx, "web-01", "internal-ca")
 
 // Create a custom CA certificate
 resp, err := c.Certificate.Create(ctx, "web-01",
@@ -68,6 +72,6 @@ for a complete working example.
 | List                   | `certificate:read`  |
 | Create, Update, Delete | `certificate:write` |
 
-Certificate management is supported on the Debian OS family (Ubuntu, Debian,
-Raspbian). On unsupported platforms (Darwin, generic Linux), operations return
-`status: skipped`.
+`List` and `Get` operate on Linux and on macOS. `Create`, `Update` and `Delete`
+operate on Linux: on the Debian family, and on the RHEL family and Fedora. On
+macOS, they return `status: skipped`.

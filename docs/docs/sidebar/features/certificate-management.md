@@ -4,59 +4,46 @@ sidebar_position: 24
 
 # Certificate management
 
-osapi manages custom CA certificates on managed hosts. It deploys CA
-certificates as PEM files through the Object Store, and adds them to the system
-trust store with `update-ca-certificates`. The list operation shows the
-certificates of the system and the custom certificates that osapi manages.
+osapi reads the certificate authorities (CAs) that a host trusts, and adds and
+removes the CAs that it deploys. The
+[certificate behavior](../reference/behaviors/certificate/certificate.md) does
+this work.
 
 ## How it works
 
-The certificate provider manages custom CA certificates in
-`/usr/local/share/ca-certificates/` on Debian family systems. You upload a
-certificate to the Object Store as PEM content. The file provider deploys it to
-the agents, and compares SHA checksums so that it does not write a file that did
-not change.
+`list` and `get` read the trust store through gohai's `ca_certificates`
+collector, on Linux and on macOS. Each entry has its subject, its SHA-256
+fingerprint and its expiry. Its `source` is `system` for a CA of the
+distribution, and `local` for a CA that an administrator added.
 
-### List
+| Family         | System CAs                                         | Local CAs                            |
+| -------------- | -------------------------------------------------- | ------------------------------------ |
+| Debian, Ubuntu | `/usr/share/ca-certificates`                       | `/usr/local/share/ca-certificates`   |
+| RHEL, Fedora   | `/usr/share/pki/ca-trust-source`                   | `/etc/pki/ca-trust/source/anchors`   |
+| macOS          | `/System/Library/Keychains/SystemRootCertificates` | `/Library/Keychains/System.keychain` |
 
-Returns all CA certificates on the host: the certificates of the system (from
-`/usr/share/ca-certificates/`) and the custom certificates that osapi manages
-(from `/usr/local/share/ca-certificates/`). Each entry has a `source` field,
-`system` or `custom`. A custom certificate also has the `object` reference that
-deployed it.
+`create` writes the PEM of an object from the Object Store as a file in the
+local directory of the family. The file name has the `osapi-` prefix: the CA
+`internal-ca` is `osapi-internal-ca.crt`. Then osapi rebuilds the trust store,
+with `update-ca-certificates` on the Debian family and `update-ca-trust` on the
+RHEL family. `managedfile` keeps a record of each file, so `list` shows a CA
+that osapi deployed by its name, `internal-ca`, with `managed: true` and the
+object that it came from.
 
-### Create
+Each write is idempotent:
 
-Deploys a new custom CA certificate to the host. First, upload the PEM content
-to the Object Store. The agent writes the file to
-`/usr/local/share/ca-certificates/{name}.crt`, and runs `update-ca-certificates`
-to make the system trust store again. Create is idempotent **on the content**.
-If a certificate on disk has the same PEM, it reports `changed: false`. If
-somebody replaced or changed the certificate, the agent writes it again from the
-Object Store. Use `update` to point the host to a different object.
+- `create` of a CA that osapi deployed with the same content reports
+  `changed: false`, and does not rebuild the trust store.
+- `create` refuses a file of the same name that osapi did not write.
+- `update` writes the CA again from a new object, or from its object when you do
+  not give one. A CA that osapi did not deploy is not found.
+- `delete` removes the file and rebuilds the trust store. A CA that osapi did
+  not deploy, such as a system CA, does not change and reports `changed: false`.
 
-### Update
+On macOS, `create`, `update` and `delete` report `skipped`.
 
-Replaces a custom CA certificate with a new Object Store reference. The agent
-deploys the PEM file again and runs `update-ca-certificates`. If the content did
-not change (the same SHA), it returns `changed: false` and does not make the
-trust store again. It fails if the certificate does not exist. Use `create`
-first.
-
-### Delete
-
-Removes a custom CA certificate from the host. The agent deletes the file from
-`/usr/local/share/ca-certificates/` and runs `update-ca-certificates` to rebuild
-the trust store without the removed certificate.
-
-## Operations
-
-| Operation | Description                                      |
-| --------- | ------------------------------------------------ |
-| List      | List all CA certificates (system and custom)     |
-| Create    | Deploy a custom CA certificate from Object Store |
-| Update    | Redeploy a custom CA certificate                 |
-| Delete    | Remove a custom CA certificate                   |
+`get` takes a name that a path segment can hold. A name with a slash, such as
+the Debian system CA `mozilla/ISRG_Root_X1`, is in `list` only.
 
 ## CLI usage
 
@@ -68,6 +55,9 @@ osapi client file upload --name internal-ca \
 # Deploy the certificate to a host
 osapi client node certificate create --target web-01 \
   --name internal-ca --object internal-ca
+
+# Get one certificate
+osapi client node certificate get --target web-01 --name internal-ca
 
 # List all certificates on a host
 osapi client node certificate list --target web-01
@@ -107,36 +97,36 @@ Skipped and failed hosts appear with their error in the output.
 
 ## Supported platforms
 
-| OS Family | Support |
-| --------- | ------- |
-| Debian    | Full    |
-| Darwin    | Skipped |
-| Linux     | Skipped |
+| OS family    | list, get | create, update, delete |
+| ------------ | --------- | ---------------------- |
+| Debian       | Yes       | Yes                    |
+| RHEL, Fedora | Yes       | Yes                    |
+| Darwin       | Yes       | Skipped                |
 
-On a platform that is not supported, certificate operations return
-`status: skipped`. They do not fail. Refer to
-[Platform Detection](../sdk/platform/detection.md) for how osapi finds the OS
-family.
+Refer to [Platform Detection](../sdk/platform/detection.md) for how osapi finds
+the OS family.
 
 ## Container behavior
 
-Certificate operations work inside containers. The provider writes to
-`/usr/local/share/ca-certificates/` and runs `update-ca-certificates`, which
-functions normally in standard container environments.
+The writes operate in a container. They write a file and run
+`update-ca-certificates` or `update-ca-trust`, which operate in a container as
+on a host.
 
 ## Permissions
 
 | Operation              | Permission          |
 | ---------------------- | ------------------- |
-| List                   | `certificate:read`  |
+| List, Get              | `certificate:read`  |
 | Create, Update, Delete | `certificate:write` |
 
-Certificate listing requires `certificate:read`, which `admin`, `operator`,
-`automation` and `read` have. Mutation operations require `certificate:write`,
-which `admin` and `automation` have.
+A read requires `certificate:read`, which `admin`, `operator`, `automation` and
+`read` have. A write requires `certificate:write`, which `admin` and
+`automation` have.
 
 ## Related
 
+- [Behavior reference](../reference/behaviors/certificate/certificate.md): the
+  certificate behavior
 - [CLI Reference](../usage/cli/client/node/certificate/certificate.mdx):
   certificate commands
 - [SDK Reference](../sdk/client/security/certificate.md): Certificate service
