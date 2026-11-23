@@ -51,6 +51,15 @@ func (s *CLIPublicTestSuite) TestCommands() {
 			},
 		},
 		{
+			name: "when the example \"A CA that osapi deployed on SUSE\" is run",
+			args: []string{"node", "certificate", "list", "--target", "server1"},
+			want: commandtest.Request{
+				Method: "GET",
+				Path:   "/api/node/server1/certificate",
+				Body:   "",
+			},
+		},
+		{
 			name: "when the example \"A Mac\" is run",
 			args: []string{"node", "certificate", "list", "--target", "server1"},
 			want: commandtest.Request{
@@ -70,6 +79,15 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		},
 		{
 			name: "when the example \"A CA that osapi deployed on the RHEL family\" is run",
+			args: []string{"node", "certificate", "get", "--target", "server1", "--name", "internal-ca"},
+			want: commandtest.Request{
+				Method: "GET",
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   "",
+			},
+		},
+		{
+			name: "when the example \"A CA that osapi deployed on SUSE\" is run",
 			args: []string{"node", "certificate", "get", "--target", "server1", "--name", "internal-ca"},
 			want: commandtest.Request{
 				Method: "GET",
@@ -105,6 +123,15 @@ func (s *CLIPublicTestSuite) TestCommands() {
 			},
 		},
 		{
+			name: "when the example \"Add a CA on SUSE\" is run",
+			args: []string{"node", "certificate", "create", "--target", "server1", "--name", "internal-ca", "--object", "internal-ca.pem"},
+			want: commandtest.Request{
+				Method: "POST",
+				Path:   "/api/node/server1/certificate",
+				Body:   "{\"name\":\"internal-ca\",\"object\":\"internal-ca.pem\"}",
+			},
+		},
+		{
 			name: "when the example \"A CA that osapi deployed with the same content\" is run",
 			args: []string{"node", "certificate", "create", "--target", "server1", "--name", "internal-ca", "--object", "internal-ca.pem"},
 			want: commandtest.Request{
@@ -132,6 +159,15 @@ func (s *CLIPublicTestSuite) TestCommands() {
 			},
 		},
 		{
+			name: "when the example \"Write a CA from a new object on SUSE\" is run",
+			args: []string{"node", "certificate", "update", "--target", "server1", "--name", "internal-ca", "--object", "internal-ca-2.pem"},
+			want: commandtest.Request{
+				Method: "PUT",
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   "{\"object\":\"internal-ca-2.pem\"}",
+			},
+		},
+		{
 			name: "when the example \"The object that it was deployed from\" is run",
 			args: []string{"node", "certificate", "update", "--target", "server1", "--name", "internal-ca"},
 			want: commandtest.Request{
@@ -151,6 +187,15 @@ func (s *CLIPublicTestSuite) TestCommands() {
 		},
 		{
 			name: "when the example \"Remove a CA on the RHEL family\" is run",
+			args: []string{"node", "certificate", "delete", "--target", "server1", "--name", "internal-ca"},
+			want: commandtest.Request{
+				Method: "DELETE",
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   "",
+			},
+		},
+		{
+			name: "when the example \"Remove a CA on SUSE\" is run",
 			args: []string{"node", "certificate", "delete", "--target", "server1", "--name", "internal-ca"},
 			want: commandtest.Request{
 				Method: "DELETE",

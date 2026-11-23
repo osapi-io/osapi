@@ -23,6 +23,9 @@ osapi client node certificate list --target web-01
 # A host of the RHEL family
 osapi client node certificate list --target web-01
 
+# A CA that osapi deployed on SUSE
+osapi client node certificate list --target web-01
+
 # A Mac
 osapi client node certificate list --target web-01
 ```
@@ -182,6 +185,55 @@ With `--json`, the API's response:
       "not_after": "2126-10-29T23:38:01Z",
       "path": "/usr/share/pki/ca-trust-source/anchors/Example_Root.pem",
       "source": "system",
+      "status": "ok",
+      "subject": "CN=osapi example CA,O=osapi"
+    }
+  ]
+}
+```
+
+A CA that osapi deployed on SUSE, on one host:
+
+```ansi
+$ osapi client node certificate list --target web-01
+[1;38;2;0;213;255mResults:[0m
+  [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mNAME         [0m[38;2;10;143;176mPATH                                          [0m[38;2;10;143;176mSOURCE  [0m[38;2;10;143;176mENABLED  [0m[38;2;10;143;176mSUBJECT                      [0m[38;2;10;143;176mFINGERPRINT                                                       [0m[38;2;10;143;176mNOT AFTER             [0m[38;2;10;143;176mMANAGED  [0m[38;2;10;143;176mOBJECT[0m
+  [1mweb-01[0m    [38;2;103;234;147mok[0m      [1minternal-ca[0m  /etc/pki/trust/anchors/osapi-internal-ca.crt  local   yes      CN=osapi example CA,O=osapi  6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312  2126-10-29T23:38:01Z  yes      internal-ca.pem
+
+  1 host: [38;2;103;234;147m1 ok[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+```
+
+On each host, where one cannot run it:
+
+```ansi
+$ osapi client node certificate list --target _all
+[1;38;2;0;213;255mResults:[0m
+  [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mNAME         [0m[38;2;10;143;176mPATH                                          [0m[38;2;10;143;176mSOURCE  [0m[38;2;10;143;176mENABLED  [0m[38;2;10;143;176mSUBJECT                      [0m[38;2;10;143;176mFINGERPRINT                                                       [0m[38;2;10;143;176mNOT AFTER             [0m[38;2;10;143;176mMANAGED  [0m[38;2;10;143;176mOBJECT[0m
+  [1mweb-01[0m    [38;2;103;234;147mok[0m      [1minternal-ca[0m  /etc/pki/trust/anchors/osapi-internal-ca.crt  local   yes      CN=osapi example CA,O=osapi  6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312  2126-10-29T23:38:01Z  yes      internal-ca.pem
+  [1mweb-02[0m    [38;2;103;234;147mok[0m      [1minternal-ca[0m  /etc/pki/trust/anchors/osapi-internal-ca.crt  local   yes      CN=osapi example CA,O=osapi  6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312  2126-10-29T23:38:01Z  yes      internal-ca.pem
+
+  3 hosts: [38;2;103;234;147m2 ok[0m, [38;5;222m1 skipped[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+
+[1;38;2;255;0;255mDetails:[0m
+  [1mmac-01[0m  [38;5;222mskipped[0m  operation not supported on this OS family
+```
+
+With `--json`, the API's response:
+
+```json
+{
+  "job_id": "550e8400-e29b-41d4-a716-446655440000",
+  "results": [
+    {
+      "enabled": true,
+      "fingerprint": "6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6471c5d32ddd4104c2312",
+      "hostname": "web-01",
+      "managed": true,
+      "name": "internal-ca",
+      "not_after": "2126-10-29T23:38:01Z",
+      "object": "internal-ca.pem",
+      "path": "/etc/pki/trust/anchors/osapi-internal-ca.crt",
+      "source": "local",
       "status": "ok",
       "subject": "CN=osapi example CA,O=osapi"
     }

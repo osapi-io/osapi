@@ -112,6 +112,48 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"internal-ca","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
 		},
 		{
+			Name: "when the example \"Write a CA from a new object on SUSE\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/certificate/internal-ca",
+				Body:   `{"name":"internal-ca","object":"internal-ca-2.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"certificate.update",
+				certificate.UpdateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca-2.pem",
+				},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"internal-ca","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"Write a CA from a new object on SUSE\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/_all/certificate/internal-ca",
+				Body:   `{"name":"internal-ca","object":"internal-ca-2.pem"}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"certificate.update",
+				certificate.UpdateInput{
+					Name:   "internal-ca",
+					Object: "internal-ca-2.pem",
+				},
+				servertest.Completed("server1", `{"name":"internal-ca","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"internal-ca","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
 			Name: "when the example \"The object that it was deployed from\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPut,

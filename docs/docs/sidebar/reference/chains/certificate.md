@@ -25,6 +25,13 @@ The behaviors that certificate calls, and each call that its examples make.
 | certificate list   |                                                             | \[&#123;"name":"mozilla/Example_Root","path":"/usr/share/ca-certificates/mo…     |
 | └─ managedfile get | path=/usr/local/share/ca-certificates/osapi-internal-ca.crt | metadata=&#123;"object":"internal-ca.pem"&#125; path=/usr/local/share/ca-certif… |
 
+## A CA that osapi deployed on SUSE (list)
+
+| CALL               | SENDS                                             | GETS                                                                             |
+| ------------------ | ------------------------------------------------- | -------------------------------------------------------------------------------- |
+| certificate list   |                                                   | \[&#123;"name":"internal-ca","path":"/etc/pki/trust/anchors/osapi-internal-…     |
+| └─ managedfile get | path=/etc/pki/trust/anchors/osapi-internal-ca.crt | metadata=&#123;"object":"internal-ca.pem"&#125; path=/etc/pki/trust/anchors/osa… |
+
 ## A CA that osapi deployed, by the name it was deployed with (get)
 
 | CALL               | SENDS                                                       | GETS                                                                             |
@@ -38,6 +45,13 @@ The behaviors that certificate calls, and each call that its examples make.
 | ------------------ | ----------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | certificate get    | name=internal-ca                                            | enabled=true fingerprint=6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6…           |
 | └─ managedfile get | path=/etc/pki/ca-trust/source/anchors/osapi-internal-ca.crt | metadata=&#123;"object":"internal-ca.pem"&#125; path=/etc/pki/ca-trust/source/a… |
+
+## A CA that osapi deployed on SUSE (get)
+
+| CALL               | SENDS                                             | GETS                                                                             |
+| ------------------ | ------------------------------------------------- | -------------------------------------------------------------------------------- |
+| certificate get    | name=internal-ca                                  | enabled=true fingerprint=6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6…           |
+| └─ managedfile get | path=/etc/pki/trust/anchors/osapi-internal-ca.crt | metadata=&#123;"object":"internal-ca.pem"&#125; path=/etc/pki/trust/anchors/osa… |
 
 ## Add a CA (create)
 
@@ -56,6 +70,15 @@ The behaviors that certificate calls, and each call that its examples make.
 | └─ managedfile get    | path=/etc/pki/ca-trust/source/anchors/osapi-internal-ca.crt                            | error: /etc/pki/ca-trust/source/anchors/osapi-internal-ca.crt: not managed   |
 | └─ object get         | name=internal-ca.pem                                                                   | content=&lt;12 lines&gt; content_type=raw name=internal-ca.pem sha256=333ed… |
 | └─ managedfile update | content=&lt;12 lines&gt; metadata=&#123;"object":"internal-ca.pem"&#125; mode=0644 pa… | changed=true path=/etc/pki/ca-trust/source/anchors/osapi-internal-ca.…       |
+
+## Add a CA on SUSE (create)
+
+| CALL                  | SENDS                                                                                  | GETS                                                                         |
+| --------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| certificate create    | name=internal-ca object=internal-ca.pem                                                | changed=true name=internal-ca                                                |
+| └─ managedfile get    | path=/etc/pki/trust/anchors/osapi-internal-ca.crt                                      | error: /etc/pki/trust/anchors/osapi-internal-ca.crt: not managed             |
+| └─ object get         | name=internal-ca.pem                                                                   | content=&lt;12 lines&gt; content_type=raw name=internal-ca.pem sha256=333ed… |
+| └─ managedfile update | content=&lt;12 lines&gt; metadata=&#123;"object":"internal-ca.pem"&#125; mode=0644 pa… | changed=true path=/etc/pki/trust/anchors/osapi-internal-ca.crt               |
 
 ## A CA that osapi deployed with the same content (create)
 
@@ -84,6 +107,15 @@ The behaviors that certificate calls, and each call that its examples make.
 | └─ object get         | name=internal-ca-2.pem                                                                 | content=&lt;12 lines&gt; content_type=raw name=internal-ca-2.pem sha256=a6a…     |
 | └─ managedfile update | content=&lt;12 lines&gt; metadata=&#123;"object":"internal-ca-2.pem"&#125; mode=0644 … | changed=true path=/etc/pki/ca-trust/source/anchors/osapi-internal-ca.…           |
 
+## Write a CA from a new object on SUSE (update)
+
+| CALL                  | SENDS                                                                                  | GETS                                                                             |
+| --------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| certificate update    | name=internal-ca object=internal-ca-2.pem                                              | changed=true name=internal-ca                                                    |
+| └─ managedfile get    | path=/etc/pki/trust/anchors/osapi-internal-ca.crt                                      | metadata=&#123;"object":"internal-ca.pem"&#125; path=/etc/pki/trust/anchors/osa… |
+| └─ object get         | name=internal-ca-2.pem                                                                 | content=&lt;12 lines&gt; content_type=raw name=internal-ca-2.pem sha256=a6a…     |
+| └─ managedfile update | content=&lt;12 lines&gt; metadata=&#123;"object":"internal-ca-2.pem"&#125; mode=0644 … | changed=true path=/etc/pki/trust/anchors/osapi-internal-ca.crt                   |
+
 ## The object that it was deployed from (update)
 
 | CALL                  | SENDS                                                                                  | GETS                                                                             |
@@ -108,6 +140,14 @@ The behaviors that certificate calls, and each call that its examples make.
 | certificate delete    | name=internal-ca                                            | changed=true name=internal-ca                                                    |
 | └─ managedfile get    | path=/etc/pki/ca-trust/source/anchors/osapi-internal-ca.crt | metadata=&#123;"object":"internal-ca.pem"&#125; path=/etc/pki/ca-trust/source/a… |
 | └─ managedfile delete | path=/etc/pki/ca-trust/source/anchors/osapi-internal-ca.crt | changed=true path=/etc/pki/ca-trust/source/anchors/osapi-internal-ca.…           |
+
+## Remove a CA on SUSE (delete)
+
+| CALL                  | SENDS                                             | GETS                                                                             |
+| --------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------- |
+| certificate delete    | name=internal-ca                                  | changed=true name=internal-ca                                                    |
+| └─ managedfile get    | path=/etc/pki/trust/anchors/osapi-internal-ca.crt | metadata=&#123;"object":"internal-ca.pem"&#125; path=/etc/pki/trust/anchors/osa… |
+| └─ managedfile delete | path=/etc/pki/trust/anchors/osapi-internal-ca.crt | changed=true path=/etc/pki/trust/anchors/osapi-internal-ca.crt                   |
 
 ## A CA that osapi did not deploy (delete)
 

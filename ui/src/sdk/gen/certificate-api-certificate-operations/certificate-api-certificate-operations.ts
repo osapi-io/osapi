@@ -158,7 +158,7 @@ export const getPostNodeCertificateUrl = (hostname: string,) => {
 }
 
 /**
- * Writes the PEM of the object as a file with the osapi- prefix, such as osapi-internal-ca.crt for internal-ca, in the family's local directory: /usr/local/share/ca-certificates on the Debian family, /etc/pki/ca-trust/source/anchors on RHEL and Fedora. Then it rebuilds the trust store with update-ca-certificates or update-ca-trust. SUSE and Alpine report skipped. A CA that osapi deployed already with the same content does not change and reports changed: false. A file of that name that osapi did not write is refused. macOS reports skipped.
+ * Writes the PEM of the object as a file with the osapi- prefix, such as osapi-internal-ca.crt for internal-ca, in the family's local directory: /usr/local/share/ca-certificates on the Debian family, /etc/pki/trust/anchors on SUSE, /etc/pki/ca-trust/source/anchors on RHEL and Fedora. Then it rebuilds the trust store: with update-ca-certificates on the Debian family and SUSE, and with update-ca-trust on the others. Alpine reports skipped. A CA that osapi deployed already with the same content does not change and reports changed: false. A file of that name that osapi did not write is refused. macOS reports skipped.
  * @summary Add a certificate authority to the trust store
  */
 export const postNodeCertificate = async (hostname: string,
@@ -228,7 +228,7 @@ export const getDeleteNodeCertificateUrl = (hostname: string,
 }
 
 /**
- * Removes the file of the CA and rebuilds the trust store: with update-ca-certificates --fresh on the Debian family, which removes the links of the CA from /etc/ssl/certs, and update-ca-trust on the RHEL family. A CA that osapi did not deploy does not change and reports changed: false: a system CA is not osapi's to remove. macOS reports skipped.
+ * Removes the file of the CA and rebuilds the trust store: with update-ca-certificates --fresh on the Debian family and SUSE, which removes the links of the CA from /etc/ssl/certs, and update-ca-trust on the RHEL family. A CA that osapi did not deploy does not change and reports changed: false: a system CA is not osapi's to remove. macOS reports skipped.
  * @summary Remove a certificate authority that osapi deployed
  */
 export const deleteNodeCertificate = async (hostname: string,

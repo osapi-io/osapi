@@ -28,6 +28,7 @@ import (
 
 	"github.com/avfs/avfs"
 	"github.com/osapi-io/gohai/pkg/gohai/collectors/cacertificates"
+	"github.com/osapi-io/gohai/pkg/gohai/family"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
@@ -57,28 +58,28 @@ type writer struct {
 
 // newWriter is the provider on Linux. The directory is the local one of
 // gohai's layout for the family, so a CA that osapi writes is one that gohai
-// reads. The Debian family rebuilds its trust store with
-// update-ca-certificates, and the others with update-ca-trust, as the
-// definition declares. SUSE and Alpine rebuild theirs with
-// update-ca-certificates too, which their linux provider does not declare, so
-// they read only. An agent with no file state store has no managedfile, and
+// reads. The Debian family and SUSE rebuild their trust stores with
+// update-ca-certificates, each its own, and the others with update-ca-trust,
+// as the definition declares. osapi does not support Alpine, whose
+// update-ca-certificates the linux provider does not declare, so it reads
+// only there. An agent with no file state store has no managedfile, and
 // reads only.
 func newWriter(
 	h host.Host,
 ) (Provider, error) {
 	files := host.Require[managedfile.Provider](h, managedfile.Behavior)
-	family := string(h.Platform)
-	if files == nil || family == "suse" || family == "alpine" {
+	if files == nil || string(h.Platform) == family.Alpine {
 		return newReader(h)
 	}
 	dir := ""
-	for _, d := range cacertificates.LayoutFor(family).Dirs {
+	for _, d := range cacertificates.LayoutFor(string(h.Platform)).Dirs {
 		if d.Source == cacertificates.SourceLocal {
 			dir = d.Path
 		}
 	}
 	update := "update-ca-trust"
-	if h.Platform == behavior.PlatformDebian {
+	switch h.Platform {
+	case behavior.PlatformDebian, behavior.PlatformSUSE:
 		update = "update-ca-certificates"
 	}
 
@@ -210,9 +211,9 @@ func (w *writer) Remove(
 		managedfile.DeleteInput{Path: path}); err != nil {
 		return false, err
 	}
-	// update-ca-certificates without --fresh keeps the links in
-	// /etc/ssl/certs of a local CA that is gone: it cleans them only when a
-	// CA was added or a system one turned off.
+	// update-ca-certificates of Debian and SUSE without --fresh keeps the
+	// links in /etc/ssl/certs of a local CA that is gone: Debian cleans them
+	// only when a CA was added or a system one turned off.
 	var args []string
 	if w.update == "update-ca-certificates" {
 		args = []string{"--fresh"}

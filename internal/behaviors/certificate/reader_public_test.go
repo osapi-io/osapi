@@ -50,12 +50,11 @@ func (s *ReaderPublicTestSuite) TestWrites() {
 }
 
 // TestReadOnly: an agent with no file state store has no managedfile, and
-// SUSE and Alpine run a program that the linux provider does not declare. On
-// each, the writer is the reader, and its writes are unsupported.
+// osapi does not support Alpine. On each, the writer is the reader, and its
+// writes are unsupported.
 func (s *ReaderPublicTestSuite) TestReadOnly() {
 	for _, h := range []host.Host{
 		{Platform: behavior.PlatformDebian},
-		{Platform: "suse", Required: map[string]any{"managedfile": managedfile.NewDebian(nil, nil, "", nil, "")}},
 		{Platform: "alpine", Required: map[string]any{"managedfile": managedfile.NewDebian(nil, nil, "", nil, "")}},
 	} {
 		p, err := certificate.NewWriter(h)

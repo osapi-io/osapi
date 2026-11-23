@@ -19,16 +19,17 @@ distribution, and `local` for a CA that an administrator added.
 | Family         | System CAs                                         | Local CAs                            |
 | -------------- | -------------------------------------------------- | ------------------------------------ |
 | Debian, Ubuntu | `/usr/share/ca-certificates`                       | `/usr/local/share/ca-certificates`   |
+| SUSE           | `/usr/share/pki/trust`                             | `/etc/pki/trust/anchors`             |
 | RHEL, Fedora   | `/usr/share/pki/ca-trust-source`                   | `/etc/pki/ca-trust/source/anchors`   |
 | macOS          | `/System/Library/Keychains/SystemRootCertificates` | `/Library/Keychains/System.keychain` |
 
 `create` writes the PEM of an object from the Object Store as a file in the
 local directory of the family. The file name has the `osapi-` prefix: the CA
 `internal-ca` is `osapi-internal-ca.crt`. Then osapi rebuilds the trust store,
-with `update-ca-certificates` on the Debian family and `update-ca-trust` on the
-RHEL family. `managedfile` keeps a record of each file, so `list` shows a CA
-that osapi deployed by its name, `internal-ca`, with `managed: true` and the
-object that it came from.
+with `update-ca-certificates` on the Debian family and SUSE, and with
+`update-ca-trust` on the RHEL family. `managedfile` keeps a record of each file,
+so `list` shows a CA that osapi deployed by its name, `internal-ca`, with
+`managed: true` and the object that it came from.
 
 Each write is idempotent:
 
@@ -37,8 +38,10 @@ Each write is idempotent:
 - `create` refuses a file of the same name that osapi did not write.
 - `update` writes the CA again from a new object, or from its object when you do
   not give one. A CA that osapi did not deploy is not found.
-- `delete` removes the file and rebuilds the trust store. A CA that osapi did
-  not deploy, such as a system CA, does not change and reports `changed: false`.
+- `delete` removes the file and rebuilds the trust store. On the Debian family
+  and SUSE, it runs `update-ca-certificates --fresh`, which removes the links of
+  the CA from `/etc/ssl/certs`. A CA that osapi did not deploy, such as a system
+  CA, does not change and reports `changed: false`.
 
 On macOS, `create`, `update` and `delete` report `skipped`.
 
@@ -100,6 +103,7 @@ Skipped and failed hosts appear with their error in the output.
 | OS family    | list, get | create, update, delete |
 | ------------ | --------- | ---------------------- |
 | Debian       | Yes       | Yes                    |
+| SUSE         | Yes       | Yes                    |
 | RHEL, Fedora | Yes       | Yes                    |
 | Darwin       | Yes       | Skipped                |
 
