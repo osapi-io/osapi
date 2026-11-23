@@ -1,0 +1,69 @@
+---
+id: delete-node-user-sshkey
+title: "Remove an authorized SSH key of a user"
+description: "Removes each line of the key with the fingerprint from ~/.ssh/authorized_keys of the user, and keeps the other lines as they are. A key that the file does not have, a user with no file, or a user that the host does not have, changes nothing. It runs on the Debian family only, and elsewhere reports skipped."
+sidebar_label: "Remove an authorized SSH key of a user"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "delete api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Remove an authorized SSH key of a user"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"delete"}
+  path={"/api/node/{hostname}/user/{name}/sshkey"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Removes each line of the key with the fingerprint from ~/.ssh/authorized_keys of the user, and keeps the other lines as they are. A key that the file does not have, a user with no file, or a user that the host does not have, changes nothing. It runs on the Debian family only, and elsewhere reports skipped.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./delete-node-user-sshkey.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./delete-node-user-sshkey.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./delete-node-user-sshkey.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

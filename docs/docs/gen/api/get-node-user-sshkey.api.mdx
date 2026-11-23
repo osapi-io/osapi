@@ -1,0 +1,69 @@
+---
+id: get-node-user-sshkey
+title: "List the authorized SSH keys of a user"
+description: "Reads ~/.ssh/authorized_keys of the user through gohai, with the type, the SHA256 fingerprint, the comment and the options of each key. A user with no file has no keys. A user that the host does not have is not found."
+sidebar_label: "List the authorized SSH keys of a user"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "get api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"List the authorized SSH keys of a user"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/api/node/{hostname}/user/{name}/sshkey"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Reads ~/.ssh/authorized_keys of the user through gohai, with the type, the SHA256 fingerprint, the comment and the options of each key. A user with no file has no keys. A user that the host does not have is not found.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./get-node-user-sshkey.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./get-node-user-sshkey.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./get-node-user-sshkey.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

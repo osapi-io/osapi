@@ -58,10 +58,9 @@ resp, err := c.User.Delete(ctx, "web-01", "deploy")
 
 // List SSH keys for a user
 keysResp, err := c.User.ListKeys(ctx, "web-01", "deploy")
+// Each result is one key on one host.
 for _, r := range keysResp.Data.Results {
-    for _, k := range r.Keys {
-        fmt.Printf("%s %s %s\n", k.Type, k.Fingerprint, k.Comment)
-    }
+    fmt.Printf("%s %s %s\n", r.Type, r.Fingerprint, r.Comment)
 }
 
 // Add an SSH key
@@ -83,29 +82,27 @@ for a complete working example.
 
 ### `SSHKeyInfoResult`
 
-| Field      | Type           | Description             |
-| ---------- | -------------- | ----------------------- |
-| `Hostname` | `string`       | Target hostname         |
-| `Status`   | `string`       | Operation status        |
-| `Keys`     | `[]SSHKeyInfo` | List of authorized keys |
-| `Error`    | `string`       | Error message (if any)  |
+Each result is one authorized key of the user on one host.
 
-### `SSHKeyInfo`
-
-| Field         | Type     | Description                    |
-| ------------- | -------- | ------------------------------ |
-| `Type`        | `string` | Key type (e.g., `ssh-ed25519`) |
-| `Fingerprint` | `string` | SHA256 fingerprint             |
-| `Comment`     | `string` | Key comment                    |
+| Field         | Type     | Description                                 |
+| ------------- | -------- | ------------------------------------------- |
+| `Hostname`    | `string` | Target hostname                             |
+| `Status`      | `string` | Operation status                            |
+| `Type`        | `string` | Key type (e.g., `ssh-ed25519`)              |
+| `Fingerprint` | `string` | SHA256 fingerprint                          |
+| `Comment`     | `string` | Key comment                                 |
+| `Options`     | `string` | The options before the key, such as `from=` |
+| `Error`       | `string` | Error message (if any)                      |
 
 ### `SSHKeyMutationResult`
 
-| Field      | Type     | Description                         |
-| ---------- | -------- | ----------------------------------- |
-| `Hostname` | `string` | Target hostname                     |
-| `Status`   | `string` | Operation status                    |
-| `Changed`  | `bool`   | Whether the operation changed state |
-| `Error`    | `string` | Error message (if any)              |
+| Field         | Type     | Description                         |
+| ------------- | -------- | ----------------------------------- |
+| `Hostname`    | `string` | Target hostname                     |
+| `Status`      | `string` | Operation status                    |
+| `Fingerprint` | `string` | SHA256 fingerprint of the key       |
+| `Changed`     | `bool`   | Whether the operation changed state |
+| `Error`       | `string` | Error message (if any)              |
 
 ### `SSHKeyAddOpts`
 

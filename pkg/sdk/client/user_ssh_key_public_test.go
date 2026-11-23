@@ -57,7 +57,7 @@ func (suite *UserSSHKeyPublicTestSuite) TestListKeys() {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","keys":[{"type":"ssh-ed25519","fingerprint":"SHA256:abc123","comment":"user@host"}]}]}`,
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","type":"ssh-ed25519","fingerprint":"SHA256:abc123","comment":"user@host"}]}`,
 					),
 				)
 			},
@@ -71,10 +71,9 @@ func (suite *UserSSHKeyPublicTestSuite) TestListKeys() {
 				suite.Len(resp.Data.Results, 1)
 				suite.Equal("agent1", resp.Data.Results[0].Hostname)
 				suite.Equal("ok", resp.Data.Results[0].Status)
-				suite.Require().Len(resp.Data.Results[0].Keys, 1)
-				suite.Equal("ssh-ed25519", resp.Data.Results[0].Keys[0].Type)
-				suite.Equal("SHA256:abc123", resp.Data.Results[0].Keys[0].Fingerprint)
-				suite.Equal("user@host", resp.Data.Results[0].Keys[0].Comment)
+				suite.Equal("ssh-ed25519", resp.Data.Results[0].Type)
+				suite.Equal("SHA256:abc123", resp.Data.Results[0].Fingerprint)
+				suite.Equal("user@host", resp.Data.Results[0].Comment)
 			},
 		},
 		{

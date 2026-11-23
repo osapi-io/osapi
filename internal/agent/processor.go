@@ -25,10 +25,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"strings"
 
 	"github.com/osapi-io/osapi/internal/job"
-	"github.com/osapi-io/osapi/internal/provider/node/user"
 )
 
 // processJobOperation handles the actual job processing based on category and operation.
@@ -45,22 +43,13 @@ func (a *Agent) processJobOperation(
 	return a.registry.Dispatch(ctx, jobRequest)
 }
 
-// NewNodeProcessor returns a ProcessorFunc that handles node-related operations.
+// NewNodeProcessor returns a ProcessorFunc for the node category. Each node
+// operation is a behavior now, so no hand-written one is left, and it refuses
+// each operation.
 func NewNodeProcessor(
-	userProvider user.Provider,
-	logger *slog.Logger,
+	_ *slog.Logger,
 ) ProcessorFunc {
-	logger = logger.With(slog.String("subsystem", "agent.processor.node"))
-
-	return func(ctx context.Context, req job.Request) (json.RawMessage, error) {
-		// Extract base operation from dotted operation (e.g., "sshKey.list" -> "sshKey")
-		baseOperation := strings.Split(req.Operation, ".")[0]
-
-		switch baseOperation {
-		case "sshKey":
-			return processSSHKeyOperation(ctx, userProvider, logger, req)
-		default:
-			return nil, fmt.Errorf("unsupported node operation: %s", req.Operation)
-		}
+	return func(_ context.Context, req job.Request) (json.RawMessage, error) {
+		return nil, fmt.Errorf("unsupported node operation: %s", req.Operation)
 	}
 }

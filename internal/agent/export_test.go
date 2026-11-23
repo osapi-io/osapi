@@ -509,10 +509,7 @@ func SetAgentAppConfig(
 	// Re-register the node processor with the updated config so that
 	// label/config-dependent dispatch picks up the change.
 	if a.registry != nil {
-		a.registry.processors["node"] = NewNodeProcessor(
-			nil,
-			a.logger,
-		)
+		a.registry.processors["node"] = NewNodeProcessor(a.logger)
 	}
 }
 
@@ -534,10 +531,7 @@ func SetAgentHostProvider(
 	// Re-register the node processor with the new host provider so job
 	// dispatch picks up the change.
 	if a.registry != nil {
-		a.registry.processors["node"] = NewNodeProcessor(
-			nil,
-			a.logger,
-		)
+		a.registry.processors["node"] = NewNodeProcessor(a.logger)
 	}
 }
 
@@ -792,7 +786,6 @@ func ExportProviders(
 		"disk":   e.disk(),
 		"memory": e.memory(),
 		"load":   e.load(),
-		"user":   e.user(),
 	}
 }
 

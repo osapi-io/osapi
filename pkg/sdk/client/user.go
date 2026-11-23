@@ -307,7 +307,7 @@ func (s *UserService) ListKeys(
 	hostname string,
 	username string,
 ) (*Response[Collection[SSHKeyInfoResult]], error) {
-	resp, err := s.client.GetNodeUserSSHKeyWithResponse(ctx, hostname, username)
+	resp, err := s.client.GetNodeUserSshkeyWithResponse(ctx, hostname, username)
 	if err != nil {
 		return nil, fmt.Errorf("user list keys: %w", err)
 	}
@@ -317,42 +317,8 @@ func (s *UserService) ListKeys(
 		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
-		resp.JSON500,
-	); err != nil {
-		return nil, err
-	}
-
-	if resp.JSON200 == nil {
-		return nil, &UnexpectedStatusError{APIError{
-			StatusCode: resp.StatusCode(),
-			Message:    "nil response body",
-		}}
-	}
-
-	return newResponse(sshKeyCollectionFromGen(resp.JSON200), resp.Body, resp.HTTPResponse), nil
-}
-
-// AddKey adds an SSH authorized key for a user on the target host.
-func (s *UserService) AddKey(
-	ctx context.Context,
-	hostname string,
-	username string,
-	opts SSHKeyAddOpts,
-) (*Response[Collection[SSHKeyMutationResult]], error) {
-	body := gen.SSHKeyAddRequest{
-		Key: opts.Key,
-	}
-
-	resp, err := s.client.PostNodeUserSSHKeyWithResponse(ctx, hostname, username, body)
-	if err != nil {
-		return nil, fmt.Errorf("user add key: %w", err)
-	}
-
-	if err := checkError(
-		resp.StatusCode(),
-		resp.JSON400,
-		resp.JSON401,
-		resp.JSON403,
+		resp.JSON404,
+		resp.JSON409,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
@@ -366,7 +332,49 @@ func (s *UserService) AddKey(
 	}
 
 	return newResponse(
-		sshKeyMutationCollectionFromGen(resp.JSON200),
+		sshKeyCollectionFromGen(resp.JSON200.Results, resp.JSON200.JobId),
+		resp.Body,
+		resp.HTTPResponse,
+	), nil
+}
+
+// AddKey adds an SSH authorized key for a user on the target host.
+func (s *UserService) AddKey(
+	ctx context.Context,
+	hostname string,
+	username string,
+	opts SSHKeyAddOpts,
+) (*Response[Collection[SSHKeyMutationResult]], error) {
+	body := gen.UserSshkeyCreateRequest{
+		Key: opts.Key,
+	}
+
+	resp, err := s.client.PostNodeUserSshkeyWithResponse(ctx, hostname, username, body)
+	if err != nil {
+		return nil, fmt.Errorf("user add key: %w", err)
+	}
+
+	if err := checkError(
+		resp.StatusCode(),
+		resp.JSON400,
+		resp.JSON401,
+		resp.JSON403,
+		resp.JSON404,
+		resp.JSON409,
+		resp.JSON500,
+	); err != nil {
+		return nil, err
+	}
+
+	if resp.JSON200 == nil {
+		return nil, &UnexpectedStatusError{APIError{
+			StatusCode: resp.StatusCode(),
+			Message:    "nil response body",
+		}}
+	}
+
+	return newResponse(
+		sshKeyMutationCollectionFromGen(resp.JSON200.Results, resp.JSON200.JobId),
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
@@ -380,8 +388,8 @@ func (s *UserService) RemoveKey(
 	username string,
 	fingerprint string,
 ) (*Response[Collection[SSHKeyMutationResult]], error) {
-	resp, err := s.client.DeleteNodeUserSSHKeyWithResponse(
-		ctx, hostname, username, fingerprint,
+	resp, err := s.client.DeleteNodeUserSshkeyWithResponse(
+		ctx, hostname, username, gen.UserSshkeyDeleteRequest{Fingerprint: fingerprint},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("user remove key: %w", err)
@@ -392,6 +400,8 @@ func (s *UserService) RemoveKey(
 		resp.JSON400,
 		resp.JSON401,
 		resp.JSON403,
+		resp.JSON404,
+		resp.JSON409,
 		resp.JSON500,
 	); err != nil {
 		return nil, err
@@ -405,7 +415,7 @@ func (s *UserService) RemoveKey(
 	}
 
 	return newResponse(
-		sshKeyMutationCollectionFromGen(resp.JSON200),
+		sshKeyMutationCollectionFromGen(resp.JSON200.Results, resp.JSON200.JobId),
 		resp.Body,
 		resp.HTTPResponse,
 	), nil
