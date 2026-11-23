@@ -19,7 +19,6 @@ import { ContainerActionBlock } from "@/components/domain/container-action-block
 import { DockerExecBlock } from "@/components/domain/docker-exec-block";
 import { NtpBlock } from "@/components/domain/ntp-block";
 import { PowerBlock } from "@/components/domain/power-block";
-import { ProcessSignalBlock } from "@/components/domain/process-signal-block";
 import { LogQueryBlock } from "@/components/domain/log-query-block";
 import { UserBlock } from "@/components/domain/user-block";
 import { UserPasswordBlock } from "@/components/domain/user-password-block";
@@ -65,11 +64,6 @@ import {
   postNodePowerReboot,
   postNodePowerShutdown,
 } from "@/sdk/gen/power-management-api-power-operations/power-management-api-power-operations";
-import {
-  getNodeProcess,
-  getNodeProcessByPid,
-  postNodeProcessSignal,
-} from "@/sdk/gen/process-management-api-process-operations/process-management-api-process-operations";
 import {
   getNodeLog,
   getNodeLogSource,
@@ -522,18 +516,6 @@ export function Configure() {
               ...(block.data.delay ? { delay: Number(block.data.delay) } : {}),
             });
             break;
-          case "process-list":
-            result = await getNodeProcess(t);
-            break;
-          case "process-get":
-            result = await getNodeProcessByPid(t, Number(block.data.pid));
-            break;
-          case "process-signal":
-            result = await postNodeProcessSignal(t, Number(block.data.pid), {
-              signal: block.data
-                .signal as import("@/sdk/gen/schemas").ProcessSignalRequestSignal,
-            });
-            break;
           case "log-query":
             result = await getNodeLog(t, {
               ...(block.data.lines ? { lines: Number(block.data.lines) } : {}),
@@ -941,28 +923,8 @@ export function Configure() {
             onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
           />
         );
-      case "process-list":
       case "log-sources":
         return null;
-      case "process-get":
-        return (
-          <SingleInputBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            field="pid"
-            label="PID"
-            placeholder="1234"
-          />
-        );
-      case "process-signal":
-        return (
-          <ProcessSignalBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-          />
-        );
       case "log-query":
         return (
           <LogQueryBlock

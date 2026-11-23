@@ -134,6 +134,9 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 			}
 			for _, ex := range m.Examples {
 				s.Run(b.Name+" "+m.Name+" "+ex.Doc, func() {
+					if ex.NotLive != "" {
+						s.T().Skip("runs on the fake host only: " + ex.NotLive)
+					}
 					defer s.restore(b)()
 					s.reset(b, ex.Input)
 					// The example's items go again after it, also when it

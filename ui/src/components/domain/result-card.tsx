@@ -716,107 +716,6 @@ function CertificateListResult({ data }: { data: Record<string, unknown> }) {
   );
 }
 
-// Process list
-function ProcessListResult({ data }: { data: Record<string, unknown> }) {
-  const { search, setSearch } = useListSearch();
-  type ProcessHost = {
-    hostname: string;
-    status?: string;
-    processes?: {
-      pid?: number;
-      name?: string;
-      user?: string;
-      state?: string;
-      cpu_percent?: number;
-      mem_percent?: number;
-      command?: string;
-    }[];
-    error?: string;
-  };
-  const hosts = data.results as ProcessHost[];
-  const totalProcesses = hosts.reduce(
-    (n, h) => n + (h.processes?.length ?? 0),
-    0,
-  );
-  return (
-    <ResultShell
-      jobId={data.job_id as string | undefined}
-      label="process list"
-      data={data}
-    >
-      <ListSearchBar
-        search={search}
-        setSearch={setSearch}
-        hasItems={totalProcesses > 0}
-      />
-      {hosts.map((host) => {
-        const allProcesses = host.processes ?? [];
-        const processes = allProcesses.filter((p) =>
-          matches(search, p.pid, p.name, p.user, p.state, p.command),
-        );
-        if (
-          search &&
-          processes.length === 0 &&
-          !host.error &&
-          host.status !== "skipped"
-        )
-          return null;
-        return (
-          <div
-            key={host.hostname}
-            className="border-b border-border/50 last:border-0"
-          >
-            <HostGroupHeader
-              hostname={host.hostname}
-              status={
-                host.status === "skipped"
-                  ? "skipped"
-                  : host.error
-                    ? "failed"
-                    : "ok"
-              }
-              detail={
-                host.status === "skipped"
-                  ? "skipped"
-                  : `${allProcesses.length} process${allProcesses.length !== 1 ? "es" : ""}`
-              }
-            />
-            {host.error && host.status !== "skipped" && (
-              <HostError>{host.error}</HostError>
-            )}
-            {host.status !== "skipped" &&
-              processes.map((p, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-4 border-b border-border/30 px-4 py-2 pl-9 last:border-0"
-                >
-                  {p.pid != null && (
-                    <KeyValue label="pid" value={String(p.pid)} />
-                  )}
-                  <KeyValue label="name" value={p.name} variant="strong" />
-                  {p.user && <KeyValue label="user" value={p.user} />}
-                  {p.state && <KeyValue label="state" value={p.state} />}
-                  {p.cpu_percent != null && (
-                    <KeyValue
-                      label="cpu"
-                      value={`${p.cpu_percent.toFixed(1)}%`}
-                    />
-                  )}
-                  {p.mem_percent != null && (
-                    <KeyValue
-                      label="mem"
-                      value={`${p.mem_percent.toFixed(1)}%`}
-                    />
-                  )}
-                </div>
-              ))}
-          </div>
-        );
-      })}
-    </ResultShell>
-  );
-}
-
 // Log sources list
 function LogSourcesResult({ data }: { data: Record<string, unknown> }) {
   const { search, setSearch } = useListSearch();
@@ -1444,26 +1343,16 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
     );
   }
 
-  // Process list — expanded with search
-  if (type === "process-list" && Array.isArray(data.results)) {
-    return <ProcessListResult data={data} />;
-  }
-
   // Log sources — expanded with search
   if (type === "log-sources" && Array.isArray(data.results)) {
     return <LogSourcesResult data={data} />;
   }
 
-  // System operations (power, process, log)
+  // System operations (power, log)
   if (
-    [
-      "power-reboot",
-      "power-shutdown",
-      "process-get",
-      "process-signal",
-      "log-query",
-      "log-query-unit",
-    ].includes(type) &&
+    ["power-reboot", "power-shutdown", "log-query", "log-query-unit"].includes(
+      type,
+    ) &&
     Array.isArray(data.results)
   ) {
     const label = type.replace("-", " ");

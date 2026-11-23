@@ -31,7 +31,6 @@ import (
 	logProv "github.com/osapi-io/osapi/internal/provider/node/log"
 	"github.com/osapi-io/osapi/internal/provider/node/ntp"
 	"github.com/osapi-io/osapi/internal/provider/node/power"
-	processProv "github.com/osapi-io/osapi/internal/provider/node/process"
 	"github.com/osapi-io/osapi/internal/provider/node/user"
 )
 
@@ -53,7 +52,6 @@ func (a *Agent) processJobOperation(
 func NewNodeProcessor(
 	ntpProvider ntp.Provider,
 	powerProvider power.Provider,
-	processProvider processProv.Provider,
 	userProvider user.Provider,
 	logProvider logProv.Provider,
 	logger *slog.Logger,
@@ -69,8 +67,6 @@ func NewNodeProcessor(
 			return processNtpOperation(ctx, ntpProvider, logger, req)
 		case "power":
 			return processPowerOperation(ctx, powerProvider, logger, req)
-		case "process":
-			return processProcessOperation(ctx, processProvider, logger, req)
 		case "user":
 			return processUserOperation(ctx, userProvider, logger, req)
 		case "sshKey":

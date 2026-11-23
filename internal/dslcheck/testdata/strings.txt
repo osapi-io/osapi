@@ -19,6 +19,7 @@ behavior.Effect.Command string	fixture	what an example sets up or expects
 behavior.Effect.Content string	fixture	what an example sets up or expects
 behavior.Effect.Path string	fixture	what an example sets up or expects
 behavior.Example.Doc string	free text	prose for a page or a message
+behavior.Example.NotLive string	free text	prose for a page or a message
 behavior.Exists(content string)	fixture	what an example sets up or expects
 behavior.Exists(path string)	path pattern	a path or a path.Match pattern
 behavior.ExistsAfter(after string)	fixture	what an example sets up or expects
@@ -49,6 +50,7 @@ behavior.Method.Runs(programs []string)	program	a program name, which preflight 
 behavior.Method.RunsPrograms []string	program	a program name, which preflight and the fake host check
 behavior.Method.Sudo(programs []string)	program	a program name, which preflight and the fake host check
 behavior.Method.SudoPrograms []string	program	a program name, which preflight and the fake host check
+behavior.NotLive(why string)	free text	prose for a page or a message
 behavior.PlatformPrograms.Programs []string	program	a program name, which preflight and the fake host check
 behavior.Prints(command string)	fixture	what an example sets up or expects
 behavior.Prints(output string)	fixture	what an example sets up or expects

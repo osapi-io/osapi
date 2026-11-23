@@ -90,8 +90,6 @@ var builtinPermissions = []Permission{
 	"ntp:read",
 	"ntp:write",
 	"power:execute",
-	"process:read",
-	"process:execute",
 	"user:read",
 	"user:write",
 	"log:read",

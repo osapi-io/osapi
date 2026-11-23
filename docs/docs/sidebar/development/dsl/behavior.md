@@ -332,6 +332,15 @@ Says what a file holds on the fake host after a command has run.
 Use: For a file that a program changes, such as /etc/group after groupadd.
 Declare its content before with Exists.
 
+### `NotLive("why")`
+
+Keeps a write example off the live host of the integration test, which skips it
+and says why. The provider tests still run it on the fake host.
+
+Use: Only for a write whose starting state the behavior's own methods cannot
+make on a real host, such as the process that a signal stops. Test it in the lab
+by hand, and say how in the definition.
+
 ### `Links("path", "target")`
 
 Puts a symbolic link to target on the fake host before the call.

@@ -37,6 +37,7 @@ import (
 	_ "github.com/osapi-io/osapi/internal/behaviors/object"
 	_ "github.com/osapi-io/osapi/internal/behaviors/os"
 	_ "github.com/osapi-io/osapi/internal/behaviors/packages"
+	_ "github.com/osapi-io/osapi/internal/behaviors/process"
 	_ "github.com/osapi-io/osapi/internal/behaviors/service"
 	_ "github.com/osapi-io/osapi/internal/behaviors/status"
 	_ "github.com/osapi-io/osapi/internal/behaviors/sysctl"

@@ -42,7 +42,6 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/node/memory"
 	ntpProv "github.com/osapi-io/osapi/internal/provider/node/ntp"
 	powerProv "github.com/osapi-io/osapi/internal/provider/node/power"
-	processProv "github.com/osapi-io/osapi/internal/provider/node/process"
 	userProv "github.com/osapi-io/osapi/internal/provider/node/user"
 	cronProv "github.com/osapi-io/osapi/internal/provider/schedule/cron"
 )
@@ -170,10 +169,6 @@ func (e hostEnv) power() powerProv.Provider {
 	default:
 		return powerProv.NewLinuxProvider()
 	}
-}
-
-func (e hostEnv) process() processProv.Provider {
-	return processProv.New(e.log, processProv.NewSyscallSignaler())
 }
 
 func (e hostEnv) user() userProv.Provider {

@@ -48,13 +48,13 @@ func TestProvidersPublicTestSuite(
 // gohaiReads are the areas that read the host through gohai, the same
 // provider on every family.
 var gohaiReads = map[string]bool{
-	"host": true, "disk": true, "memory": true, "load": true, "process": true,
+	"host": true, "disk": true, "memory": true, "load": true,
 }
 
 func (s *ProvidersPublicTestSuite) TestProviders() {
 	areas := []string{
 		"host", "disk", "memory", "load", "ping", "cron",
-		"ntp", "power", "process", "user",
+		"ntp", "power", "user",
 		"logs", "certificate",
 	}
 

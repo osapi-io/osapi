@@ -93,13 +93,6 @@ const (
 	OpPowerShutdown JobOperation = "node.power.shutdown"
 )
 
-// Process operations.
-const (
-	OpProcessList   JobOperation = "node.process.list"
-	OpProcessGet    JobOperation = "node.process.get"
-	OpProcessSignal JobOperation = "node.process.signal"
-)
-
 // User operations.
 const (
 	OpUserList           JobOperation = "node.user.list"

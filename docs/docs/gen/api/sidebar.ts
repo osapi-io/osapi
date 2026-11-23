@@ -562,34 +562,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Process",
-      link: {
-        type: "doc",
-        id: "gen/api/process-management-api-process-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/get-node-process",
-          label: "List processes",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/get-node-process-by-pid",
-          label: "Get process by PID",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-node-process-signal",
-          label: "Send signal to process",
-          className: "api-method post",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Node/Schedule",
       link: {
         type: "doc",
@@ -951,6 +923,34 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/get-node-package-by-key",
           label: "Get one installed package",
           className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Process",
+      link: {
+        type: "doc",
+        id: "gen/api/process-api-process-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-process",
+          label: "List the processes of the host",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-process-by-key",
+          label: "Get one process",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-process-signal",
+          label: "Send a signal to a process",
+          className: "api-method post",
         },
       ],
     },

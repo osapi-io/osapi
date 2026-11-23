@@ -109,28 +109,6 @@ const HAND_BLOCK_TYPES: BlockType[] = [
     group: "node",
   },
   {
-    type: "process-list",
-    label: "List",
-    description: "List running processes",
-    category: "process",
-    group: "node",
-    readyOnAdd: true,
-  },
-  {
-    type: "process-get",
-    label: "Get",
-    description: "Get process details",
-    category: "process",
-    group: "node",
-  },
-  {
-    type: "process-signal",
-    label: "Signal",
-    description: "Send signal to a process",
-    category: "process",
-    group: "node",
-  },
-  {
     type: "log-query",
     label: "Query",
     description: "Query system logs",

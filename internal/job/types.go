@@ -203,13 +203,6 @@ const (
 	OperationPowerShutdown = client.OpPowerShutdown
 )
 
-// Process operations.
-const (
-	OperationProcessList   = client.OpProcessList
-	OperationProcessGet    = client.OpProcessGet
-	OperationProcessSignal = client.OpProcessSignal
-)
-
 // User operations.
 const (
 	OperationUserList           = client.OpUserList
