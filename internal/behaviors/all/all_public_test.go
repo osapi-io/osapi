@@ -263,12 +263,12 @@ func (s *AllPublicTestSuite) TestNoRouteIsServedTwice() {
 	}
 
 	s.Run("when a behavior shares a hand-written route", func() {
-		served := behavior.Define("ntp", "NTP", behavior.Node, behavior.API,
+		served := behavior.Define("process", "Process", behavior.Node, behavior.API,
 			behavior.Read("list", sysctl.List).Describe("List"))
 		got := collisions(served, ops)
 		s.Require().Len(got, 1)
-		s.Contains(got[0], "GET /api/node/{hostname}/ntp is served by the ntp behavior "+
-			"and by internal/controller/api/node/ntp")
+		s.Contains(got[0], "GET /api/node/{hostname}/process is served by the process behavior "+
+			"and by internal/controller/api/node/process")
 	})
 }
 
