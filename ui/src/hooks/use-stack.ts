@@ -10,7 +10,8 @@ export interface BlockType {
   label: string;
   description: string;
   category: string;
-  group: string;
+  /** The area of the Add Block panel that the block goes in. */
+  area: string;
   /** Blocks that need no input are ready immediately */
   readyOnAdd?: boolean;
 }
@@ -21,7 +22,7 @@ export interface BlockCategory {
   types: BlockType[];
 }
 
-export interface BlockGroup {
+export interface BlockArea {
   name: string;
   label: string;
   categories: BlockCategory[];
@@ -37,7 +38,7 @@ const HAND_BLOCK_TYPES: (BlockType & { type: HandBlockType })[] = [
     label: "List",
     description: "List files in object store",
     category: "file",
-    group: "files",
+    area: "files",
     readyOnAdd: true,
   },
   {
@@ -45,21 +46,21 @@ const HAND_BLOCK_TYPES: (BlockType & { type: HandBlockType })[] = [
     label: "Upload",
     description: "Upload to object store",
     category: "file",
-    group: "files",
+    area: "files",
   },
   {
     type: "object-delete",
     label: "Delete",
     description: "Delete file from object store",
     category: "file",
-    group: "files",
+    area: "files",
   },
   {
     type: "object-stale",
     label: "Stale",
     description: "Check for stale deployments",
     category: "file-deploy",
-    group: "files",
+    area: "files",
     readyOnAdd: true,
   },
 
@@ -69,7 +70,7 @@ const HAND_BLOCK_TYPES: (BlockType & { type: HandBlockType })[] = [
     label: "List",
     description: "List audit log entries",
     category: "audit",
-    group: "audit",
+    area: "audit",
     readyOnAdd: true,
   },
   {
@@ -77,14 +78,14 @@ const HAND_BLOCK_TYPES: (BlockType & { type: HandBlockType })[] = [
     label: "Get",
     description: "Get audit entry details",
     category: "audit",
-    group: "audit",
+    area: "audit",
   },
   {
     type: "audit-export",
     label: "Export",
     description: "Export audit log",
     category: "audit",
-    group: "audit",
+    area: "audit",
     readyOnAdd: true,
   },
 ];
@@ -96,7 +97,7 @@ const BEHAVIOR_BLOCK_TYPES: BlockType[] = Object.values(BEHAVIOR_BLOCKS).map(
     label: def.label,
     description: def.description,
     category: def.behavior,
-    group: def.area,
+    area: def.area,
     readyOnAdd: !def.fields.some((f) => f.required),
   }),
 );
@@ -111,17 +112,8 @@ export const ALL_BLOCK_TYPES: BlockType[] = [
 // title does not read well.
 const categoryNames: Record<string, string> = {
   updatepackages: "Package Index",
-  ntp: "NTP",
-  power: "Power",
-  process: "Process",
-  log: "Log",
-  network: "Network",
-  user: "User",
-  group: "Group",
-  certificate: "Certificate",
   file: "File",
   "file-deploy": "File Deploy",
-  command: "Command",
   audit: "Audit",
 };
 
@@ -129,8 +121,8 @@ const behaviorTitles: Record<string, string> = Object.fromEntries(
   Object.values(BEHAVIOR_BLOCKS).map((def) => [def.behavior, def.title]),
 );
 
-function buildCategories(groupName: string): BlockCategory[] {
-  const types = ALL_BLOCK_TYPES.filter((b) => b.group === groupName);
+function buildCategories(area: string): BlockCategory[] {
+  const types = ALL_BLOCK_TYPES.filter((b) => b.area === area);
   const cats = [...new Set(types.map((b) => b.category))];
   return cats.map((cat) => ({
     name: cat,
@@ -140,13 +132,14 @@ function buildCategories(groupName: string): BlockCategory[] {
 }
 
 /**
- * The area of each behavior, from behavior.Area in its definition, is a
- * group of the panel: a new area fails the type check here until the panel
- * has a group for it.
+ * The areas of the panel: the AreaName of each behavior, from behavior.Area
+ * in its definition, and the areas of the hand-written blocks. A new
+ * AreaName fails the type check here until the panel has it.
  */
 type BehaviorArea =
   (typeof BEHAVIOR_BLOCKS)[keyof typeof BEHAVIOR_BLOCKS]["area"];
-type GroupName =
+type PanelArea = BehaviorArea | "files" | "audit";
+type PanelAreaName =
   | "services"
   | "software"
   | "config"
@@ -158,10 +151,10 @@ type GroupName =
   | "command"
   | "hardware"
   | "audit";
-const areaIsGroup = (a: BehaviorArea): GroupName => a;
-void areaIsGroup;
+const areaInPanel = (a: PanelArea): PanelAreaName => a;
+void areaInPanel;
 
-export const BLOCK_GROUPS: (BlockGroup & { name: GroupName })[] = [
+export const BLOCK_AREAS: (BlockArea & { name: PanelAreaName })[] = [
   {
     name: "services",
     label: "Services",
@@ -200,8 +193,8 @@ export const BLOCK_GROUPS: (BlockGroup & { name: GroupName })[] = [
 ];
 
 /** Flat list for backwards compat (command palette, etc.) */
-export const BLOCK_CATEGORIES: BlockCategory[] = BLOCK_GROUPS.flatMap(
-  (g) => g.categories,
+export const BLOCK_CATEGORIES: BlockCategory[] = BLOCK_AREAS.flatMap(
+  (a) => a.categories,
 );
 
 export interface Block {

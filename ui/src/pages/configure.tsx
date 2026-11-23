@@ -16,7 +16,7 @@ import { SaveStackDialog } from "@/components/domain/save-stack-dialog";
 import {
   useStack,
   ALL_BLOCK_TYPES,
-  BLOCK_GROUPS,
+  BLOCK_AREAS,
   blockRunnable,
   type BlockStatus,
 } from "@/hooks/use-stack";
@@ -87,16 +87,21 @@ const blockIcons: Record<
 > = {
   // Services
   "service-list": Cog,
-  "schedule-list": Calendar,
   // Software
   "package-list": Package,
   "updatepackages-list": RefreshCw,
   // Config
+  "schedule-list": Calendar,
   "sysctl-list": SlidersHorizontal,
   "ntp-get": Clock,
   "timezone-get": Globe,
   "hostname-get": Tag,
-  // System
+  "file-status": FileDown,
+  // Node
+  "status-get": Monitor,
+  "load-get": Gauge,
+  "uptime-get": Timer,
+  "os-get": Info,
   "power-reboot": Power,
   "process-list": Activity,
   // Networking
@@ -108,19 +113,13 @@ const blockIcons: Record<
   "group-list": UsersRound,
   // Containers
   "docker-list": Container,
-  // Files
-  "object-list": FolderOpen,
-  "file-status": FileDown,
   // Command
   "command-exec": Terminal,
-  // Node
-  "status-get": Monitor,
-  "load-get": Gauge,
-  "uptime-get": Timer,
-  "os-get": Info,
   // Hardware
   "disk-get": HardDrive,
   "memory-get": MemoryStick,
+  // Files
+  "object-list": FolderOpen,
   // Audit
   "audit-list": ClipboardList,
 };
@@ -151,7 +150,7 @@ export function Configure() {
     ? `${applied + failed} applied: ${applied} ok${failed ? `, ${failed} failed` : ""}`
     : `${blocks.length} block${blocks.length === 1 ? "" : "s"}`;
   const [showSaveDialog, setShowSaveDialog] = useState(false);
-  const [activeGroup, setActiveGroup] = useState("services");
+  const [activeArea, setActiveArea] = useState("services");
 
   const handleLoadStack = useCallback(
     (id: string) => {
@@ -519,22 +518,22 @@ export function Configure() {
             )}
           </div>
 
-          {/* Group pills */}
+          {/* Area pills */}
           <div className="flex flex-wrap gap-1.5">
-            {BLOCK_GROUPS.map((group) => (
+            {BLOCK_AREAS.map((area) => (
               <Chip
-                key={group.name}
+                key={area.name}
                 size="sm"
-                active={activeGroup === group.name}
-                onClick={() => setActiveGroup(group.name)}
+                active={activeArea === area.name}
+                onClick={() => setActiveArea(area.name)}
               >
-                {group.label}
+                {area.label}
               </Chip>
             ))}
           </div>
 
-          {/* Categories for active group */}
-          {BLOCK_GROUPS.find((g) => g.name === activeGroup)?.categories.map(
+          {/* Categories for the active area */}
+          {BLOCK_AREAS.find((a) => a.name === activeArea)?.categories.map(
             (cat) => {
               const CatIcon = blockIcons[cat.types[0]?.type] || Terminal;
               return (
