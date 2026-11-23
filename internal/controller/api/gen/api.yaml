@@ -65,9 +65,6 @@ tags:
   - name: Node_File_Operations_API_node_file_operations
     x-displayName: Node/File
     description: File deploy, undeploy, and status operations on a target node.
-  - name: Log_Management_API_log_operations
-    x-displayName: Node/Log
-    description: Log viewing operations on a target node.
   - name: Network_Management_API_network_operations
     x-displayName: Node/Network
     description: Network operations on a target node.
@@ -98,6 +95,12 @@ tags:
   - description: Get the load averages of target hosts
     name: Load_API_load_operations
     x-displayName: Node/Load
+  - description: The entries of the systemd journal
+    name: Entry_API_log_entry_operations
+    x-displayName: Node/Entry
+  - description: The sources that write to the systemd journal
+    name: Source_API_log_source_operations
+    x-displayName: Node/Source
   - description: Get the memory usage of target hosts
     name: Memory_API_memory_operations
     x-displayName: Node/Memory
@@ -2925,207 +2928,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/log:
-    servers: []
-    get:
-      summary: Get system log entries
-      description: |
-        Retrieve log entries from the target node's system journal.
-      tags:
-        - Log_Management_API_log_operations
-      operationId: GetNodeLog
-      security:
-        - BearerAuth:
-            - log:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - name: lines
-          in: query
-          required: false
-          description: |
-            Maximum number of log lines to return.
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=1,max=10000
-          schema:
-            type: integer
-            default: 100
-            minimum: 1
-            maximum: 10000
-        - name: since
-          in: query
-          required: false
-          description: >
-            Return log entries since this time. Accepts systemd time
-            specifications (e.g., "1h", "2026-01-01 00:00:00").
-          x-oapi-codegen-extra-tags:
-            validate: omitempty
-          schema:
-            type: string
-        - name: priority
-          in: query
-          required: false
-          description: >
-            Filter by log priority level (e.g., "err", "warning", "info",
-            "debug").
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,oneof=emerg alert crit err warning notice info debug
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Log entries from the target node.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LogCollectionResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error retrieving log entries.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/log/source:
-    servers: []
-    get:
-      summary: List log sources
-      description: >
-        List unique syslog identifiers (log sources) available in the journal on
-        the target node.
-      tags:
-        - Log_Management_API_log_operations
-      operationId: GetNodeLogSource
-      security:
-        - BearerAuth:
-            - log:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      responses:
-        '200':
-          description: List of log sources.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LogSourceCollectionResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error listing log sources.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/log/unit/{name}:
-    servers: []
-    get:
-      summary: Get log entries for a systemd unit
-      description: |
-        Retrieve log entries for a specific systemd unit on the target node.
-      tags:
-        - Log_Management_API_log_operations
-      operationId: GetNodeLogUnit
-      security:
-        - BearerAuth:
-            - log:read
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-        - $ref: '#/components/parameters/UnitName'
-        - name: lines
-          in: query
-          required: false
-          description: |
-            Maximum number of log lines to return.
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=1,max=10000
-          schema:
-            type: integer
-            default: 100
-            minimum: 1
-            maximum: 10000
-        - name: since
-          in: query
-          required: false
-          description: >
-            Return log entries since this time. Accepts systemd time
-            specifications (e.g., "1h", "2026-01-01 00:00:00").
-          x-oapi-codegen-extra-tags:
-            validate: omitempty
-          schema:
-            type: string
-        - name: priority
-          in: query
-          required: false
-          description: >
-            Filter by log priority level (e.g., "err", "warning", "info",
-            "debug").
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,oneof=emerg alert crit err warning notice info debug
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Log entries for the specified unit.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LogCollectionResponse'
-        '400':
-          description: Bad request - validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error retrieving unit log entries.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /api/node/{hostname}/network/ping:
     servers: []
     post:
@@ -4959,6 +4761,176 @@ paths:
       summary: Get the load averages of the host
       tags:
         - Load_API_load_operations
+  /api/node/{hostname}/log/entry:
+    servers: []
+    get:
+      description: >-
+        Runs journalctl --output=json, the newest entries last: the last 100
+        unless lines says, of one unit when unit says, since a time when since
+        says, and at a priority or above when priority says. A priority is its
+        name, such as err or info. The hand-written log domain read the Debian
+        family only; this reads each Linux host that has journald.
+      operationId: GetNodeLogEntry
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+        - description: Only the entries of this systemd unit, such as nginx.service
+          in: query
+          name: unit
+          schema:
+            pattern: ^[a-zA-Z0-9:_.@-]+$
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,unit_name
+        - description: How many of the newest entries; 100 when it is not set
+          in: query
+          name: lines
+          schema:
+            maximum: 10000
+            minimum: 1
+            type: integer
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=1,max=10000
+        - description: >-
+            Only the entries since this time, in any form that journalctl
+            --since takes, such as 1 hour ago
+          in: query
+          name: since
+          schema:
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
+        - description: Only the entries at this priority or above
+          in: query
+          name: priority
+          schema:
+            enum:
+              - emerg
+              - alert
+              - crit
+              - err
+              - warning
+              - notice
+              - info
+              - debug
+            type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,oneof=emerg alert crit err warning notice info debug
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogEntryCollectionResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            The host does not have what the request names, such as the object of
+            a deploy.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - log:read
+      summary: List the entries of the journal
+      tags:
+        - Entry_API_log_entry_operations
+  /api/node/{hostname}/log/source:
+    servers: []
+    get:
+      description: >-
+        Runs journalctl --field=SYSLOG_IDENTIFIER: each syslog identifier that
+        has an entry, once, sorted. A name here is what log entry list takes as
+        unit when the source is a systemd unit.
+      operationId: GetNodeLogSource
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogSourceCollectionResponse'
+          description: Each target host's result.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            The host does not have what the request names, such as the object of
+            a deploy.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - log:read
+      summary: List the sources of the journal
+      tags:
+        - Source_API_log_source_operations
   /api/node/{hostname}/memory:
     servers: []
     get:
@@ -9686,114 +9658,6 @@ components:
             $ref: '#/components/schemas/FileUndeployResult'
       required:
         - results
-    LogEntryInfo:
-      type: object
-      description: A single log entry from the system journal.
-      properties:
-        timestamp:
-          type: string
-          description: Log entry timestamp.
-          example: '2026-01-15T10:30:00Z'
-        unit:
-          type: string
-          description: Systemd unit that produced this entry.
-          example: nginx.service
-        priority:
-          type: string
-          description: Log priority level.
-          example: info
-        message:
-          type: string
-          description: Log message text.
-          example: Server started successfully
-        pid:
-          type: integer
-          description: Process identifier that produced this entry.
-          example: 1234
-        hostname:
-          type: string
-          description: Hostname of the system that produced this entry.
-          example: web-01
-    LogResultEntry:
-      type: object
-      description: Log result for a single agent.
-      properties:
-        hostname:
-          type: string
-          description: The hostname of the agent.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        entries:
-          type: array
-          description: Log entries from this agent.
-          items:
-            $ref: '#/components/schemas/LogEntryInfo'
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    LogSourceEntry:
-      type: object
-      description: Log source result for a single agent.
-      properties:
-        hostname:
-          type: string
-          description: The hostname of the agent.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        sources:
-          type: array
-          description: Unique syslog identifiers on this agent.
-          items:
-            type: string
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    LogSourceCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/LogSourceEntry'
-      required:
-        - results
-    LogCollectionResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/LogResultEntry'
-      required:
-        - results
     PingResponse:
       type: object
       properties:
@@ -11207,6 +11071,100 @@ components:
           type: array
       required:
         - results
+      type: object
+    LogEntryCollectionResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/LogEntryEntry'
+          type: array
+      required:
+        - results
+      type: object
+    LogEntryEntry:
+      properties:
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        message:
+          description: The message
+          type: string
+        pid:
+          description: The process that wrote it
+          type: integer
+        priority:
+          description: Its priority, by name
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+        timestamp:
+          description: When journald recorded it, in RFC 3339
+          type: string
+        unit:
+          description: The syslog identifier that wrote it
+          type: string
+      required:
+        - hostname
+        - status
+      type: object
+    LogSourceCollectionResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/LogSourceSource'
+          type: array
+      required:
+        - results
+      type: object
+    LogSourceSource:
+      properties:
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        name:
+          description: The syslog identifier, such as sshd
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
       type: object
     MemoryEntry:
       properties:
@@ -12846,18 +12804,6 @@ components:
         type: string
         minLength: 1
         pattern: ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$
-    UnitName:
-      name: name
-      in: path
-      required: true
-      description: |
-        Systemd unit name (e.g., "nginx.service", "sshd.service").
-      x-oapi-codegen-extra-tags:
-        validate: required,unit_name
-      schema:
-        type: string
-        minLength: 1
-        pattern: ^[a-zA-Z0-9:_.@-]+$
     Pid:
       name: pid
       in: path
@@ -13027,9 +12973,6 @@ x-tagGroups:
   - name: Node File Operations API
     tags:
       - Node_File_Operations_API_node_file_operations
-  - name: Log Management API
-    tags:
-      - Log_Management_API_log_operations
   - name: Network Management API
     tags:
       - Network_Management_API_network_operations
@@ -13060,6 +13003,12 @@ x-tagGroups:
   - name: Load API
     tags:
       - Load_API_load_operations
+  - name: Entry API
+    tags:
+      - Entry_API_log_entry_operations
+  - name: Source API
+    tags:
+      - Source_API_log_source_operations
   - name: Memory API
     tags:
       - Memory_API_memory_operations

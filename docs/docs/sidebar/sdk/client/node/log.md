@@ -4,22 +4,26 @@ sidebar_position: 4
 
 # Log
 
-The `Log` service has methods that query the systemd journal on target hosts.
-Use `client.Log`.
+`client.Log` reads the systemd journal of target hosts: its entries, and the
+sources that wrote them. It calls the `log entry` and `log source` behaviors.
 
 ## Methods
 
-| Method                                 | Description                               |
-| -------------------------------------- | ----------------------------------------- |
-| `Query(ctx, hostname, opts)`           | Query journal entries for the host        |
-| `QueryUnit(ctx, hostname, unit, opts)` | Query journal entries for a specific unit |
-| `Sources(ctx, hostname)`               | List available log sources (syslog IDs)   |
+| Method                         | What it does                             |
+| ------------------------------ | ---------------------------------------- |
+| `Entries(ctx, hostname, opts)` | The journal entries that `opts` selects  |
+| `Sources(ctx, hostname)`       | Each syslog identifier that has an entry |
 
-## Request Types
+Each method returns a `Collection` with one row for each entry, or source, of
+each host. A host that skipped or failed has one row with its error.
 
-| Type           | Fields                                                        |
-| -------------- | ------------------------------------------------------------- |
-| `LogQueryOpts` | `Lines` (`*int`), `Since` (`*string`), `Priority` (`*string`) |
+## Types
+
+| Type              | Fields                                                                           |
+| ----------------- | -------------------------------------------------------------------------------- |
+| `LogEntryOpts`    | `Unit`, `Lines` (100 when zero), `Since`, `Priority`; each is optional           |
+| `LogEntryResult`  | `Hostname`, `Status`, `Timestamp`, `Unit`, `Priority`, `Message`, `PID`, `Error` |
+| `LogSourceResult` | `Hostname`, `Status`, `Name`, `Error`                                            |
 
 ## Usage
 
@@ -28,89 +32,32 @@ import "github.com/osapi-io/osapi/pkg/sdk/client"
 
 c := client.New("http://localhost:8080", token)
 
-// Query last 50 journal entries
-lines := 50
-resp, err := c.Log.Query(ctx, "web-01", client.LogQueryOpts{
-    Lines: &lines,
-})
+// The 50 newest entries of web-01.
+resp, err := c.Log.Entries(ctx, "web-01", client.LogEntryOpts{Lines: 50})
 for _, r := range resp.Data.Results {
-    for _, e := range r.Entries {
-        fmt.Printf("[%s] %s %s: %s\n",
-            e.Timestamp, e.Priority, e.Unit, e.Message)
-    }
+    fmt.Printf("[%s] %s %s: %s\n", r.Timestamp, r.Priority, r.Unit, r.Message)
 }
 
-// Query only error entries from the past hour
-since := "1h"
-priority := "err"
-resp, err := c.Log.Query(ctx, "web-01", client.LogQueryOpts{
-    Since:    &since,
-    Priority: &priority,
+// The errors of sshd.service in the last hour, on each host.
+resp, err = c.Log.Entries(ctx, "_all", client.LogEntryOpts{
+    Unit:     "sshd.service",
+    Since:    "1 hour ago",
+    Priority: "err",
 })
 
-// Query entries for a specific systemd unit
-resp, err := c.Log.QueryUnit(ctx, "web-01", "sshd.service",
-    client.LogQueryOpts{})
-for _, r := range resp.Data.Results {
-    fmt.Printf("%s: %d entries\n", r.Hostname, len(r.Entries))
-    for _, e := range r.Entries {
-        fmt.Printf("  [%s] %s\n", e.Priority, e.Message)
-    }
+// The sources of the journal.
+sources, err := c.Log.Sources(ctx, "web-01")
+for _, r := range sources.Data.Results {
+    fmt.Println(r.Name)
 }
-
-// List available log sources on the host
-srcResp, err := c.Log.Sources(ctx, "web-01")
-for _, r := range srcResp.Data.Results {
-    for _, src := range r.Sources {
-        fmt.Println(src)
-    }
-}
-
-// Broadcast log query to all hosts
-resp, err := c.Log.Query(ctx, "_all", client.LogQueryOpts{})
 ```
-
-## Result Types
-
-`LogEntryResult` is returned per host in the `Collection.Results` slice:
-
-| Field      | Type         | Description                      |
-| ---------- | ------------ | -------------------------------- |
-| `Hostname` | `string`     | Target host                      |
-| `Status`   | `string`     | `ok`, `skipped`, or `failed`     |
-| `Entries`  | `[]LogEntry` | Journal entries (nil if none)    |
-| `Error`    | `string`     | Error message if the call failed |
-
-`LogEntry` fields:
-
-| Field       | Type     | Description                         |
-| ----------- | -------- | ----------------------------------- |
-| `Timestamp` | `string` | ISO 8601 timestamp                  |
-| `Unit`      | `string` | Systemd unit name                   |
-| `Priority`  | `string` | Log priority (e.g., `info`, `err`)  |
-| `Message`   | `string` | Log message text                    |
-| `PID`       | `int`    | Process ID that generated the entry |
-| `Hostname`  | `string` | Hostname from the journal entry     |
-
-`LogSourceResult` is returned per host for the `Sources` method:
-
-| Field      | Type       | Description                      |
-| ---------- | ---------- | -------------------------------- |
-| `Hostname` | `string`   | Target host                      |
-| `Status`   | `string`   | `ok`, `skipped`, or `failed`     |
-| `Sources`  | `[]string` | Syslog identifiers (sorted)      |
-| `Error`    | `string`   | Error message if the call failed |
 
 ## Example
 
-- [`examples/sdk/client/log.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/log.go)
+See
+[`examples/sdk/client/log.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/log.go)
+for a complete program.
 
 ## Permissions
 
-| Operation                 | Permission |
-| ------------------------- | ---------- |
-| Query, QueryUnit, Sources | `log:read` |
-
-Log management is supported on the Debian OS family (Ubuntu, Debian, Raspbian).
-On unsupported platforms (Darwin, generic Linux) and inside containers,
-operations return `status: skipped`.
+`log:read`.

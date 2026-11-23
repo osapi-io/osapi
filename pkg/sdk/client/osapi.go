@@ -129,6 +129,9 @@ type Client struct {
 	// update, delete).
 	Group *GroupService
 
+	// Log reads the systemd journal: its entries and the sources that wrote them.
+	Log *LogService
+
 	// Package provides package management operations (list, get,
 	// install, remove, update, list updates).
 	Package *PackageService
@@ -136,9 +139,6 @@ type Client struct {
 	// Certificate provides CA certificate management operations
 	// (list, create, update, delete).
 	Certificate *CertificateService
-
-	// Log provides log viewing operations (query journal entries).
-	Log *LogService
 
 	// Service provides systemd service management operations (list, get,
 	// create, update, delete, start, stop, restart, enable, disable).
@@ -240,9 +240,9 @@ func New(
 	c.Power = &PowerService{client: httpClient}
 	c.User = &UserService{client: httpClient}
 	c.Group = &GroupService{client: httpClient}
+	c.Log = &LogService{client: httpClient}
 	c.Package = &PackageService{client: httpClient}
 	c.Certificate = &CertificateService{client: httpClient}
-	c.Log = &LogService{client: httpClient}
 	c.Service = &ServiceService{client: httpClient}
 	c.Interface = &InterfaceService{client: httpClient}
 	c.Route = &RouteService{client: httpClient}

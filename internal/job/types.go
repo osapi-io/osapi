@@ -227,13 +227,6 @@ const (
 	OperationSSHKeyRemove = client.OpSSHKeyRemove
 )
 
-// Log operations.
-const (
-	OperationLogQuery     = client.OpLogQuery
-	OperationLogQueryUnit = client.OpLogQueryUnit
-	OperationLogSources   = client.OpLogSources
-)
-
 // Certificate operations.
 const (
 	OperationCertificateCAList   = client.OpCertificateCAList

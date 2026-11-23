@@ -517,7 +517,6 @@ func SetAgentAppConfig(
 			power.Provider(nil),
 			nil,
 			nil,
-			nil,
 			a.logger,
 		)
 	}
@@ -544,7 +543,6 @@ func SetAgentHostProvider(
 		a.registry.processors["node"] = NewNodeProcessor(
 			ntp.Provider(nil),
 			power.Provider(nil),
-			nil,
 			nil,
 			nil,
 			a.logger,
@@ -841,7 +839,6 @@ func ExportProviders(
 		"power":       e.power(),
 		"process":     e.process(),
 		"user":        e.user(),
-		"logs":        e.logs(),
 		"certificate": e.certificate(),
 	}
 }

@@ -817,77 +817,6 @@ function ProcessListResult({ data }: { data: Record<string, unknown> }) {
   );
 }
 
-// Log sources list
-function LogSourcesResult({ data }: { data: Record<string, unknown> }) {
-  const { search, setSearch } = useListSearch();
-  type LogSourceHost = {
-    hostname: string;
-    status?: string;
-    sources?: string[];
-    error?: string;
-  };
-  const hosts = data.results as LogSourceHost[];
-  const totalSources = hosts.reduce((n, h) => n + (h.sources?.length ?? 0), 0);
-  return (
-    <ResultShell
-      jobId={data.job_id as string | undefined}
-      label="log sources"
-      data={data}
-    >
-      <ListSearchBar
-        search={search}
-        setSearch={setSearch}
-        hasItems={totalSources > 0}
-      />
-      {hosts.map((host) => {
-        const allSources = host.sources ?? [];
-        const sources = allSources.filter((s) => matches(search, s));
-        if (
-          search &&
-          sources.length === 0 &&
-          !host.error &&
-          host.status !== "skipped"
-        )
-          return null;
-        return (
-          <div
-            key={host.hostname}
-            className="border-b border-border/50 last:border-0"
-          >
-            <HostGroupHeader
-              hostname={host.hostname}
-              status={
-                host.status === "skipped"
-                  ? "skipped"
-                  : host.error
-                    ? "failed"
-                    : "ok"
-              }
-              detail={
-                host.status === "skipped"
-                  ? "skipped"
-                  : `${allSources.length} source${allSources.length !== 1 ? "s" : ""}`
-              }
-            />
-            {host.error && host.status !== "skipped" && (
-              <HostError>{host.error}</HostError>
-            )}
-            {host.status !== "skipped" &&
-              sources.map((s, i) => (
-                <div
-                  key={i}
-                  className="border-b border-border/30 px-4 py-2 pl-9 last:border-0"
-                >
-                  <Text variant="mono-muted">{s}</Text>
-                </div>
-              ))}
-          </div>
-        );
-      })}
-    </ResultShell>
-  );
-}
-
 // ---------------------------------------------------------------------------
 // Router
 // ---------------------------------------------------------------------------
@@ -1449,20 +1378,13 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
     return <ProcessListResult data={data} />;
   }
 
-  // Log sources — expanded with search
-  if (type === "log-sources" && Array.isArray(data.results)) {
-    return <LogSourcesResult data={data} />;
-  }
-
-  // System operations (power, process, log)
+  // System operations (power, process)
   if (
     [
       "power-reboot",
       "power-shutdown",
       "process-get",
       "process-signal",
-      "log-query",
-      "log-query-unit",
     ].includes(type) &&
     Array.isArray(data.results)
   ) {

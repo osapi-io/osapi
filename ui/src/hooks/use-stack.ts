@@ -130,28 +130,6 @@ const HAND_BLOCK_TYPES: BlockType[] = [
     category: "process",
     group: "node",
   },
-  {
-    type: "log-query",
-    label: "Query",
-    description: "Query system logs",
-    category: "log",
-    group: "node",
-  },
-  {
-    type: "log-sources",
-    label: "Sources",
-    description: "List log sources",
-    category: "log",
-    group: "node",
-    readyOnAdd: true,
-  },
-  {
-    type: "log-query-unit",
-    label: "Query Unit",
-    description: "Query logs for a systemd unit",
-    category: "log",
-    group: "node",
-  },
 
   // ── Networking ─────────────────────────────────────────────────────────────
   {

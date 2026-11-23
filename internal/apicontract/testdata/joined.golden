@@ -43,9 +43,8 @@ op GET /api/node/{hostname}/group id=GetNodeGroup tags=[Group_API_group_operatio
 op GET /api/node/{hostname}/group/{name} id=GetNodeGroupByKey tags=[Group_API_group_operations] auth=BearerAuth:group:read params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:GroupGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/hostname id=GetNodeHostname tags=[Hostname_API_hostname_operations] auth=BearerAuth:hostname:read params=[path:hostname!:string] body= responses=[200=application/json:HostnameGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/load id=GetNodeLoad tags=[Load_API_load_operations] auth=BearerAuth:load:read params=[path:hostname!:string] body= responses=[200=application/json:LoadGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op GET /api/node/{hostname}/log id=GetNodeLog tags=[Log_Management_API_log_operations] auth=BearerAuth:log:read params=[path:hostname!:string query:lines:integer query:priority:string query:since:string] body= responses=[200=application/json:LogCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op GET /api/node/{hostname}/log/source id=GetNodeLogSource tags=[Log_Management_API_log_operations] auth=BearerAuth:log:read params=[path:hostname!:string] body= responses=[200=application/json:LogSourceCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op GET /api/node/{hostname}/log/unit/{name} id=GetNodeLogUnit tags=[Log_Management_API_log_operations] auth=BearerAuth:log:read params=[path:hostname!:string path:name!:string query:lines:integer query:priority:string query:since:string] body= responses=[200=application/json:LogCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op GET /api/node/{hostname}/log/entry id=GetNodeLogEntry tags=[Entry_API_log_entry_operations] auth=BearerAuth:log:read params=[path:hostname!:string query:lines:integer query:priority:string(emerg|alert|crit|err|warning|notice|info|debug) query:since:string query:unit:string] body= responses=[200=application/json:LogEntryCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op GET /api/node/{hostname}/log/source id=GetNodeLogSource tags=[Source_API_log_source_operations] auth=BearerAuth:log:read params=[path:hostname!:string] body= responses=[200=application/json:LogSourceCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/memory id=GetNodeMemory tags=[Memory_API_memory_operations] auth=BearerAuth:memory:read params=[path:hostname!:string] body= responses=[200=application/json:MemoryGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/network/dns/{interface_name} id=GetNodeNetworkDnsByKey tags=[Dns_API_network_dns_operations] auth=BearerAuth:network:read params=[path:hostname!:string path:interface_name!:string] body= responses=[200=application/json:NetworkDnsGetResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/node/{hostname}/network/interface id=GetNodeNetworkInterface tags=[Interface_API_network_interface_operations] auth=BearerAuth:network:read params=[path:hostname!:string] body= responses=[200=application/json:NetworkInterfaceCollectionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -464,24 +463,22 @@ schema LoadEntry.load_average = Averages
 schema LoadEntry.status! = string(ok|failed|skipped|timeout)
 schema LoadGetResponse.job_id = string/uuid
 schema LoadGetResponse.results! = [LoadEntry]
-schema LogCollectionResponse.job_id = string/uuid
-schema LogCollectionResponse.results! = [LogResultEntry]
-schema LogEntryInfo.hostname = string
-schema LogEntryInfo.message = string
-schema LogEntryInfo.pid = integer
-schema LogEntryInfo.priority = string
-schema LogEntryInfo.timestamp = string
-schema LogEntryInfo.unit = string
-schema LogResultEntry.entries = [LogEntryInfo]
-schema LogResultEntry.error = string
-schema LogResultEntry.hostname! = string
-schema LogResultEntry.status! = string(ok|failed|skipped|timeout)
+schema LogEntryCollectionResponse.job_id = string/uuid
+schema LogEntryCollectionResponse.results! = [LogEntryEntry]
+schema LogEntryEntry.error = string
+schema LogEntryEntry.hostname! = string
+schema LogEntryEntry.message = string
+schema LogEntryEntry.pid = integer
+schema LogEntryEntry.priority = string
+schema LogEntryEntry.status! = string(ok|failed|skipped|timeout)
+schema LogEntryEntry.timestamp = string
+schema LogEntryEntry.unit = string
 schema LogSourceCollectionResponse.job_id = string/uuid
-schema LogSourceCollectionResponse.results! = [LogSourceEntry]
-schema LogSourceEntry.error = string
-schema LogSourceEntry.hostname! = string
-schema LogSourceEntry.sources = [string]
-schema LogSourceEntry.status! = string(ok|failed|skipped|timeout)
+schema LogSourceCollectionResponse.results! = [LogSourceSource]
+schema LogSourceSource.error = string
+schema LogSourceSource.hostname! = string
+schema LogSourceSource.name = string
+schema LogSourceSource.status! = string(ok|failed|skipped|timeout)
 schema MemoryEntry.error = string
 schema MemoryEntry.hostname! = string
 schema MemoryEntry.memory = Usage
@@ -983,6 +980,7 @@ tag Dns_API_network_dns_operations
 tag Docker_Management_API_docker_exec
 tag Docker_Management_API_docker_image
 tag Docker_Management_API_docker_operations
+tag Entry_API_log_entry_operations
 tag Facts_API_facts
 tag File_Management_API_file_operations
 tag Group_API_group_operations
@@ -991,7 +989,6 @@ tag Hostname_API_hostname_operations
 tag Interface_API_network_interface_operations
 tag Job_Management_API_job_operations
 tag Load_API_load_operations
-tag Log_Management_API_log_operations
 tag Memory_API_memory_operations
 tag NATS_API_nats
 tag NTP_Management_API_ntp_operations
@@ -1004,6 +1001,7 @@ tag Process_Management_API_process_operations
 tag Route_API_route_operations
 tag Schedule_Management_API_schedule_operations
 tag Service_API_service_operations
+tag Source_API_log_source_operations
 tag Status_API_status_operations
 tag Sysctl_API_sysctl_operations
 tag Telemetry_API_telemetry

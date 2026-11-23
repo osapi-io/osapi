@@ -20,126 +20,75 @@
 
 package client
 
-import (
-	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
-)
+import "github.com/osapi-io/osapi/pkg/sdk/client/gen"
 
-// LogEntryResult represents the result of a log query for one host.
-type LogEntryResult struct {
-	Hostname string     `json:"hostname"`
-	Status   string     `json:"status"`
-	Entries  []LogEntry `json:"entries,omitempty"`
-	Error    string     `json:"error,omitempty"`
+// LogEntryOpts selects journal entries. Each field is optional.
+type LogEntryOpts struct {
+	// Unit is a systemd unit, such as nginx.service.
+	Unit string
+	// Lines is how many of the newest entries; 100 when it is zero.
+	Lines int
+	// Since is a time, in any form that journalctl --since takes.
+	Since string
+	// Priority is a priority name, such as err: that one and above.
+	Priority string
 }
 
-// LogEntry represents a single journal entry.
-type LogEntry struct {
+// LogEntryResult is one journal entry of one host. A host that failed or
+// skipped has a row with its status and no entry.
+type LogEntryResult struct {
+	Hostname  string `json:"hostname"`
+	Status    string `json:"status"`
 	Timestamp string `json:"timestamp,omitempty"`
 	Unit      string `json:"unit,omitempty"`
 	Priority  string `json:"priority,omitempty"`
 	Message   string `json:"message,omitempty"`
 	PID       int    `json:"pid,omitempty"`
-	Hostname  string `json:"hostname,omitempty"`
+	Error     string `json:"error,omitempty"`
 }
 
-// LogSourceResult represents the result of a log sources query for one host.
+// LogSourceResult is one syslog identifier of one host's journal.
 type LogSourceResult struct {
-	Hostname string   `json:"hostname"`
-	Status   string   `json:"status"`
-	Sources  []string `json:"sources,omitempty"`
-	Error    string   `json:"error,omitempty"`
+	Hostname string `json:"hostname"`
+	Status   string `json:"status"`
+	Name     string `json:"name,omitempty"`
+	Error    string `json:"error,omitempty"`
 }
 
-// LogQueryOpts contains options for log query operations.
-type LogQueryOpts struct {
-	// Lines is the maximum number of log lines to return.
-	Lines *int
-	// Since filters entries since this time (e.g., "1h", "2026-01-01 00:00:00").
-	Since *string
-	// Priority filters by log priority level (e.g., "err", "warning", "info").
-	Priority *string
-}
-
-// logCollectionFromGen converts a gen.LogCollectionResponse to a
-// Collection[LogEntryResult].
-func logCollectionFromGen(
-	g *gen.LogCollectionResponse,
+// logEntryCollectionFromGen converts the rows of a log entry list.
+func logEntryCollectionFromGen(
+	g *gen.LogEntryCollectionResponse,
 ) Collection[LogEntryResult] {
 	results := make([]LogEntryResult, 0, len(g.Results))
 	for _, r := range g.Results {
-		results = append(results, logEntryResultFromGen(r))
+		results = append(results, LogEntryResult{
+			Hostname:  r.Hostname,
+			Status:    string(r.Status),
+			Timestamp: derefString(r.Timestamp),
+			Unit:      derefString(r.Unit),
+			Priority:  derefString(r.Priority),
+			Message:   derefString(r.Message),
+			PID:       derefInt(r.Pid),
+			Error:     derefString(r.Error),
+		})
 	}
 
-	return Collection[LogEntryResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
-	}
+	return Collection[LogEntryResult]{Results: results, JobID: jobIDFromGen(g.JobId)}
 }
 
-// logEntryResultFromGen converts a gen.LogResultEntry to a LogEntryResult.
-func logEntryResultFromGen(
-	r gen.LogResultEntry,
-) LogEntryResult {
-	result := LogEntryResult{
-		Hostname: r.Hostname,
-		Status:   string(r.Status),
-		Error:    derefString(r.Error),
-	}
-
-	if r.Entries != nil {
-		entries := make([]LogEntry, 0, len(*r.Entries))
-		for _, e := range *r.Entries {
-			entries = append(entries, logEntryInfoFromGen(e))
-		}
-		result.Entries = entries
-	}
-
-	return result
-}
-
-// logEntryInfoFromGen converts a gen.LogEntryInfo to a LogEntry.
-func logEntryInfoFromGen(
-	e gen.LogEntryInfo,
-) LogEntry {
-	return LogEntry{
-		Timestamp: derefString(e.Timestamp),
-		Unit:      derefString(e.Unit),
-		Priority:  derefString(e.Priority),
-		Message:   derefString(e.Message),
-		PID:       derefInt(e.Pid),
-		Hostname:  derefString(e.Hostname),
-	}
-}
-
-// logSourceCollectionFromGen converts a gen.LogSourceCollectionResponse to a
-// Collection[LogSourceResult].
+// logSourceCollectionFromGen converts the rows of a log source list.
 func logSourceCollectionFromGen(
 	g *gen.LogSourceCollectionResponse,
 ) Collection[LogSourceResult] {
 	results := make([]LogSourceResult, 0, len(g.Results))
 	for _, r := range g.Results {
-		results = append(results, logSourceResultFromGen(r))
+		results = append(results, LogSourceResult{
+			Hostname: r.Hostname,
+			Status:   string(r.Status),
+			Name:     derefString(r.Name),
+			Error:    derefString(r.Error),
+		})
 	}
 
-	return Collection[LogSourceResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
-	}
-}
-
-// logSourceResultFromGen converts a gen.LogSourceEntry to a LogSourceResult.
-func logSourceResultFromGen(
-	r gen.LogSourceEntry,
-) LogSourceResult {
-	result := LogSourceResult{
-		Hostname: r.Hostname,
-		Status:   string(r.Status),
-		Error:    derefString(r.Error),
-	}
-
-	if r.Sources != nil {
-		result.Sources = *r.Sources
-	}
-
-	return result
+	return Collection[LogSourceResult]{Results: results, JobID: jobIDFromGen(g.JobId)}
 }

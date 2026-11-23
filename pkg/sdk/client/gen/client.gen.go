@@ -529,48 +529,48 @@ func (e LoadEntryStatus) Valid() bool {
 	}
 }
 
-// Defines values for LogResultEntryStatus.
+// Defines values for LogEntryEntryStatus.
 const (
-	LogResultEntryStatusFailed  LogResultEntryStatus = "failed"
-	LogResultEntryStatusOk      LogResultEntryStatus = "ok"
-	LogResultEntryStatusSkipped LogResultEntryStatus = "skipped"
-	LogResultEntryStatusTimeout LogResultEntryStatus = "timeout"
+	LogEntryEntryStatusFailed  LogEntryEntryStatus = "failed"
+	LogEntryEntryStatusOk      LogEntryEntryStatus = "ok"
+	LogEntryEntryStatusSkipped LogEntryEntryStatus = "skipped"
+	LogEntryEntryStatusTimeout LogEntryEntryStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the LogResultEntryStatus enum.
-func (e LogResultEntryStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the LogEntryEntryStatus enum.
+func (e LogEntryEntryStatus) Valid() bool {
 	switch e {
-	case LogResultEntryStatusFailed:
+	case LogEntryEntryStatusFailed:
 		return true
-	case LogResultEntryStatusOk:
+	case LogEntryEntryStatusOk:
 		return true
-	case LogResultEntryStatusSkipped:
+	case LogEntryEntryStatusSkipped:
 		return true
-	case LogResultEntryStatusTimeout:
+	case LogEntryEntryStatusTimeout:
 		return true
 	default:
 		return false
 	}
 }
 
-// Defines values for LogSourceEntryStatus.
+// Defines values for LogSourceSourceStatus.
 const (
-	LogSourceEntryStatusFailed  LogSourceEntryStatus = "failed"
-	LogSourceEntryStatusOk      LogSourceEntryStatus = "ok"
-	LogSourceEntryStatusSkipped LogSourceEntryStatus = "skipped"
-	LogSourceEntryStatusTimeout LogSourceEntryStatus = "timeout"
+	LogSourceSourceStatusFailed  LogSourceSourceStatus = "failed"
+	LogSourceSourceStatusOk      LogSourceSourceStatus = "ok"
+	LogSourceSourceStatusSkipped LogSourceSourceStatus = "skipped"
+	LogSourceSourceStatusTimeout LogSourceSourceStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the LogSourceEntryStatus enum.
-func (e LogSourceEntryStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the LogSourceSourceStatus enum.
+func (e LogSourceSourceStatus) Valid() bool {
 	switch e {
-	case LogSourceEntryStatusFailed:
+	case LogSourceSourceStatusFailed:
 		return true
-	case LogSourceEntryStatusOk:
+	case LogSourceSourceStatusOk:
 		return true
-	case LogSourceEntryStatusSkipped:
+	case LogSourceSourceStatusSkipped:
 		return true
-	case LogSourceEntryStatusTimeout:
+	case LogSourceSourceStatusTimeout:
 		return true
 	default:
 		return false
@@ -1645,6 +1645,42 @@ func (e GetNodeContainerDockerParamsState) Valid() bool {
 	case Running:
 		return true
 	case Stopped:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for GetNodeLogEntryParamsPriority.
+const (
+	Alert   GetNodeLogEntryParamsPriority = "alert"
+	Crit    GetNodeLogEntryParamsPriority = "crit"
+	Debug   GetNodeLogEntryParamsPriority = "debug"
+	Emerg   GetNodeLogEntryParamsPriority = "emerg"
+	Err     GetNodeLogEntryParamsPriority = "err"
+	Info    GetNodeLogEntryParamsPriority = "info"
+	Notice  GetNodeLogEntryParamsPriority = "notice"
+	Warning GetNodeLogEntryParamsPriority = "warning"
+)
+
+// Valid indicates whether the value is a known member of the GetNodeLogEntryParamsPriority enum.
+func (e GetNodeLogEntryParamsPriority) Valid() bool {
+	switch e {
+	case Alert:
+		return true
+	case Crit:
+		return true
+	case Debug:
+		return true
+	case Emerg:
+		return true
+	case Err:
+		return true
+	case Info:
+		return true
+	case Notice:
+		return true
+	case Warning:
 		return true
 	default:
 		return false
@@ -2981,76 +3017,67 @@ type LoadGetResponse struct {
 	Results []LoadEntry         `json:"results"`
 }
 
-// LogCollectionResponse defines model for LogCollectionResponse.
-type LogCollectionResponse struct {
+// LogEntryCollectionResponse defines model for LogEntryCollectionResponse.
+type LogEntryCollectionResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []LogResultEntry    `json:"results"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []LogEntryEntry     `json:"results"`
 }
 
-// LogEntryInfo A single log entry from the system journal.
-type LogEntryInfo struct {
-	// Hostname Hostname of the system that produced this entry.
-	Hostname *string `json:"hostname,omitempty"`
-
-	// Message Log message text.
-	Message *string `json:"message,omitempty"`
-
-	// Pid Process identifier that produced this entry.
-	Pid *int `json:"pid,omitempty"`
-
-	// Priority Log priority level.
-	Priority *string `json:"priority,omitempty"`
-
-	// Timestamp Log entry timestamp.
-	Timestamp *string `json:"timestamp,omitempty"`
-
-	// Unit Systemd unit that produced this entry.
-	Unit *string `json:"unit,omitempty"`
-}
-
-// LogResultEntry Log result for a single agent.
-type LogResultEntry struct {
-	// Entries Log entries from this agent.
-	Entries *[]LogEntryInfo `json:"entries,omitempty"`
-
+// LogEntryEntry defines model for LogEntryEntry.
+type LogEntryEntry struct {
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
-	// Hostname The hostname of the agent.
+	// Hostname Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
+	// Message The message
+	Message *string `json:"message,omitempty"`
+
+	// Pid The process that wrote it
+	Pid *int `json:"pid,omitempty"`
+
+	// Priority Its priority, by name
+	Priority *string `json:"priority,omitempty"`
+
 	// Status The status of the operation for this host.
-	Status LogResultEntryStatus `json:"status"`
+	Status LogEntryEntryStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
+
+	// Timestamp When journald recorded it, in RFC 3339
+	Timestamp *string `json:"timestamp,omitempty"`
+
+	// Unit The syslog identifier that wrote it
+	Unit *string `json:"unit,omitempty"`
 }
 
-// LogResultEntryStatus The status of the operation for this host.
-type LogResultEntryStatus string
+// LogEntryEntryStatus The status of the operation for this host.
+type LogEntryEntryStatus string
 
 // LogSourceCollectionResponse defines model for LogSourceCollectionResponse.
 type LogSourceCollectionResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []LogSourceEntry    `json:"results"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []LogSourceSource   `json:"results"`
 }
 
-// LogSourceEntry Log source result for a single agent.
-type LogSourceEntry struct {
+// LogSourceSource defines model for LogSourceSource.
+type LogSourceSource struct {
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
-	// Hostname The hostname of the agent.
+	// Hostname Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
-	// Sources Unique syslog identifiers on this agent.
-	Sources *[]string `json:"sources,omitempty"`
+	// Name The syslog identifier, such as sshd
+	Name *string `json:"name,omitempty"`
 
 	// Status The status of the operation for this host.
-	Status LogSourceEntryStatus `json:"status"`
+	Status LogSourceSourceStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
 }
 
-// LogSourceEntryStatus The status of the operation for this host.
-type LogSourceEntryStatus string
+// LogSourceSourceStatus The status of the operation for this host.
+type LogSourceSourceStatus string
 
 // MemoryEntry defines model for MemoryEntry.
 type MemoryEntry struct {
@@ -4927,9 +4954,6 @@ type ServiceName = string
 // SysctlKey defines model for SysctlKey.
 type SysctlKey = string
 
-// UnitName defines model for UnitName.
-type UnitName = string
-
 // UserName defines model for UserName.
 type UserName = string
 
@@ -5037,29 +5061,23 @@ type GetNodeFileStatusParams struct {
 	Path string `form:"path" json:"path" validate:"required,min=1"`
 }
 
-// GetNodeLogParams defines parameters for GetNodeLog.
-type GetNodeLogParams struct {
-	// Lines Maximum number of log lines to return.
+// GetNodeLogEntryParams defines parameters for GetNodeLogEntry.
+type GetNodeLogEntryParams struct {
+	// Unit Only the entries of this systemd unit, such as nginx.service
+	Unit *string `form:"unit,omitempty" json:"unit,omitempty" validate:"omitempty,unit_name"`
+
+	// Lines How many of the newest entries; 100 when it is not set
 	Lines *int `form:"lines,omitempty" json:"lines,omitempty" validate:"omitempty,min=1,max=10000"`
 
-	// Since Return log entries since this time. Accepts systemd time specifications (e.g., "1h", "2026-01-01 00:00:00").
+	// Since Only the entries since this time, in any form that journalctl --since takes, such as 1 hour ago
 	Since *string `form:"since,omitempty" json:"since,omitempty" validate:"omitempty"`
 
-	// Priority Filter by log priority level (e.g., "err", "warning", "info", "debug").
-	Priority *string `form:"priority,omitempty" json:"priority,omitempty" validate:"omitempty,oneof=emerg alert crit err warning notice info debug"`
+	// Priority Only the entries at this priority or above
+	Priority *GetNodeLogEntryParamsPriority `form:"priority,omitempty" json:"priority,omitempty" validate:"omitempty,oneof=emerg alert crit err warning notice info debug"`
 }
 
-// GetNodeLogUnitParams defines parameters for GetNodeLogUnit.
-type GetNodeLogUnitParams struct {
-	// Lines Maximum number of log lines to return.
-	Lines *int `form:"lines,omitempty" json:"lines,omitempty" validate:"omitempty,min=1,max=10000"`
-
-	// Since Return log entries since this time. Accepts systemd time specifications (e.g., "1h", "2026-01-01 00:00:00").
-	Since *string `form:"since,omitempty" json:"since,omitempty" validate:"omitempty"`
-
-	// Priority Filter by log priority level (e.g., "err", "warning", "info", "debug").
-	Priority *string `form:"priority,omitempty" json:"priority,omitempty" validate:"omitempty,oneof=emerg alert crit err warning notice info debug"`
-}
+// GetNodeLogEntryParamsPriority defines parameters for GetNodeLogEntry.
+type GetNodeLogEntryParamsPriority string
 
 // PostNodeNetworkPingJSONBody defines parameters for PostNodeNetworkPing.
 type PostNodeNetworkPingJSONBody struct {
@@ -5481,14 +5499,11 @@ type ClientInterface interface {
 	// GetNodeLoad request
 	GetNodeLoad(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetNodeLog request
-	GetNodeLog(ctx context.Context, hostname Hostname, params *GetNodeLogParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetNodeLogEntry request
+	GetNodeLogEntry(ctx context.Context, hostname Hostname, params *GetNodeLogEntryParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNodeLogSource request
 	GetNodeLogSource(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetNodeLogUnit request
-	GetNodeLogUnit(ctx context.Context, hostname Hostname, name UnitName, params *GetNodeLogUnitParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNodeMemory request
 	GetNodeMemory(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -6607,8 +6622,8 @@ func (c *Client) GetNodeLoad(ctx context.Context, hostname Hostname, reqEditors 
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetNodeLog(ctx context.Context, hostname Hostname, params *GetNodeLogParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetNodeLogRequest(c.Server, hostname, params)
+func (c *Client) GetNodeLogEntry(ctx context.Context, hostname Hostname, params *GetNodeLogEntryParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeLogEntryRequest(c.Server, hostname, params)
 	if err != nil {
 		return nil, err
 	}
@@ -6621,18 +6636,6 @@ func (c *Client) GetNodeLog(ctx context.Context, hostname Hostname, params *GetN
 
 func (c *Client) GetNodeLogSource(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetNodeLogSourceRequest(c.Server, hostname)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetNodeLogUnit(ctx context.Context, hostname Hostname, name UnitName, params *GetNodeLogUnitParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetNodeLogUnitRequest(c.Server, hostname, name, params)
 	if err != nil {
 		return nil, err
 	}
@@ -10102,8 +10105,8 @@ func NewGetNodeLoadRequest(server string, hostname Hostname) (*http.Request, err
 	return req, nil
 }
 
-// NewGetNodeLogRequest generates requests for GetNodeLog
-func NewGetNodeLogRequest(server string, hostname Hostname, params *GetNodeLogParams) (*http.Request, error) {
+// NewGetNodeLogEntryRequest generates requests for GetNodeLogEntry
+func NewGetNodeLogEntryRequest(server string, hostname Hostname, params *GetNodeLogEntryParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -10118,7 +10121,7 @@ func NewGetNodeLogRequest(server string, hostname Hostname, params *GetNodeLogPa
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/api/node/%s/log", pathParam0)
+	operationPath := fmt.Sprintf("/api/node/%s/log/entry", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -10136,6 +10139,18 @@ func NewGetNodeLogRequest(server string, hostname Hostname, params *GetNodeLogPa
 		// styled parameters, preserving literal commas as delimiters
 		// per the OpenAPI spec (e.g. "color=blue,black,brown").
 		var rawQueryFragments []string
+
+		if params.Unit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "unit", *params.Unit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
 
 		if params.Lines != nil {
 
@@ -10211,98 +10226,6 @@ func NewGetNodeLogSourceRequest(server string, hostname Hostname) (*http.Request
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetNodeLogUnitRequest generates requests for GetNodeLogUnit
-func NewGetNodeLogUnitRequest(server string, hostname Hostname, name UnitName, params *GetNodeLogUnitParams) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	var pathParam1 string
-
-	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "name", name, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/node/%s/log/unit/%s", pathParam0, pathParam1)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		// queryValues collects non-styled parameters (passthrough, JSON)
-		// that are safe to round-trip through url.Values.Encode().
-		queryValues := queryURL.Query()
-		// rawQueryFragments collects pre-encoded query fragments from
-		// styled parameters, preserving literal commas as delimiters
-		// per the OpenAPI spec (e.g. "color=blue,black,brown").
-		var rawQueryFragments []string
-
-		if params.Lines != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "lines", *params.Lines, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if params.Since != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "since", *params.Since, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if params.Priority != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "priority", *params.Priority, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if encoded := queryValues.Encode(); encoded != "" {
-			rawQueryFragments = append(rawQueryFragments, encoded)
-		}
-		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
 	}
 
 	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
@@ -13360,14 +13283,11 @@ type ClientWithResponsesInterface interface {
 	// GetNodeLoadWithResponse request
 	GetNodeLoadWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeLoadResponse, error)
 
-	// GetNodeLogWithResponse request
-	GetNodeLogWithResponse(ctx context.Context, hostname Hostname, params *GetNodeLogParams, reqEditors ...RequestEditorFn) (*GetNodeLogResponse, error)
+	// GetNodeLogEntryWithResponse request
+	GetNodeLogEntryWithResponse(ctx context.Context, hostname Hostname, params *GetNodeLogEntryParams, reqEditors ...RequestEditorFn) (*GetNodeLogEntryResponse, error)
 
 	// GetNodeLogSourceWithResponse request
 	GetNodeLogSourceWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeLogSourceResponse, error)
-
-	// GetNodeLogUnitWithResponse request
-	GetNodeLogUnitWithResponse(ctx context.Context, hostname Hostname, name UnitName, params *GetNodeLogUnitParams, reqEditors ...RequestEditorFn) (*GetNodeLogUnitResponse, error)
 
 	// GetNodeMemoryWithResponse request
 	GetNodeMemoryWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeMemoryResponse, error)
@@ -15585,18 +15505,20 @@ func (r GetNodeLoadResponse) ContentType() string {
 	return ""
 }
 
-type GetNodeLogResponse struct {
+type GetNodeLogEntryResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *LogCollectionResponse
+	JSON200      *LogEntryCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r GetNodeLogResponse) Status() string {
+func (r GetNodeLogEntryResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -15604,7 +15526,7 @@ func (r GetNodeLogResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetNodeLogResponse) StatusCode() int {
+func (r GetNodeLogEntryResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -15612,7 +15534,7 @@ func (r GetNodeLogResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetNodeLogResponse) ContentType() string {
+func (r GetNodeLogEntryResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -15626,6 +15548,8 @@ type GetNodeLogSourceResponse struct {
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -15647,40 +15571,6 @@ func (r GetNodeLogSourceResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetNodeLogSourceResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type GetNodeLogUnitResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *LogCollectionResponse
-	JSON400      *ErrorResponse
-	JSON401      *ErrorResponse
-	JSON403      *ErrorResponse
-	JSON500      *ErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r GetNodeLogUnitResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetNodeLogUnitResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetNodeLogUnitResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -18597,13 +18487,13 @@ func (c *ClientWithResponses) GetNodeLoadWithResponse(ctx context.Context, hostn
 	return ParseGetNodeLoadResponse(rsp)
 }
 
-// GetNodeLogWithResponse request returning *GetNodeLogResponse
-func (c *ClientWithResponses) GetNodeLogWithResponse(ctx context.Context, hostname Hostname, params *GetNodeLogParams, reqEditors ...RequestEditorFn) (*GetNodeLogResponse, error) {
-	rsp, err := c.GetNodeLog(ctx, hostname, params, reqEditors...)
+// GetNodeLogEntryWithResponse request returning *GetNodeLogEntryResponse
+func (c *ClientWithResponses) GetNodeLogEntryWithResponse(ctx context.Context, hostname Hostname, params *GetNodeLogEntryParams, reqEditors ...RequestEditorFn) (*GetNodeLogEntryResponse, error) {
+	rsp, err := c.GetNodeLogEntry(ctx, hostname, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetNodeLogResponse(rsp)
+	return ParseGetNodeLogEntryResponse(rsp)
 }
 
 // GetNodeLogSourceWithResponse request returning *GetNodeLogSourceResponse
@@ -18613,15 +18503,6 @@ func (c *ClientWithResponses) GetNodeLogSourceWithResponse(ctx context.Context, 
 		return nil, err
 	}
 	return ParseGetNodeLogSourceResponse(rsp)
-}
-
-// GetNodeLogUnitWithResponse request returning *GetNodeLogUnitResponse
-func (c *ClientWithResponses) GetNodeLogUnitWithResponse(ctx context.Context, hostname Hostname, name UnitName, params *GetNodeLogUnitParams, reqEditors ...RequestEditorFn) (*GetNodeLogUnitResponse, error) {
-	rsp, err := c.GetNodeLogUnit(ctx, hostname, name, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetNodeLogUnitResponse(rsp)
 }
 
 // GetNodeMemoryWithResponse request returning *GetNodeMemoryResponse
@@ -22729,22 +22610,22 @@ func ParseGetNodeLoadResponse(rsp *http.Response) (*GetNodeLoadResponse, error) 
 	return response, nil
 }
 
-// ParseGetNodeLogResponse parses an HTTP response from a GetNodeLogWithResponse call
-func ParseGetNodeLogResponse(rsp *http.Response) (*GetNodeLogResponse, error) {
+// ParseGetNodeLogEntryResponse parses an HTTP response from a GetNodeLogEntryWithResponse call
+func ParseGetNodeLogEntryResponse(rsp *http.Response) (*GetNodeLogEntryResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetNodeLogResponse{
+	response := &GetNodeLogEntryResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest LogCollectionResponse
+		var dest LogEntryCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -22770,6 +22651,20 @@ func ParseGetNodeLogResponse(rsp *http.Response) (*GetNodeLogResponse, error) {
 			return nil, err
 		}
 		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
@@ -22825,59 +22720,19 @@ func ParseGetNodeLogSourceResponse(rsp *http.Response) (*GetNodeLogSourceRespons
 		}
 		response.JSON403 = &dest
 
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
-		response.JSON500 = &dest
+		response.JSON404 = &dest
 
-	}
-
-	return response, nil
-}
-
-// ParseGetNodeLogUnitResponse parses an HTTP response from a GetNodeLogUnitWithResponse call
-func ParseGetNodeLogUnitResponse(rsp *http.Response) (*GetNodeLogUnitResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetNodeLogUnitResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest LogCollectionResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
-		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON403 = &dest
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

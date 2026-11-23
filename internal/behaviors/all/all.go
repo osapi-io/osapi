@@ -28,6 +28,8 @@ import (
 	_ "github.com/osapi-io/osapi/internal/behaviors/group"
 	_ "github.com/osapi-io/osapi/internal/behaviors/hostname"
 	_ "github.com/osapi-io/osapi/internal/behaviors/load"
+	_ "github.com/osapi-io/osapi/internal/behaviors/log/entry"
+	_ "github.com/osapi-io/osapi/internal/behaviors/log/source"
 	_ "github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	_ "github.com/osapi-io/osapi/internal/behaviors/memory"
 	_ "github.com/osapi-io/osapi/internal/behaviors/netplan"
