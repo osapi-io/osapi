@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">How a request runs | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/architecture/request-flow"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="How a request runs | OSAPI"><meta data-rh="true" name="description" content="Each change and each read of a host is a job. A client does not send a request"><meta data-rh="true" property="og:description" content="Each change and each read of a host is a job. A client does not send a request"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/architecture/request-flow"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/request-flow" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/architecture/request-flow" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Architecture","item":"https://osapi-io.github.io/osapi/sidebar/architecture/"},{"@type":"ListItem","position":2,"name":"How a request runs","item":"https://osapi-io.github.io/osapi/sidebar/architecture/request-flow"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.ee2257e7.css">
-<script src="/osapi/assets/js/runtime~main.6dbd1e38.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.e473d109.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.ed3fa410.js" defer="defer"></script>
 </head>
 <body>
@@ -73,9 +73,15 @@ hours by default. Thus a host that gets a new machine ID, such as a rebuilt VM,
 does not keep its old consumers in the stream. An agent that starts again in
 that time continues with the same consumers. The agent sets the threshold each
 time it starts, so a consumer that had no threshold gets it.</p>
-<p>Keep the threshold at or above <code>nats.stream.max_age</code>. A new consumer gets each
-job that is in the stream. When the threshold is longer than the stream keeps a
-job, that is only the jobs that came while the agent was gone.</p>
+<p>A new consumer gets only the jobs that come after NATS makes it. Thus a new host
+or a new label does not run the jobs that the stream kept from before. An agent
+that starts again with the same consumers gets the jobs that came while it was
+gone. Keep the threshold at or above <code>nats.stream.max_age</code>. Then the consumer of
+an agent that was gone stays while the stream keeps a job for it.</p>
+<p>NATS does not change the deliver policy of a consumer that exists. When the
+agent finds a consumer with a different deliver policy, such as one that an
+earlier version made, it removes the consumer, makes it again and logs a
+warning. Thus an upgraded agent gets its consumers with no operator action.</p>
 <p>If the agent cannot make or bind a consumer, for example when the stream has its
 maximum number of consumers, it reports the <code>ConsumersUnavailable</code> condition and
 tries again each 10 seconds. Refer to
