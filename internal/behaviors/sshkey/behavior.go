@@ -103,6 +103,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A name that is not a user name", ListInput{Name: "Bad;name"}, "Name").
 		Fails("A name over 32 characters", ListInput{Name: strings.Repeat("a", 33)}, "max"),
 	behavior.Write("create", Create).
+		AdminOnly().
 		On(behavior.PlatformDebian).
 		Describe("Add an authorized SSH key to a user").
 		Explain("Adds the key line to the end of ~/.ssh/authorized_keys of the user, and makes "+
@@ -142,6 +143,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A key with a line break", CreateInput{Name: "osapitest", Key: key1 + "\n" + key2},
 			"no_linebreak"),
 	behavior.Write("delete", Delete).
+		AdminOnly().
 		On(behavior.PlatformDebian).
 		Describe("Remove an authorized SSH key of a user").
 		Explain("Removes each line of the key with the fingerprint from ~/.ssh/authorized_keys "+

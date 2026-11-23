@@ -31,6 +31,7 @@ export * from './route-api-route-operations/route-api-route-operations';
 export * from './schedule-api-schedule-operations/schedule-api-schedule-operations';
 export * from './service-api-service-operations/service-api-service-operations';
 export * from './source-api-log-source-operations/source-api-log-source-operations';
+export * from './sshkey-api-sshkey-operations/sshkey-api-sshkey-operations';
 export * from './status-api-status-operations/status-api-status-operations';
 export * from './sysctl-api-sysctl-operations/sysctl-api-sysctl-operations';
 export * from './telemetry-api-telemetry/telemetry-api-telemetry';
@@ -38,4 +39,3 @@ export * from './timezone-api-timezone-operations/timezone-api-timezone-operatio
 export * from './updatepackages-api-updatepackages-operations/updatepackages-api-updatepackages-operations';
 export * from './uptime-api-uptime-operations/uptime-api-uptime-operations';
 export * from './user-api-user-operations/user-api-user-operations';
-export * from './user-ssh-key-management-api-user-operations/user-ssh-key-management-api-user-operations';

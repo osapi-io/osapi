@@ -34,7 +34,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 				Path:   "/api/node/server1/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","fingerprint":"SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"sshkey.delete",
@@ -54,7 +54,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 				Path:   "/api/node/_all/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","fingerprint":"SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"sshkey.delete",
@@ -76,7 +76,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 				Path:   "/api/node/server1/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","fingerprint":"SHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"sshkey.delete",
@@ -96,7 +96,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 				Path:   "/api/node/_all/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","fingerprint":"SHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"sshkey.delete",
@@ -118,7 +118,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 				Path:   "/api/node/server1/user/nobody/sshkey",
 				Body:   `{"name":"nobody","fingerprint":"SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"sshkey.delete",
@@ -138,7 +138,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 				Path:   "/api/node/_all/user/nobody/sshkey",
 				Body:   `{"name":"nobody","fingerprint":"SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"sshkey.delete",
@@ -160,7 +160,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 				Path:   "/api/node/server1/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","fingerprint":"SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"sshkey.delete",
@@ -180,7 +180,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 				Path:   "/api/node/server1/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","fingerprint":"SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"sshkey.delete",
@@ -200,7 +200,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 				Path:   "/api/node/server1/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","fingerprint":"SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"sshkey.delete",
@@ -220,7 +220,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 				Path:   "/api/node/server1/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","fingerprint":"SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"sshkey.delete",
@@ -238,7 +238,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 				Path:   "/api/node/_all/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","fingerprint":"SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"sshkey.delete",
@@ -263,7 +263,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteValidationHTTP() {
 				Path:   "/api/node/nowhere/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","fingerprint":"SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -273,7 +273,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteValidationHTTP() {
 				Path:   "/api/node//user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","fingerprint":"SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -283,7 +283,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteValidationHTTP() {
 				Path:   "/api/node/server1/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","fingerprint":""}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -293,7 +293,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteValidationHTTP() {
 				Path:   "/api/node/server1/user/osapitest/sshkey",
 				Body:   `{`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -303,7 +303,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteValidationHTTP() {
 				Path:   "/api/node/server1/user/osapitest/sshkey",
 				Body:   `{"fingerprint":[]}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -313,7 +313,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteValidationHTTP() {
 				Path:   "/api/node/server1/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","fingerprint":"MD5:aa"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -323,7 +323,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteValidationHTTP() {
 				Path:   "/api/node/server1/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","fingerprint":"SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk\nSHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -333,7 +333,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteValidationHTTP() {
 				Path:   "/api/node/server1/user/Bad%3Bname/sshkey",
 				Body:   `{"name":"Bad;name","fingerprint":"SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -343,7 +343,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteValidationHTTP() {
 				Path:   "/api/node/server1/user/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/sshkey",
 				Body:   `{"name":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","fingerprint":"SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 	})
@@ -380,6 +380,16 @@ func (s *APIDeletePublicTestSuite) TestDeleteRBACHTTP() {
 				Body:   `{"name":"osapitest","fingerprint":"SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk"}`,
 			},
 			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the write role, it is a 403: the method is admin only",
+			Request: servertest.Request{
+				Method: http.MethodDelete,
+				Path:   "/api/node/server1/user/osapitest/sshkey",
+				Body:   `{"name":"osapitest","fingerprint":"SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk"}`,
+			},
+			Token:    servertest.Write,
 			WantCode: http.StatusForbidden,
 		},
 		{

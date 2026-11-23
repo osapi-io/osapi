@@ -34,7 +34,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/server1/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","key":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"sshkey.create",
@@ -54,7 +54,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/_all/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","key":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"sshkey.create",
@@ -76,7 +76,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/server1/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","key":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"sshkey.create",
@@ -96,7 +96,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/_all/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","key":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"sshkey.create",
@@ -118,7 +118,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/server1/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","key":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"sshkey.create",
@@ -138,7 +138,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/_all/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","key":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"sshkey.create",
@@ -160,7 +160,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/server1/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","key":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"sshkey.create",
@@ -180,7 +180,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/_all/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","key":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"sshkey.create",
@@ -202,7 +202,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/server1/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","key":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"sshkey.create",
@@ -222,7 +222,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/server1/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","key":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"sshkey.create",
@@ -242,7 +242,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/server1/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","key":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"sshkey.create",
@@ -262,7 +262,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/server1/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","key":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
 				"sshkey.create",
@@ -280,7 +280,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				Path:   "/api/node/_all/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","key":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"}`,
 			},
-			Token: servertest.Write,
+			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"_all",
 				"sshkey.create",
@@ -305,7 +305,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/nowhere/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","key":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -315,7 +315,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node//user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","key":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -325,7 +325,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","key":""}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -335,7 +335,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/user/osapitest/sshkey",
 				Body:   `{`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -345,7 +345,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/user/osapitest/sshkey",
 				Body:   `{"key":[]}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -355,7 +355,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/user/Bad%3Bname/sshkey",
 				Body:   `{"name":"Bad;name","key":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -365,7 +365,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/user/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/sshkey",
 				Body:   `{"name":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","key":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 		{
@@ -375,7 +375,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 				Path:   "/api/node/server1/user/osapitest/sshkey",
 				Body:   `{"name":"osapitest","key":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGLPeEZQDbhOrSIx6gISjxXIcREV3rwL517pX6m9G5jc other@example"}`,
 			},
-			Token:    servertest.Write,
+			Token:    servertest.Admin,
 			WantCode: http.StatusBadRequest,
 		},
 	})
@@ -412,6 +412,16 @@ func (s *APICreatePublicTestSuite) TestCreateRBACHTTP() {
 				Body:   `{"name":"osapitest","key":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"}`,
 			},
 			Token:    servertest.Read,
+			WantCode: http.StatusForbidden,
+		},
+		{
+			Name: "when the token has the write role, it is a 403: the method is admin only",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/user/osapitest/sshkey",
+				Body:   `{"name":"osapitest","key":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"}`,
+			},
+			Token:    servertest.Write,
 			WantCode: http.StatusForbidden,
 		},
 		{

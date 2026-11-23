@@ -1039,54 +1039,6 @@ func (e ProcessSignalRequestSignal) Valid() bool {
 	}
 }
 
-// Defines values for SSHKeyEntryStatus.
-const (
-	SSHKeyEntryStatusFailed  SSHKeyEntryStatus = "failed"
-	SSHKeyEntryStatusOk      SSHKeyEntryStatus = "ok"
-	SSHKeyEntryStatusSkipped SSHKeyEntryStatus = "skipped"
-	SSHKeyEntryStatusTimeout SSHKeyEntryStatus = "timeout"
-)
-
-// Valid indicates whether the value is a known member of the SSHKeyEntryStatus enum.
-func (e SSHKeyEntryStatus) Valid() bool {
-	switch e {
-	case SSHKeyEntryStatusFailed:
-		return true
-	case SSHKeyEntryStatusOk:
-		return true
-	case SSHKeyEntryStatusSkipped:
-		return true
-	case SSHKeyEntryStatusTimeout:
-		return true
-	default:
-		return false
-	}
-}
-
-// Defines values for SSHKeyMutationEntryStatus.
-const (
-	SSHKeyMutationEntryStatusFailed  SSHKeyMutationEntryStatus = "failed"
-	SSHKeyMutationEntryStatusOk      SSHKeyMutationEntryStatus = "ok"
-	SSHKeyMutationEntryStatusSkipped SSHKeyMutationEntryStatus = "skipped"
-	SSHKeyMutationEntryStatusTimeout SSHKeyMutationEntryStatus = "timeout"
-)
-
-// Valid indicates whether the value is a known member of the SSHKeyMutationEntryStatus enum.
-func (e SSHKeyMutationEntryStatus) Valid() bool {
-	switch e {
-	case SSHKeyMutationEntryStatusFailed:
-		return true
-	case SSHKeyMutationEntryStatusOk:
-		return true
-	case SSHKeyMutationEntryStatusSkipped:
-		return true
-	case SSHKeyMutationEntryStatusTimeout:
-		return true
-	default:
-		return false
-	}
-}
-
 // Defines values for ScheduleCreateRequestContentType.
 const (
 	ScheduleCreateRequestContentTypeRaw      ScheduleCreateRequestContentType = "raw"
@@ -1495,6 +1447,54 @@ func (e UserResultStatus) Valid() bool {
 	case UserResultStatusSkipped:
 		return true
 	case UserResultStatusTimeout:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for UserSshkeyKeyStatus.
+const (
+	UserSshkeyKeyStatusFailed  UserSshkeyKeyStatus = "failed"
+	UserSshkeyKeyStatusOk      UserSshkeyKeyStatus = "ok"
+	UserSshkeyKeyStatusSkipped UserSshkeyKeyStatus = "skipped"
+	UserSshkeyKeyStatusTimeout UserSshkeyKeyStatus = "timeout"
+)
+
+// Valid indicates whether the value is a known member of the UserSshkeyKeyStatus enum.
+func (e UserSshkeyKeyStatus) Valid() bool {
+	switch e {
+	case UserSshkeyKeyStatusFailed:
+		return true
+	case UserSshkeyKeyStatusOk:
+		return true
+	case UserSshkeyKeyStatusSkipped:
+		return true
+	case UserSshkeyKeyStatusTimeout:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for UserSshkeyResultStatus.
+const (
+	UserSshkeyResultStatusFailed  UserSshkeyResultStatus = "failed"
+	UserSshkeyResultStatusOk      UserSshkeyResultStatus = "ok"
+	UserSshkeyResultStatusSkipped UserSshkeyResultStatus = "skipped"
+	UserSshkeyResultStatusTimeout UserSshkeyResultStatus = "timeout"
+)
+
+// Valid indicates whether the value is a known member of the UserSshkeyResultStatus enum.
+func (e UserSshkeyResultStatus) Valid() bool {
+	switch e {
+	case UserSshkeyResultStatusFailed:
+		return true
+	case UserSshkeyResultStatusOk:
+		return true
+	case UserSshkeyResultStatusSkipped:
+		return true
+	case UserSshkeyResultStatusTimeout:
 		return true
 	default:
 		return false
@@ -3975,74 +3975,6 @@ type RouteResponse struct {
 	Metric *int `json:"metric,omitempty"`
 }
 
-// SSHKeyAddRequest defines model for SSHKeyAddRequest.
-type SSHKeyAddRequest struct {
-	// Key Full SSH public key line (e.g., "ssh-ed25519 AAAA... user@host").
-	Key string `json:"key" validate:"required,min=1"`
-}
-
-// SSHKeyCollectionResponse defines model for SSHKeyCollectionResponse.
-type SSHKeyCollectionResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []SSHKeyEntry       `json:"results"`
-}
-
-// SSHKeyEntry SSH key list result for a single agent.
-type SSHKeyEntry struct {
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname The hostname of the agent.
-	Hostname string `json:"hostname"`
-
-	// Keys SSH authorized keys on this agent.
-	Keys *[]SSHKeyInfo `json:"keys,omitempty"`
-
-	// Status The status of the operation for this host.
-	Status SSHKeyEntryStatus `json:"status"`
-}
-
-// SSHKeyEntryStatus The status of the operation for this host.
-type SSHKeyEntryStatus string
-
-// SSHKeyInfo An SSH authorized key entry.
-type SSHKeyInfo struct {
-	// Comment Key comment (typically user@host).
-	Comment *string `json:"comment,omitempty"`
-
-	// Fingerprint SHA256 fingerprint of the key.
-	Fingerprint *string `json:"fingerprint,omitempty"`
-
-	// Type Key type (e.g., ssh-rsa, ssh-ed25519).
-	Type *string `json:"type,omitempty"`
-}
-
-// SSHKeyMutationEntry SSH key mutation result for a single agent.
-type SSHKeyMutationEntry struct {
-	// Changed Whether the operation modified system state.
-	Changed *bool `json:"changed,omitempty"`
-
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname The hostname of the agent.
-	Hostname string `json:"hostname"`
-
-	// Status The status of the operation for this host.
-	Status SSHKeyMutationEntryStatus `json:"status"`
-}
-
-// SSHKeyMutationEntryStatus The status of the operation for this host.
-type SSHKeyMutationEntryStatus string
-
-// SSHKeyMutationResponse defines model for SSHKeyMutationResponse.
-type SSHKeyMutationResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID   `json:"job_id,omitempty"`
-	Results []SSHKeyMutationEntry `json:"results"`
-}
-
 // ScheduleCollectionResponse defines model for ScheduleCollectionResponse.
 type ScheduleCollectionResponse struct {
 	// JobId The job ID used to process this request.
@@ -4921,6 +4853,87 @@ type UserResult struct {
 // UserResultStatus The status of the operation for this host.
 type UserResultStatus string
 
+// UserSshkeyCollectionResponse defines model for UserSshkeyCollectionResponse.
+type UserSshkeyCollectionResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []UserSshkeyKey     `json:"results"`
+}
+
+// UserSshkeyCreateRequest defines model for UserSshkeyCreateRequest.
+type UserSshkeyCreateRequest struct {
+	// Key The public key line, such as ssh-ed25519 AAAA... alice@laptop, with options before it if any
+	Key string `json:"key" validate:"required,no_linebreak"`
+}
+
+// UserSshkeyCreateResponse defines model for UserSshkeyCreateResponse.
+type UserSshkeyCreateResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []UserSshkeyResult  `json:"results"`
+}
+
+// UserSshkeyDeleteRequest defines model for UserSshkeyDeleteRequest.
+type UserSshkeyDeleteRequest struct {
+	// Fingerprint The SHA256 fingerprint of the key, as list shows it
+	Fingerprint string `json:"fingerprint" validate:"required,startswith=SHA256:,no_linebreak"`
+}
+
+// UserSshkeyDeleteResponse defines model for UserSshkeyDeleteResponse.
+type UserSshkeyDeleteResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []UserSshkeyResult  `json:"results"`
+}
+
+// UserSshkeyKey defines model for UserSshkeyKey.
+type UserSshkeyKey struct {
+	// Comment The comment after the key, such as alice@laptop
+	Comment *string `json:"comment,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Fingerprint The SHA256 fingerprint of the key
+	Fingerprint *string `json:"fingerprint,omitempty"`
+
+	// Hostname Hostname of the agent that produced this result.
+	Hostname string `json:"hostname"`
+
+	// Options The options before the key, such as from="10.0.0.0/8"
+	Options *string `json:"options,omitempty"`
+
+	// Status The status of the operation for this host.
+	Status UserSshkeyKeyStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
+
+	// Type The key type, such as ssh-ed25519
+	Type *string `json:"type,omitempty"`
+}
+
+// UserSshkeyKeyStatus The status of the operation for this host.
+type UserSshkeyKeyStatus string
+
+// UserSshkeyResult defines model for UserSshkeyResult.
+type UserSshkeyResult struct {
+	// Changed Whether the host changed
+	Changed *bool `json:"changed,omitempty"`
+
+	// Error Error message if the agent failed.
+	Error *string `json:"error,omitempty"`
+
+	// Fingerprint The SHA256 fingerprint of the key
+	Fingerprint *string `json:"fingerprint,omitempty"`
+
+	// Hostname Hostname of the agent that produced this result.
+	Hostname string `json:"hostname"`
+
+	// Status The status of the operation for this host.
+	Status UserSshkeyResultStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
+}
+
+// UserSshkeyResultStatus The status of the operation for this host.
+type UserSshkeyResultStatus string
+
 // UserUpdateRequest defines model for UserUpdateRequest.
 type UserUpdateRequest struct {
 	// Groups The groups it is a member of, which replace the groups it has
@@ -4973,12 +4986,6 @@ type PackageName = string
 // ProcessPid defines model for ProcessPid.
 type ProcessPid = int
 
-// SSHKeyFingerprint defines model for SSHKeyFingerprint.
-type SSHKeyFingerprint = string
-
-// SSHKeyUserName defines model for SSHKeyUserName.
-type SSHKeyUserName = string
-
 // ScheduleName defines model for ScheduleName.
 type ScheduleName = string
 
@@ -4990,6 +4997,9 @@ type SysctlKey = string
 
 // UserName defines model for UserName.
 type UserName = string
+
+// UserSshkeyName defines model for UserSshkeyName.
+type UserSshkeyName = string
 
 // bearerAuthContextKey is the context key for BearerAuth security scheme
 type bearerAuthContextKey string
@@ -5248,8 +5258,11 @@ type PutNodeUserJSONRequestBody = UserUpdateRequest
 // PostNodeUserPasswdJSONRequestBody defines body for PostNodeUserPasswd for application/json ContentType.
 type PostNodeUserPasswdJSONRequestBody = UserPasswdRequest
 
-// PostNodeUserSSHKeyJSONRequestBody defines body for PostNodeUserSSHKey for application/json ContentType.
-type PostNodeUserSSHKeyJSONRequestBody = SSHKeyAddRequest
+// DeleteNodeUserSshkeyJSONRequestBody defines body for DeleteNodeUserSshkey for application/json ContentType.
+type DeleteNodeUserSshkeyJSONRequestBody = UserSshkeyDeleteRequest
+
+// PostNodeUserSshkeyJSONRequestBody defines body for PostNodeUserSshkey for application/json ContentType.
+type PostNodeUserSshkeyJSONRequestBody = UserSshkeyCreateRequest
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -5762,16 +5775,18 @@ type ClientInterface interface {
 
 	PostNodeUserPasswd(ctx context.Context, hostname Hostname, name UserName, body PostNodeUserPasswdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetNodeUserSSHKey request
-	GetNodeUserSSHKey(ctx context.Context, hostname Hostname, name SSHKeyUserName, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// DeleteNodeUserSshkeyWithBody request with any body
+	DeleteNodeUserSshkeyWithBody(ctx context.Context, hostname Hostname, name UserSshkeyName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostNodeUserSSHKeyWithBody request with any body
-	PostNodeUserSSHKeyWithBody(ctx context.Context, hostname Hostname, name SSHKeyUserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	DeleteNodeUserSshkey(ctx context.Context, hostname Hostname, name UserSshkeyName, body DeleteNodeUserSshkeyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostNodeUserSSHKey(ctx context.Context, hostname Hostname, name SSHKeyUserName, body PostNodeUserSSHKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetNodeUserSshkey request
+	GetNodeUserSshkey(ctx context.Context, hostname Hostname, name UserSshkeyName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// DeleteNodeUserSSHKey request
-	DeleteNodeUserSSHKey(ctx context.Context, hostname Hostname, name SSHKeyUserName, fingerprint SSHKeyFingerprint, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostNodeUserSshkeyWithBody request with any body
+	PostNodeUserSshkeyWithBody(ctx context.Context, hostname Hostname, name UserSshkeyName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostNodeUserSshkey(ctx context.Context, hostname Hostname, name UserSshkeyName, body PostNodeUserSshkeyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetTrace request
 	GetTrace(ctx context.Context, id string, params *GetTraceParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -7685,8 +7700,8 @@ func (c *Client) PostNodeUserPasswd(ctx context.Context, hostname Hostname, name
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetNodeUserSSHKey(ctx context.Context, hostname Hostname, name SSHKeyUserName, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetNodeUserSSHKeyRequest(c.Server, hostname, name)
+func (c *Client) DeleteNodeUserSshkeyWithBody(ctx context.Context, hostname Hostname, name UserSshkeyName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteNodeUserSshkeyRequestWithBody(c.Server, hostname, name, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -7697,8 +7712,8 @@ func (c *Client) GetNodeUserSSHKey(ctx context.Context, hostname Hostname, name 
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNodeUserSSHKeyWithBody(ctx context.Context, hostname Hostname, name SSHKeyUserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeUserSSHKeyRequestWithBody(c.Server, hostname, name, contentType, body)
+func (c *Client) DeleteNodeUserSshkey(ctx context.Context, hostname Hostname, name UserSshkeyName, body DeleteNodeUserSshkeyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteNodeUserSshkeyRequest(c.Server, hostname, name, body)
 	if err != nil {
 		return nil, err
 	}
@@ -7709,8 +7724,8 @@ func (c *Client) PostNodeUserSSHKeyWithBody(ctx context.Context, hostname Hostna
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNodeUserSSHKey(ctx context.Context, hostname Hostname, name SSHKeyUserName, body PostNodeUserSSHKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostNodeUserSSHKeyRequest(c.Server, hostname, name, body)
+func (c *Client) GetNodeUserSshkey(ctx context.Context, hostname Hostname, name UserSshkeyName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeUserSshkeyRequest(c.Server, hostname, name)
 	if err != nil {
 		return nil, err
 	}
@@ -7721,8 +7736,20 @@ func (c *Client) PostNodeUserSSHKey(ctx context.Context, hostname Hostname, name
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteNodeUserSSHKey(ctx context.Context, hostname Hostname, name SSHKeyUserName, fingerprint SSHKeyFingerprint, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteNodeUserSSHKeyRequest(c.Server, hostname, name, fingerprint)
+func (c *Client) PostNodeUserSshkeyWithBody(ctx context.Context, hostname Hostname, name UserSshkeyName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeUserSshkeyRequestWithBody(c.Server, hostname, name, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostNodeUserSshkey(ctx context.Context, hostname Hostname, name UserSshkeyName, body PostNodeUserSshkeyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostNodeUserSshkeyRequest(c.Server, hostname, name, body)
 	if err != nil {
 		return nil, err
 	}
@@ -12917,8 +12944,19 @@ func NewPostNodeUserPasswdRequestWithBody(server string, hostname Hostname, name
 	return req, nil
 }
 
-// NewGetNodeUserSSHKeyRequest generates requests for GetNodeUserSSHKey
-func NewGetNodeUserSSHKeyRequest(server string, hostname Hostname, name SSHKeyUserName) (*http.Request, error) {
+// NewDeleteNodeUserSshkeyRequest calls the generic DeleteNodeUserSshkey builder with application/json body
+func NewDeleteNodeUserSshkeyRequest(server string, hostname Hostname, name UserSshkeyName, body DeleteNodeUserSshkeyJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewDeleteNodeUserSshkeyRequestWithBody(server, hostname, name, "application/json", bodyReader)
+}
+
+// NewDeleteNodeUserSshkeyRequestWithBody generates requests for DeleteNodeUserSshkey with any type of body
+func NewDeleteNodeUserSshkeyRequestWithBody(server string, hostname Hostname, name UserSshkeyName, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -12940,7 +12978,50 @@ func NewGetNodeUserSSHKeyRequest(server string, hostname Hostname, name SSHKeyUs
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/api/node/%s/user/%s/ssh-key", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/user/%s/sshkey", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetNodeUserSshkeyRequest generates requests for GetNodeUserSshkey
+func NewGetNodeUserSshkeyRequest(server string, hostname Hostname, name UserSshkeyName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "name", name, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/node/%s/user/%s/sshkey", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -12958,19 +13039,19 @@ func NewGetNodeUserSSHKeyRequest(server string, hostname Hostname, name SSHKeyUs
 	return req, nil
 }
 
-// NewPostNodeUserSSHKeyRequest calls the generic PostNodeUserSSHKey builder with application/json body
-func NewPostNodeUserSSHKeyRequest(server string, hostname Hostname, name SSHKeyUserName, body PostNodeUserSSHKeyJSONRequestBody) (*http.Request, error) {
+// NewPostNodeUserSshkeyRequest calls the generic PostNodeUserSshkey builder with application/json body
+func NewPostNodeUserSshkeyRequest(server string, hostname Hostname, name UserSshkeyName, body PostNodeUserSshkeyJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostNodeUserSSHKeyRequestWithBody(server, hostname, name, "application/json", bodyReader)
+	return NewPostNodeUserSshkeyRequestWithBody(server, hostname, name, "application/json", bodyReader)
 }
 
-// NewPostNodeUserSSHKeyRequestWithBody generates requests for PostNodeUserSSHKey with any type of body
-func NewPostNodeUserSSHKeyRequestWithBody(server string, hostname Hostname, name SSHKeyUserName, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostNodeUserSshkeyRequestWithBody generates requests for PostNodeUserSshkey with any type of body
+func NewPostNodeUserSshkeyRequestWithBody(server string, hostname Hostname, name UserSshkeyName, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -12992,7 +13073,7 @@ func NewPostNodeUserSSHKeyRequestWithBody(server string, hostname Hostname, name
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/api/node/%s/user/%s/ssh-key", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/api/node/%s/user/%s/sshkey", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -13008,54 +13089,6 @@ func NewPostNodeUserSSHKeyRequestWithBody(server string, hostname Hostname, name
 	}
 
 	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewDeleteNodeUserSSHKeyRequest generates requests for DeleteNodeUserSSHKey
-func NewDeleteNodeUserSSHKeyRequest(server string, hostname Hostname, name SSHKeyUserName, fingerprint SSHKeyFingerprint) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "hostname", hostname, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	var pathParam1 string
-
-	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "name", name, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	var pathParam2 string
-
-	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "fingerprint", fingerprint, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/node/%s/user/%s/ssh-key/%s", pathParam0, pathParam1, pathParam2)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
 
 	return req, nil
 }
@@ -13602,16 +13635,18 @@ type ClientWithResponsesInterface interface {
 
 	PostNodeUserPasswdWithResponse(ctx context.Context, hostname Hostname, name UserName, body PostNodeUserPasswdJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeUserPasswdResponse, error)
 
-	// GetNodeUserSSHKeyWithResponse request
-	GetNodeUserSSHKeyWithResponse(ctx context.Context, hostname Hostname, name SSHKeyUserName, reqEditors ...RequestEditorFn) (*GetNodeUserSSHKeyResponse, error)
+	// DeleteNodeUserSshkeyWithBodyWithResponse request with any body
+	DeleteNodeUserSshkeyWithBodyWithResponse(ctx context.Context, hostname Hostname, name UserSshkeyName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteNodeUserSshkeyResponse, error)
 
-	// PostNodeUserSSHKeyWithBodyWithResponse request with any body
-	PostNodeUserSSHKeyWithBodyWithResponse(ctx context.Context, hostname Hostname, name SSHKeyUserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeUserSSHKeyResponse, error)
+	DeleteNodeUserSshkeyWithResponse(ctx context.Context, hostname Hostname, name UserSshkeyName, body DeleteNodeUserSshkeyJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteNodeUserSshkeyResponse, error)
 
-	PostNodeUserSSHKeyWithResponse(ctx context.Context, hostname Hostname, name SSHKeyUserName, body PostNodeUserSSHKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeUserSSHKeyResponse, error)
+	// GetNodeUserSshkeyWithResponse request
+	GetNodeUserSshkeyWithResponse(ctx context.Context, hostname Hostname, name UserSshkeyName, reqEditors ...RequestEditorFn) (*GetNodeUserSshkeyResponse, error)
 
-	// DeleteNodeUserSSHKeyWithResponse request
-	DeleteNodeUserSSHKeyWithResponse(ctx context.Context, hostname Hostname, name SSHKeyUserName, fingerprint SSHKeyFingerprint, reqEditors ...RequestEditorFn) (*DeleteNodeUserSSHKeyResponse, error)
+	// PostNodeUserSshkeyWithBodyWithResponse request with any body
+	PostNodeUserSshkeyWithBodyWithResponse(ctx context.Context, hostname Hostname, name UserSshkeyName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeUserSshkeyResponse, error)
+
+	PostNodeUserSshkeyWithResponse(ctx context.Context, hostname Hostname, name UserSshkeyName, body PostNodeUserSshkeyJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeUserSshkeyResponse, error)
 
 	// GetTraceWithResponse request
 	GetTraceWithResponse(ctx context.Context, id string, params *GetTraceParams, reqEditors ...RequestEditorFn) (*GetTraceResponse, error)
@@ -17873,18 +17908,20 @@ func (r PostNodeUserPasswdResponse) ContentType() string {
 	return ""
 }
 
-type GetNodeUserSSHKeyResponse struct {
+type DeleteNodeUserSshkeyResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *SSHKeyCollectionResponse
+	JSON200      *UserSshkeyDeleteResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r GetNodeUserSSHKeyResponse) Status() string {
+func (r DeleteNodeUserSshkeyResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -17892,7 +17929,7 @@ func (r GetNodeUserSSHKeyResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetNodeUserSSHKeyResponse) StatusCode() int {
+func (r DeleteNodeUserSshkeyResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -17900,25 +17937,27 @@ func (r GetNodeUserSSHKeyResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetNodeUserSSHKeyResponse) ContentType() string {
+func (r DeleteNodeUserSshkeyResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type PostNodeUserSSHKeyResponse struct {
+type GetNodeUserSshkeyResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *SSHKeyMutationResponse
+	JSON200      *UserSshkeyCollectionResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r PostNodeUserSSHKeyResponse) Status() string {
+func (r GetNodeUserSshkeyResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -17926,7 +17965,7 @@ func (r PostNodeUserSSHKeyResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostNodeUserSSHKeyResponse) StatusCode() int {
+func (r GetNodeUserSshkeyResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -17934,25 +17973,27 @@ func (r PostNodeUserSSHKeyResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r PostNodeUserSSHKeyResponse) ContentType() string {
+func (r GetNodeUserSshkeyResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type DeleteNodeUserSSHKeyResponse struct {
+type PostNodeUserSshkeyResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *SSHKeyMutationResponse
+	JSON200      *UserSshkeyCreateResponse
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r DeleteNodeUserSSHKeyResponse) Status() string {
+func (r PostNodeUserSshkeyResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -17960,7 +18001,7 @@ func (r DeleteNodeUserSSHKeyResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r DeleteNodeUserSSHKeyResponse) StatusCode() int {
+func (r PostNodeUserSshkeyResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -17968,7 +18009,7 @@ func (r DeleteNodeUserSSHKeyResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r DeleteNodeUserSSHKeyResponse) ContentType() string {
+func (r PostNodeUserSshkeyResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -19403,39 +19444,47 @@ func (c *ClientWithResponses) PostNodeUserPasswdWithResponse(ctx context.Context
 	return ParsePostNodeUserPasswdResponse(rsp)
 }
 
-// GetNodeUserSSHKeyWithResponse request returning *GetNodeUserSSHKeyResponse
-func (c *ClientWithResponses) GetNodeUserSSHKeyWithResponse(ctx context.Context, hostname Hostname, name SSHKeyUserName, reqEditors ...RequestEditorFn) (*GetNodeUserSSHKeyResponse, error) {
-	rsp, err := c.GetNodeUserSSHKey(ctx, hostname, name, reqEditors...)
+// DeleteNodeUserSshkeyWithBodyWithResponse request with arbitrary body returning *DeleteNodeUserSshkeyResponse
+func (c *ClientWithResponses) DeleteNodeUserSshkeyWithBodyWithResponse(ctx context.Context, hostname Hostname, name UserSshkeyName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteNodeUserSshkeyResponse, error) {
+	rsp, err := c.DeleteNodeUserSshkeyWithBody(ctx, hostname, name, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetNodeUserSSHKeyResponse(rsp)
+	return ParseDeleteNodeUserSshkeyResponse(rsp)
 }
 
-// PostNodeUserSSHKeyWithBodyWithResponse request with arbitrary body returning *PostNodeUserSSHKeyResponse
-func (c *ClientWithResponses) PostNodeUserSSHKeyWithBodyWithResponse(ctx context.Context, hostname Hostname, name SSHKeyUserName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeUserSSHKeyResponse, error) {
-	rsp, err := c.PostNodeUserSSHKeyWithBody(ctx, hostname, name, contentType, body, reqEditors...)
+func (c *ClientWithResponses) DeleteNodeUserSshkeyWithResponse(ctx context.Context, hostname Hostname, name UserSshkeyName, body DeleteNodeUserSshkeyJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteNodeUserSshkeyResponse, error) {
+	rsp, err := c.DeleteNodeUserSshkey(ctx, hostname, name, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostNodeUserSSHKeyResponse(rsp)
+	return ParseDeleteNodeUserSshkeyResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostNodeUserSSHKeyWithResponse(ctx context.Context, hostname Hostname, name SSHKeyUserName, body PostNodeUserSSHKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeUserSSHKeyResponse, error) {
-	rsp, err := c.PostNodeUserSSHKey(ctx, hostname, name, body, reqEditors...)
+// GetNodeUserSshkeyWithResponse request returning *GetNodeUserSshkeyResponse
+func (c *ClientWithResponses) GetNodeUserSshkeyWithResponse(ctx context.Context, hostname Hostname, name UserSshkeyName, reqEditors ...RequestEditorFn) (*GetNodeUserSshkeyResponse, error) {
+	rsp, err := c.GetNodeUserSshkey(ctx, hostname, name, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostNodeUserSSHKeyResponse(rsp)
+	return ParseGetNodeUserSshkeyResponse(rsp)
 }
 
-// DeleteNodeUserSSHKeyWithResponse request returning *DeleteNodeUserSSHKeyResponse
-func (c *ClientWithResponses) DeleteNodeUserSSHKeyWithResponse(ctx context.Context, hostname Hostname, name SSHKeyUserName, fingerprint SSHKeyFingerprint, reqEditors ...RequestEditorFn) (*DeleteNodeUserSSHKeyResponse, error) {
-	rsp, err := c.DeleteNodeUserSSHKey(ctx, hostname, name, fingerprint, reqEditors...)
+// PostNodeUserSshkeyWithBodyWithResponse request with arbitrary body returning *PostNodeUserSshkeyResponse
+func (c *ClientWithResponses) PostNodeUserSshkeyWithBodyWithResponse(ctx context.Context, hostname Hostname, name UserSshkeyName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeUserSshkeyResponse, error) {
+	rsp, err := c.PostNodeUserSshkeyWithBody(ctx, hostname, name, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseDeleteNodeUserSSHKeyResponse(rsp)
+	return ParsePostNodeUserSshkeyResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostNodeUserSshkeyWithResponse(ctx context.Context, hostname Hostname, name UserSshkeyName, body PostNodeUserSshkeyJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeUserSshkeyResponse, error) {
+	rsp, err := c.PostNodeUserSshkey(ctx, hostname, name, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostNodeUserSshkeyResponse(rsp)
 }
 
 // GetTraceWithResponse request returning *GetTraceResponse
@@ -27159,22 +27208,22 @@ func ParsePostNodeUserPasswdResponse(rsp *http.Response) (*PostNodeUserPasswdRes
 	return response, nil
 }
 
-// ParseGetNodeUserSSHKeyResponse parses an HTTP response from a GetNodeUserSSHKeyWithResponse call
-func ParseGetNodeUserSSHKeyResponse(rsp *http.Response) (*GetNodeUserSSHKeyResponse, error) {
+// ParseDeleteNodeUserSshkeyResponse parses an HTTP response from a DeleteNodeUserSshkeyWithResponse call
+func ParseDeleteNodeUserSshkeyResponse(rsp *http.Response) (*DeleteNodeUserSshkeyResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetNodeUserSSHKeyResponse{
+	response := &DeleteNodeUserSshkeyResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest SSHKeyCollectionResponse
+		var dest UserSshkeyDeleteResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -27200,6 +27249,20 @@ func ParseGetNodeUserSSHKeyResponse(rsp *http.Response) (*GetNodeUserSSHKeyRespo
 			return nil, err
 		}
 		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
@@ -27213,22 +27276,22 @@ func ParseGetNodeUserSSHKeyResponse(rsp *http.Response) (*GetNodeUserSSHKeyRespo
 	return response, nil
 }
 
-// ParsePostNodeUserSSHKeyResponse parses an HTTP response from a PostNodeUserSSHKeyWithResponse call
-func ParsePostNodeUserSSHKeyResponse(rsp *http.Response) (*PostNodeUserSSHKeyResponse, error) {
+// ParseGetNodeUserSshkeyResponse parses an HTTP response from a GetNodeUserSshkeyWithResponse call
+func ParseGetNodeUserSshkeyResponse(rsp *http.Response) (*GetNodeUserSshkeyResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostNodeUserSSHKeyResponse{
+	response := &GetNodeUserSshkeyResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest SSHKeyMutationResponse
+		var dest UserSshkeyCollectionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -27254,6 +27317,20 @@ func ParsePostNodeUserSSHKeyResponse(rsp *http.Response) (*PostNodeUserSSHKeyRes
 			return nil, err
 		}
 		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
@@ -27267,22 +27344,22 @@ func ParsePostNodeUserSSHKeyResponse(rsp *http.Response) (*PostNodeUserSSHKeyRes
 	return response, nil
 }
 
-// ParseDeleteNodeUserSSHKeyResponse parses an HTTP response from a DeleteNodeUserSSHKeyWithResponse call
-func ParseDeleteNodeUserSSHKeyResponse(rsp *http.Response) (*DeleteNodeUserSSHKeyResponse, error) {
+// ParsePostNodeUserSshkeyResponse parses an HTTP response from a PostNodeUserSshkeyWithResponse call
+func ParsePostNodeUserSshkeyResponse(rsp *http.Response) (*PostNodeUserSshkeyResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &DeleteNodeUserSSHKeyResponse{
+	response := &PostNodeUserSshkeyResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest SSHKeyMutationResponse
+		var dest UserSshkeyCreateResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -27308,6 +27385,20 @@ func ParseDeleteNodeUserSSHKeyResponse(rsp *http.Response) (*DeleteNodeUserSSHKe
 			return nil, err
 		}
 		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

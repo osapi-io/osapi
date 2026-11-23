@@ -860,33 +860,6 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
     );
   }
 
-  // Security — user operations
-  if (
-    ["user-list-keys", "user-add-key", "user-remove-key"].includes(type) &&
-    Array.isArray(data.results)
-  ) {
-    const label = type.replace("-", " ");
-    const results = data.results as {
-      hostname?: string;
-      status?: string;
-      changed?: boolean;
-      error?: string;
-    }[];
-    return (
-      <CollectionResult
-        jobId={data.job_id as string | undefined}
-        label={label}
-        results={results.map((r) => ({
-          hostname: r.hostname,
-          status: hostStatus(r),
-          changed: r.changed,
-          error: r.error,
-        }))}
-        data={data}
-      />
-    );
-  }
-
   // Docker inspect — per-host container detail
   if (type === "docker-inspect" && Array.isArray(data.results)) {
     type DockerDetailEntry = {
