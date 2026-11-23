@@ -69,9 +69,9 @@ func ScopeMiddleware(
 						target,
 						authtoken.TargetsFrom(ctx.Request().Context()),
 					)
-					return nil, ctx.JSON(http.StatusForbidden, gen.ErrorResponse{
-						Error:  &errMsg,
-						Reason: apierr.Forbidden(),
+					return nil, ctx.JSON(http.StatusForbidden, endpoint.ErrorResponse{
+						Error:  errMsg,
+						Reason: endpoint.ReasonForbidden,
 					})
 				}
 
