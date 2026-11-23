@@ -437,6 +437,9 @@ func ValidateBehavior(
 	for _, pr := range b.PlatformRuns {
 		unknown("", "RunsOnPlatform", pr.Platform)
 	}
+	for _, ps := range b.ProviderSudo {
+		unknown("", "SudoOnPlatform", ps.Platform)
+	}
 	for _, m := range b.Methods {
 		for _, e := range m.Examples {
 			for _, p := range e.Platforms {

@@ -91,8 +91,6 @@ var builtinPermissions = []Permission{
 	"user:read",
 	"user:write",
 	"log:read",
-	"certificate:read",
-	"certificate:write",
 }
 
 // adminVerbs are the verbs of a permission that only the admin role gets:

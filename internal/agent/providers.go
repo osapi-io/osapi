@@ -33,7 +33,6 @@ import (
 	"github.com/osapi-io/osapi/internal/exec"
 	dockerProv "github.com/osapi-io/osapi/internal/provider/container/docker"
 	fileProv "github.com/osapi-io/osapi/internal/provider/file"
-	certProv "github.com/osapi-io/osapi/internal/provider/node/certificate"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
@@ -139,28 +138,5 @@ func (e hostEnv) user() userProv.Provider {
 		return userProv.NewDarwinProvider()
 	default:
 		return userProv.NewLinuxProvider()
-	}
-}
-
-func (e hostEnv) certificate() certProv.Provider {
-	switch e.platform {
-	case "debian":
-		if e.files == nil {
-			e.log.Warn("file provider not available, certificate operations disabled")
-			return certProv.NewLinuxProvider()
-		}
-		return certProv.NewDebianProvider(
-			e.log,
-			e.fs,
-			e.files,
-			e.fileState,
-			e.fileStateBucket,
-			e.exec,
-			e.hostname,
-		)
-	case "darwin":
-		return certProv.NewDarwinProvider()
-	default:
-		return certProv.NewLinuxProvider()
 	}
 }

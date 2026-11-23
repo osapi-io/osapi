@@ -21,120 +21,102 @@
 package client
 
 import (
+	openapi_types "github.com/oapi-codegen/runtime/types"
+
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
-// CertificateCAResult represents a CA certificate list result from a single agent.
-type CertificateCAResult struct {
-	Hostname     string          `json:"hostname"`
-	Status       string          `json:"status"`
-	Certificates []CertificateCA `json:"certificates,omitempty"`
-	Error        string          `json:"error,omitempty"`
+// CertificateInfoResult is one certificate authority on one host, from a
+// list or a get. A host that failed or skipped has a row with its status and
+// no CA.
+type CertificateInfoResult struct {
+	Hostname    string `json:"hostname"`
+	Status      string `json:"status"`
+	Name        string `json:"name,omitempty"`
+	Path        string `json:"path,omitempty"`
+	Source      string `json:"source,omitempty"`
+	Enabled     bool   `json:"enabled,omitempty"`
+	Subject     string `json:"subject,omitempty"`
+	Fingerprint string `json:"fingerprint,omitempty"`
+	NotAfter    string `json:"not_after,omitempty"`
+	Managed     bool   `json:"managed,omitempty"`
+	Object      string `json:"object,omitempty"`
+	Error       string `json:"error,omitempty"`
 }
 
-// CertificateCA represents a single CA certificate entry.
-type CertificateCA struct {
-	Name   string `json:"name"`
-	Source string `json:"source,omitempty"`
-	Object string `json:"object,omitempty"`
-}
-
-// CertificateCAMutationResult represents the result of a CA certificate
-// create, update, or delete operation.
-type CertificateCAMutationResult struct {
+// CertificateMutationResult is what a create, an update or a delete did on
+// one host.
+type CertificateMutationResult struct {
 	Hostname string `json:"hostname"`
 	Status   string `json:"status"`
-	Name     string `json:"name"`
+	Name     string `json:"name,omitempty"`
 	Changed  bool   `json:"changed"`
 	Error    string `json:"error,omitempty"`
 }
 
-// CertificateCreateOpts contains options for creating a CA certificate.
+// CertificateCreateOpts is the CA to add.
 type CertificateCreateOpts struct {
-	// Name is the certificate name (required).
+	// Name is the name of the CA, such as internal-ca. Required.
 	Name string
-	// Object is the object store reference for the PEM file (required).
+	// Object is the object of the Object Store that has the PEM. Required.
 	Object string
 }
 
-// CertificateUpdateOpts contains options for updating a CA certificate.
+// CertificateUpdateOpts is what to write a CA that osapi deployed from.
 type CertificateUpdateOpts struct {
-	// Object is the new object store reference for the PEM file (required).
+	// Object is the object that has the PEM. When empty, the CA is written
+	// from the object that it was deployed from.
 	Object string
 }
 
-// certificateCACollectionFromGen converts a gen.CertificateCACollectionResponse
-// to a Collection[CertificateCAResult].
-func certificateCACollectionFromGen(
-	g *gen.CertificateCACollectionResponse,
-) Collection[CertificateCAResult] {
-	results := make([]CertificateCAResult, 0, len(g.Results))
-	for _, r := range g.Results {
-		result := CertificateCAResult{
+// certificateInfoCollectionFromGen converts the rows of a list or a get.
+func certificateInfoCollectionFromGen(
+	rows []gen.CertificateEntry,
+	jobID *openapi_types.UUID,
+) Collection[CertificateInfoResult] {
+	results := make([]CertificateInfoResult, 0, len(rows))
+	for _, r := range rows {
+		results = append(results, CertificateInfoResult{
+			Hostname:    r.Hostname,
+			Status:      string(r.Status),
+			Name:        derefString(r.Name),
+			Path:        derefString(r.Path),
+			Source:      derefString(r.Source),
+			Enabled:     derefBool(r.Enabled),
+			Subject:     derefString(r.Subject),
+			Fingerprint: derefString(r.Fingerprint),
+			NotAfter:    derefString(r.NotAfter),
+			Managed:     derefBool(r.Managed),
+			Object:      derefString(r.Object),
+			Error:       derefString(r.Error),
+		})
+	}
+
+	return Collection[CertificateInfoResult]{
+		Results: results,
+		JobID:   jobIDFromGen(jobID),
+	}
+}
+
+// certificateMutationCollectionFromGen converts the rows of a create, an update or
+// a delete.
+func certificateMutationCollectionFromGen(
+	rows []gen.CertificateResult,
+	jobID *openapi_types.UUID,
+) Collection[CertificateMutationResult] {
+	results := make([]CertificateMutationResult, 0, len(rows))
+	for _, r := range rows {
+		results = append(results, CertificateMutationResult{
 			Hostname: r.Hostname,
 			Status:   string(r.Status),
+			Name:     derefString(r.Name),
+			Changed:  derefBool(r.Changed),
 			Error:    derefString(r.Error),
-		}
-
-		if r.Certificates != nil {
-			certs := make([]CertificateCA, 0, len(*r.Certificates))
-			for _, c := range *r.Certificates {
-				certs = append(certs, certificateCAInfoFromGen(c))
-			}
-			result.Certificates = certs
-		}
-
-		results = append(results, result)
+		})
 	}
 
-	return Collection[CertificateCAResult]{
+	return Collection[CertificateMutationResult]{
 		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
-	}
-}
-
-// certificateCAInfoFromGen converts a gen.CertificateCAInfo to a CertificateCA.
-func certificateCAInfoFromGen(
-	c gen.CertificateCAInfo,
-) CertificateCA {
-	var source string
-	if c.Source != nil {
-		source = string(*c.Source)
-	}
-
-	return CertificateCA{
-		Name:   derefString(c.Name),
-		Source: source,
-		Object: derefString(c.Object),
-	}
-}
-
-// certificateCAMutationCollectionFromGen converts a gen.CertificateCAMutationResponse
-// to a Collection[CertificateCAMutationResult].
-func certificateCAMutationCollectionFromGen(
-	g *gen.CertificateCAMutationResponse,
-) Collection[CertificateCAMutationResult] {
-	results := make([]CertificateCAMutationResult, 0, len(g.Results))
-	for _, r := range g.Results {
-		results = append(results, certificateCAMutationResultFromGen(r))
-	}
-
-	return Collection[CertificateCAMutationResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
-	}
-}
-
-// certificateCAMutationResultFromGen converts a gen.CertificateCAMutationEntry
-// to a CertificateCAMutationResult.
-func certificateCAMutationResultFromGen(
-	r gen.CertificateCAMutationEntry,
-) CertificateCAMutationResult {
-	return CertificateCAMutationResult{
-		Hostname: r.Hostname,
-		Status:   string(r.Status),
-		Name:     derefString(r.Name),
-		Changed:  derefBool(r.Changed),
-		Error:    derefString(r.Error),
+		JobID:   jobIDFromGen(jobID),
 	}
 }

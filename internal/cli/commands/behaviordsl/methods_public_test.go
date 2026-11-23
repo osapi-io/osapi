@@ -106,6 +106,14 @@ func (s *MethodsPublicTestSuite) TestGet() {
 			},
 		},
 		{
+			name: "when a provider runs a program with sudo, the behavior lists it",
+			in:   behaviordsl.GetInput{Name: "certificate"},
+			validateFunc: func(got behaviordsl.GetOutput, err error) {
+				s.Require().NoError(err)
+				s.Equal([]string{"update-ca-certificates", "update-ca-trust"}, got.Sudo)
+			},
+		},
+		{
 			name: "when the behavior is internal, its methods have no route or command",
 			in:   behaviordsl.GetInput{Name: "managedfile"},
 			validateFunc: func(got behaviordsl.GetOutput, err error) {

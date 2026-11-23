@@ -54,7 +54,6 @@ var gohaiReads = map[string]bool{
 func (s *ProvidersPublicTestSuite) TestProviders() {
 	areas := []string{
 		"host", "disk", "memory", "load", "cron",
-		"certificate",
 	}
 
 	tests := []struct {
@@ -86,8 +85,7 @@ func (s *ProvidersPublicTestSuite) TestProviders() {
 			platform: "debian",
 			want:     "Debian",
 			except: map[string]string{
-				"cron":        "Linux",
-				"certificate": "Linux",
+				"cron": "Linux",
 			},
 		},
 		{

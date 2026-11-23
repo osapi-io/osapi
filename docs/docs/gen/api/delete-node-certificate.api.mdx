@@ -1,0 +1,69 @@
+---
+id: delete-node-certificate
+title: "Remove a certificate authority that osapi deployed"
+description: "Removes the file of the CA and rebuilds the trust store: with update-ca-certificates --fresh on the Debian family, which removes the links of the CA from /etc/ssl/certs, and update-ca-trust on the RHEL family. A CA that osapi did not deploy does not change and reports changed: false: a system CA is not osapi's to remove. macOS reports skipped."
+sidebar_label: "Remove a certificate authority that osapi deployed"
+hide_title: true
+hide_table_of_contents: true
+api: eJztWm1v3DYS/isEcUBjnPbF7TptVPTDXpNcXKS9INkiwNk+YyTOrhhTpEJStreL/e+HIald2buXS4M7IB/0yZIozuszz1Dr2XCBrrSy8dJonvO3WJtbdMxXyJZSITPLcP3znIEWzGLRSiXiuret88x5YzFnd9JXrG0EeByVMCrRermUJXh0bDRaWnQVMzrse46FBM2WUEu1zthdJcuK2Z5iJfWN62leWlOzCfpy4pyakGiXBXP2+qItScHbVy9eJ/FjNicJvgLPjINGMiEF08YzgY0yayYMunBfVqBXmLxsjPUuPRI5W4JymDNgbu081iRRxl1B5jeOeZM8GLMayn+828lwN7JpUIx5xk2DFijO54Ln/Dkq9PibEfjzPlY84w1YqNGjdTy/2DxKzwLsCn3OrkGpjF2DXmesMs5rqDFjxjIFBSr2ZGVN2+R3WIwF3p6QcknbG/AVzzi9zXPebeQZt/ixlRYFz71tMeOurLAGnm94LfVr1Ctf8fw0437d0E7nrdQrvs34/chAI0elEbhCPcJ7b2HkYeVo7y0oSQni+U5BVkv902kWVq598IZvt9mBnzHx/bSFdKHImGvLioFjUnu0GtSohOP+/VffGvAkguf8Xxcw+mM++ud09Ox6dPXXv/D/hasWnWltidfBkO32imxxjdEOw55vp1P6UxrtUXu6hKZRhANp9OSDo0hs+uZaQpCXcfcHU1xLQVeHoftgCnb+nLUOBSGzsaZER7UlHSPz0HnCBN5D3Siy+exsij/MptMRfvusGM1OxWwE358+Hc1mT5+enc1m0+l0yjO+NLYGz3PetlIcxOjzQxS2b7chHq3yYVl6rN2hm6kGD/18X6Gv0IaCJyR31bo3qzBGIWjKHVpr7KGMF/SY1egcrJDJSDiwQu3ZEqSKZXsAhF3dHMh7lVY67oqiAooba0RbUj5iEsjvo9KPS44Fcex958G37viOuNZZs+MftjQ22kGuBCTotub5BTc3lOXgOs944i7SKms0redXX55zo9EsfzI3KbIdMbJO9DbioavViz49JR/32k3xAUsfDPMBwD0OfRtiS6FJL4O1sOaPxXfQ+zyhka3fpvKNxj7CEpQVi4wWwvpNl+Us9sa7hFe5Q+qYbJz9SRJ4bOvDatnh/HGWHto6Z737Dh5hb6LcsmytjfDfk8TLmLjQ6ryVeNsBLDgi0INU7jOUCyHpEhRLexgUpvV7I46qFS2Sao3+ztibDjZBtUVIcfq05vfVOihJFJiQmFEzAXZnrIjeAxXrykLNStCssKBLOruMGZXUq8XiTVdXMh5XSgVuV2SNNYXC+sekiAzbvQetw3hw2cc7rXUcRJUJrEHrjO6ORmRFOp0U6O8QNbOoEBy6MZM69tLkU/7AwcIi3JBztlW475zAaumc1Cu2lKgEezKbTk/GrNXQ+spY+QedebRh3tygDscKiNcxPunoE/TS3tOTMdldSCFQRwPi27uzVQW3GKODNqg2mjZ+dzKm5eulabXI90xubNf0Hwi4I+V994gdHAmaJUE1aAgHNnqLGkoKr8WMFe1/OAFKnzFnHmtMAZee5D9L8qV2HpTCvrEPbdxjxx9YiyhcJ600eqlkmfJFeNo1jWB3oUx54/r7++krLaYNRmPUhPfS+Z34VsMtSAWFCsfWBqx/dJhCLRyL2BTmTu+l/zZfvGNPzkJyHNpbtNcBqdFS4ilrlEKbqudHJr1jyqxYBT2Yk4TpSb+1PAIqz3gfb/FwESFEJ7gOFek6JTbd7dLAM94FMsrrnKae0bOdSH5PKHvhxOId2YezwKcIftHLZb8EEo2fDjQ+0PhA4wONDzT+VdP47z1z2YjN35yzG1yz3adBIPPvBjIfyHwg84HMBzL/qsn8ZWcfG7Fz7drlUpaSfnPbg9pFRp8NjD4w+sDoA6MPjP5VM/qiyzg5qg3r/SM5/o4eAkyYTL+7PBuIfSD2gdgHYh+I/asm9qPg6RIWICT9EfyE+vl8tNToKyMiWAK5nQ3/Xx0axNAghgYxNIivvEHMdSrZNMW5D8U4CHJYtlb6dRiL/BuCRTtvaS7xgvc+EvI7Kz3yK5q2i1NIF/05nuv5m/Pr3uvXu6GoMAkU2wfPuQjzPmEck1TwCTRyoo3AyaabS9pOenImm/BoFxfSe7W3+R31l9hC+pZveBHuXnZzdb+8X/A0oRgm2MLqfuqr8r4JsZB6aQIfp+AG2B3w8WLdEP1abBA8pW0/AuYCE76Wur0PZebG7O/yFtnatDaNrQFbKkSfUfFdamCuQqXGl/pSR5Ar9I6BZvPztCGCqC+U+cqadlUxsl/0tCeh3TIQwKUeszBEtZ9Tk1SMBVZwK6lAYjESrxrNIKjILrXApdQknVYlzcGG70RgS3mPgkndtD40BdP6pvXjVKNlhcQACGV1qXeEjktjAyt9bLFFx6SnCWKHpaG54LZrFIGRyJJkcsdmjkSVxgoU40sqNIJCTMbpeDqexoLyUIaTSGtVSqrLJ5OV9FVbjEtTT4KFI2niBbVgJUukusk33XTrr+cL9jo9zR6JMg3qOHs6NnY1SZvd5NfzRYBPY5yvQfekxblvor7e93aiD78+Noj7GG29M9YwRf5/nCJPVODx3k8aBTLMt4b0bxJZXfBIBkRXPON5b5CyfDBqnoenV3GilfZtNgU4/N2q7ZYef2zRriOR3YKVgfjDTLp0dC14Hlz6BBCevE3/Vj1hXz66ftTjbrZTr6nKQLV0xzN+g+v+aHsYLf8ic//0BPoXmBlNvKKZYgSBNkQ3Ls3LEhvf23Tw2bLt96vnL16/WLzgGYfUWLoZ6K6DpAtScNSmzSa+saCT5Xa7MzGcNMnG7fbf0id3xA==
+sidebar_class_name: "delete api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Remove a certificate authority that osapi deployed"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"delete"}
+  path={"/api/node/{hostname}/certificate/{name}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Removes the file of the CA and rebuilds the trust store: with update-ca-certificates --fresh on the Debian family, which removes the links of the CA from /etc/ssl/certs, and update-ca-trust on the RHEL family. A CA that osapi did not deploy does not change and reports changed: false: a system CA is not osapi's to remove. macOS reports skipped.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./delete-node-certificate.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./delete-node-certificate.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./delete-node-certificate.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

@@ -27,7 +27,7 @@ client file upload. `osapi behavior get --name object` and
 | Writes      | none                                                                                                |
 | Keeps state | no                                                                                                  |
 | Uses        | none                                                                                                |
-| Used by     | [service](../service/service.md)                                                                    |
+| Used by     | [certificate](../certificate/certificate.md), [service](../service/service.md)                      |
 
 ### Methods (1)
 

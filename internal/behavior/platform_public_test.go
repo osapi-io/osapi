@@ -264,6 +264,48 @@ func (s *PlatformPublicTestSuite) TestPrograms() {
 	}
 }
 
+// TestProviderSudo: a program declared with SudoOnPlatform holds on each host
+// that its platform's provider serves, and linux does not hold on debian when
+// debian has its own provider.
+func (s *PlatformPublicTestSuite) TestProviderSudo() {
+	linux := func(host.Host) (fakeProvider, error) { return fakeProvider{}, nil }
+	b := behavior.Define("certificate", "CAs", behavior.Node,
+		behavior.Platform(behavior.PlatformDebian, linux),
+		behavior.Platform(behavior.PlatformLinux, linux),
+		behavior.Platform(behavior.PlatformDarwin, linux),
+		behavior.SudoOnPlatform(behavior.PlatformDebian, "update-ca-certificates"),
+		behavior.SudoOnPlatform(behavior.PlatformLinux, "update-ca-trust"),
+		behavior.Read("list", get),
+	)
+	tests := []struct {
+		name     string
+		platform behavior.PlatformName
+		want     []string
+	}{
+		{
+			name:     "when the platform has its own provider",
+			platform: "debian",
+			want:     []string{"update-ca-certificates"},
+		},
+		{
+			name:     "when the linux provider serves the platform",
+			platform: "rhel",
+			want:     []string{"update-ca-trust"},
+		},
+		{name: "when the provider declares none", platform: "darwin"},
+		{
+			name: "when the platform is empty",
+			want: []string{"update-ca-certificates", "update-ca-trust"},
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			sudo, _ := b.Programs(tc.platform)
+			s.Equal(tc.want, sudo)
+		})
+	}
+}
+
 func (s *PlatformPublicTestSuite) TestSudo() {
 	b := behavior.Define("sysctl", "Kernel parameters", behavior.Node,
 		behavior.Sudo("sysctl"), behavior.Sudo("modprobe", "tee"),

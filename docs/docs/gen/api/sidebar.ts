@@ -294,40 +294,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Certificate",
-      link: {
-        type: "doc",
-        id: "gen/api/certificate-management-api-certificate-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/get-node-certificate-ca",
-          label: "List all CA certificates",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-node-certificate-ca",
-          label: "Create a CA certificate",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "gen/api/put-node-certificate-ca",
-          label: "Update a CA certificate",
-          className: "api-method put",
-        },
-        {
-          type: "doc",
-          id: "gen/api/delete-node-certificate-ca",
-          label: "Delete a CA certificate",
-          className: "api-method delete",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Node/Command",
       link: {
         type: "doc",
@@ -589,6 +555,46 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/delete-node-user-ssh-key",
           label: "Remove SSH authorized key",
           className: "api-method delete",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Certificate",
+      link: {
+        type: "doc",
+        id: "gen/api/certificate-api-certificate-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/get-node-certificate",
+          label: "List the certificate authorities that the host trusts",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-certificate",
+          label: "Add a certificate authority to the trust store",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/delete-node-certificate",
+          label: "Remove a certificate authority that osapi deployed",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "gen/api/get-node-certificate-by-key",
+          label: "Get one certificate authority",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "gen/api/put-node-certificate",
+          label: "Write a certificate authority that osapi deployed again",
+          className: "api-method put",
         },
       ],
     },

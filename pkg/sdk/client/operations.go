@@ -101,14 +101,6 @@ const (
 	OpSSHKeyRemove JobOperation = "node.sshKey.remove"
 )
 
-// Certificate operations.
-const (
-	OpCertificateCAList   JobOperation = "certificate.ca.list"
-	OpCertificateCACreate JobOperation = "certificate.ca.create"
-	OpCertificateCAUpdate JobOperation = "certificate.ca.update"
-	OpCertificateCADelete JobOperation = "certificate.ca.delete"
-)
-
 // Network interface operations.
 const (
 	OpNetworkInterfaceList   JobOperation = "network.interface.list"

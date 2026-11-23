@@ -114,6 +114,45 @@ func RunsOnPlatform(
 	})
 }
 
+// SudoOnPlatform declares the programs that the provider declared for
+// platform runs with sudo, such as update-ca-certificates on debian and
+// update-ca-trust on linux. They hold on each host that this provider
+// serves: linux holds on a Debian host only when the behavior declares no
+// provider for debian. Thus the agent and the integration test do not ask a
+// host for a program that its provider does not run.
+func SudoOnPlatform(
+	platform PlatformName,
+	programs ...string,
+) Option {
+	return optionFunc(func(b *Behavior) {
+		b.ProviderSudo = append(
+			b.ProviderSudo,
+			PlatformPrograms{Platform: platform, Programs: programs},
+		)
+	})
+}
+
+// ProviderSudoOn is the programs that SudoOnPlatform declares for the
+// provider of a host whose platform is platform. An empty platform is every
+// provider.
+func (b *Behavior) ProviderSudoOn(
+	platform PlatformName,
+) []string {
+	var out []string
+	for _, ps := range b.ProviderSudo {
+		if platform == "" {
+			out = append(out, ps.Programs...)
+
+			continue
+		}
+		if pp := b.resolve(platform); pp != nil && pp == b.platform(ps.Platform) {
+			out = append(out, ps.Programs...)
+		}
+	}
+
+	return out
+}
+
 // RunsIfPresent declares the programs the behavior's providers run only when
 // the host has them, such as zfs: a provider that does not find one reads
 // without it. The fake host permits them, and the agent and the integration
@@ -251,6 +290,7 @@ func (b *Behavior) Programs(
 		return to
 	}
 	sudo = add(sudo, b.Sudo)
+	sudo = add(sudo, b.ProviderSudoOn(platform))
 	runs = add(runs, b.Runs)
 	for _, pp := range b.PlatformRuns {
 		if platform == "" || covers(pp.Platform, platform) {

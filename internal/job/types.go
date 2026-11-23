@@ -208,14 +208,6 @@ const (
 	OperationSSHKeyRemove = client.OpSSHKeyRemove
 )
 
-// Certificate operations.
-const (
-	OperationCertificateCAList   = client.OpCertificateCAList
-	OperationCertificateCACreate = client.OpCertificateCACreate
-	OperationCertificateCAUpdate = client.OpCertificateCAUpdate
-	OperationCertificateCADelete = client.OpCertificateCADelete
-)
-
 // Network interface operations.
 const (
 	OperationNetworkInterfaceList   = client.OpNetworkInterfaceList

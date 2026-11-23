@@ -314,7 +314,6 @@ func buildRegistry(
 	commandProvider := command.New(e.log, e.exec)
 	dockerProvider := e.docker(ctx)
 	cronProvider := e.cron()
-	certificateProvider := e.certificate()
 
 	r := NewProviderRegistry()
 
@@ -348,12 +347,6 @@ func buildRegistry(
 	)
 
 	r.Register("schedule", NewScheduleProcessor(cronProvider, e.log), cronProvider)
-
-	r.Register(
-		"certificate",
-		NewCertificateProcessor(certificateProvider, e.log),
-		certificateProvider,
-	)
 
 	// Behaviors run beside the categories above.
 	// Each builds its own provider for this platform from what it declares.

@@ -797,6 +797,14 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 			wantRules: []string{behavior.RulePlatform},
 		},
 		{
+			name: "when SudoOnPlatform names a platform that is not known",
+			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
+				behavior.SudoOnPlatform("debain", "update-ca-certificates"),
+				behavior.Read("get", get).Describe("Get"),
+			),
+			wantRules: []string{behavior.RulePlatform},
+		},
+		{
 			name: "when an example or a refusal names a platform that is not known",
 			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
 				behavior.Read("get", get).Describe("Get").

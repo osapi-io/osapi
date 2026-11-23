@@ -24,6 +24,7 @@ package all
 
 import (
 	// Each import registers its behavior.
+	_ "github.com/osapi-io/osapi/internal/behaviors/certificate"
 	_ "github.com/osapi-io/osapi/internal/behaviors/disk"
 	_ "github.com/osapi-io/osapi/internal/behaviors/group"
 	_ "github.com/osapi-io/osapi/internal/behaviors/hostname"

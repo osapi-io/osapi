@@ -134,10 +134,6 @@ export const BLOCK_OPERATIONS: Record<string, OperationId> = {
   "user-add-key": "postNodeUserSSHKey",
   "user-remove-key": "deleteNodeUserSSHKey",
   "user-change-password": "postNodeUserPassword",
-  "certificate-list": "getNodeCertificateCa",
-  "certificate-create": "postNodeCertificateCa",
-  "certificate-update": "putNodeCertificateCa",
-  "certificate-delete": "deleteNodeCertificateCa",
 };
 
 export const BLOCK_PERMISSIONS: Record<string, Permission> = Object.fromEntries(

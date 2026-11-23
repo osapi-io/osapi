@@ -62,7 +62,6 @@ var sudoCommands = []string{
 	"chown",
 	"apt-get",
 	"shutdown",
-	"update-ca-certificates",
 	"netplan",
 	"chpasswd",
 }

@@ -639,83 +639,6 @@ function UserListResult({ data }: { data: Record<string, unknown> }) {
   );
 }
 
-// Certificate list
-function CertificateListResult({ data }: { data: Record<string, unknown> }) {
-  const { search, setSearch } = useListSearch();
-  type CertHost = {
-    hostname: string;
-    status?: string;
-    certificates?: { name?: string; source?: string; object?: string }[];
-    error?: string;
-  };
-  const hosts = data.results as CertHost[];
-  const totalCerts = hosts.reduce(
-    (n, h) => n + (h.certificates?.length ?? 0),
-    0,
-  );
-  return (
-    <ResultShell
-      jobId={data.job_id as string | undefined}
-      label="certificate list"
-      data={data}
-    >
-      <ListSearchBar
-        search={search}
-        setSearch={setSearch}
-        hasItems={totalCerts > 0}
-      />
-      {hosts.map((host) => {
-        const allCerts = host.certificates ?? [];
-        const certs = allCerts.filter((c) =>
-          matches(search, c.name, c.source, c.object),
-        );
-        if (
-          search &&
-          certs.length === 0 &&
-          !host.error &&
-          host.status !== "skipped"
-        )
-          return null;
-        return (
-          <div
-            key={host.hostname}
-            className="border-b border-border/50 last:border-0"
-          >
-            <HostGroupHeader
-              hostname={host.hostname}
-              status={
-                host.status === "skipped"
-                  ? "skipped"
-                  : host.error
-                    ? "failed"
-                    : "ok"
-              }
-              detail={
-                host.status === "skipped"
-                  ? "skipped"
-                  : `${allCerts.length} cert${allCerts.length !== 1 ? "s" : ""}`
-              }
-            />
-            {host.error && host.status !== "skipped" && (
-              <HostError>{host.error}</HostError>
-            )}
-            {host.status !== "skipped" &&
-              certs.map((c, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-4 border-b border-border/30 px-4 py-2 pl-9 last:border-0"
-                >
-                  <KeyValue label="name" value={c.name} variant="strong" />
-                  {c.source && <KeyValue label="source" value={c.source} />}
-                </div>
-              ))}
-          </div>
-        );
-      })}
-    </ResultShell>
-  );
-}
-
 // Process list
 function ProcessListResult({ data }: { data: Record<string, unknown> }) {
   const { search, setSearch } = useListSearch();
@@ -1363,12 +1286,7 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
     return <UserListResult data={data} />;
   }
 
-  // Certificate list — expanded with search
-  if (type === "certificate-list" && Array.isArray(data.results)) {
-    return <CertificateListResult data={data} />;
-  }
-
-  // Security — user, group, certificate operations
+  // Security — user operations
   if (
     [
       "user-get",
@@ -1379,9 +1297,6 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
       "user-add-key",
       "user-remove-key",
       "user-change-password",
-      "certificate-create",
-      "certificate-update",
-      "certificate-delete",
     ].includes(type) &&
     Array.isArray(data.results)
   ) {

@@ -1,44 +1,192 @@
 # Delete
 
-Remove a custom CA certificate.
+Remove a certificate authority that osapi deployed.
 
-The agent removes the certificate file from `/usr/local/share/ca-certificates/`.
-Then it runs `update-ca-certificates` to make the trust store again.
+Removes the file of the CA and rebuilds the trust store: with
+update-ca-certificates --fresh on the Debian family, which removes the links of
+the CA from /etc/ssl/certs, and update-ca-trust on the RHEL family. A CA that
+osapi did not deploy does not change and reports changed: false: a system CA is
+not osapi's to remove. macOS reports skipped.
 
 ```bash
-osapi client node certificate delete
+osapi client node certificate delete [flags]
 ```
 
 ## Examples
 
 ```bash
-osapi client node certificate delete --target web-01 \
-  --name internal-ca
-osapi client node certificate delete --target _all \
-  --name internal-ca
-osapi client node certificate delete --target web-01 \
-  --name internal-ca --json
+# Remove a CA
+osapi client node certificate delete --target web-01 --name internal-ca
+
+# Remove a CA on the RHEL family
+osapi client node certificate delete --target web-01 --name internal-ca
+
+# A CA that osapi did not deploy
+osapi client node certificate delete --target web-01 --name internal-ca
 ```
 
 ## Result
 
-If the certificate does not exist, the command returns `changed: false`.
+Remove a CA, on one host:
+
+```ansi
+$ osapi client node certificate delete --target web-01 --name internal-ca
+[1;38;2;0;213;255mResults:[0m
+  [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mNAME[0m
+  [1mweb-01[0m    [38;2;103;234;147mchanged[0m  [1minternal-ca[0m
+
+  1 host: [38;2;103;234;147m1 changed[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+```
+
+On each host, where one cannot run it:
+
+```ansi
+$ osapi client node certificate delete --target _all --name internal-ca
+[1;38;2;0;213;255mResults:[0m
+  [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mNAME[0m
+  [1mweb-01[0m    [38;2;103;234;147mchanged[0m  [1minternal-ca[0m
+  [1mweb-02[0m    [38;2;103;234;147mchanged[0m  [1minternal-ca[0m
+
+  3 hosts: [38;2;103;234;147m2 changed[0m, [38;5;222m1 skipped[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+
+[1;38;2;255;0;255mDetails:[0m
+  [1mmac-01[0m  [38;5;222mskipped[0m  operation not supported on this OS family
+```
+
+With `--json`, the API's response:
+
+```json
+{
+  "job_id": "550e8400-e29b-41d4-a716-446655440000",
+  "results": [
+    {
+      "changed": true,
+      "hostname": "web-01",
+      "name": "internal-ca",
+      "status": "ok"
+    }
+  ]
+}
+```
+
+Remove a CA on the RHEL family, on one host:
+
+```ansi
+$ osapi client node certificate delete --target web-01 --name internal-ca
+[1;38;2;0;213;255mResults:[0m
+  [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mNAME[0m
+  [1mweb-01[0m    [38;2;103;234;147mchanged[0m  [1minternal-ca[0m
+
+  1 host: [38;2;103;234;147m1 changed[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+```
+
+On each host, where one cannot run it:
+
+```ansi
+$ osapi client node certificate delete --target _all --name internal-ca
+[1;38;2;0;213;255mResults:[0m
+  [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mNAME[0m
+  [1mweb-01[0m    [38;2;103;234;147mchanged[0m  [1minternal-ca[0m
+  [1mweb-02[0m    [38;2;103;234;147mchanged[0m  [1minternal-ca[0m
+
+  3 hosts: [38;2;103;234;147m2 changed[0m, [38;5;222m1 skipped[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+
+[1;38;2;255;0;255mDetails:[0m
+  [1mmac-01[0m  [38;5;222mskipped[0m  operation not supported on this OS family
+```
+
+With `--json`, the API's response:
+
+```json
+{
+  "job_id": "550e8400-e29b-41d4-a716-446655440000",
+  "results": [
+    {
+      "changed": true,
+      "hostname": "web-01",
+      "name": "internal-ca",
+      "status": "ok"
+    }
+  ]
+}
+```
+
+A CA that osapi did not deploy, on one host:
+
+```ansi
+$ osapi client node certificate delete --target web-01 --name internal-ca
+[1;38;2;0;213;255mResults:[0m
+  [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mNAME[0m
+  [1mweb-01[0m    [38;2;103;234;147mok[0m      [1minternal-ca[0m
+
+  1 host: [38;2;103;234;147m1 ok[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+```
+
+On each host, where one cannot run it:
+
+```ansi
+$ osapi client node certificate delete --target _all --name internal-ca
+[1;38;2;0;213;255mResults:[0m
+  [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS  [0m[38;2;10;143;176mNAME[0m
+  [1mweb-01[0m    [38;2;103;234;147mok[0m      [1minternal-ca[0m
+  [1mweb-02[0m    [38;2;103;234;147mok[0m      [1minternal-ca[0m
+
+  3 hosts: [38;2;103;234;147m2 ok[0m, [38;5;222m1 skipped[0m   [38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000[0m   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
+
+[1;38;2;255;0;255mDetails:[0m
+  [1mmac-01[0m  [38;5;222mskipped[0m  operation not supported on this OS family
+```
+
+With `--json`, the API's response:
+
+```json
+{
+  "job_id": "550e8400-e29b-41d4-a716-446655440000",
+  "results": [
+    {
+      "changed": false,
+      "hostname": "web-01",
+      "name": "internal-ca",
+      "status": "ok"
+    }
+  ]
+}
+```
+
+With the default settings, each example does this on the host:
+
+| Example                        | On the host                                                                                             |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| Remove a CA                    | removes `/usr/local/share/ca-certificates/osapi-internal-ca.crt`; runs `update-ca-certificates --fresh` |
+| Remove a CA on the RHEL family | removes `/etc/pki/ca-trust/source/anchors/osapi-internal-ca.crt`; runs `update-ca-trust`                |
+
+The command fails in these cases:
+
+| Call                     | Flags          | Fails with       |
+| ------------------------ | -------------- | ---------------- |
+| A name that is an option | `--name -r`    | not a valid name |
+| A name with a space      | `--name "a b"` | resource_name    |
+
+## Permission
+
+It needs the `certificate:write` permission.
+`osapi token roles get --name <role>` shows what a role grants.
 
 ## Flags
 
-| Flag     | Description                           | Default |
-| -------- | ------------------------------------- | ------- |
-| `--name` | Certificate name to delete (required) |         |
+| Flag           | Description                                                | Default |
+| -------------- | ---------------------------------------------------------- | ------- |
+| `--name`       | The CA that osapi deployed, such as internal-ca (required) |         |
+| `-T, --target` | Target: _all, _any, hostname, or label (group:web.dev)     | `_all`  |
 
 ## Global flags
 
-| Flag               | Description                                            | Default                 |
-| ------------------ | ------------------------------------------------------ | ----------------------- |
-| `-d, --debug`      | Enable or disable debug mode                           |                         |
-| `-j, --json`       | Enable JSON output                                     |                         |
-| `-f, --osapi-file` | Path to config file                                    | `/etc/osapi/osapi.yaml` |
-| `-T, --target`     | Target: _all, _any, hostname, or label (group:web.dev) | `_all`                  |
-| `--url`            | URL the client will connect to                         | `http://0.0.0.0:8080`   |
+| Flag               | Description                    | Default                 |
+| ------------------ | ------------------------------ | ----------------------- |
+| `-d, --debug`      | Enable or disable debug mode   |                         |
+| `-j, --json`       | Enable JSON output             |                         |
+| `-f, --osapi-file` | Path to config file            | `/etc/osapi/osapi.yaml` |
+| `--url`            | URL the client will connect to | `http://0.0.0.0:8080`   |
 
 [Output](../../../output.md) tells how the result is printed, and what `--json`
 gives.

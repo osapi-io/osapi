@@ -22,7 +22,6 @@ import { UserBlock } from "@/components/domain/user-block";
 import { UserPasswordBlock } from "@/components/domain/user-password-block";
 import { UserSSHKeyBlock } from "@/components/domain/user-ssh-key-block";
 import { UserRemoveKeyBlock } from "@/components/domain/user-remove-key-block";
-import { CertificateBlock } from "@/components/domain/certificate-block";
 import { ApplyButton } from "@/components/domain/apply-button";
 import { StackBar } from "@/components/domain/stack-bar";
 import { SaveStackDialog } from "@/components/domain/save-stack-dialog";
@@ -82,12 +81,6 @@ import {
   postNodeUserPassword,
 } from "@/sdk/gen/user-management-api-user-operations/user-management-api-user-operations";
 import {
-  getNodeCertificateCa,
-  postNodeCertificateCa,
-  putNodeCertificateCa,
-  deleteNodeCertificateCa,
-} from "@/sdk/gen/certificate-management-api-certificate-operations/certificate-management-api-certificate-operations";
-import {
   postNodeFileDeploy,
   postNodeFileUndeploy,
   getNodeFileStatus,
@@ -126,7 +119,6 @@ import {
   GitBranch,
   Users,
   UsersRound,
-  ShieldCheck,
   FolderOpen,
   Monitor,
   HardDrive,
@@ -164,7 +156,6 @@ const blockIcons: Record<
   // Security
   "user-list": Users,
   "group-list": UsersRound,
-  "certificate-list": ShieldCheck,
   // Containers
   "docker-create": Container,
   // Files
@@ -532,26 +523,6 @@ export function Configure() {
               password: block.data.password as string,
             });
             break;
-          case "certificate-list":
-            result = await getNodeCertificateCa(t);
-            break;
-          case "certificate-create":
-            result = await postNodeCertificateCa(t, {
-              name: block.data.name as string,
-              object: block.data.object as string,
-            });
-            break;
-          case "certificate-update":
-            result = await putNodeCertificateCa(t, block.data.name as string, {
-              object: block.data.object as string,
-            });
-            break;
-          case "certificate-delete":
-            result = await deleteNodeCertificateCa(
-              t,
-              block.data.name as string,
-            );
-            break;
           case "audit-list":
             result = await getAuditLogs();
             break;
@@ -915,37 +886,6 @@ export function Configure() {
             data={block.data}
             onChange={(data) => updateBlockData(block.id, data)}
             onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-          />
-        );
-      case "certificate-list":
-        return null;
-      case "certificate-create":
-        return (
-          <CertificateBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            mode="create"
-          />
-        );
-      case "certificate-update":
-        return (
-          <CertificateBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            mode="update"
-          />
-        );
-      case "certificate-delete":
-        return (
-          <SingleInputBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            field="name"
-            label="Certificate Name"
-            placeholder="my-ca"
           />
         );
       case "audit-list":

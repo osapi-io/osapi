@@ -1,0 +1,69 @@
+---
+id: post-node-certificate
+title: "Add a certificate authority to the trust store"
+description: "Writes the PEM of the object as a file with the osapi- prefix, such as osapi-internal-ca.crt for internal-ca, in the family's local directory: /usr/local/share/ca-certificates on the Debian family, /etc/pki/ca-trust/source/anchors on RHEL and Fedora. Then it rebuilds the trust store with update-ca-certificates or update-ca-trust. SUSE and Alpine report skipped. A CA that osapi deployed already with the same content does not change and reports changed: false. A file of that name that osapi did not write is refused. macOS reports skipped."
+sidebar_label: "Add a certificate authority to the trust store"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "post api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Add a certificate authority to the trust store"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/api/node/{hostname}/certificate"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Writes the PEM of the object as a file with the osapi- prefix, such as osapi-internal-ca.crt for internal-ca, in the family's local directory: /usr/local/share/ca-certificates on the Debian family, /etc/pki/ca-trust/source/anchors on RHEL and Fedora. Then it rebuilds the trust store with update-ca-certificates or update-ca-trust. SUSE and Alpine report skipped. A CA that osapi deployed already with the same content does not change and reports changed: false. A file of that name that osapi did not write is refused. macOS reports skipped.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./post-node-certificate.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./post-node-certificate.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./post-node-certificate.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

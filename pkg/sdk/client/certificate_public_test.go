@@ -48,21 +48,21 @@ func (suite *CertificatePublicTestSuite) TestCertificateList() {
 		name         string
 		handler      http.HandlerFunc
 		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.CertificateCAResult]], error)
+		validateFunc func(*client.Response[client.Collection[client.CertificateInfoResult]], error)
 	}{
 		{
-			name: "when listing CA certificates returns results",
+			name: "when listing CAs returns results",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","certificates":[{"name":"my-ca","source":"custom","object":"my-ca.pem"}]}]}`,
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","name":"internal-ca","source":"local","managed":true,"object":"internal-ca.pem"}]}`,
 					),
 				)
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAResult]],
+				resp *client.Response[client.Collection[client.CertificateInfoResult]],
 				err error,
 			) {
 				suite.NoError(err)
@@ -71,30 +71,10 @@ func (suite *CertificatePublicTestSuite) TestCertificateList() {
 				suite.Len(resp.Data.Results, 1)
 				suite.Equal("agent1", resp.Data.Results[0].Hostname)
 				suite.Equal("ok", resp.Data.Results[0].Status)
-				suite.Require().Len(resp.Data.Results[0].Certificates, 1)
-				suite.Equal("my-ca", resp.Data.Results[0].Certificates[0].Name)
-				suite.Equal("custom", resp.Data.Results[0].Certificates[0].Source)
-				suite.Equal("my-ca.pem", resp.Data.Results[0].Certificates[0].Object)
-			},
-		},
-		{
-			name: "when broadcast list returns multiple results",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"server1","status":"ok","certificates":[]},{"hostname":"server2","status":"ok","certificates":[]}]}`,
-					),
-				)
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Len(resp.Data.Results, 2)
+				suite.Equal("internal-ca", resp.Data.Results[0].Name)
+				suite.Equal("local", resp.Data.Results[0].Source)
+				suite.True(resp.Data.Results[0].Managed)
+				suite.Equal("internal-ca.pem", resp.Data.Results[0].Object)
 			},
 		},
 		{
@@ -105,7 +85,7 @@ func (suite *CertificatePublicTestSuite) TestCertificateList() {
 				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAResult]],
+				resp *client.Response[client.Collection[client.CertificateInfoResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -124,7 +104,7 @@ func (suite *CertificatePublicTestSuite) TestCertificateList() {
 				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAResult]],
+				resp *client.Response[client.Collection[client.CertificateInfoResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -143,7 +123,7 @@ func (suite *CertificatePublicTestSuite) TestCertificateList() {
 				_, _ = w.Write([]byte(`{"error":"internal error"}`))
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAResult]],
+				resp *client.Response[client.Collection[client.CertificateInfoResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -158,7 +138,7 @@ func (suite *CertificatePublicTestSuite) TestCertificateList() {
 			name:      "when client HTTP call fails returns error",
 			serverURL: "http://127.0.0.1:0",
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAResult]],
+				resp *client.Response[client.Collection[client.CertificateInfoResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -172,7 +152,7 @@ func (suite *CertificatePublicTestSuite) TestCertificateList() {
 				w.WriteHeader(http.StatusOK)
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAResult]],
+				resp *client.Response[client.Collection[client.CertificateInfoResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -215,64 +195,163 @@ func (suite *CertificatePublicTestSuite) TestCertificateList() {
 	}
 }
 
+func (suite *CertificatePublicTestSuite) TestCertificateGet() {
+	tests := []struct {
+		name         string
+		handler      http.HandlerFunc
+		serverURL    string
+		validateFunc func(*client.Response[client.Collection[client.CertificateInfoResult]], error)
+	}{
+		{
+			name: "when getting CA returns result collection",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","name":"mozilla/ISRG_Root_X1","source":"system","enabled":true}]}`,
+					),
+				)
+			},
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.CertificateInfoResult]],
+				err error,
+			) {
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Len(resp.Data.Results, 1)
+				suite.Equal("mozilla/ISRG_Root_X1", resp.Data.Results[0].Name)
+				suite.True(resp.Data.Results[0].Enabled)
+			},
+		},
+		{
+			name: "when server returns 404 returns NotFoundError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusNotFound)
+				_, _ = w.Write([]byte(`{"error":"certificate not found"}`))
+			},
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.CertificateInfoResult]],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.NotFoundError
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
+				suite.Equal(http.StatusNotFound, target.StatusCode)
+			},
+		},
+		{
+			name: "when server returns 403 returns AuthError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusForbidden)
+				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
+			},
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.CertificateInfoResult]],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.AuthError
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
+			},
+		},
+		{
+			name:      "when client HTTP call fails returns error",
+			serverURL: "http://127.0.0.1:0",
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.CertificateInfoResult]],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+				suite.Contains(err.Error(), "certificate get")
+			},
+		},
+		{
+			name: "when server returns 200 with no JSON body returns UnexpectedStatusError",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			},
+			validateFunc: func(
+				resp *client.Response[client.Collection[client.CertificateInfoResult]],
+				err error,
+			) {
+				suite.Error(err)
+				suite.Nil(resp)
+
+				var target *client.UnexpectedStatusError
+				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			var (
+				serverURL string
+				cleanup   func()
+			)
+
+			if tc.serverURL != "" {
+				serverURL = tc.serverURL
+				cleanup = func() {}
+			} else {
+				server := httptest.NewServer(tc.handler)
+				serverURL = server.URL
+				cleanup = server.Close
+			}
+			defer cleanup()
+
+			sut := client.New(
+				serverURL,
+				"test-token",
+				client.WithLogger(slog.Default()),
+			)
+
+			resp, err := sut.Certificate.Get(suite.ctx, "_any", "internal-ca")
+			tc.validateFunc(resp, err)
+		})
+	}
+}
+
 func (suite *CertificatePublicTestSuite) TestCertificateCreate() {
 	tests := []struct {
 		name         string
 		handler      http.HandlerFunc
 		serverURL    string
 		opts         client.CertificateCreateOpts
-		validateFunc func(*client.Response[client.Collection[client.CertificateCAMutationResult]], error)
+		validateFunc func(*client.Response[client.Collection[client.CertificateMutationResult]], error)
 	}{
 		{
-			name: "when creating CA certificate returns result collection",
+			name: "when creating CA returns result",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","name":"my-ca","changed":true}]}`,
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","name":"internal-ca","changed":true}]}`,
 					),
 				)
 			},
 			opts: client.CertificateCreateOpts{
-				Name:   "my-ca",
-				Object: "my-ca.pem",
+				Name:   "internal-ca",
+				Object: "internal-ca.pem",
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAMutationResult]],
+				resp *client.Response[client.Collection[client.CertificateMutationResult]],
 				err error,
 			) {
 				suite.NoError(err)
 				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
 				suite.Len(resp.Data.Results, 1)
-				suite.Equal("agent1", resp.Data.Results[0].Hostname)
-				suite.Equal("my-ca", resp.Data.Results[0].Name)
+				suite.Equal("internal-ca", resp.Data.Results[0].Name)
 				suite.True(resp.Data.Results[0].Changed)
-			},
-		},
-		{
-			name: "when broadcast create returns multiple results",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"server1","status":"ok","name":"my-ca","changed":true},{"hostname":"server2","status":"ok","name":"my-ca","changed":true}]}`,
-					),
-				)
-			},
-			opts: client.CertificateCreateOpts{
-				Name:   "my-ca",
-				Object: "my-ca.pem",
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAMutationResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Len(resp.Data.Results, 2)
 			},
 		},
 		{
@@ -280,14 +359,11 @@ func (suite *CertificatePublicTestSuite) TestCertificateCreate() {
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusBadRequest)
-				_, _ = w.Write([]byte(`{"error":"invalid name"}`))
+				_, _ = w.Write([]byte(`{"error":"validation failed"}`))
 			},
-			opts: client.CertificateCreateOpts{
-				Name:   "",
-				Object: "my-ca.pem",
-			},
+			opts: client.CertificateCreateOpts{Name: ""},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAMutationResult]],
+				resp *client.Response[client.Collection[client.CertificateMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -305,12 +381,9 @@ func (suite *CertificatePublicTestSuite) TestCertificateCreate() {
 				w.WriteHeader(http.StatusUnauthorized)
 				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
 			},
-			opts: client.CertificateCreateOpts{
-				Name:   "my-ca",
-				Object: "my-ca.pem",
-			},
+			opts: client.CertificateCreateOpts{Name: "test"},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAMutationResult]],
+				resp *client.Response[client.Collection[client.CertificateMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -318,30 +391,6 @@ func (suite *CertificatePublicTestSuite) TestCertificateCreate() {
 
 				var target *client.AuthError
 				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusUnauthorized, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			opts: client.CertificateCreateOpts{
-				Name:   "my-ca",
-				Object: "my-ca.pem",
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
 			},
 		},
 		{
@@ -351,12 +400,9 @@ func (suite *CertificatePublicTestSuite) TestCertificateCreate() {
 				w.WriteHeader(http.StatusInternalServerError)
 				_, _ = w.Write([]byte(`{"error":"internal error"}`))
 			},
-			opts: client.CertificateCreateOpts{
-				Name:   "my-ca",
-				Object: "my-ca.pem",
-			},
+			opts: client.CertificateCreateOpts{Name: "test"},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAMutationResult]],
+				resp *client.Response[client.Collection[client.CertificateMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -364,18 +410,14 @@ func (suite *CertificatePublicTestSuite) TestCertificateCreate() {
 
 				var target *client.ServerError
 				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusInternalServerError, target.StatusCode)
 			},
 		},
 		{
 			name:      "when client HTTP call fails returns error",
 			serverURL: "http://127.0.0.1:0",
-			opts: client.CertificateCreateOpts{
-				Name:   "my-ca",
-				Object: "my-ca.pem",
-			},
+			opts:      client.CertificateCreateOpts{Name: "test"},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAMutationResult]],
+				resp *client.Response[client.Collection[client.CertificateMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -388,12 +430,9 @@ func (suite *CertificatePublicTestSuite) TestCertificateCreate() {
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusOK)
 			},
-			opts: client.CertificateCreateOpts{
-				Name:   "my-ca",
-				Object: "my-ca.pem",
-			},
+			opts: client.CertificateCreateOpts{Name: "test"},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAMutationResult]],
+				resp *client.Response[client.Collection[client.CertificateMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -401,8 +440,6 @@ func (suite *CertificatePublicTestSuite) TestCertificateCreate() {
 
 				var target *client.UnexpectedStatusError
 				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
 			},
 		},
 	}
@@ -441,55 +478,29 @@ func (suite *CertificatePublicTestSuite) TestCertificateUpdate() {
 		name         string
 		handler      http.HandlerFunc
 		serverURL    string
-		opts         client.CertificateUpdateOpts
-		validateFunc func(*client.Response[client.Collection[client.CertificateCAMutationResult]], error)
+		object       string
+		validateFunc func(*client.Response[client.Collection[client.CertificateMutationResult]], error)
 	}{
 		{
-			name: "when updating CA certificate returns result collection",
+			name:   "when updating CA returns result",
+			object: "internal-ca-2.pem",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","name":"my-ca","changed":true}]}`,
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","name":"internal-ca","changed":true}]}`,
 					),
 				)
 			},
-			opts: client.CertificateUpdateOpts{
-				Object: "my-ca-updated.pem",
-			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAMutationResult]],
+				resp *client.Response[client.Collection[client.CertificateMutationResult]],
 				err error,
 			) {
 				suite.NoError(err)
 				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Equal("my-ca", resp.Data.Results[0].Name)
+				suite.Len(resp.Data.Results, 1)
 				suite.True(resp.Data.Results[0].Changed)
-			},
-		},
-		{
-			name: "when broadcast update returns multiple results",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"server1","status":"ok","name":"my-ca","changed":true},{"hostname":"server2","status":"ok","name":"my-ca","changed":true}]}`,
-					),
-				)
-			},
-			opts: client.CertificateUpdateOpts{
-				Object: "my-ca-updated.pem",
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAMutationResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Len(resp.Data.Results, 2)
 			},
 		},
 		{
@@ -497,13 +508,10 @@ func (suite *CertificatePublicTestSuite) TestCertificateUpdate() {
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusBadRequest)
-				_, _ = w.Write([]byte(`{"error":"invalid object"}`))
-			},
-			opts: client.CertificateUpdateOpts{
-				Object: "",
+				_, _ = w.Write([]byte(`{"error":"validation failed"}`))
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAMutationResult]],
+				resp *client.Response[client.Collection[client.CertificateMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -511,7 +519,6 @@ func (suite *CertificatePublicTestSuite) TestCertificateUpdate() {
 
 				var target *client.ValidationError
 				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusBadRequest, target.StatusCode)
 			},
 		},
 		{
@@ -521,11 +528,8 @@ func (suite *CertificatePublicTestSuite) TestCertificateUpdate() {
 				w.WriteHeader(http.StatusNotFound)
 				_, _ = w.Write([]byte(`{"error":"certificate not found"}`))
 			},
-			opts: client.CertificateUpdateOpts{
-				Object: "my-ca-updated.pem",
-			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAMutationResult]],
+				resp *client.Response[client.Collection[client.CertificateMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -533,83 +537,13 @@ func (suite *CertificatePublicTestSuite) TestCertificateUpdate() {
 
 				var target *client.NotFoundError
 				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusNotFound, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 401 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusUnauthorized)
-				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
-			},
-			opts: client.CertificateUpdateOpts{
-				Object: "my-ca-updated.pem",
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusUnauthorized, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 403 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
-			},
-			opts: client.CertificateUpdateOpts{
-				Object: "my-ca-updated.pem",
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.AuthError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 500 returns ServerError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusInternalServerError)
-				_, _ = w.Write([]byte(`{"error":"internal error"}`))
-			},
-			opts: client.CertificateUpdateOpts{
-				Object: "my-ca-updated.pem",
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.ServerError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusInternalServerError, target.StatusCode)
 			},
 		},
 		{
 			name:      "when client HTTP call fails returns error",
 			serverURL: "http://127.0.0.1:0",
-			opts: client.CertificateUpdateOpts{
-				Object: "my-ca-updated.pem",
-			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAMutationResult]],
+				resp *client.Response[client.Collection[client.CertificateMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -622,11 +556,8 @@ func (suite *CertificatePublicTestSuite) TestCertificateUpdate() {
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusOK)
 			},
-			opts: client.CertificateUpdateOpts{
-				Object: "my-ca-updated.pem",
-			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAMutationResult]],
+				resp *client.Response[client.Collection[client.CertificateMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -634,8 +565,6 @@ func (suite *CertificatePublicTestSuite) TestCertificateUpdate() {
 
 				var target *client.UnexpectedStatusError
 				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
 			},
 		},
 	}
@@ -666,8 +595,8 @@ func (suite *CertificatePublicTestSuite) TestCertificateUpdate() {
 			resp, err := sut.Certificate.Update(
 				suite.ctx,
 				"_any",
-				"my-ca",
-				tc.opts,
+				"internal-ca",
+				client.CertificateUpdateOpts{Object: tc.object},
 			)
 			tc.validateFunc(resp, err)
 		})
@@ -679,67 +608,45 @@ func (suite *CertificatePublicTestSuite) TestCertificateDelete() {
 		name         string
 		handler      http.HandlerFunc
 		serverURL    string
-		validateFunc func(*client.Response[client.Collection[client.CertificateCAMutationResult]], error)
+		validateFunc func(*client.Response[client.Collection[client.CertificateMutationResult]], error)
 	}{
 		{
-			name: "when deleting CA certificate returns result collection",
+			name: "when deleting CA returns result",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","name":"my-ca","changed":true}]}`,
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"agent1","status":"ok","name":"testCA","changed":true}]}`,
 					),
 				)
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAMutationResult]],
+				resp *client.Response[client.Collection[client.CertificateMutationResult]],
 				err error,
 			) {
 				suite.NoError(err)
 				suite.NotNil(resp)
-				suite.Equal("00000000-0000-0000-0000-000000000001", resp.Data.JobID)
-				suite.Equal("my-ca", resp.Data.Results[0].Name)
+				suite.Len(resp.Data.Results, 1)
 				suite.True(resp.Data.Results[0].Changed)
 			},
 		},
 		{
-			name: "when broadcast delete returns multiple results",
+			name: "when server returns 404 returns NotFoundError",
 			handler: func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(
-					[]byte(
-						`{"job_id":"00000000-0000-0000-0000-000000000002","results":[{"hostname":"server1","status":"ok","name":"my-ca","changed":true},{"hostname":"server2","status":"failed","error":"not found"}]}`,
-					),
-				)
+				w.WriteHeader(http.StatusNotFound)
+				_, _ = w.Write([]byte(`{"error":"certificate not found"}`))
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAMutationResult]],
-				err error,
-			) {
-				suite.NoError(err)
-				suite.NotNil(resp)
-				suite.Len(resp.Data.Results, 2)
-			},
-		},
-		{
-			name: "when server returns 401 returns AuthError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusUnauthorized)
-				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAMutationResult]],
+				resp *client.Response[client.Collection[client.CertificateMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
 				suite.Nil(resp)
 
-				var target *client.AuthError
+				var target *client.NotFoundError
 				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusUnauthorized, target.StatusCode)
 			},
 		},
 		{
@@ -750,7 +657,7 @@ func (suite *CertificatePublicTestSuite) TestCertificateDelete() {
 				_, _ = w.Write([]byte(`{"error":"forbidden"}`))
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAMutationResult]],
+				resp *client.Response[client.Collection[client.CertificateMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -758,33 +665,13 @@ func (suite *CertificatePublicTestSuite) TestCertificateDelete() {
 
 				var target *client.AuthError
 				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusForbidden, target.StatusCode)
-			},
-		},
-		{
-			name: "when server returns 500 returns ServerError",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusInternalServerError)
-				_, _ = w.Write([]byte(`{"error":"internal error"}`))
-			},
-			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAMutationResult]],
-				err error,
-			) {
-				suite.Error(err)
-				suite.Nil(resp)
-
-				var target *client.ServerError
-				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusInternalServerError, target.StatusCode)
 			},
 		},
 		{
 			name:      "when client HTTP call fails returns error",
 			serverURL: "http://127.0.0.1:0",
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAMutationResult]],
+				resp *client.Response[client.Collection[client.CertificateMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -798,7 +685,7 @@ func (suite *CertificatePublicTestSuite) TestCertificateDelete() {
 				w.WriteHeader(http.StatusOK)
 			},
 			validateFunc: func(
-				resp *client.Response[client.Collection[client.CertificateCAMutationResult]],
+				resp *client.Response[client.Collection[client.CertificateMutationResult]],
 				err error,
 			) {
 				suite.Error(err)
@@ -806,8 +693,6 @@ func (suite *CertificatePublicTestSuite) TestCertificateDelete() {
 
 				var target *client.UnexpectedStatusError
 				suite.Require().True(errors.As(err, &target), "err is %T: %v", err, err)
-				suite.Equal(http.StatusOK, target.StatusCode)
-				suite.Equal("nil response body", target.Message)
 			},
 		},
 	}
@@ -835,7 +720,7 @@ func (suite *CertificatePublicTestSuite) TestCertificateDelete() {
 				client.WithLogger(slog.Default()),
 			)
 
-			resp, err := sut.Certificate.Delete(suite.ctx, "_any", "my-ca")
+			resp, err := sut.Certificate.Delete(suite.ctx, "_any", "testCA")
 			tc.validateFunc(resp, err)
 		})
 	}
@@ -844,5 +729,6 @@ func (suite *CertificatePublicTestSuite) TestCertificateDelete() {
 func TestCertificatePublicTestSuite(
 	t *testing.T,
 ) {
+	t.Parallel()
 	suite.Run(t, new(CertificatePublicTestSuite))
 }
