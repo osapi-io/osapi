@@ -37,16 +37,28 @@ of role names, such as `admin`, `operator` or `read`.
 
 ### RBAC model
 
-Three built-in roles have permissions in levels:
+Six built-in roles have permissions. A rule gives each role its permissions from
+the verbs of the permissions.
+[Roles and permissions](../features/platform/authentication.md#roles-and-permissions)
+tells the rule. In the UI, each role can do these things:
 
-| Role     | JWT value | Permissions                            |
-| -------- | --------- | -------------------------------------- |
-| Admin    | `admin`   | All permissions, `audit:read` included |
-| Operator | `write`   | Read, write and execute, but not audit |
-| Viewer   | `read`    | Read only                              |
+| Role       | JWT role     | In the UI                                                                                           |
+| ---------- | ------------ | --------------------------------------------------------------------------------------------------- |
+| Admin      | `admin`      | Each method and each page of the Admin menu. Only admin can switch the role of the session          |
+| Operator   | `operator`   | Each read, and each action, such as a restart, a signal or a reboot. No change to the configuration |
+| Automation | `automation` | Each read, and each change to the configuration. No action                                          |
+| Auditor    | `auditor`    | The Audit Log, Jobs, Roles and Traces pages, and the health. It changes nothing                     |
+| Read       | `read`       | Each read that is not admin only. A read of a log, a file or a process can show a secret            |
+| Observer   | `observer`   | The health, the status of each host, and the agents with their facts, for a dashboard. Nothing more |
 
-Each role can read traces with `trace:read`. The Traces page in the Admin menu
-shows the span tree of a trace by its ID.
+A permission with the verb `shell` or `exec` is admin only. Some other
+permissions are admin only too, such as `command:execute`, `user:write`,
+`schedule:write`, `admission:write` and `agent:write`. `audit:read` goes to
+`admin` and `auditor` only.
+
+The Audit Log, Admission, Jobs and Roles links of the Admin menu need
+`audit:read`. The Traces link needs `trace:read`, which each role but `observer`
+has. The Traces page shows the span tree of a trace by its ID.
 
 A permission has the form `resource:verb`, as in the Go model of osapi, for
 example `agent:read`, `file:write`, `command:execute` and `docker:execute`. The
