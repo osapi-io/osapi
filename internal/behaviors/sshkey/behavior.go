@@ -41,10 +41,13 @@ const (
 const authorizedKeys = "/home/osapitest/.ssh/authorized_keys"
 
 // osapitest is a host that has the user osapitest, and a live host where
-// the user behavior adds it first.
+// the user behavior adds it first. On macOS, gohai reads the home of each
+// user from the directory service with dscl.
 var osapitest = []behavior.HostOption{
 	behavior.Exists("/etc/passwd", "root:x:0:0:root:/root:/bin/bash\n"+
 		"osapitest:x:1001:1001::/home/osapitest:/bin/sh\n"),
+	behavior.Prints("dscl . -list /Users NFSHomeDirectory",
+		"root /var/root\nosapitest /home/osapitest\n"),
 	behavior.Exists("/etc/group", "root:x:0:\nosapitest:x:1001:\n"),
 	behavior.Exists("/etc/shadow", "root:*:19000:0:99999:7:::\nosapitest:!:19000:0:99999:7:::\n"),
 }
@@ -74,6 +77,7 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Platform(behavior.PlatformDebian, newDebian),
 	behavior.Platform(behavior.PlatformLinux, newReader),
 	behavior.Platform(behavior.PlatformDarwin, newReader),
+	behavior.RunsIfPresent("dscl"),
 	behavior.Writes("/home/*/.ssh/authorized_keys"),
 	behavior.Read("list", List).
 		Describe("List the authorized SSH keys of a user").
@@ -97,9 +101,11 @@ var Behavior = behavior.Register(behavior.Define(
 		Example("A user with no keys", ListInput{Name: "osapitest"}, []Key{}, osapitest...).
 		Fails("A user that the host does not have", ListInput{Name: "nobody"}, "not found",
 			osapitest...).
-		Fails("A host key that gohai cannot read", ListInput{Name: "osapitest"}, "parse",
+		Example("A host key that gohai cannot read", ListInput{Name: "osapitest"},
+			[]Key{{Type: "ssh-ed25519", Fingerprint: fp1, Comment: "osapitest@example"}},
 			append(slices.Clone(osapitest),
-				behavior.Exists("/etc/ssh/ssh_host_ed25519_key.pub", "ssh-ed25519"))...).
+				behavior.Exists("/etc/ssh/ssh_host_ed25519_key.pub", "ssh-ed25519"),
+				behavior.Exists(authorizedKeys, key1+"\n"))...).
 		Fails("A name that is not a user name", ListInput{Name: "Bad;name"}, "Name").
 		Fails("A name over 32 characters", ListInput{Name: strings.Repeat("a", 33)}, "max"),
 	behavior.Write("create", Create).

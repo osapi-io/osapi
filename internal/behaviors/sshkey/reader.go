@@ -37,8 +37,9 @@ import (
 )
 
 // reader reads the keys through gohai's ssh collector, which reads the
-// authorized_keys of each user that /etc/passwd lists. It asks the user
-// behavior whether the user exists. It changes nothing.
+// authorized_keys of each user that /etc/passwd lists, or on macOS the
+// directory service. It asks the user behavior whether the user exists. It
+// changes nothing.
 type reader struct {
 	src   source.Sources
 	users user.Provider

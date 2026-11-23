@@ -983,9 +983,10 @@ Returns passwd, group, current_user. Build it with users.NewWith(h.Sources()).
 Use: An example's fake host gives, on debian: Exists for /etc/group,
 /etc/passwd, /etc/shadow, Prints for id -u. On rhel: Exists for /etc/group,
 /etc/passwd, /etc/shadow, Prints for id -u. On darwin: Exists for /etc/group,
-/etc/passwd, /etc/shadow, Prints for dscl . -list /Users
-AuthenticationAuthority; id -u. With content, it reads more under those paths.
-gohai collector get --name users shows it in full; users is its package.
+/etc/passwd, /etc/shadow, Prints for dscl . -list /Groups PrimaryGroupID; dscl .
+-list /Users AuthenticationAuthority; dscl . -list /Users UniqueID; id -u. With
+content, it reads more under those paths. gohai collector get --name users shows
+it in full; users is its package.
 
 ### `sessions`
 
@@ -1438,10 +1439,11 @@ Use: An example's fake host gives, on debian: Exists for /etc/passwd,
 /etc/ssh/ssh_host_ecdsa_key.pub, /etc/ssh/ssh_host_ed25519_key.pub,
 /etc/ssh/ssh_host_rsa_key.pub. On rhel: Exists for /etc/passwd,
 /etc/ssh/ssh_host_ecdsa_key.pub, /etc/ssh/ssh_host_ed25519_key.pub,
-/etc/ssh/ssh_host_rsa_key.pub. On darwin: Exists for /etc/passwd,
+/etc/ssh/ssh_host_rsa_key.pub. On darwin: Exists for
 /etc/ssh/ssh_host_ecdsa_key.pub, /etc/ssh/ssh_host_ed25519_key.pub,
-/etc/ssh/ssh_host_rsa_key.pub. With content, it reads more under those paths.
-gohai collector get --name ssh shows it in full; ssh is its package.
+/etc/ssh/ssh_host_rsa_key.pub, Prints for dscl . -list /Users NFSHomeDirectory.
+With content, it reads more under those paths. gohai collector get --name ssh
+shows it in full; ssh is its package.
 
 ### `sysconf`
 
@@ -1521,9 +1523,12 @@ Returns certificates. Build it with cacertificates.NewWith(h.Sources()).
 Use: An example's fake host gives, on debian: Exists for
 /etc/ca-certificates.conf, /usr/local/share/ca-certificates,
 /usr/share/ca-certificates. On rhel: Exists for
-/etc/pki/ca-trust/source/anchors, /usr/share/pki/ca-trust-source. On darwin:
-Prints for security find-certificate -a -p /Library/Keychains/System.keychain;
-security find-certificate -a -p
+/etc/pki/ca-trust/source/anchors, /etc/pki/ca-trust/source/blacklist,
+/etc/pki/ca-trust/source/blocklist, /usr/share/pki/ca-trust-source,
+/usr/share/pki/ca-trust-source/blacklist,
+/usr/share/pki/ca-trust-source/blocklist. On darwin: Prints for security
+find-certificate -a -p /Library/Keychains/System.keychain; security
+find-certificate -a -p
 /System/Library/Keychains/SystemRootCertificates.keychain. With content, it
 reads more under those paths. gohai collector get --name ca_certificates shows
 it in full; cacertificates is its package.
