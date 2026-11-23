@@ -406,7 +406,7 @@ func rbacCases(
 			"Read", http.StatusForbidden
 		cases = append(cases, read)
 	}
-	if m.Admin {
+	if m.AdminRole() {
 		write := base
 		write.name, write.token, write.code = "when the token has the write role, it is a 403: the method is admin only",
 			"Write", http.StatusForbidden
@@ -434,7 +434,7 @@ func request(
 ) (httpCase, error) {
 	c := httpCase{method: m.HTTPMethod(), token: "Read"}
 	switch {
-	case m.Admin:
+	case m.AdminRole():
 		// Only the admin role grants an admin-only method's permission.
 		c.token = "Admin"
 	case m.Verb == behavior.VerbWrite:

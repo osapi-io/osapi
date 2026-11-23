@@ -38,6 +38,14 @@ import (
 	"github.com/avfs/avfs"
 
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/exec"
+)
+
+// ErrCommandDisabled is the refusal of a command that a caller supplies, such
+// as command exec or docker exec, on an agent where agent.command.enabled is
+// false: Host.CommandEnabled.
+var ErrCommandDisabled = errors.New(
+	"command execution is disabled on this agent: set agent.command.enabled to true to allow it",
 )
 
 // Host is one agent's host, as a provider builder sees it.
@@ -176,6 +184,17 @@ type Exec interface {
 		name string,
 		args []string,
 	) (stdout string, stderr string, exitCode int, err error)
+	// RunCmdFull runs name with args as the agent's own user, in cwd when it
+	// is not empty, for at most timeout seconds, and returns its standard
+	// output, standard error, exit code and duration apart. A program that
+	// exits non-zero is a result, not an error.
+	RunCmdFull(
+		ctx context.Context,
+		name string,
+		args []string,
+		cwd string,
+		timeout int,
+	) (*exec.CmdResult, error)
 }
 
 // Require is the provider of a behavior that h's behavior declared with

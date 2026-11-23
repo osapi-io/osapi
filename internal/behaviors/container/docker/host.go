@@ -36,12 +36,6 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/host"
 )
 
-// errCommandDisabled is exec's refusal on an agent that runs no command a
-// caller supplies, as the command domain refuses.
-var errCommandDisabled = errors.New(
-	"command execution is disabled on this agent: set agent.command.enabled to true to allow it",
-)
-
 // cli reads the containers through gohai's docker collector, and changes
 // them with the docker CLI. It is the same on each platform: docker answers
 // the same way on each.
@@ -250,7 +244,7 @@ func (c *cli) Exec(
 	in ExecInput,
 ) (ExecResult, error) {
 	if !c.enabled {
-		return ExecResult{}, errCommandDisabled
+		return ExecResult{}, host.ErrCommandDisabled
 	}
 	args := []string{"exec"}
 	for _, k := range slices.Sorted(maps.Keys(in.Env)) {

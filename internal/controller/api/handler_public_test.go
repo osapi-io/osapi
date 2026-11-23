@@ -30,7 +30,6 @@ import (
 
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/api"
-	commandAPI "github.com/osapi-io/osapi/internal/controller/api/node/command"
 	"github.com/osapi-io/osapi/internal/job/mocks"
 )
 
@@ -78,13 +77,11 @@ func (s *HandlerPublicTestSuite) TestRegisterHandlers() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			signingKey := "test-signing-key"
-
-			handlers := make([]func(e *echo.Echo), 0, 5)
-			handlers = append(
-				handlers,
-				commandAPI.Handler(slog.Default(), s.mockJobClient, signingKey, nil)...,
-			)
+			handlers := []func(e *echo.Echo){
+				func(e *echo.Echo) {
+					e.GET("/api/test", func(c *echo.Context) error { return c.NoContent(200) })
+				},
+			}
 
 			routesBefore := len(s.server.Echo.Router().Routes())
 			s.server.RegisterHandlers(handlers)

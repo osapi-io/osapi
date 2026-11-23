@@ -101,7 +101,6 @@ export const BLOCK_OPERATIONS: Record<string, OperationId> = {
   "object-upload": "postFile",
   "object-delete": "deleteFileByName",
   "object-stale": "getFileStale",
-  "command-shell": "postNodeCommandShell",
   "audit-list": "getAuditLogs",
   "audit-get": "getAuditLogByID",
   "audit-export": "getAuditExport",

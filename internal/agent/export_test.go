@@ -55,7 +55,6 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/provider"
-	"github.com/osapi-io/osapi/internal/provider/command"
 	fileProv "github.com/osapi-io/osapi/internal/provider/file"
 	diskProv "github.com/osapi-io/osapi/internal/provider/node/disk"
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
@@ -576,22 +575,6 @@ func ExportGetLoadProvider(
 	a *Agent,
 ) load.Provider {
 	return a.loadProvider
-}
-
-// ExportGetCommandProvider returns the first command.Provider found in the
-// registry for testing.
-func ExportGetCommandProvider(
-	a *Agent,
-) command.Provider {
-	if a.registry == nil {
-		return nil
-	}
-	for _, p := range a.registry.AllProviders() {
-		if v, ok := p.(command.Provider); ok {
-			return v
-		}
-	}
-	return nil
 }
 
 // GetAgentCachedFacts returns the agent's cachedFacts field for testing.

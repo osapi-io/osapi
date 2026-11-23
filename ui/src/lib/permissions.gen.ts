@@ -7,12 +7,12 @@ export type Permission =
   | "file:write"
   | "health:read"
   | "trace:read"
-  | "command:execute"
-  | "command:shell"
   | "power:execute"
   | "log:read"
   | "certificate:read"
   | "certificate:write"
+  | "command:execute"
+  | "command:shell"
   | "disk:read"
   | "group:read"
   | "group:write"
@@ -63,12 +63,12 @@ export const ALL_PERMISSIONS: Permission[] = [
   "file:write",
   "health:read",
   "trace:read",
-  "command:execute",
-  "command:shell",
   "power:execute",
   "log:read",
   "certificate:read",
   "certificate:write",
+  "command:execute",
+  "command:shell",
   "disk:read",
   "group:read",
   "group:write",
@@ -122,12 +122,12 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "file:write",
     "health:read",
     "trace:read",
-    "command:execute",
-    "command:shell",
     "power:execute",
     "log:read",
     "certificate:read",
     "certificate:write",
+    "command:execute",
+    "command:shell",
     "disk:read",
     "group:read",
     "group:write",

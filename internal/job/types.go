@@ -149,12 +149,6 @@ type OperationType = client.JobOperation
 // Node operations — read-only operations that query node state.
 const ()
 
-// Command operations — execute arbitrary commands on agents.
-const (
-	OperationCommandExecExecute  = client.OpCommandExec
-	OperationCommandShellExecute = client.OpCommandShell
-)
-
 // User operations.
 const ()
 
@@ -254,28 +248,6 @@ type QueueStats struct {
 // NodeHostnameGetData represents data for hostname retrieval
 type NodeHostnameGetData struct {
 	// No additional data needed for hostname retrieval
-}
-
-// CommandExecData represents data for direct command execution
-type CommandExecData struct {
-	// Command is the executable name or path
-	Command string `json:"command"`
-	// Args are the command arguments
-	Args []string `json:"args,omitempty"`
-	// Cwd is the optional working directory
-	Cwd string `json:"cwd,omitempty"`
-	// Timeout is the timeout in seconds
-	Timeout int `json:"timeout,omitempty"`
-}
-
-// CommandShellData represents data for shell command execution
-type CommandShellData struct {
-	// Command is the full shell command string
-	Command string `json:"command"`
-	// Cwd is the optional working directory
-	Cwd string `json:"cwd,omitempty"`
-	// Timeout is the timeout in seconds
-	Timeout int `json:"timeout,omitempty"`
 }
 
 // NodeShutdownData represents data for node shutdown/reboot operations

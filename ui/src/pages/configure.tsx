@@ -7,7 +7,6 @@ import { BlockStack } from "@/components/domain/block-stack";
 import { ResultCard } from "@/components/domain/result-card";
 import { RunLinks } from "@/components/domain/run-links";
 import { traceIdOf } from "@/lib/trace";
-import { CommandBlock } from "@/components/domain/command-block";
 import { FileUploadBlock } from "@/components/domain/file-upload-block";
 import { SingleInputBlock } from "@/components/domain/single-input-block";
 import { FileDeleteBlock } from "@/components/domain/file-delete-block";
@@ -23,10 +22,6 @@ import {
 import { useCommands } from "@/hooks/use-commands";
 import { useStacks } from "@/hooks/use-stacks";
 import { features } from "@/lib/features";
-import {
-  postNodeCommandExec,
-  postNodeCommandShell,
-} from "@/sdk/gen/command-execution-api-command-operations/command-execution-api-command-operations";
 import {
   postFile,
   getFiles,
@@ -110,7 +105,7 @@ const blockIcons: Record<
   "object-list": FolderOpen,
   "file-status": FileDown,
   // Command
-  command: Terminal,
+  "command-exec": Terminal,
   // Node
   "status-get": Monitor,
   "load-get": Gauge,
@@ -241,15 +236,6 @@ export function Configure() {
         }
 
         switch (block.type) {
-          case "command": {
-            const argsStr = (block.data.args as string) || "";
-            result = await postNodeCommandExec(t, {
-              command: block.data.command as string,
-              args: argsStr ? argsStr.split(" ") : undefined,
-              cwd: (block.data.cwd as string) || undefined,
-            });
-            break;
-          }
           case "object-list":
             result = await getFiles();
             break;
@@ -268,11 +254,6 @@ export function Configure() {
             break;
           case "object-stale":
             result = await getFileStale();
-            break;
-          case "command-shell":
-            result = await postNodeCommandShell(t, {
-              command: block.data.command as string,
-            });
             break;
           case "audit-list":
             result = await getAuditLogs();
@@ -376,14 +357,6 @@ export function Configure() {
     }
 
     switch (block.type) {
-      case "command":
-        return (
-          <CommandBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-          />
-        );
       case "object-list":
         return null;
       case "object-upload":
@@ -404,17 +377,6 @@ export function Configure() {
         );
       case "object-stale":
         return null;
-      case "command-shell":
-        return (
-          <SingleInputBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            field="command"
-            label="Shell Command"
-            placeholder="echo hello | tee /tmp/out.txt"
-          />
-        );
       case "audit-list":
       case "audit-export":
         return null;

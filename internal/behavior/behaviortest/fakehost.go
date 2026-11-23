@@ -49,6 +49,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	hostmocks "github.com/osapi-io/osapi/internal/behavior/host/mocks"
+	"github.com/osapi-io/osapi/internal/exec"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 )
 
@@ -76,7 +77,10 @@ type fakeHost struct {
 	ran     []string
 	history []string
 	outputs map[string]string
-	later   []behavior.Given
+	// exits are the exit codes of the commands declared with Exits, by
+	// command line.
+	exits map[string]int
+	later []behavior.Given
 	// laterFiles are the files that a command writes when it runs,
 	// declared with ExistsAfter.
 	laterFiles []behavior.Given
@@ -127,6 +131,7 @@ func newHost(
 ) *fakeHost {
 	h := &fakeHost{
 		outputs: map[string]string{},
+		exits:   map[string]int{},
 		values:  map[string][]byte{},
 		objects: map[string]behavior.Given{},
 		writes:  b.Writes,
@@ -184,7 +189,8 @@ func (h *fakeHost) check(
 	case privileged && !slices.Contains(h.sudo, name):
 		problem = behavior.TestFailure(behavior.TestRuns,
 			fmt.Sprintf("runs %s with sudo but does not declare it with behavior.Sudo", name))
-	case !privileged && !slices.Contains(h.runs, name) && !slices.Contains(h.sudo, name):
+	case !privileged && !slices.Contains(h.runs, name) && !slices.Contains(h.sudo, name) &&
+		!slices.Contains(h.runs, behavior.AnyProgram):
 		problem = behavior.TestFailure(behavior.TestRuns,
 			fmt.Sprintf("runs %s but does not declare it with behavior.Runs", name))
 	}
@@ -343,6 +349,19 @@ func (h *fakeHost) commands(
 			}
 
 			return run(ctx, name, args)
+		}).
+		AnyTimes()
+	m.EXPECT().RunCmdFull(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, name string, args []string, _ string, _ int) (*exec.CmdResult, error) {
+			h.check(name, false)
+			out, err := run(ctx, name, args)
+			if err != nil {
+				return nil, err
+			}
+
+			line := strings.Join(append([]string{name}, args...), " ")
+
+			return &exec.CmdResult{Stdout: out, ExitCode: h.exits[line]}, nil
 		}).
 		AnyTimes()
 	m.EXPECT().RunPrivilegedCmd(gomock.Any(), gomock.Any(), gomock.Any()).

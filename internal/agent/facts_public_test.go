@@ -39,7 +39,6 @@ import (
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/mocks"
-	commandMocks "github.com/osapi-io/osapi/internal/provider/command/mocks"
 	diskMocks "github.com/osapi-io/osapi/internal/provider/node/disk/mocks"
 	hostMocks "github.com/osapi-io/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/osapi-io/osapi/internal/provider/node/load/mocks"
@@ -77,7 +76,6 @@ func (s *FactsPublicTestSuite) SetupTest() {
 		diskProvider:    diskMocks.NewDefaultMockProvider(s.mockCtrl),
 		memoryProvider:  memoryMocks.NewDefaultMockProvider(s.mockCtrl),
 		loadProvider:    loadMocks.NewDefaultMockProvider(s.mockCtrl),
-		commandProvider: commandMocks.NewDefaultMockProvider(s.mockCtrl),
 		processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
 		factsBucket:     "facts",
 		natsClient:      s.mockFactsKV,

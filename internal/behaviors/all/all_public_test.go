@@ -21,7 +21,6 @@
 package all_test
 
 import (
-	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -30,16 +29,13 @@ import (
 
 	"github.com/labstack/echo/v5"
 	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"gopkg.in/yaml.v3"
 
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all/gen"
-	"github.com/osapi-io/osapi/internal/behaviors/sysctl"
 	"github.com/osapi-io/osapi/internal/cli"
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
@@ -183,93 +179,6 @@ func (s *AllPublicTestSuite) TestEveryCommandIsAttached() {
 			})
 		}
 	}
-}
-
-// handWritten is every operation the hand-written specs declare, as "VERB
-// path", with the directory of the spec that declares it.
-func handWritten(
-	t *testing.T,
-) map[string]string {
-	root, err := filepath.Abs("../../..")
-	require.NoError(t, err)
-	var specs []string
-	for _, pattern := range []string{
-		"internal/controller/api/*/gen/api.yaml",
-		"internal/controller/api/node/*/gen/api.yaml",
-	} {
-		found, err := filepath.Glob(filepath.Join(root, pattern))
-		require.NoError(t, err)
-		specs = append(specs, found...)
-	}
-
-	ops := map[string]string{}
-	for _, spec := range specs {
-		dir := filepath.Dir(filepath.Dir(spec))
-		rel, _ := filepath.Rel(root, dir)
-		// The joined spec is not hand-written.
-		if rel == "internal/controller/api" {
-			continue
-		}
-		data, err := os.ReadFile(spec)
-		require.NoError(t, err)
-		var doc struct {
-			Paths map[string]map[string]any `yaml:"paths"`
-		}
-		require.NoError(t, yaml.Unmarshal(data, &doc))
-		for path, item := range doc.Paths {
-			for verb := range item {
-				ops[strings.ToUpper(verb)+" "+path] = rel
-			}
-		}
-	}
-
-	return ops
-}
-
-// collisions is each of b's operations a hand-written spec in ops also
-// declares, with what to do about it.
-func collisions(
-	b *behavior.Behavior,
-	ops map[string]string,
-) []string {
-	var out []string
-	for _, m := range b.Methods {
-		op := m.HTTPMethod() + " " + b.Path(m)
-		if dir, ok := ops[op]; ok {
-			out = append(out, fmt.Sprintf(
-				"%s is served by the %s behavior and by %s: delete the hand-written domain "+
-					"(its cutover)",
-				op, b.Name, dir))
-		}
-	}
-
-	return out
-}
-
-// TestNoRouteIsServedTwice fails while a behavior shares a route with a
-// hand-written domain, naming the domain's directory: a domain's cutover
-// deletes what this names in the change that adds its behavior.
-func (s *AllPublicTestSuite) TestNoRouteIsServedTwice() {
-	ops := handWritten(s.T())
-	s.Require().NotEmpty(ops)
-
-	for _, b := range behavior.All() {
-		if !b.API {
-			continue
-		}
-		s.Run(b.Name, func() {
-			s.Empty(collisions(b, ops))
-		})
-	}
-
-	s.Run("when a behavior shares a hand-written route", func() {
-		served := behavior.Define("command", "Command", behavior.Node, behavior.API,
-			behavior.Action("exec", sysctl.Create).Describe("Exec"))
-		got := collisions(served, ops)
-		s.Require().Len(got, 1)
-		s.Contains(got[0], "POST /api/node/{hostname}/command/exec is served by the command "+
-			"behavior and by internal/controller/api/node/command")
-	})
 }
 
 func TestAllPublicTestSuite(

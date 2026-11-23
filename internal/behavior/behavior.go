@@ -54,6 +54,10 @@ const (
 	// way; only its permission is <name>:execute, which the operator role
 	// gets and the automation role does not.
 	VerbExecute Verb = "execute"
+	// VerbShell is the permission verb of an action declared with .Shell:
+	// it runs a shell command line, which reaches anything the host can
+	// do. Only the admin role gets a shell permission.
+	VerbShell Verb = "shell"
 )
 
 // Behavior is one area of a host that osapi manages, such as kernel
@@ -190,6 +194,7 @@ const (
 	AreaNode       AreaName = "node"
 	AreaNetworking AreaName = "networking"
 	AreaSecurity   AreaName = "security"
+	AreaCommand    AreaName = "command"
 	AreaHardware   AreaName = "hardware"
 	AreaContainers AreaName = "containers"
 )
@@ -197,8 +202,8 @@ const (
 // Areas are the areas of the UI that a served behavior can sit in: the
 // groups of the Configure page's Add Block panel.
 var Areas = []AreaName{
-	AreaServices, AreaSoftware, AreaConfig, AreaNode, AreaNetworking, AreaSecurity, AreaHardware,
-	AreaContainers,
+	AreaServices, AreaSoftware, AreaConfig, AreaNode, AreaNetworking, AreaSecurity, AreaCommand,
+	AreaHardware, AreaContainers,
 }
 
 // Area puts a served behavior in an area of the UI: Area(AreaHardware) puts
@@ -346,6 +351,9 @@ type Method struct {
 	Disruptive bool
 	// Disruption is why, as .Disrupts gives it.
 	Disruption string
+	// UsesShell is true for an action declared with .Shell: its permission
+	// is <name>:shell, which only the admin role gets.
+	UsesShell bool
 	// NonFact is why a read runs a command outside gohai, set with
 	// .NotAFact: what it reads is not a fact of the host.
 	NonFact string
@@ -527,12 +535,29 @@ func (m *Method) Explain(
 	return m
 }
 
+// Shell makes an action's permission <name>:shell, in place of
+// <name>:execute: the action runs a shell command line. Only the admin role
+// gets a shell permission. behavior validate refuses it on a method that is
+// not an action.
+func (m *Method) Shell() *Method {
+	m.UsesShell = true
+
+	return m
+}
+
 // AdminOnly makes the method's permission one that only the admin role
 // grants. Each method of the behavior with that verb must agree.
 func (m *Method) AdminOnly() *Method {
 	m.Admin = true
 
 	return m
+}
+
+// AdminRole reports whether only the admin role gets the method's
+// permission: it is declared with .AdminOnly, or with .Shell, whose verb
+// only the admin role gets.
+func (m *Method) AdminRole() bool {
+	return m.Admin || m.UsesShell
 }
 
 // Describe sets the method's one-line description.
@@ -671,6 +696,9 @@ func newMethod[P any, In any, Out any](
 // PermissionVerb is the verb of the method's permission: execute for an
 // action, else its verb.
 func (m *Method) PermissionVerb() Verb {
+	if m.UsesShell {
+		return VerbShell
+	}
 	if m.Action {
 		return VerbExecute
 	}

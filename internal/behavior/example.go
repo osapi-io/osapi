@@ -184,6 +184,9 @@ type Given struct {
 	// Content, for a GivenOutput declared with PrintsAfter, or before the
 	// file holds Content, for a GivenFile declared with ExistsAfter.
 	After string `json:"after,omitempty"`
+	// ExitCode is the command's exit code, for GivenOutput declared with
+	// Exits.
+	ExitCode int `json:"exit_code,omitempty"`
 	// ContentType is the object's content type, for GivenObject, whose name
 	// is Path.
 	ContentType client.ContentType `json:"content_type,omitempty"`
@@ -241,6 +244,15 @@ func Prints(
 	output string,
 ) Given {
 	return Given{Kind: GivenOutput, Command: command, Content: output}
+}
+
+// Exits says a command exits with code when it runs, as RunCmdFull returns
+// it. A command with no Exits exits 0.
+func Exits(
+	command string,
+	code int,
+) Given {
+	return Given{Kind: GivenOutput, Command: command, ExitCode: code}
 }
 
 // PrintsAfter says a command prints output once another command line, after,

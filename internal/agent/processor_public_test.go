@@ -33,7 +33,6 @@ import (
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/mocks"
-	commandMocks "github.com/osapi-io/osapi/internal/provider/command/mocks"
 	diskMocks "github.com/osapi-io/osapi/internal/provider/node/disk/mocks"
 	hostMocks "github.com/osapi-io/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/osapi-io/osapi/internal/provider/node/load/mocks"
@@ -71,8 +70,6 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 	memMock := memoryMocks.NewDefaultMockProvider(s.mockCtrl)
 	loadMock := loadMocks.NewDefaultMockProvider(s.mockCtrl)
 
-	commandMock := commandMocks.NewDefaultMockProvider(s.mockCtrl)
-
 	s.testAgent = newTestAgent(newTestAgentParams{
 		appFs:           appFs,
 		appConfig:       appConfig,
@@ -83,7 +80,6 @@ func (s *ProcessorPublicTestSuite) SetupTest() {
 		diskProvider:    diskMock,
 		memoryProvider:  memMock,
 		loadProvider:    loadMock,
-		commandProvider: commandMock,
 		processProvider: processMocks.NewDefaultMockProvider(s.mockCtrl),
 	})
 }
@@ -98,42 +94,6 @@ func (s *ProcessorPublicTestSuite) TestProcessJobOperation() {
 		jobRequest   job.Request
 		validateFunc func(json.RawMessage, error)
 	}{
-		{
-			name: "successful command exec operation",
-			jobRequest: job.Request{
-				Type:      job.TypeModify,
-				Category:  "command",
-				Operation: "exec.execute",
-				Data:      json.RawMessage(`{"command":"ls","args":["-la"]}`),
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Contains(response, "stdout")
-			},
-		},
-		{
-			name: "successful command shell operation",
-			jobRequest: job.Request{
-				Type:      job.TypeModify,
-				Category:  "command",
-				Operation: "shell.execute",
-				Data:      json.RawMessage(`{"command":"echo hello"}`),
-			},
-			validateFunc: func(result json.RawMessage, err error) {
-				s.NoError(err)
-				s.NotNil(result)
-
-				var response map[string]interface{}
-				decodeErr := json.Unmarshal(result, &response)
-				s.NoError(decodeErr)
-				s.Contains(response, "stdout")
-			},
-		},
 		{
 			name: "unsupported job category",
 			jobRequest: job.Request{
@@ -201,13 +161,6 @@ func (s *ProcessorPublicTestSuite) TestProviderFactoryMethods() {
 		{
 			name:        "getLoadProvider",
 			getProvider: func() interface{} { return agent.ExportGetLoadProvider(s.testAgent) },
-			validateFunc: func(provider interface{}) {
-				s.NotNil(provider)
-			},
-		},
-		{
-			name:        "getCommandProvider",
-			getProvider: func() interface{} { return agent.ExportGetCommandProvider(s.testAgent) },
 			validateFunc: func(provider interface{}) {
 				s.NotNil(provider)
 			},

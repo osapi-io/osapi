@@ -84,7 +84,10 @@ func Sudo(
 // Runs declares the programs the behavior's providers run without sudo, such
 // as ip or dpkg-query. The agent warns at startup when one is not installed,
 // the integration test fails when its image lacks one, and the docs page lists
-// them. A program declared with Sudo need not be declared again.
+// them. A program declared with Sudo need not be declared again. AnyProgram,
+// "*", is each program: a behavior such as command, which runs the program
+// its caller names, declares it, and the agent and the integration test look
+// for none.
 func Runs(
 	programs ...string,
 ) Option {
@@ -180,6 +183,9 @@ func Writes(
 // examples fail when a behavior uses the bucket without it; a behavior that
 // requires one that keeps state gets it from there.
 var KeepsState Option = optionFunc(func(b *Behavior) { b.KeepsState = true })
+
+// AnyProgram is the program name Runs takes for each program.
+const AnyProgram = "*"
 
 // PlatformName is a platform that a behavior can name: PlatformLinux, or a
 // platform as gohai's family.Detect names it. Use a constant: behavior
