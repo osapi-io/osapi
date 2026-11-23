@@ -56,6 +56,12 @@ syntax before it applies the file. If validation fails, the agent puts back the
 content that the file had, or removes a new file, and the job returns an error.
 Thus a bad configuration does not stop the network connection.
 
+If `netplan apply` fails, the file stays, and the job returns an error. The
+record of the file has a mark that tells that the apply did not finish. Thus a
+retry with the same input reports a change and runs `netplan apply` again. A
+delete whose `netplan apply` fails puts back the file with the mark, so a retry
+removes it again.
+
 ### DNS delete
 
 The DNS behavior also supports delete: it removes the interface's own

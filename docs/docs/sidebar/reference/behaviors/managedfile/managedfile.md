@@ -39,11 +39,11 @@ same.
 
 ### Types (3)
 
-| NAME                     | INPUT                                                                                                                  | OUTPUT                                                  |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| [get](#method-get)       | GetInput &#123; path\* &#125;                                                                                          | Record &#123; path, sha256, metadata, undeployed &#125; |
-| [update](#method-update) | UpdateInput &#123; path\*, content\*, mode, owner, group, secret, metadata, object, content_type, object_sha256 &#125; | Result &#123; path, changed &#125;                      |
-| [delete](#method-delete) | DeleteInput &#123; path\* &#125;                                                                                       | Result &#123; path, changed &#125;                      |
+| NAME                     | INPUT                                                                                                                  | OUTPUT                                                                 |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| [get](#method-get)       | GetInput &#123; path\* &#125;                                                                                          | Record &#123; path, sha256, metadata, undeployed, object_sha256 &#125; |
+| [update](#method-update) | UpdateInput &#123; path\*, content\*, mode, owner, group, secret, metadata, object, content_type, object_sha256 &#125; | Result &#123; path, changed &#125;                                     |
+| [delete](#method-delete) | DeleteInput &#123; path\* &#125;                                                                                       | Result &#123; path, changed &#125;                                     |
 
 ### Settings (0)
 
@@ -76,14 +76,15 @@ None. Declare them with behavior.Config.
 | ----- | ------ | -------- | ----------- | ------------------------- |
 | path  | string | yes      | pattern ^/  | Absolute path of the file |
 
-### Output (4)
+### Output (5)
 
-| FIELD      | TYPE    | DESCRIPTION                                 |
-| ---------- | ------- | ------------------------------------------- |
-| path       | string  | Absolute path of the file                   |
-| sha256     | string  | Checksum of the content osapi wrote         |
-| metadata   | object  | What the caller keeps in the record         |
-| undeployed | boolean | Whether osapi has stopped managing the file |
+| FIELD         | TYPE    | DESCRIPTION                                                                                           |
+| ------------- | ------- | ----------------------------------------------------------------------------------------------------- |
+| path          | string  | Absolute path of the file                                                                             |
+| sha256        | string  | Checksum of the content osapi wrote                                                                   |
+| metadata      | object  | What the caller keeps in the record                                                                   |
+| undeployed    | boolean | Whether osapi has stopped managing the file                                                           |
+| object_sha256 | string  | SHA-256 of the object that the content came from, in hex; empty for a secret or a file from no object |
 
 ### Examples (2)
 

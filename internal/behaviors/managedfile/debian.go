@@ -277,10 +277,11 @@ func (d *debian) Read(
 	}
 
 	return Record{
-		Path:       path,
-		SHA256:     state.SHA256,
-		Metadata:   state.Metadata,
-		Undeployed: state.UndeployedAt != "",
+		Path:         path,
+		SHA256:       state.SHA256,
+		Metadata:     state.Metadata,
+		Undeployed:   state.UndeployedAt != "",
+		ObjectSHA256: state.ObjectSHA256,
 	}, nil
 }
 

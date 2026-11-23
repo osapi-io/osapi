@@ -56,7 +56,8 @@ func newDebian(
 // Apply writes the file and, when it changed, validates and applies it.
 // netplan reads the whole directory, so a file it refuses does not stay to
 // reach a later apply: the content it had is put back, or a new file is
-// removed.
+// removed. A file that netplan accepts and does not apply stays, with its
+// record marked, so a retry with the same input applies it.
 func (d *debian) Apply(
 	ctx context.Context,
 	in UpdateInput,
@@ -96,13 +97,22 @@ func (d *debian) Apply(
 		return false, fmt.Errorf("netplan generate refused %s, so it was removed: %w", in.Path, err)
 	}
 	if _, err := d.exec.RunPrivilegedCmd(ctx, "netplan", []string{"apply"}); err != nil {
+		// The file stays as it was asked, and its record is marked: a retry
+		// with the same input then changes and applies again.
+		_, _ = behavior.Call(ctx, managedfile.Behavior, managedfile.Update, d.files,
+			managedfile.MarkUnapplied(managedfile.UpdateInput{
+				Path: in.Path, Content: in.Content, Mode: "0600", Metadata: in.Metadata,
+			}))
+
 		return false, fmt.Errorf("netplan apply: %w", err)
 	}
 
 	return true, nil
 }
 
-// Remove removes the file and, when it was there, applies what is left.
+// Remove removes the file and, when it was there, applies what is left. When
+// netplan apply fails, the file is put back with its record marked, so a
+// retry removes it and applies again.
 func (d *debian) Remove(
 	ctx context.Context,
 	path string,
@@ -110,12 +120,26 @@ func (d *debian) Remove(
 	if err := own(path); err != nil {
 		return false, err
 	}
+	previous, readErr := d.fs.ReadFile(path)
 	result, err := behavior.Call(ctx, managedfile.Behavior, managedfile.Delete, d.files,
 		managedfile.DeleteInput{Path: path})
 	if err != nil || !result.Changed {
 		return false, err
 	}
 	if _, err := d.exec.RunPrivilegedCmd(ctx, "netplan", []string{"apply"}); err != nil {
+		// The record of a file that osapi stopped managing keeps its
+		// metadata, which the file gets back.
+		rec, recErr := behavior.Call(ctx, managedfile.Behavior, managedfile.Get, d.files,
+			managedfile.GetInput{Path: path})
+		if readErr == nil && recErr == nil {
+			_, _ = behavior.Call(ctx, managedfile.Behavior, managedfile.Update, d.files,
+				managedfile.MarkUnapplied(managedfile.UpdateInput{
+					Path: path, Content: string(previous), Mode: "0600", Metadata: rec.Metadata,
+				}))
+
+			return false, fmt.Errorf("netplan apply: %w, so %s was put back", err, path)
+		}
+
 		return false, fmt.Errorf("netplan apply: %w", err)
 	}
 

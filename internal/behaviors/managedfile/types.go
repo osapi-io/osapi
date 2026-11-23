@@ -65,6 +65,9 @@ type Record struct {
 	SHA256     string            `json:"sha256"     doc:"Checksum of the content osapi wrote"`
 	Metadata   map[string]string `json:"metadata"   doc:"What the caller keeps in the record"`
 	Undeployed bool              `json:"undeployed" doc:"Whether osapi has stopped managing the file"`
+	// ObjectSHA256 is the checksum of the object that the content came from,
+	// so a caller that puts the file back keeps the stale check as it was.
+	ObjectSHA256 string `json:"object_sha256,omitempty" doc:"SHA-256 of the object that the content came from, in hex; empty for a secret or a file from no object"`
 }
 
 // File is what Write makes a path hold.

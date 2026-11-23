@@ -140,8 +140,9 @@ func (d *debian) Service(
 }
 
 // Deploy writes the object of u as the unit file, and reloads systemd when
-// the file changed. An update of a service that osapi did not deploy is not
-// found.
+// the file changed. When the reload fails, the unit file stays with its
+// record marked, so a retry with the same input reloads. An update of a
+// service that osapi did not deploy is not found.
 func (d *debian) Deploy(
 	ctx context.Context,
 	u Unit,
@@ -166,24 +167,34 @@ func (d *debian) Deploy(
 	if err != nil {
 		return false, err
 	}
-	result, err := behavior.Call(ctx, managedfile.Behavior, managedfile.Update, d.files,
-		managedfile.UpdateInput{
-			Path:         path,
-			Content:      obj.Content,
-			Mode:         "0644",
-			Metadata:     map[string]string{"object": u.Object},
-			Object:       u.Object,
-			ObjectSHA256: obj.SHA256,
-		})
+	in := managedfile.UpdateInput{
+		Path:         path,
+		Content:      obj.Content,
+		Mode:         "0644",
+		Metadata:     map[string]string{"object": u.Object},
+		Object:       u.Object,
+		ObjectSHA256: obj.SHA256,
+	}
+	result, err := behavior.Call(ctx, managedfile.Behavior, managedfile.Update, d.files, in)
 	if err != nil || !result.Changed {
 		return false, err
 	}
+	if err := d.systemctl(ctx, "daemon-reload"); err != nil {
+		// The unit file stays as it was asked, and its record is marked: a
+		// retry with the same input then changes and reloads again.
+		_, _ = behavior.Call(ctx, managedfile.Behavior, managedfile.Update, d.files,
+			managedfile.MarkUnapplied(in))
 
-	return true, d.systemctl(ctx, "daemon-reload")
+		return false, err
+	}
+
+	return true, nil
 }
 
 // Remove stops and disables the service, drops its unit file and reloads
-// systemd. A service with no unit file is unchanged.
+// systemd. A service with no unit file is unchanged. When the reload fails,
+// the unit file is put back with its record marked, so a retry removes it
+// and reloads again.
 func (d *debian) Remove(
 	ctx context.Context,
 	name string,
@@ -192,19 +203,39 @@ func (d *debian) Remove(
 		return false, err
 	}
 	path := unitPath(name)
-	if owned, err := d.owned(ctx, path); err != nil || !owned {
+	rec, owned, err := d.record(ctx, path)
+	if err != nil || !owned {
 		return false, err
 	}
 	unit := prefix + name + ".service"
 	if err := d.systemctl(ctx, "disable", "--now", unit); err != nil {
 		return false, err
 	}
+	previous, readErr := d.fs.ReadFile(path)
 	if _, err := behavior.Call(ctx, managedfile.Behavior, managedfile.Delete, d.files,
 		managedfile.DeleteInput{Path: path}); err != nil {
 		return false, err
 	}
+	if err := d.systemctl(ctx, "daemon-reload"); err != nil {
+		if readErr != nil {
+			return false, err
+		}
+		// The unit file is put back with its record marked, so a retry
+		// removes it and reloads again.
+		_, _ = behavior.Call(ctx, managedfile.Behavior, managedfile.Update, d.files,
+			managedfile.MarkUnapplied(managedfile.UpdateInput{
+				Path:         path,
+				Content:      string(previous),
+				Mode:         "0644",
+				Metadata:     rec.Metadata,
+				Object:       rec.Metadata["object"],
+				ObjectSHA256: rec.ObjectSHA256,
+			}))
 
-	return true, d.systemctl(ctx, "daemon-reload")
+		return false, fmt.Errorf("%w, so %s was put back", err, path)
+	}
+
+	return true, nil
 }
 
 // Act runs action on the service, unless the service is already where the
@@ -261,13 +292,24 @@ func (d *debian) owned(
 	ctx context.Context,
 	path string,
 ) (bool, error) {
+	_, owned, err := d.record(ctx, path)
+
+	return owned, err
+}
+
+// record is the record of the unit file path, and whether osapi deployed it,
+// as owned says.
+func (d *debian) record(
+	ctx context.Context,
+	path string,
+) (managedfile.Record, bool, error) {
 	rec, err := behavior.Call(ctx, managedfile.Behavior, managedfile.Get, d.files,
 		managedfile.GetInput{Path: path})
 	if errors.Is(err, managedfile.ErrNotManaged) {
-		return false, nil
+		return managedfile.Record{}, false, nil
 	}
 
-	return err == nil && !rec.Undeployed, err
+	return rec, err == nil && !rec.Undeployed, err
 }
 
 // systemctl runs systemctl with args, as root.

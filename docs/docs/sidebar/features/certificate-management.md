@@ -42,6 +42,11 @@ Each write is idempotent:
   and SUSE, it runs `update-ca-certificates --fresh`, which removes the links of
   the CA from `/etc/ssl/certs`. A CA that osapi did not deploy, such as a system
   CA, does not change and reports `changed: false`.
+- When the rebuild of the trust store fails, a retry with the same input
+  rebuilds it again. After `create` or `update`, the file stays, and its record
+  has a mark that tells that the rebuild did not finish. After `delete`, the
+  file comes back with the mark. The next write of the CA reports a change and
+  removes the mark.
 
 On macOS, `create`, `update` and `delete` report `skipped`.
 

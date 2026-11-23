@@ -46,6 +46,12 @@ service that osapi did not deploy is not found.
 - **Delete** runs `systemctl disable --now`, removes the unit file and reloads
   systemd. A service with no unit file reports `changed: false`.
 
+When `systemctl daemon-reload` fails, a retry with the same input reloads
+systemd again. After a create or an update, the unit file stays, and its record
+has a mark that tells that the reload did not finish. After a delete, the unit
+file comes back with the mark. The next write of the service reports a change
+and removes the mark.
+
 ### Actions
 
 Each action runs `systemctl <action> osapi-<name>.service` on the Debian family.

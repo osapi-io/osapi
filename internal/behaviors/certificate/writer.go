@@ -148,10 +148,11 @@ func (w *writer) Get(
 }
 
 // Deploy writes the PEM of object as the CA name, and rebuilds the trust
-// store when the file changed. With create, a CA that osapi deployed is
-// written again, and changes nothing when its content is the same; without
-// it, a CA that osapi did not deploy is not found, and an empty object keeps
-// the one that it was deployed from.
+// store when the file changed. When the rebuild fails, the file stays with
+// its record marked, so a retry with the same input rebuilds. With create, a
+// CA that osapi deployed is written again, and changes nothing when its
+// content is the same; without it, a CA that osapi did not deploy is not
+// found, and an empty object keeps the one that it was deployed from.
 func (w *writer) Deploy(
 	ctx context.Context,
 	name string,
@@ -180,24 +181,34 @@ func (w *writer) Deploy(
 	if err != nil {
 		return false, err
 	}
-	result, err := behavior.Call(ctx, managedfile.Behavior, managedfile.Update, w.files,
-		managedfile.UpdateInput{
-			Path:         path,
-			Content:      got.Content,
-			Mode:         "0644",
-			Metadata:     map[string]string{"object": obj},
-			Object:       obj,
-			ObjectSHA256: got.SHA256,
-		})
+	in := managedfile.UpdateInput{
+		Path:         path,
+		Content:      got.Content,
+		Mode:         "0644",
+		Metadata:     map[string]string{"object": obj},
+		Object:       obj,
+		ObjectSHA256: got.SHA256,
+	}
+	result, err := behavior.Call(ctx, managedfile.Behavior, managedfile.Update, w.files, in)
 	if err != nil || !result.Changed {
 		return false, err
 	}
+	if err := w.rebuild(ctx, nil); err != nil {
+		// The file stays as it was asked, and its record is marked: a retry
+		// with the same input then changes and rebuilds again.
+		_, _ = behavior.Call(ctx, managedfile.Behavior, managedfile.Update, w.files,
+			managedfile.MarkUnapplied(in))
 
-	return true, w.rebuild(ctx, nil)
+		return false, err
+	}
+
+	return true, nil
 }
 
 // Remove drops the file of a CA that osapi deployed, and rebuilds the trust
-// store. A CA that osapi did not deploy is unchanged.
+// store. A CA that osapi did not deploy is unchanged. When the rebuild
+// fails, the file is put back with its record marked, so a retry removes it
+// and rebuilds again.
 func (w *writer) Remove(
 	ctx context.Context,
 	name string,
@@ -206,9 +217,11 @@ func (w *writer) Remove(
 		return false, err
 	}
 	path := w.path(name)
-	if _, owned, err := w.owned(ctx, path); err != nil || !owned {
+	rec, owned, err := w.owned(ctx, path)
+	if err != nil || !owned {
 		return false, err
 	}
+	previous, readErr := w.fs.ReadFile(path)
 	if _, err := behavior.Call(ctx, managedfile.Behavior, managedfile.Delete, w.files,
 		managedfile.DeleteInput{Path: path}); err != nil {
 		return false, err
@@ -220,8 +233,26 @@ func (w *writer) Remove(
 	if w.update == "update-ca-certificates" {
 		args = []string{"--fresh"}
 	}
+	if err := w.rebuild(ctx, args); err != nil {
+		if readErr != nil {
+			return false, err
+		}
+		// The file is put back with its record marked, so a retry removes
+		// it and rebuilds again.
+		_, _ = behavior.Call(ctx, managedfile.Behavior, managedfile.Update, w.files,
+			managedfile.MarkUnapplied(managedfile.UpdateInput{
+				Path:         path,
+				Content:      string(previous),
+				Mode:         "0644",
+				Metadata:     rec.Metadata,
+				Object:       rec.Metadata["object"],
+				ObjectSHA256: rec.ObjectSHA256,
+			}))
 
-	return true, w.rebuild(ctx, args)
+		return false, fmt.Errorf("%w, so %s was put back", err, path)
+	}
+
+	return true, nil
 }
 
 // owned is the record of path, and whether osapi deployed it: managedfile

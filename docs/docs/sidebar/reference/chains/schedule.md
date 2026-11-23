@@ -30,7 +30,7 @@ The behaviors that schedule calls, and each call that its examples make.
 | CALL               | SENDS                          | GETS                                                                             |
 | ------------------ | ------------------------------ | -------------------------------------------------------------------------------- |
 | schedule list      |                                | \[&#123;"name":"osapitest","object":"osapitest.sh","interval":"daily","sour…     |
-| └─ managedfile get | path=/etc/cron.daily/osapitest | metadata=&#123;"interval":"daily","object":"osapitest.sh"&#125; path=/etc/cron.… |
+| └─ managedfile get | path=/etc/cron.daily/osapitest | metadata=&#123;"interval":"daily","object":"osapitest.sh"&#125; object_sha256=b… |
 
 ## A host where osapi deployed none (list)
 
@@ -143,8 +143,8 @@ The behaviors that schedule calls, and each call that its examples make.
 | schedule update       | name=osapitest object=osapitest-v2.sh                                             | changed=true name=osapitest                                                      |
 | └─ managedfile get    | path=/etc/cron.d/osapitest                                                        | error: /etc/cron.d/osapitest: not managed                                        |
 | └─ managedfile get    | path=/etc/cron.hourly/osapitest                                                   | error: /etc/cron.hourly/osapitest: not managed                                   |
-| └─ managedfile get    | path=/etc/cron.daily/osapitest                                                    | metadata=&#123;"interval":"daily","object":"osapitest.sh"&#125; path=/etc/cron.… |
-| └─ managedfile get    | path=/etc/cron.daily/osapitest                                                    | metadata=&#123;"interval":"daily","object":"osapitest.sh"&#125; path=/etc/cron.… |
+| └─ managedfile get    | path=/etc/cron.daily/osapitest                                                    | metadata=&#123;"interval":"daily","object":"osapitest.sh"&#125; object_sha256=b… |
+| └─ managedfile get    | path=/etc/cron.daily/osapitest                                                    | metadata=&#123;"interval":"daily","object":"osapitest.sh"&#125; object_sha256=b… |
 | └─ object get         | name=osapitest-v2.sh                                                              | content=&lt;3 lines&gt; content_type=raw name=osapitest-v2.sh sha256=176e1c…     |
 | └─ managedfile update | content=&lt;3 lines&gt; content_type=raw metadata=&#123;"interval":"daily","obje… | changed=true path=/etc/cron.daily/osapitest                                      |
 
