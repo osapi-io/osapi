@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Behavior chains | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/behavior-chains"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Behavior chains | OSAPI"><meta data-rh="true" name="description" content="Some behaviors use other behaviors to do their work. For example, dns update"><meta data-rh="true" property="og:description" content="Some behaviors use other behaviors to do their work. For example, dns update"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/behavior-chains"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/behavior-chains" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/behavior-chains" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Behavior chains","item":"https://osapi-io.github.io/osapi/sidebar/features/behavior-chains"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.ee2257e7.css">
-<script src="/osapi/assets/js/runtime~main.219baa8e.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.62e7ccc4.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.e5743117.js" defer="defer"></script>
 </head>
 <body>
@@ -69,11 +69,12 @@ are under its span:</p>
 a command. <code>osapi client telemetry trace get --id &lt;trace&gt;</code> prints the tree. A
 span of a step that failed has the error status.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-audit-log">The audit log<a href="#the-audit-log" class="hash-link" aria-label="Direct link to The audit log" title="Direct link to The audit log" translate="no">​</a></h3>
-<p>The <a class="" href="/osapi/sidebar/features/audit-logging">audit entry</a> of the request has the <code>job_id</code> and the
-<code>trace_id</code>. It does not have the chain. To see the chain of an audit entry, read
-its job with <code>osapi client job get --id &lt;job_id&gt;</code>.
-<a href="https://github.com/osapi-io/osapi/issues/1193" target="_blank" rel="noopener noreferrer" class="">osapi#1193</a> tracks the chain in
-the audit entry.</p>
+<p>The <a class="" href="/osapi/sidebar/features/audit-logging">audit entry</a> of the request records the chain. <code>steps</code>
+has the tree of each host, and <code>chain</code> has one line for each host.
+<code>osapi client audit get</code> prints the <code>Chain:</code> line, and the audit view of the UI
+shows the tree. The entry has the steps of each host that answered before the
+request returned, also when a step failed. The job has the steps of a host that
+answered after the request returned.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="when-a-step-fails">When a step fails<a href="#when-a-step-fails" class="hash-link" aria-label="Direct link to When a step fails" title="Direct link to When a step fails" translate="no">​</a></h2>
 <p>A chain does not roll back. A step that fails gives its error to the step that
 called it. That step returns the error, and the job fails on that host with the
