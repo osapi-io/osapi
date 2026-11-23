@@ -388,6 +388,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindExample,
+			Name: `NotLive("why")`,
+			Does: "Keeps a write example off the live host of the integration test, which skips it and says why. The provider tests still run it on the fake host.",
+			When: "Only for a write whose starting state the behavior's own methods cannot make on a real host, such as the process that a signal stops. Test it in the lab by hand, and say how in the definition.",
+		},
+		{
+			Kind: KindExample,
 			Name: `Links("path", "target")`,
 			Does: "Puts a symbolic link to target on the fake host before the call.",
 			When: "When the call reads a link, such as /etc/localtime for the timezone.",

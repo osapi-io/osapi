@@ -961,24 +961,24 @@ func (e ProcessEntryStatus) Valid() bool {
 	}
 }
 
-// Defines values for ProcessGetEntryStatus.
+// Defines values for ProcessResultStatus.
 const (
-	ProcessGetEntryStatusFailed  ProcessGetEntryStatus = "failed"
-	ProcessGetEntryStatusOk      ProcessGetEntryStatus = "ok"
-	ProcessGetEntryStatusSkipped ProcessGetEntryStatus = "skipped"
-	ProcessGetEntryStatusTimeout ProcessGetEntryStatus = "timeout"
+	ProcessResultStatusFailed  ProcessResultStatus = "failed"
+	ProcessResultStatusOk      ProcessResultStatus = "ok"
+	ProcessResultStatusSkipped ProcessResultStatus = "skipped"
+	ProcessResultStatusTimeout ProcessResultStatus = "timeout"
 )
 
-// Valid indicates whether the value is a known member of the ProcessGetEntryStatus enum.
-func (e ProcessGetEntryStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the ProcessResultStatus enum.
+func (e ProcessResultStatus) Valid() bool {
 	switch e {
-	case ProcessGetEntryStatusFailed:
+	case ProcessResultStatusFailed:
 		return true
-	case ProcessGetEntryStatusOk:
+	case ProcessResultStatusOk:
 		return true
-	case ProcessGetEntryStatusSkipped:
+	case ProcessResultStatusSkipped:
 		return true
-	case ProcessGetEntryStatusTimeout:
+	case ProcessResultStatusTimeout:
 		return true
 	default:
 		return false
@@ -1009,30 +1009,6 @@ func (e ProcessSignalRequestSignal) Valid() bool {
 	case USR1:
 		return true
 	case USR2:
-		return true
-	default:
-		return false
-	}
-}
-
-// Defines values for ProcessSignalResultStatus.
-const (
-	ProcessSignalResultStatusFailed  ProcessSignalResultStatus = "failed"
-	ProcessSignalResultStatusOk      ProcessSignalResultStatus = "ok"
-	ProcessSignalResultStatusSkipped ProcessSignalResultStatus = "skipped"
-	ProcessSignalResultStatusTimeout ProcessSignalResultStatus = "timeout"
-)
-
-// Valid indicates whether the value is a known member of the ProcessSignalResultStatus enum.
-func (e ProcessSignalResultStatus) Valid() bool {
-	switch e {
-	case ProcessSignalResultStatusFailed:
-		return true
-	case ProcessSignalResultStatusOk:
-		return true
-	case ProcessSignalResultStatusSkipped:
-		return true
-	case ProcessSignalResultStatusTimeout:
 		return true
 	default:
 		return false
@@ -1587,25 +1563,25 @@ func (e PutFileByNameMultipartBodyContentType) Valid() bool {
 
 // Defines values for GetJobsParamsStatus.
 const (
-	GetJobsParamsStatusCompleted      GetJobsParamsStatus = "completed"
-	GetJobsParamsStatusFailed         GetJobsParamsStatus = "failed"
-	GetJobsParamsStatusPartialFailure GetJobsParamsStatus = "partial_failure"
-	GetJobsParamsStatusProcessing     GetJobsParamsStatus = "processing"
-	GetJobsParamsStatusSubmitted      GetJobsParamsStatus = "submitted"
+	Completed      GetJobsParamsStatus = "completed"
+	Failed         GetJobsParamsStatus = "failed"
+	PartialFailure GetJobsParamsStatus = "partial_failure"
+	Processing     GetJobsParamsStatus = "processing"
+	Submitted      GetJobsParamsStatus = "submitted"
 )
 
 // Valid indicates whether the value is a known member of the GetJobsParamsStatus enum.
 func (e GetJobsParamsStatus) Valid() bool {
 	switch e {
-	case GetJobsParamsStatusCompleted:
+	case Completed:
 		return true
-	case GetJobsParamsStatusFailed:
+	case Failed:
 		return true
-	case GetJobsParamsStatusPartialFailure:
+	case PartialFailure:
 		return true
-	case GetJobsParamsStatusProcessing:
+	case Processing:
 		return true
-	case GetJobsParamsStatusSubmitted:
+	case Submitted:
 		return true
 	default:
 		return false
@@ -3828,122 +3804,98 @@ type PowerShutdownResponse struct {
 // ProcessCollectionResponse defines model for ProcessCollectionResponse.
 type ProcessCollectionResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
 	Results []ProcessEntry      `json:"results"`
 }
 
-// ProcessEntry Process list result for a single agent.
+// ProcessEntry defines model for ProcessEntry.
 type ProcessEntry struct {
+	// Command Its full command line
+	Command *string `json:"command,omitempty"`
+
+	// CpuPercent Its CPU time as a percent of the time since it started
+	CpuPercent *float64 `json:"cpu_percent,omitempty"`
+
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
-	// Hostname The hostname of the agent.
+	// Hostname Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
-	// Processes List of processes on this agent.
-	Processes *[]ProcessInfo `json:"processes,omitempty"`
+	// MemPercent Its resident memory as a percent of the host's memory
+	MemPercent *float32 `json:"mem_percent,omitempty"`
+
+	// MemRss Its resident memory in bytes
+	MemRss *int64 `json:"mem_rss,omitempty"`
+
+	// Name The name of the process
+	Name *string `json:"name,omitempty"`
+
+	// Pid The process ID
+	Pid *int `json:"pid,omitempty"`
+
+	// StartTime When it started, in RFC 3339
+	StartTime *string `json:"start_time,omitempty"`
+
+	// State Its state, such as running or sleep
+	State *string `json:"state,omitempty"`
 
 	// Status The status of the operation for this host.
-	Status ProcessEntryStatus `json:"status"`
+	Status ProcessEntryStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
+
+	// User The user that runs it
+	User *string `json:"user,omitempty"`
 }
 
 // ProcessEntryStatus The status of the operation for this host.
 type ProcessEntryStatus string
 
-// ProcessGetEntry Process get result for a single agent.
-type ProcessGetEntry struct {
-	// Error Error message if the agent failed.
-	Error *string `json:"error,omitempty"`
-
-	// Hostname The hostname of the agent.
-	Hostname string `json:"hostname"`
-
-	// Process Information about a running process.
-	Process *ProcessInfo `json:"process,omitempty"`
-
-	// Status The status of the operation for this host.
-	Status ProcessGetEntryStatus `json:"status"`
-}
-
-// ProcessGetEntryStatus The status of the operation for this host.
-type ProcessGetEntryStatus string
-
 // ProcessGetResponse defines model for ProcessGetResponse.
 type ProcessGetResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []ProcessGetEntry   `json:"results"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []ProcessEntry      `json:"results"`
 }
 
-// ProcessInfo Information about a running process.
-type ProcessInfo struct {
-	// Command Full command line.
-	Command *string `json:"command,omitempty"`
-
-	// CpuPercent CPU usage percentage.
-	CpuPercent *float64 `json:"cpu_percent,omitempty"`
-
-	// MemPercent Memory usage percentage.
-	MemPercent *float32 `json:"mem_percent,omitempty"`
-
-	// MemRss Resident set size in bytes.
-	MemRss *int64 `json:"mem_rss,omitempty"`
-
-	// Name Process name.
-	Name *string `json:"name,omitempty"`
-
-	// Pid Process identifier.
-	Pid *int `json:"pid,omitempty"`
-
-	// StartTime Process start time.
-	StartTime *string `json:"start_time,omitempty"`
-
-	// State Process state.
-	State *string `json:"state,omitempty"`
-
-	// User User running the process.
-	User *string `json:"user,omitempty"`
-}
-
-// ProcessSignalRequest defines model for ProcessSignalRequest.
-type ProcessSignalRequest struct {
-	// Signal Signal name to send to the process.
-	Signal ProcessSignalRequestSignal `json:"signal" validate:"required,oneof=TERM KILL HUP INT USR1 USR2"`
-}
-
-// ProcessSignalRequestSignal Signal name to send to the process.
-type ProcessSignalRequestSignal string
-
-// ProcessSignalResponse defines model for ProcessSignalResponse.
-type ProcessSignalResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID   `json:"job_id,omitempty"`
-	Results []ProcessSignalResult `json:"results"`
-}
-
-// ProcessSignalResult Result of sending a signal to a process.
-type ProcessSignalResult struct {
-	// Changed Whether the operation modified system state.
+// ProcessResult defines model for ProcessResult.
+type ProcessResult struct {
+	// Changed Whether the signal was sent
 	Changed *bool `json:"changed,omitempty"`
 
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
-	// Hostname The hostname of the agent.
+	// Hostname Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
-	// Pid Process identifier.
+	// Pid The process ID
 	Pid *int `json:"pid,omitempty"`
 
-	// Signal Signal that was sent.
+	// Signal The signal that was sent
 	Signal *string `json:"signal,omitempty"`
 
 	// Status The status of the operation for this host.
-	Status ProcessSignalResultStatus `json:"status"`
+	Status ProcessResultStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
 }
 
-// ProcessSignalResultStatus The status of the operation for this host.
-type ProcessSignalResultStatus string
+// ProcessResultStatus The status of the operation for this host.
+type ProcessResultStatus string
+
+// ProcessSignalRequest defines model for ProcessSignalRequest.
+type ProcessSignalRequest struct {
+	// Signal The signal: TERM, KILL, HUP, INT, USR1 or USR2
+	Signal ProcessSignalRequestSignal `json:"signal" validate:"required,oneof=TERM KILL HUP INT USR1 USR2"`
+}
+
+// ProcessSignalRequestSignal The signal: TERM, KILL, HUP, INT, USR1 or USR2
+type ProcessSignalRequestSignal string
+
+// ProcessSignalResponse defines model for ProcessSignalResponse.
+type ProcessSignalResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []ProcessResult     `json:"results"`
+}
 
 // ReadyResponse defines model for ReadyResponse.
 type ReadyResponse struct {
@@ -4966,8 +4918,8 @@ type NetworkInterfaceRouteName = string
 // PackageName defines model for PackageName.
 type PackageName = string
 
-// Pid defines model for Pid.
-type Pid = int
+// ProcessPid defines model for ProcessPid.
+type ProcessPid = int
 
 // SSHKeyFingerprint defines model for SSHKeyFingerprint.
 type SSHKeyFingerprint = string
@@ -5631,13 +5583,13 @@ type ClientInterface interface {
 	// GetNodeProcess request
 	GetNodeProcess(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetNodeProcessByPid request
-	GetNodeProcessByPid(ctx context.Context, hostname Hostname, pid Pid, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetNodeProcessByKey request
+	GetNodeProcessByKey(ctx context.Context, hostname Hostname, pid ProcessPid, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostNodeProcessSignalWithBody request with any body
-	PostNodeProcessSignalWithBody(ctx context.Context, hostname Hostname, pid Pid, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostNodeProcessSignalWithBody(ctx context.Context, hostname Hostname, pid ProcessPid, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostNodeProcessSignal(ctx context.Context, hostname Hostname, pid Pid, body PostNodeProcessSignalJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostNodeProcessSignal(ctx context.Context, hostname Hostname, pid ProcessPid, body PostNodeProcessSignalJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetNodeSchedule request
 	GetNodeSchedule(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -7138,8 +7090,8 @@ func (c *Client) GetNodeProcess(ctx context.Context, hostname Hostname, reqEdito
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetNodeProcessByPid(ctx context.Context, hostname Hostname, pid Pid, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetNodeProcessByPidRequest(c.Server, hostname, pid)
+func (c *Client) GetNodeProcessByKey(ctx context.Context, hostname Hostname, pid ProcessPid, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNodeProcessByKeyRequest(c.Server, hostname, pid)
 	if err != nil {
 		return nil, err
 	}
@@ -7150,7 +7102,7 @@ func (c *Client) GetNodeProcessByPid(ctx context.Context, hostname Hostname, pid
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNodeProcessSignalWithBody(ctx context.Context, hostname Hostname, pid Pid, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) PostNodeProcessSignalWithBody(ctx context.Context, hostname Hostname, pid ProcessPid, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostNodeProcessSignalRequestWithBody(c.Server, hostname, pid, contentType, body)
 	if err != nil {
 		return nil, err
@@ -7162,7 +7114,7 @@ func (c *Client) PostNodeProcessSignalWithBody(ctx context.Context, hostname Hos
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostNodeProcessSignal(ctx context.Context, hostname Hostname, pid Pid, body PostNodeProcessSignalJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) PostNodeProcessSignal(ctx context.Context, hostname Hostname, pid ProcessPid, body PostNodeProcessSignalJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostNodeProcessSignalRequest(c.Server, hostname, pid, body)
 	if err != nil {
 		return nil, err
@@ -11444,8 +11396,8 @@ func NewGetNodeProcessRequest(server string, hostname Hostname) (*http.Request, 
 	return req, nil
 }
 
-// NewGetNodeProcessByPidRequest generates requests for GetNodeProcessByPid
-func NewGetNodeProcessByPidRequest(server string, hostname Hostname, pid Pid) (*http.Request, error) {
+// NewGetNodeProcessByKeyRequest generates requests for GetNodeProcessByKey
+func NewGetNodeProcessByKeyRequest(server string, hostname Hostname, pid ProcessPid) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -11486,7 +11438,7 @@ func NewGetNodeProcessByPidRequest(server string, hostname Hostname, pid Pid) (*
 }
 
 // NewPostNodeProcessSignalRequest calls the generic PostNodeProcessSignal builder with application/json body
-func NewPostNodeProcessSignalRequest(server string, hostname Hostname, pid Pid, body PostNodeProcessSignalJSONRequestBody) (*http.Request, error) {
+func NewPostNodeProcessSignalRequest(server string, hostname Hostname, pid ProcessPid, body PostNodeProcessSignalJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
@@ -11497,7 +11449,7 @@ func NewPostNodeProcessSignalRequest(server string, hostname Hostname, pid Pid, 
 }
 
 // NewPostNodeProcessSignalRequestWithBody generates requests for PostNodeProcessSignal with any type of body
-func NewPostNodeProcessSignalRequestWithBody(server string, hostname Hostname, pid Pid, contentType string, body io.Reader) (*http.Request, error) {
+func NewPostNodeProcessSignalRequestWithBody(server string, hostname Hostname, pid ProcessPid, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -13471,13 +13423,13 @@ type ClientWithResponsesInterface interface {
 	// GetNodeProcessWithResponse request
 	GetNodeProcessWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeProcessResponse, error)
 
-	// GetNodeProcessByPidWithResponse request
-	GetNodeProcessByPidWithResponse(ctx context.Context, hostname Hostname, pid Pid, reqEditors ...RequestEditorFn) (*GetNodeProcessByPidResponse, error)
+	// GetNodeProcessByKeyWithResponse request
+	GetNodeProcessByKeyWithResponse(ctx context.Context, hostname Hostname, pid ProcessPid, reqEditors ...RequestEditorFn) (*GetNodeProcessByKeyResponse, error)
 
 	// PostNodeProcessSignalWithBodyWithResponse request with any body
-	PostNodeProcessSignalWithBodyWithResponse(ctx context.Context, hostname Hostname, pid Pid, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeProcessSignalResponse, error)
+	PostNodeProcessSignalWithBodyWithResponse(ctx context.Context, hostname Hostname, pid ProcessPid, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeProcessSignalResponse, error)
 
-	PostNodeProcessSignalWithResponse(ctx context.Context, hostname Hostname, pid Pid, body PostNodeProcessSignalJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeProcessSignalResponse, error)
+	PostNodeProcessSignalWithResponse(ctx context.Context, hostname Hostname, pid ProcessPid, body PostNodeProcessSignalJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeProcessSignalResponse, error)
 
 	// GetNodeScheduleWithResponse request
 	GetNodeScheduleWithResponse(ctx context.Context, hostname Hostname, reqEditors ...RequestEditorFn) (*GetNodeScheduleResponse, error)
@@ -16607,6 +16559,8 @@ type GetNodeProcessResponse struct {
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -16634,7 +16588,7 @@ func (r GetNodeProcessResponse) ContentType() string {
 	return ""
 }
 
-type GetNodeProcessByPidResponse struct {
+type GetNodeProcessByKeyResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *ProcessGetResponse
@@ -16642,11 +16596,12 @@ type GetNodeProcessByPidResponse struct {
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r GetNodeProcessByPidResponse) Status() string {
+func (r GetNodeProcessByKeyResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -16654,7 +16609,7 @@ func (r GetNodeProcessByPidResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetNodeProcessByPidResponse) StatusCode() int {
+func (r GetNodeProcessByKeyResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -16662,7 +16617,7 @@ func (r GetNodeProcessByPidResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetNodeProcessByPidResponse) ContentType() string {
+func (r GetNodeProcessByKeyResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -16677,6 +16632,7 @@ type PostNodeProcessSignalResponse struct {
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
 	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -18980,17 +18936,17 @@ func (c *ClientWithResponses) GetNodeProcessWithResponse(ctx context.Context, ho
 	return ParseGetNodeProcessResponse(rsp)
 }
 
-// GetNodeProcessByPidWithResponse request returning *GetNodeProcessByPidResponse
-func (c *ClientWithResponses) GetNodeProcessByPidWithResponse(ctx context.Context, hostname Hostname, pid Pid, reqEditors ...RequestEditorFn) (*GetNodeProcessByPidResponse, error) {
-	rsp, err := c.GetNodeProcessByPid(ctx, hostname, pid, reqEditors...)
+// GetNodeProcessByKeyWithResponse request returning *GetNodeProcessByKeyResponse
+func (c *ClientWithResponses) GetNodeProcessByKeyWithResponse(ctx context.Context, hostname Hostname, pid ProcessPid, reqEditors ...RequestEditorFn) (*GetNodeProcessByKeyResponse, error) {
+	rsp, err := c.GetNodeProcessByKey(ctx, hostname, pid, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetNodeProcessByPidResponse(rsp)
+	return ParseGetNodeProcessByKeyResponse(rsp)
 }
 
 // PostNodeProcessSignalWithBodyWithResponse request with arbitrary body returning *PostNodeProcessSignalResponse
-func (c *ClientWithResponses) PostNodeProcessSignalWithBodyWithResponse(ctx context.Context, hostname Hostname, pid Pid, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeProcessSignalResponse, error) {
+func (c *ClientWithResponses) PostNodeProcessSignalWithBodyWithResponse(ctx context.Context, hostname Hostname, pid ProcessPid, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeProcessSignalResponse, error) {
 	rsp, err := c.PostNodeProcessSignalWithBody(ctx, hostname, pid, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -18998,7 +18954,7 @@ func (c *ClientWithResponses) PostNodeProcessSignalWithBodyWithResponse(ctx cont
 	return ParsePostNodeProcessSignalResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostNodeProcessSignalWithResponse(ctx context.Context, hostname Hostname, pid Pid, body PostNodeProcessSignalJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeProcessSignalResponse, error) {
+func (c *ClientWithResponses) PostNodeProcessSignalWithResponse(ctx context.Context, hostname Hostname, pid ProcessPid, body PostNodeProcessSignalJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeProcessSignalResponse, error) {
 	rsp, err := c.PostNodeProcessSignal(ctx, hostname, pid, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -24750,6 +24706,20 @@ func ParseGetNodeProcessResponse(rsp *http.Response) (*GetNodeProcessResponse, e
 		}
 		response.JSON403 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -24762,15 +24732,15 @@ func ParseGetNodeProcessResponse(rsp *http.Response) (*GetNodeProcessResponse, e
 	return response, nil
 }
 
-// ParseGetNodeProcessByPidResponse parses an HTTP response from a GetNodeProcessByPidWithResponse call
-func ParseGetNodeProcessByPidResponse(rsp *http.Response) (*GetNodeProcessByPidResponse, error) {
+// ParseGetNodeProcessByKeyResponse parses an HTTP response from a GetNodeProcessByKeyWithResponse call
+func ParseGetNodeProcessByKeyResponse(rsp *http.Response) (*GetNodeProcessByKeyResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetNodeProcessByPidResponse{
+	response := &GetNodeProcessByKeyResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -24810,6 +24780,13 @@ func ParseGetNodeProcessByPidResponse(rsp *http.Response) (*GetNodeProcessByPidR
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
@@ -24871,6 +24848,13 @@ func ParsePostNodeProcessSignalResponse(rsp *http.Response) (*PostNodeProcessSig
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

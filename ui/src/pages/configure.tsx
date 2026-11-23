@@ -17,7 +17,6 @@ import { FileDeleteBlock } from "@/components/domain/file-delete-block";
 import { ScheduleDeleteBlock } from "@/components/domain/schedule-delete-block";
 import { ContainerActionBlock } from "@/components/domain/container-action-block";
 import { DockerExecBlock } from "@/components/domain/docker-exec-block";
-import { ProcessSignalBlock } from "@/components/domain/process-signal-block";
 import { UserBlock } from "@/components/domain/user-block";
 import { UserPasswordBlock } from "@/components/domain/user-password-block";
 import { UserSSHKeyBlock } from "@/components/domain/user-ssh-key-block";
@@ -50,11 +49,6 @@ import {
   postNodeContainerDockerPull,
   deleteNodeContainerDockerImage,
 } from "@/sdk/gen/docker-management-api-docker-image/docker-management-api-docker-image";
-import {
-  getNodeProcess,
-  getNodeProcessByPid,
-  postNodeProcessSignal,
-} from "@/sdk/gen/process-management-api-process-operations/process-management-api-process-operations";
 import {
   postNodeContainerDocker,
   getNodeContainerDocker,
@@ -453,18 +447,6 @@ export function Configure() {
               command: block.data.command as string,
             });
             break;
-          case "process-list":
-            result = await getNodeProcess(t);
-            break;
-          case "process-get":
-            result = await getNodeProcessByPid(t, Number(block.data.pid));
-            break;
-          case "process-signal":
-            result = await postNodeProcessSignal(t, Number(block.data.pid), {
-              signal: block.data
-                .signal as import("@/sdk/gen/schemas").ProcessSignalRequestSignal,
-            });
-            break;
           case "user-list":
             result = await getNodeUser(t);
             break;
@@ -800,27 +782,6 @@ export function Configure() {
             field="command"
             label="Shell Command"
             placeholder="echo hello | tee /tmp/out.txt"
-          />
-        );
-      case "process-list":
-        return null;
-      case "process-get":
-        return (
-          <SingleInputBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            field="pid"
-            label="PID"
-            placeholder="1234"
-          />
-        );
-      case "process-signal":
-        return (
-          <ProcessSignalBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
           />
         );
       case "user-list":

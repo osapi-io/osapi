@@ -94,6 +94,11 @@ func (s *ExamplePublicTestSuite) TestHostOptions() {
 			},
 		},
 		{
+			name:   "when NotLive keeps the example off a live host",
+			option: behavior.NotLive("no method starts a process"),
+			want:   behavior.Example{NotLive: "no method starts a process"},
+		},
+		{
 			name:   "when Links gives a symbolic link",
 			option: behavior.Links("/etc/localtime", "/usr/share/zoneinfo/UTC"),
 			want: behavior.Example{Given: []behavior.Given{

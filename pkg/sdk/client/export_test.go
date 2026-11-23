@@ -214,27 +214,13 @@ func PowerCollectionFromShutdown(
 	return powerCollectionFromShutdown(input)
 }
 
-func ProcessInfoCollectionFromList(
-	input *gen.ProcessCollectionResponse,
-) Collection[ProcessInfoResult] {
-	return processInfoCollectionFromList(input)
-}
-
-// ProcessInfoCollectionFromGet exposes the private
-// processInfoCollectionFromGet for testing.
-func ProcessInfoCollectionFromGet(
-	input *gen.ProcessGetResponse,
-) Collection[ProcessInfoResult] {
-	return processInfoCollectionFromGet(input)
-}
+// ProcessInfoCollectionFromGen exposes the private
+// processInfoCollectionFromGen for testing.
+var ProcessInfoCollectionFromGen = processInfoCollectionFromGen
 
 // ProcessSignalCollectionFromGen exposes the private
 // processSignalCollectionFromGen for testing.
-func ProcessSignalCollectionFromGen(
-	input *gen.ProcessSignalResponse,
-) Collection[ProcessSignalResult] {
-	return processSignalCollectionFromGen(input)
-}
+var ProcessSignalCollectionFromGen = processSignalCollectionFromGen
 
 func UserInfoCollectionFromList(
 	input *gen.UserCollectionResponse,

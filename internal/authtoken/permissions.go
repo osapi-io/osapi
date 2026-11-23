@@ -86,8 +86,6 @@ var builtinPermissions = []Permission{
 	"schedule:read",
 	"schedule:write",
 	"power:execute",
-	"process:read",
-	"process:execute",
 	"user:read",
 	"user:write",
 	"log:read",

@@ -7,6 +7,6 @@
 import type { ProcessSignalRequestSignal } from './processSignalRequestSignal';
 
 export interface ProcessSignalRequest {
-  /** Signal name to send to the process. */
+  /** The signal: TERM, KILL, HUP, INT, USR1 or USR2 */
   signal: ProcessSignalRequestSignal;
 }

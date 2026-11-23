@@ -6,7 +6,7 @@
  */
 
 /**
- * Signal name to send to the process.
+ * The signal: TERM, KILL, HUP, INT, USR1 or USR2
  */
 export type ProcessSignalRequestSignal = typeof ProcessSignalRequestSignal[keyof typeof ProcessSignalRequestSignal];
 

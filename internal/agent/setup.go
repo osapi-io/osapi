@@ -309,7 +309,6 @@ func buildRegistry(
 	memoryProvider memory.Provider,
 	loadProvider load.Provider,
 ) *ProviderRegistry {
-	processProvider := e.process()
 	userProvider := e.user()
 	commandProvider := command.New(e.log, e.exec)
 	dockerProvider := e.docker(ctx)
@@ -320,7 +319,6 @@ func buildRegistry(
 	r.Register(
 		"node",
 		NewNodeProcessor(
-			processProvider,
 			userProvider,
 			e.log,
 		),
@@ -328,7 +326,6 @@ func buildRegistry(
 		diskProvider,
 		memoryProvider,
 		loadProvider,
-		processProvider,
 		userProvider,
 	)
 

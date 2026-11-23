@@ -45,6 +45,31 @@ type Example struct {
 	// them; OnPlatform sets it. An example with none runs on each platform
 	// the method serves.
 	Platforms []PlatformName `json:"platforms,omitempty"`
+	// NotLive is why the example runs only on the fake host, not on the
+	// live host of the integration test; NotLive sets it. Empty runs it on
+	// both.
+	NotLive string `json:"not_live,omitempty"`
+}
+
+// NotLive keeps a write example off the live host of the integration test,
+// for one whose state a real host cannot be given through the behavior's
+// own methods, such as the process that a signal stops: After can only call
+// the behavior's methods, and none of process's starts a process. why says
+// so, and the docs page shows it. The provider tests still run it on the
+// fake host.
+func NotLive(
+	why string,
+) HostOption {
+	return exampleNotLive(why)
+}
+
+// exampleNotLive is the HostOption of NotLive.
+type exampleNotLive string
+
+func (n exampleNotLive) applyExample(
+	e *Example,
+) {
+	e.NotLive = string(n)
 }
 
 // OnPlatform limits an example to platforms, for a read whose answer is

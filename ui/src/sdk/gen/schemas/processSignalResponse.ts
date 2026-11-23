@@ -4,10 +4,10 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { ProcessSignalResult } from './processSignalResult';
+import type { ProcessResult } from './processResult';
 
 export interface ProcessSignalResponse {
   /** The job ID used to process this request. */
   job_id?: string;
-  results: ProcessSignalResult[];
+  results: ProcessResult[];
 }

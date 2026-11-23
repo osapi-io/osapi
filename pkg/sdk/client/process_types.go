@@ -21,21 +21,16 @@
 package client
 
 import (
+	openapi_types "github.com/oapi-codegen/runtime/types"
+
 	"github.com/osapi-io/osapi/pkg/sdk/client/gen"
 )
 
-// ProcessInfoResult represents the result of a process list/get operation
-// for one host.
+// ProcessInfoResult is one process of one host.
 type ProcessInfoResult struct {
-	Hostname  string        `json:"hostname"`
-	Status    string        `json:"status"`
-	Processes []ProcessInfo `json:"processes,omitempty"`
-	Error     string        `json:"error,omitempty"`
-}
-
-// ProcessInfo represents information about a single running process.
-type ProcessInfo struct {
-	PID        int     `json:"pid"`
+	Hostname   string  `json:"hostname"`
+	Status     string  `json:"status"`
+	PID        int     `json:"pid,omitempty"`
 	Name       string  `json:"name,omitempty"`
 	User       string  `json:"user,omitempty"`
 	State      string  `json:"state,omitempty"`
@@ -44,10 +39,10 @@ type ProcessInfo struct {
 	MemRSS     int64   `json:"mem_rss,omitempty"`
 	Command    string  `json:"command,omitempty"`
 	StartTime  string  `json:"start_time,omitempty"`
+	Error      string  `json:"error,omitempty"`
 }
 
-// ProcessSignalResult represents the result of sending a signal to a process
-// for one host.
+// ProcessSignalResult is what a signal did on one host.
 type ProcessSignalResult struct {
 	Hostname string `json:"hostname"`
 	Status   string `json:"status"`
@@ -57,128 +52,58 @@ type ProcessSignalResult struct {
 	Error    string `json:"error,omitempty"`
 }
 
-// ProcessSignalOpts contains options for the process signal operation.
+// ProcessSignalOpts is the signal to send.
 type ProcessSignalOpts struct {
-	// Signal is the signal name to send (e.g., TERM, KILL, HUP).
+	// Signal is TERM, KILL, HUP, INT, USR1 or USR2. Required.
 	Signal string
 }
 
-// processInfoCollectionFromList converts a gen.ProcessCollectionResponse
-// to a Collection[ProcessInfoResult].
-func processInfoCollectionFromList(
-	g *gen.ProcessCollectionResponse,
+func processInfoCollectionFromGen(
+	rows []gen.ProcessEntry,
+	jobID *openapi_types.UUID,
 ) Collection[ProcessInfoResult] {
-	results := make([]ProcessInfoResult, 0, len(g.Results))
-	for _, r := range g.Results {
-		results = append(results, processInfoResultFromListEntry(r))
+	results := make([]ProcessInfoResult, 0, len(rows))
+	for _, r := range rows {
+		results = append(results, ProcessInfoResult{
+			Hostname:   r.Hostname,
+			Status:     string(r.Status),
+			PID:        derefInt(r.Pid),
+			Name:       derefString(r.Name),
+			User:       derefString(r.User),
+			State:      derefString(r.State),
+			CPUPercent: derefFloat64(r.CpuPercent),
+			MemPercent: derefFloat32(r.MemPercent),
+			MemRSS:     derefInt64(r.MemRss),
+			Command:    derefString(r.Command),
+			StartTime:  derefString(r.StartTime),
+			Error:      derefString(r.Error),
+		})
 	}
 
 	return Collection[ProcessInfoResult]{
 		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
+		JobID:   jobIDFromGen(jobID),
 	}
 }
 
-// processInfoCollectionFromGet converts a gen.ProcessGetResponse
-// to a Collection[ProcessInfoResult].
-func processInfoCollectionFromGet(
-	g *gen.ProcessGetResponse,
-) Collection[ProcessInfoResult] {
-	results := make([]ProcessInfoResult, 0, len(g.Results))
-	for _, r := range g.Results {
-		results = append(results, processInfoResultFromGetEntry(r))
-	}
-
-	return Collection[ProcessInfoResult]{
-		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
-	}
-}
-
-// processSignalCollectionFromGen converts a gen.ProcessSignalResponse
-// to a Collection[ProcessSignalResult].
 func processSignalCollectionFromGen(
-	g *gen.ProcessSignalResponse,
+	rows []gen.ProcessResult,
+	jobID *openapi_types.UUID,
 ) Collection[ProcessSignalResult] {
-	results := make([]ProcessSignalResult, 0, len(g.Results))
-	for _, r := range g.Results {
-		results = append(results, processSignalResultFromGen(r))
+	results := make([]ProcessSignalResult, 0, len(rows))
+	for _, r := range rows {
+		results = append(results, ProcessSignalResult{
+			Hostname: r.Hostname,
+			Status:   string(r.Status),
+			PID:      derefInt(r.Pid),
+			Signal:   derefString(r.Signal),
+			Changed:  derefBool(r.Changed),
+			Error:    derefString(r.Error),
+		})
 	}
 
 	return Collection[ProcessSignalResult]{
 		Results: results,
-		JobID:   jobIDFromGen(g.JobId),
-	}
-}
-
-// processInfoResultFromListEntry converts a gen.ProcessEntry to a
-// ProcessInfoResult.
-func processInfoResultFromListEntry(
-	r gen.ProcessEntry,
-) ProcessInfoResult {
-	result := ProcessInfoResult{
-		Hostname: r.Hostname,
-		Status:   string(r.Status),
-		Error:    derefString(r.Error),
-	}
-
-	if r.Processes != nil {
-		procs := make([]ProcessInfo, 0, len(*r.Processes))
-		for _, p := range *r.Processes {
-			procs = append(procs, processInfoFromGen(p))
-		}
-		result.Processes = procs
-	}
-
-	return result
-}
-
-// processInfoResultFromGetEntry converts a gen.ProcessGetEntry to a
-// ProcessInfoResult.
-func processInfoResultFromGetEntry(
-	r gen.ProcessGetEntry,
-) ProcessInfoResult {
-	result := ProcessInfoResult{
-		Hostname: r.Hostname,
-		Status:   string(r.Status),
-		Error:    derefString(r.Error),
-	}
-
-	if r.Process != nil {
-		result.Processes = []ProcessInfo{processInfoFromGen(*r.Process)}
-	}
-
-	return result
-}
-
-// processInfoFromGen converts a gen.ProcessInfo to a ProcessInfo.
-func processInfoFromGen(
-	p gen.ProcessInfo,
-) ProcessInfo {
-	return ProcessInfo{
-		PID:        derefInt(p.Pid),
-		Name:       derefString(p.Name),
-		User:       derefString(p.User),
-		State:      derefString(p.State),
-		CPUPercent: derefFloat64(p.CpuPercent),
-		MemPercent: derefFloat32(p.MemPercent),
-		MemRSS:     derefInt64(p.MemRss),
-		Command:    derefString(p.Command),
-		StartTime:  derefString(p.StartTime),
-	}
-}
-
-// processSignalResultFromGen converts a gen.ProcessSignalResult to a
-// ProcessSignalResult.
-func processSignalResultFromGen(
-	r gen.ProcessSignalResult,
-) ProcessSignalResult {
-	return ProcessSignalResult{
-		Hostname: r.Hostname,
-		Status:   string(r.Status),
-		PID:      derefInt(r.Pid),
-		Signal:   derefString(r.Signal),
-		Changed:  derefBool(r.Changed),
-		Error:    derefString(r.Error),
+		JobID:   jobIDFromGen(jobID),
 	}
 }
