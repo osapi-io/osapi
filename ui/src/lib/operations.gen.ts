@@ -64,7 +64,7 @@ export const OPERATION_PERMISSIONS = {
   getNodeProcess: "process:read",
   getNodeProcessByKey: "process:read",
   getNodeSchedule: "schedule:read",
-  getNodeScheduleByName: "schedule:read",
+  getNodeScheduleByKey: "schedule:read",
   getNodeService: "service:read",
   getNodeServiceByKey: "service:read",
   getNodeStatus: "status:read",

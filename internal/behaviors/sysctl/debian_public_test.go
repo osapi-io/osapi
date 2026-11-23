@@ -221,6 +221,8 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 				Value: "1",
 			},
 			setup: func() {
+				suite.mockStateKV.EXPECT().KVGet(gomock.Any(), "file-state", gomock.Any()).
+					Return(nil, errors.New("not found"))
 				suite.NoError(suite.memFs.MkdirAll("/etc/sysctl.d", 0o755))
 				suite.NoError(suite.memFs.WriteFile(
 					"/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf",
@@ -576,6 +578,8 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 				Value: "1",
 			},
 			setup: func() {
+				suite.mockStateKV.EXPECT().KVGet(gomock.Any(), "file-state", gomock.Any()).
+					Return(nil, errors.New("not found"))
 				suite.NoError(suite.memFs.WriteFile(
 					"/etc/sysctl.d/osapi-net.ipv4.ip_forward.conf",
 					[]byte("net.ipv4.ip_forward = 1\n"),
@@ -604,6 +608,8 @@ func (suite *DebianPublicTestSuite) TestCreate() {
 				Value: "0 2147483647",
 			},
 			setup: func() {
+				suite.mockStateKV.EXPECT().KVGet(gomock.Any(), "file-state", gomock.Any()).
+					Return(nil, errors.New("not found"))
 				suite.NoError(suite.memFs.WriteFile(
 					"/etc/sysctl.d/osapi-net.ipv4.ping_group_range.conf",
 					[]byte("net.ipv4.ping_group_range = 0 2147483647\n"),
@@ -800,6 +806,8 @@ func (suite *DebianPublicTestSuite) TestUpdate() {
 				Value: "1",
 			},
 			setup: func() {
+				suite.mockStateKV.EXPECT().KVGet(gomock.Any(), "file-state", gomock.Any()).
+					Return(nil, errors.New("not found"))
 				// Write the file to disk so Stat succeeds.
 				content := []byte("net.ipv4.ip_forward = 1\n")
 				_ = suite.memFs.WriteFile(

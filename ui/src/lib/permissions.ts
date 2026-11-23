@@ -97,11 +97,6 @@ export function hasAnyPermission(
 // ---------------------------------------------------------------------------
 
 export const BLOCK_OPERATIONS: Record<string, OperationId> = {
-  "cron-create": "postNodeSchedule",
-  "cron-list": "getNodeSchedule",
-  "cron-delete": "deleteNodeSchedule",
-  "cron-get": "getNodeScheduleByName",
-  "cron-update": "putNodeSchedule",
   "file-list": "getFiles",
   "file-upload": "postFile",
   "file-deploy": "postNodeFileDeploy",

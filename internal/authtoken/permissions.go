@@ -83,8 +83,6 @@ var builtinPermissions = []Permission{
 	"docker:read",
 	"docker:write",
 	"docker:execute",
-	"schedule:read",
-	"schedule:write",
 	"power:execute",
 	"user:read",
 	"user:write",
@@ -97,15 +95,14 @@ var adminVerbs = []string{"shell"}
 
 // builtinAdminOnly are the permissions of the hand-written domains that only
 // the admin role gets, because each reaches root directly: an arbitrary
-// command (command:execute, docker:execute), an account or an SSH key
-// (user:write), and a cron entry, which runs as any user (schedule:write).
+// command (command:execute, docker:execute), and an account or an SSH key
+// (user:write).
 // A behavior or a group that takes one over marks its methods AdminOnly,
 // and Check fails until it does.
 var builtinAdminOnly = []Permission{
 	"command:execute",
 	"docker:execute",
 	"user:write",
-	"schedule:write",
 }
 
 // declared is a permission that something needs: a hand-written domain, a

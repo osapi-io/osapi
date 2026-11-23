@@ -7,14 +7,12 @@ import { BlockStack } from "@/components/domain/block-stack";
 import { ResultCard } from "@/components/domain/result-card";
 import { RunLinks } from "@/components/domain/run-links";
 import { traceIdOf } from "@/lib/trace";
-import { ScheduleBlock } from "@/components/domain/schedule-block";
 import { CommandBlock } from "@/components/domain/command-block";
 import { DockerBlock } from "@/components/domain/docker-block";
 import { FileBlock } from "@/components/domain/file-block";
 import { FileUploadBlock } from "@/components/domain/file-upload-block";
 import { SingleInputBlock } from "@/components/domain/single-input-block";
 import { FileDeleteBlock } from "@/components/domain/file-delete-block";
-import { ScheduleDeleteBlock } from "@/components/domain/schedule-delete-block";
 import { ContainerActionBlock } from "@/components/domain/container-action-block";
 import { DockerExecBlock } from "@/components/domain/docker-exec-block";
 import { UserBlock } from "@/components/domain/user-block";
@@ -33,13 +31,6 @@ import {
 import { useCommands } from "@/hooks/use-commands";
 import { useStacks } from "@/hooks/use-stacks";
 import { features } from "@/lib/features";
-import {
-  postNodeSchedule,
-  getNodeSchedule,
-  deleteNodeSchedule,
-  getNodeScheduleByName,
-  putNodeSchedule,
-} from "@/sdk/gen/schedule-management-api-schedule-operations/schedule-management-api-schedule-operations";
 import {
   postNodeCommandExec,
   postNodeCommandShell,
@@ -131,7 +122,7 @@ const blockIcons: Record<
 > = {
   // Services
   "service-list": Cog,
-  "cron-create": Calendar,
+  "schedule-list": Calendar,
   // Software
   "package-list": Package,
   "updatepackages-list": RefreshCw,
@@ -298,33 +289,6 @@ export function Configure() {
         }
 
         switch (block.type) {
-          case "cron-create":
-            result = await postNodeSchedule(t, {
-              name: block.data.name as string,
-              schedule: block.data.schedule as string,
-              object: block.data.object as string,
-              content_type: ((block.data.content_type as string) || "raw") as
-                "raw" | "template",
-            });
-            break;
-          case "cron-list":
-            result = await getNodeSchedule(t);
-            break;
-          case "cron-delete":
-            result = await deleteNodeSchedule(t, block.data.name as string);
-            break;
-          case "cron-get":
-            result = await getNodeScheduleByName(t, block.data.name as string);
-            break;
-          case "cron-update":
-            result = await putNodeSchedule(t, block.data.name as string, {
-              schedule: block.data.schedule as string,
-              object: block.data.object as string,
-              content_type:
-                (block.data.content_type as "raw" | "template" | undefined) ||
-                undefined,
-            });
-            break;
           case "command": {
             const argsStr = (block.data.args as string) || "";
             result = await postNodeCommandExec(t, {
@@ -609,45 +573,6 @@ export function Configure() {
     }
 
     switch (block.type) {
-      case "cron-create":
-        return (
-          <ScheduleBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            upstreamObjects={upstream}
-          />
-        );
-      case "cron-list":
-        return null;
-      case "cron-delete":
-        return (
-          <ScheduleDeleteBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-          />
-        );
-      case "cron-get":
-        return (
-          <SingleInputBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            field="name"
-            label="Cron Name"
-            placeholder="backup-daily"
-          />
-        );
-      case "cron-update":
-        return (
-          <ScheduleBlock
-            data={block.data}
-            onChange={(data) => updateBlockData(block.id, data)}
-            onStatusChange={(s: BlockStatus) => setBlockStatus(block.id, s)}
-            upstreamObjects={upstream}
-          />
-        );
       case "command":
         return (
           <CommandBlock
@@ -875,9 +800,7 @@ export function Configure() {
   const handleResultAction = useCallback(
     async (action: string, name: string) => {
       try {
-        if (action === "cron-delete") {
-          await deleteNodeSchedule("_all", name);
-        } else if (action === "file-delete") {
+        if (action === "file-delete") {
           await deleteFileByName(name);
         }
       } catch {

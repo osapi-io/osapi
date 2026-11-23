@@ -38,7 +38,6 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/node/load"
 	"github.com/osapi-io/osapi/internal/provider/node/memory"
 	userProv "github.com/osapi-io/osapi/internal/provider/node/user"
-	cronProv "github.com/osapi-io/osapi/internal/provider/schedule/cron"
 )
 
 // dockerNewFn makes the Docker client (injectable for testing). docker checks
@@ -101,28 +100,6 @@ func (e hostEnv) docker(
 	}
 
 	return c
-}
-
-func (e hostEnv) cron() cronProv.Provider {
-	switch e.platform {
-	case "debian":
-		if e.files == nil {
-			e.log.Warn("file provider not available, cron operations disabled")
-			return cronProv.NewLinuxProvider()
-		}
-		return cronProv.NewDebianProvider(
-			e.log,
-			e.fs,
-			e.files,
-			e.fileState,
-			e.fileStateBucket,
-			e.hostname,
-		)
-	case "darwin":
-		return cronProv.NewDarwinProvider()
-	default:
-		return cronProv.NewLinuxProvider()
-	}
 }
 
 func (e hostEnv) user() userProv.Provider {

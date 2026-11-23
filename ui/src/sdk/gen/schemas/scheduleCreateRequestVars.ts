@@ -6,6 +6,6 @@
  */
 
 /**
- * Template variables. Only used when content_type is "template".
+ * The vars of a template, as key=value
  */
-export type ScheduleCreateRequestVars = { [key: string]: unknown };
+export type ScheduleCreateRequestVars = {[key: string]: string};

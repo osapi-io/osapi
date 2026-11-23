@@ -27,6 +27,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"path/filepath"
 	"strings"
 	"time"
@@ -116,7 +117,7 @@ func (d *debian) Write(
 	if err != nil {
 		return false, err
 	}
-	if !changed && !owned {
+	if !changed && !owned && !d.stale(ctx, f) {
 		return false, nil
 	}
 
@@ -140,6 +141,27 @@ func (d *debian) Write(
 	}
 
 	return true, nil
+}
+
+// stale reports whether osapi deployed f.Path with metadata that is not
+// f's, such as a cron entry whose schedule changed and whose file did not.
+// The write then changes the record, so that a read gives the new metadata.
+// A path that has no record, or an undeployed one, is not stale: a file with
+// the content that osapi did not deploy stays as it is.
+func (d *debian) stale(
+	ctx context.Context,
+	f File,
+) bool {
+	entry, err := d.state.KVGet(ctx, d.bucket, StateKey(d.hostname, f.Path))
+	if err != nil {
+		return false
+	}
+	var state State
+	if err := json.Unmarshal(entry.Value(), &state); err != nil {
+		return false
+	}
+
+	return state.UndeployedAt == "" && !maps.Equal(state.Metadata, f.Metadata)
 }
 
 // own gives f.Path f's owner and group when it does not have them, and

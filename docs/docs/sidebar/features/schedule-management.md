@@ -16,27 +16,37 @@ upload a script with the file management commands. Then make an entry that
 points to it. Thus the script content and the schedule configuration are
 separate, and you can update a script as a new version.
 
+The `schedule` behavior supplies the API, the CLI commands, the SDK service and
+the UI blocks. The
+[behavior reference](../reference/behaviors/schedule/schedule.md) has each
+method, its fields and its examples.
+
 ## How it works
 
 ### Object-based workflow
 
-The cron provider is a **meta provider**: it does not keep the script content.
-Each entry has an `object` name that refers to a file in the NATS Object Store.
-When the agent deploys or updates an entry, it does these steps:
+The behavior does not keep the script content. Each entry has an `object` name
+that refers to a file in the NATS Object Store. When the agent deploys or
+updates an entry, it does these steps:
 
-1. It gets the named object from the Object Store.
+1. It gets the named object from the Object Store, through the `object` building
+   block.
 1. It writes the script content to the correct path under `/etc/cron.d/` or
-   `/etc/cron.{interval}/`.
-1. It records the deploy state in the file-state KV bucket (SHA-256, path,
-   times).
+   `/etc/cron.{interval}/`, through the `managedfile` building block.
+1. `managedfile` records the deploy state in the file-state KV bucket (SHA-256,
+   path, times, and the object, schedule, interval and user of the entry).
 
 `create` and `update` are idempotent on the content. The agent compares the
 requested content with the file on disk, and writes the file only when they are
 different. Thus it puts back an entry that somebody changed by hand.
 
-`create` has one exception. If an entry with the same name exists under a
-different schedule, `create` reports `changed: false`. It does not write a
-second copy in a different directory. Use `update` to move the entry.
+`create` has two exceptions:
+
+- If osapi deployed an entry with the same name in a different directory,
+  `create` reports `changed: false`. It does not write a second copy. To move
+  the entry, use `delete`, then `create`.
+- If a file is at the path and osapi did not deploy it, `create` refuses the
+  request. osapi does not write over a cron file that somebody made by hand.
 
 ### Custom schedule (`/etc/cron.d/`)
 
@@ -76,13 +86,15 @@ put a header comment in the deployed file. Thus:
 - The list and get operations read the file-state KV to find the managed
   entries. They do not touch files that somebody made by hand.
 - The state stays in the KV until you remove it. When you delete an entry, the
-  agent removes the file from disk but keeps the file-state record.
+  agent removes the file from disk and marks the file-state record as
+  undeployed.
 
 ### Template support
 
 If the object has `content_type: template`, the agent renders it as a Go
-`text/template` before it writes the file to disk. Give variables at deploy time
-with `--var`. Give one `--var` for each variable:
+`text/template` before it writes the file to disk. To render an object of a
+different content type, give `--content-type template`. Give the variables with
+`--vars`, as `key=value` pairs:
 
 ```bash
 # Upload a template script
@@ -93,21 +105,22 @@ osapi client file upload --name backup-script.tmpl \
 osapi client node schedule create --target web-01 \
   --name backup --schedule "0 2 * * *" \
   --object backup-script.tmpl \
-  --var retention_days=30 --var s3_bucket=my-bucket
+  --vars retention_days=30,s3_bucket=my-bucket
 ```
 
-The agent merges the template variables with its system facts and its hostname.
-Refer to [File Management](file-management.md) for the full template context.
+The template reads the variables as `.Vars`, the facts that the agent collected
+last as `.Facts`, and the hostname as `.Hostname`. Refer to
+[File Management](file-management.md) for the full template context.
 
 ## Operations
 
-| Operation | Description                                     |
-| --------- | ----------------------------------------------- |
-| List      | List all entries that osapi manages             |
-| Get       | Get one entry by name                           |
-| Create    | Upload the script, then make the entry          |
-| Update    | Upload a new version of the script, then update |
-| Delete    | Remove the cron file from disk                  |
+| Operation | Description                                   |
+| --------- | --------------------------------------------- |
+| List      | List all entries that osapi manages           |
+| Get       | Get one entry by name                         |
+| Create    | Upload the script, then make the entry        |
+| Update    | Deploy the entry again, with the fields given |
+| Delete    | Remove the cron file from disk                |
 
 ## CLI usage
 
@@ -133,13 +146,13 @@ osapi client node schedule list --target web-01
 osapi client node schedule get --target web-01 --name backup
 
 # Update: upload a new script version and redeploy
-osapi client file update --name backup-script \
+osapi client file upload --name backup-script-v2 \
   --file ./backup-v2.sh
 osapi client node schedule update --target web-01 \
   --name backup --schedule "0 3 * * *" \
-  --object backup-script
+  --object backup-script-v2
 
-# Delete an entry (undeploys file from disk; state preserved in KV)
+# Delete an entry (removes the file; the KV record stays, marked undeployed)
 osapi client node schedule delete --target web-01 --name backup
 ```
 
@@ -160,7 +173,7 @@ The agent writes the files as root. A name must not have dots, because
 ## Undeploy behavior
 
 When you delete an entry, the agent **undeploys** the file. It removes the file
-from the filesystem, but keeps the file-state KV record. Thus:
+from the filesystem, and marks the file-state KV record as undeployed. Thus:
 
 - When you make the entry again with the same name and object, the agent finds
   the previous state. It writes the file only if the content is different.
@@ -171,14 +184,15 @@ management API after you remove the scheduled entry.
 
 ## Supported platforms
 
-| OS family | Support |
-| --------- | ------- |
-| Debian    | Full    |
-| Darwin    | Skipped |
+| OS family | List, Get | Create, Update, Delete |
+| --------- | --------- | ---------------------- |
+| Debian    | Full      | Full                   |
+| Darwin    | Skipped   | Skipped                |
 
-On a platform that is not supported, cron operations return `status: skipped`.
-They do not fail. Refer to [Platform Detection](../sdk/platform/detection.md)
-for how osapi finds the OS family.
+On a platform that is not supported, schedule operations return
+`status: skipped`. They do not fail. Refer to
+[Platform Detection](../sdk/platform/detection.md) for how osapi finds the OS
+family.
 
 ## Permissions
 
@@ -188,7 +202,9 @@ for how osapi finds the OS family.
 | Create, Update, Delete | `schedule:write` |
 
 `admin`, `operator`, `automation` and `read` have `schedule:read`. Only `admin`
-has `schedule:write`, because a cron entry runs a command as any user.
+has `schedule:write`. A cron entry runs a command as its user, and that user can
+be root. Thus a token that can write an entry can run a command as root, which
+is an admin power.
 
 ## Naming rules
 
@@ -198,21 +214,23 @@ An entry name can have only letters, digits, hyphens and underscores (pattern:
 
 ## Idempotent updates
 
-The update operation compares the new content with the file that exists, through
-the SHA-256 in the file-state KV. If the script content and the schedule
-parameters did not change, the response is `changed: false`. Thus you can run an
-update many times, and it writes to the filesystem only when necessary.
+The update operation compares the new content with the file that exists, and the
+object, schedule and user with the record of the entry. If none of them changed,
+the response is `changed: false`. A new schedule or user with the same content
+changes only the record, so that list and get give the new values. Thus you can
+run an update many times, and it writes to the filesystem only when necessary.
+An update keeps the entry in its directory: it cannot change the interval. A
+field that the update does not give keeps the value of the entry.
 
 ## Future: crontab and systemd timers
 
-Cron drop-in management is the first provider of the `schedule` domain. Future
-providers will add:
+Cron drop-in management is the first part of the `schedule` behavior. Future
+work will add:
 
 - **Crontab**: user crontab management (`crontab -u <user>`)
 - **Systemd timers**: systemd timer unit management
 
-They will have separate API endpoints, `/node/{hostname}/schedule/crontab` and
-`/node/{hostname}/schedule/timer`.
+Each will have its own routes.
 
 ## Related
 

@@ -117,6 +117,51 @@ func (s *DebianPublicTestSuite) TestWrite() {
 	}
 }
 
+// TestWriteOfTheSameContent: a file that has the content changes only when
+// osapi deployed it with other metadata. A path with no record, an unreadable
+// one or an undeployed one stays as it is.
+func (s *DebianPublicTestSuite) TestWriteOfTheSameContent() {
+	undeployed, _ := json.Marshal(
+		managedfile.State{Path: path, UndeployedAt: "2026-11-22T00:00:00Z"},
+	)
+	tests := []struct {
+		name   string
+		record []byte
+		err    error
+	}{
+		{name: "when the path has no record, it does not change", err: errors.New("not found")},
+		{name: "when the record cannot be read, it does not change", record: []byte("{")},
+		{name: "when the record is undeployed, it does not change", record: undeployed},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			fs := memfs.New()
+			s.Require().NoError(fs.MkdirAll("/etc/osapi", 0o755))
+			s.Require().NoError(fs.WriteFile(path, []byte("on\n"), 0o644))
+			var entry *jobmocks.MockKeyValueEntry
+			if tc.err == nil {
+				entry = jobmocks.NewMockKeyValueEntry(s.ctrl)
+				entry.EXPECT().Value().Return(tc.record)
+			}
+			s.state.EXPECT().KVGet(gomock.Any(), "file-state", gomock.Any()).Return(entry, tc.err)
+			p := managedfile.NewDebian(fs, s.state, "file-state", nil, "web-01")
+
+			changed, err := p.Write(
+				context.Background(),
+				managedfile.File{
+					Path:     path,
+					Content:  []byte("on\n"),
+					Metadata: map[string]string{"a": "b"},
+				},
+			)
+
+			s.NoError(err)
+			s.False(changed)
+		})
+	}
+}
+
 func (s *DebianPublicTestSuite) TestRemove() {
 	tests := []struct {
 		name    string

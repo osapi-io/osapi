@@ -175,15 +175,6 @@ const (
 	OperationDockerImageRemove = client.OpDockerImageRemove
 )
 
-// Schedule/Cron operations.
-const (
-	OperationCronList   = client.OpScheduleList
-	OperationCronGet    = client.OpScheduleGet
-	OperationCronCreate = client.OpScheduleCreate
-	OperationCronUpdate = client.OpScheduleUpdate
-	OperationCronDelete = client.OpScheduleDelete
-)
-
 // User operations.
 const (
 	OperationUserList           = client.OpUserList
