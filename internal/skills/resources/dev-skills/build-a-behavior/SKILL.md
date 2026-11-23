@@ -1,6 +1,6 @@
 ---
 name: build-a-behavior
-description: Build or change an osapi behavior, the typed definition under internal/behaviors/<name>/ that osapi's API routes, agent dispatch, CLI commands, OpenAPI spec, docs pages, settings, permissions and tests are generated from. Use when asked to add a behavior, manage something new on a host, add a method or a setting to a behavior, give a behavior a provider for another platform, migrate a hand-written domain to a behavior, or when a behavior fails osapi behavior validate, behavior-gen-check or its tests. Also use to decide whether something should be a behavior at all, whether it should be internal or served, which platforms it runs on, whether it should require another behavior or be split into an internal one, and whether it belongs in osapi-orchestrator instead. Not for the hand-written domains under internal/controller/api/node, which the add-a-domain skill in osapi-io/specs covers, and not for operations that run on the controller itself, such as the agents, the jobs and the audit log, which the build-an-endpoint skill covers.
+description: Build or change an osapi behavior, the typed definition under internal/behaviors/<name>/ that osapi's API routes, agent dispatch, CLI commands, OpenAPI spec, docs pages, settings, permissions and tests are generated from. Use when asked to add a behavior, manage something new on a host, add a method or a setting to a behavior, give a behavior a provider for another platform, or when a behavior fails osapi behavior validate, behavior-gen-check or its tests. Also use to decide whether something should be a behavior at all, whether it should be internal or served, which platforms it runs on, whether it should require another behavior or be split into an internal one, and whether it belongs in osapi-orchestrator instead. Not for operations that run on the controller itself, such as the agents, the jobs and the audit log, which the build-an-endpoint skill covers.
 ---
 
 # Build a behavior
@@ -97,9 +97,11 @@ marks it, so its `doc` does not say so. `TestCommandShape` in
 Each input field has a `validate` tag, such as `validate:"required,min=1,max=255"`.
 A field with no limit is `validate:"omitempty"`. The server answers 400 to a
 value that breaks a rule, and the spec carries the rule and the whole tag.
-`validate` refuses an input field with no tag. A custom rule, such as
-`sysctl_key`, needs its schema from `rule.Register`, beside its validator in
-`internal/validation`. Without one the spec does not build. The endpoint DSL
+`validate` refuses an input field with no tag. A rule of the behavior's own,
+such as `sysctl_key`, is a `behavior.Validator` in the behavior's directory,
+with its check, its schema and its message. A shared rule, such as
+`resource_name`, has its schema from `rule.Register`, beside its validator in
+`internal/validation`. Without a schema the spec does not build. The endpoint DSL
 and the behavior DSL use the same rules; `spec` prints them under
 `validate:"..."`.
 
@@ -201,14 +203,6 @@ default route, goes in a unit test of the provider, not in an example.
 AGENTS.md puts the design in `osapi-io/specs` before you build. For a behavior, the definition is the design. The generated pages and `behavior get` publish its methods, types, settings, examples and refusals. The page of the behavior has its platforms, settings and the behaviors it uses. The CLI page of each method has its examples, what each example does on the host, its refusals and its permission. Thus a new behavior does not need its own specs page. Change `components/osapi/behaviors.md` in specs
 only when the work changes the platform itself: a new option, rule, surface or
 check that every behavior gets.
-
-## Migrate a hand-written domain
-
-To move a domain, copy the code that works. Do not write it again. Follow [references/migrating.md](references/migrating.md):
-
-1. Build the behavior next to the domain.
-1. Move the provider and its tests without changes.
-1. Find a replacement for each hand-written handler test case before the cutover deletes it.
 
 ## Check it
 

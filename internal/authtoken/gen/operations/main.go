@@ -19,7 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 // Command operations writes the UI's permission of each operation from the
-// endpoint groups, the behaviors and the hand-written domains' specs.
+// endpoint groups and the behaviors.
 package main
 
 //go:generate go run . --root ../../../..
@@ -39,11 +39,7 @@ func main() {
 	root := flag.String("root", ".", "The root of the osapi repository")
 	flag.Parse()
 
-	ops, err := authtoken.Operations(*root)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
+	ops := authtoken.RegistryOperations()
 	path := filepath.Join(*root, authtoken.OperationsFile)
 	if err := os.WriteFile(path, []byte(authtoken.OperationsTypeScript(ops)), 0o644); err != nil {
 		fmt.Fprintln(os.Stderr, err)

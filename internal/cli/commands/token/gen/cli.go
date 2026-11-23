@@ -11,7 +11,7 @@ import (
 
 var tokenGenerateCmd = &cobra.Command{
 	Args:    cobra.NoArgs,
-	Example: "  osapi token generate --subject user123 --roles=read\n  osapi token generate --subject svc@example.com --roles=read \\\n    -p node:read -p health:read",
+	Example: "  osapi token generate --subject user123 --roles=read\n  osapi token generate --subject svc@example.com --roles=read \\\n    -p status:read -p health:read",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		roles, _ := cmd.Flags().GetStringSlice("roles")
 		subject, _ := cmd.Flags().GetString("subject")

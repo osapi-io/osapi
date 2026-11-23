@@ -59,7 +59,7 @@ func (s *HandlersPublicTestSuite) TestHandlers() {
 	var cfg config.Config
 	cfg.Controller.API.Security.SigningKey = "test-key"
 	cfg.Controller.API.Security.Roles = map[client.Role]config.CustomRole{
-		"reader": {Permissions: []client.Permission{"node:read"}},
+		"reader": {Permissions: []client.Permission{"status:read"}},
 	}
 	base := len(controller.ExportHandlers(slog.Default(), cfg, nil, nil, ""))
 

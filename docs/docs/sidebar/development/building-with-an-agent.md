@@ -95,11 +95,3 @@ for example a restart, and not a create, update or delete; a command that the
 caller gives; and a resource under another resource. For those, the agent stops
 and says what is missing. It does not build around the gap. Each one is a change
 to the platform, and a person decides it.
-
-## Moving a hand-written domain
-
-A hand-written domain moves in one change: you build its behavior and delete the
-domain together. The two never run side by side. The checks name the code that
-is left to delete: the route check names the directory of the hand-written
-domain, and a test names each hand-written command that has the name of a
-behavior command. `references/migrating.md` of the skill gives the procedure.

@@ -2,18 +2,15 @@
 // From AllPermissions and RolePermissions in internal/authtoken.
 
 export type Permission =
-  | "node:read"
-  | "file:read"
-  | "file:write"
   | "health:read"
   | "trace:read"
-  | "power:execute"
-  | "log:read"
   | "certificate:read"
   | "certificate:write"
   | "command:execute"
   | "command:shell"
   | "disk:read"
+  | "file:read"
+  | "file:write"
   | "group:read"
   | "group:write"
   | "hostname:read"
@@ -25,6 +22,7 @@ export type Permission =
   | "os:read"
   | "package:read"
   | "package:write"
+  | "power:execute"
   | "process:read"
   | "process:execute"
   | "network:read"
@@ -49,6 +47,7 @@ export type Permission =
   | "container:write"
   | "container:execute"
   | "container:exec"
+  | "log:read"
   | "network:execute"
   | "admission:read"
   | "admission:write"
@@ -59,18 +58,15 @@ export type Permission =
   | "job:write";
 
 export const ALL_PERMISSIONS: Permission[] = [
-  "node:read",
-  "file:read",
-  "file:write",
   "health:read",
   "trace:read",
-  "power:execute",
-  "log:read",
   "certificate:read",
   "certificate:write",
   "command:execute",
   "command:shell",
   "disk:read",
+  "file:read",
+  "file:write",
   "group:read",
   "group:write",
   "hostname:read",
@@ -82,6 +78,7 @@ export const ALL_PERMISSIONS: Permission[] = [
   "os:read",
   "package:read",
   "package:write",
+  "power:execute",
   "process:read",
   "process:execute",
   "network:read",
@@ -106,6 +103,7 @@ export const ALL_PERMISSIONS: Permission[] = [
   "container:write",
   "container:execute",
   "container:exec",
+  "log:read",
   "network:execute",
   "admission:read",
   "admission:write",
@@ -119,18 +117,15 @@ export const ALL_PERMISSIONS: Permission[] = [
 /** The permissions of each built-in role, by its JWT role. */
 export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
   admin: [
-    "node:read",
-    "file:read",
-    "file:write",
     "health:read",
     "trace:read",
-    "power:execute",
-    "log:read",
     "certificate:read",
     "certificate:write",
     "command:execute",
     "command:shell",
     "disk:read",
+    "file:read",
+    "file:write",
     "group:read",
     "group:write",
     "hostname:read",
@@ -142,6 +137,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "os:read",
     "package:read",
     "package:write",
+    "power:execute",
     "process:read",
     "process:execute",
     "network:read",
@@ -166,6 +162,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "container:write",
     "container:execute",
     "container:exec",
+    "log:read",
     "network:execute",
     "admission:read",
     "admission:write",
@@ -176,14 +173,11 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "job:write",
   ],
   operator: [
-    "node:read",
-    "file:read",
     "health:read",
     "trace:read",
-    "power:execute",
-    "log:read",
     "certificate:read",
     "disk:read",
+    "file:read",
     "group:read",
     "hostname:read",
     "load:read",
@@ -191,6 +185,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "ntp:read",
     "os:read",
     "package:read",
+    "power:execute",
     "process:read",
     "process:execute",
     "network:read",
@@ -205,21 +200,20 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "uptime:read",
     "container:read",
     "container:execute",
+    "log:read",
     "network:execute",
     "admission:read",
     "agent:read",
     "job:read",
   ],
   automation: [
-    "node:read",
-    "file:read",
-    "file:write",
     "health:read",
     "trace:read",
-    "log:read",
     "certificate:read",
     "certificate:write",
     "disk:read",
+    "file:read",
+    "file:write",
     "group:read",
     "group:write",
     "hostname:read",
@@ -248,6 +242,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "uptime:read",
     "container:read",
     "container:write",
+    "log:read",
     "admission:read",
     "agent:read",
     "job:read",
@@ -255,13 +250,11 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
   ],
   auditor: ["health:read", "trace:read", "audit:read", "job:read"],
   read: [
-    "node:read",
-    "file:read",
     "health:read",
     "trace:read",
-    "log:read",
     "certificate:read",
     "disk:read",
+    "file:read",
     "group:read",
     "hostname:read",
     "load:read",
@@ -280,6 +273,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "updatepackages:read",
     "uptime:read",
     "container:read",
+    "log:read",
     "admission:read",
     "agent:read",
     "job:read",
