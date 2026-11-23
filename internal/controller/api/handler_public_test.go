@@ -30,7 +30,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/api"
-	powerAPI "github.com/osapi-io/osapi/internal/controller/api/node/power"
+	processAPI "github.com/osapi-io/osapi/internal/controller/api/node/process"
 	"github.com/osapi-io/osapi/internal/job/mocks"
 )
 
@@ -83,7 +83,7 @@ func (s *HandlerPublicTestSuite) TestRegisterHandlers() {
 			handlers := make([]func(e *echo.Echo), 0, 5)
 			handlers = append(
 				handlers,
-				powerAPI.Handler(slog.Default(), s.mockJobClient, signingKey, nil)...,
+				processAPI.Handler(slog.Default(), s.mockJobClient, signingKey, nil)...,
 			)
 
 			routesBefore := len(s.server.Echo.Router().Routes())
