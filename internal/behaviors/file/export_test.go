@@ -25,7 +25,6 @@ import (
 
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	"github.com/osapi-io/osapi/internal/behaviors/object"
-	"github.com/osapi-io/osapi/internal/provider"
 )
 
 // NewLinux is the provider on the building blocks' providers, for the
@@ -39,7 +38,7 @@ func NewLinux(
 ) Provider {
 	l := &linux{objects: objects, files: files, fs: fs, hostname: hostname}
 	if facts != nil {
-		l.SetFactsFunc(provider.FactsFunc(func() map[string]any { return facts }))
+		l.facts = func() map[string]any { return facts }
 	}
 
 	return l

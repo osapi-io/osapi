@@ -32,15 +32,13 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	"github.com/osapi-io/osapi/internal/behaviors/object"
-	"github.com/osapi-io/osapi/internal/provider"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // linux deploys objects through the object and managedfile building blocks.
-// The agent gives it its facts, which a template reads as .Facts.
+// A template reads the agent's facts, from the host, as .Facts.
 type linux struct {
-	provider.FactsAware
-
+	facts    func() map[string]any
 	objects  object.Provider
 	files    managedfile.Provider
 	fs       avfs.VFS
@@ -57,6 +55,7 @@ func newLinux(
 		files:    host.Require[managedfile.Provider](h, managedfile.Behavior),
 		fs:       h.FS,
 		hostname: h.Hostname,
+		facts:    h.Facts,
 	}, nil
 }
 
@@ -82,7 +81,7 @@ func (l *linux) Deploy(
 	content := obj.Content
 	if contentType == string(client.ContentTemplate) {
 		content, err = behavior.Render(content, behavior.TemplateData{
-			Facts:    l.Facts(),
+			Facts:    l.factsNow(),
 			Vars:     in.Vars,
 			Hostname: l.hostname,
 		})
@@ -153,6 +152,15 @@ func (l *linux) Status(
 	}
 
 	return Status{Path: path, State: Drifted, SHA256: sum}, nil
+}
+
+// factsNow are the agent's facts now, or none when the host gives none.
+func (l *linux) factsNow() map[string]any {
+	if l.facts == nil {
+		return nil
+	}
+
+	return l.facts()
 }
 
 // checksum is the SHA-256 of data, in hex.
