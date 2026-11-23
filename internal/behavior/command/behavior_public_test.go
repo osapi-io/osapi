@@ -28,6 +28,7 @@ import (
 	"testing"
 
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/spf13/cobra"
 
 	"github.com/spf13/pflag"
@@ -460,13 +461,23 @@ func (s *BehaviorcmdPublicTestSuite) TestPrintResults() {
 		{"when the group is a behavior, its result table prints", "kv", "list", "web-01"},
 		{"when the behavior has no such method, the answer prints as JSON", "kv", "get", ""},
 		{"when the group is not a behavior, the answer prints as JSON", "zzother", "list", ""},
+		{
+			"when an endpoint group has the behavior's name, the answer prints as JSON",
+			"endpoint",
+			"list",
+			"",
+		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			printed = ""
 			got := cli.Capture(func() {
-				clicommand.Output(tc.group, tc.method, struct{}{}, answer)
+				var g clicommand.Group = clicommand.Define(tc.group, "A group")
+				if tc.group == "endpoint" {
+					g = endpoint.Define("kv", "Key values")
+				}
+				clicommand.Output(g, tc.method, struct{}{}, answer)
 			})
 
 			if tc.want != "" {

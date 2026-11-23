@@ -455,7 +455,7 @@ func (s *OutputPublicTestSuite) TestOutput() {
 				answer = []byte(tc.answer)
 			}
 
-			command.Output("zzderive", tc.method, tc.in, answer)
+			command.Output(g, tc.method, tc.in, answer)
 
 			s.Equal(tc.want, r.b.String())
 		})
@@ -549,7 +549,7 @@ func (s *OutputPublicTestSuite) TestPlural() {
 		Print: r,
 	}))
 
-	command.Output("zzlogs", "list", struct{}{}, []byte(`["a"]`))
+	command.Output(g, "list", struct{}{}, []byte(`["a"]`))
 
 	s.Equal("# Zzlogs (1)\nVALUE\na\n", r.b.String(), "a name in s is its own plural")
 }
@@ -561,8 +561,8 @@ func (s *OutputPublicTestSuite) TestPrintsGroups() {
 	g.cmds = []command.Command{m}
 	command.AddCommands(g)
 	printed := ""
-	command.PrintsGroups(func(group, method string, answer []byte) bool {
-		if group != "zzprinted" {
+	command.PrintsGroups(func(group command.Group, method string, answer []byte) bool {
+		if group.GroupName() != "zzprinted" {
 			return false
 		}
 		printed = method + ":" + string(answer)
@@ -573,7 +573,7 @@ func (s *OutputPublicTestSuite) TestPrintsGroups() {
 		JSON: func() bool { return false },
 	}))
 
-	command.Output("zzprinted", "list", struct{}{}, []byte(`{}`))
+	command.Output(g, "list", struct{}{}, []byte(`{}`))
 
 	s.Equal("list:{}", printed)
 }
