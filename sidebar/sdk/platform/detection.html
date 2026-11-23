@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Detection | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/sdk/platform/detection"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Detection | OSAPI"><meta data-rh="true" name="description" content="The agent selects the provider of each operation from the OS family of its host."><meta data-rh="true" property="og:description" content="The agent selects the provider of each operation from the OS family of its host."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/sdk/platform/detection"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/sdk/platform/detection" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/sdk/platform/detection" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"SDK","item":"https://osapi-io.github.io/osapi/sidebar/sdk/"},{"@type":"ListItem","position":2,"name":"Detection","item":"https://osapi-io.github.io/osapi/sidebar/sdk/platform/detection"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.ee2257e7.css">
-<script src="/osapi/assets/js/runtime~main.c68b45af.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.394f4b2f.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.ed3fa410.js" defer="defer"></script>
 </head>
 <body>
@@ -61,7 +61,8 @@ the family is <code>darwin</code>, not Ohai&#x27;s <code>mac_os_x</code>.</p>
 <p>A family with no case gets the Linux provider. A
 <a class="" href="/osapi/sidebar/reference/behaviors">behavior</a> names a family with
 <code>behavior.Platform</code>, and can limit one method to a family with <code>.On</code>.
-<code>behavior.PlatformDebian</code> and <code>behavior.PlatformDarwin</code> are gohai&#x27;s values.</p>
+<code>behavior.PlatformDebian</code>, <code>behavior.PlatformSUSE</code> and <code>behavior.PlatformDarwin</code>
+are gohai&#x27;s values.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="adding-a-new-os-family">Adding a new OS family<a href="#adding-a-new-os-family" class="hash-link" aria-label="Direct link to Adding a new OS family" title="Direct link to Adding a new OS family" translate="no">​</a></h2>
 <ol>
 <li class="">If gohai does not name the family yet, add it to gohai first.</li>

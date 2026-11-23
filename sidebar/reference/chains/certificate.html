@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Certificate | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/reference/chains/certificate"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Certificate | OSAPI"><meta data-rh="true" name="description" content="The behaviors that certificate calls, and each call that its examples make."><meta data-rh="true" property="og:description" content="The behaviors that certificate calls, and each call that its examples make."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/reference/chains/certificate"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/reference/chains/certificate" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/reference/chains/certificate" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Reference","item":"https://osapi-io.github.io/osapi/sidebar/reference/"},{"@type":"ListItem","position":2,"name":"Chains","item":"https://osapi-io.github.io/osapi/sidebar/reference/chains/"},{"@type":"ListItem","position":3,"name":"Certificate","item":"https://osapi-io.github.io/osapi/sidebar/reference/chains/certificate"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.ee2257e7.css">
-<script src="/osapi/assets/js/runtime~main.c68b45af.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.394f4b2f.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.ed3fa410.js" defer="defer"></script>
 </head>
 <body>
@@ -63,6 +63,28 @@
 
 
 <table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>certificate list</td><td></td><td>[{&quot;name&quot;:&quot;mozilla/Example_Root&quot;,&quot;path&quot;:&quot;/usr/share/ca-certificates/mo…</td></tr><tr><td>└─ managedfile get</td><td>path=/usr/local/share/ca-certificates/osapi-internal-ca.crt</td><td>metadata={&quot;object&quot;:&quot;internal-ca.pem&quot;} path=/usr/local/share/ca-certif…</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-ca-that-osapi-deployed-on-suse-list">A CA that osapi deployed on SUSE (list)<a href="#a-ca-that-osapi-deployed-on-suse-list" class="hash-link" aria-label="Direct link to A CA that osapi deployed on SUSE (list)" title="Direct link to A CA that osapi deployed on SUSE (list)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>certificate list</td><td></td><td>[{&quot;name&quot;:&quot;internal-ca&quot;,&quot;path&quot;:&quot;/etc/pki/trust/anchors/osapi-internal-…</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/pki/trust/anchors/osapi-internal-ca.crt</td><td>metadata={&quot;object&quot;:&quot;internal-ca.pem&quot;} path=/etc/pki/trust/anchors/osa…</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-ca-that-osapi-deployed-by-the-name-it-was-deployed-with-get">A CA that osapi deployed, by the name it was deployed with (get)<a href="#a-ca-that-osapi-deployed-by-the-name-it-was-deployed-with-get" class="hash-link" aria-label="Direct link to A CA that osapi deployed, by the name it was deployed with (get)" title="Direct link to A CA that osapi deployed, by the name it was deployed with (get)" translate="no">​</a></h2>
 
 
@@ -107,6 +129,28 @@
 
 
 <table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>certificate get</td><td>name=internal-ca</td><td>enabled=true fingerprint=6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6…</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/pki/ca-trust/source/anchors/osapi-internal-ca.crt</td><td>metadata={&quot;object&quot;:&quot;internal-ca.pem&quot;} path=/etc/pki/ca-trust/source/a…</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-ca-that-osapi-deployed-on-suse-get">A CA that osapi deployed on SUSE (get)<a href="#a-ca-that-osapi-deployed-on-suse-get" class="hash-link" aria-label="Direct link to A CA that osapi deployed on SUSE (get)" title="Direct link to A CA that osapi deployed on SUSE (get)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>certificate get</td><td>name=internal-ca</td><td>enabled=true fingerprint=6513d3f115f766cdffa3922e5ee47c4cccc98475cbe6…</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/pki/trust/anchors/osapi-internal-ca.crt</td><td>metadata={&quot;object&quot;:&quot;internal-ca.pem&quot;} path=/etc/pki/trust/anchors/osa…</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="add-a-ca-create">Add a CA (create)<a href="#add-a-ca-create" class="hash-link" aria-label="Direct link to Add a CA (create)" title="Direct link to Add a CA (create)" translate="no">​</a></h2>
 
 
@@ -171,6 +215,38 @@
 
 
 <table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>certificate create</td><td>name=internal-ca object=internal-ca.pem</td><td>changed=true name=internal-ca</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/pki/ca-trust/source/anchors/osapi-internal-ca.crt</td><td>error: /etc/pki/ca-trust/source/anchors/osapi-internal-ca.crt: not managed</td></tr><tr><td>└─ object get</td><td>name=internal-ca.pem</td><td>content=&lt;12 lines&gt; content_type=raw name=internal-ca.pem sha256=333ed…</td></tr><tr><td>└─ managedfile update</td><td>content=&lt;12 lines&gt; metadata={&quot;object&quot;:&quot;internal-ca.pem&quot;} mode=0644 pa…</td><td>changed=true path=/etc/pki/ca-trust/source/anchors/osapi-internal-ca.…</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="add-a-ca-on-suse-create">Add a CA on SUSE (create)<a href="#add-a-ca-on-suse-create" class="hash-link" aria-label="Direct link to Add a CA on SUSE (create)" title="Direct link to Add a CA on SUSE (create)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>certificate create</td><td>name=internal-ca object=internal-ca.pem</td><td>changed=true name=internal-ca</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/pki/trust/anchors/osapi-internal-ca.crt</td><td>error: /etc/pki/trust/anchors/osapi-internal-ca.crt: not managed</td></tr><tr><td>└─ object get</td><td>name=internal-ca.pem</td><td>content=&lt;12 lines&gt; content_type=raw name=internal-ca.pem sha256=333ed…</td></tr><tr><td>└─ managedfile update</td><td>content=&lt;12 lines&gt; metadata={&quot;object&quot;:&quot;internal-ca.pem&quot;} mode=0644 pa…</td><td>changed=true path=/etc/pki/trust/anchors/osapi-internal-ca.crt</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-ca-that-osapi-deployed-with-the-same-content-create">A CA that osapi deployed with the same content (create)<a href="#a-ca-that-osapi-deployed-with-the-same-content-create" class="hash-link" aria-label="Direct link to A CA that osapi deployed with the same content (create)" title="Direct link to A CA that osapi deployed with the same content (create)" translate="no">​</a></h2>
 
 
@@ -267,6 +343,38 @@
 
 
 <table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>certificate update</td><td>name=internal-ca object=internal-ca-2.pem</td><td>changed=true name=internal-ca</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/pki/ca-trust/source/anchors/osapi-internal-ca.crt</td><td>metadata={&quot;object&quot;:&quot;internal-ca.pem&quot;} path=/etc/pki/ca-trust/source/a…</td></tr><tr><td>└─ object get</td><td>name=internal-ca-2.pem</td><td>content=&lt;12 lines&gt; content_type=raw name=internal-ca-2.pem sha256=a6a…</td></tr><tr><td>└─ managedfile update</td><td>content=&lt;12 lines&gt; metadata={&quot;object&quot;:&quot;internal-ca-2.pem&quot;} mode=0644 …</td><td>changed=true path=/etc/pki/ca-trust/source/anchors/osapi-internal-ca.…</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="write-a-ca-from-a-new-object-on-suse-update">Write a CA from a new object on SUSE (update)<a href="#write-a-ca-from-a-new-object-on-suse-update" class="hash-link" aria-label="Direct link to Write a CA from a new object on SUSE (update)" title="Direct link to Write a CA from a new object on SUSE (update)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>certificate update</td><td>name=internal-ca object=internal-ca-2.pem</td><td>changed=true name=internal-ca</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/pki/trust/anchors/osapi-internal-ca.crt</td><td>metadata={&quot;object&quot;:&quot;internal-ca.pem&quot;} path=/etc/pki/trust/anchors/osa…</td></tr><tr><td>└─ object get</td><td>name=internal-ca-2.pem</td><td>content=&lt;12 lines&gt; content_type=raw name=internal-ca-2.pem sha256=a6a…</td></tr><tr><td>└─ managedfile update</td><td>content=&lt;12 lines&gt; metadata={&quot;object&quot;:&quot;internal-ca-2.pem&quot;} mode=0644 …</td><td>changed=true path=/etc/pki/trust/anchors/osapi-internal-ca.crt</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-object-that-it-was-deployed-from-update">The object that it was deployed from (update)<a href="#the-object-that-it-was-deployed-from-update" class="hash-link" aria-label="Direct link to The object that it was deployed from (update)" title="Direct link to The object that it was deployed from (update)" translate="no">​</a></h2>
 
 
@@ -353,6 +461,33 @@
 
 
 <table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>certificate delete</td><td>name=internal-ca</td><td>changed=true name=internal-ca</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/pki/ca-trust/source/anchors/osapi-internal-ca.crt</td><td>metadata={&quot;object&quot;:&quot;internal-ca.pem&quot;} path=/etc/pki/ca-trust/source/a…</td></tr><tr><td>└─ managedfile delete</td><td>path=/etc/pki/ca-trust/source/anchors/osapi-internal-ca.crt</td><td>changed=true path=/etc/pki/ca-trust/source/anchors/osapi-internal-ca.…</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="remove-a-ca-on-suse-delete">Remove a CA on SUSE (delete)<a href="#remove-a-ca-on-suse-delete" class="hash-link" aria-label="Direct link to Remove a CA on SUSE (delete)" title="Direct link to Remove a CA on SUSE (delete)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>certificate delete</td><td>name=internal-ca</td><td>changed=true name=internal-ca</td></tr><tr><td>└─ managedfile get</td><td>path=/etc/pki/trust/anchors/osapi-internal-ca.crt</td><td>metadata={&quot;object&quot;:&quot;internal-ca.pem&quot;} path=/etc/pki/trust/anchors/osa…</td></tr><tr><td>└─ managedfile delete</td><td>path=/etc/pki/trust/anchors/osapi-internal-ca.crt</td><td>changed=true path=/etc/pki/trust/anchors/osapi-internal-ca.crt</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-ca-that-osapi-did-not-deploy-delete">A CA that osapi did not deploy (delete)<a href="#a-ca-that-osapi-did-not-deploy-delete" class="hash-link" aria-label="Direct link to A CA that osapi did not deploy (delete)" title="Direct link to A CA that osapi did not deploy (delete)" translate="no">​</a></h2>
 
 
@@ -374,6 +509,6 @@
 
 
 
-<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>certificate delete</td><td>name=internal-ca</td><td>changed=false name=internal-ca</td></tr><tr><td>└─ managedfile get</td><td>path=/usr/local/share/ca-certificates/osapi-internal-ca.crt</td><td>error: /usr/local/share/ca-certificates/osapi-internal-ca.crt: not managed</td></tr></tbody></table></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/reference/chains"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Chains</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/reference/chains/dns"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">DNS</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#chain" class="table-of-contents__link toc-highlight">Chain</a></li><li><a href="#a-ca-that-osapi-deployed-reads-by-its-name-list" class="table-of-contents__link toc-highlight">A CA that osapi deployed reads by its name (list)</a></li><li><a href="#a-ca-that-osapi-deployed-by-the-name-it-was-deployed-with-get" class="table-of-contents__link toc-highlight">A CA that osapi deployed, by the name it was deployed with (get)</a></li><li><a href="#a-ca-that-osapi-deployed-on-the-rhel-family-get" class="table-of-contents__link toc-highlight">A CA that osapi deployed on the RHEL family (get)</a></li><li><a href="#add-a-ca-create" class="table-of-contents__link toc-highlight">Add a CA (create)</a></li><li><a href="#add-a-ca-on-the-rhel-family-create" class="table-of-contents__link toc-highlight">Add a CA on the RHEL family (create)</a></li><li><a href="#a-ca-that-osapi-deployed-with-the-same-content-create" class="table-of-contents__link toc-highlight">A CA that osapi deployed with the same content (create)</a></li><li><a href="#write-a-ca-from-a-new-object-update" class="table-of-contents__link toc-highlight">Write a CA from a new object (update)</a></li><li><a href="#write-a-ca-from-a-new-object-on-the-rhel-family-update" class="table-of-contents__link toc-highlight">Write a CA from a new object on the RHEL family (update)</a></li><li><a href="#the-object-that-it-was-deployed-from-update" class="table-of-contents__link toc-highlight">The object that it was deployed from (update)</a></li><li><a href="#remove-a-ca-delete" class="table-of-contents__link toc-highlight">Remove a CA (delete)</a></li><li><a href="#remove-a-ca-on-the-rhel-family-delete" class="table-of-contents__link toc-highlight">Remove a CA on the RHEL family (delete)</a></li><li><a href="#a-ca-that-osapi-did-not-deploy-delete" class="table-of-contents__link toc-highlight">A CA that osapi did not deploy (delete)</a></li></ul></div></div></div></div></main></div></div></div></div>
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>certificate delete</td><td>name=internal-ca</td><td>changed=false name=internal-ca</td></tr><tr><td>└─ managedfile get</td><td>path=/usr/local/share/ca-certificates/osapi-internal-ca.crt</td><td>error: /usr/local/share/ca-certificates/osapi-internal-ca.crt: not managed</td></tr></tbody></table></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/reference/chains"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Chains</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/reference/chains/dns"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">DNS</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#chain" class="table-of-contents__link toc-highlight">Chain</a></li><li><a href="#a-ca-that-osapi-deployed-reads-by-its-name-list" class="table-of-contents__link toc-highlight">A CA that osapi deployed reads by its name (list)</a></li><li><a href="#a-ca-that-osapi-deployed-on-suse-list" class="table-of-contents__link toc-highlight">A CA that osapi deployed on SUSE (list)</a></li><li><a href="#a-ca-that-osapi-deployed-by-the-name-it-was-deployed-with-get" class="table-of-contents__link toc-highlight">A CA that osapi deployed, by the name it was deployed with (get)</a></li><li><a href="#a-ca-that-osapi-deployed-on-the-rhel-family-get" class="table-of-contents__link toc-highlight">A CA that osapi deployed on the RHEL family (get)</a></li><li><a href="#a-ca-that-osapi-deployed-on-suse-get" class="table-of-contents__link toc-highlight">A CA that osapi deployed on SUSE (get)</a></li><li><a href="#add-a-ca-create" class="table-of-contents__link toc-highlight">Add a CA (create)</a></li><li><a href="#add-a-ca-on-the-rhel-family-create" class="table-of-contents__link toc-highlight">Add a CA on the RHEL family (create)</a></li><li><a href="#add-a-ca-on-suse-create" class="table-of-contents__link toc-highlight">Add a CA on SUSE (create)</a></li><li><a href="#a-ca-that-osapi-deployed-with-the-same-content-create" class="table-of-contents__link toc-highlight">A CA that osapi deployed with the same content (create)</a></li><li><a href="#write-a-ca-from-a-new-object-update" class="table-of-contents__link toc-highlight">Write a CA from a new object (update)</a></li><li><a href="#write-a-ca-from-a-new-object-on-the-rhel-family-update" class="table-of-contents__link toc-highlight">Write a CA from a new object on the RHEL family (update)</a></li><li><a href="#write-a-ca-from-a-new-object-on-suse-update" class="table-of-contents__link toc-highlight">Write a CA from a new object on SUSE (update)</a></li><li><a href="#the-object-that-it-was-deployed-from-update" class="table-of-contents__link toc-highlight">The object that it was deployed from (update)</a></li><li><a href="#remove-a-ca-delete" class="table-of-contents__link toc-highlight">Remove a CA (delete)</a></li><li><a href="#remove-a-ca-on-the-rhel-family-delete" class="table-of-contents__link toc-highlight">Remove a CA on the RHEL family (delete)</a></li><li><a href="#remove-a-ca-on-suse-delete" class="table-of-contents__link toc-highlight">Remove a CA on SUSE (delete)</a></li><li><a href="#a-ca-that-osapi-did-not-deploy-delete" class="table-of-contents__link toc-highlight">A CA that osapi did not deploy (delete)</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
