@@ -156,8 +156,8 @@ reference.
 
 ## Permissions
 
-The Permission column of [Methods](#methods) gives the permission of each
-method.
+The [audit](../reference/endpoints/audit.md) reference page gives the permission
+of each method.
 
 ## Related
 

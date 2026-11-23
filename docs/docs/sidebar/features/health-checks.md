@@ -131,8 +131,8 @@ or the [API Reference](/gen/api/health-check-api-health) for the REST endpoints.
 
 ## Permissions
 
-The Permission column of [Methods](#methods) gives the permission of each
-method.
+The [health](../reference/endpoints/health.md) reference page gives the
+permission of each method.
 
 ## Related
 

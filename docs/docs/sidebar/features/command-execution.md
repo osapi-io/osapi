@@ -135,8 +135,8 @@ NATS, agent and authentication settings.
 
 ## Permissions
 
-The Permission column of [Methods](#methods) gives the permission of each
-method.
+The [command](../reference/behaviors/command/command.md) reference page gives
+the permission of each method.
 
 ## Related
 

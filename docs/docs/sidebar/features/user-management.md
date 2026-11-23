@@ -145,8 +145,10 @@ $ osapi client node user create --target group:web \
 
 ## Permissions
 
-The Permission column of [Methods](#methods) gives the permission of each
-method.
+The [user](../reference/behaviors/user/user.md),
+[group](../reference/behaviors/group/group.md), and
+[sshkey](../reference/behaviors/sshkey/sshkey.md) reference pages give the
+permission of each method.
 
 ## Supported platforms
 

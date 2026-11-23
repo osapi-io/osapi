@@ -317,8 +317,9 @@ nats:
 
 ## Permissions
 
-The Permission column of [Methods](#methods) gives the permission of each
-method.
+The [file](../reference/endpoints/file.md) and
+[node file](../reference/behaviors/file/file.md) reference pages give the
+permission of each method.
 
 ## Related
 
