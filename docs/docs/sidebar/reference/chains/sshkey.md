@@ -32,6 +32,13 @@ The behaviors that sshkey calls, and each call that its examples make.
 | sshkey list | name=osapitest | \[]                                                                    |
 | └─ user get | name=osapitest | gid=1001 home=/home/osapitest locked=true name=osapitest shell=/bin/s… |
 
+## A host key that gohai cannot read (list)
+
+| CALL        | SENDS          | GETS                                                                         |
+| ----------- | -------------- | ---------------------------------------------------------------------------- |
+| sshkey list | name=osapitest | \[&#123;"type":"ssh-ed25519","fingerprint":"SHA256:mnpIO1El26FsWnOeLzppADcN… |
+| └─ user get | name=osapitest | gid=1001 home=/home/osapitest locked=true name=osapitest shell=/bin/s…       |
+
 ## Add a key (create)
 
 | CALL          | SENDS                                                                  | GETS                                                                   |

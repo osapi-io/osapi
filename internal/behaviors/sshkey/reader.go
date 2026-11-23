@@ -37,8 +37,9 @@ import (
 )
 
 // reader reads the keys through gohai's ssh collector, which reads the
-// authorized_keys of each user that /etc/passwd lists. It asks the user
-// behavior whether the user exists. It changes nothing.
+// authorized_keys of each user that /etc/passwd lists, or on macOS the
+// directory service. It asks the user behavior whether the user exists. It
+// changes nothing.
 type reader struct {
 	src   source.Sources
 	users user.Provider
@@ -59,7 +60,27 @@ func (r *reader) Keys(
 	if _, err := r.user(ctx, name); err != nil {
 		return nil, err
 	}
-	out, err := ssh.NewWith(r.src).Collect(ctx, nil)
+
+	return keysOf(ctx, r.src, name)
+}
+
+// collectSSH runs gohai's ssh collector. A test replaces it to fail: the
+// collector of gohai v1.12.1 has no error of its own.
+var collectSSH = func(
+	ctx context.Context,
+	src source.Sources,
+) (any, error) {
+	return ssh.NewWith(src).Collect(ctx, nil)
+}
+
+// keysOf is the keys of name that gohai reads from its
+// authorized_keys, in the order of the file.
+func keysOf(
+	ctx context.Context,
+	src source.Sources,
+	name string,
+) ([]Key, error) {
+	out, err := collectSSH(ctx, src)
 	if err != nil {
 		return nil, err
 	}

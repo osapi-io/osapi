@@ -96,6 +96,40 @@ func (s *APIListPublicTestSuite) TestList() {
 			WantBody: `{"job_id":"job-1","results":[{"hostname":"server1","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
 		},
 		{
+			Name: "when the example \"A host key that gohai cannot read\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/server1/user/osapitest/sshkey",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"server1",
+				"sshkey.list",
+				sshkey.ListInput{Name: "osapitest"},
+				servertest.Completed("server1", `[{"type":"ssh-ed25519","fingerprint":"SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk","comment":"osapitest@example"}]`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"comment":"osapitest@example","fingerprint":"SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk","hostname":"server1","status":"ok","type":"ssh-ed25519"}]}`,
+		},
+		{
+			Name: "when the example \"A host key that gohai cannot read\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodGet,
+				Path:   "/api/node/_all/user/osapitest/sshkey",
+			},
+			Token: servertest.Read,
+			Job: servertest.Query(
+				"_all",
+				"sshkey.list",
+				sshkey.ListInput{Name: "osapitest"},
+				servertest.Completed("server1", `[{"type":"ssh-ed25519","fingerprint":"SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk","comment":"osapitest@example"}]`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"comment":"osapitest@example","fingerprint":"SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk","hostname":"server1","status":"ok","type":"ssh-ed25519"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodGet,

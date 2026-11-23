@@ -42,6 +42,15 @@ func (s *CLIPublicTestSuite) TestCommands() {
 			},
 		},
 		{
+			name: "when the example \"A host key that gohai cannot read\" is run",
+			args: []string{"node", "user", "sshkey", "list", "--target", "server1", "--name", "osapitest"},
+			want: commandtest.Request{
+				Method: "GET",
+				Path:   "/api/node/server1/user/osapitest/sshkey",
+				Body:   "",
+			},
+		},
+		{
 			name: "when the example \"Add a key\" is run",
 			args: []string{"node", "user", "sshkey", "create", "--target", "server1", "--name", "osapitest", "--key", "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJl85dcLw7lIdX+IyXEXT00CTCezv/2E1jvolleleo6Z osapitest@example"},
 			want: commandtest.Request{

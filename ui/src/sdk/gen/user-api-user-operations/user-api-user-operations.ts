@@ -92,7 +92,7 @@ export const getGetNodeUserUrl = (hostname: string,) => {
 }
 
 /**
- * Lists each user with its IDs, home, shell, groups and whether it is locked, from /etc/passwd, /etc/group and /etc/shadow through gohai, on every platform. The groups are those that list the user as a member, besides its primary group.
+ * Lists each user with its IDs, home, shell, groups and whether it is locked, through gohai: from /etc/passwd, /etc/group and /etc/shadow on Linux, and from the directory service with dscl on macOS. The groups are those that list the user as a member, besides its primary group.
  * @summary List the users of the host
  */
 export const getNodeUser = async (hostname: string, options?: Parameters<typeof apiFetch>[1]): Promise<getNodeUserResponse> => {

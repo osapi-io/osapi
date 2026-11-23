@@ -55,7 +55,7 @@ None. Declare them with behavior.Config.
 |                 |                                                                                                                                                            |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Span            | behavior.sshkey.&lt;method&gt;                                                                                                                             |
-| Child spans     | behavior.user.&lt;method&gt;, exec chown, exec useradd, exec chpasswd, exec usermod, exec userdel, exec id, exec dscl, file.write, file.remove, file.chmod |
+| Child spans     | behavior.user.&lt;method&gt;, exec chown, exec dscl, exec useradd, exec chpasswd, exec usermod, exec userdel, exec id, file.write, file.remove, file.chmod |
 | Metrics         | osapi_behavior_calls_total, osapi_behavior_duration_seconds, osapi_behavior_changes_total                                                                  |
 | Attributes      | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed                                            |
 | Recorded inputs | name (list, create, delete), fingerprint (delete)                                                                                                          |
@@ -90,12 +90,13 @@ None. Declare them with behavior.Config.
 | comment     | string | The comment after the key, such as alice@laptop       |
 | options     | string | The options before the key, such as from="10.0.0.0/8" |
 
-### Examples (2)
+### Examples (3)
 
-| EXAMPLE             | INPUT          | OUTPUT                                                                                                                                                                                                                                               |
-| ------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A user with keys    | name=osapitest | \[comment=osapitest@example, fingerprint=SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk, type=ssh-ed25519] \[comment=other@example, fingerprint=SHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE, options=from="10.0.0.0/8", type=ssh-ed25519] |
-| A user with no keys | name=osapitest |                                                                                                                                                                                                                                                      |
+| EXAMPLE                           | INPUT          | OUTPUT                                                                                                                                                                                                                                               |
+| --------------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A user with keys                  | name=osapitest | \[comment=osapitest@example, fingerprint=SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk, type=ssh-ed25519] \[comment=other@example, fingerprint=SHA256:a5CeY6Lh3ZXkJOqGyuwb24kQeVjgag1gc9ujzv++nhE, options=from="10.0.0.0/8", type=ssh-ed25519] |
+| A user with no keys               | name=osapitest |                                                                                                                                                                                                                                                      |
+| A host key that gohai cannot read | name=osapitest | \[comment=osapitest@example, fingerprint=SHA256:mnpIO1El26FsWnOeLzppADcNXgXRNHh9MPNPLPvSCwk, type=ssh-ed25519]                                                                                                                                       |
 
 ## Method create
 
