@@ -207,7 +207,7 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 			bname:    "motd",
 			doc:      "x",
 			requires: []string{"managedfile", "chained"},
-			validateFunc: func(root string, files []string) {
+			validateFunc: func(root string, _ []string) {
 				def, err := os.ReadFile(filepath.Join(root, "internal/behaviors/motd/behavior.go"))
 				s.Require().NoError(err)
 				s.Contains(string(def),

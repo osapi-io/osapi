@@ -452,11 +452,12 @@ func (sc scaffold) debianFile() *jen.File {
 		jen.Id("fs").Qual(avfsPath, "VFS"),
 		jen.Id("path").String(),
 	}
-	values := []jen.Code{
+	values := make([]jen.Code, 0, 2+len(sc.requires))
+	values = append(values,
 		field("fs", jen.Id("h").Dot("FS")),
 		field("path", jen.Qual(hostPath, "Settings").Index(jen.Id("Settings")).
 			Call(jen.Id("h")).Dot("Path")),
-	}
+	)
 	var body []jen.Code
 	var missing jen.Code
 	for _, r := range sc.requires {
