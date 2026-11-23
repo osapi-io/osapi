@@ -25,11 +25,11 @@ The command prints:
 ```ansi
 $ osapi behavior spec get
 [1;38;2;0;213;255mDefinition:[0m
-  Register(Define(name, doc, options...))
+  [1mRegister(Define(name, doc, options...))[0m
     Declares the behavior and adds it to the registry. The agent, the
     server, the CLI and the generator read the registry.
-    Use: One time, in behavior.go: var Behavior =
-    behavior.Register(behavior.Define(...)).
+    [38;2;138;138;138mUse: One time, in behavior.go: var Behavior =[0m
+    [38;2;138;138;138mbehavior.Register(behavior.Define(...)).[0m
 ```
 
 With `--json`, the command prints:

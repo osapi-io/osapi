@@ -24,7 +24,7 @@ The command prints:
 
 ```ansi
 $ osapi client agent drain --hostname web-01
-[ok] web-01 draining
+[38;2;103;234;147m✓[0m web-01 draining
 
   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
 ```

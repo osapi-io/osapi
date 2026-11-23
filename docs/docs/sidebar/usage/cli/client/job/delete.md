@@ -20,7 +20,7 @@ The command prints:
 
 ```ansi
 $ osapi client job delete --id 550e8400-e29b-41d4-a716-446655440000
-[ok] 550e8400-e29b-41d4-a716-446655440000 deleted
+[38;2;103;234;147m✓[0m 550e8400-e29b-41d4-a716-446655440000 deleted
 
   [38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9[0m
 ```

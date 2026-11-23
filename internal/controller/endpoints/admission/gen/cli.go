@@ -48,7 +48,7 @@ var admissionGetCmd = &cobra.Command{
 var admissionAdmitCmd = &cobra.Command{
 	Annotations: map[string]string{
 		reference.Permission: "admission:write",
-		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client admission admit --machine-id d530664edc1c431eb5ef1e9dfd6617a5 --fingerprint SHA256:1f53dea6...\n[ok] d530664edc1c431eb5ef1e9dfd6617a5 admitted\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the command prints:\n\n```json\n{\"machine_id\":\"d530664edc1c431eb5ef1e9dfd6617a5\",\"result\":\"admitted\"}\n```",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client admission admit --machine-id d530664edc1c431eb5ef1e9dfd6617a5 --fingerprint SHA256:1f53dea6...\n\x1b[38;2;103;234;147m✓\x1b[0m d530664edc1c431eb5ef1e9dfd6617a5 admitted\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the command prints:\n\n```json\n{\"machine_id\":\"d530664edc1c431eb5ef1e9dfd6617a5\",\"result\":\"admitted\"}\n```",
 	},
 	Args:    cobra.NoArgs,
 	Example: "  osapi client admission admit --machine-id d530664edc1c431eb5ef1e9dfd6617a5 --fingerprint SHA256:1f53dea6...",
@@ -66,7 +66,7 @@ var admissionAdmitCmd = &cobra.Command{
 var admissionRejectCmd = &cobra.Command{
 	Annotations: map[string]string{
 		reference.Permission: "admission:write",
-		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client admission reject --machine-id d530664edc1c431eb5ef1e9dfd6617a5 --reason \"unknown host\"\n[ok] d530664edc1c431eb5ef1e9dfd6617a5 rejected\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the command prints:\n\n```json\n{\"machine_id\":\"d530664edc1c431eb5ef1e9dfd6617a5\",\"result\":\"rejected\"}\n```",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client admission reject --machine-id d530664edc1c431eb5ef1e9dfd6617a5 --reason \"unknown host\"\n\x1b[38;2;103;234;147m✓\x1b[0m d530664edc1c431eb5ef1e9dfd6617a5 rejected\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the command prints:\n\n```json\n{\"machine_id\":\"d530664edc1c431eb5ef1e9dfd6617a5\",\"result\":\"rejected\"}\n```",
 	},
 	Args:    cobra.NoArgs,
 	Example: "  osapi client admission reject --machine-id d530664edc1c431eb5ef1e9dfd6617a5 --reason \"unknown host\"",
@@ -84,7 +84,7 @@ var admissionRejectCmd = &cobra.Command{
 var admissionRevokeCmd = &cobra.Command{
 	Annotations: map[string]string{
 		reference.Permission: "admission:write",
-		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client admission revoke --machine-id d530664edc1c431eb5ef1e9dfd6617a5\n[ok] d530664edc1c431eb5ef1e9dfd6617a5 revoked\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the command prints:\n\n```json\n{\"machine_id\":\"d530664edc1c431eb5ef1e9dfd6617a5\",\"result\":\"revoked\"}\n```",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client admission revoke --machine-id d530664edc1c431eb5ef1e9dfd6617a5\n\x1b[38;2;103;234;147m✓\x1b[0m d530664edc1c431eb5ef1e9dfd6617a5 revoked\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the command prints:\n\n```json\n{\"machine_id\":\"d530664edc1c431eb5ef1e9dfd6617a5\",\"result\":\"revoked\"}\n```",
 	},
 	Args:    cobra.NoArgs,
 	Example: "  osapi client admission revoke --machine-id d530664edc1c431eb5ef1e9dfd6617a5",
@@ -101,7 +101,7 @@ var admissionRevokeCmd = &cobra.Command{
 var admissionDeleteCmd = &cobra.Command{
 	Annotations: map[string]string{
 		reference.Permission: "admission:write",
-		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client admission delete --machine-id d530664edc1c431eb5ef1e9dfd6617a5\n[ok] d530664edc1c431eb5ef1e9dfd6617a5 deleted\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the command prints:\n\n```json\n{\"machine_id\":\"d530664edc1c431eb5ef1e9dfd6617a5\",\"result\":\"deleted\"}\n```",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client admission delete --machine-id d530664edc1c431eb5ef1e9dfd6617a5\n\x1b[38;2;103;234;147m✓\x1b[0m d530664edc1c431eb5ef1e9dfd6617a5 deleted\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the command prints:\n\n```json\n{\"machine_id\":\"d530664edc1c431eb5ef1e9dfd6617a5\",\"result\":\"deleted\"}\n```",
 	},
 	Args:    cobra.NoArgs,
 	Example: "  osapi client admission delete --machine-id d530664edc1c431eb5ef1e9dfd6617a5",
