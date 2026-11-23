@@ -36,10 +36,10 @@ When disabled, the controller serves only the REST API.
 
 The UI uses the same JWT-based authentication as the CLI and API. Generate a
 token with `osapi token generate` and paste it on the sign-in page. The token's
-`roles` claim determines what the user can see and do. osapi has six built-in
-roles: `admin`, `operator`, `automation`, `auditor`, `read` and `observer`.
-[RBAC model](../../architecture/ui.md#rbac-model) tells what each role can do in
-the UI.
+`roles` claim determines what the user can see and do. The UI shows and hides
+each control by the permissions of the token's roles.
+[Roles and permissions](authentication.md#roles-and-permissions) lists the
+built-in roles.
 
 ## Architecture
 
