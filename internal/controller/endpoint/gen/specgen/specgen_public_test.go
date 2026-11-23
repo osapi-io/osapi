@@ -48,13 +48,24 @@ type other struct {
 
 type listInput struct{}
 
-// spec is the spec of a group named name with one list of out, under title.
+// spec is the spec of a group named name with one list of out, under title,
+// in the config area.
 func spec[Out any](
 	name string,
 	title string,
 ) *openapi3.T {
+	return specIn[Out](name, title, area.Config)
+}
+
+// specIn is spec, in the area a.
+func specIn[Out any](
+	name string,
+	title string,
+	a area.Name,
+) *openapi3.T {
 	doc, err := endpoint.OpenAPI(endpoint.Define(name, "The "+name,
 		endpoint.Title(title),
+		endpoint.Area(a),
 		endpoint.Tag(name+"_operations", name, "The "+name+"."),
 		endpoint.Get[listInput, Out]("list"),
 	))
@@ -72,10 +83,12 @@ func (s *SpecgenPublicTestSuite) TestFull() {
 		validateFunc func([]byte, error)
 	}{
 		{
-			name: "when groups are joined, each keeps its tag under its title, in order",
+			name: "when groups are joined, each tag gets its title, under its area, in order",
 			docs: []*openapi3.T{
 				spec[node]("zeta", "Zeta API"),
-				spec[node]("alpha", "Alpha Management API"),
+				specIn[node]("alpha", "Alpha Management API", area.Fleet),
+				specIn[node]("beta", "Beta API", area.Services),
+				spec[other]("gamma", "Gamma API"),
 			},
 			validateFunc: func(got []byte, err error) {
 				s.Require().NoError(err)
@@ -96,17 +109,31 @@ func (s *SpecgenPublicTestSuite) TestFull() {
 				}
 				s.Require().NoError(yaml.Unmarshal(got, &doc))
 				s.Equal(area.All, doc.Areas, "the areas, with their labels, in order")
-				s.Equal("Zeta_API_zeta_operations", doc.Tags[0].Name)
-				s.Equal("Alpha_Management_API_alpha_operations", doc.Tags[1].Name)
+				tags := make([]string, 0, len(doc.Tags))
+				for _, t := range doc.Tags {
+					tags = append(tags, t.Name)
+				}
+				s.Equal([]string{
+					"Beta_API_beta_operations",
+					"Zeta_API_zeta_operations",
+					"Gamma_API_gamma_operations",
+					"Alpha_Management_API_alpha_operations",
+				}, tags, "in the order of the areas, then of the groups")
 				s.Equal("/api/zeta", doc.Paths.Content[0].Value, "in the order of the groups")
-				s.Equal("Alpha Management API", doc.Groups[1].Name)
-				s.Equal([]string{"Alpha_Management_API_alpha_operations"}, doc.Groups[1].Tags)
+				s.Len(doc.Groups, 3, "an area with no tag has no group")
+				s.Equal("Services", doc.Groups[0].Name)
+				s.Equal("Config", doc.Groups[1].Name)
+				s.Equal(
+					[]string{"Zeta_API_zeta_operations", "Gamma_API_gamma_operations"},
+					doc.Groups[1].Tags,
+				)
+				s.Equal("Fleet", doc.Groups[2].Name)
 				s.Equal("ErrorResponse", doc.Components.Schemas.Content[0].Value, "first")
 				s.Equal([]string{"type", "properties"}, []string{
 					doc.Components.Schemas.Content[1].Content[0].Value,
 					doc.Components.Schemas.Content[1].Content[2].Value,
 				})
-				s.Len(doc.Components.Schemas.Content, 4, "a shared schema is there once")
+				s.Len(doc.Components.Schemas.Content, 6, "a shared schema is there once")
 				s.Contains(string(got), "example: 134217728\n", "a whole number stays whole")
 				s.Contains(string(got), "example: 2.5\n")
 				s.Contains(
@@ -133,6 +160,16 @@ func (s *SpecgenPublicTestSuite) TestFull() {
 			}()},
 			validateFunc: func(_ []byte, err error) {
 				s.EqualError(err, "schema node: Zeta API and Alpha API both define it")
+			},
+		},
+		{
+			name: "when a tag has no area of area.All",
+			docs: []*openapi3.T{specIn[node]("zeta", "Zeta API", "nowhere")},
+			validateFunc: func(_ []byte, err error) {
+				s.EqualError(
+					err,
+					`tag Zeta_API_zeta_operations: "nowhere" is not an area of area.All`,
+				)
 			},
 		},
 		{

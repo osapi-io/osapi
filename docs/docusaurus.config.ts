@@ -286,7 +286,7 @@ const config: Config = {
             specPath: '../internal/controller/api/gen/api.yaml',
             outputDir: 'docs/gen/api',
             sidebarOptions: {
-              groupPathsBy: 'tag',
+              groupPathsBy: 'tagGroup',
               categoryLinkSource: 'tag'
             }
           } satisfies OpenApiPlugin.Options

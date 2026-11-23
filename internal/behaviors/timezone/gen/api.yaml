@@ -284,4 +284,5 @@ tags:
   - description: The timezone of the host
     name: timezone_operations
     x-displayName: Timezone
+    x-osapi-area: config
     x-osapi-group: timezone

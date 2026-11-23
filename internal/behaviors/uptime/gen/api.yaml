@@ -157,4 +157,5 @@ tags:
   - description: Get the uptime of target hosts
     name: uptime_operations
     x-displayName: Uptime
+    x-osapi-area: node
     x-osapi-group: uptime

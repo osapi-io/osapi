@@ -169,4 +169,5 @@ tags:
   - description: Get the memory usage of target hosts
     name: memory_operations
     x-displayName: Memory
+    x-osapi-area: hardware
     x-osapi-group: memory

@@ -281,4 +281,5 @@ tags:
   - description: Get or set the hostname of target hosts
     name: hostname_operations
     x-displayName: Hostname
+    x-osapi-area: config
     x-osapi-group: hostname

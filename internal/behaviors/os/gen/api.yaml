@@ -165,4 +165,5 @@ tags:
   - description: Get the operating system of target hosts
     name: os_operations
     x-displayName: OS
+    x-osapi-area: node
     x-osapi-group: os

@@ -424,4 +424,5 @@ tags:
   - description: The Docker images of the host
     name: container_image_operations
     x-displayName: Container image
+    x-osapi-area: containers
     x-osapi-group: image

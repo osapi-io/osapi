@@ -577,4 +577,5 @@ tags:
   - description: The certificate authorities that the host trusts
     name: certificate_operations
     x-displayName: Certificate
+    x-osapi-area: security
     x-osapi-group: certificate

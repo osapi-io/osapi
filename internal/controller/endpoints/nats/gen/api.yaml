@@ -142,4 +142,5 @@ tags:
   - description: The NATS server of the fleet.
     name: nats
     x-displayName: NATS
+    x-osapi-area: fleet
     x-osapi-group: nats

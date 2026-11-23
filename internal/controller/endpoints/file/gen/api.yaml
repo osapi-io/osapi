@@ -611,4 +611,5 @@ tags:
   - description: Object Store file management operations.
     name: file_operations
     x-displayName: File
+    x-osapi-area: objectstore
     x-osapi-group: file

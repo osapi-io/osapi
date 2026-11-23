@@ -154,4 +154,5 @@ tags:
   - description: The sources that write to the systemd journal
     name: log_source_operations
     x-displayName: Log source
+    x-osapi-area: logs
     x-osapi-group: source

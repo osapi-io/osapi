@@ -73,14 +73,17 @@ func Encode(
 }
 
 // Full is the spec of the API, from the spec of each group in docs, under
-// the comment header. Each group keeps its part in the order of docs: its
-// tag, its paths and its schemas. A tag gets the title of its group in front,
-// with _ for each space, such as Agent_Management_API_agent_operations, and
-// x-tagGroups puts it under that title. x-osapi-areas lists the areas, with
-// the label and in the order of area.All. The UI's client files take their
-// names from the tags. The shared ErrorResponse schema is first. Two groups
-// that serve one path, or that give one schema or parameter two shapes, are
-// an error.
+// the comment header. Each group keeps its paths and its schemas in the
+// order of docs. A tag gets the title of its group in front, with _ for each
+// space, such as Agent_Management_API_agent_operations. The tags are in the
+// order of the areas of area.All, and in the order of docs in an area.
+// x-tagGroups puts each tag under the label of its area, the x-osapi-area of
+// the tag, so the API reference groups the tags as the UI's tabs and the
+// SDK's pages do. A tag with no area of area.All is an error. x-osapi-areas
+// lists the areas, with the label and in the order of area.All. The UI's
+// client files take their names from the tags. The shared ErrorResponse
+// schema is first. Two groups that serve one path, or that give one schema
+// or parameter two shapes, are an error.
 func Full(
 	docs []*openapi3.T,
 	header string,
@@ -91,11 +94,11 @@ func Full(
 		return nil, err
 	}
 	var (
-		tags, groups []any
-		paths        = &part{what: "path"}
-		schemas      = &part{what: "schema"}
-		security     = &part{what: "security scheme"}
-		params       = &part{what: "parameter"}
+		byArea   = map[area.Name][]any{}
+		paths    = &part{what: "path"}
+		schemas  = &part{what: "schema"}
+		security = &part{what: "security scheme"}
+		params   = &part{what: "parameter"}
 	)
 	// The first entry has nothing to conflict with.
 	_ = schemas.put("ErrorResponse", errorResponse, ordered(shared), "the shared ErrorResponse")
@@ -109,16 +112,17 @@ func Full(
 		prefix := strings.ReplaceAll(group, " ", "_") + "_"
 
 		renamed := map[string]string{}
-		var names []any
 		for _, t := range list(root["tags"]) {
 			tag := t.(map[string]any)
 			name := prefix + tag["name"].(string)
+			a, _ := tag[endpoint.AreaExtension].(string)
+			if !area.Valid(area.Name(a)) {
+				return nil, fmt.Errorf("tag %s: %q is not an area of area.All", name, a)
+			}
 			renamed[tag["name"].(string)] = name
 			tag["name"] = name
-			tags = append(tags, tag)
-			names = append(names, name)
+			byArea[area.Name(a)] = append(byArea[area.Name(a)], tag)
 		}
-		groups = append(groups, map[string]any{"name": group, "tags": names})
 
 		for _, item := range object(root["paths"]) {
 			for _, op := range object(item) {
@@ -145,6 +149,18 @@ func Full(
 			if err := p.to.merge(p.add, group); err != nil {
 				return nil, err
 			}
+		}
+	}
+
+	var tags, groups []any
+	for _, a := range area.All {
+		var names []any
+		for _, tag := range byArea[a.Name] {
+			tags = append(tags, tag)
+			names = append(names, tag.(map[string]any)["name"])
+		}
+		if len(names) > 0 {
+			groups = append(groups, map[string]any{"name": a.Label, "tags": names})
 		}
 	}
 

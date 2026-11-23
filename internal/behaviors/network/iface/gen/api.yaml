@@ -664,4 +664,5 @@ tags:
   - description: The network interfaces of the host
     name: network_interface_operations
     x-displayName: Interface
+    x-osapi-area: networking
     x-osapi-group: interface
