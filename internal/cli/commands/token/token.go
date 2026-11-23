@@ -56,9 +56,8 @@ var Group = command.Register(command.Define(
 			"binary that you run. A custom role from the config's\n"+
 			"`controller.api.security.roles` gets a column of its own. Without a config\n"+
 			"file it shows the built-in roles only. A behavior's permissions are\n"+
-			"`<name>:read` and `<name>:write`, or the group's when it is nested under\n"+
-			"one. `admin` and `write` grant both, and `read` grants the read permission.\n"+
-			"Use this list, not a table in the docs.").
+			"`<name>:<verb>`, such as `dns:read` and `dns:write`. A rule gives each\n"+
+			"built-in role its permissions. Use this list, not a table in the docs.").
 		Example("").
 		Prints(sampleRoles).
 		Example("--json").

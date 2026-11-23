@@ -37,8 +37,11 @@ var (
 
 	sampleRoles = RolesOutput{Roles: []Role{
 		{Name: "admin", Source: "built-in"},
-		{Name: "write", Source: "built-in"},
+		{Name: "operator", Source: "built-in"},
+		{Name: "automation", Source: "built-in"},
+		{Name: "auditor", Source: "built-in"},
 		{Name: "read", Source: "built-in"},
+		{Name: "observer", Source: "built-in"},
 		{Name: "dns-ops", Source: "config"},
 	}}
 
