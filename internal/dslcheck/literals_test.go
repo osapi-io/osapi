@@ -30,7 +30,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	"golang.org/x/tools/go/packages"
 )
 
 // definitions are the packages that define behaviors, endpoint groups and
@@ -66,23 +65,19 @@ type LiteralsPublicTestSuite struct {
 // or a field of a composite literal. Use the constant, such as
 // behavior.PlatformDebian, not "debian".
 func (s *LiteralsPublicTestSuite) TestNoLiteralForATypedValue() {
-	pkgs, err := packages.Load(&packages.Config{
-		Mode: packages.NeedName | packages.NeedFiles | packages.NeedSyntax |
-			packages.NeedTypes | packages.NeedTypesInfo,
-	}, definitions...)
+	pkgs, err := loadChecked("", definitions...)
 	s.Require().NoError(err)
 
 	var found []string
 	for _, p := range pkgs {
-		s.Require().Empty(p.Errors)
-		for _, f := range p.Syntax {
+		for _, f := range p.Files {
 			// A generator writes a permission as a literal: the constant
 			// of a new behavior's permission is written after its routes,
 			// from the registry that the routes register in.
 			if ast.IsGenerated(f) {
 				continue
 			}
-			found = append(found, literals(p.Fset, p.TypesInfo, f)...)
+			found = append(found, literals(p.Fset, p.Info, f)...)
 		}
 	}
 	sort.Strings(found)
@@ -92,17 +87,12 @@ func (s *LiteralsPublicTestSuite) TestNoLiteralForATypedValue() {
 // TestFindsALiteral is the guard of the guard: it gives literals a file
 // with each kind of literal it must find.
 func (s *LiteralsPublicTestSuite) TestFindsALiteral() {
-	pkgs, err := packages.Load(&packages.Config{
-		Mode: packages.NeedName | packages.NeedFiles | packages.NeedSyntax |
-			packages.NeedTypes | packages.NeedTypesInfo,
-		Dir: "testdata/literals",
-	}, ".")
+	pkgs, err := loadChecked("testdata/literals", ".")
 	s.Require().NoError(err)
 	s.Require().Len(pkgs, 1)
-	s.Require().Empty(pkgs[0].Errors)
 	found := make([]string, 0, 4)
-	for _, f := range pkgs[0].Syntax {
-		found = append(found, literals(pkgs[0].Fset, pkgs[0].TypesInfo, f)...)
+	for _, f := range pkgs[0].Files {
+		found = append(found, literals(pkgs[0].Fset, pkgs[0].Info, f)...)
 	}
 	s.Equal([]string{
 		"literals.go:31: \"debain\" as behavior.PlatformName",
