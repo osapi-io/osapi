@@ -34,9 +34,9 @@ list of permissions:
 - **Custom roles.** You define them in `controller.api.security.roles`. Each one
   is a list of permissions. A custom role with the name of a built-in role
   replaces the built-in role.
-- **Behaviors** add their own permissions, `<name>:read` and `<name>:write`.
-  `admin` and `write` give the two permissions. `read` gives only the read
-  permission.
+- **Behaviors** add their own permissions, `<name>:<verb>`, such as `dns:read`
+  and `dns:write`. A rule gives them to the built-in roles, as
+  [Authentication](../features/authentication.md) tells.
 
 osapi divides the permissions by what an operation can do, not by area. To run a
 command (`command:execute`) and to run a shell (`command:shell`) are two

@@ -32,7 +32,7 @@ you need no more network configuration.
 
 The UI uses the same JWT authentication as the rest of osapi.
 `osapi token generate` makes the tokens. A token has a `roles` claim with a list
-of role names (`admin`, `write`, `read`).
+of role names, such as `admin`, `operator` or `read`.
 
 ### RBAC model
 

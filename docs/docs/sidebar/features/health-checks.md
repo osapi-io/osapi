@@ -137,7 +137,7 @@ or the [API Reference](/gen/api/health-check-api-health) for the REST endpoints.
 | `/health/ready`  | None          |
 | `/health/status` | `health:read` |
 
-All built-in roles (`admin`, `write`, `read`) include `health:read`.
+Each built-in role includes `health:read`.
 
 ## Related
 

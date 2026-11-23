@@ -31,8 +31,9 @@ validation when osapi starts. Make one with `openssl rand -hex 32`.
 
 A token carries three pieces of authorization data:
 
-- **Roles** (`roles` claim, required): one or more of `admin`, `write` and
-  `read`
+- **Roles** (`roles` claim, required): one or more roles. A role is a built-in
+  role (`admin`, `operator`, `automation`, `auditor`, `read` or `observer`) or a
+  custom role of the config
 - **Permissions** (`permissions` claim, optional): direct `resource:verb`
   permissions. They replace the permissions of the roles
 - **Subject** (`sub` claim): the identity of the user, for the audit log
