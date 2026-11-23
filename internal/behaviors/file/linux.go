@@ -25,6 +25,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 
 	"github.com/avfs/avfs"
 
@@ -127,20 +128,24 @@ func (l *linux) Undeploy(
 }
 
 // Status compares the file on the host with the record that managedfile
-// keeps of what osapi wrote.
+// keeps of what osapi wrote. A directory is refused: osapi deploys files.
 func (l *linux) Status(
 	ctx context.Context,
 	path string,
 ) (Status, error) {
+	if info, err := l.fs.Stat(path); err == nil && info.IsDir() {
+		return Status{}, fmt.Errorf("%s: a directory, not a file: %w", path, behavior.ErrInvalid)
+	}
+
 	record, err := behavior.Call(ctx, managedfile.Behavior, managedfile.Get, l.files,
 		managedfile.GetInput{Path: path})
 	switch {
 	case errors.Is(err, managedfile.ErrNotManaged):
-		return Status{Path: path, State: Missing}, nil
+		return Status{Path: path, State: Unmanaged}, nil
 	case err != nil:
 		return Status{}, err
 	case record.Undeployed:
-		return Status{Path: path, State: Missing}, nil
+		return Status{Path: path, State: Unmanaged}, nil
 	}
 
 	data, err := l.fs.ReadFile(path)

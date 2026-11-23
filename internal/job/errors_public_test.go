@@ -75,6 +75,15 @@ func (s *ErrorsPublicTestSuite) TestResponseError() {
 			},
 		},
 		{
+			name: "an input the host refuses",
+			resp: &job.Response{
+				ErrorCode: job.ErrorCodeInvalid,
+			},
+			validateFunc: func(err error) {
+				s.Require().ErrorIs(err, job.ErrInvalid)
+			},
+		},
+		{
 			name: "an operation this OS family does not have",
 			resp: &job.Response{
 				ErrorCode: job.ErrorCodeUnsupported,

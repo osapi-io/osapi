@@ -153,7 +153,13 @@ func groupFile(
 		}
 		conflict := "osapi did not deploy the item, so it does not change it, " +
 			"or the host does not have a program that the method needs."
-		errs := []jen.Code{
+		invalid := "The request is not valid, or the host refuses the input, " +
+			"such as a path that is a directory."
+		if len(behavior.TemplateFields(m.In)) > 0 {
+			invalid = "The request is not valid, a template reads a var that the " +
+				"behavior does not have, or the host refuses the input."
+		}
+		def = def.Op(".").Line().Id("Errors").Call(
 			jen.Qual(endpointPath, "NotFound").
 				Call(jen.Qual(behaviorPkg, "ErrNotFound"), jen.Lit(missing)),
 			jen.Qual(endpointPath, "Conflict").
@@ -162,15 +168,9 @@ func groupFile(
 			jen.Qual(endpointPath, "Conflict").
 				Call(jen.Qual(behaviorPkg, "ErrNotInstalled"), jen.Lit(conflict)).
 				Dot("Because").Call(jen.Qual(endpointPath, "ReasonNotInstalled")),
-		}
-		if len(behavior.TemplateFields(m.In)) > 0 {
-			errs = append(errs, jen.Qual(endpointPath, "Invalid").Call(
-				jen.Qual(dispatchPath, "ErrInvalid"),
-				jen.Lit("A template reads a var that the behavior does not have.")))
-		}
-		if len(errs) > 0 {
-			def = def.Op(".").Line().Id("Errors").Call(errs...)
-		}
+			jen.Qual(endpointPath, "Invalid").
+				Call(jen.Qual(dispatchPath, "ErrInvalid"), jen.Lit(invalid)),
+		)
 		methods = append(methods, def)
 	}
 

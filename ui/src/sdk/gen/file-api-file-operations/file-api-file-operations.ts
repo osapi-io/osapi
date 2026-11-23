@@ -89,7 +89,7 @@ export const getDeleteNodeFileUrl = (hostname: string,) => {
 }
 
 /**
- * Removes the file and keeps its record, marked undeployed, so status reports missing. A path that osapi did not deploy, or deleted already, does not change and reports changed: false. The object stays in the object store.
+ * Removes the file and keeps its record, marked undeployed, so status reports unmanaged. A path that osapi did not deploy, or deleted already, does not change and reports changed: false. The object stays in the object store.
  * @summary Remove a file that osapi deployed
  */
 export const deleteNodeFile = async (hostname: string,
@@ -166,7 +166,7 @@ export const getGetNodeFileUrl = (hostname: string,
 }
 
 /**
- * Compares the file on the host with the record that osapi keeps of what it deployed: in-sync when they agree, drifted when something changed the file, and missing when osapi did not deploy the path, undeployed it, or the file is gone.
+ * Compares the file on the host with the record that osapi keeps of what it deployed: in-sync when they agree, drifted when something changed the file, missing when osapi deployed the file and it is gone, and unmanaged when osapi did not deploy the path or undeployed it. A path that is a directory is refused.
  * @summary Show whether a deployed file holds what osapi wrote
  */
 export const getNodeFile = async (hostname: string,

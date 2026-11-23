@@ -37,6 +37,8 @@ const (
 	ErrorCodeNotManaged ErrorCode = "not_managed"
 	// ErrorCodeNotInstalled means a program the operation depends on is absent.
 	ErrorCodeNotInstalled ErrorCode = "not_installed"
+	// ErrorCodeInvalid means the host refuses the input.
+	ErrorCodeInvalid ErrorCode = "invalid"
 	// ErrorCodeUnsupported means the operation does not apply to this OS family.
 	ErrorCodeUnsupported ErrorCode = "unsupported"
 	// ErrorCodeTimeout means the agent never answered.
@@ -53,6 +55,8 @@ var (
 	ErrNotManaged = errors.New("not managed by osapi")
 	// ErrNotInstalled corresponds to ErrorCodeNotInstalled.
 	ErrNotInstalled = errors.New("not installed")
+	// ErrInvalid corresponds to ErrorCodeInvalid.
+	ErrInvalid = errors.New("invalid input")
 	// ErrUnsupported corresponds to ErrorCodeUnsupported.
 	ErrUnsupported = errors.New("operation not supported on this OS family")
 
@@ -80,6 +84,8 @@ func sentinelFor(
 		return ErrNotManaged
 	case ErrorCodeNotInstalled:
 		return ErrNotInstalled
+	case ErrorCodeInvalid:
+		return ErrInvalid
 	case ErrorCodeUnsupported:
 		return ErrUnsupported
 	case ErrorCodeTimeout:

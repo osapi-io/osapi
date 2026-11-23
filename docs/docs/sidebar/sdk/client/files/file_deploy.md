@@ -29,7 +29,7 @@ agents, check the status and undeploy.
 | `Target`      | string            | Yes      | Host target (see Targeting below)                              |
 
 `Status` returns a `FileStatusResult` for each host. Its `State` is `in-sync`,
-`drifted` or `missing`. Its `Status` is the status of the job on the host: `ok`,
+`drifted`, `missing` or `unmanaged`. Its `Status` is the status of the job on the host: `ok`,
 `failed` or `skipped`.
 
 ## Usage

@@ -206,7 +206,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: The request is not valid.
+          description: The request is not valid, or the host refuses the input, such as a path that is a directory.
         "401":
           content:
             application/json:
@@ -266,7 +266,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: The request is not valid.
+          description: The request is not valid, or the host refuses the input, such as a path that is a directory.
         "401":
           content:
             application/json:
@@ -322,7 +322,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: The request is not valid.
+          description: The request is not valid, or the host refuses the input, such as a path that is a directory.
         "401":
           content:
             application/json:
@@ -377,7 +377,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: The request is not valid.
+          description: The request is not valid, or the host refuses the input, such as a path that is a directory.
         "401":
           content:
             application/json:

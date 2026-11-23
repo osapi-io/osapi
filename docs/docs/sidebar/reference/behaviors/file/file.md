@@ -62,18 +62,18 @@ None. Declare them with behavior.Config.
 
 ## Method status
 
-|             |                                                                                                                                                                                                                                           |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Name        | status                                                                                                                                                                                                                                    |
-| Verb        | read                                                                                                                                                                                                                                      |
-| Description | Show whether a deployed file holds what osapi wrote                                                                                                                                                                                       |
-| Detail      | Compares the file on the host with the record that osapi keeps of what it deployed: in-sync when they agree, drifted when something changed the file, and missing when osapi did not deploy the path, undeployed it, or the file is gone. |
-| HTTP        | GET                                                                                                                                                                                                                                       |
-| Route       | /api/node/&#123;hostname&#125;/file                                                                                                                                                                                                       |
-| Permission  | file:read                                                                                                                                                                                                                                 |
-| Command     | [osapi client node file status](../../../usage/cli/client/node/file/status.md)                                                                                                                                                            |
-| Input type  | StatusInput                                                                                                                                                                                                                               |
-| Output type | Status                                                                                                                                                                                                                                    |
+|             |                                                                                                                                                                                                                                                                                                                      |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | status                                                                                                                                                                                                                                                                                                               |
+| Verb        | read                                                                                                                                                                                                                                                                                                                 |
+| Description | Show whether a deployed file holds what osapi wrote                                                                                                                                                                                                                                                                  |
+| Detail      | Compares the file on the host with the record that osapi keeps of what it deployed: in-sync when they agree, drifted when something changed the file, missing when osapi deployed the file and it is gone, and unmanaged when osapi did not deploy the path or undeployed it. A path that is a directory is refused. |
+| HTTP        | GET                                                                                                                                                                                                                                                                                                                  |
+| Route       | /api/node/&#123;hostname&#125;/file                                                                                                                                                                                                                                                                                  |
+| Permission  | file:read                                                                                                                                                                                                                                                                                                            |
+| Command     | [osapi client node file status](../../../usage/cli/client/node/file/status.md)                                                                                                                                                                                                                                       |
+| Input type  | StatusInput                                                                                                                                                                                                                                                                                                          |
+| Output type | Status                                                                                                                                                                                                                                                                                                               |
 
 ### Input (1)
 
@@ -86,15 +86,16 @@ None. Declare them with behavior.Config.
 | FIELD  | TYPE   | DESCRIPTION                                       |
 | ------ | ------ | ------------------------------------------------- |
 | path   | string | Absolute path of the file                         |
-| state  | string | in-sync, drifted or missing                       |
+| state  | string | in-sync, drifted, missing or unmanaged            |
 | sha256 | string | SHA-256 of the file on the host, when it is there |
 
-### Examples (2)
+### Examples (3)
 
 | EXAMPLE                          | INPUT                             | OUTPUT                                                                                                                    |
 | -------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | A deployed file                  | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf, state=in-sync, sha256=0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde81da46ef60 |
-| A path that osapi did not deploy | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf, state=missing                                                                          |
+| A path that osapi did not deploy | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf, state=unmanaged                                                                        |
+| A file that osapi undeployed     | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf, state=unmanaged                                                                        |
 
 ## Method update
 
@@ -141,18 +142,18 @@ None. Declare them with behavior.Config.
 
 ## Method delete
 
-|             |                                                                                                                                                                                                                              |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Name        | delete                                                                                                                                                                                                                       |
-| Verb        | write                                                                                                                                                                                                                        |
-| Description | Remove a file that osapi deployed                                                                                                                                                                                            |
-| Detail      | Removes the file and keeps its record, marked undeployed, so status reports missing. A path that osapi did not deploy, or deleted already, does not change and reports changed: false. The object stays in the object store. |
-| HTTP        | DELETE                                                                                                                                                                                                                       |
-| Route       | /api/node/&#123;hostname&#125;/file                                                                                                                                                                                          |
-| Permission  | file:write                                                                                                                                                                                                                   |
-| Command     | [osapi client node file delete](../../../usage/cli/client/node/file/delete.md)                                                                                                                                               |
-| Input type  | DeleteInput                                                                                                                                                                                                                  |
-| Output type | DeleteResult                                                                                                                                                                                                                 |
+|             |                                                                                                                                                                                                                                |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Name        | delete                                                                                                                                                                                                                         |
+| Verb        | write                                                                                                                                                                                                                          |
+| Description | Remove a file that osapi deployed                                                                                                                                                                                              |
+| Detail      | Removes the file and keeps its record, marked undeployed, so status reports unmanaged. A path that osapi did not deploy, or deleted already, does not change and reports changed: false. The object stays in the object store. |
+| HTTP        | DELETE                                                                                                                                                                                                                         |
+| Route       | /api/node/&#123;hostname&#125;/file                                                                                                                                                                                            |
+| Permission  | file:write                                                                                                                                                                                                                     |
+| Command     | [osapi client node file delete](../../../usage/cli/client/node/file/delete.md)                                                                                                                                                 |
+| Input type  | DeleteInput                                                                                                                                                                                                                    |
+| Output type | DeleteResult                                                                                                                                                                                                                   |
 
 ### Input (1)
 

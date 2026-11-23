@@ -161,6 +161,7 @@ func (s *LinuxPublicTestSuite) TestStatus() {
 	tests := []struct {
 		name      string
 		onDisk    string
+		dir       bool
 		record    managedfile.Record
 		recordErr error
 		wantState string
@@ -175,9 +176,19 @@ func (s *LinuxPublicTestSuite) TestStatus() {
 			wantState: file.Drifted,
 		},
 		{
-			name:      "when osapi undeployed it it is missing",
+			name:      "when osapi undeployed it it is unmanaged",
 			record:    managedfile.Record{Undeployed: true},
-			wantState: file.Missing,
+			wantState: file.Unmanaged,
+		},
+		{
+			name:      "when osapi has no record of it it is unmanaged",
+			recordErr: managedfile.ErrNotManaged,
+			wantState: file.Unmanaged,
+		},
+		{
+			name:    "when the path is a directory it is refused",
+			dir:     true,
+			wantErr: "/etc/a: a directory, not a file: invalid input",
 		},
 		{
 			name:      "when the record is there and the file is gone it is missing",
@@ -198,7 +209,11 @@ func (s *LinuxPublicTestSuite) TestStatus() {
 				s.Require().NoError(fs.MkdirAll("/etc", 0o755))
 				s.Require().NoError(fs.WriteFile("/etc/a", []byte(tc.onDisk), 0o644))
 			}
-			s.files.EXPECT().Read(gomock.Any(), "/etc/a").Return(tc.record, tc.recordErr)
+			if tc.dir {
+				s.Require().NoError(fs.MkdirAll("/etc/a", 0o755))
+			} else {
+				s.files.EXPECT().Read(gomock.Any(), "/etc/a").Return(tc.record, tc.recordErr)
+			}
 			got, err := file.NewLinux(s.objects, s.files, fs, "web-01", nil).
 				Status(context.Background(), "/etc/a")
 			if tc.wantErr != "" {

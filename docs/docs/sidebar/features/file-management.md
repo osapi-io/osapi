@@ -39,8 +39,10 @@ filesystem of the agent. The file-state KV record stays. Thus you can audit the
 undeploy, and a later deploy can find the change.
 
 **Status** makes an asynchronous job. The job compares the file on disk with its
-expected SHA-256 from the file-state KV bucket. It reports one of three states:
-`in-sync`, `drifted` or `missing`.
+expected SHA-256 from the file-state KV bucket. It reports one of four states:
+`in-sync`, `drifted`, `missing` or `unmanaged`. `missing` is a file that osapi
+deployed and that is not on the disk. `unmanaged` is a path that osapi did not
+deploy, or undeployed. Status refuses a path that is a directory with a 400.
 
 ## How it works
 

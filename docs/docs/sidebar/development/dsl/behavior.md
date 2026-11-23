@@ -602,6 +602,15 @@ A program that the method needs is not on the host. The API answers 409.
 Use: When a method needs a program that the platform does not always have, and
 Runs or RunsIfPresent does not say it.
 
+### `behavior.ErrInvalid`
+
+The host refuses the input, which the validate tags cannot see, such as a path
+that is a directory where the method reads a file. On one host the API answers
+400; on a broadcast the row of the host is failed with the message.
+
+Use: Wrap it with what is wrong: fmt.Errorf("%s: a directory, not a file: %w",
+path, behavior.ErrInvalid). Use a validate tag when the input alone tells it.
+
 ### `behavior.ErrUnsupported`
 
 The method does not apply to this host: its platform, or a container. The row of

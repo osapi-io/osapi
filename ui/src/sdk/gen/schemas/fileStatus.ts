@@ -15,7 +15,7 @@ export interface FileStatus {
   path?: string;
   /** SHA-256 of the file on the host, when it is there */
   sha256?: string;
-  /** in-sync, drifted or missing */
+  /** in-sync, drifted, missing or unmanaged */
   state?: string;
   /** The status of the operation for this host. */
   status: FileStatusStatus;

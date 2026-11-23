@@ -82,7 +82,7 @@ type FileUndeployResult struct {
 }
 
 // FileStatusResult is one deployed file on one host against what osapi
-// wrote: State is in-sync, drifted or missing.
+// wrote: State is in-sync, drifted, missing or unmanaged.
 type FileStatusResult struct {
 	Hostname string `json:"hostname"`
 	Status   string `json:"status"`

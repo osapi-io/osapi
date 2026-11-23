@@ -61,13 +61,15 @@ const (
 	InSync = "in-sync"
 	// Drifted is a file that something changed after osapi deployed it.
 	Drifted = "drifted"
-	// Missing is a file that osapi did not deploy, or that is gone.
+	// Missing is a file that osapi deployed and that is gone.
 	Missing = "missing"
+	// Unmanaged is a path that osapi did not deploy, or that it undeployed.
+	Unmanaged = "unmanaged"
 )
 
 // Status is how a file is against what osapi deployed.
 type Status struct {
 	Path   string `json:"path"             doc:"Absolute path of the file"`
-	State  string `json:"state"            doc:"in-sync, drifted or missing"`
+	State  string `json:"state"            doc:"in-sync, drifted, missing or unmanaged"`
 	SHA256 string `json:"sha256,omitempty" doc:"SHA-256 of the file on the host, when it is there"`
 }

@@ -61,6 +61,11 @@ func (s *ClassifyPublicTestSuite) TestClassifyProviderError() {
 			want: job.ErrorCodeNotInstalled,
 		},
 		{
+			name: "an input the host refuses",
+			err:  fmt.Errorf("/tmp: a directory, not a file: %w", provider.ErrInvalid),
+			want: job.ErrorCodeInvalid,
+		},
+		{
 			name: "an operation this OS family does not have",
 			err:  fmt.Errorf("timezone: %w", provider.ErrUnsupported),
 			want: job.ErrorCodeUnsupported,

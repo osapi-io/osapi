@@ -627,6 +627,8 @@ func classifyProviderError(
 		return job.ErrorCodeNotManaged
 	case errors.Is(err, provider.ErrNotInstalled):
 		return job.ErrorCodeNotInstalled
+	case errors.Is(err, provider.ErrInvalid):
+		return job.ErrorCodeInvalid
 	case errors.Is(err, provider.ErrUnsupported):
 		return job.ErrorCodeUnsupported
 	}

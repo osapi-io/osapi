@@ -504,6 +504,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindError,
+			Name: "behavior.ErrInvalid",
+			Does: "The host refuses the input, which the validate tags cannot see, such as a path that is a directory where the method reads a file. On one host the API answers 400; on a broadcast the row of the host is failed with the message.",
+			When: "Wrap it with what is wrong: fmt.Errorf(\"%s: a directory, not a file: %w\", path, behavior.ErrInvalid). Use a validate tag when the input alone tells it.",
+		},
+		{
+			Kind: KindError,
 			Name: "behavior.ErrUnsupported",
 			Does: "The method does not apply to this host: its platform, or a container. The row of the host is skipped, not failed.",
 			When: "From a builder, for a platform or a host that it cannot manage, or from a method that does not apply. Use .On or a reader builder first, so the definition says it.",
