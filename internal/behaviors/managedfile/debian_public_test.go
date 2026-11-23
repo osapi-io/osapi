@@ -279,6 +279,60 @@ func (s *DebianPublicTestSuite) TestWriteOfANewObject() {
 	}
 }
 
+// TestWriteOfAnUnappliedFile: a file whose record a caller marked, as its
+// step after the write did not finish, changes on a write of the same
+// content, so the caller runs the step again. The new record drops the mark.
+func (s *DebianPublicTestSuite) TestWriteOfAnUnappliedFile() {
+	meta := map[string]string{"setting": "on"}
+	record, _ := json.Marshal(managedfile.State{
+		Path:     path,
+		SHA256:   "b6ac5bc39377e44ee783dff946f6703a994f5eb31a438e69dc0735b40060d2e8",
+		Metadata: managedfile.MarkUnapplied(managedfile.UpdateInput{Metadata: meta}).Metadata,
+	})
+	fs := memfs.New()
+	s.Require().NoError(fs.MkdirAll("/etc/osapi", 0o755))
+	s.Require().NoError(fs.WriteFile(path, []byte("on\n"), 0o644))
+	ctrl := gomock.NewController(s.T())
+	state := providermocks.NewMockFileState(ctrl)
+	entry := jobmocks.NewMockKeyValueEntry(ctrl)
+	entry.EXPECT().Value().Return(record)
+	state.EXPECT().KVGet(gomock.Any(), "file-state", gomock.Any()).Return(entry, nil)
+	state.EXPECT().KVPut(gomock.Any(), "file-state", gomock.Any(), gomock.Any()).
+		DoAndReturn(func(_ context.Context, _, _ string, data []byte) (uint64, error) {
+			var st managedfile.State
+			s.Require().NoError(json.Unmarshal(data, &st))
+			s.Equal(meta, st.Metadata)
+
+			return 1, nil
+		})
+	p := managedfile.NewDebian(fs, state, "file-state", nil, "web-01")
+
+	changed, err := p.Write(
+		context.Background(),
+		managedfile.File{Path: path, Content: []byte("on\n"), Metadata: meta},
+	)
+
+	s.NoError(err)
+	s.True(changed)
+}
+
+// TestReadOfAnObjectChecksum: the record gives the checksum of the object
+// that the file came from, so a caller that puts the file back keeps it.
+func (s *DebianPublicTestSuite) TestReadOfAnObjectChecksum() {
+	record, _ := json.Marshal(managedfile.State{Path: path, ObjectSHA256: "abc"})
+	ctrl := gomock.NewController(s.T())
+	state := providermocks.NewMockFileState(ctrl)
+	entry := jobmocks.NewMockKeyValueEntry(ctrl)
+	entry.EXPECT().Value().Return(record)
+	state.EXPECT().KVGet(gomock.Any(), "file-state", gomock.Any()).Return(entry, nil)
+	p := managedfile.NewDebian(memfs.New(), state, "file-state", nil, "web-01")
+
+	got, err := p.Read(context.Background(), path)
+
+	s.NoError(err)
+	s.Equal("abc", got.ObjectSHA256)
+}
+
 func (s *DebianPublicTestSuite) TestRemove() {
 	tests := []struct {
 		name    string

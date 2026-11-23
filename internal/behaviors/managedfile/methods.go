@@ -24,10 +24,33 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
+	"maps"
 	"path/filepath"
 	"regexp"
 	"strconv"
 )
+
+// Unapplied is the key of the metadata that marks a file whose write landed
+// and whose next step did not finish, such as netplan apply or a reload of
+// systemd. No caller writes it, so the record then differs from each write
+// of the file: the next write of the same content changes the record and
+// reports changed, and its caller runs the step again.
+const Unapplied = "osapi.unapplied"
+
+// MarkUnapplied is in with Unapplied in its metadata. A caller whose step
+// after a write failed writes it, so a retry runs the step again.
+func MarkUnapplied(
+	in UpdateInput,
+) UpdateInput {
+	metadata := maps.Clone(in.Metadata)
+	if metadata == nil {
+		metadata = map[string]string{}
+	}
+	metadata[Unapplied] = "true"
+	in.Metadata = metadata
+
+	return in
+}
 
 // Update writes a file and keeps a record of it.
 func Update(

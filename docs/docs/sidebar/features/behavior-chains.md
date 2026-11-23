@@ -136,7 +136,7 @@ These are the failures of `dns update`:
 | --------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | `managedfile update` cannot write       | No change. The write is atomic.                                                                                 | `write file: ...`                                                                                     |
 | `netplan generate` refuses the new file | No change. `netplan` puts back the content that the file had, or removes a new file, with a `managedfile` call. | `netplan generate refused <path>, so its content was put back: ...`, or `..., so it was removed: ...` |
-| `netplan apply` fails                   | The new file stays in `/etc/netplan`. netplan did not apply it.                                                 | `netplan apply: ...`                                                                                  |
+| `netplan apply` fails                   | The new file stays in `/etc/netplan`. netplan did not apply it. Its record has a mark, so a retry applies it.   | `netplan apply: ...`                                                                                  |
 
 Only a building block undoes its own change, as `netplan` does when
 `netplan generate` refuses a file. The caller of a step does not undo the work
@@ -145,17 +145,26 @@ of the step.
 For the last failure, the chain line of the job is:
 
 ```text
-  Chain:     web-01: (netplan get, netplan update (failed) → managedfile update (changed))
+  Chain:     web-01: (netplan get, netplan update (failed) → (managedfile update (changed), managedfile update (changed)))
 ```
 
-`netplan update (failed)` is the step that failed.
+`netplan update (failed)` is the step that failed. The first
 `managedfile update (changed)` under it is the write that stayed on the host.
+The second one puts a mark in the record of the file. The mark tells that the
+step after the write did not finish.
 
-A retry with the same input does not apply the file now. `managedfile update`
-finds the same content on disk and reports no change, so `netplan` does not run
-`netplan apply` again, and the job reports unchanged.
-[osapi#1194](https://github.com/osapi-io/osapi/issues/1194) tracks this. Until
-it is fixed, correct the cause and run `netplan apply` on the host.
+A retry with the same input applies the file. The record of the file does not
+agree with the input, because of the mark. Thus `managedfile update` reports a
+change and removes the mark, and `netplan` runs `netplan generate` and
+`netplan apply` again. After an apply that succeeds, a call with the same input
+reports unchanged.
+
+`certificate` and `service` operate in the same way. When
+`update-ca-certificates`, `update-ca-trust` or `systemctl daemon-reload` fails
+after a write, the file stays with the mark in its record. When the command
+fails after a delete, the file comes back with the mark in its record. A retry
+then removes the file and runs the command again. `netplan delete` puts back the
+file in the same way when `netplan apply` fails.
 
 ## What a chain is not
 

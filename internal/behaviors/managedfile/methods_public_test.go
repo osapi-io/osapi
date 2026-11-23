@@ -209,6 +209,37 @@ func (s *MethodsPublicTestSuite) TestGet() {
 	}
 }
 
+func (s *MethodsPublicTestSuite) TestMarkUnapplied() {
+	tests := []struct {
+		name     string
+		metadata map[string]string
+		want     map[string]string
+	}{
+		{
+			name: "when the input has no metadata, it gets the mark",
+			want: map[string]string{managedfile.Unapplied: "true"},
+		},
+		{
+			name:     "when the input has metadata, the mark is added to a copy",
+			metadata: map[string]string{"key": "a"},
+			want:     map[string]string{"key": "a", managedfile.Unapplied: "true"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			in := managedfile.UpdateInput{Path: "/etc/motd", Content: "hi\n", Metadata: tc.metadata}
+
+			got := managedfile.MarkUnapplied(in)
+
+			s.Equal(tc.want, got.Metadata)
+			s.Equal(in.Path, got.Path)
+			s.Equal(in.Content, got.Content)
+			s.NotContains(in.Metadata, managedfile.Unapplied)
+		})
+	}
+}
+
 func TestMethodsPublicTestSuite(
 	t *testing.T,
 ) {
