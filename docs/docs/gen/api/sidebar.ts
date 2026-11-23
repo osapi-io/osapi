@@ -540,28 +540,6 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Node/Power",
-      link: {
-        type: "doc",
-        id: "gen/api/power-management-api-power-operations",
-      },
-      items: [
-        {
-          type: "doc",
-          id: "gen/api/post-node-power-reboot",
-          label: "Reboot node",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "gen/api/post-node-power-shutdown",
-          label: "Shutdown node",
-          className: "api-method post",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Node/Process",
       link: {
         type: "doc",
@@ -951,6 +929,28 @@ const sidebar: SidebarsConfig = {
           id: "gen/api/get-node-package-by-key",
           label: "Get one installed package",
           className: "api-method get",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Node/Power",
+      link: {
+        type: "doc",
+        id: "gen/api/power-api-power-operations",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "gen/api/post-node-power-reboot",
+          label: "Reboot the host",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "gen/api/post-node-power-shutdown",
+          label: "Shut the host down",
+          className: "api-method post",
         },
       ],
     },

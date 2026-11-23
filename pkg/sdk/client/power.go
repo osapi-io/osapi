@@ -38,9 +38,10 @@ func (s *PowerService) Reboot(
 	hostname string,
 	opts PowerOpts,
 ) (*Response[Collection[PowerResult]], error) {
-	body := buildPowerRequest(opts)
+	delay, message := powerFields(opts)
 
-	resp, err := s.client.PostNodePowerRebootWithResponse(ctx, hostname, body)
+	resp, err := s.client.PostNodePowerRebootWithResponse(
+		ctx, hostname, gen.PowerRebootRequest{Delay: delay, Message: message})
 	if err != nil {
 		return nil, fmt.Errorf("power reboot: %w", err)
 	}
@@ -71,9 +72,10 @@ func (s *PowerService) Shutdown(
 	hostname string,
 	opts PowerOpts,
 ) (*Response[Collection[PowerResult]], error) {
-	body := buildPowerRequest(opts)
+	delay, message := powerFields(opts)
 
-	resp, err := s.client.PostNodePowerShutdownWithResponse(ctx, hostname, body)
+	resp, err := s.client.PostNodePowerShutdownWithResponse(
+		ctx, hostname, gen.PowerShutdownRequest{Delay: delay, Message: message})
 	if err != nil {
 		return nil, fmt.Errorf("power shutdown: %w", err)
 	}
@@ -98,20 +100,19 @@ func (s *PowerService) Shutdown(
 	return newResponse(powerCollectionFromShutdown(resp.JSON200), resp.Body, resp.HTTPResponse), nil
 }
 
-// buildPowerRequest constructs a gen.PowerRequest from PowerOpts,
-// only including fields with non-zero values.
-func buildPowerRequest(
+// powerFields are the delay and the message of opts, each nil when it is
+// zero, so the request leaves it out.
+func powerFields(
 	opts PowerOpts,
-) gen.PowerRequest {
-	var body gen.PowerRequest
-
+) (*int, *string) {
+	var delay *int
+	var message *string
 	if opts.Delay != 0 {
-		body.Delay = &opts.Delay
+		delay = &opts.Delay
 	}
-
 	if opts.Message != "" {
-		body.Message = &opts.Message
+		message = &opts.Message
 	}
 
-	return body
+	return delay, message
 }

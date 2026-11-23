@@ -13,12 +13,15 @@ controller returns immediately.
 
 Power operations call `shutdown` on the agent host:
 
-- **Reboot**: schedules `shutdown -r +N`
-- **Shutdown**: schedules `shutdown -h +N`
+- **Reboot**: schedules `shutdown -r -- +N`
+- **Shutdown**: schedules `shutdown -h -- +N`
 
-The agent records the scheduled action and returns `changed: true` before the
-system stops. If the platform does not support the operation, for example on
-macOS agents, the job returns `status: skipped`.
+`--` ends the options of `shutdown`. Thus a message that starts with `-` is the
+message, not an option. The agent records the scheduled action and returns
+`changed: true` before the system stops. If the platform does not support the
+operation, for example on macOS agents or in a container, the job returns
+`status: skipped`. Power is a behavior: `osapi behavior get --name power` shows
+its definition.
 
 ### Minimum delay
 
@@ -94,8 +97,10 @@ for how osapi finds the OS family.
 | ---------------- | --------------- |
 | Reboot, Shutdown | `power:execute` |
 
-Power management requires the `power:execute` permission. Only the `admin` role
-includes this permission by default. Do not grant it to untrusted tokens.
+Reboot and shutdown are actions, so they need `power:execute`. The `admin` and
+`operator` roles have it; `automation`, `read` and `observer` do not. Do not
+grant it to untrusted tokens. The integration test never runs these actions on a
+live host, because the host would go down under it.
 
 ## Related
 

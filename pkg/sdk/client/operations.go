@@ -87,12 +87,6 @@ const (
 	OpNtpDelete JobOperation = "node.ntp.delete"
 )
 
-// Power operations.
-const (
-	OpPowerReboot   JobOperation = "node.power.reboot"
-	OpPowerShutdown JobOperation = "node.power.shutdown"
-)
-
 // Process operations.
 const (
 	OpProcessList   JobOperation = "node.process.list"

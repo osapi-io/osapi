@@ -3724,50 +3724,59 @@ type PingResponse struct {
 // PingResponseStatus The status of the operation for this host.
 type PingResponseStatus string
 
-// PowerRebootResponse defines model for PowerRebootResponse.
-type PowerRebootResponse struct {
-	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
-	Results []PowerResult       `json:"results"`
-}
-
-// PowerRequest defines model for PowerRequest.
-type PowerRequest struct {
-	// Delay Delay in seconds before the operation is executed.
+// PowerRebootRequest defines model for PowerRebootRequest.
+type PowerRebootRequest struct {
+	// Delay Seconds before the host goes down. It rounds to whole minutes, at least one.
 	Delay *int `json:"delay,omitempty" validate:"omitempty,min=0"`
 
-	// Message Optional message to broadcast before the operation.
+	// Message A message to the logged-in users first.
 	Message *string `json:"message,omitempty" validate:"omitempty"`
 }
 
-// PowerResult Result of a power operation for one host.
+// PowerRebootResponse defines model for PowerRebootResponse.
+type PowerRebootResponse struct {
+	// JobId The job ID used to process this request.
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
+	Results []PowerResult       `json:"results"`
+}
+
+// PowerResult defines model for PowerResult.
 type PowerResult struct {
-	// Action The power action performed (reboot, shutdown).
+	// Action reboot or shutdown
 	Action *string `json:"action,omitempty"`
 
-	// Changed Whether the operation modified system state.
+	// Changed Always true: each run changes the host.
 	Changed *bool `json:"changed,omitempty"`
 
-	// Delay The delay in seconds before the operation executes.
+	// Delay Seconds before the host goes down.
 	Delay *int `json:"delay,omitempty"`
 
 	// Error Error message if the agent failed.
 	Error *string `json:"error,omitempty"`
 
-	// Hostname Hostname of the agent that processed this operation.
+	// Hostname Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
 	// Status The status of the operation for this host.
-	Status PowerResultStatus `json:"status"`
+	Status PowerResultStatus `json:"status" validate:"oneof=ok failed skipped timeout"`
 }
 
 // PowerResultStatus The status of the operation for this host.
 type PowerResultStatus string
 
+// PowerShutdownRequest defines model for PowerShutdownRequest.
+type PowerShutdownRequest struct {
+	// Delay Seconds before the host goes down. It rounds to whole minutes, at least one.
+	Delay *int `json:"delay,omitempty" validate:"omitempty,min=0"`
+
+	// Message A message to the logged-in users first.
+	Message *string `json:"message,omitempty" validate:"omitempty"`
+}
+
 // PowerShutdownResponse defines model for PowerShutdownResponse.
 type PowerShutdownResponse struct {
 	// JobId The job ID used to process this request.
-	JobId   *openapi_types.UUID `json:"job_id,omitempty"`
+	JobId   *openapi_types.UUID `json:"job_id,omitempty" validate:"uuid"`
 	Results []PowerResult       `json:"results"`
 }
 
@@ -5164,10 +5173,10 @@ type PutNodeNtpJSONRequestBody = NtpUpdateRequest
 type PostNodePackageJSONRequestBody = PackageCreateRequest
 
 // PostNodePowerRebootJSONRequestBody defines body for PostNodePowerReboot for application/json ContentType.
-type PostNodePowerRebootJSONRequestBody = PowerRequest
+type PostNodePowerRebootJSONRequestBody = PowerRebootRequest
 
 // PostNodePowerShutdownJSONRequestBody defines body for PostNodePowerShutdown for application/json ContentType.
-type PostNodePowerShutdownJSONRequestBody = PowerRequest
+type PostNodePowerShutdownJSONRequestBody = PowerShutdownRequest
 
 // PostNodeProcessSignalJSONRequestBody defines body for PostNodeProcessSignal for application/json ContentType.
 type PostNodeProcessSignalJSONRequestBody = ProcessSignalRequest
@@ -16513,6 +16522,8 @@ type PostNodePowerRebootResponse struct {
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -16547,6 +16558,8 @@ type PostNodePowerShutdownResponse struct {
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
 	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
@@ -24434,6 +24447,20 @@ func ParsePostNodePowerRebootResponse(rsp *http.Response) (*PostNodePowerRebootR
 		}
 		response.JSON403 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -24487,6 +24514,20 @@ func ParsePostNodePowerShutdownResponse(rsp *http.Response) (*PostNodePowerShutd
 			return nil, err
 		}
 		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

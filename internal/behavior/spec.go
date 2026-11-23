@@ -277,6 +277,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindRefine,
+			Name: `.Disrupts("why")`,
+			Does: "Marks a method that takes the host down, such as a reboot or a shutdown, and says why. Its examples run on the fake host, but the integration test never runs them on a live host. behavior validate refuses it with no reason.",
+			When: "On a method whose run would take down the host that the test runs on.",
+		},
+		{
+			Kind: KindRefine,
 			Name: `.Describe("text")`,
 			Does: "The one-line description of the method, in the help, the spec and the docs.",
 			When: "On each method.",

@@ -1454,16 +1454,11 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
     return <LogSourcesResult data={data} />;
   }
 
-  // System operations (power, process, log)
+  // System operations (process, log)
   if (
-    [
-      "power-reboot",
-      "power-shutdown",
-      "process-get",
-      "process-signal",
-      "log-query",
-      "log-query-unit",
-    ].includes(type) &&
+    ["process-get", "process-signal", "log-query", "log-query-unit"].includes(
+      type,
+    ) &&
     Array.isArray(data.results)
   ) {
     const label = type.replace("-", " ");

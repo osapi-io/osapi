@@ -74,9 +74,6 @@ tags:
   - name: NTP_Management_API_ntp_operations
     x-displayName: Node/NTP
     description: NTP server configuration management on a target node.
-  - name: Power_Management_API_power_operations
-    x-displayName: Node/Power
-    description: Power management operations (reboot, shutdown) on a target node.
   - name: Process_Management_API_process_operations
     x-displayName: Node/Process
     description: Process management operations on a target node.
@@ -116,6 +113,9 @@ tags:
   - description: The packages installed on the host
     name: Package_API_package_operations
     x-displayName: Node/Package
+  - description: Reboot or shut down the host
+    name: Power_API_power_operations
+    x-displayName: Node/Power
   - description: The systemd services of the host
     name: Service_API_service_operations
     x-displayName: Node/Service
@@ -3386,112 +3386,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/power/reboot:
-    servers: []
-    post:
-      summary: Reboot node
-      description: >
-        Reboot the target node. An optional delay (in seconds) and message can
-        be provided.
-      tags:
-        - Power_Management_API_power_operations
-      operationId: PostNodePowerReboot
-      security:
-        - BearerAuth:
-            - power:execute
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      requestBody:
-        description: Optional reboot parameters.
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PowerRequest'
-      responses:
-        '200':
-          description: Reboot initiated.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PowerRebootResponse'
-        '400':
-          description: Invalid request payload.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error initiating reboot.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/node/{hostname}/power/shutdown:
-    servers: []
-    post:
-      summary: Shutdown node
-      description: >
-        Shutdown the target node. An optional delay (in seconds) and message can
-        be provided.
-      tags:
-        - Power_Management_API_power_operations
-      operationId: PostNodePowerShutdown
-      security:
-        - BearerAuth:
-            - power:execute
-      parameters:
-        - $ref: '#/components/parameters/Hostname'
-      requestBody:
-        description: Optional shutdown parameters.
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PowerRequest'
-      responses:
-        '200':
-          description: Shutdown initiated.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PowerShutdownResponse'
-        '400':
-          description: Invalid request payload.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized - API key required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error initiating shutdown.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /api/node/{hostname}/process:
     servers: []
     get:
@@ -6125,6 +6019,144 @@ paths:
       summary: Get one installed package
       tags:
         - Package_API_package_operations
+  /api/node/{hostname}/power/reboot:
+    servers: []
+    post:
+      description: >-
+        Runs shutdown -r -- +N, with N the delay in whole minutes and at least
+        one, so the agent can answer before the host goes down. A message goes
+        to the logged-in users. Each run changes the host.
+      operationId: PostNodePowerReboot
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PowerRebootRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PowerRebootResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            The host does not have what the request names, such as the object of
+            a deploy.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - power:execute
+      summary: Reboot the host
+      tags:
+        - Power_API_power_operations
+  /api/node/{hostname}/power/shutdown:
+    servers: []
+    post:
+      description: >-
+        Runs shutdown -h -- +N, with N the delay in whole minutes and at least
+        one, so the agent can answer before the host goes down. A message goes
+        to the logged-in users. Each run changes the host.
+      operationId: PostNodePowerShutdown
+      parameters:
+        - $ref: '#/components/parameters/Hostname'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PowerShutdownRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PowerShutdownResponse'
+          description: Each target host's result, with whether it changed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The request is not valid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - API key required
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden - Insufficient permissions
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            The host does not have what the request names, such as the object of
+            a deploy.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            osapi did not deploy the item, so it does not change it, or the host
+            does not have a program that the method needs.
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: An error on the controller.
+      security:
+        - BearerAuth:
+            - power:execute
+      summary: Shut the host down
+      tags:
+        - Power_API_power_operations
   /api/node/{hostname}/service:
     servers: []
     get:
@@ -10006,80 +10038,6 @@ components:
             $ref: '#/components/schemas/NtpMutationResult'
       required:
         - results
-    PowerRequest:
-      type: object
-      properties:
-        delay:
-          type: integer
-          minimum: 0
-          description: |
-            Delay in seconds before the operation is executed.
-          x-oapi-codegen-extra-tags:
-            validate: omitempty,min=0
-        message:
-          type: string
-          description: |
-            Optional message to broadcast before the operation.
-          x-oapi-codegen-extra-tags:
-            validate: omitempty
-    PowerResult:
-      type: object
-      description: Result of a power operation for one host.
-      properties:
-        hostname:
-          type: string
-          description: Hostname of the agent that processed this operation.
-        status:
-          type: string
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          description: The status of the operation for this host.
-        action:
-          type: string
-          description: The power action performed (reboot, shutdown).
-        delay:
-          type: integer
-          description: The delay in seconds before the operation executes.
-        changed:
-          type: boolean
-          description: Whether the operation modified system state.
-        error:
-          type: string
-          description: Error message if the agent failed.
-      required:
-        - hostname
-        - status
-    PowerRebootResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/PowerResult'
-      required:
-        - results
-    PowerShutdownResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/PowerResult'
-      required:
-        - results
     ProcessSignalRequest:
       type: object
       properties:
@@ -12073,6 +12031,101 @@ components:
         - hostname
         - status
       type: object
+    PowerRebootRequest:
+      properties:
+        delay:
+          description: >-
+            Seconds before the host goes down. It rounds to whole minutes, at
+            least one.
+          minimum: 0
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=0
+        message:
+          description: A message to the logged-in users first.
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
+      type: object
+    PowerRebootResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/PowerResult'
+          type: array
+      required:
+        - results
+      type: object
+    PowerResult:
+      properties:
+        action:
+          description: reboot or shutdown
+          type: string
+        changed:
+          description: 'Always true: each run changes the host.'
+          type: boolean
+        delay:
+          description: Seconds before the host goes down.
+          type: integer
+        error:
+          description: Error message if the agent failed.
+          type: string
+        hostname:
+          description: Hostname of the agent that produced this result.
+          type: string
+        status:
+          description: The status of the operation for this host.
+          enum:
+            - ok
+            - failed
+            - skipped
+            - timeout
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: oneof=ok failed skipped timeout
+      required:
+        - hostname
+        - status
+      type: object
+    PowerShutdownRequest:
+      properties:
+        delay:
+          description: >-
+            Seconds before the host goes down. It rounds to whole minutes, at
+            least one.
+          minimum: 0
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: omitempty,min=0
+        message:
+          description: A message to the logged-in users first.
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: omitempty
+      type: object
+    PowerShutdownResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/PowerResult'
+          type: array
+      required:
+        - results
+      type: object
     ServiceCollectionResponse:
       properties:
         job_id:
@@ -13036,9 +13089,6 @@ x-tagGroups:
   - name: NTP Management API
     tags:
       - NTP_Management_API_ntp_operations
-  - name: Power Management API
-    tags:
-      - Power_Management_API_power_operations
   - name: Process Management API
     tags:
       - Process_Management_API_process_operations
@@ -13078,6 +13128,9 @@ x-tagGroups:
   - name: Package API
     tags:
       - Package_API_package_operations
+  - name: Power API
+    tags:
+      - Power_API_power_operations
   - name: Service API
     tags:
       - Service_API_service_operations

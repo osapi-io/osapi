@@ -123,8 +123,6 @@ export const BLOCK_OPERATIONS: Record<string, OperationId> = {
   "ntp-set": "postNodeNtp",
   "ntp-update": "putNodeNtp",
   "ntp-delete": "deleteNodeNtp",
-  "power-reboot": "postNodePowerReboot",
-  "power-shutdown": "postNodePowerShutdown",
   "process-list": "getNodeProcess",
   "process-get": "getNodeProcessByPid",
   "process-signal": "postNodeProcessSignal",

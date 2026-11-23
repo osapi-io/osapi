@@ -495,6 +495,13 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 			wantRules: []string{behavior.RuleVerb},
 		},
 		{
+			name: "when a method disrupts the host with no reason",
+			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
+				behavior.Write("update", set).Key("key").Describe("Update").Disrupts(" "),
+			),
+			wantRules: []string{behavior.RuleVerb},
+		},
+		{
 			name: "when a write records nothing on its span",
 			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
 				behavior.Write("create", set).Describe("Create"),

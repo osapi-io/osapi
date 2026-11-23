@@ -328,6 +328,11 @@ type Method struct {
 	// Always is true for an action declared with .Always: it changes the
 	// host each time it runs, as restart does, so no run is unchanged.
 	AlwaysChanges bool
+	// Disruptive is true for a method declared with .Disrupts: it takes the
+	// host down, as a reboot does, so its examples never run on a live host.
+	Disruptive bool
+	// Disruption is why, as .Disrupts gives it.
+	Disruption string
 	// NonFact is why a read runs a command outside gohai, set with
 	// .NotAFact: what it reads is not a fact of the host.
 	NonFact string
@@ -469,6 +474,19 @@ func covers(
 // on a method that is not an action.
 func (m *Method) Always() *Method {
 	m.AlwaysChanges = true
+
+	return m
+}
+
+// Disrupts marks a method that takes the host down, such as a reboot, and
+// says why. Its examples run on the fake host as each example does, but the
+// integration test never runs them on a live host, because the host would
+// go down under the test. behavior validate refuses it without a reason.
+func (m *Method) Disrupts(
+	why string,
+) *Method {
+	m.Disruptive = true
+	m.Disruption = why
 
 	return m
 }

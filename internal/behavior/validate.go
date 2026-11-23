@@ -493,6 +493,9 @@ func ValidateBehavior(
 			add(m.Name, RuleVerb, "a write is named create, update or delete, not %q; "+
 				"declare a write named for what it does, such as restart, with behavior.Action", m.Name)
 		}
+		if m.Disruptive && strings.TrimSpace(m.Disruption) == "" {
+			add(m.Name, RuleVerb, ".Disrupts has no reason; say why a run takes the host down")
+		}
 		if m.AlwaysChanges && !m.Action {
 			add(m.Name, RuleVerb, ".Always is for an action, such as restart; a create, update or "+
 				"delete compares the host with its input and changes nothing when they agree")

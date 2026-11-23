@@ -310,7 +310,6 @@ func buildRegistry(
 	loadProvider load.Provider,
 ) *ProviderRegistry {
 	ntpProvider := e.ntp()
-	powerProvider := e.power()
 	processProvider := e.process()
 	userProvider := e.user()
 	logProvider := e.logs()
@@ -326,7 +325,6 @@ func buildRegistry(
 		"node",
 		NewNodeProcessor(
 			ntpProvider,
-			powerProvider,
 			processProvider,
 			userProvider,
 			logProvider,
@@ -337,7 +335,6 @@ func buildRegistry(
 		memoryProvider,
 		loadProvider,
 		ntpProvider,
-		powerProvider,
 		processProvider,
 		userProvider,
 		logProvider,

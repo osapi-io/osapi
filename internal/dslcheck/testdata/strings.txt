@@ -43,7 +43,9 @@ behavior.Method.Key(field string)	checked	an input field by json name; validate 
 behavior.Method.KeyField string	checked	set only by Key, which validate checks
 behavior.Method.Long string	free text	prose for a page or a message
 behavior.Method.Name string	identity	a name that the registry, the route or the command path holds
+behavior.Method.Disruption string	free text	prose for a page or a message
 behavior.Method.NonFact string	free text	prose for a page or a message
+behavior.Method.Disrupts(why string)	free text	prose for a page or a message
 behavior.Method.NotAFact(why string)	free text	prose for a page or a message
 behavior.Method.Runs(programs []string)	program	a program name, which preflight and the fake host check
 behavior.Method.RunsPrograms []string	program	a program name, which preflight and the fake host check
