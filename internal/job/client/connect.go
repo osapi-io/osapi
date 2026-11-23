@@ -120,6 +120,7 @@ func Connect(
 		StateBucket:    c.StateBucket,
 		StreamName:     job.ApplyNamespaceToInfraName(namespace, cfg.Stream.Name),
 		TargetResolver: resolve,
+		Consumers:      nc.ExtJS,
 	})
 	if err != nil {
 		bus.Close(nc)

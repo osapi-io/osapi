@@ -26,3 +26,5 @@ package mocks
 //go:generate go tool go.uber.org/mock/mockgen -destination=./job_client.gen.go -package=mocks github.com/osapi-io/osapi/internal/job/client JobClient
 //go:generate go tool go.uber.org/mock/mockgen -destination=./pki_signer.gen.go -package=mocks github.com/osapi-io/osapi/internal/job/client PKISigner
 //go:generate go tool go.uber.org/mock/mockgen -destination=./agent_key_store.gen.go -package=mocks github.com/osapi-io/osapi/internal/job/client AgentKeyStore
+//go:generate go tool go.uber.org/mock/mockgen -destination=./consumer_store.gen.go -package=mocks github.com/osapi-io/osapi/internal/job/client ConsumerStore
+//go:generate go tool go.uber.org/mock/mockgen -destination=./consumer.gen.go -package=mocks github.com/nats-io/nats.go/jetstream Consumer

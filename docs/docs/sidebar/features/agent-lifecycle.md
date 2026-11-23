@@ -19,6 +19,7 @@ is wrong. The operator does not need to read the raw metrics.
 | `MemoryPressure`       | Memory used > 90%                      | Heartbeat memory |
 | `HighLoad`             | Load1 > 2x CPU count                   | Heartbeat load   |
 | `DiskPressure`         | Any disk > 90% used                    | Heartbeat disk   |
+| `DrainStuck`           | A drain waits for its consumers > 1m   | Drain            |
 | `ConsumersUnavailable` | A job consumer cannot be made or bound | Job consumers    |
 
 The agent evaluates each condition at each heartbeat, and keeps:
@@ -26,6 +27,10 @@ The agent evaluates each condition at each heartbeat, and keeps:
 - **Reason**: an explanation for a person, for example "memory 94% used,
   15.1/16.0 GB"
 - **LastTransitionTime**: the last time that the condition started or stopped
+
+`DrainStuck` holds while a drain waits for the consumers of the agent to stop
+for more than one minute. While it holds, the agent stays `Draining` and does
+not change to `Cordoned`. The agent logs a warning and continues to wait.
 
 `ConsumersUnavailable` holds while a JetStream consumer of the agent does not
 run, for example when the stream has its maximum number of consumers. The reason
