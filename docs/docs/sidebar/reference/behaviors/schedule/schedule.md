@@ -216,13 +216,14 @@ None. The method takes no input; its command needs only --target.
 | name    | string  | The entry                |
 | changed | boolean | Whether the host changed |
 
-### Examples (3)
+### Examples (4)
 
-| EXAMPLE                                | INPUT                                                                      | OUTPUT                       |
-| -------------------------------------- | -------------------------------------------------------------------------- | ---------------------------- |
-| A new object                           | name=osapitest, object=osapitest-v2.cron                                   | name=osapitest, changed=true |
-| A new object, cron expression and user | name=osapitest, object=osapitest-v2.cron, schedule=30 2 * * *, user=nobody | name=osapitest, changed=true |
-| A daily script with a new object       | name=osapitest, object=osapitest-v2.sh                                     | name=osapitest, changed=true |
+| EXAMPLE                                     | INPUT                                                                      | OUTPUT                       |
+| ------------------------------------------- | -------------------------------------------------------------------------- | ---------------------------- |
+| A new object                                | name=osapitest, object=osapitest-v2.cron                                   | name=osapitest, changed=true |
+| A new cron expression, with the same object | name=osapitest, schedule=30 2 * * *                                        | name=osapitest, changed=true |
+| A new object, cron expression and user      | name=osapitest, object=osapitest-v2.cron, schedule=30 2 * * *, user=nobody | name=osapitest, changed=true |
+| A daily script with a new object            | name=osapitest, object=osapitest-v2.sh                                     | name=osapitest, changed=true |
 
 ## Method delete
 

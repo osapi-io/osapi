@@ -214,11 +214,13 @@ An entry name can have only letters, digits, hyphens and underscores (pattern:
 
 ## Idempotent updates
 
-The update operation compares the new content with the file that exists. If the
-content and the mode did not change, the response is `changed: false`. Thus you
-can run an update many times, and it writes to the filesystem only when
-necessary. An update keeps the entry in its directory: it cannot change the
-interval. A field that the update does not give keeps the value of the entry.
+The update operation compares the new content with the file that exists, and the
+object, schedule and user with the record of the entry. If none of them changed,
+the response is `changed: false`. A new schedule or user with the same content
+changes only the record, so that list and get give the new values. Thus you can
+run an update many times, and it writes to the filesystem only when necessary.
+An update keeps the entry in its directory: it cannot change the interval. A
+field that the update does not give keeps the value of the entry.
 
 ## Future: crontab and systemd timers
 

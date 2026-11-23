@@ -246,6 +246,14 @@ var Behavior = behavior.Register(behavior.Define(
 			stored, deployed, storedV2,
 			behavior.Wrote(backupPath, backupV2Text),
 		).
+		Example("A new cron expression, with the same object",
+			UpdateInput{Name: "osapitest", Schedule: "30 2 * * *"},
+			Result{Name: "osapitest", Changed: true},
+			stored, deployed,
+			// The file keeps its content; the entry's record takes the new
+			// cron expression, which a list then gives.
+			behavior.Wrote(backupPath, backupText),
+		).
 		Example("A new object, cron expression and user",
 			UpdateInput{
 				Name:     "osapitest",

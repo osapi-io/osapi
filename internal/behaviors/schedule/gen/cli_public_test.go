@@ -114,6 +114,15 @@ func (s *CLIPublicTestSuite) TestCommands() {
 			},
 		},
 		{
+			name: "when the example \"A new cron expression, with the same object\" is run",
+			args: []string{"node", "schedule", "update", "--target", "server1", "--name", "osapitest", "--schedule", "30 2 * * *"},
+			want: commandtest.Request{
+				Method: "PUT",
+				Path:   "/api/node/server1/schedule/osapitest",
+				Body:   "{\"schedule\":\"30 2 * * *\"}",
+			},
+		},
+		{
 			name: "when the example \"A new object, cron expression and user\" is run",
 			args: []string{"node", "schedule", "update", "--target", "server1", "--name", "osapitest", "--object", "osapitest-v2.cron", "--schedule", "30 2 * * *", "--user", "nobody"},
 			want: commandtest.Request{

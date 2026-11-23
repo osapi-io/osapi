@@ -116,6 +116,16 @@ The behaviors that schedule calls, and each call that its examples make.
 | └─ object get         | name=osapitest-v2.cron                                                      | content="30 2 * * * root /usr/local/bin/backup --full\n" content_type…      |
 | └─ managedfile update | content="30 2 * * * root /usr/local/bin/backup --full\n" metadata=&#123;"o… | changed=true path=/etc/cron.d/osapitest                                     |
 
+## A new cron expression, with the same object (update)
+
+| CALL                  | SENDS                                                                       | GETS                                                                        |
+| --------------------- | --------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| schedule update       | name=osapitest schedule="30 2 * * *"                                        | changed=true name=osapitest                                                 |
+| └─ managedfile get    | path=/etc/cron.d/osapitest                                                  | metadata=&#123;"object":"osapitest.cron","schedule":"0 2 * * *","user":"ro… |
+| └─ managedfile get    | path=/etc/cron.d/osapitest                                                  | metadata=&#123;"object":"osapitest.cron","schedule":"0 2 * * *","user":"ro… |
+| └─ object get         | name=osapitest.cron                                                         | content="0 2 * * * root /usr/local/bin/backup\n" content_type=raw nam…      |
+| └─ managedfile update | content="0 2 * * * root /usr/local/bin/backup\n" metadata=&#123;"object":"… | changed=true path=/etc/cron.d/osapitest                                     |
+
 ## A new object, cron expression and user (update)
 
 | CALL                  | SENDS                                                                       | GETS                                                                        |
