@@ -21,7 +21,11 @@
 // Package audit provides audit logging types and storage.
 package audit
 
-import "time"
+import (
+	"time"
+
+	"github.com/osapi-io/osapi/pkg/sdk/client"
+)
 
 // Entry represents a single audit log record.
 type Entry struct {
@@ -53,8 +57,21 @@ type Entry struct {
 	// JobID is the job the request created, empty for a request that created
 	// none. It is what joins an audit entry to the job's own status timeline.
 	JobID string `json:"job_id,omitempty"`
+	// Steps are the calls of other behaviors that the job's method made, for
+	// each host that answered before the request returned, also when one
+	// failed. Empty when no host made a call.
+	Steps []HostSteps `json:"steps,omitempty"`
 	// RequestSummary is what the request asked for, with sensitive values
 	// replaced. Recorded for methods that change something, because "who ran
 	// command/shell against which host" without the command is not an answer.
 	RequestSummary string `json:"request_summary,omitempty"`
+}
+
+// HostSteps are the calls of other behaviors that the job's method made on one
+// host.
+type HostSteps struct {
+	// Hostname is the host that answered the job.
+	Hostname string `json:"hostname"`
+	// Steps are the calls, in the order that the method made them.
+	Steps []client.Step `json:"steps"`
 }

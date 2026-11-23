@@ -15,6 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { KVList } from "@/components/ui/kv-list";
 import { CodeBlock } from "@/components/ui/code-block";
 import { RunLinks } from "@/components/domain/run-links";
+import { ChainSection } from "@/components/domain/step-tree";
 import {
   Loader2,
   Download,
@@ -45,8 +46,9 @@ interface Filters {
   status: string;
 }
 
-// AuditDetail is one entry in full: who, what, the result, and the links to
-// its job and its trace.
+// AuditDetail is one entry in full: who, what, the result, the chain of
+// calls that its job made on each host, and the links to its job and its
+// trace.
 function AuditDetail({ entry }: { entry: AuditEntry }) {
   return (
     <div className="space-y-3 px-2 py-2">
@@ -73,6 +75,7 @@ function AuditDetail({ entry }: { entry: AuditEntry }) {
           <CodeBlock variant="json">{entry.request_summary}</CodeBlock>
         </div>
       )}
+      <ChainSection hosts={entry.steps ?? []} lines={entry.chain} />
       <RunLinks jobId={entry.job_id} traceId={entry.trace_id} />
     </div>
   );

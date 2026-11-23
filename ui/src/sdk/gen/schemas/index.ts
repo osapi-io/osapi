@@ -15,6 +15,7 @@ export * from './agentInfoState';
 export * from './agentStats';
 export * from './auditEntry';
 export * from './auditEntryResponse';
+export * from './auditEntryStepsItem';
 export * from './averages';
 export * from './certificateCollectionResponse';
 export * from './certificateCreateRequest';

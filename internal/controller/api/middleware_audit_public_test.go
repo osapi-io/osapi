@@ -38,6 +38,7 @@ import (
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/audit/mocks"
 	"github.com/osapi-io/osapi/internal/controller/api"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 	"go.uber.org/mock/gomock"
 )
 
@@ -53,6 +54,7 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 		body         string
 		contentType  string
 		jobID        string
+		steps        map[string][]client.Step
 		subject      string
 		roles        []string
 		targets      []string
@@ -157,10 +159,39 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 				s.Contains(entry.RequestSummary, "systemctl restart nginx")
 				s.NotContains(entry.RequestSummary, "hunter2")
 				s.Equal("7c9e6679-7425-40de-944b-e07fc1f90ae7", entry.JobID)
+				s.Empty(entry.Steps)
 			},
 			validateBody: func(seen string) {
 				// The handler still gets the body the middleware read.
 				s.Contains(seen, "systemctl restart nginx")
+			},
+		},
+		{
+			name:        "a request whose job made calls records the steps of each host",
+			path:        "/api/node/_all/sysctl/net.ipv4.ip_forward",
+			method:      http.MethodPost,
+			body:        `{"value":"1"}`,
+			contentType: "application/json",
+			jobID:       "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+			steps: map[string][]client.Step{
+				"web-01": {{Behavior: "managedfile", Method: "update"}},
+				"web-02": {{Behavior: "managedfile", Method: "update", Error: "denied"}},
+			},
+			subject:   "user@example.com",
+			wantWrite: true,
+			validateFunc: func(entry audit.Entry) {
+				s.Equal([]audit.HostSteps{
+					{
+						Hostname: "web-01",
+						Steps:    []client.Step{{Behavior: "managedfile", Method: "update"}},
+					},
+					{
+						Hostname: "web-02",
+						Steps: []client.Step{
+							{Behavior: "managedfile", Method: "update", Error: "denied"},
+						},
+					},
+				}, entry.Steps)
 			},
 		},
 		{
@@ -291,6 +322,9 @@ func (s *AuditMiddlewarePublicTestSuite) TestAuditMiddleware() {
 				// job client does inside a real one.
 				if tt.jobID != "" {
 					audit.RecordJobID(c.Request().Context(), tt.jobID)
+				}
+				for hostname, steps := range tt.steps {
+					audit.RecordSteps(c.Request().Context(), tt.jobID, hostname, steps)
 				}
 
 				return c.String(http.StatusOK, "ok")

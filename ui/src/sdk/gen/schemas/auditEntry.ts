@@ -4,8 +4,11 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
+import type { AuditEntryStepsItem } from './auditEntryStepsItem';
 
 export interface AuditEntry {
+  /** The steps on one line for each host, such as web-01: managedfile update (changed). */
+  chain?: string[];
   /** Request duration in milliseconds. */
   duration_ms: number;
   /** Unique identifier for the audit entry. */
@@ -26,6 +29,8 @@ export interface AuditEntry {
   roles: string[];
   /** Client IP address. */
   source_ip: string;
+  /** The calls of other behaviors that the method of the job made, for each host that answered before the request returned, also when one failed. Absent when no host made a call. */
+  steps?: AuditEntryStepsItem[];
   /** The target scope of the JWT token, absent when the token acts on each host. */
   targets?: string[];
   /** When the request was processed. */

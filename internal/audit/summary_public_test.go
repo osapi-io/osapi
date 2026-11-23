@@ -32,6 +32,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // vaultIn is a behavior's input with a field it tags secret, under a name the
@@ -239,6 +240,70 @@ func (s *SummaryPublicTestSuite) TestJobIDSink() {
 
 		s.NotEmpty(audit.JobIDFrom(ctx))
 	})
+}
+
+// TestStepsSink covers the channel by which an entry learns the chain of the
+// job of its request.
+func (s *SummaryPublicTestSuite) TestStepsSink() {
+	update := []client.Step{{Behavior: "managedfile", Method: "update"}}
+	failed := []client.Step{{Behavior: "managedfile", Method: "update", Error: "denied"}}
+
+	tests := []struct {
+		name   string
+		ctx    func() context.Context
+		record func(context.Context)
+		want   []audit.HostSteps
+	}{
+		{
+			name:   "a context with no sink records nothing and does not panic",
+			ctx:    context.Background,
+			record: func(ctx context.Context) { audit.RecordSteps(ctx, "job-1", "web-01", update) },
+		},
+		{
+			name: "the steps of each host, sorted by hostname, also when one failed",
+			ctx:  func() context.Context { return audit.WithJobIDSink(context.Background()) },
+			record: func(ctx context.Context) {
+				audit.RecordJobID(ctx, "job-1")
+				audit.RecordSteps(ctx, "job-1", "web-02", failed)
+				audit.RecordSteps(ctx, "job-1", "web-01", update)
+			},
+			want: []audit.HostSteps{
+				{Hostname: "web-01", Steps: update},
+				{Hostname: "web-02", Steps: failed},
+			},
+		},
+		{
+			name: "a host that made no call is left out",
+			ctx:  func() context.Context { return audit.WithJobIDSink(context.Background()) },
+			record: func(ctx context.Context) {
+				audit.RecordJobID(ctx, "job-1")
+				audit.RecordSteps(ctx, "job-1", "web-01", nil)
+			},
+		},
+		{
+			name: "the steps of a job that is not the job of the request",
+			ctx:  func() context.Context { return audit.WithJobIDSink(context.Background()) },
+			record: func(ctx context.Context) {
+				audit.RecordJobID(ctx, "job-1")
+				audit.RecordSteps(ctx, "job-2", "web-01", update)
+			},
+		},
+		{
+			name: "the steps before a job is recorded",
+			ctx:  func() context.Context { return audit.WithJobIDSink(context.Background()) },
+			record: func(ctx context.Context) {
+				audit.RecordSteps(ctx, "job-1", "web-01", update)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctx := tt.ctx()
+			tt.record(ctx)
+			s.Equal(tt.want, audit.StepsFrom(ctx))
+		})
+	}
 }
 
 // In order for `go test` to run this suite, we need to create

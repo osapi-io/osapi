@@ -40,6 +40,19 @@ type AuditEntry struct {
 	SourceIP     string    `json:"source_ip"`
 	OperationID  string    `json:"operation_id,omitempty"`
 	TraceID      string    `json:"trace_id,omitempty"`
+	// Steps are the calls of other behaviors that the method of the job
+	// made, for each host that answered before the request returned.
+	Steps []HostSteps `json:"steps,omitempty"`
+	// Chain is the steps on one line for each host, such as web-01:
+	// managedfile update (changed).
+	Chain []string `json:"chain,omitempty"`
+}
+
+// HostSteps are the calls of other behaviors that the method of a job made
+// on one host.
+type HostSteps struct {
+	Hostname string `json:"hostname"`
+	Steps    []Step `json:"steps"`
 }
 
 // AuditList is a paginated list of audit entries.
@@ -74,6 +87,19 @@ func auditEntryFromGen(
 
 	if g.TraceId != nil {
 		a.TraceID = *g.TraceId
+	}
+
+	if g.Steps != nil {
+		for _, h := range *g.Steps {
+			a.Steps = append(a.Steps, HostSteps{
+				Hostname: h.Hostname,
+				Steps:    stepsFromGen(h.Steps),
+			})
+		}
+	}
+
+	if g.Chain != nil {
+		a.Chain = *g.Chain
 	}
 
 	return a

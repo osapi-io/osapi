@@ -38,6 +38,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoints/audit"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/audit/gen"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/audit/mocks"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 const (
@@ -56,6 +57,10 @@ var (
 		OperationID: "PostNodeCommandExec", SourceIP: "192.168.1.100",
 		ResponseCode: 202, DurationMs: 42, TraceID: "4bf92f3577b34da6a3ce929d0e0e4736",
 		JobID: "7c9e6679-7425-40de-944b-e07fc1f90ae7", RequestSummary: `{"command":"uptime"}`,
+		Steps: []auditstore.HostSteps{{
+			Hostname: "web-01",
+			Steps:    []client.Step{{Behavior: "managedfile", Method: "update", Error: "denied"}},
+		}},
 	}
 	bare = auditstore.Entry{
 		ID: entryID, Timestamp: when, User: "ops@example.com", Roles: []string{"read"},
@@ -135,7 +140,16 @@ func (s *MethodsPublicTestSuite) TestList() {
 					TraceID:        "4bf92f3577b34da6a3ce929d0e0e4736",
 					JobID:          "7c9e6679-7425-40de-944b-e07fc1f90ae7",
 					RequestSummary: `{"command":"uptime"}`,
+					Steps: []audit.HostSteps{{
+						Hostname: "web-01",
+						Steps: []client.Step{
+							{Behavior: "managedfile", Method: "update", Error: "denied"},
+						},
+					}},
+					Chain: []string{"web-01: managedfile update (failed)"},
 				}, got.Items[0])
+				s.Empty(got.Items[1].Steps)
+				s.Empty(got.Items[1].Chain)
 				s.Empty(got.Items[1].OperationID)
 				s.Empty(got.Items[1].TraceID)
 				s.Empty(got.Items[1].JobID)
@@ -361,6 +375,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 				s.Require().NoError(err)
 				s.Equal(entryID, got.Entry.ID)
 				s.Equal("7c9e6679-7425-40de-944b-e07fc1f90ae7", got.Entry.JobID)
+				s.Equal([]string{"web-01: managedfile update (failed)"}, got.Entry.Chain)
 			},
 		},
 		{

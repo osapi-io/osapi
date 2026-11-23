@@ -1825,6 +1825,9 @@ type AgentStats struct {
 
 // AuditEntry defines model for AuditEntry.
 type AuditEntry struct {
+	// Chain The steps on one line for each host, such as web-01: managedfile update (changed).
+	Chain *[]string `json:"chain,omitempty"`
+
 	// DurationMs Request duration in milliseconds.
 	DurationMs int64 `json:"duration_ms"`
 
@@ -1854,6 +1857,15 @@ type AuditEntry struct {
 
 	// SourceIp Client IP address.
 	SourceIp string `json:"source_ip"`
+
+	// Steps The calls of other behaviors that the method of the job made, for each host that answered before the request returned, also when one failed. Absent when no host made a call.
+	Steps *[]struct {
+		// Hostname The host that answered the job.
+		Hostname string `json:"hostname"`
+
+		// Steps The calls, in the order that the method made them.
+		Steps []Step `json:"steps"`
+	} `json:"steps,omitempty"`
 
 	// Targets The target scope of the JWT token, absent when the token acts on each host.
 	Targets *[]string `json:"targets,omitempty"`

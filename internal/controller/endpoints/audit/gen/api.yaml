@@ -3,6 +3,11 @@ components:
   schemas:
     AuditEntry:
       properties:
+        chain:
+          description: 'The steps on one line for each host, such as web-01: managedfile update (changed).'
+          items:
+            type: string
+          type: array
         duration_ms:
           description: Request duration in milliseconds.
           example: 42
@@ -48,6 +53,23 @@ components:
           description: Client IP address.
           example: 192.168.1.100
           type: string
+        steps:
+          description: The calls of other behaviors that the method of the job made, for each host that answered before the request returned, also when one failed. Absent when no host made a call.
+          items:
+            properties:
+              hostname:
+                description: The host that answered the job.
+                type: string
+              steps:
+                description: The calls, in the order that the method made them.
+                items:
+                  $ref: '#/components/schemas/Step'
+                type: array
+            required:
+              - hostname
+              - steps
+            type: object
+          type: array
         targets:
           description: The target scope of the JWT token, absent when the token acts on each host.
           items:
@@ -123,6 +145,28 @@ components:
       required:
         - total_items
         - items
+      type: object
+    Step:
+      properties:
+        behavior:
+          type: string
+        changed:
+          type: boolean
+        duration_ms:
+          format: int64
+          type: integer
+        error:
+          type: string
+        method:
+          type: string
+        steps:
+          items:
+            $ref: '#/components/schemas/Step'
+          type: array
+      required:
+        - behavior
+        - method
+        - duration_ms
       type: object
   securitySchemes:
     BearerAuth:

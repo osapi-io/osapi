@@ -18,10 +18,14 @@ export function stepRows(steps: readonly Step[], depth = 0): StepRow[] {
   ]);
 }
 
+/** The steps of one host. */
+export interface HostSteps {
+  hostname: string;
+  steps: Step[];
+}
+
 /** The responses of a job that have steps, each with its host. */
-export function hostSteps(
-  job: JobDetailResponse,
-): { hostname: string; steps: Step[] }[] {
+export function hostSteps(job: JobDetailResponse): HostSteps[] {
   return (job.responses ?? [])
     .filter((r) => (r.steps ?? []).length > 0)
     .map((r) => ({ hostname: r.hostname, steps: r.steps ?? [] }));
