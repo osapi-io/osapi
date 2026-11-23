@@ -12,22 +12,22 @@ client file upload. `osapi behavior get --name object` and
 
 ## Behavior
 
-|             |                                                                                                                     |
-| ----------- | ------------------------------------------------------------------------------------------------------------------- |
-| Name        | object                                                                                                              |
-| Description | The objects of the object store of the fleet, such as a file uploaded with osapi client file upload                 |
-| Placement   | node                                                                                                                |
-| Internal    | yes                                                                                                                 |
-| API         | no                                                                                                                  |
-| CLI         | no                                                                                                                  |
-| Next        | no                                                                                                                  |
-| Platforms   | debian, linux, darwin                                                                                               |
-| Sudo        | none                                                                                                                |
-| Runs        | none                                                                                                                |
-| Writes      | none                                                                                                                |
-| Keeps state | no                                                                                                                  |
-| Uses        | none                                                                                                                |
-| Used by     | [certificate](../certificate/certificate.md), [schedule](../schedule/schedule.md), [service](../service/service.md) |
+|             |                                                                                                                                              |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name        | object                                                                                                                                       |
+| Description | The objects of the object store of the fleet, such as a file uploaded with osapi client file upload                                          |
+| Placement   | node                                                                                                                                         |
+| Internal    | yes                                                                                                                                          |
+| API         | no                                                                                                                                           |
+| CLI         | no                                                                                                                                           |
+| Next        | no                                                                                                                                           |
+| Platforms   | debian, linux, darwin                                                                                                                        |
+| Sudo        | none                                                                                                                                         |
+| Runs        | none                                                                                                                                         |
+| Writes      | none                                                                                                                                         |
+| Keeps state | no                                                                                                                                           |
+| Uses        | none                                                                                                                                         |
+| Used by     | [certificate](../certificate/certificate.md), [file](../file/file.md), [schedule](../schedule/schedule.md), [service](../service/service.md) |
 
 ### Methods (1)
 

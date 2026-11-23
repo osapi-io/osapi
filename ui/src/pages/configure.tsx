@@ -232,17 +232,6 @@ export function Configure() {
     }
   }, []);
 
-  const getUpstreamObjects = (blockIndex: number) => {
-    const names: string[] = [];
-    for (let i = 0; i < blockIndex; i++) {
-      const b = blocks[i];
-      if (b.type === "object-upload" && b.data.name) {
-        names.push(b.data.name as string);
-      }
-    }
-    return names;
-  };
-
   const handleApply = useCallback(async () => {
     setApplying(true);
 
@@ -477,9 +466,7 @@ export function Configure() {
     itemRefs: blockRefs,
   });
 
-  const renderBlockForm = (block: (typeof blocks)[0], index: number) => {
-    const upstream = getUpstreamObjects(index);
-
+  const renderBlockForm = (block: (typeof blocks)[0]) => {
     const behaviorDef = BEHAVIOR_BLOCKS[block.type as BehaviorBlockType];
     if (behaviorDef) {
       return (
@@ -693,7 +680,7 @@ export function Configure() {
         onRemove={() => removeBlock(block.id)}
         onFocusCard={() => setFocusedId(block.id)}
       >
-        {renderBlockForm(block, i)}
+        {renderBlockForm(block)}
       </BlockCard>,
     );
     // The job and the trace of the call, also for a call that failed.
