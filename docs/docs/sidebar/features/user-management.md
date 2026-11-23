@@ -38,8 +38,8 @@ and the agent have only the hash, never the password.
 
 ### SSH keys
 
-The [SSH key behavior](../reference/behaviors/security/user/sshkey/sshkey.md) manages
-the `~/.ssh/authorized_keys` file of a user. Its commands are under
+The [SSH key behavior](../reference/behaviors/security/user/sshkey/sshkey.md)
+manages the `~/.ssh/authorized_keys` file of a user. Its commands are under
 `osapi client node user sshkey`. It reads the keys through gohai on each
 platform, and it changes them on the Debian family only.
 
@@ -147,8 +147,8 @@ $ osapi client node user create --target group:web \
 
 The [user](../reference/behaviors/security/user/user.md),
 [group](../reference/behaviors/security/group/group.md), and
-[sshkey](../reference/behaviors/security/user/sshkey/sshkey.md) reference pages give
-the permission of each method.
+[sshkey](../reference/behaviors/security/user/sshkey/sshkey.md) reference pages
+give the permission of each method.
 
 ## Supported platforms
 
