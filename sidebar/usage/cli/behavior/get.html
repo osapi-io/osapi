@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Get | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/usage/cli/behavior/get"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Get | OSAPI"><meta data-rh="true" name="description" content="Show a behavior: its surfaces, chain, methods, types and telemetry."><meta data-rh="true" property="og:description" content="Show a behavior: its surfaces, chain, methods, types and telemetry."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/behavior/get"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/behavior/get" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/behavior/get" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Usage","item":"https://osapi-io.github.io/osapi/sidebar/usage/"},{"@type":"ListItem","position":2,"name":"CLI","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/"},{"@type":"ListItem","position":3,"name":"Behavior","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/behavior/"},{"@type":"ListItem","position":4,"name":"Get","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/behavior/get"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.ee2257e7.css">
-<script src="/osapi/assets/js/runtime~main.38049aec.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.c68b45af.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.ed3fa410.js" defer="defer"></script>
 </head>
 <body>
@@ -16,13 +16,14 @@
 <p>It shows where osapi serves the behavior, its platforms, the programs that it
 runs with sudo, the behaviors that it uses and that use it, its methods with
 their routes and permissions, its types, its settings and its telemetry.</p>
-<p><strong>Uses</strong> lists the behaviors this one is built on. The agent builds their
+<p>**Uses** lists the behaviors this one is built on. The agent builds their
 providers first, and the methods of this behavior call theirs on the same host,
 in the same job. If a behavior that it uses cannot run on a platform, this one
-reports <code>skipped</code> there too. <strong>Used by</strong> lists the behaviors built on this one.
-A behavior with <code>Internal: yes</code> has no route, no command and no permission. Only
-the behaviors under <strong>Used by</strong> call it. <code>osapi behavior method get</code> shows one
-method in full: its fields with their constraints, its output and its examples.</p>
+reports <code>skipped</code> there too. **Used by** lists the behaviors built on this
+one. A behavior with <code>Internal: yes</code> has no route, no command and no permission.
+Only the behaviors under **Used by** call it. <code>osapi behavior method get</code>
+shows one method in full: its fields with their constraints, its output and its
+examples.</p>
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi behavior get </span><span class="token punctuation" style="color:#8a8a8a">[</span><span class="token plain">flags</span><span class="token punctuation" style="color:#8a8a8a">]</span><br></div></code></pre></div></div>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="examples">Examples<a href="#examples" class="hash-link" aria-label="Direct link to Examples" title="Direct link to Examples" translate="no">​</a></h2>
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi behavior get </span><span class="token parameter variable" style="color:#6b5cff">--name</span><span class="token plain"> </span><span class="token function" style="color:#00d5ff">sysctl</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi behavior get </span><span class="token parameter variable" style="color:#6b5cff">--name</span><span class="token plain"> </span><span class="token function" style="color:#00d5ff">sysctl</span><span class="token plain"> </span><span class="token parameter variable" style="color:#6b5cff">--json</span><br></div></code></pre></div></div>
