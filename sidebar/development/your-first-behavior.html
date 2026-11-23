@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Your first behavior | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/development/your-first-behavior"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Your first behavior | OSAPI"><meta data-rh="true" name="description" content="In this tutorial, you build a behavior that reads and sets the message of the"><meta data-rh="true" property="og:description" content="In this tutorial, you build a behavior that reads and sets the message of the"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/development/your-first-behavior"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/your-first-behavior" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/development/your-first-behavior" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Development","item":"https://osapi-io.github.io/osapi/sidebar/development/"},{"@type":"ListItem","position":2,"name":"Your first behavior","item":"https://osapi-io.github.io/osapi/sidebar/development/your-first-behavior"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.ee2257e7.css">
-<script src="/osapi/assets/js/runtime~main.e473d109.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.105392ca.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.ed3fa410.js" defer="defer"></script>
 </head>
 <body>
@@ -175,45 +175,6 @@ and what it changes on the host</li>
 <li class="">provider, API, CLI and integration tests, from the examples.</li>
 </ul>
 <p>Next: <a class="" href="/osapi/sidebar/development/behaviors">Building a behavior</a> has every option and tag, and
-<a class="" href="/osapi/sidebar/reference/behaviors">Behaviors</a> shows the ones osapi ships.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="changing-a-hand-written-domain">Changing a hand-written domain<a href="#changing-a-hand-written-domain" class="hash-link" aria-label="Direct link to Changing a hand-written domain" title="Direct link to Changing a hand-written domain" translate="no">​</a></h2>
-<p>The domains that are not behaviors yet still need maintenance. Their rules are
-in the specifications repository, stated one time. The <code>add-a-domain</code> skill
-there gives the build order and links to the rules:</p>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<table><thead><tr><th>Subject</th><th>Document</th></tr></thead><tbody><tr><td>What a domain consists of, and how to tell one is half-finished</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/domains.md" target="_blank" rel="noopener noreferrer" class="">Building a domain</a></td></tr><tr><td>What a provider returns, and the three idempotency outcomes</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/providers.md" target="_blank" rel="noopener noreferrer" class="">Providers</a></td></tr><tr><td>Broadcast targeting, and the shape every result returns</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/job-system.md" target="_blank" rel="noopener noreferrer" class="">The job system</a></td></tr><tr><td>What a new SDK service owes</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/sdk.md" target="_blank" rel="noopener noreferrer" class="">The Go SDK</a></td></tr><tr><td>Where a new permission goes</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/permissions.md" target="_blank" rel="noopener noreferrer" class="">Permissions</a></td></tr><tr><td>Running a command safely</td><td><a href="https://github.com/osapi-io/specs/blob/main/components/osapi/exec.md" target="_blank" rel="noopener noreferrer" class="">Running commands</a></td></tr></tbody></table>
-<p>A new area of a host is a behavior, not a new hand-written domain.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/development/building-with-an-agent"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Building a behavior with an agent</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/development/behaviors"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Building a behavior</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#what-we-will-build" class="table-of-contents__link toc-highlight">What we will build</a></li><li><a href="#before-we-start" class="table-of-contents__link toc-highlight">Before we start</a></li><li><a href="#check-what-exists" class="table-of-contents__link toc-highlight">Check what exists</a></li><li><a href="#create-it" class="table-of-contents__link toc-highlight">Create it</a></li><li><a href="#point-the-setting-at-etcmotd" class="table-of-contents__link toc-highlight">Point the setting at /etc/motd</a></li><li><a href="#the-types" class="table-of-contents__link toc-highlight">The types</a></li><li><a href="#the-provider" class="table-of-contents__link toc-highlight">The provider</a></li><li><a href="#the-examples" class="table-of-contents__link toc-highlight">The examples</a></li><li><a href="#generate-and-confirm" class="table-of-contents__link toc-highlight">Generate and confirm</a></li><li><a href="#the-tests-we-did-not-write" class="table-of-contents__link toc-highlight">The tests we did not write</a></li><li><a href="#run-it" class="table-of-contents__link toc-highlight">Run it</a></li><li><a href="#what-we-built" class="table-of-contents__link toc-highlight">What we built</a></li><li><a href="#changing-a-hand-written-domain" class="table-of-contents__link toc-highlight">Changing a hand-written domain</a></li></ul></div></div></div></div></main></div></div></div></div>
+<a class="" href="/osapi/sidebar/reference/behaviors">Behaviors</a> shows the ones osapi ships.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/development/building-with-an-agent"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Building a behavior with an agent</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/development/behaviors"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Building a behavior</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#what-we-will-build" class="table-of-contents__link toc-highlight">What we will build</a></li><li><a href="#before-we-start" class="table-of-contents__link toc-highlight">Before we start</a></li><li><a href="#check-what-exists" class="table-of-contents__link toc-highlight">Check what exists</a></li><li><a href="#create-it" class="table-of-contents__link toc-highlight">Create it</a></li><li><a href="#point-the-setting-at-etcmotd" class="table-of-contents__link toc-highlight">Point the setting at /etc/motd</a></li><li><a href="#the-types" class="table-of-contents__link toc-highlight">The types</a></li><li><a href="#the-provider" class="table-of-contents__link toc-highlight">The provider</a></li><li><a href="#the-examples" class="table-of-contents__link toc-highlight">The examples</a></li><li><a href="#generate-and-confirm" class="table-of-contents__link toc-highlight">Generate and confirm</a></li><li><a href="#the-tests-we-did-not-write" class="table-of-contents__link toc-highlight">The tests we did not write</a></li><li><a href="#run-it" class="table-of-contents__link toc-highlight">Run it</a></li><li><a href="#what-we-built" class="table-of-contents__link toc-highlight">What we built</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
