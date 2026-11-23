@@ -215,6 +215,14 @@ not an action.
 Use: On an action that has no state to compare, so a second run is not
 unchanged.
 
+### `.Disrupts("why")`
+
+Marks a method that takes the host down, such as a reboot or a shutdown, and
+says why. Its examples run on the fake host, but the integration test never runs
+them on a live host. behavior validate refuses it with no reason.
+
+Use: On a method whose run would take down the host that the test runs on.
+
 ### `.Describe("text")`
 
 The one-line description of the method, in the help, the spec and the docs.

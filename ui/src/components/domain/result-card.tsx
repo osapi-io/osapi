@@ -1335,14 +1335,9 @@ export function ResultCard({ type, result, onAction }: ResultCardProps) {
     return <ProcessListResult data={data} />;
   }
 
-  // System operations (power, process)
+  // System operations (process)
   if (
-    [
-      "power-reboot",
-      "power-shutdown",
-      "process-get",
-      "process-signal",
-    ].includes(type) &&
+    ["process-get", "process-signal"].includes(type) &&
     Array.isArray(data.results)
   ) {
     const label = type.replace("-", " ");

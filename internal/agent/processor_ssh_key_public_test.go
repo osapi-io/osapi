@@ -56,7 +56,6 @@ func (s *ProcessorSSHKeyPublicTestSuite) newProcessor(
 	return agent.NewNodeProcessor(
 		nil,
 		nil,
-		nil,
 		userProvider,
 		slog.Default(),
 	)

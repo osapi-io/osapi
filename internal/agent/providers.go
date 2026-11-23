@@ -39,7 +39,6 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/node/load"
 	"github.com/osapi-io/osapi/internal/provider/node/memory"
 	ntpProv "github.com/osapi-io/osapi/internal/provider/node/ntp"
-	powerProv "github.com/osapi-io/osapi/internal/provider/node/power"
 	processProv "github.com/osapi-io/osapi/internal/provider/node/process"
 	userProv "github.com/osapi-io/osapi/internal/provider/node/user"
 	cronProv "github.com/osapi-io/osapi/internal/provider/schedule/cron"
@@ -141,21 +140,6 @@ func (e hostEnv) ntp() ntpProv.Provider {
 		return ntpProv.NewDarwinProvider()
 	default:
 		return ntpProv.NewLinuxProvider()
-	}
-}
-
-func (e hostEnv) power() powerProv.Provider {
-	switch e.platform {
-	case "debian":
-		if e.container {
-			e.log.Info("running in container, power operations disabled")
-			return powerProv.NewLinuxProvider()
-		}
-		return powerProv.NewDebianProvider(e.log, e.exec)
-	case "darwin":
-		return powerProv.NewDarwinProvider()
-	default:
-		return powerProv.NewLinuxProvider()
 	}
 }
 
