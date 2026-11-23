@@ -207,11 +207,11 @@ the operations that run that program fail.
 The agent also checks each capability above. A missing capability is a warning
 too.
 
-The agent checks the programs above, and each program that a behavior declares
-with `behavior.Sudo`. The page of a behavior under
-[Behaviors](../reference/behaviors/behaviors.mdx) names the programs that it
-runs with sudo. `osapi behavior get --name <name>` also lists them. Thus you
-find the sudoers entry of a new behavior there.
+The agent checks each program that a behavior declares with `behavior.Sudo` on
+the platform of the host. It does not check a program that no behavior declares.
+The page of a behavior under [Behaviors](../reference/behaviors/behaviors.mdx)
+names the programs that it runs with sudo. `osapi behavior get --name <name>`
+also lists them. Thus you find the sudoers entry of a new behavior there.
 
 Example log, with no rule for `useradd`:
 
