@@ -406,7 +406,7 @@ func token(
 		// write, operator for an action (its execute permission).
 		roles = []string{"automation", "operator"}
 	case Lacking:
-		roles, perms = []string{"admin"}, []string{"status:read"}
+		roles, perms = []string{"admin"}, []string{"health:read"}
 	case Admin:
 		roles = []string{"admin"}
 	}
