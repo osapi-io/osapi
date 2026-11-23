@@ -127,15 +127,16 @@ func (a *Agent) writeRegistration(
 	a.writeSeen(ctx, machineID)
 
 	reg := job.AgentRegistration{
-		MachineID:     machineID,
-		Hostname:      hostname,
-		Labels:        a.appConfig.Agent.Labels,
-		RegisteredAt:  time.Now(),
-		StartedAt:     a.startedAt,
-		State:         a.State(),
-		SubComponents: a.subComponents,
-		Fingerprint:   a.pkiFingerprint(),
-		AgentVersion:  a.version,
+		MachineID:       machineID,
+		Hostname:        hostname,
+		Labels:          a.appConfig.Agent.Labels,
+		RegisteredAt:    time.Now(),
+		StartedAt:       a.startedAt,
+		State:           a.State(),
+		SubComponents:   a.subComponents,
+		Fingerprint:     a.pkiFingerprint(),
+		AgentVersion:    a.version,
+		MissingPrograms: a.missingPrograms,
 	}
 
 	if info, err := a.hostProvider.GetOSInfo(); err == nil {

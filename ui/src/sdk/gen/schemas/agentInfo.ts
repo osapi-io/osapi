@@ -41,6 +41,8 @@ export interface AgentInfo {
   /** The permanent machine identifier. */
   machine_id?: string;
   memory?: MemoryResponse;
+  /** The programs that the agent's behaviors declare and that the host lacks. A behavior fails until its program is installed. */
+  missing_programs?: string[];
   os_info?: OSInfoResponse;
   /** Package manager. */
   package_mgr?: string;

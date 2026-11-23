@@ -310,24 +310,41 @@ func requiredSudo(
 // export_test.go.
 var lookPath = osexec.LookPath
 
-// MissingPrograms is each program a registered behavior declares with
-// behavior.Runs that is not on the agent's PATH, once. A missing one fails
-// only the behavior that runs it, so the agent warns rather than refusing to
-// start.
+// sbinDirs are where a program that runs with sudo usually is. sudo finds it
+// through its secure_path, which has these directories, but the PATH of the
+// agent's user may not have them.
+var sbinDirs = []string{"/usr/local/sbin", "/usr/sbin", "/sbin"}
+
+// MissingPrograms is each program a registered behavior declares, with
+// behavior.Runs or behavior.Sudo, that the agent cannot find, once. A
+// missing one fails only the behavior that runs it, so the agent warns
+// rather than refusing to start, and reports the list in its registration.
 func MissingPrograms(
 	platform string,
 ) []string {
 	var missing []string
+	check := func(p string, dirs []string) {
+		// A behavior that runs the program its caller names needs none.
+		if p == behavior.AnyProgram || slices.Contains(missing, p) {
+			return
+		}
+		if _, err := lookPath(p); err == nil {
+			return
+		}
+		for _, d := range dirs {
+			if _, err := lookPath(filepath.Join(d, p)); err == nil {
+				return
+			}
+		}
+		missing = append(missing, p)
+	}
 	for _, b := range behavior.All() {
-		_, runs := b.Programs(behavior.PlatformName(platform))
+		sudo, runs := b.Programs(behavior.PlatformName(platform))
 		for _, p := range runs {
-			// A behavior that runs the program its caller names needs none.
-			if p == behavior.AnyProgram || slices.Contains(missing, p) {
-				continue
-			}
-			if _, err := lookPath(p); err != nil {
-				missing = append(missing, p)
-			}
+			check(p, nil)
+		}
+		for _, p := range sudo {
+			check(p, sbinDirs)
 		}
 	}
 

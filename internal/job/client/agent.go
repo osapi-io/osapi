@@ -355,19 +355,20 @@ func agentInfoFromRegistration(
 	reg *job.AgentRegistration,
 ) job.AgentInfo {
 	return job.AgentInfo{
-		MachineID:    reg.MachineID,
-		Hostname:     reg.Hostname,
-		Labels:       reg.Labels,
-		RegisteredAt: reg.RegisteredAt,
-		StartedAt:    reg.StartedAt,
-		OSInfo:       reg.OSInfo,
-		Uptime:       reg.Uptime,
-		LoadAverages: reg.LoadAverages,
-		MemoryStats:  reg.MemoryStats,
-		AgentVersion: reg.AgentVersion,
-		Conditions:   reg.Conditions,
-		State:        reg.State,
-		Fingerprint:  reg.Fingerprint,
+		MachineID:       reg.MachineID,
+		Hostname:        reg.Hostname,
+		Labels:          reg.Labels,
+		RegisteredAt:    reg.RegisteredAt,
+		StartedAt:       reg.StartedAt,
+		OSInfo:          reg.OSInfo,
+		Uptime:          reg.Uptime,
+		LoadAverages:    reg.LoadAverages,
+		MemoryStats:     reg.MemoryStats,
+		AgentVersion:    reg.AgentVersion,
+		MissingPrograms: reg.MissingPrograms,
+		Conditions:      reg.Conditions,
+		State:           reg.State,
+		Fingerprint:     reg.Fingerprint,
 	}
 }
 

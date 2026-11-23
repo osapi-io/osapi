@@ -25,7 +25,6 @@ package integration_test
 import (
 	"encoding/json"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -33,7 +32,6 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osapi-io/gohai/pkg/gohai/family"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/command"
 	_ "github.com/osapi-io/osapi/internal/behaviors/all"
@@ -83,22 +81,33 @@ func (s *BehaviorSmokeSuite) results(
 	return body.Results
 }
 
-// TestPrograms: the image has every program a behavior declares for this
-// platform, so a behavior's examples fail here for what it does, not for
-// what is missing.
+// TestPrograms: each host the suite targets has every program a behavior
+// declares for its platform, so a behavior's examples fail for what it does,
+// not for what is missing. The agent finds its missing programs at start and
+// reports them, so this checks the host the behaviors run on: the CI runner,
+// or each lab VM.
 func (s *BehaviorSmokeSuite) TestPrograms() {
-	for _, b := range behavior.All() {
-		sudo, runs := b.Programs(behavior.PlatformName(family.Detect()))
-		for _, p := range append(sudo, runs...) {
-			if p == behavior.AnyProgram {
-				continue
-			}
-			_, err := exec.LookPath(p)
-			s.NoError(err,
-				"%s runs %s, which this host lacks: install its package on the CI "+
-					"runner in .github/workflows/go-int.yml", b.Name, p)
-		}
+	out, stderr, code := runCLI("client", "agent", "list", "--json")
+	s.Require().Zero(code, stderr)
+	var resp struct {
+		Items []struct {
+			Hostname        string   `json:"hostname"`
+			MissingPrograms []string `json:"missing_programs"`
+		} `json:"items"`
 	}
+	s.Require().NoError(parseJSON(out, &resp))
+
+	checked := 0
+	for _, a := range resp.Items {
+		if target != "_any" && a.Hostname != target {
+			continue
+		}
+		checked++
+		s.Empty(a.MissingPrograms,
+			"%s lacks programs that its behaviors run: install their packages on the "+
+				"CI runner in .github/workflows/go-int.yml, or in the lab's image", a.Hostname)
+	}
+	s.NotZero(checked, "no agent matches the target %s", target)
 }
 
 func (s *BehaviorSmokeSuite) TestReads() {

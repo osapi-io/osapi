@@ -154,6 +154,10 @@ type Agent struct {
 	// Guarded by lifecycleMu.
 	drainStuck bool
 
+	// missingPrograms are the behaviors' programs that this host lacks,
+	// found at start. The heartbeat reports them.
+	missingPrograms []string
+
 	// subComponents reports the status of internal services in heartbeat.
 	subComponents map[string]job.SubComponentInfo
 
