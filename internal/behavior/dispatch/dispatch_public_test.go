@@ -262,6 +262,17 @@ func (s *DispatchPublicTestSuite) TestRun() {
 			wantErr: func(err error) { s.ErrorIs(err, behavior.ErrNotInstalled) },
 		},
 		{
+			name:   "when the host refuses the input, it is ErrInvalid",
+			method: "get",
+			target: "server1",
+			setup: func() {
+				s.jobs.EXPECT().
+					Query(gomock.Any(), "server1", job.CategoryBehavior, op+"get", kvIn{}).
+					Return("", nil, fmt.Errorf("on server1: %w", job.ErrInvalid))
+			},
+			wantErr: func(err error) { s.ErrorIs(err, dispatch.ErrInvalid) },
+		},
+		{
 			name:   "when the job runs and fails, the host's row says why",
 			method: "set",
 			target: "server1",

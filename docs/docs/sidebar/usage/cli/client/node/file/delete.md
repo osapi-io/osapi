@@ -3,7 +3,7 @@
 Remove a file that osapi deployed.
 
 Removes the file and keeps its record, marked undeployed, so status reports
-missing. A path that osapi did not deploy, or deleted already, does not change
+unmanaged. A path that osapi did not deploy, or deleted already, does not change
 and reports changed: false. The object stays in the object store.
 
 ```bash

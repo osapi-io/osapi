@@ -2617,7 +2617,7 @@ type FileStatus struct {
 	// Sha256 SHA-256 of the file on the host, when it is there
 	Sha256 *string `json:"sha256,omitempty"`
 
-	// State in-sync, drifted or missing
+	// State in-sync, drifted, missing or unmanaged
 	State *string `json:"state,omitempty"`
 
 	// Status The status of the operation for this host.

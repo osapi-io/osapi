@@ -31,16 +31,17 @@ can set the file permissions (mode, owner, group) and can render a Go template.
 Deploy, undeploy and status are the update, delete and status methods of the
 [file behavior](../reference/behaviors/file/file.md):
 `osapi client node file update`, `osapi client node file delete` and
-`osapi client node file status`. They run on each Linux host. A macOS host
-reports `skipped`.
+`osapi client node file status`. They run on each Linux host and on macOS.
 
 **Undeploy** makes an asynchronous job that removes a deployed file from the
 filesystem of the agent. The file-state KV record stays. Thus you can audit the
 undeploy, and a later deploy can find the change.
 
 **Status** makes an asynchronous job. The job compares the file on disk with its
-expected SHA-256 from the file-state KV bucket. It reports one of three states:
-`in-sync`, `drifted` or `missing`.
+expected SHA-256 from the file-state KV bucket. It reports one of four states:
+`in-sync`, `drifted`, `missing` or `unmanaged`. `missing` is a file that osapi
+deployed and that is not on the disk. `unmanaged` is a path that osapi did not
+deploy, or undeployed. Status refuses a path that is a directory with a 400.
 
 ## How it works
 

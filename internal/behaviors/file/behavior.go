@@ -61,22 +61,33 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Requires(object.Behavior),
 	behavior.Requires(managedfile.Behavior),
 	behavior.Platform(behavior.PlatformLinux, newLinux),
+	// macOS deploys the same way: managedfile reads the owner there with
+	// BSD stat.
+	behavior.Platform(behavior.PlatformDarwin, newLinux),
 	// It writes the path its caller names.
 	behavior.Writes("*"),
 	behavior.Read("status", GetStatus).
 		Describe("Show whether a deployed file holds what osapi wrote").
 		Explain("Compares the file on the host with the record that osapi keeps of what it "+
 			"deployed: in-sync when they agree, drifted when something changed the file, "+
-			"and missing when osapi did not deploy the path, undeployed it, or the file is gone.").
+			"missing when osapi deployed the file and it is gone, and unmanaged when osapi "+
+			"did not deploy the path or undeployed it. A path that is a directory is refused.").
 		Example("A deployed file", StatusInput{Path: path},
 			Status{Path: path, State: InSync, SHA256: rawSHA},
 			stored,
 			behavior.After(deployed),
 		).
 		Example("A path that osapi did not deploy", StatusInput{Path: path},
-			Status{Path: path, State: Missing},
+			Status{Path: path, State: Unmanaged},
 		).
-		Fails("A relative path", StatusInput{Path: "etc/example.conf"}, "startswith"),
+		Example("A file that osapi undeployed", StatusInput{Path: path},
+			Status{Path: path, State: Unmanaged},
+			stored,
+			behavior.After(deployed),
+			behavior.After(DeleteInput{Path: path}),
+		).
+		Fails("A relative path", StatusInput{Path: "etc/example.conf"}, "startswith").
+		Fails("A directory", StatusInput{Path: "/tmp"}, "a directory, not a file"),
 	behavior.Write("update", Update).
 		Describe("Deploy an object of the object store to a path").
 		Explain("Writes the object at the path with its mode and ownership, and keeps a record "+
@@ -121,7 +132,7 @@ var Behavior = behavior.Register(behavior.Define(
 	behavior.Write("delete", Delete).
 		Describe("Remove a file that osapi deployed").
 		Explain("Removes the file and keeps its record, marked undeployed, so status reports "+
-			"missing. A path that osapi did not deploy, or deleted already, does not "+
+			"unmanaged. A path that osapi did not deploy, or deleted already, does not "+
 			"change and reports changed: false. The object stays in the object store.").
 		Example("Remove a deployed file", DeleteInput{Path: path},
 			DeleteResult{Path: path, Changed: true},

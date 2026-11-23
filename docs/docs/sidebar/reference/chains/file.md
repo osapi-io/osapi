@@ -27,10 +27,17 @@ The behaviors that file calls, and each call that its examples make.
 
 ## A path that osapi did not deploy (status)
 
-| CALL               | SENDS                             | GETS                                             |
-| ------------------ | --------------------------------- | ------------------------------------------------ |
-| file status        | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf state=missing  |
-| └─ managedfile get | path=/etc/osapi/file-example.conf | error: /etc/osapi/file-example.conf: not managed |
+| CALL               | SENDS                             | GETS                                              |
+| ------------------ | --------------------------------- | ------------------------------------------------- |
+| file status        | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf state=unmanaged |
+| └─ managedfile get | path=/etc/osapi/file-example.conf | error: /etc/osapi/file-example.conf: not managed  |
+
+## A file that osapi undeployed (status)
+
+| CALL               | SENDS                             | GETS                                                                   |
+| ------------------ | --------------------------------- | ---------------------------------------------------------------------- |
+| file status        | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf state=unmanaged                      |
+| └─ managedfile get | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf sha256=0083dacc561dfd01081d8554269e… |
 
 ## Deploy a file (update)
 

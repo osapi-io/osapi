@@ -45,4 +45,9 @@ var (
 
 	// ErrNotInstalled means a program the operation depends on is absent.
 	ErrNotInstalled = errors.New("not installed")
+
+	// ErrInvalid means the host refuses the input, which the route's
+	// validate tags cannot see, such as a path that is a directory where
+	// the method reads a file.
+	ErrInvalid = errors.New("invalid input")
 )

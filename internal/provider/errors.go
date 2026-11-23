@@ -51,4 +51,8 @@ var (
 	// ErrNotInstalled means a program an operation depends on is absent, so the
 	// operation cannot be carried out on this host at all.
 	ErrNotInstalled = behavior.ErrNotInstalled
+
+	// ErrInvalid means the host refuses the input, such as a path that is a
+	// directory where the operation reads a file.
+	ErrInvalid = behavior.ErrInvalid
 )

@@ -48,10 +48,11 @@ const (
 	statusTimeout = "timeout"
 )
 
-// ErrInvalid is an input whose template reads a var that its behavior does
-// not have, which the route's validate tags cannot see. The group of a
-// method with a template field maps it to 400.
-var ErrInvalid = errors.New("invalid input")
+// ErrInvalid is an input that the route's validate tags cannot see as
+// wrong: a template that reads a var that its behavior does not have, or an
+// input that the host refuses, such as a path that is a directory. The
+// group of each method maps it to 400.
+var ErrInvalid = behavior.ErrInvalid
 
 // JobClient is the part of the job client a behavior's routes use: a read
 // or a write, on one host or broadcast.
@@ -101,8 +102,9 @@ type response struct {
 
 // Run sends input to method of b on the host, or the hosts, that target
 // names, and returns the answer as Out, the method's response type. On one
-// host, a provider's behavior.ErrNotFound is a 404, and its ErrNotManaged
-// and ErrNotInstalled are a 409, as the group maps them; on a broadcast each
+// host, a provider's behavior.ErrNotFound is a 404, its ErrNotManaged
+// and ErrNotInstalled are a 409, and its ErrInvalid is a 400, as the group
+// maps them; on a broadcast each
 // host's row says it. A job that cannot be sent is a 500 that does not tell
 // its cause.
 func Run[Out any](
@@ -166,6 +168,8 @@ func Run[Out any](
 			return out, fmt.Errorf("%w: %s", behavior.ErrNotManaged, err)
 		case errors.Is(err, job.ErrNotInstalled):
 			return out, fmt.Errorf("%w: %s", behavior.ErrNotInstalled, err)
+		case errors.Is(err, job.ErrInvalid):
+			return out, fmt.Errorf("%w: %s", ErrInvalid, err)
 		case errors.As(err, &failed):
 			// The job ran and the provider refused it: the host's row
 			// says why, as a broadcast's does.
