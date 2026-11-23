@@ -300,35 +300,6 @@ export function useStack() {
     );
   }, []);
 
-  const loadBlocks = useCallback(
-    (
-      items: {
-        type: string;
-        label: string;
-        description: string;
-        target?: string;
-        data: Record<string, unknown>;
-      }[],
-    ) => {
-      setBlocks(
-        items.map((item) => {
-          const id = `${item.type}-${nextId++}`;
-          const hasData = Object.keys(item.data).length > 0;
-          return {
-            id,
-            type: item.type,
-            label: item.label,
-            description: item.description,
-            status: hasData ? "ready" : "pending",
-            target: item.target ?? defaultTarget(item.type),
-            data: { ...item.data },
-          };
-        }),
-      );
-    },
-    [],
-  );
-
   const clearBlocks = useCallback(() => {
     setBlocks([]);
   }, []);
@@ -349,7 +320,6 @@ export function useStack() {
     setBlockStatus,
     setBlockTarget,
     resetBlocks,
-    loadBlocks,
     clearBlocks,
   };
 }

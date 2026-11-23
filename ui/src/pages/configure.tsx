@@ -11,8 +11,6 @@ import { FileUploadBlock } from "@/components/domain/file-upload-block";
 import { SingleInputBlock } from "@/components/domain/single-input-block";
 import { FileDeleteBlock } from "@/components/domain/file-delete-block";
 import { ApplyButton } from "@/components/domain/apply-button";
-import { StackBar } from "@/components/domain/stack-bar";
-import { SaveStackDialog } from "@/components/domain/save-stack-dialog";
 import {
   useStack,
   ALL_BLOCK_TYPES,
@@ -21,8 +19,6 @@ import {
   type BlockStatus,
 } from "@/hooks/use-stack";
 import { useCommands } from "@/hooks/use-commands";
-import { useStacks } from "@/hooks/use-stacks";
-import { features } from "@/lib/features";
 import {
   postFile,
   getFiles,
@@ -136,11 +132,8 @@ export function Configure() {
     setBlockStatus,
     setBlockTarget,
     resetBlocks,
-    loadBlocks,
     clearBlocks,
   } = useStack();
-  const { stacks, activeStack, activeStackId, loadStack, clearActiveStack } =
-    useStacks();
   const [applying, setApplying] = useState(false);
 
   // After Apply, what the run did, counted from the blocks' states.
@@ -149,24 +142,7 @@ export function Configure() {
   const applySummary = hasApplied
     ? `${applied + failed} applied: ${applied} ok${failed ? `, ${failed} failed` : ""}`
     : `${blocks.length} block${blocks.length === 1 ? "" : "s"}`;
-  const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [activeArea, setActiveArea] = useState("services");
-
-  const handleLoadStack = useCallback(
-    (id: string) => {
-      loadStack(id);
-      const stack = stacks.find((s) => s.id === id);
-      if (stack) {
-        loadBlocks(stack.blocks);
-      }
-    },
-    [stacks, loadStack, loadBlocks],
-  );
-
-  const handleNewStack = useCallback(() => {
-    clearActiveStack();
-    clearBlocks();
-  }, [clearActiveStack, clearBlocks]);
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const blockRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const focusBlock = useBlockFocus(blockRefs);
@@ -484,21 +460,8 @@ export function Configure() {
     <ContentArea>
       <PageHeader
         title="Configure"
-        subtitle={
-          activeStack
-            ? `Editing stack: ${activeStack.name}`
-            : "Build a stack by selecting blocks"
-        }
+        subtitle="Add blocks to a stack, then apply them to your hosts"
       />
-
-      {features.stacks && (
-        <StackBar
-          stacks={stacks}
-          activeStackId={activeStackId}
-          onLoad={handleLoadStack}
-          onNew={handleNewStack}
-        />
-      )}
 
       <div className="grid grid-cols-12 gap-6">
         {/* Sidebar */}
@@ -581,7 +544,7 @@ export function Configure() {
         {/* Main */}
         <main className="col-span-9">
           {blocks.length === 0 ? (
-            <EmptyState message="Select a saved stack above or add blocks to build a new one" />
+            <EmptyState message="Add blocks from the panel to build a stack" />
           ) : (
             <>
               <BlockStack>{stackItems}</BlockStack>
@@ -591,27 +554,14 @@ export function Configure() {
                 ready={canApply}
                 applying={applying}
                 hasApplied={hasApplied}
-                hasBlocks={blocks.length > 0}
-                showSave={features.stacks}
                 onApply={handleApply}
                 onReset={resetBlocks}
-                onSave={() => setShowSaveDialog(true)}
               />
               <div className="h-24" />
             </>
           )}
         </main>
       </div>
-      <SaveStackDialog
-        open={showSaveDialog}
-        blockCount={blocks.length}
-        onSave={(name, description) => {
-          // TODO: POST /stacks — mock no-op for now
-          console.log("Saving stack:", { name, description, blocks });
-          setShowSaveDialog(false);
-        }}
-        onClose={() => setShowSaveDialog(false)}
-      />
     </ContentArea>
   );
 }
