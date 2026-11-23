@@ -81,7 +81,7 @@ func Get(
 		Name: b.Name, Doc: b.Doc, Placement: b.Placement, Group: b.Group,
 		Internal: b.Internal, API: b.API, CLI: b.CLI,
 		Platforms:  platformNames(b),
-		Sudo:       append([]string{}, b.Sudo...),
+		Sudo:       sudoOf(b),
 		Runs:       append([]string{}, b.Runs...),
 		Writes:     append([]string{}, b.Writes...),
 		KeepsState: b.KeepsState,
@@ -462,4 +462,17 @@ func OpenAPIGet(
 	_ = enc.Encode(tree)
 
 	return OpenAPIOutput{Name: b.Name, YAML: out.String()}, nil
+}
+
+// sudoOf is each program b runs with sudo on every platform, then each that
+// one platform's provider runs with it.
+func sudoOf(
+	b *behavior.Behavior,
+) []string {
+	out := append([]string{}, b.Sudo...)
+	for _, ps := range b.ProviderSudo {
+		out = append(out, ps.Programs...)
+	}
+
+	return out
 }

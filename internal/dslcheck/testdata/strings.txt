@@ -72,6 +72,7 @@ behavior.Render(text string)	free text	prose for a page or a message
 behavior.Runs(programs []string)	program	a program name, which preflight and the fake host check
 behavior.RunsIfPresent(programs []string)	program	a program name, which preflight and the fake host check
 behavior.RunsOnPlatform(programs []string)	program	a program name, which preflight and the fake host check
+behavior.SudoOnPlatform(programs []string)	program	a program name, which preflight and the fake host check
 behavior.Scaffold(doc string)	free text	prose for a page or a message
 behavior.Scaffold(goPackage string)	identity	a Go package name, which Scaffold checks
 behavior.Scaffold(group string)	checked	a group; Scaffold refuses one outside KnownGroups

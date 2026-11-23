@@ -155,7 +155,7 @@ func (h *fakeHost) declare(
 	b *behavior.Behavior,
 	platform behavior.PlatformName,
 ) {
-	h.sudo = append(h.sudo, b.Sudo...)
+	h.sudo = append(append(h.sudo, b.Sudo...), b.ProviderSudoOn(platform)...)
 	_, runs := b.Programs(platform)
 	h.runs = append(append(h.runs, runs...), b.RunsIfPresent...)
 	for _, m := range b.Methods {

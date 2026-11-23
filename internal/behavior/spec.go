@@ -149,6 +149,12 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindOption,
+			Name: "SudoOnPlatform(platform, programs...)",
+			Does: "Lists the programs that the provider declared for one platform runs with sudo. They hold on each host that this provider serves, so linux does not hold on debian when the behavior declares a debian provider. The agent and the integration test ask for them there only.",
+			When: "For a program that each platform's provider runs in its own way, such as update-ca-certificates on debian and update-ca-trust on linux.",
+		},
+		{
+			Kind: KindOption,
 			Name: "RunsIfPresent(programs...)",
 			Does: "Lists the programs that the providers run only when the host has them. The fake host permits them, and the agent and the integration test do not ask for them.",
 			When: "For a program that a provider reads without, when it is missing, such as zfs.",

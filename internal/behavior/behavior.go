@@ -110,6 +110,9 @@ type Behavior struct {
 	// PlatformRuns lists the programs its providers run on some platforms
 	// only, declared with RunsOnPlatform.
 	PlatformRuns []PlatformPrograms
+	// ProviderSudo lists the programs that one platform's provider runs with
+	// sudo, declared with SudoOnPlatform.
+	ProviderSudo []PlatformPrograms
 	// RunsIfPresent lists the programs its providers run only when the host
 	// has them, declared with RunsIfPresent.
 	RunsIfPresent []string
