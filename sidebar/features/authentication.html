@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Authentication &amp; RBAC | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/authentication"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Authentication &amp; RBAC | OSAPI"><meta data-rh="true" name="description" content="OSAPI uses JWT bearer tokens for authentication and fine-grained resource:verb"><meta data-rh="true" property="og:description" content="OSAPI uses JWT bearer tokens for authentication and fine-grained resource:verb"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/authentication"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/authentication" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/authentication" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Authentication & RBAC","item":"https://osapi-io.github.io/osapi/sidebar/features/authentication"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.ee2257e7.css">
-<script src="/osapi/assets/js/runtime~main.4f1f4f75.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.ac8ae75f.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.ed3fa410.js" defer="defer"></script>
 </head>
 <body>
@@ -64,8 +64,20 @@ scope when the agent of the host has a label that the scope covers.</li>
 a host. A retry of a job must name a target in the scope, because a retry
 without a target goes to <code>_any</code>. The audit log records the scope of the token
 with each entry, and the UI shows it on the Roles page and in each audit entry.</p>
-<p>The scope limits where a token acts. It does not limit what the token reads from
-the controller, such as the jobs and the audit log.</p>
+<p>The scope also limits what the token reads of the jobs, the traces and the audit
+log. The token sees a record only when the target of the record is in the scope:</p>
+<ul>
+<li class="">A job: its target, such as <code>group:web.dev</code> or <code>web-01</code>.</li>
+<li class="">An audit entry: the <code>{hostname}</code> of a <code>/api/node/{hostname}/</code> request. An
+entry of a request with no target, such as a read of the jobs, has no target.</li>
+<li class="">A trace: each <code>osapi.target</code> that its spans record. The token sees the trace
+only when a span records a target, and each target is in the scope.</li>
+</ul>
+<p>A record with no target, or with the target <code>_all</code> or <code>_any</code>, is hidden from a
+scoped token. A list leaves out each record that the token does not see, and its
+counts include only the records that the token sees. A get, a delete or a retry
+of a hidden record gets <code>404 Not Found</code>, the same as a record that does not
+exist. A token without targets sees each record.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="roles-and-permissions">Roles and permissions<a href="#roles-and-permissions" class="hash-link" aria-label="Direct link to Roles and permissions" title="Direct link to Roles and permissions" translate="no">​</a></h2>
 <p>There are six built-in roles, one for each kind of person or program that uses
 osapi: <code>admin</code>, <code>operator</code>, <code>automation</code>, <code>auditor</code>, <code>read</code> and <code>observer</code>. A
