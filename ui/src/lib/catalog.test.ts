@@ -17,6 +17,7 @@ const method: CatalogMethod = {
   path: "/api/node/{hostname}/network/dns/{interface_name}",
   permission: "network:write",
   platforms: ["debian"],
+  runsOn: ["debian"],
   input: "UpdateInput { interface_name*, servers, override }",
   output: "Result { changed }",
   fields: [

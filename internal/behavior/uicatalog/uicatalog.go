@@ -85,13 +85,17 @@ type Method struct {
 	Name string `json:"name"`
 	// Kind is what the method does to a host: read, write, or action, by
 	// the verb of its permission.
-	Kind       string    `json:"kind"`
-	Doc        string    `json:"doc"`
-	Long       string    `json:"long,omitempty"`
-	HTTPMethod string    `json:"httpMethod,omitempty"`
-	Path       string    `json:"path,omitempty"`
-	Permission string    `json:"permission,omitempty"`
-	Platforms  []string  `json:"platforms"`
+	Kind       string   `json:"kind"`
+	Doc        string   `json:"doc"`
+	Long       string   `json:"long,omitempty"`
+	HTTPMethod string   `json:"httpMethod,omitempty"`
+	Path       string   `json:"path,omitempty"`
+	Permission string   `json:"permission,omitempty"`
+	Platforms  []string `json:"platforms"`
+	// RunsOn are the host platforms that the method runs on, as the agent
+	// decides, of behavior.HostFamilies, and "*" when it runs on a Linux host
+	// whose platform is none of them.
+	RunsOn     []string  `json:"runsOn"`
 	Input      string    `json:"input"`
 	Output     string    `json:"output"`
 	Fields     []Field   `json:"fields"`
@@ -165,6 +169,27 @@ func Catalog(
 	return out
 }
 
+// otherLinux is a Linux platform that has no family, such as NixOS.
+const otherLinux behavior.PlatformName = "*"
+
+// runsOn are the host platforms that m of b runs on.
+func runsOn(
+	b *behavior.Behavior,
+	m *behavior.Method,
+) []string {
+	out := []string{}
+	for _, f := range behavior.HostFamilies {
+		if b.RunsOnHost(m, f) {
+			out = append(out, string(f))
+		}
+	}
+	if b.RunsOnHost(m, otherLinux) {
+		out = append(out, string(otherLinux))
+	}
+
+	return out
+}
+
 // method is m of b, as the UI shows and runs it.
 func method(
 	b *behavior.Behavior,
@@ -194,6 +219,7 @@ func method(
 		cm.Path = b.Path(m)
 		cm.Permission = string(b.Permission(m.PermissionVerb()))
 	}
+	cm.RunsOn = runsOn(b, m)
 	for _, pp := range b.Platforms {
 		if b.Serves(m, pp.Name) {
 			cm.Platforms = append(cm.Platforms, string(pp.Name))
@@ -417,7 +443,15 @@ func TypeScript(
 		fmt.Fprintf(&sb, "  %s,\n", data)
 	}
 	sb.WriteString("] as const;\n\n")
-	sb.WriteString("export type AreaName = (typeof AREAS)[number][\"name\"];\n")
+	sb.WriteString("export type AreaName = (typeof AREAS)[number][\"name\"];\n\n")
+	sb.WriteString(
+		"/** The host platforms that gohai names; runsOn has \"*\" for any other Linux. */\n",
+	)
+	sb.WriteString("export const HOST_FAMILIES: readonly string[] = [\n")
+	for _, f := range behavior.HostFamilies {
+		fmt.Fprintf(&sb, "  %q,\n", f)
+	}
+	sb.WriteString("];\n")
 
 	return sb.String()
 }

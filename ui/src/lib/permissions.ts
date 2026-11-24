@@ -4,6 +4,7 @@
 
 import {
   ALL_PERMISSIONS,
+  BUILT_IN_ROLES,
   ROLE_PERMISSIONS,
   type Permission,
 } from "./permissions.gen";
@@ -38,23 +39,10 @@ const role = (
   permissions: new Set(ROLE_PERMISSIONS[name]),
 });
 
-export const ROLES: RoleDefinition[] = [
-  role(
-    "admin",
-    "Everything, including admission, tokens, shells and the audit log",
-  ),
-  role(
-    "operator",
-    "Reads, and actions such as a restart, a signal or a reboot",
-  ),
-  role(
-    "automation",
-    "Reads, and changes to the configuration, with no actions",
-  ),
-  role("auditor", "The audit log, traces, jobs and health, read only"),
-  role("read", "Reads each thing that is not admin only"),
-  role("observer", "Health, status and agents only, for dashboards"),
-];
+/** The built-in roles, in the order and with the descriptions that Go gives. */
+export const ROLES: RoleDefinition[] = BUILT_IN_ROLES.map((r) =>
+  role(r.name, r.description),
+);
 
 export function getRoleByName(name: string): RoleDefinition | undefined {
   return ROLES.find((r) => r.name === name);

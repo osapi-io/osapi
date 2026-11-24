@@ -275,6 +275,24 @@ func (b *Behavior) Serves(
 	return false
 }
 
+// HostFamilies are the platforms that gohai's family.Detect names, in the
+// order the UI lists them. A Linux host whose platform has no family gets
+// its own name, which is none of these.
+var HostFamilies = []PlatformName{
+	family.Darwin, family.Debian, family.RHEL, family.Amazon, family.SUSE,
+	family.Fedora, family.WRLinux, family.Gentoo, family.Arch, family.Exherbo,
+	family.Alpine, family.ClearLinux, family.Mandriva, family.Slackware,
+}
+
+// RunsOnHost reports whether m runs on a host whose platform is platform,
+// as the agent decides: b has a provider there, and m runs there.
+func (b *Behavior) RunsOnHost(
+	m *Method,
+	platform PlatformName,
+) bool {
+	return b.resolve(platform) != nil && m.RunsOn(platform)
+}
+
 // resolve is the provider b declares for platform itself, or else, on a
 // platform other than macOS, the one declared for PlatformLinux, or nil.
 func (b *Behavior) resolve(

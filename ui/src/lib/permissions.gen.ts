@@ -310,3 +310,32 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
   ],
   observer: ["health:read", "status:read", "agent:read"],
 };
+
+/** The built-in roles, in order, with what each is for. */
+export const BUILT_IN_ROLES = [
+  {
+    name: "admin",
+    description:
+      "Everything, including admission, tokens, shells and the audit log",
+  },
+  {
+    name: "operator",
+    description: "Reads, and actions such as a restart, a signal or a reboot",
+  },
+  {
+    name: "automation",
+    description: "Reads, and changes to the configuration, with no actions",
+  },
+  {
+    name: "auditor",
+    description: "The audit log, traces, jobs and health, read only",
+  },
+  {
+    name: "read",
+    description: "Reads each thing that is not admin only",
+  },
+  {
+    name: "observer",
+    description: "Health, status and agents only, for dashboards",
+  },
+] as const;

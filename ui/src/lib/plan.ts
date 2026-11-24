@@ -5,6 +5,7 @@
 // ---------------------------------------------------------------------------
 
 import type { AgentInfo } from "@/sdk/gen/schemas";
+import { HOST_FAMILIES } from "@/lib/catalog.gen";
 import { methodInput, methodReady } from "@/lib/catalog";
 import type { StepDef } from "@/lib/catalog-index";
 
@@ -155,17 +156,16 @@ export function hostPlatform(agent: AgentInfo): string | undefined {
 }
 
 /**
- * Whether a method that runs on platforms runs on a host of platform: one
- * that names it, or one that names linux, on a host that is not macOS, as
- * the agent resolves a provider.
+ * Whether a method runs on a host of platform: one that its runsOn names,
+ * which the catalog has from the agent's own rule, or any other Linux when
+ * runsOn has "*".
  */
-export function servesPlatform(
-  platforms: readonly string[],
+export function runsOnHost(
+  runsOn: readonly string[],
   platform: string,
 ): boolean {
-  if (platforms.length === 0) return true;
-  if (platforms.includes(platform)) return true;
-  return platform !== "darwin" && platforms.includes("linux");
+  if (runsOn.includes(platform)) return true;
+  return !HOST_FAMILIES.includes(platform) && runsOn.includes("*");
 }
 
 /** The agents that a target names: each, one host, or the hosts of a label. */
@@ -234,7 +234,7 @@ export function preflight(
     if (!def.method) continue;
     for (const host of targetHosts(step.target, agents)) {
       const platform = hostPlatform(host);
-      if (platform && !servesPlatform(def.method.platforms, platform)) {
+      if (platform && !runsOnHost(def.method.runsOn, platform)) {
         skips.push({
           stepId: step.id,
           run: step.run,
