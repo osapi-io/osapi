@@ -82,9 +82,9 @@ func Sudo(
 }
 
 // Runs declares the programs the behavior's providers run without sudo, such
-// as ip or dpkg-query. The agent warns at startup when one is not installed,
-// the integration test fails when its image lacks one, and the docs page lists
-// them. A program declared with Sudo need not be declared again. AnyProgram,
+// as ip or dpkg-query. The agent warns when one is not installed, at start or
+// at a later heartbeat, the integration test fails when its image lacks one,
+// and the docs page lists them. A program declared with Sudo need not be declared again. AnyProgram,
 // "*", is each program: a behavior such as command, which runs the program
 // its caller names, declares it, and the agent and the integration test look
 // for none.

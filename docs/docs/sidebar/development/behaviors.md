@@ -96,7 +96,7 @@ var Behavior = behavior.Register(behavior.Define(
 | `behavior.Config(v)`             | The behavior's own settings, with `v` as their defaults. See below.                                                                                                       |
 | `behavior.Platform(p, f)`        | How the provider is built on platform `p`: `debian`, `darwin`, or `linux` for every Linux host without a provider of its own. On any other, the methods report `skipped`. |
 | `behavior.Sudo("prog")`          | A program the provider runs with sudo. The agent's preflight checks it.                                                                                                   |
-| `behavior.Runs("prog")`          | A program the provider runs without sudo. The agent warns at startup when it is missing.                                                                                  |
+| `behavior.Runs("prog")`          | A program the provider runs without sudo. The agent warns when it is missing, at startup or at a later heartbeat.                                                         |
 | `behavior.Writes("...")`         | The paths the provider writes, removes or changes the mode of, as patterns. `"*"` is any path. The examples fail on a path that is not declared.                          |
 | `behavior.KeepsState`            | The provider keeps a record in the `file-state` bucket. The examples fail on a record without it.                                                                         |
 | `behavior.Validator(...)`        | A `validate` tag of the behavior's own: the check, its schema and its message.                                                                                            |
