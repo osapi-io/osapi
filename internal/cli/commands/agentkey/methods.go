@@ -27,14 +27,15 @@ import (
 	"github.com/osapi-io/osapi/internal/pki"
 )
 
-// Fingerprint loads the agent's key pair, or makes one when there is none, and is
-// the machine's ID, hostname and fingerprint, and the command that admits it.
+// Fingerprint loads the agent's keys, or makes each one that does not exist, and
+// is the machine's ID, hostname, public encryption key and the fingerprint that
+// covers both keys, and the command that admits it.
 func Fingerprint(
 	_ context.Context,
 	d Deps,
 	_ FingerprintInput,
 ) (FingerprintOutput, error) {
-	mgr := pki.New(d.FS, d.KeyDir, "agent")
+	mgr := pki.New(d.FS, d.KeyDir, "agent", pki.WithEncryptionKey())
 	if err := mgr.LoadOrGenerate(); err != nil {
 		return FingerprintOutput{}, fmt.Errorf("load the agent key from %s: %w", d.KeyDir, err)
 	}
@@ -45,9 +46,10 @@ func Fingerprint(
 	fp := mgr.Fingerprint()
 
 	return FingerprintOutput{
-		MachineID:   ident.MachineID,
-		Hostname:    ident.Hostname,
-		Fingerprint: fp,
+		MachineID:     ident.MachineID,
+		Hostname:      ident.Hostname,
+		EncryptionKey: mgr.EncryptionPublicKey(),
+		Fingerprint:   fp,
 		Admit: fmt.Sprintf(
 			"osapi client admission admit --machine-id %s --fingerprint %s", ident.MachineID, fp,
 		),

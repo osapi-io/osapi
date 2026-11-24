@@ -196,6 +196,7 @@ func admissionOf(
 		MachineID:           r.MachineID,
 		Hostname:            r.Hostname,
 		Fingerprint:         r.Fingerprint,
+		EncryptionKey:       r.EncryptionKey,
 		State:               r.State,
 		RequestedAt:         timeOf(r.RequestedAt),
 		AdmittedAt:          timeOf(r.AdmittedAt),

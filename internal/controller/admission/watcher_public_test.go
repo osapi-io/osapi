@@ -109,6 +109,7 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequest() {
 						s.Equal("machine-001", stored.MachineID)
 						s.Equal("web-01", stored.Hostname)
 						s.Equal("SHA256:abc123", stored.Fingerprint)
+						s.Equal(testEncryptionKey, stored.EncryptionKey)
 						s.False(
 							stored.RequestedAt.IsZero(),
 							"requested_at must be non-zero",
@@ -123,6 +124,35 @@ func (s *WatcherPublicTestSuite) TestHandleEnrollmentRequest() {
 			name:      "logs warning on unmarshal failure",
 			setupMock: func() {},
 			msg:       &nats.Msg{Data: []byte("invalid json")},
+		},
+		{
+			// An agent older than the controller sends no encryption key.
+			// Nothing is stored, so it cannot be admitted without one.
+			name:      "drops a request with no encryption key",
+			setupMock: func() {},
+			msg: func() *nats.Msg {
+				data, err := json.Marshal(pki.EnrollmentRequest{
+					MachineID: "machine-001",
+					Hostname:  "web-01",
+					PublicKey: []byte("test-pubkey"),
+				})
+				s.Require().NoError(err)
+				return &nats.Msg{Data: data}
+			}(),
+		},
+		{
+			name:      "drops a request whose encryption key is not a curve key",
+			setupMock: func() {},
+			msg: func() *nats.Msg {
+				data, err := json.Marshal(pki.EnrollmentRequest{
+					MachineID:     "machine-001",
+					Hostname:      "web-01",
+					PublicKey:     []byte("test-pubkey"),
+					EncryptionKey: "UABC",
+				})
+				s.Require().NoError(err)
+				return &nats.Msg{Data: data}
+			}(),
 		},
 		{
 			name: "logs warning on marshal failure",
@@ -283,10 +313,11 @@ func (s *WatcherPublicTestSuite) TestAcceptAgent() {
 						s.Equal("machine-001", stored.MachineID)
 						s.Equal("web-01", stored.Hostname)
 						s.Equal(
-							pki.FingerprintOf([]byte("test-pubkey")),
+							pki.FingerprintOfKeys([]byte("test-pubkey"), testEncryptionKey),
 							stored.Fingerprint,
-							"the fingerprint is recomputed, not taken from the request",
+							"the fingerprint is recomputed over both keys, not taken from the request",
 						)
+						s.Equal(testEncryptionKey, stored.EncryptionKey)
 						s.Equal(s.fixedTime, stored.AcceptedAt)
 
 						return uint64(1), nil
@@ -756,6 +787,9 @@ func (s *WatcherPublicTestSuite) TestKVPrefix() {
 	s.Equal("accepted.", admission.AcceptedKVPrefix())
 }
 
+// testEncryptionKey is a public X25519 key in the nkeys form.
+const testEncryptionKey = "XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM"
+
 // makeEnrollmentMsg creates a *nats.Msg with a serialized EnrollmentRequest.
 func (s *WatcherPublicTestSuite) makeEnrollmentMsg(
 	machineID string,
@@ -765,10 +799,11 @@ func (s *WatcherPublicTestSuite) makeEnrollmentMsg(
 	s.T().Helper()
 
 	req := pki.EnrollmentRequest{
-		MachineID:   machineID,
-		Hostname:    hostname,
-		PublicKey:   []byte("test-pubkey"),
-		Fingerprint: fingerprint,
+		MachineID:     machineID,
+		Hostname:      hostname,
+		PublicKey:     []byte("test-pubkey"),
+		EncryptionKey: testEncryptionKey,
+		Fingerprint:   fingerprint,
 	}
 
 	data, err := json.Marshal(req)
@@ -786,11 +821,12 @@ func (s *WatcherPublicTestSuite) makePendingJSON(
 	s.T().Helper()
 
 	pending := admission.PendingAgent{
-		MachineID:   machineID,
-		Hostname:    hostname,
-		PublicKey:   []byte("test-pubkey"),
-		Fingerprint: fingerprint,
-		RequestedAt: s.fixedTime,
+		MachineID:     machineID,
+		Hostname:      hostname,
+		PublicKey:     []byte("test-pubkey"),
+		EncryptionKey: testEncryptionKey,
+		Fingerprint:   fingerprint,
+		RequestedAt:   s.fixedTime,
 	}
 
 	data, err := json.Marshal(pending)

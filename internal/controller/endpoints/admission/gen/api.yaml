@@ -11,8 +11,12 @@ components:
           description: When the node was rejected or revoked.
           format: date-time
           type: string
+        encryption_key:
+          description: The node's public X25519 encryption key, which the fingerprint covers.
+          example: XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM
+          type: string
         fingerprint:
-          description: The fingerprint of the node's key.
+          description: 'The fingerprint of the node''s two public keys: signing and encryption.'
           example: SHA256:1f53dea6dba17ae38388b931df5c6370076c8236018d6e8a2adecc8474ae93ef
           type: string
         hostname:

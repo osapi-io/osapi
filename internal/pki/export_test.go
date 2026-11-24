@@ -20,7 +20,13 @@
 
 package pki
 
-import "crypto/ed25519"
+import (
+	"crypto/ed25519"
+	"crypto/rand"
+	"io"
+
+	"github.com/nats-io/nkeys"
+)
 
 // SetGenerateKeyPairFn overrides the generateKeyPairFn function for testing.
 func SetGenerateKeyPairFn(
@@ -32,4 +38,32 @@ func SetGenerateKeyPairFn(
 // ResetGenerateKeyPairFn restores the default generateKeyPairFn function.
 func ResetGenerateKeyPairFn() {
 	generateKeyPairFn = defaultGenerateKeyPair
+}
+
+// SetCurveRand overrides the entropy of a new X25519 key for testing.
+func SetCurveRand(
+	r io.Reader,
+) {
+	curveRand = r
+}
+
+// SetGenerateCurveSeedFn overrides the generateCurveSeedFn function for testing.
+func SetGenerateCurveSeedFn(
+	fn func() ([]byte, error),
+) {
+	generateCurveSeedFn = fn
+}
+
+// SetFromCurveSeedFn overrides the fromCurveSeedFn function for testing.
+func SetFromCurveSeedFn(
+	fn func([]byte) (nkeys.KeyPair, error),
+) {
+	fromCurveSeedFn = fn
+}
+
+// ResetCurveFns restores the defaults of the X25519 test hooks.
+func ResetCurveFns() {
+	curveRand = rand.Reader
+	generateCurveSeedFn = generateCurveSeed
+	fromCurveSeedFn = nkeys.FromCurveSeed
 }

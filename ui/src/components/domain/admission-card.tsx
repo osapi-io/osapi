@@ -110,6 +110,13 @@ export function AdmissionCard({
             value={record.fingerprint}
             display={shortFingerprint(record.fingerprint)}
           />
+          {record.encryption_key && (
+            <CopyField
+              label="Encryption key"
+              value={record.encryption_key}
+              display={shortFingerprint(record.encryption_key)}
+            />
+          )}
         </div>
         <Text variant="muted" as="p">
           Last seen {formatAgeSince(record.last_seen) || "never"}
