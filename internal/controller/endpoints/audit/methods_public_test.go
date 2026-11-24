@@ -38,7 +38,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoints/audit"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/audit/gen"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/audit/mocks"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 const (
@@ -61,7 +61,7 @@ var (
 		JobID: "7c9e6679-7425-40de-944b-e07fc1f90ae7", RequestSummary: `{"command":"uptime"}`,
 		Steps: []auditstore.HostSteps{{
 			Hostname: "web-01",
-			Steps:    []client.Step{{Behavior: "managedfile", Method: "update", Error: "denied"}},
+			Steps:    []types.Step{{Behavior: "managedfile", Method: "update", Error: "denied"}},
 		}},
 	}
 	bare = auditstore.Entry{
@@ -144,7 +144,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 					RequestSummary: `{"command":"uptime"}`,
 					Steps: []audit.HostSteps{{
 						Hostname: "web-01",
-						Steps: []client.Step{
+						Steps: []types.Step{
 							{Behavior: "managedfile", Method: "update", Error: "denied"},
 						},
 					}},

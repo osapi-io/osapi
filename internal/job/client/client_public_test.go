@@ -41,7 +41,7 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
-	sdkclient "github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // registrationJSON returns a minimal agent registration JSON for the given hostname.
@@ -2111,7 +2111,7 @@ func (s *ClientPublicTestSuite) TestAuditRecordsSteps() {
 		s.Error(err)
 		s.Equal([]audit.HostSteps{{
 			Hostname: "server1",
-			Steps: []sdkclient.Step{
+			Steps: []types.Step{
 				{Behavior: "managedfile", Method: "update", Error: "denied", DurationMS: 3},
 			},
 		}}, audit.StepsFrom(ctx))
@@ -2136,7 +2136,7 @@ func (s *ClientPublicTestSuite) TestAuditRecordsSteps() {
 		s.NoError(err)
 		s.Equal([]audit.HostSteps{{
 			Hostname: "server1",
-			Steps: []sdkclient.Step{
+			Steps: []types.Step{
 				{Behavior: "managedfile", Method: "update", DurationMS: 3},
 			},
 		}}, audit.StepsFrom(ctx))

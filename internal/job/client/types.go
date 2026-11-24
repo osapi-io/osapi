@@ -26,7 +26,7 @@ import (
 	"errors"
 	"time"
 
-	sdkclient "github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
@@ -284,7 +284,7 @@ type JobClient interface {
 		errorMsg string,
 		errorCode job.ErrorCode,
 		changed *bool,
-		steps []sdkclient.Step,
+		steps []types.Step,
 	) error
 	ConsumeJobs(
 		ctx context.Context,

@@ -33,7 +33,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	"github.com/osapi-io/osapi/internal/behaviors/object"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // linux deploys objects through the object and managedfile building blocks.
@@ -77,10 +77,10 @@ func (l *linux) Deploy(
 		contentType = obj.ContentType
 	}
 	if contentType == "" {
-		contentType = string(client.ContentRaw)
+		contentType = string(types.ContentRaw)
 	}
 	content := obj.Content
-	if contentType == string(client.ContentTemplate) {
+	if contentType == string(types.ContentTemplate) {
 		content, err = behavior.Render(content, behavior.TemplateData{
 			Facts:    l.factsNow(),
 			Vars:     in.Vars,

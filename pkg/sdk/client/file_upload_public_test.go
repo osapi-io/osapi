@@ -32,6 +32,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/pkg/sdk/client"
@@ -82,7 +84,7 @@ func (suite *FilePublicTestSuite) TestUpload() {
 				suite.Equal("abc123", resp.Data.SHA256)
 				suite.Equal(1024, resp.Data.Size)
 				suite.True(resp.Data.Changed)
-				suite.Equal("raw", resp.Data.ContentType)
+				suite.Equal(types.ContentRaw, resp.Data.ContentType)
 			},
 		},
 		{

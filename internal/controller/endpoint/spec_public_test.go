@@ -31,6 +31,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
@@ -202,32 +204,32 @@ func (s *SpecPublicTestSuite) TestSpecKinds() {
 // one means, so a client's typed reason and the server cannot drift.
 func (s *SpecPublicTestSuite) TestReasonsMatchTheSchema() {
 	reason := endpoint.ErrorSchema().Properties["reason"].Value
-	want := make([]any, 0, len(endpoint.Reasons))
-	for _, r := range endpoint.Reasons {
+	want := make([]any, 0, len(types.Reasons))
+	for _, r := range types.Reasons {
 		want = append(want, string(r))
 		s.NotEmpty(endpoint.ReasonDocs[r], "%s has a doc", r)
 		s.Contains(reason.Description, string(r)+": "+endpoint.ReasonDocs[r])
 	}
 	s.Equal(want, reason.Enum)
-	s.Len(endpoint.ReasonDocs, len(endpoint.Reasons))
+	s.Len(endpoint.ReasonDocs, len(types.Reasons))
 }
 
 // TestReasons: each helper gives the reason of its status, Because names
 // another, and a status that no error names has the reason of its class.
 func (s *SpecPublicTestSuite) TestReasons() {
 	err := errors.New("x")
-	s.Equal(endpoint.ReasonNotFound, endpoint.NotFound(err, "").Reason)
-	s.Equal(endpoint.ReasonConflict, endpoint.Conflict(err, "").Reason)
-	s.Equal(endpoint.ReasonNotManaged,
-		endpoint.Conflict(err, "").Because(endpoint.ReasonNotManaged).Reason)
-	s.Equal(endpoint.ReasonInvalidRequest, endpoint.Invalid(err, "").Reason)
-	s.Equal(endpoint.ReasonForbidden, endpoint.Forbidden(err, "").Reason)
-	s.Equal(endpoint.ReasonUnavailable, endpoint.Unavailable(err, "").Reason)
-	for status, want := range map[int]endpoint.Reason{
-		401: endpoint.ReasonUnauthorized, 403: endpoint.ReasonForbidden,
-		404: endpoint.ReasonNotFound, 405: endpoint.ReasonInvalidRequest,
-		409: endpoint.ReasonConflict, 503: endpoint.ReasonUnavailable,
-		500: endpoint.ReasonServerError,
+	s.Equal(types.ReasonNotFound, endpoint.NotFound(err, "").Reason)
+	s.Equal(types.ReasonConflict, endpoint.Conflict(err, "").Reason)
+	s.Equal(types.ReasonNotManaged,
+		endpoint.Conflict(err, "").Because(types.ReasonNotManaged).Reason)
+	s.Equal(types.ReasonInvalidRequest, endpoint.Invalid(err, "").Reason)
+	s.Equal(types.ReasonForbidden, endpoint.Forbidden(err, "").Reason)
+	s.Equal(types.ReasonUnavailable, endpoint.Unavailable(err, "").Reason)
+	for status, want := range map[int]types.Reason{
+		401: types.ReasonUnauthorized, 403: types.ReasonForbidden,
+		404: types.ReasonNotFound, 405: types.ReasonInvalidRequest,
+		409: types.ReasonConflict, 503: types.ReasonUnavailable,
+		500: types.ReasonServerError,
 	} {
 		s.Equal(want, endpoint.ReasonFor(status), "status %d", status)
 	}

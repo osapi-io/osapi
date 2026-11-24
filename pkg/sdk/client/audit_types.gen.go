@@ -2,7 +2,11 @@
 
 package client
 
-import "time"
+import (
+	"time"
+
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
+)
 
 // AuditEntry is the AuditEntry of the spec.
 type AuditEntry struct {
@@ -72,7 +76,7 @@ type AuditEntrySteps struct {
 	Hostname string `json:"hostname"`
 
 	// The calls, in the order that the method made them.
-	Steps []Step `json:"steps"`
+	Steps []types.Step `json:"steps"`
 }
 
 // ListAuditResponse is the ListAuditResponse of the spec.

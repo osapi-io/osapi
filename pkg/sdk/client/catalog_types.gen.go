@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // CatalogArea is the CatalogArea of the spec.
 type CatalogArea struct {
 	// The label of the area.
@@ -166,7 +168,7 @@ type CatalogMethod struct {
 	Path string `json:"path,omitempty"`
 
 	// A permission that osapi knows, as resource:verb.
-	Permission Permission `json:"permission,omitzero"`
+	Permission types.Permission `json:"permission,omitzero"`
 
 	// The platforms that the method runs on: those that its On limits it to, else
 	// each platform of the behavior.
@@ -183,7 +185,7 @@ type CatalogOperation struct {
 	ID OperationID `json:"id"`
 
 	// A permission that osapi knows, as resource:verb.
-	Permission Permission `json:"permission"`
+	Permission types.Permission `json:"permission"`
 }
 
 // CatalogResponse is the CatalogResponse of the spec.
@@ -207,7 +209,7 @@ type CatalogResponse struct {
 	Operations []CatalogOperation `json:"operations"`
 
 	// Each permission that osapi knows.
-	Permissions []Permission `json:"permissions"`
+	Permissions []types.Permission `json:"permissions"`
 
 	// The built-in roles, in order, with the permissions of each.
 	Roles []CatalogRole `json:"roles"`
@@ -225,8 +227,139 @@ type CatalogRole struct {
 	Name string `json:"name"`
 
 	// The permissions of the role.
-	Permissions []Permission `json:"permissions"`
+	Permissions []types.Permission `json:"permissions"`
 }
 
 // OperationID: An operationId of an operation that needs a permission.
 type OperationID string
+
+// The values of OperationID.
+const (
+	OperationIDAdmitMachine             OperationID = "AdmitMachine"
+	OperationIDDeleteFileByName         OperationID = "DeleteFileByName"
+	OperationIDDeleteJobByID            OperationID = "DeleteJobByID"
+	OperationIDDeleteMachine            OperationID = "DeleteMachine"
+	OperationIDDeleteNodeCertificate    OperationID = "DeleteNodeCertificate"
+	OperationIDDeleteNodeDns            OperationID = "DeleteNodeDns"
+	OperationIDDeleteNodeDocker         OperationID = "DeleteNodeDocker"
+	OperationIDDeleteNodeFile           OperationID = "DeleteNodeFile"
+	OperationIDDeleteNodeGroup          OperationID = "DeleteNodeGroup"
+	OperationIDDeleteNodeImage          OperationID = "DeleteNodeImage"
+	OperationIDDeleteNodeInterface      OperationID = "DeleteNodeInterface"
+	OperationIDDeleteNodeInterfaceRoute OperationID = "DeleteNodeInterfaceRoute"
+	OperationIDDeleteNodeNtp            OperationID = "DeleteNodeNtp"
+	OperationIDDeleteNodePackage        OperationID = "DeleteNodePackage"
+	OperationIDDeleteNodeSchedule       OperationID = "DeleteNodeSchedule"
+	OperationIDDeleteNodeService        OperationID = "DeleteNodeService"
+	OperationIDDeleteNodeSysctl         OperationID = "DeleteNodeSysctl"
+	OperationIDDeleteNodeUser           OperationID = "DeleteNodeUser"
+	OperationIDDeleteNodeUserSshkey     OperationID = "DeleteNodeUserSshkey"
+	OperationIDDeleteSecret             OperationID = "DeleteSecret"
+	OperationIDDrainAgent               OperationID = "DrainAgent"
+	OperationIDGetAdmission             OperationID = "GetAdmission"
+	OperationIDGetAdmissions            OperationID = "GetAdmissions"
+	OperationIDGetAgentDetails          OperationID = "GetAgentDetails"
+	OperationIDGetAgentFacts            OperationID = "GetAgentFacts"
+	OperationIDGetAgents                OperationID = "GetAgents"
+	OperationIDGetAuditExport           OperationID = "GetAuditExport"
+	OperationIDGetAuditLogByID          OperationID = "GetAuditLogByID"
+	OperationIDGetAuditLogs             OperationID = "GetAuditLogs"
+	OperationIDGetCatalog               OperationID = "GetCatalog"
+	OperationIDGetFileByName            OperationID = "GetFileByName"
+	OperationIDGetFileStale             OperationID = "GetFileStale"
+	OperationIDGetFiles                 OperationID = "GetFiles"
+	OperationIDGetHealthStatus          OperationID = "GetHealthStatus"
+	OperationIDGetJobByID               OperationID = "GetJobByID"
+	OperationIDGetJobs                  OperationID = "GetJobs"
+	OperationIDGetNodeCertificate       OperationID = "GetNodeCertificate"
+	OperationIDGetNodeCertificateByKey  OperationID = "GetNodeCertificateByKey"
+	OperationIDGetNodeDisk              OperationID = "GetNodeDisk"
+	OperationIDGetNodeDnsByKey          OperationID = "GetNodeDnsByKey"
+	OperationIDGetNodeDocker            OperationID = "GetNodeDocker"
+	OperationIDGetNodeDockerByKey       OperationID = "GetNodeDockerByKey"
+	OperationIDGetNodeFile              OperationID = "GetNodeFile"
+	OperationIDGetNodeGroup             OperationID = "GetNodeGroup"
+	OperationIDGetNodeGroupByKey        OperationID = "GetNodeGroupByKey"
+	OperationIDGetNodeHostname          OperationID = "GetNodeHostname"
+	OperationIDGetNodeImage             OperationID = "GetNodeImage"
+	OperationIDGetNodeInterface         OperationID = "GetNodeInterface"
+	OperationIDGetNodeInterfaceByKey    OperationID = "GetNodeInterfaceByKey"
+	OperationIDGetNodeInterfaceRoute    OperationID = "GetNodeInterfaceRoute"
+	OperationIDGetNodeLoad              OperationID = "GetNodeLoad"
+	OperationIDGetNodeLog               OperationID = "GetNodeLog"
+	OperationIDGetNodeLogSource         OperationID = "GetNodeLogSource"
+	OperationIDGetNodeMemory            OperationID = "GetNodeMemory"
+	OperationIDGetNodeNtp               OperationID = "GetNodeNtp"
+	OperationIDGetNodeOs                OperationID = "GetNodeOs"
+	OperationIDGetNodePackage           OperationID = "GetNodePackage"
+	OperationIDGetNodePackageByKey      OperationID = "GetNodePackageByKey"
+	OperationIDGetNodePackageUpdates    OperationID = "GetNodePackageUpdates"
+	OperationIDGetNodeProcess           OperationID = "GetNodeProcess"
+	OperationIDGetNodeProcessByKey      OperationID = "GetNodeProcessByKey"
+	OperationIDGetNodeSchedule          OperationID = "GetNodeSchedule"
+	OperationIDGetNodeScheduleByKey     OperationID = "GetNodeScheduleByKey"
+	OperationIDGetNodeService           OperationID = "GetNodeService"
+	OperationIDGetNodeServiceByKey      OperationID = "GetNodeServiceByKey"
+	OperationIDGetNodeStatus            OperationID = "GetNodeStatus"
+	OperationIDGetNodeSysctl            OperationID = "GetNodeSysctl"
+	OperationIDGetNodeSysctlByKey       OperationID = "GetNodeSysctlByKey"
+	OperationIDGetNodeTimezone          OperationID = "GetNodeTimezone"
+	OperationIDGetNodeUptime            OperationID = "GetNodeUptime"
+	OperationIDGetNodeUser              OperationID = "GetNodeUser"
+	OperationIDGetNodeUserByKey         OperationID = "GetNodeUserByKey"
+	OperationIDGetNodeUserSshkey        OperationID = "GetNodeUserSshkey"
+	OperationIDGetSecret                OperationID = "GetSecret"
+	OperationIDGetSecretValue           OperationID = "GetSecretValue"
+	OperationIDGetSecretVaults          OperationID = "GetSecretVaults"
+	OperationIDGetSecrets               OperationID = "GetSecrets"
+	OperationIDGetTrace                 OperationID = "GetTrace"
+	OperationIDPostFile                 OperationID = "PostFile"
+	OperationIDPostNodeCertificate      OperationID = "PostNodeCertificate"
+	OperationIDPostNodeCommandExec      OperationID = "PostNodeCommandExec"
+	OperationIDPostNodeCommandShell     OperationID = "PostNodeCommandShell"
+	OperationIDPostNodeConnectivityPing OperationID = "PostNodeConnectivityPing"
+	OperationIDPostNodeDocker           OperationID = "PostNodeDocker"
+	OperationIDPostNodeDockerExec       OperationID = "PostNodeDockerExec"
+	OperationIDPostNodeDockerStart      OperationID = "PostNodeDockerStart"
+	OperationIDPostNodeDockerStop       OperationID = "PostNodeDockerStop"
+	OperationIDPostNodeGroup            OperationID = "PostNodeGroup"
+	OperationIDPostNodeImagePull        OperationID = "PostNodeImagePull"
+	OperationIDPostNodeInterface        OperationID = "PostNodeInterface"
+	OperationIDPostNodeInterfaceRoute   OperationID = "PostNodeInterfaceRoute"
+	OperationIDPostNodeNtp              OperationID = "PostNodeNtp"
+	OperationIDPostNodePackage          OperationID = "PostNodePackage"
+	OperationIDPostNodePowerReboot      OperationID = "PostNodePowerReboot"
+	OperationIDPostNodePowerShutdown    OperationID = "PostNodePowerShutdown"
+	OperationIDPostNodeProcessSignal    OperationID = "PostNodeProcessSignal"
+	OperationIDPostNodeSchedule         OperationID = "PostNodeSchedule"
+	OperationIDPostNodeService          OperationID = "PostNodeService"
+	OperationIDPostNodeServiceDisable   OperationID = "PostNodeServiceDisable"
+	OperationIDPostNodeServiceEnable    OperationID = "PostNodeServiceEnable"
+	OperationIDPostNodeServiceRestart   OperationID = "PostNodeServiceRestart"
+	OperationIDPostNodeServiceStart     OperationID = "PostNodeServiceStart"
+	OperationIDPostNodeServiceStop      OperationID = "PostNodeServiceStop"
+	OperationIDPostNodeSysctl           OperationID = "PostNodeSysctl"
+	OperationIDPostNodeUser             OperationID = "PostNodeUser"
+	OperationIDPostNodeUserSshkey       OperationID = "PostNodeUserSshkey"
+	OperationIDPutFileByName            OperationID = "PutFileByName"
+	OperationIDPutNodeCertificate       OperationID = "PutNodeCertificate"
+	OperationIDPutNodeDns               OperationID = "PutNodeDns"
+	OperationIDPutNodeFile              OperationID = "PutNodeFile"
+	OperationIDPutNodeGroup             OperationID = "PutNodeGroup"
+	OperationIDPutNodeHostname          OperationID = "PutNodeHostname"
+	OperationIDPutNodeInterface         OperationID = "PutNodeInterface"
+	OperationIDPutNodeInterfaceRoute    OperationID = "PutNodeInterfaceRoute"
+	OperationIDPutNodeNtp               OperationID = "PutNodeNtp"
+	OperationIDPutNodePackageUpdates    OperationID = "PutNodePackageUpdates"
+	OperationIDPutNodeSchedule          OperationID = "PutNodeSchedule"
+	OperationIDPutNodeService           OperationID = "PutNodeService"
+	OperationIDPutNodeSysctl            OperationID = "PutNodeSysctl"
+	OperationIDPutNodeTimezone          OperationID = "PutNodeTimezone"
+	OperationIDPutNodeUser              OperationID = "PutNodeUser"
+	OperationIDPutNodeUserPassword      OperationID = "PutNodeUserPassword"
+	OperationIDPutSecret                OperationID = "PutSecret"
+	OperationIDRejectMachine            OperationID = "RejectMachine"
+	OperationIDRetryJobByID             OperationID = "RetryJobByID"
+	OperationIDRevokeMachine            OperationID = "RevokeMachine"
+	OperationIDUndrainAgent             OperationID = "UndrainAgent"
+)

@@ -23,7 +23,7 @@ package endpoint_test
 import (
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/dsl"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // TestDSL gives the permission of each method of each registered group, and
@@ -51,15 +51,15 @@ func (s *EndpointPublicTestSuite) TestDSL() {
 		}
 	}
 	s.Equal([]dsl.Declared{
-		{Permission: client.Permission("zzdsl:read"), Where: "endpoint zzdsl list"},
+		{Permission: types.Permission("zzdsl:read"), Where: "endpoint zzdsl list"},
 		{
-			Permission: client.Permission("zzdsl:write"),
+			Permission: types.Permission("zzdsl:write"),
 			AdminOnly:  true,
 			Where:      "endpoint zzdsl drain",
 		},
 	}, perms)
 
-	ids := map[string]client.Permission{}
+	ids := map[string]types.Permission{}
 	for _, op := range d.Operations() {
 		ids[op.ID] = op.Permission
 	}

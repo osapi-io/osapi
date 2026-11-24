@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package client
+package types
 
 // JobType represents the type of job operation.
 // Defined as a type alias so it's interchangeable with string in assignments.
@@ -29,47 +29,6 @@ const (
 	JobTypeQuery JobType = "query"
 	// JobTypeModify represents write operations that modify system state.
 	JobTypeModify JobType = "modify"
-)
-
-// JobOperation represents a specific operation using hierarchical dot notation.
-// SDK consumers use these to avoid string typos when building orchestrator tasks.
-// Defined as a type alias so it's interchangeable with string in assignments.
-type JobOperation = string
-
-// Node operations — read-only operations that query node state.
-const ()
-
-// Network operations.
-const ()
-
-// Command operations — execute arbitrary commands on agents.
-const (
-	OpCommandExec  JobOperation = "command.exec.execute"
-	OpCommandShell JobOperation = "command.shell.execute"
-)
-
-// User operations.
-const ()
-
-// SSH Key operations.
-const ()
-
-// Network interface operations.
-const (
-	OpNetworkInterfaceList   JobOperation = "network.interface.list"
-	OpNetworkInterfaceGet    JobOperation = "network.interface.get"
-	OpNetworkInterfaceCreate JobOperation = "network.interface.create"
-	OpNetworkInterfaceUpdate JobOperation = "network.interface.update"
-	OpNetworkInterfaceDelete JobOperation = "network.interface.delete"
-)
-
-// Network route operations.
-const (
-	OpNetworkRouteList   JobOperation = "network.route.list"
-	OpNetworkRouteGet    JobOperation = "network.route.get"
-	OpNetworkRouteCreate JobOperation = "network.route.create"
-	OpNetworkRouteUpdate JobOperation = "network.route.update"
-	OpNetworkRouteDelete JobOperation = "network.route.delete"
 )
 
 // Target constants for job routing.

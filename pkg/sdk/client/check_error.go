@@ -22,6 +22,8 @@ package client
 
 import (
 	"fmt"
+
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // checkError inspects the HTTP status code and returns the appropriate
@@ -74,10 +76,10 @@ func errorMessage(
 // errorReason is the reason of body, or "".
 func errorReason(
 	body *ErrorResponse,
-) string {
+) types.Reason {
 	if body == nil {
 		return ""
 	}
 
-	return body.Reason
+	return types.Reason(body.Reason)
 }

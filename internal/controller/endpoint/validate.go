@@ -30,6 +30,8 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/cli/command"
 
@@ -74,7 +76,7 @@ const (
 	// example from the spec, with no error.
 	RuleField = "field"
 	// RuleReason: each error that a method maps has one of Reasons. Go
-	// converts an untyped literal to Reason, so Because("not_manged")
+	// converts an untyped literal to types.Reason, so Because("not_manged")
 	// compiles, and the caller would get a word the schema does not list.
 	RuleReason = "reason"
 	// RuleExample: each flag that an Example names is a flag of the
@@ -140,7 +142,7 @@ var Checks = guide.Checks{
 	{
 		Rule:     RuleReason,
 		Requires: "Each error that a method maps has a reason of endpoint.Reasons.",
-		Fix:      "Use a Reason constant, such as endpoint.ReasonNotManaged, in Because.",
+		Fix:      "Use a types.Reason constant, such as endpoint.ReasonNotManaged, in Because.",
 	},
 	{
 		Rule:     RuleField,
@@ -344,9 +346,9 @@ func Validate(
 			add(m.Name, RuleExample, msg)
 		}
 		for _, e := range m.Mapped() {
-			if !slices.Contains(Reasons, e.Reason) {
+			if !slices.Contains(types.Reasons, e.Reason) {
 				add(m.Name, RuleReason, fmt.Sprintf(
-					"an error of %d has the reason %q, which is not one of endpoint.Reasons.",
+					"an error of %d has the reason %q, which is not one of types.Reasons.",
 					e.Code, e.Reason))
 			}
 		}

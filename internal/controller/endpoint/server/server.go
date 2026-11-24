@@ -34,6 +34,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/labstack/echo/v5"
 
 	"github.com/osapi-io/osapi/internal/authtoken"
@@ -197,7 +199,7 @@ func Serve[D, In, Out any](
 		in, msg, ok := decode(c)
 		if !ok {
 			return c.JSON(http.StatusBadRequest,
-				endpoint.ErrorResponse{Error: msg, Reason: endpoint.ReasonInvalidRequest})
+				endpoint.ErrorResponse{Error: msg, Reason: types.ReasonInvalidRequest})
 		}
 		// Each reference becomes its value here, so the handler, and the
 		// job that it queues, get the value. The job client seals it for
@@ -240,7 +242,7 @@ func status(
 	g *endpoint.Group,
 	m *endpoint.Method,
 	err error,
-) (int, endpoint.Reason) {
+) (int, types.Reason) {
 	for _, e := range m.Mapped() {
 		if errors.Is(err, e.Err) {
 			return e.Code, e.Reason
@@ -256,7 +258,7 @@ func status(
 		slog.String("method", m.Name),
 		slog.String("error", cause))
 
-	return http.StatusInternalServerError, endpoint.ReasonServerError
+	return http.StatusInternalServerError, types.ReasonServerError
 }
 
 // Path is the echo path of a method: its route, with {param} written as

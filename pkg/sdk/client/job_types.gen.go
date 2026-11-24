@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // CreateJobResponse is the CreateJobResponse of the spec.
 type CreateJobResponse struct {
 	// Unique identifier for the created job.
@@ -112,7 +114,7 @@ type JobDetailResponseResponses struct {
 
 	// The calls of other behaviors that the method made on the host, also when one
 	// failed.
-	Steps []Step `json:"steps,omitempty"`
+	Steps []types.Step `json:"steps,omitempty"`
 }
 
 // JobDetailResponseTimeline is the JobDetailResponseTimeline of the spec.

@@ -25,6 +25,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/labstack/echo/v5"
 
 	"github.com/osapi-io/osapi/internal/authtoken"
@@ -71,7 +73,7 @@ func ScopeMiddleware(
 					)
 					return nil, ctx.JSON(http.StatusForbidden, endpoint.ErrorResponse{
 						Error:  errMsg,
-						Reason: endpoint.ReasonForbidden,
+						Reason: types.ReasonForbidden,
 					})
 				}
 
@@ -85,7 +87,7 @@ func ScopeMiddleware(
 			if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
 				return nil, ctx.JSON(http.StatusUnauthorized, endpoint.ErrorResponse{
 					Error:  "Bearer token required",
-					Reason: endpoint.ReasonUnauthorized,
+					Reason: types.ReasonUnauthorized,
 				})
 			}
 
@@ -94,7 +96,7 @@ func ScopeMiddleware(
 			if err != nil {
 				return nil, ctx.JSON(http.StatusUnauthorized, endpoint.ErrorResponse{
 					Error:  "Invalid token: " + err.Error(),
-					Reason: endpoint.ReasonUnauthorized,
+					Reason: types.ReasonUnauthorized,
 				})
 			}
 
@@ -137,7 +139,7 @@ func ScopeMiddleware(
 			)
 			return nil, ctx.JSON(http.StatusForbidden, endpoint.ErrorResponse{
 				Error:  errMsg,
-				Reason: endpoint.ReasonForbidden,
+				Reason: types.ReasonForbidden,
 			})
 		},
 	)

@@ -35,7 +35,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller"
 	"github.com/osapi-io/osapi/internal/controller/mocks"
 	"github.com/osapi-io/osapi/internal/secret/vault"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type HandlersPublicTestSuite struct {
@@ -75,8 +75,8 @@ func (s *HandlersPublicTestSuite) TestHandlers() {
 	ctrl := gomock.NewController(s.T())
 	var cfg config.Config
 	cfg.Controller.API.Security.SigningKeys = []config.SigningKey{{ID: "test", Key: "test-key"}}
-	cfg.Controller.API.Security.Roles = map[client.Role]config.CustomRole{
-		"reader": {Permissions: []client.Permission{"status:read"}},
+	cfg.Controller.API.Security.Roles = map[types.Role]config.CustomRole{
+		"reader": {Permissions: []types.Permission{"status:read"}},
 	}
 	base := len(controller.ExportHandlers(slog.Default(), cfg, nil, nil, ""))
 

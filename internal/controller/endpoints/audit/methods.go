@@ -28,7 +28,7 @@ import (
 	auditstore "github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // defaultLimit is the page size when the caller gives none.
@@ -209,7 +209,7 @@ func toEntry(
 	}
 	for _, h := range e.Steps {
 		out.Steps = append(out.Steps, HostSteps{Hostname: h.Hostname, Steps: h.Steps})
-		out.Chain = append(out.Chain, h.Hostname+": "+client.FormatSteps(h.Steps))
+		out.Chain = append(out.Chain, h.Hostname+": "+types.FormatSteps(h.Steps))
 	}
 
 	return out

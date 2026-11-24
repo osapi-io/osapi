@@ -151,6 +151,14 @@ func Commands(
 					Call(jen.Lit(flag)))
 			}
 
+			// A named string type, such as types.ContentType, takes the flag's
+			// string through a conversion.
+			if fld.Type.Kind() == reflect.String && fld.Type.Name() != "string" &&
+				fld.Type.PkgPath() != "" && fld.Type != reflect.TypeFor[secret.Value]() {
+				return jen.Id(fld.Name).Op(":").
+					Qual(fld.Type.PkgPath(), fld.Type.Name()).Call(jen.Id(local))
+			}
+
 			return jen.Id(fld.Name).Op(":").Id(local)
 		}
 		var fields []jen.Code

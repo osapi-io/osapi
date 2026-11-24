@@ -30,7 +30,7 @@ import (
 	"testing"
 	"time"
 
-	sdkclient "github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
@@ -195,7 +195,7 @@ func (s *AgentPublicTestSuite) TestWriteJobResponse() {
 		errorMsg     string
 		errorCode    job.ErrorCode
 		changed      *bool
-		steps        []sdkclient.Step
+		steps        []types.Step
 		kvError      error
 		validateFunc func(error)
 	}{
@@ -238,9 +238,9 @@ func (s *AgentPublicTestSuite) TestWriteJobResponse() {
 			hostname:     "agent-1",
 			responseData: []byte(`{"changed": true}`),
 			status:       "completed",
-			steps: []sdkclient.Step{{
+			steps: []types.Step{{
 				Behavior: "netplan", Method: "update",
-				Steps: []sdkclient.Step{{Behavior: "managedfile", Method: "update"}},
+				Steps: []types.Step{{Behavior: "managedfile", Method: "update"}},
 			}},
 			validateFunc: func(err error) {
 				s.NoError(err)

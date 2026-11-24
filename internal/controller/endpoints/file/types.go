@@ -19,6 +19,8 @@
 // DEALINGS IN THE SOFTWARE.
 package file
 
+import "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // ListInput is the input of list, which has none.
 type ListInput struct{}
 
@@ -38,33 +40,33 @@ type DeleteInput struct {
 // UploadInput is a new file: its name, how a deploy treats it, and its
 // content, as a multipart form.
 type UploadInput struct {
-	Name        string `json:"name"         in:"form" validate:"required,min=1,max=255"       doc:"The name of the file in the Object Store."                                                                                     example:"nginx.conf"`
-	ContentType string `json:"content_type" in:"form" validate:"omitempty,oneof=raw template" doc:"How the file should be treated during deploy. raw writes bytes as-is; template renders with Go text/template and agent facts."                      default:"raw"`
-	File        []byte `json:"file"         in:"form" validate:"required,min=1"               doc:"The file content."`
+	Name        string            `json:"name"         in:"form" validate:"required,min=1,max=255"       doc:"The name of the file in the Object Store."                                                                                     example:"nginx.conf"`
+	ContentType types.ContentType `json:"content_type" in:"form" validate:"omitempty,oneof=raw template" doc:"How the file should be treated during deploy. raw writes bytes as-is; template renders with Go text/template and agent facts."                      default:"raw"`
+	File        []byte            `json:"file"         in:"form" validate:"required,min=1"               doc:"The file content."`
 }
 
 // UpdateInput is the new content of a file that the path names.
 type UpdateInput struct {
-	Name        string `json:"name"         in:"path" validate:"required,min=1,max=255"       doc:"The name of the file in the Object Store."`
-	ContentType string `json:"content_type" in:"form" validate:"omitempty,oneof=raw template" doc:"How the file should be treated during deploy. raw writes bytes as-is; template renders with Go text/template and agent facts." default:"raw"`
-	File        []byte `json:"file"         in:"form" validate:"required,min=1"               doc:"The file content."`
+	Name        string            `json:"name"         in:"path" validate:"required,min=1,max=255"       doc:"The name of the file in the Object Store."`
+	ContentType types.ContentType `json:"content_type" in:"form" validate:"omitempty,oneof=raw template" doc:"How the file should be treated during deploy. raw writes bytes as-is; template renders with Go text/template and agent facts." default:"raw"`
+	File        []byte            `json:"file"         in:"form" validate:"required,min=1"               doc:"The file content."`
 }
 
 // FileInfo is a stored file.
 type FileInfo struct { //nolint:revive // the schema name is part of the API
-	Name        string `json:"name"         doc:"The name of the file."                                           example:"nginx.conf"`
-	Sha256      string `json:"sha256"       doc:"SHA-256 hash of the file content."                               example:"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"`
-	Size        int    `json:"size"         doc:"File size in bytes."                                             example:"1024"                                                             render:"bytes"`
-	ContentType string `json:"content_type" doc:"How the file should be treated during deploy (raw or template)." example:"raw"                                                                             table:"-"`
-	Source      string `json:"source"       doc:"Source of the file: 'system' or 'user'."                         example:"user"`
+	Name        string            `json:"name"         doc:"The name of the file."                                           example:"nginx.conf"`
+	Sha256      string            `json:"sha256"       doc:"SHA-256 hash of the file content."                               example:"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"`
+	Size        int               `json:"size"         doc:"File size in bytes."                                             example:"1024"                                                             render:"bytes"`
+	ContentType types.ContentType `json:"content_type" doc:"How the file should be treated during deploy (raw or template)." example:"raw"                                                                             table:"-"`
+	Source      string            `json:"source"       doc:"Source of the file: 'system' or 'user'."                         example:"user"`
 }
 
 // FileInfoResponse is the metadata of a file.
 type FileInfoResponse struct { //nolint:revive // the schema name is part of the API
-	Name        string `json:"name"         doc:"The name of the file."                                           example:"nginx.conf"`
-	Sha256      string `json:"sha256"       doc:"SHA-256 hash of the file content."                               example:"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"`
-	Size        int    `json:"size"         doc:"File size in bytes."                                             example:"1024"                                                             render:"bytes"`
-	ContentType string `json:"content_type" doc:"How the file should be treated during deploy (raw or template)." example:"raw"`
+	Name        string            `json:"name"         doc:"The name of the file."                                           example:"nginx.conf"`
+	Sha256      string            `json:"sha256"       doc:"SHA-256 hash of the file content."                               example:"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"`
+	Size        int               `json:"size"         doc:"File size in bytes."                                             example:"1024"                                                             render:"bytes"`
+	ContentType types.ContentType `json:"content_type" doc:"How the file should be treated during deploy (raw or template)." example:"raw"`
 }
 
 // FileListResponse is each stored file.
@@ -75,11 +77,11 @@ type FileListResponse struct { //nolint:revive // the schema name is part of the
 
 // FileUploadResponse is the file that an upload or an update wrote.
 type FileUploadResponse struct { //nolint:revive // the schema name is part of the API
-	Name        string `json:"name"         doc:"The name of the uploaded file."                                                                                     example:"nginx.conf"`
-	Sha256      string `json:"sha256"       doc:"SHA-256 hash of the file content."                                                                                  example:"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"`
-	Size        int    `json:"size"         doc:"File size in bytes."                                                                                                example:"1024"                                                             render:"bytes"`
-	Changed     bool   `json:"changed"      doc:"Whether the file content changed. False when the Object Store already held an object with the same SHA-256 digest." example:"true"`
-	ContentType string `json:"content_type" doc:"How the file should be treated during deploy (raw or template)."                                                    example:"raw"`
+	Name        string            `json:"name"         doc:"The name of the uploaded file."                                                                                     example:"nginx.conf"`
+	Sha256      string            `json:"sha256"       doc:"SHA-256 hash of the file content."                                                                                  example:"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"`
+	Size        int               `json:"size"         doc:"File size in bytes."                                                                                                example:"1024"                                                             render:"bytes"`
+	Changed     bool              `json:"changed"      doc:"Whether the file content changed. False when the Object Store already held an object with the same SHA-256 digest." example:"true"`
+	ContentType types.ContentType `json:"content_type" doc:"How the file should be treated during deploy (raw or template)."                                                    example:"raw"`
 }
 
 // StaleDeployment is a deploy whose object changed since.

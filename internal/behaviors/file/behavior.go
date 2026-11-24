@@ -27,7 +27,7 @@ package file
 import (
 	"strings"
 
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
@@ -47,8 +47,8 @@ const (
 )
 
 var (
-	stored   = behavior.Stored("example.conf", raw, client.ContentRaw)
-	template = behavior.Stored("example.conf.tmpl", tmpl, client.ContentTemplate)
+	stored   = behavior.Stored("example.conf", raw, types.ContentRaw)
+	template = behavior.Stored("example.conf.tmpl", tmpl, types.ContentTemplate)
 	deployed = UpdateInput{ObjectName: "example.conf", Path: path}
 )
 

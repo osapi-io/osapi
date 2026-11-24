@@ -24,7 +24,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
@@ -64,7 +64,7 @@ var appEntry = Entry{Name: "app", State: "dead", Description: "Example app", Man
 // stored and deployed are the unit file of the examples: uploaded, then
 // deployed with create, so osapi keeps a record of it.
 var (
-	stored   = behavior.Stored("app.service", unitText, client.ContentRaw)
+	stored   = behavior.Stored("app.service", unitText, types.ContentRaw)
 	deployed = behavior.After(CreateInput{Name: "app", Object: "app.service"})
 )
 
@@ -153,13 +153,13 @@ var Behavior = behavior.Register(behavior.Define(
 			"start and enable are their own actions.").
 		Example("Deploy a unit file", CreateInput{Name: "app", Object: "app.service"},
 			Result{Name: "app", Changed: true},
-			behavior.Stored("app.service", unitText, client.ContentRaw),
+			behavior.Stored("app.service", unitText, types.ContentRaw),
 			behavior.Wrote(appPath, unitText),
 			behavior.Ran("systemctl", "daemon-reload"),
 		).
 		Example("A unit file that has the content", CreateInput{Name: "app", Object: "app.service"},
 			Result{Name: "app"},
-			behavior.Stored("app.service", unitText, client.ContentRaw),
+			behavior.Stored("app.service", unitText, types.ContentRaw),
 			behavior.After(CreateInput{Name: "app", Object: "app.service"}),
 		).
 		Fails("An object the store does not have", CreateInput{Name: "app", Object: "nosuch"}, "not found").
@@ -182,7 +182,7 @@ var Behavior = behavior.Register(behavior.Define(
 			Result{Name: "app", Changed: true},
 			stored,
 			deployed,
-			behavior.Stored("app-v2.service", unitText+"Restart=always\n", client.ContentRaw),
+			behavior.Stored("app-v2.service", unitText+"Restart=always\n", types.ContentRaw),
 			behavior.Wrote(appPath, unitText+"Restart=always\n"),
 			behavior.Ran("systemctl", "daemon-reload"),
 		).
@@ -203,7 +203,7 @@ var Behavior = behavior.Register(behavior.Define(
 			"systemd. A service with no unit file does not change.").
 		Example("Remove a service", DeleteInput{Name: "app"},
 			Result{Name: "app", Changed: true},
-			behavior.Stored("app.service", unitText, client.ContentRaw),
+			behavior.Stored("app.service", unitText, types.ContentRaw),
 			behavior.After(CreateInput{Name: "app", Object: "app.service"}),
 			behavior.Removed(appPath),
 			behavior.Ran("systemctl", "disable", "--now", "osapi-app.service"),
@@ -289,7 +289,7 @@ var Behavior = behavior.Register(behavior.Define(
 	).
 		Example("A unit with no [Install] section", EnableInput{Name: "static"},
 			Result{Name: "static"},
-			behavior.Stored("static.service", staticText, client.ContentRaw),
+			behavior.Stored("static.service", staticText, types.ContentRaw),
 			behavior.After(CreateInput{Name: "static", Object: "static.service"}),
 			behavior.Prints(units, "osapi-static.service loaded inactive dead Example static\n"),
 			behavior.Prints(files, "osapi-static.service static -\n"),

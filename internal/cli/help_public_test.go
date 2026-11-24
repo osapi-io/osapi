@@ -28,6 +28,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/termenv"
 	"github.com/spf13/cobra"
@@ -310,12 +312,12 @@ func (suite *HelpPublicTestSuite) TestExitCodeAndAPIReason() {
 	assert.Equal(suite.T(), cli.ExitError, cli.ExitCode(errors.New("boom")))
 
 	for status, want := range map[int]string{
-		400: cli.ReasonInvalidRequest,
-		401: cli.ReasonUnauthorized,
-		403: cli.ReasonForbidden,
-		404: cli.ReasonNotFound,
-		409: cli.ReasonConflict,
-		503: cli.ReasonServerError,
+		400: string(types.ReasonInvalidRequest),
+		401: string(types.ReasonUnauthorized),
+		403: string(types.ReasonForbidden),
+		404: string(types.ReasonNotFound),
+		409: string(types.ReasonConflict),
+		503: string(types.ReasonServerError),
 		418: cli.ReasonAPIError,
 	} {
 		assert.Equal(suite.T(), want, cli.APIReason(status))

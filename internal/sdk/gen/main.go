@@ -61,6 +61,11 @@ const spec = "internal/controller/api/gen/api.yaml"
 // dir is the SDK's package, from the root of the repository.
 const dir = "pkg/sdk/client"
 
+// typesDir is the package of the SDK's shared types, from the root of the
+// repository. A schema of the spec that it declares is not written again:
+// the client refers to it.
+const typesDir = "pkg/sdk/types"
+
 func main() {
 	root := flag.String("root", ".", "the root of the repository")
 	docs := flag.Bool("docs", false, "write the SDK's reference pages, not the SDK")
@@ -101,6 +106,12 @@ func run(
 	written, err := clean(w, root)
 	if err != nil {
 		return err
+	}
+	if shared, err = declaredTypes(filepath.Join(root, typesDir)); err != nil {
+		return err
+	}
+	for name := range shared {
+		written[name] = true
 	}
 	out := map[string]*jen.File{}
 	for path, f := range files(m, written) {
@@ -168,20 +179,66 @@ func clean(
 		if strings.HasSuffix(e.Name(), "_test.go") {
 			continue
 		}
-		f, err := parser.ParseFile(fset, path, data, parser.SkipObjectResolution)
-		if err != nil {
+		if err := addTypes(written, fset, path, data); err != nil {
 			return nil, err
-		}
-		for _, decl := range f.Decls {
-			gd, ok := decl.(*ast.GenDecl)
-			if !ok || gd.Tok != token.TYPE {
-				continue
-			}
-			for _, spec := range gd.Specs {
-				written[spec.(*ast.TypeSpec).Name.Name] = true
-			}
 		}
 	}
 
 	return written, nil
+}
+
+// declaredTypes is the types that the Go files of dir declare, but its
+// tests. A dir that does not exist declares none.
+func declaredTypes(
+	dir string,
+) (map[string]bool, error) {
+	out := map[string]bool{}
+	entries, err := os.ReadDir(dir)
+	if os.IsNotExist(err) {
+		return out, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	fset := token.NewFileSet()
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".go") ||
+			strings.HasSuffix(e.Name(), "_test.go") {
+			continue
+		}
+		path := filepath.Join(dir, e.Name())
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return nil, err
+		}
+		if err := addTypes(out, fset, path, data); err != nil {
+			return nil, err
+		}
+	}
+
+	return out, nil
+}
+
+// addTypes adds to names each type that the Go source data declares.
+func addTypes(
+	names map[string]bool,
+	fset *token.FileSet,
+	path string,
+	data []byte,
+) error {
+	f, err := parser.ParseFile(fset, path, data, parser.SkipObjectResolution)
+	if err != nil {
+		return err
+	}
+	for _, decl := range f.Decls {
+		gd, ok := decl.(*ast.GenDecl)
+		if !ok || gd.Tok != token.TYPE {
+			continue
+		}
+		for _, spec := range gd.Specs {
+			names[spec.(*ast.TypeSpec).Name.Name] = true
+		}
+	}
+
+	return nil
 }

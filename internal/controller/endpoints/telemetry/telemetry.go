@@ -26,7 +26,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 var (
@@ -46,7 +46,7 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Get[TraceInput, TraceResponse]("get").
 		Handle(Get).
 		ID("GetTrace").
-		Permission(client.PermTraceRead).
+		Permission(types.PermTraceRead).
 		Describe("Get the spans of a trace").
 		Explain("Returns each span of a trace, read from the tracing backend at "+
 			"telemetry.tracing.url. The backend gets the spans a few seconds after the "+

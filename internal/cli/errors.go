@@ -24,6 +24,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // Reasons in the --json error document: why a command failed, as a word that
@@ -38,14 +40,9 @@ const (
 	ReasonFatal = "fatal"
 	// ReasonError is any other failure the CLI cannot name more precisely.
 	ReasonError = "error"
-	// ReasonInvalidRequest and the codes below are the API's answer, by status.
-	ReasonInvalidRequest = "invalid_request"
-	ReasonUnauthorized   = "unauthorized"
-	ReasonForbidden      = "forbidden"
-	ReasonNotFound       = "not_found"
-	ReasonConflict       = "conflict"
-	ReasonServerError    = "server_error"
-	ReasonAPIError       = "api_error"
+	// ReasonAPIError is an API answer with no reason of types.Reasons. The
+	// API's own reasons are the words of types.Reason.
+	ReasonAPIError = "api_error"
 )
 
 // Exit codes shared by every command.
@@ -70,17 +67,17 @@ func APIReason(
 ) string {
 	switch {
 	case status == 400:
-		return ReasonInvalidRequest
+		return string(types.ReasonInvalidRequest)
 	case status == 401:
-		return ReasonUnauthorized
+		return string(types.ReasonUnauthorized)
 	case status == 403:
-		return ReasonForbidden
+		return string(types.ReasonForbidden)
 	case status == 404:
-		return ReasonNotFound
+		return string(types.ReasonNotFound)
 	case status == 409:
-		return ReasonConflict
+		return string(types.ReasonConflict)
 	case status >= 500:
-		return ReasonServerError
+		return string(types.ReasonServerError)
 	default:
 		return ReasonAPIError
 	}

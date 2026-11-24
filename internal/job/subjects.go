@@ -49,7 +49,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 var (
@@ -82,11 +82,11 @@ const (
 	// AllHosts is a wildcard for targeting all hosts.
 	AllHosts = "*"
 	// AnyHost is load-balanced across available hosts.
-	AnyHost = client.TargetAny
+	AnyHost = types.TargetAny
 	// LocalHost targets the API server's host.
 	LocalHost = "_local"
 	// BroadcastHost broadcasts to all hosts (no queue group).
-	BroadcastHost = client.TargetAll
+	BroadcastHost = types.TargetAll
 )
 
 // Subject categories for different operations

@@ -29,7 +29,7 @@ import (
 	"strings"
 	"time"
 
-	sdkclient "github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/osapi-io/osapi/internal/telemetry/opspan"
 	"go.opentelemetry.io/otel/attribute"
@@ -118,7 +118,7 @@ func (c *Client) WriteJobResponse(
 	errorMsg string,
 	errorCode job.ErrorCode,
 	changed *bool,
-	steps []sdkclient.Step,
+	steps []types.Step,
 ) error {
 	// Create response key with timestamp to ensure uniqueness
 	responseKey := fmt.Sprintf("responses.%s.%s.%d",

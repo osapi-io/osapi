@@ -9,6 +9,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/reference"
 	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/file"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 var fileListCmd = &cobra.Command{
@@ -43,7 +44,7 @@ var fileUploadCmd = &cobra.Command{
 			return
 		}
 
-		endpointcommand.Run(cmd, file.Group, "upload", file.UploadInput{Name: name, ContentType: contentType, File: fileFlagData})
+		endpointcommand.Run(cmd, file.Group, "upload", file.UploadInput{Name: name, ContentType: types.ContentType(contentType), File: fileFlagData})
 	},
 	Short: "Upload a file to the Object Store",
 	Use:   "upload",
@@ -83,7 +84,7 @@ var fileUpdateCmd = &cobra.Command{
 			return
 		}
 
-		endpointcommand.Run(cmd, file.Group, "update", file.UpdateInput{Name: name, ContentType: contentType, File: fileFlagData})
+		endpointcommand.Run(cmd, file.Group, "update", file.UpdateInput{Name: name, ContentType: types.ContentType(contentType), File: fileFlagData})
 	},
 	Short: "Replace a file in the Object Store",
 	Use:   "update",

@@ -27,7 +27,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/dsl"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type DSLPublicTestSuite struct {
@@ -71,16 +71,16 @@ func (s *DSLPublicTestSuite) TestBehavior() {
 	s.True(d.ServesAPI())
 	s.Equal([]string{"dsl", "behavior"}, d.Command)
 	s.Equal([]dsl.Declared{
-		{Permission: client.Permission("zzserved:read"), Where: "behavior zzserved get"},
+		{Permission: types.Permission("zzserved:read"), Where: "behavior zzserved get"},
 		{
-			Permission: client.Permission("zzserved:write"),
+			Permission: types.Permission("zzserved:write"),
 			AdminOnly:  true,
 			Where:      "behavior zzserved update",
 		},
 	}, d.Permissions())
 	ops := d.Operations()
 	s.Require().Len(ops, 2)
-	s.Equal(client.Permission("zzserved:write"), ops[1].Permission)
+	s.Equal(types.Permission("zzserved:write"), ops[1].Permission)
 	s.NotEmpty(ops[0].ID)
 }
 

@@ -23,7 +23,7 @@ package audit
 import (
 	"time"
 
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // The sample answers of the examples, which the docs page of each command
@@ -44,7 +44,7 @@ var (
 		JobID:        "7c9e6679-7425-40de-944b-e07fc1f90ae7",
 		Steps: []HostSteps{{
 			Hostname: "web-01",
-			Steps: []client.Step{{
+			Steps: []types.Step{{
 				Behavior:   "managedfile",
 				Method:     "update",
 				Changed:    &sampleChanged,

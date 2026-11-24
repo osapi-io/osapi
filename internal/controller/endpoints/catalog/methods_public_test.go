@@ -35,7 +35,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	_ "github.com/osapi-io/osapi/internal/controller/endpoints/all"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/catalog"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type MethodsPublicTestSuite struct {
@@ -58,7 +58,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 	s.Equal(string(area.All[0].Name), got.Areas[0].Name, "the areas, in order")
 	s.Equal(area.All[0].Label, got.Areas[0].Label)
 	s.Equal(authtoken.AllPermissions(), got.Permissions)
-	s.Contains(got.Permissions, client.PermCatalogRead)
+	s.Contains(got.Permissions, types.PermCatalogRead)
 
 	s.Require().Len(got.Roles, len(authtoken.Roles()))
 	for i, r := range authtoken.Roles() {
@@ -66,7 +66,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 		s.Equal(string(r), got.Roles[i].Name, "the roles, in order")
 		s.Equal(authtoken.RoleDescription(r), got.Roles[i].Description)
 		s.Equal(perms, got.Roles[i].Permissions)
-		s.Contains(got.Roles[i].Permissions, client.PermCatalogRead,
+		s.Contains(got.Roles[i].Permissions, types.PermCatalogRead,
 			"each built-in role reads the catalog, so each can use the UI")
 	}
 
@@ -79,7 +79,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 		}
 	}
 	s.Contains(got.Operations, catalog.CatalogOperation{
-		ID: "GetCatalog", Permission: client.PermCatalogRead,
+		ID: "GetCatalog", Permission: types.PermCatalogRead,
 	})
 
 	s.Equal(cli.StatusTones, got.StatusTones)

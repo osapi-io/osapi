@@ -35,7 +35,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/guide"
 	"github.com/osapi-io/osapi/internal/secret"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // The chain rules, by the name a problem reports. RuleRequires and
@@ -131,15 +131,15 @@ func NewStep(
 // duration. The input and the output stay out: an output is not redacted,
 // and the content of a managed file can be large. The job's request and response have the input
 // and the output of the method at the top.
-func (s *Step) Wire() []client.Step {
+func (s *Step) Wire() []types.Step {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if len(s.Steps) == 0 {
 		return nil
 	}
-	out := make([]client.Step, 0, len(s.Steps))
+	out := make([]types.Step, 0, len(s.Steps))
 	for _, c := range s.Steps {
-		w := client.Step{
+		w := types.Step{
 			Behavior:   c.Behavior,
 			Method:     c.Method,
 			Changed:    changedOf(c.Output),

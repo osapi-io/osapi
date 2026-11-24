@@ -1206,14 +1206,7 @@ paths:
             schema:
               properties:
                 content_type:
-                  default: raw
-                  description: How the file should be treated during deploy. raw writes bytes as-is; template renders with Go text/template and agent facts.
-                  enum:
-                    - raw
-                    - template
-                  type: string
-                  x-oapi-codegen-extra-tags:
-                    validate: omitempty,oneof=raw template
+                  $ref: '#/components/schemas/ContentType'
                 file:
                   description: The file content.
                   format: binary
@@ -1461,14 +1454,7 @@ paths:
             schema:
               properties:
                 content_type:
-                  default: raw
-                  description: How the file should be treated during deploy. raw writes bytes as-is; template renders with Go text/template and agent facts.
-                  enum:
-                    - raw
-                    - template
-                  type: string
-                  x-oapi-codegen-extra-tags:
-                    validate: omitempty,oneof=raw template
+                  $ref: '#/components/schemas/ContentType'
                 file:
                   description: The file content.
                   format: binary
@@ -9998,12 +9984,16 @@ components:
         - secret:read
         - secret:write
       type: string
+    ContentType:
+      description: 'How a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent''s facts.'
+      enum:
+        - raw
+        - template
+      type: string
     FileInfo:
       properties:
         content_type:
-          description: How the file should be treated during deploy (raw or template).
-          example: raw
-          type: string
+          $ref: '#/components/schemas/ContentType'
         name:
           description: The name of the file.
           example: nginx.conf
@@ -10030,9 +10020,7 @@ components:
     FileInfoResponse:
       properties:
         content_type:
-          description: How the file should be treated during deploy (raw or template).
-          example: raw
-          type: string
+          $ref: '#/components/schemas/ContentType'
         name:
           description: The name of the file.
           example: nginx.conf
@@ -10073,9 +10061,7 @@ components:
           example: true
           type: boolean
         content_type:
-          description: How the file should be treated during deploy (raw or template).
-          example: raw
-          type: string
+          $ref: '#/components/schemas/ContentType'
         name:
           description: The name of the uploaded file.
           example: nginx.conf

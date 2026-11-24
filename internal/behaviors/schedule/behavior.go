@@ -23,7 +23,7 @@ package schedule
 import (
 	"strings"
 
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
@@ -43,8 +43,8 @@ const (
 )
 
 var (
-	stored   = behavior.Stored("osapitest.cron", backupText, client.ContentRaw)
-	storedV2 = behavior.Stored("osapitest-v2.cron", backupV2Text, client.ContentRaw)
+	stored   = behavior.Stored("osapitest.cron", backupText, types.ContentRaw)
+	storedV2 = behavior.Stored("osapitest-v2.cron", backupV2Text, types.ContentRaw)
 	deployed = behavior.After(
 		CreateInput{
 			Name:     "osapitest",
@@ -93,7 +93,7 @@ var Behavior = behavior.Register(behavior.Define(
 			[]Entry{
 				{Name: "osapitest", Object: "osapitest.sh", Interval: "daily", Source: "daily"},
 			},
-			behavior.Stored("osapitest.sh", scriptText, client.ContentRaw),
+			behavior.Stored("osapitest.sh", scriptText, types.ContentRaw),
 			behavior.After(CreateInput{Name: "osapitest", Object: "osapitest.sh", Interval: "daily"}),
 		).
 		Example("A host where osapi deployed none", ListInput{}, []Entry{}, theirs),
@@ -130,7 +130,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Example("A script that runs daily",
 			CreateInput{Name: "osapitest", Object: "osapitest.sh", Interval: "daily"},
 			Result{Name: "osapitest", Changed: true},
-			behavior.Stored("osapitest.sh", scriptText, client.ContentRaw),
+			behavior.Stored("osapitest.sh", scriptText, types.ContentRaw),
 			behavior.Wrote(scriptPath, scriptText),
 		).
 		Example("A template, rendered with its vars",
@@ -139,12 +139,12 @@ var Behavior = behavior.Register(behavior.Define(
 				Object:   "osapitest.tmpl",
 				Schedule: "0 2 * * *",
 				ContentType: string(
-					client.ContentTemplate,
+					types.ContentTemplate,
 				),
 				Vars: map[string]string{"target": "/srv"},
 			},
 			Result{Name: "osapitest", Changed: true},
-			behavior.Stored("osapitest.tmpl", templateText, client.ContentRaw),
+			behavior.Stored("osapitest.tmpl", templateText, types.ContentRaw),
 			behavior.Wrote(backupPath, "0 2 * * * root /usr/local/bin/backup /srv\n"),
 		).
 		Example("An entry that has the content",
@@ -161,17 +161,17 @@ var Behavior = behavior.Register(behavior.Define(
 			CreateInput{Name: "osapitest", Object: "osapitest.sh", Interval: "daily"},
 			Result{Name: "osapitest"},
 			stored, deployed,
-			behavior.Stored("osapitest.sh", scriptText, client.ContentRaw),
+			behavior.Stored("osapitest.sh", scriptText, types.ContentRaw),
 		).
 		Fails("An object the store does not have",
 			CreateInput{Name: "osapitest", Object: "nosuch", Schedule: "0 2 * * *"}, "not found").
 		Fails("A template that reads a var the request does not give",
 			CreateInput{
 				Name: "osapitest", Object: "osapitest.tmpl", Schedule: "0 2 * * *",
-				ContentType: string(client.ContentTemplate),
+				ContentType: string(types.ContentTemplate),
 			},
 			"render template",
-			behavior.Stored("osapitest.tmpl", templateText, client.ContentRaw)).
+			behavior.Stored("osapitest.tmpl", templateText, types.ContentRaw)).
 		Fails("A file that osapi did not deploy",
 			CreateInput{Name: "osapitest", Object: "osapitest.cron", Schedule: "0 2 * * *"},
 			"osapi did not deploy it", stored, theirs).
@@ -269,9 +269,9 @@ var Behavior = behavior.Register(behavior.Define(
 		Example("A daily script with a new object",
 			UpdateInput{Name: "osapitest", Object: "osapitest-v2.sh"},
 			Result{Name: "osapitest", Changed: true},
-			behavior.Stored("osapitest.sh", scriptText, client.ContentRaw),
+			behavior.Stored("osapitest.sh", scriptText, types.ContentRaw),
 			behavior.After(CreateInput{Name: "osapitest", Object: "osapitest.sh", Interval: "daily"}),
-			behavior.Stored("osapitest-v2.sh", scriptText+"/usr/local/bin/prune\n", client.ContentRaw),
+			behavior.Stored("osapitest-v2.sh", scriptText+"/usr/local/bin/prune\n", types.ContentRaw),
 			behavior.Wrote(scriptPath, scriptText+"/usr/local/bin/prune\n"),
 		).
 		Fails("An entry that osapi did not deploy",

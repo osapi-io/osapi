@@ -27,7 +27,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
@@ -63,13 +63,13 @@ type apiGroup struct {
 	name string
 }
 
-func (g apiGroup) GroupName() string                                   { return g.name }
-func (g apiGroup) GroupDoc() string                                    { return "Remote " + g.name }
-func (g apiGroup) GroupNotes() string                                  { return "" }
-func (g apiGroup) GroupLong() string                                   { return "" }
-func (g apiGroup) SubDoc(string) string                                { return "" }
-func (g apiGroup) CommandPath() []string                               { return []string{g.name} }
-func (g apiGroup) CommandPermission(command.Command) client.Permission { return "" }
+func (g apiGroup) GroupName() string                                  { return g.name }
+func (g apiGroup) GroupDoc() string                                   { return "Remote " + g.name }
+func (g apiGroup) GroupNotes() string                                 { return "" }
+func (g apiGroup) GroupLong() string                                  { return "" }
+func (g apiGroup) SubDoc(string) string                               { return "" }
+func (g apiGroup) CommandPath() []string                              { return []string{g.name} }
+func (g apiGroup) CommandPermission(command.Command) types.Permission { return "" }
 func (g apiGroup) Commands() []command.Command {
 	return []command.Command{command.Method[struct{}, widgetOut]("get").Short("Get it")}
 }

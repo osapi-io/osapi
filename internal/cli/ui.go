@@ -889,7 +889,7 @@ func apiReason(
 	e *client.APIError,
 ) string {
 	if e.Reason != "" {
-		return e.Reason
+		return string(e.Reason)
 	}
 
 	return APIReason(e.StatusCode)

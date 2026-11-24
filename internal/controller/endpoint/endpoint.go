@@ -37,7 +37,7 @@ import (
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/secret"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // Group is a set of endpoints under one path, /api/<name>, such as agent.
@@ -289,16 +289,16 @@ func (g *Group) Path(
 // method needs none, and has "".
 func (g *Group) Permission(
 	m *Method,
-) client.Permission {
+) types.Permission {
 	switch {
 	case m.public:
 		return ""
 	case m.permission != "":
 		return m.permission
 	case m.verb == http.MethodGet:
-		return client.Permission(g.Name + ":read")
+		return types.Permission(g.Name + ":read")
 	default:
-		return client.Permission(g.Name + ":write")
+		return types.Permission(g.Name + ":write")
 	}
 }
 
@@ -306,7 +306,7 @@ func (g *Group) Permission(
 // whether the method marks it admin only, and whether the method names it,
 // with Permission, rather than takes its group's.
 type Declared struct {
-	Permission client.Permission
+	Permission types.Permission
 	AdminOnly  bool
 	Named      bool
 	// Where is the group and method, such as agent drain, for an error.
@@ -387,7 +387,7 @@ func (g *Group) Commands() []command.Command {
 // group's methods, for the command layer.
 func (g *Group) CommandPermission(
 	m command.Command,
-) client.Permission {
+) types.Permission {
 	return g.Permission(m.(*Method))
 }
 
@@ -469,7 +469,7 @@ type Method struct {
 	cmdSub           string
 	summary, explain string
 	returns          string
-	permission       client.Permission
+	permission       types.Permission
 	public           bool
 	adminOnly        bool
 	handler          any
@@ -614,7 +614,7 @@ func (m *Method) HTTPMethod() string {
 // Permission names the permission the method needs, in place of the
 // group's read or write permission.
 func (m *Method) Permission(
-	permission client.Permission,
+	permission types.Permission,
 ) *Method {
 	m.permission = permission
 
@@ -1001,89 +1001,61 @@ type Error struct {
 	Err error
 	// Code is the status code.
 	Code int
-	// Reason is the word of the answer's reason field, one of Reasons.
-	Reason Reason
+	// Reason is the word of the answer's reason field, one of types.Reasons.
+	Reason types.Reason
 	// Doc says when it occurs, for the spec.
 	Doc string
 }
 
-// Reason is the reason of an error answer, one of Reasons. A program
-// branches on it, so a reason outside the list breaks the contract of the
-// spec's ErrorResponse.
-type Reason string
-
-// The reasons of an error answer: why the request failed, as a word that a
-// program branches on. The HTTP status is the class of the problem, the
-// reason its cause, and the message is for a person. The ErrorResponse
-// schema of the spec lists the same words.
-const (
-	ReasonInvalidRequest Reason = "invalid_request"
-	ReasonUnauthorized   Reason = "unauthorized"
-	ReasonForbidden      Reason = "forbidden"
-	ReasonNotFound       Reason = "not_found"
-	ReasonNotManaged     Reason = "not_managed"
-	ReasonNotInstalled   Reason = "not_installed"
-	ReasonConflict       Reason = "conflict"
-	ReasonUnavailable    Reason = "unavailable"
-	ReasonServerError    Reason = "server_error"
-)
-
-// Reasons are each reason, in the order of the schema.
-var Reasons = []Reason{
-	ReasonInvalidRequest, ReasonUnauthorized, ReasonForbidden, ReasonNotFound,
-	ReasonNotManaged, ReasonNotInstalled, ReasonConflict, ReasonUnavailable,
-	ReasonServerError,
-}
-
 // ReasonDocs say when each reason is the answer, with its status. The
 // ErrorResponse schema of the spec has them.
-var ReasonDocs = map[Reason]string{
-	ReasonInvalidRequest: "the request breaks a rule, such as a missing field (400).",
-	ReasonUnauthorized:   "no token, or a token that is not valid (401).",
-	ReasonForbidden:      "the token does not have the permission (403).",
-	ReasonNotFound:       "the host or osapi does not have what the request names (404).",
-	ReasonNotManaged:     "the item is there, but osapi did not deploy it, so osapi does not change it (409).",
-	ReasonNotInstalled:   "the host does not have a program that the request needs (409).",
-	ReasonConflict:       "the state of the item blocks the request, such as a create of one that exists (409).",
-	ReasonUnavailable:    "a part that osapi depends on is down, such as NATS (503).",
-	ReasonServerError:    "the controller failed; its log has the cause (500).",
+var ReasonDocs = map[types.Reason]string{
+	types.ReasonInvalidRequest: "the request breaks a rule, such as a missing field (400).",
+	types.ReasonUnauthorized:   "no token, or a token that is not valid (401).",
+	types.ReasonForbidden:      "the token does not have the permission (403).",
+	types.ReasonNotFound:       "the host or osapi does not have what the request names (404).",
+	types.ReasonNotManaged:     "the item is there, but osapi did not deploy it, so osapi does not change it (409).",
+	types.ReasonNotInstalled:   "the host does not have a program that the request needs (409).",
+	types.ReasonConflict:       "the state of the item blocks the request, such as a create of one that exists (409).",
+	types.ReasonUnavailable:    "a part that osapi depends on is down, such as NATS (503).",
+	types.ReasonServerError:    "the controller failed; its log has the cause (500).",
 }
 
 // ErrorResponse is the body of each answer that is not a success: the
 // ErrorResponse schema of the spec.
 type ErrorResponse struct {
 	Error string `json:"error"`
-	// Reason is why, as one of Reasons.
-	Reason Reason `json:"reason"`
+	// Reason is why, as one of types.Reasons.
+	Reason types.Reason `json:"reason"`
 }
 
 // ReasonFor is the reason of a status that no error names: the reason of
 // a 404 that no route matches, or a 405.
 func ReasonFor(
 	status int,
-) Reason {
+) types.Reason {
 	switch {
 	case status == http.StatusUnauthorized:
-		return ReasonUnauthorized
+		return types.ReasonUnauthorized
 	case status == http.StatusForbidden:
-		return ReasonForbidden
+		return types.ReasonForbidden
 	case status == http.StatusNotFound:
-		return ReasonNotFound
+		return types.ReasonNotFound
 	case status == http.StatusConflict:
-		return ReasonConflict
+		return types.ReasonConflict
 	case status == http.StatusServiceUnavailable:
-		return ReasonUnavailable
+		return types.ReasonUnavailable
 	case status >= http.StatusInternalServerError:
-		return ReasonServerError
+		return types.ReasonServerError
 	default:
-		return ReasonInvalidRequest
+		return types.ReasonInvalidRequest
 	}
 }
 
 // Because is e with reason instead of the reason of its status, such as
 // not_managed for a 409 that osapi did not deploy.
 func (e Error) Because(
-	reason Reason,
+	reason types.Reason,
 ) Error {
 	e.Reason = reason
 
@@ -1147,7 +1119,12 @@ func Invalid(
 	err error,
 	doc string,
 ) Error {
-	return Error{Err: err, Code: http.StatusBadRequest, Reason: ReasonInvalidRequest, Doc: doc}
+	return Error{
+		Err:    err,
+		Code:   http.StatusBadRequest,
+		Reason: types.ReasonInvalidRequest,
+		Doc:    doc,
+	}
 }
 
 // Forbidden maps err to 403: a request that the token may make, but not
@@ -1156,7 +1133,7 @@ func Forbidden(
 	err error,
 	doc string,
 ) Error {
-	return Error{Err: err, Code: http.StatusForbidden, Reason: ReasonForbidden, Doc: doc}
+	return Error{Err: err, Code: http.StatusForbidden, Reason: types.ReasonForbidden, Doc: doc}
 }
 
 // NotFound maps err to 404.
@@ -1164,7 +1141,7 @@ func NotFound(
 	err error,
 	doc string,
 ) Error {
-	return Error{Err: err, Code: http.StatusNotFound, Reason: ReasonNotFound, Doc: doc}
+	return Error{Err: err, Code: http.StatusNotFound, Reason: types.ReasonNotFound, Doc: doc}
 }
 
 // Conflict maps err to 409.
@@ -1172,7 +1149,7 @@ func Conflict(
 	err error,
 	doc string,
 ) Error {
-	return Error{Err: err, Code: http.StatusConflict, Reason: ReasonConflict, Doc: doc}
+	return Error{Err: err, Code: http.StatusConflict, Reason: types.ReasonConflict, Doc: doc}
 }
 
 // Unavailable maps err to 503.
@@ -1180,5 +1157,10 @@ func Unavailable(
 	err error,
 	doc string,
 ) Error {
-	return Error{Err: err, Code: http.StatusServiceUnavailable, Reason: ReasonUnavailable, Doc: doc}
+	return Error{
+		Err:    err,
+		Code:   http.StatusServiceUnavailable,
+		Reason: types.ReasonUnavailable,
+		Doc:    doc,
+	}
 }

@@ -36,7 +36,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behaviors/managedfile"
 	managedfilemocks "github.com/osapi-io/osapi/internal/behaviors/managedfile/mocks"
 	"github.com/osapi-io/osapi/internal/behaviors/netplan"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // DebianPublicTestSuite covers what no example can: netplan generate
@@ -182,7 +182,7 @@ func (s *DebianPublicTestSuite) TestFailedStepIsInTheTree() {
 			)
 
 			s.ErrorContains(err, tc.wantError)
-			s.Equal(tc.wantSteps, client.FormatSteps(root.Wire()))
+			s.Equal(tc.wantSteps, types.FormatSteps(root.Wire()))
 		})
 	}
 }

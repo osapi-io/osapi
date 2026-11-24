@@ -264,9 +264,9 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindRefine,
-			Name: `.Permission(client.PermGroupVerb)`,
+			Name: `.Permission(types.PermGroupVerb)`,
 			Does: "Names the permission the method needs, in place of <group>:read or <group>:write. " +
-				"It takes a client.Permission: use a Perm constant of pkg/sdk/client, not a string. " +
+				"It takes a types.Permission: use a Perm constant of pkg/sdk/types, not a string. " +
 				"The constant is Perm, then the resource and the verb, such as PermAgentRead; " +
 				"osapi controller role get --name admin lists each permission. " +
 				"It must be one that a group, a behavior or the hand-written domains declare: " +
@@ -323,7 +323,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindError,
 			Name: `.Because(reason)`,
-			Does: "Gives a mapped error a reason other than the reason of its status, such as Conflict(behavior.ErrNotManaged, doc).Because(ReasonNotManaged). Each error answer is {error, reason}: the status is the class of the problem, the reason is the cause that a program branches on, one of Reasons, and the message is for a person. Each helper sets the reason of its status: NotFound not_found, Conflict conflict, Invalid invalid_request, Forbidden forbidden, Unavailable unavailable.",
+			Does: "Gives a mapped error a reason other than the reason of its status, such as Conflict(behavior.ErrNotManaged, doc).Because(types.ReasonNotManaged). Each error answer is {error, reason}: the status is the class of the problem, the reason is the cause that a program branches on, one of types.Reasons, and the message is for a person. Each helper sets the reason of its status: NotFound not_found, Conflict conflict, Invalid invalid_request, Forbidden forbidden, Unavailable unavailable.",
 			When: "When two errors of one status are different causes, such as not_managed and not_installed beside conflict.",
 		},
 		{

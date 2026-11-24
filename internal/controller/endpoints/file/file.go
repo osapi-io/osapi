@@ -26,6 +26,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
@@ -43,6 +45,15 @@ var (
 	ErrNoState = errors.New("the file state KV is not configured")
 )
 
+// notAContentType is a content type that the API refuses, for the Fails of
+// the upload and the update.
+const notAContentType = "zip"
+
+// contentTypes are the values of types.ContentType.
+func contentTypes() []string {
+	return []string{string(types.ContentRaw), string(types.ContentTemplate)}
+}
+
 // noStore503 is the 503 of each method, when the controller has no Object
 // Store.
 var noStore503 = endpoint.Unavailable(ErrNoStore,
@@ -50,12 +61,17 @@ var noStore503 = endpoint.Unavailable(ErrNoStore,
 
 // Group is the file group's definition.
 var Group = endpoint.Register(endpoint.Define(
-	"file", "Manage the files in the Object Store",
+	"file",
+	"Manage the files in the Object Store",
 	endpoint.Area(area.ObjectStore),
 	endpoint.SubDoc("stale", "Read the deployments whose file changed since"),
 	endpoint.Title("File Management API"),
 	endpoint.Tag("file_operations", "File", "Object Store file management operations."),
 	endpoint.Uses[Deps](),
+	endpoint.Doc[types.ContentType](
+		"How a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent's facts.",
+	),
+	endpoint.Enum[types.ContentType](contentTypes),
 	endpoint.Get[ListInput, FileListResponse]("list").
 		Handle(List).
 		ID("GetFiles").
@@ -71,7 +87,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Fails("no name", UploadInput{File: content}).
 		Fails("no file", UploadInput{Name: "app.conf"}).
 		Fails("a name over 255 characters", UploadInput{Name: long, File: content}).
-		Fails("a content type that is not raw or template", UploadInput{Name: "app.conf", ContentType: "zip", File: content}).
+		Fails("a content type that is not raw or template", UploadInput{Name: "app.conf", ContentType: notAContentType, File: content}).
 		Fails("an empty file", UploadInput{Name: "app.conf", File: []byte{}}).
 		Handle(Upload).
 		ID("PostFile").
@@ -110,7 +126,7 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Put[UpdateInput, FileUploadResponse]("update").
 		Fails("no file", UpdateInput{Name: "app.conf"}).
 		Fails("a name over 255 characters", UpdateInput{Name: long, File: content}).
-		Fails("a content type that is not raw or template", UpdateInput{Name: "app.conf", ContentType: "zip", File: content}).
+		Fails("a content type that is not raw or template", UpdateInput{Name: "app.conf", ContentType: notAContentType, File: content}).
 		Fails("an empty file", UpdateInput{Name: "app.conf", File: []byte{}}).
 		Handle(Update).
 		ID("PutFileByName").

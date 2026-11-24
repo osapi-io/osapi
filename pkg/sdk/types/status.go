@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package client
+package types
 
 // JobStatus represents the status of a job in the OSAPI system.
 // These values match the status strings returned by the REST API.

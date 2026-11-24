@@ -33,7 +33,7 @@ import (
 	"github.com/osapi-io/osapi/internal/area"
 
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 var (
@@ -67,7 +67,7 @@ var Group = endpoint.Register(endpoint.Define(
 		Sub("facts").
 		Use("list").
 		ID("GetAgentFacts").
-		Permission(client.PermAgentRead).
+		Permission(types.PermAgentRead).
 		Describe("List the fact keys").
 		Explain("Returns the fact keys that an input can refer to as @fact.<key>: the "+
 			"built-in keys and the custom keys that agents register.").

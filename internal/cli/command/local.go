@@ -27,7 +27,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // LocalGroup is a group of local commands: commands that run in the CLI
@@ -304,7 +304,7 @@ func (g *LocalGroup) Commands() []Command {
 // permission.
 func (g *LocalGroup) CommandPermission(
 	_ Command,
-) client.Permission {
+) types.Permission {
 	return ""
 }
 

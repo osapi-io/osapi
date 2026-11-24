@@ -30,16 +30,16 @@ import (
 	"github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
 	"github.com/osapi-io/osapi/internal/provider/node/memory"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
-// Type is a type alias for client.JobType.
-type Type = client.JobType
+// Type is a type alias for types.JobType.
+type Type = types.JobType
 
 // Job type constants re-exported from the SDK.
 const (
-	TypeQuery  = client.JobTypeQuery
-	TypeModify = client.JobTypeModify
+	TypeQuery  = types.JobTypeQuery
+	TypeModify = types.JobTypeModify
 )
 
 // CategoryBehavior is the job category every registered behavior runs under.
@@ -47,23 +47,23 @@ const (
 const CategoryBehavior = "behavior"
 
 // Status represents the current status of a job.
-// Status is a type alias for client.JobStatus so internal code and the SDK
-// share the same type. All status constants are defined in pkg/sdk/client/.
-type Status = client.JobStatus
+// Status is a type alias for types.JobStatus so internal code and the SDK
+// share the same type. All status constants are defined in pkg/sdk/types.
+type Status = types.JobStatus
 
 // Job status constants re-exported from the SDK.
 const (
-	StatusSubmitted      = client.JobStatusSubmitted
-	StatusAcknowledged   = client.JobStatusAcknowledged
-	StatusStarted        = client.JobStatusStarted
-	StatusPending        = client.JobStatusPending
-	StatusProcessing     = client.JobStatusProcessing
-	StatusCompleted      = client.JobStatusCompleted
-	StatusFailed         = client.JobStatusFailed
-	StatusSkipped        = client.JobStatusSkipped
-	StatusTimeout        = client.JobStatusTimeout
-	StatusPartialFailure = client.JobStatusPartialFailure
-	StatusRetried        = client.JobStatusRetried
+	StatusSubmitted      = types.JobStatusSubmitted
+	StatusAcknowledged   = types.JobStatusAcknowledged
+	StatusStarted        = types.JobStatusStarted
+	StatusPending        = types.JobStatusPending
+	StatusProcessing     = types.JobStatusProcessing
+	StatusCompleted      = types.JobStatusCompleted
+	StatusFailed         = types.JobStatusFailed
+	StatusSkipped        = types.JobStatusSkipped
+	StatusTimeout        = types.JobStatusTimeout
+	StatusPartialFailure = types.JobStatusPartialFailure
+	StatusRetried        = types.JobStatusRetried
 )
 
 // StatusPriority maps each job status to a numeric priority used when
@@ -139,7 +139,7 @@ type Response struct {
 	Changed *bool `json:"changed,omitempty"`
 	// Steps are the calls of other behaviors that the job's method made on
 	// the host, also when one failed. Empty for a method that calls none.
-	Steps []client.Step `json:"steps,omitempty"`
+	Steps []types.Step `json:"steps,omitempty"`
 	// Hostname identifies which agent processed this job.
 	Hostname string `json:"hostname"`
 	// Timestamp indicates when the response was created.
@@ -149,35 +149,9 @@ type Response struct {
 // Operation type definitions for hierarchical job routing
 // These support the new dot-notation format used by the jobs CLI
 
-// OperationType is a type alias for client.JobOperation.
-type OperationType = client.JobOperation
-
-// Node operations — read-only operations that query node state.
-const ()
-
-// User operations.
-const ()
-
-// SSH Key operations.
-const ()
-
-// Network interface operations.
-const (
-	OperationNetworkInterfaceList   = client.OpNetworkInterfaceList
-	OperationNetworkInterfaceGet    = client.OpNetworkInterfaceGet
-	OperationNetworkInterfaceCreate = client.OpNetworkInterfaceCreate
-	OperationNetworkInterfaceUpdate = client.OpNetworkInterfaceUpdate
-	OperationNetworkInterfaceDelete = client.OpNetworkInterfaceDelete
-)
-
-// Network route operations.
-const (
-	OperationNetworkRouteList   = client.OpNetworkRouteList
-	OperationNetworkRouteGet    = client.OpNetworkRouteGet
-	OperationNetworkRouteCreate = client.OpNetworkRouteCreate
-	OperationNetworkRouteUpdate = client.OpNetworkRouteUpdate
-	OperationNetworkRouteDelete = client.OpNetworkRouteDelete
-)
+// OperationType is the operation of a job, in dot notation, such as
+// behavior.dns.update.
+type OperationType = string
 
 // Operation represents an operation in the new hierarchical format
 type Operation struct {
@@ -330,21 +304,21 @@ func FactKeys() []string {
 
 // Condition type constants re-exported from the SDK.
 const (
-	ConditionMemoryPressure = client.ConditionMemoryPressure
-	ConditionHighLoad       = client.ConditionHighLoad
-	ConditionDiskPressure   = client.ConditionDiskPressure
-	ConditionDrainStuck     = client.ConditionDrainStuck
+	ConditionMemoryPressure = types.ConditionMemoryPressure
+	ConditionHighLoad       = types.ConditionHighLoad
+	ConditionDiskPressure   = types.ConditionDiskPressure
+	ConditionDrainStuck     = types.ConditionDrainStuck
 	// ConditionConsumersUnavailable is set while a job consumer of the
 	// agent cannot be created or bound.
-	ConditionConsumersUnavailable = client.ConditionConsumersUnavailable
+	ConditionConsumersUnavailable = types.ConditionConsumersUnavailable
 )
 
 // Agent state constants re-exported from the SDK.
 const (
-	AgentStateReady    = client.AgentReady
-	AgentStateDraining = client.AgentDraining
-	AgentStateCordoned = client.AgentCordoned
-	AgentStatePending  = client.AgentPending
+	AgentStateReady    = types.AgentReady
+	AgentStateDraining = types.AgentDraining
+	AgentStateCordoned = types.AgentCordoned
+	AgentStatePending  = types.AgentPending
 )
 
 // Condition represents a node condition evaluated agent-side.

@@ -30,6 +30,8 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // The two methods of the file group that send a multipart form, PostFile and
@@ -46,7 +48,7 @@ import (
 func (s *FileService) Upload(
 	ctx context.Context,
 	name string,
-	contentType string,
+	contentType types.ContentType,
 	file io.Reader,
 ) (*Response[FileUploadResponse], error) {
 	fileData, err := io.ReadAll(file)
@@ -75,7 +77,7 @@ func (s *FileService) Upload(
 func (s *FileService) Update(
 	ctx context.Context,
 	name string,
-	contentType string,
+	contentType types.ContentType,
 	file io.Reader,
 ) (*Response[FileUploadResponse], error) {
 	fileData, err := io.ReadAll(file)
@@ -108,7 +110,7 @@ func (s *FileService) sendForm(
 // it, its content type and its content.
 func fileForm(
 	name string,
-	contentType string,
+	contentType types.ContentType,
 	data []byte,
 ) ([]byte, string) {
 	body := &bytes.Buffer{}
@@ -116,7 +118,7 @@ func fileForm(
 	if name != "" {
 		_ = writer.WriteField("name", name)
 	}
-	_ = writer.WriteField("content_type", contentType)
+	_ = writer.WriteField("content_type", string(contentType))
 	part, _ := writer.CreateFormFile("file", "upload")
 	_, _ = part.Write(data)
 	_ = writer.Close()

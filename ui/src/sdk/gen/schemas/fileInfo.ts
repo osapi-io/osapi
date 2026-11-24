@@ -4,10 +4,10 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
+import type { ContentType } from './contentType';
 
 export interface FileInfo {
-  /** How the file should be treated during deploy (raw or template). */
-  content_type: string;
+  content_type: ContentType;
   /** The name of the file. */
   name: string;
   /** SHA-256 hash of the file content. */

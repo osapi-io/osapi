@@ -4,11 +4,10 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { PostFileBodyContentType } from './postFileBodyContentType';
+import type { ContentType } from './contentType';
 
 export type PostFileBody = {
-  /** How the file should be treated during deploy. raw writes bytes as-is; template renders with Go text/template and agent facts. */
-  content_type?: PostFileBodyContentType;
+  content_type?: ContentType;
   /**
      * The file content.
      * @minLength 1

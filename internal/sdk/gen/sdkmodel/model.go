@@ -300,6 +300,9 @@ type Type struct {
 	// Scalar is the Go type under a schema that is not an object, such as
 	// string for the enum Permission, or empty for a struct.
 	Scalar string
+	// Enum are the values of a scalar type, in the order of the spec, or
+	// nil.
+	Enum []string
 }
 
 // Field is a property of a schema.
@@ -813,6 +816,9 @@ func (b *builder) named(
 	b.types[name] = t
 	if s.Type != nil && s.Type.Is(openapi3.TypeString) {
 		t.Scalar = "string"
+		for _, e := range s.Enum {
+			t.Enum = append(t.Enum, fmt.Sprint(e))
+		}
 
 		return nil
 	}

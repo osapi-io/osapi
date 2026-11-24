@@ -28,15 +28,15 @@ import (
 	"github.com/osapi-io/osapi/internal/dsl"
 
 	"github.com/osapi-io/osapi/internal/validation/rule"
-	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
-// Permission is a type alias for client.Permission.
-type Permission = client.Permission
+// Permission is a type alias for types.Permission.
+type Permission = types.Permission
 
-// Role is a type alias for client.Role: a built-in role or a custom role of
+// Role is a type alias for types.Role: a built-in role or a custom role of
 // the config.
-type Role = client.Role
+type Role = types.Role
 
 // CustomRoles are the custom roles of the config, each with its
 // permissions.

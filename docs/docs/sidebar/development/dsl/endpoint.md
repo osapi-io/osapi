@@ -307,11 +307,11 @@ Adds a Result section to the CLI command's page.
 Use: For what the command does in a case that needs words, such as when two
 agents share a hostname.
 
-### `.Permission(client.PermGroupVerb)`
+### `.Permission(types.PermGroupVerb)`
 
 Names the permission the method needs, in place of &lt;group&gt;:read or
-&lt;group&gt;:write. It takes a client.Permission: use a Perm constant of
-pkg/sdk/client, not a string. The constant is Perm, then the resource and the
+&lt;group&gt;:write. It takes a types.Permission: use a Perm constant of
+pkg/sdk/types, not a string. The constant is Perm, then the resource and the
 verb, such as PermAgentRead; osapi controller role get --name admin lists each
 permission. It must be one that a group, a behavior or the hand-written domains
 declare: a test fails on a name that nothing declares, because no role grants
@@ -385,12 +385,12 @@ error of a backend.
 ### `.Because(reason)`
 
 Gives a mapped error a reason other than the reason of its status, such as
-Conflict(behavior.ErrNotManaged, doc).Because(ReasonNotManaged). Each error
-answer is &#123;error, reason&#125;: the status is the class of the problem, the
-reason is the cause that a program branches on, one of Reasons, and the message
-is for a person. Each helper sets the reason of its status: NotFound not_found,
-Conflict conflict, Invalid invalid_request, Forbidden forbidden, Unavailable
-unavailable.
+Conflict(behavior.ErrNotManaged, doc).Because(types.ReasonNotManaged). Each
+error answer is &#123;error, reason&#125;: the status is the class of the
+problem, the reason is the cause that a program branches on, one of
+types.Reasons, and the message is for a person. Each helper sets the reason of
+its status: NotFound not_found, Conflict conflict, Invalid invalid_request,
+Forbidden forbidden, Unavailable unavailable.
 
 Use: When two errors of one status are different causes, such as not_managed and
 not_installed beside conflict.

@@ -29,6 +29,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/labstack/echo/v5"
 
 	"github.com/osapi-io/osapi/internal/authtoken"
@@ -72,7 +74,7 @@ func invalid(
 	err error,
 ) *refusal {
 	return &refusal{http.StatusBadRequest, endpoint.ErrorResponse{
-		Error: err.Error(), Reason: endpoint.ReasonInvalidRequest,
+		Error: err.Error(), Reason: types.ReasonInvalidRequest,
 	}}
 }
 
@@ -83,7 +85,7 @@ func forbidden(
 	args ...any,
 ) *refusal {
 	return &refusal{http.StatusForbidden, endpoint.ErrorResponse{
-		Error: ref + ": " + fmt.Sprintf(format, args...), Reason: endpoint.ReasonForbidden,
+		Error: ref + ": " + fmt.Sprintf(format, args...), Reason: types.ReasonForbidden,
 	}}
 }
 
@@ -198,7 +200,7 @@ func read(
 
 		return "", &refusal{http.StatusInternalServerError, endpoint.ErrorResponse{
 			Error:  ref + ": the vault could not be read",
-			Reason: endpoint.ReasonServerError,
+			Reason: types.ReasonServerError,
 		}}
 	}
 
