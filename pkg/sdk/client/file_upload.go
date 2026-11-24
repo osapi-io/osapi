@@ -34,7 +34,10 @@ import (
 
 // The two methods of the file group that send a multipart form, PostFile and
 // PutFileByName, are written here by hand: the generator writes a method
-// only for a JSON body.
+// only for a JSON body. It writes their examples, which call each one with
+// the arguments in the order of FormArgs in internal/sdk/gen/sdkmodel: the
+// keys of the path, the required fields of the form, the optional ones, and
+// then the file.
 
 // Upload creates a file in the Object Store. It computes the SHA-256 of
 // the content first, and skips the upload when the stored file has the

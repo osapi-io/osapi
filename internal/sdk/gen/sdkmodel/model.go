@@ -124,8 +124,11 @@ type Method struct {
 	Input *Type
 	// Multipart is true when the body is a multipart form, such as the
 	// upload of a file. The generator writes no method for it: a person
-	// writes it.
+	// writes it, with the arguments that FormArgs gives.
 	Multipart bool
+	// Form is the fields of a multipart form, in the order of their names,
+	// or nil when the body is not a form.
+	Form []*Field
 	// Result is the type of a success's body, or nil when a success has
 	// none, such as a 204.
 	Result *TypeRef
@@ -143,6 +146,38 @@ type Example struct {
 	// Input is the value of each parameter and each property of the body
 	// that the example sets, by its name in the spec.
 	Input map[string]any `json:"input"`
+}
+
+// FormArgs is the arguments after the context of the method that a person
+// writes for a multipart form, in order: each key of the path, then each
+// required field of the form, then each optional one, then the file, which
+// the method takes as an io.Reader. The fields of each part are in the
+// order of their names. It is an error when the form has no file, or more
+// than one.
+func (m *Method) FormArgs() ([]*Field, error) {
+	var out []*Field
+	for _, p := range m.Keys() {
+		out = append(
+			out,
+			&Field{Name: p.Name, GoName: p.GoName, Type: p.Type, Required: true, Path: true},
+		)
+	}
+	var optional, files []*Field
+	for _, f := range m.Form {
+		switch {
+		case f.File:
+			files = append(files, f)
+		case f.Required:
+			out = append(out, f)
+		default:
+			optional = append(optional, f)
+		}
+	}
+	if len(files) != 1 {
+		return nil, fmt.Errorf("the form has %d files, not one", len(files))
+	}
+
+	return append(append(out, optional...), files...), nil
 }
 
 // Target is the parameter of the path that names the hosts, hostname, or
@@ -284,6 +319,12 @@ type Field struct {
 	// Path is true for a field of an Input that goes in the path, not in
 	// the body.
 	Path bool
+	// File is true for the content of a file in a multipart form, which a
+	// method takes as an io.Reader.
+	File bool
+	// Default is the value that the API uses when the field is not sent,
+	// or nil.
+	Default any
 }
 
 // New is the model of doc.
@@ -575,6 +616,11 @@ func (b *builder) method(
 			}
 		case content.Get("multipart/form-data") != nil:
 			m.Multipart = true
+			form, err := b.fields(m.Name+"Form", content.Get("multipart/form-data").Schema.Value)
+			if err != nil {
+				return nil, fmt.Errorf("form: %w", err)
+			}
+			m.Form = form
 		default:
 			return nil, fmt.Errorf("the body is not JSON and not a multipart form")
 		}
@@ -803,6 +849,8 @@ func (b *builder) fields(
 			Doc:      s.Properties[p].Value.Description,
 			Type:     ft,
 			Required: slices.Contains(s.Required, p),
+			File:     s.Properties[p].Value.Format == "binary",
+			Default:  s.Properties[p].Value.Default,
 		}
 		// A schema of the components with an enum is a type of its own,
 		// which has the values, so a field of it does not list them.

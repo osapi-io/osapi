@@ -44,6 +44,13 @@ type SpecExample struct {
 	Input map[string]any `json:"input"`
 }
 
+// bytesType is the type of a file's content, such as the file of an upload.
+// Its flag names the path of the file, a string.
+var (
+	bytesType  = reflect.TypeFor[[]byte]()
+	stringType = reflect.TypeFor[string]()
+)
+
 // exampleInput is where a flag of a method's command puts its value.
 type exampleInput struct {
 	// name is the name of the parameter or the property in the spec.
@@ -56,17 +63,11 @@ type exampleInput struct {
 // each one read into the input that the command sends. Two examples that
 // send the same input, such as one with --json, are one. An example with no
 // doc has the summary, and the flags after the first one, so that the docs
-// of two examples differ.
+// of two examples differ. A file of a multipart form, such as the upload of
+// a file, is the path that its flag names.
 func specExamples(
 	m *Method,
 ) ([]SpecExample, error) {
-	// A multipart form, such as the upload of a file, has a field that a
-	// flag names by its path: the SDK has no generated method to call.
-	for _, f := range fields(m.In) {
-		if f.Tag.Get("in") == "form" {
-			return nil, nil
-		}
-	}
 	inputs := exampleInputs(m.In)
 	var out []SpecExample
 	seen := map[string]bool{}
@@ -158,6 +159,9 @@ func readFlags(
 		t := in.typ
 		for t.Kind() == reflect.Pointer {
 			t = t.Elem()
+		}
+		if t == bytesType {
+			t = stringType
 		}
 		if !hasValue {
 			if t.Kind() == reflect.Bool {

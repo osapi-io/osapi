@@ -330,6 +330,16 @@ paths:
       tags:
         - file_operations
       x-osapi-area: objectstore
+      x-osapi-examples:
+        - doc: Upload a file
+          input:
+            file: /tmp/app.conf
+            name: app.conf
+        - doc: Upload a file, with --name app.conf.tmpl --file /tmp/app.conf.tmpl --content-type template
+          input:
+            content_type: template
+            file: /tmp/app.conf.tmpl
+            name: app.conf.tmpl
       x-osapi-method: upload
   /api/file/{name}:
     delete:
@@ -560,6 +570,11 @@ paths:
       tags:
         - file_operations
       x-osapi-area: objectstore
+      x-osapi-examples:
+        - doc: Replace a file
+          input:
+            file: /tmp/app.conf
+            name: app.conf
       x-osapi-method: update
   /api/file/stale:
     get:

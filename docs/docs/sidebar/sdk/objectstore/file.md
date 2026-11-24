@@ -127,6 +127,31 @@ Upload creates a file in the Object Store. It computes the SHA-256 of the
 content first, and skips the upload when the stored file has the same content. A
 file with other content is a ConflictError: Update replaces it.
 
+The examples of the method's definition:
+
+Upload a file, `go run file.go upload`:
+
+```go
+content, err := os.ReadFile("/tmp/app.conf")
+if err != nil {
+	return err
+}
+
+resp, err := c.File.Upload(ctx, "app.conf", "raw", bytes.NewReader(content))
+```
+
+Upload a file, with --name app.conf.tmpl --file /tmp/app.conf.tmpl
+--content-type template, `go run file.go upload-2`:
+
+```go
+content, err := os.ReadFile("/tmp/app.conf.tmpl")
+if err != nil {
+	return err
+}
+
+resp, err := c.File.Upload(ctx, "app.conf.tmpl", "template", bytes.NewReader(content))
+```
+
 ### Update
 
 ```go
@@ -139,6 +164,19 @@ func (s *FileService) Update(
 ```
 
 Update replaces a file in the Object Store, or creates it when the name is new.
+
+The examples of the method's definition:
+
+Replace a file, `go run file.go update`:
+
+```go
+content, err := os.ReadFile("/tmp/app.conf")
+if err != nil {
+	return err
+}
+
+resp, err := c.File.Update(ctx, "app.conf", "raw", bytes.NewReader(content))
+```
 
 ### GetChanged
 
@@ -219,6 +257,3 @@ The fields of each type are the properties of its schema in the API's spec.
 
 [`examples/sdk/client/file.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/file.go)
 runs each example of this page. With no argument, it lists them.
-
-[`examples/sdk/client/file_upload.go`](https://github.com/osapi-io/osapi/blob/main/examples/sdk/client/file_upload.go)
-calls the methods that a person wrote.

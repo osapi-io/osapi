@@ -29,7 +29,6 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
-	"regexp"
 	"slices"
 	"sort"
 	"strings"
@@ -93,7 +92,6 @@ func runPages(
 	if err != nil {
 		return err
 	}
-	written := handExamples(filepath.Join(root, exampleDir))
 	w := &genfile.Writer{Root: root}
 	users := typeUsers(m)
 	removeOld(w, root)
@@ -114,7 +112,9 @@ func runPages(
 			return err
 		}
 		page := servicePage(s, methods[s.Name+"Service"], cs, serviceTypes(m, users, s))
-		page += examplesSection(s, len(cs) > 0, written[s.Name])
+		if len(cs) > 0 {
+			page += examplesSection(s)
+		}
 		_ = w.Write(pagePath(s), []byte(page))
 	}
 
@@ -278,16 +278,20 @@ func servicePage(
 	for _, gm := range methods {
 		fmt.Fprintf(&b, "\n### %s\n\n```go\n%s\n```\n\n", gm.Name, gm.Signature)
 		meth := byName[gm.Name]
-		if meth == nil || meth.Multipart {
-			// A method a person wrote has its doc comment, and no example.
+		if meth == nil {
+			// A method that is not an operation has its doc comment.
 			b.WriteString(strings.TrimSpace(gm.Doc) + "\n")
-			if meth == nil {
-				b.WriteString("\nIt is not an operation of the API: it runs in the client.\n")
-			}
+			b.WriteString("\nIt is not an operation of the API: it runs in the client.\n")
 
 			continue
 		}
-		b.WriteString(methodText(meth))
+		if meth.Multipart {
+			// A person wrote the method of a form: its doc comment says
+			// what it does on the client too.
+			b.WriteString(strings.TrimSpace(gm.Doc) + "\n")
+		} else {
+			b.WriteString(methodText(meth))
+		}
 		for i, c := range examples[gm.Name] {
 			if i == 0 {
 				b.WriteString("\nThe examples of the method's definition:\n")
@@ -321,59 +325,13 @@ func servicePage(
 	return b.String()
 }
 
-// examplesSection is the section of a page that links the programs of the
-// examples of s: the one the generator writes, when s has examples, and each
-// one a person wrote that calls s.
+// examplesSection is the section of a page that links the program of the
+// examples of s.
 func examplesSection(
 	s *sdkmodel.Service,
-	generated bool,
-	written []string,
 ) string {
-	var lines []string
-	if generated {
-		lines = append(lines, fmt.Sprintf("[`%s/%s.go`](%s%s.go) runs each example of this page. "+
-			"With no argument, it lists them.", exampleDir, snake(s.Name), exampleURL, snake(s.Name)))
-	}
-	for _, f := range written {
-		lines = append(lines, fmt.Sprintf("[`%s/%s`](%s%s) calls the methods that a person wrote.",
-			exampleDir, f, exampleURL, f))
-	}
-	if len(lines) == 0 {
-		return ""
-	}
-
-	return "\n## Example\n\n" + strings.Join(lines, "\n\n") + "\n"
-}
-
-// serviceCall finds the service of each call in an example, such as File in
-// c.File.Upload(.
-var serviceCall = regexp.MustCompile(`\bc\.([A-Z][A-Za-z0-9]*)\.[A-Z]`)
-
-// handExamples is the examples in dir that a person wrote, by each service
-// they call, in the order of their names.
-func handExamples(
-	dir string,
-) map[string][]string {
-	out := map[string][]string{}
-	entries, _ := os.ReadDir(dir)
-	for _, e := range entries {
-		if !strings.HasSuffix(e.Name(), ".go") {
-			continue
-		}
-		data, err := os.ReadFile(filepath.Join(dir, e.Name()))
-		if err != nil || strings.HasPrefix(string(data), header) {
-			continue
-		}
-		seen := map[string]bool{}
-		for _, match := range serviceCall.FindAllStringSubmatch(string(data), -1) {
-			if !seen[match[1]] {
-				seen[match[1]] = true
-				out[match[1]] = append(out[match[1]], e.Name())
-			}
-		}
-	}
-
-	return out
+	return fmt.Sprintf("\n## Example\n\n[`%s/%s.go`](%s%s.go) runs each example of this page. "+
+		"With no argument, it lists them.\n", exampleDir, snake(s.Name), exampleURL, snake(s.Name))
 }
 
 // callText is the code of the example c, as its program has it.
@@ -381,12 +339,16 @@ func callText(
 	c *call,
 	m *sdkmodel.Method,
 ) string {
+	var pre strings.Builder
+	for _, p := range c.Pre {
+		pre.WriteString(strings.TrimSpace(fmt.Sprintf("%#v", p)) + "\n")
+	}
 	code := fmt.Sprintf("%#v", c.Code)
 	if m.Result == nil {
-		return "err := " + code
+		return pre.String() + "err := " + code
 	}
 
-	return "resp, err := " + code
+	return pre.String() + "resp, err := " + code
 }
 
 // summary is what a method does, in one sentence: the summary of its
