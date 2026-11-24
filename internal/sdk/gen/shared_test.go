@@ -47,28 +47,56 @@ func (s *SharedTestSuite) TestDeclaredTypes() {
 	tests := []struct {
 		name    string
 		setup   func() string
-		want    map[string]bool
+		want    map[string]*goType
 		wantErr string
 	}{
 		{
 			name:  "when the directory does not exist, it declares none",
 			setup: func() string { return filepath.Join(s.root, "none") },
-			want:  map[string]bool{},
+			want:  map[string]*goType{},
 		},
 		{
 			name: "when the directory has Go files, a test and a directory",
 			setup: func() string {
-				s.write(
-					typesDir+"/a.go",
-					"package types\n\ntype Step struct{}\n\ntype (\n\tMode string\n)\n",
-				)
+				s.write(typesDir+"/a.go", `package types
+
+type Step struct {
+	Behavior string `+"`json:\"behavior\"`"+`
+	Changed  *bool  `+"`json:\"changed,omitempty\"`"+`
+	Hidden   string `+"`json:\"-\"`"+`
+	Plain, Other int
+}
+
+type (
+	Mode string
+	Kind = string
+)
+
+const (
+	ModeRaw      Mode = "raw"
+	ModeTemplate Mode = "template"
+	KindOne      Kind = "one"
+	Untyped           = "untyped"
+	Number       Mode = 1
+	Count        int  = 2
+	Steps        Step = Step{}
+)
+
+var Other = "other"
+
+func f() {}
+`)
 				s.write(typesDir+"/a_test.go", "package types\n\ntype Hidden struct{}\n")
 				s.write(typesDir+"/notes.txt", "")
 				s.Require().NoError(os.MkdirAll(filepath.Join(s.root, typesDir, "dir.go"), 0o755))
 
 				return filepath.Join(s.root, typesDir)
 			},
-			want: map[string]bool{"Step": true, "Mode": true},
+			want: map[string]*goType{
+				"Step": {Struct: true, Names: []string{"Other", "Plain", "behavior", "changed"}},
+				"Mode": {Names: []string{"raw", "template"}},
+				"Kind": {Names: []string{"one"}},
+			},
 		},
 		{
 			name: "when a Go file does not parse",
@@ -107,7 +135,8 @@ func (s *SharedTestSuite) TestDeclaredTypes() {
 }
 
 func (s *SharedTestSuite) TestRunSharedType() {
-	s.write(typesDir+"/types.go", "package types\n\ntype FileUploadResponse struct{}\n")
+	s.write(typesDir+"/types.go", "package types\n\ntype FileUploadResponse struct {\n"+
+		"\tSHA256 string `json:\"sha256\"`\n\tSize int64 `json:\"size\"`\n}\n")
 
 	s.Require().NoError(generate(s.root, false))
 
@@ -123,6 +152,52 @@ func (s *SharedTestSuite) TestRunSharedType() {
 		"a type of pkg/sdk/types is not written again")
 	s.Contains(all.String(), "types.FileUploadResponse",
 		"the client refers to the type of pkg/sdk/types")
+}
+
+func (s *SharedTestSuite) TestRunSharedTypeDiffers() {
+	tests := []struct {
+		name    string
+		source  string
+		wantErr string
+	}{
+		{
+			name: "when a struct has other fields than the properties of the schema",
+			source: "type FileUploadResponse struct {\n" +
+				"\tSHA256 string `json:\"sha256\"`\n\tLength int64 `json:\"length\"`\n}\n",
+			wantErr: "the schema FileUploadResponse binds to types.FileUploadResponse, " +
+				"but the properties of the schema are [sha256 size], " +
+				"and of types.FileUploadResponse are [length sha256]",
+		},
+		{
+			name: "when a type has other values than the enum of the schema",
+			source: "type DnsKind string\n\nconst (\n\tDnsKindStatic DnsKind = \"static\"\n" +
+				"\tDnsKindAuto DnsKind = \"auto\"\n)\n",
+			wantErr: "the schema DnsKind binds to types.DnsKind, " +
+				"but the values of the schema are [dhcp static], and of types.DnsKind are [auto static]",
+		},
+		{
+			name:   "when a schema is an object and the type is not a struct",
+			source: "type FileUploadResponse string\n",
+			wantErr: "the schema FileUploadResponse binds to types.FileUploadResponse, " +
+				"but one is a struct and the other is not",
+		},
+		{
+			name:    "when a schema is an enum and the type is a struct",
+			source:  "type DnsKind struct{}\n",
+			wantErr: "one is a struct and the other is not",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			s.write(typesDir+"/types.go", "package types\n\n"+tc.source)
+
+			s.ErrorContains(generate(s.root, false), tc.wantErr)
+			s.FileExists(filepath.Join(s.root, dir, "gone.gen.go"),
+				"a run that fails writes nothing")
+		})
+	}
 }
 
 func (s *SharedTestSuite) TestRunTypesDirError() {

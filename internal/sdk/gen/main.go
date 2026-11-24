@@ -46,6 +46,9 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"reflect"
+	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/dave/jennifer/jen"
@@ -102,15 +105,21 @@ func run(
 	root string,
 	m *sdkmodel.Model,
 ) error {
+	declared, err := declaredTypes(filepath.Join(root, typesDir))
+	if err != nil {
+		return err
+	}
+	if err := checkShared(m, declared); err != nil {
+		return err
+	}
 	w := &genfile.Writer{Root: root}
 	written, err := clean(w, root)
 	if err != nil {
 		return err
 	}
-	if shared, err = declaredTypes(filepath.Join(root, typesDir)); err != nil {
-		return err
-	}
-	for name := range shared {
+	shared = map[string]bool{}
+	for name := range declared {
+		shared[name] = true
 		written[name] = true
 	}
 	out := map[string]*jen.File{}
@@ -187,12 +196,21 @@ func clean(
 	return written, nil
 }
 
+// goType is a type of pkg/sdk/types as the spec sees it.
+type goType struct {
+	// Struct is true for a struct, and false for a type such as a string.
+	Struct bool
+	// Names are the JSON names of the fields of a struct, or the values of
+	// the constants of any other type, in order.
+	Names []string
+}
+
 // declaredTypes is the types that the Go files of dir declare, but its
-// tests. A dir that does not exist declares none.
+// tests, by their names. A dir that does not exist declares none.
 func declaredTypes(
 	dir string,
-) (map[string]bool, error) {
-	out := map[string]bool{}
+) (map[string]*goType, error) {
+	out := map[string]*goType{}
 	entries, err := os.ReadDir(dir)
 	if os.IsNotExist(err) {
 		return out, nil
@@ -201,22 +219,129 @@ func declaredTypes(
 		return nil, err
 	}
 	fset := token.NewFileSet()
+	var consts []*ast.ValueSpec
 	for _, e := range entries {
 		if e.IsDir() || !strings.HasSuffix(e.Name(), ".go") ||
 			strings.HasSuffix(e.Name(), "_test.go") {
 			continue
 		}
-		path := filepath.Join(dir, e.Name())
-		data, err := os.ReadFile(path)
+		f, err := parser.ParseFile(fset, filepath.Join(dir, e.Name()), nil, 0)
 		if err != nil {
 			return nil, err
 		}
-		if err := addTypes(out, fset, path, data); err != nil {
-			return nil, err
+		for _, decl := range f.Decls {
+			gd, ok := decl.(*ast.GenDecl)
+			if !ok {
+				continue
+			}
+			for _, spec := range gd.Specs {
+				switch spec := spec.(type) {
+				case *ast.TypeSpec:
+					out[spec.Name.Name] = &goType{}
+					if st, ok := spec.Type.(*ast.StructType); ok {
+						out[spec.Name.Name] = &goType{Struct: true, Names: jsonNames(st)}
+					}
+				case *ast.ValueSpec:
+					if gd.Tok == token.CONST {
+						consts = append(consts, spec)
+					}
+				}
+			}
 		}
+	}
+	// A constant of a type, such as ContentRaw of ContentType, is a value
+	// of it.
+	for _, spec := range consts {
+		id, ok := spec.Type.(*ast.Ident)
+		if !ok || out[id.Name] == nil || out[id.Name].Struct {
+			continue
+		}
+		for _, v := range spec.Values {
+			if lit, ok := v.(*ast.BasicLit); ok && lit.Kind == token.STRING {
+				text, _ := strconv.Unquote(lit.Value)
+				out[id.Name].Names = append(out[id.Name].Names, text)
+			}
+		}
+	}
+	for _, t := range out {
+		slices.Sort(t.Names)
 	}
 
 	return out, nil
+}
+
+// jsonNames is the JSON name of each field of st that JSON has: the name
+// that its json tag gives, or the field's own name.
+func jsonNames(
+	st *ast.StructType,
+) []string {
+	var out []string
+	for _, f := range st.Fields.List {
+		tag := ""
+		if f.Tag != nil {
+			text, _ := strconv.Unquote(f.Tag.Value)
+			tag, _, _ = strings.Cut(reflect.StructTag(text).Get("json"), ",")
+		}
+		if tag == "-" {
+			continue
+		}
+		for _, n := range f.Names {
+			if tag != "" {
+				out = append(out, tag)
+			} else {
+				out = append(out, n.Name)
+			}
+		}
+	}
+
+	return out
+}
+
+// checkShared fails when a schema of m binds by its name to a type of
+// pkg/sdk/types that is not the same: an object whose properties are not
+// the fields of a struct, or an enum whose values are not the constants of
+// the type. A schema binds by its name only, so a schema named Step with
+// other properties would bind to types.Step with no error.
+func checkShared(
+	m *sdkmodel.Model,
+	declared map[string]*goType,
+) error {
+	for _, t := range m.Types {
+		d := declared[t.Name]
+		if d == nil {
+			continue
+		}
+		var want []string
+		what := "the values"
+		if t.Scalar == "" {
+			what = "the properties"
+			for _, f := range t.Fields {
+				want = append(want, f.Name)
+			}
+		} else {
+			want = append(want, t.Enum...)
+		}
+		slices.Sort(want)
+		if (t.Scalar == "") != d.Struct {
+			return fmt.Errorf(
+				"the schema %s binds to types.%s, but one is a struct and the other is not",
+				t.Name, t.Name,
+			)
+		}
+		if !slices.Equal(want, d.Names) {
+			return fmt.Errorf(
+				"the schema %s binds to types.%s, but %s of the schema are %v, and of types.%s are %v",
+				t.Name,
+				t.Name,
+				what,
+				want,
+				t.Name,
+				d.Names,
+			)
+		}
+	}
+
+	return nil
 }
 
 // addTypes adds to names each type that the Go source data declares.
