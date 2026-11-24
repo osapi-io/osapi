@@ -64,13 +64,14 @@ func (s *PagesTestSuite) SetupTest() {
 	s.write(dir+"/file_upload.go", handWritten)
 	s.write(dir+"/file_upload_test.go", "package client\n")
 	s.write(dir+"/notes.txt", "")
-	s.write(pageDir+"/client.md", "# Client\n\n<!-- osapi:sdk-services -->\nold\n"+
+	s.write(pageDir+"/"+indexPage, "# Client\n\n<!-- osapi:sdk-services -->\nold\n"+
 		"<!-- /osapi:sdk-services -->\n\nThe end.\n")
 	s.write(pageDir+"/gone.md", pageHeader+"\na page of a service that is gone\n")
 	s.write(pageDir+"/notes.md", "a page that a person wrote\n")
 	s.write(pageDir+"/kitchen/"+categoryFile, "{}\n")
 	s.write(pageDir+"/kitchen/sink.md", pageHeader+"\na page of an area that is gone\n")
 	s.write(pageDir+"/kitchen/notes.md", "a page that a person wrote\n")
+	s.write(pageDir+"/"+libraryDir+"/"+categoryFile, "{}\n")
 	s.write(pageDir+"/pantry/"+categoryFile, "{}\n")
 	s.write(pageDir+"/pantry/jar.md", pageHeader+"\na page of an area that is gone\n")
 	s.write(
@@ -159,19 +160,19 @@ func (s *PagesTestSuite) TestRunPages() {
 		{
 			name: "when client.md has a table of the services of each area, in the areas' order",
 			validateFunc: func() {
-				index := s.page("client.md")
+				index := s.page(indexPage)
 				s.Contains(index, "<!-- osapi:sdk-services -->\n\n### Config\n\n"+
 					"| Service | Description |\n| --- | --- |\n"+
-					"| [NodeFile](config/node_file.md) | The files of the host. |\n\n"+
+					"| [NodeFile](../config/node_file.md) | The files of the host. |\n\n"+
 					"### Networking\n\n")
 				s.Contains(
 					index,
-					"| [NetworkDNS](networking/network_dns.md) | "+
+					"| [NetworkDNS](../networking/network_dns.md) | "+
 						"The DNS resolvers of each interface of the host. |",
 				)
 				s.Contains(index, "### Files\n\n")
 				s.Contains(index, "### Fleet\n\n| Service | Description |\n| --- | --- |\n"+
-					"| [Job](fleet/job.md) | The job queue. |")
+					"| [Job](../fleet/job.md) | The job queue. |")
 				s.NotContains(index, "### Audit", "an area with no service has no table")
 				s.NotContains(index, "old")
 				s.Contains(index, "The end.")
@@ -180,9 +181,9 @@ func (s *PagesTestSuite) TestRunPages() {
 		{
 			name: "when the folder of each area has its label and its order",
 			validateFunc: func() {
-				s.Equal("{\n  \"label\": \"Config\",\n  \"position\": 2\n}\n",
+				s.Equal("{\n  \"label\": \"Config\",\n  \"position\": 1\n}\n",
 					s.page("config/"+categoryFile))
-				s.Equal("{\n  \"label\": \"Fleet\",\n  \"position\": 5\n}\n",
+				s.Equal("{\n  \"label\": \"Fleet\",\n  \"position\": 4\n}\n",
 					s.page("fleet/"+categoryFile))
 				s.NoDirExists(filepath.Join(s.root, pageDir, "audit"),
 					"an area with no service has no folder")
@@ -197,6 +198,8 @@ func (s *PagesTestSuite) TestRunPages() {
 				s.NoFileExists(filepath.Join(s.root, pageDir, "kitchen", "sink.md"))
 				s.NoFileExists(filepath.Join(s.root, pageDir, "kitchen", categoryFile))
 				s.FileExists(filepath.Join(s.root, pageDir, "kitchen", "notes.md"))
+				s.FileExists(filepath.Join(s.root, pageDir, libraryDir, categoryFile),
+					"the library folder is not the generator's")
 				s.NoDirExists(filepath.Join(s.root, pageDir, "pantry"),
 					"the folder of an area that has no page now is removed")
 			},
@@ -243,7 +246,7 @@ func (s *PagesTestSuite) TestRunPagesErrors() {
 		{
 			name: "when client.md is not there",
 			setup: func() {
-				s.Require().NoError(os.Remove(filepath.Join(s.root, pageDir, "client.md")))
+				s.Require().NoError(os.Remove(filepath.Join(s.root, pageDir, indexPage)))
 			},
 			wantErr: "client.md",
 		},

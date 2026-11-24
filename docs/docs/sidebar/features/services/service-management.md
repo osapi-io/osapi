@@ -111,5 +111,5 @@ permissions each role has.
   with its input, its output and its examples
 - [CLI Reference](../../usage/cli/client/node/service/service.mdx): the service
   commands
-- [SDK Reference](../../sdk/client/services/service.md): the service of the SDK
+- [SDK Reference](../../sdk/services/service.md): the service of the SDK
 - [File management](../config/file-management.md): upload the unit file

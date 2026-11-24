@@ -32,7 +32,7 @@
 // examples, examples/sdk/client/<service>.go: it calls each method with the
 // input of each example of the method's definition, which the spec has in
 // x-osapi-examples. With -docs, it writes the SDK's reference pages under
-// docs/docs/sidebar/sdk/client instead, from the same model and the methods
+// docs/docs/sidebar/sdk instead, from the same model and the methods
 // of the SDK's source, and the table of services of client.md.
 package main
 

@@ -134,5 +134,6 @@ the key and the value before they apply a change.
 - [CLI Reference](../../usage/cli/client/node/sysctl/sysctl.mdx): sysctl
   commands
 - [File Management](file-management.md): file-state KV tracking
-- [Platform Detection](../../sdk/platform/detection.md): OS family detection
+- [Platform Detection](../../sdk/library/platform-detection.md): OS family
+  detection
 - [Configuration](../../usage/configuration.md): full configuration reference

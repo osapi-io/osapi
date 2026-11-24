@@ -108,8 +108,8 @@ Skipped and failed hosts appear with their error in the output.
 | RHEL, Fedora | Yes       | Yes                    |
 | Darwin       | Yes       | Skipped                |
 
-Refer to [Platform Detection](../../sdk/platform/detection.md) for how osapi
-finds the OS family.
+Refer to [Platform Detection](../../sdk/library/platform-detection.md) for how
+osapi finds the OS family.
 
 ## Container behavior
 
@@ -128,6 +128,7 @@ reference page gives the permission of each method.
   the certificate behavior
 - [CLI Reference](../../usage/cli/client/node/certificate/certificate.mdx):
   certificate commands
-- [SDK Reference](../../sdk/client/security/certificate.md): Certificate service
-- [Platform Detection](../../sdk/platform/detection.md): OS family detection
+- [SDK Reference](../../sdk/security/certificate.md): Certificate service
+- [Platform Detection](../../sdk/library/platform-detection.md): OS family
+  detection
 - [Configuration](../../usage/configuration.md): full configuration reference

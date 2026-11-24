@@ -101,5 +101,6 @@ Skipped and failed hosts appear with their error in the output.
 
 - [CLI Reference](../../usage/cli/client/node/package/package.mdx): package
   commands
-- [Platform Detection](../../sdk/platform/detection.md): OS family detection
+- [Platform Detection](../../sdk/library/platform-detection.md): OS family
+  detection
 - [Configuration](../../usage/configuration.md): full configuration reference

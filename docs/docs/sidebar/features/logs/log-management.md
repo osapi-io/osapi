@@ -78,7 +78,7 @@ give the permission of each method.
 ## Related
 
 - [CLI reference](../../usage/cli/client/node/log/log.mdx): the log commands
-- [SDK reference](../../sdk/client/logs/log_entry.md): the LogEntry service, and
-  [LogSource](../../sdk/client/logs/log_source.md)
-- [Platform detection](../../sdk/platform/detection.md): how osapi finds the
-  platform of a host
+- [SDK reference](../../sdk/logs/log_entry.md): the LogEntry service, and
+  [LogSource](../../sdk/logs/log_source.md)
+- [Platform detection](../../sdk/library/platform-detection.md): how osapi finds
+  the platform of a host

@@ -295,6 +295,8 @@ const config: Config = {
     ]
   ],
 
+  // Colors each participant of a sequence diagram after Mermaid draws it.
+  clientModules: [require.resolve('./src/clientModules/mermaid-colors.ts')],
   themes: ['docusaurus-theme-openapi-docs', '@docusaurus/theme-mermaid']
 };
 
