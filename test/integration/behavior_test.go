@@ -50,23 +50,31 @@ type BehaviorSmokeSuite struct {
 	suite.Suite
 }
 
+// call is a command line and what it reads from standard input.
+type call struct {
+	args  []string
+	stdin string
+}
+
 // commandLine is the generated command line for one method, with input's flags:
-// the docs pages' command without the binary's name.
+// the docs pages' command without the binary's name. A secret of input with a
+// value is the flag -, and the value is the call's standard input.
 func commandLine(
 	b *behavior.Behavior,
 	m *behavior.Method,
 	input any,
-) []string {
+) call {
 	args := append(strings.Fields(b.Command(m))[1:], "--target", target, "--json")
 
-	return append(args, command.Args(input)...)
+	return call{args: append(args, command.Args(input)...), stdin: command.Stdin(input)}
 }
 
 // results runs one command and returns its result rows.
 func (s *BehaviorSmokeSuite) results(
-	args []string,
+	c call,
 ) []map[string]any {
-	stdout, stderr, code := runCLI(args...)
+	args := c.args
+	stdout, stderr, code := runCLIStdin(c.stdin, args...)
 	s.Require().Equal(0, code, "%s: %s", strings.Join(args, " "), stderr)
 
 	var body struct {
