@@ -1,0 +1,1 @@
+{"parameters":[{"description":"Show only the components of this type: controller, nats or agent. The other parts of the status stay.","in":"query","name":"component","schema":{"enum":["controller","nats","agent"],"type":"string"},"x-oapi-codegen-extra-tags":{"validate":"omitempty,oneof=controller nats agent"}}]}

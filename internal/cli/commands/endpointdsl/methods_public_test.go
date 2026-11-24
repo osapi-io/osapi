@@ -150,10 +150,10 @@ func (s *MethodsPublicTestSuite) TestMethodGet() {
 		},
 		{
 			name: "when the method is under a sub-command, its command has it",
-			in:   endpointdsl.MethodInput{Name: "facts", Method: "list"},
+			in:   endpointdsl.MethodInput{Name: "agent", Method: "facts"},
 			validateFunc: func(got endpointdsl.MethodOutput, err error) {
 				s.Require().NoError(err)
-				s.Equal("osapi client facts keys list", got.Command)
+				s.Equal("osapi client agent facts list", got.Command)
 			},
 		},
 		{

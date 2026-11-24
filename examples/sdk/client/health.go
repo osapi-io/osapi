@@ -31,6 +31,7 @@ var examples = []struct {
 	{"liveness", "Liveness probe", runLiveness},
 	{"ready", "Readiness probe", runReady},
 	{"status", "System status and component health", runStatus},
+	{"status-2", "System status and component health, with --component agent", runStatus2},
 }
 
 // runLiveness runs the example liveness: liveness probe.
@@ -64,7 +65,20 @@ func runStatus(
 	ctx context.Context,
 	c *client.Client,
 ) error {
-	resp, err := c.Health.Status(ctx)
+	resp, err := c.Health.Status(ctx, client.HealthStatusParams{})
+	if err != nil {
+		return err
+	}
+
+	return show(resp.Data)
+}
+
+// runStatus2 runs the example status-2: system status and component health, with --component agent.
+func runStatus2(
+	ctx context.Context,
+	c *client.Client,
+) error {
+	resp, err := c.Health.Status(ctx, client.HealthStatusParams{Component: "agent"})
 	if err != nil {
 		return err
 	}

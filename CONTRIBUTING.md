@@ -257,7 +257,7 @@ command, or the command in `cmd/` when no definition makes it, then run
 `just cli-docs-generate`:
 
 - Each command under `osapi client` is `<resource> <verb>`, such as
-  `facts keys list` or `node log source list`. The verb is `list`, `get`,
+  `agent facts list` or `node log source list`. The verb is `list`, `get`,
   `create`, `update` or `delete`, or an action that a CRUD verb does not say,
   such as `drain`, `exec` or `restart`. A noun is never the verb: list a noun's
   items with `list` under it. A local command has the same shape, such as

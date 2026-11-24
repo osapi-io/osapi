@@ -202,7 +202,7 @@ func (s *TracesPublicTestSuite) TestReadSpan() {
 			defer srv.Close()
 
 			ctx, request := otel.Tracer("test").
-				Start(context.Background(), "GET /api/telemetry/trace")
+				Start(context.Background(), "GET /api/trace")
 			_, _ = traces.NewJaeger(srv.URL, nil).Trace(ctx, "0123456789abcdef0123456789abcdef")
 			request.End()
 

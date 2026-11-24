@@ -152,7 +152,7 @@ var (
 
 // SubKey is the annotation of a generated command that goes under a
 // command of its own: the Sub segment of its method, such as trace in
-// osapi client telemetry trace get.
+// osapi client trace get.
 const SubKey = "osapi.endpoint.sub"
 
 // AddCommands adds a group's generated commands. Each gen/cli.go calls it

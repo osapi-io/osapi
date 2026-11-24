@@ -11,19 +11,20 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent"
 )
 
-var agentStatusCmd = &cobra.Command{
+var agentFactsCmd = &cobra.Command{
 	Annotations: map[string]string{
-		reference.Permission: "health:read",
-		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client agent status\n\x1b[1;38;2;0;213;255mComponents (2):\x1b[0m\n  \x1b[38;2;10;143;176mTYPE          \x1b[0m\x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mCONDITIONS  \x1b[0m\x1b[38;2;10;143;176mAGE    \x1b[0m\x1b[38;2;10;143;176mCPU %  \x1b[0m\x1b[38;2;10;143;176mMEM      \x1b[0m\x1b[38;2;10;143;176mVERSION\x1b[0m\n  \x1b[1magent\x1b[0m         \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[38;2;138;138;138m-\x1b[0m           \x1b[38;2;138;138;138m51h2m\x1b[0m  0.40   30.0 MB  v1.4.0\n  \x1b[38;2;138;138;138m├─ \x1b[0m\x1b[1mheartbeat\x1b[0m  \x1b[1m\x1b[0m          \x1b[38;2;103;234;147mok\x1b[0m      \x1b[38;2;138;138;138m-\x1b[0m           \x1b[38;2;138;138;138m\x1b[0m                       \n  \x1b[38;2;138;138;138m└─ \x1b[0m\x1b[1mfacts\x1b[0m      \x1b[1m\x1b[0m          \x1b[38;2;103;234;147mok\x1b[0m      \x1b[38;2;138;138;138m-\x1b[0m           \x1b[38;2;138;138;138m\x1b[0m                       \n  \x1b[1magent\x1b[0m         \x1b[1mmac-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[38;2;138;138;138m-\x1b[0m           \x1b[38;2;138;138;138m1h30m\x1b[0m  0.70   27.0 MB  v1.4.0\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"total_items\": 2,\n  \"items\": [\n    {\n      \"type\": \"agent\",\n      \"hostname\": \"web-01\",\n      \"status\": \"ok\",\n      \"age\": \"51h2m\",\n      \"cpu_percent\": 0.4,\n      \"mem_bytes\": 31457280,\n      \"version\": \"v1.4.0\",\n      \"components\": [\n        {\n          \"type\": \"heartbeat\",\n          \"status\": \"ok\"\n        },\n        {\n          \"type\": \"facts\",\n          \"status\": \"ok\"\n        }\n      ]\n    },\n    {\n      \"type\": \"agent\",\n      \"hostname\": \"mac-01\",\n      \"status\": \"ok\",\n      \"age\": \"1h30m\",\n      \"cpu_percent\": 0.7,\n      \"mem_bytes\": 28311552,\n      \"version\": \"v1.4.0\"\n    }\n  ]\n}\n```",
+		clicommand.SubKey:    "facts",
+		reference.Permission: "agent:read",
+		reference.Result:     "The command prints:\n\n```ansi\n$ osapi client agent facts list\n\x1b[1;38;2;0;213;255mFact keys (3):\x1b[0m\n  \x1b[38;2;10;143;176mREFERENCE                \x1b[0m\x1b[38;2;10;143;176mDESCRIPTION\x1b[0m\n  @fact.hostname           The hostname of the agent.\n  @fact.primary_interface  The interface of the default route.\n  @fact.datacenter         A custom fact from the config of the agent.\n\n  \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"items\": [\n    {\n      \"key\": \"hostname\",\n      \"description\": \"The hostname of the agent.\",\n      \"builtin\": true\n    },\n    {\n      \"key\": \"primary_interface\",\n      \"description\": \"The interface of the default route.\",\n      \"builtin\": true\n    },\n    {\n      \"key\": \"datacenter\",\n      \"description\": \"A custom fact from the config of the agent.\"\n    }\n  ],\n  \"total_items\": 3\n}\n```",
 	},
 	Args:    cobra.NoArgs,
-	Example: "  osapi client agent status\n  osapi client agent status --json",
-	Long:    "Each agent, with its process CPU and memory and each of its sub-components, from the\nhealth status of the controller. agent list shows the host of each agent.",
+	Example: "  osapi client agent facts list\n  osapi client agent facts list --json",
+	Long:    "Lists each fact key that an input can refer to as @fact.<key>, with\nits description.",
 	Run: func(cmd *cobra.Command, _ []string) {
-		endpointcommand.Run(cmd, agent.Group, "status", agent.StatusInput{})
+		endpointcommand.Run(cmd, agent.Group, "facts", agent.FactsInput{})
 	},
-	Short: "Show the health of each agent",
-	Use:   "status",
+	Short: "List the fact keys",
+	Use:   "list",
 }
 
 var agentListCmd = &cobra.Command{
@@ -100,5 +101,5 @@ func init() {
 	_ = agentDrainCmd.MarkFlagRequired("hostname")
 	agentUndrainCmd.Flags().String("hostname", "", "The hostname of the agent to undrain")
 	_ = agentUndrainCmd.MarkFlagRequired("hostname")
-	clicommand.AddCommands(agent.Group, agentStatusCmd, agentListCmd, agentGetCmd, agentDrainCmd, agentUndrainCmd)
+	clicommand.AddCommands(agent.Group, agentFactsCmd, agentListCmd, agentGetCmd, agentDrainCmd, agentUndrainCmd)
 }

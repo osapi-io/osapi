@@ -6,13 +6,14 @@ The table has each component that registered: its status, its active conditions,
 its uptime, and the CPU and memory of its process.
 
 ```bash
-osapi client health status
+osapi client health status [flags]
 ```
 
 ## Examples
 
 ```bash
 osapi client health status
+osapi client health status --component agent
 osapi client health status --json
 ```
 
@@ -156,10 +157,16 @@ shows what a role grants.
 Each sub-component is under its component, as a tree, with its address and its
 URL. The checks tell if the controller can reach NATS and the KV buckets. The
 output also has the counts of the job queue, the streams, the KV buckets and the
-Object Stores. The command needs a token. `controller status`, `nats status` and
-`agent status` show one type of component. Use `osapi client agent list` for the
+Object Stores. The command needs a token. --component shows one type of
+component: controller, nats or agent. Use `osapi client agent list` for the
 labels and the OS of each agent. When a check fails, the overall status is
 `degraded`, and the check shows the error.
+
+## Flags
+
+| Flag          | Description                                                                                                                    | Default |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------- |
+| `--component` | Show only the components of this type: controller, nats or agent. The other parts of the status stay (controller, nats, agent) |         |
 
 ## Global flags
 

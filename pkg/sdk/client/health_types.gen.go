@@ -38,6 +38,44 @@ type Check struct {
 	Status string `json:"status"`
 }
 
+// ComponentEntry is the ComponentEntry of the spec.
+type ComponentEntry struct {
+	// Listen address of a sub-component, such as :8080.
+	Address string `json:"address,omitempty"`
+
+	// Time since component started.
+	Age string `json:"age,omitempty"`
+
+	// The sub-components of the component, such as its api and its metrics server,
+	// sorted by name.
+	Components []ComponentEntry `json:"components,omitempty"`
+
+	// Active conditions.
+	Conditions []string `json:"conditions,omitempty"`
+
+	// Process CPU usage percentage.
+	CPUPercent float64 `json:"cpu_percent,omitempty"`
+
+	// Component hostname.
+	Hostname string `json:"hostname,omitempty"`
+
+	// Process RSS memory in bytes.
+	MemBytes int64 `json:"mem_bytes,omitempty"`
+
+	// Component status.
+	Status string `json:"status,omitempty"`
+
+	// Component type (agent, controller, nats), or the name of a sub-component,
+	// such as api.
+	Type string `json:"type,omitempty"`
+
+	// Where a person opens a sub-component, from its url config key.
+	URL string `json:"url,omitempty"`
+
+	// Build version of the component's binary.
+	Version string `json:"version,omitempty"`
+}
+
 // HealthResponse is the HealthResponse of the spec.
 type HealthResponse struct {
 	// Health status.

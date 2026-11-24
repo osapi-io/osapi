@@ -25,8 +25,10 @@ type LivenessInput struct{}
 // ReadyInput is the input of the readiness probe, which has none.
 type ReadyInput struct{}
 
-// StatusInput is the input of status, which has none.
-type StatusInput struct{}
+// StatusInput is the input of status: the type of component to show.
+type StatusInput struct {
+	Component string `json:"component,omitempty" in:"query" validate:"omitempty,oneof=controller nats agent" doc:"Show only the components of this type: controller, nats or agent. The other parts of the status stay."`
+}
 
 // HealthResponse is the liveness probe's answer.
 type HealthResponse struct { //nolint:revive // the schema name is part of the API
@@ -129,13 +131,4 @@ type ComponentEntry struct {
 	Address    string           `json:"address,omitempty"     doc:"Listen address of a sub-component, such as :8080."`
 	URL        string           `json:"url,omitempty"         doc:"Where a person opens a sub-component, from its url config key."`
 	Components []ComponentEntry `json:"components,omitempty"  doc:"The sub-components of the component, such as its api and its metrics server, sorted by name."`
-}
-
-// ComponentList is the components of one type, each with its
-// sub-components: the answer of the status of the controller, NATS and the
-// agents.
-type ComponentList struct {
-	_          struct{}         `title:"Components"`
-	TotalItems int              `                   json:"total_items" doc:"The number of components of the type."`
-	Items      []ComponentEntry `                   json:"items"       doc:"Each component of the type, with its sub-components." empty:"None of this type has registered."`
 }

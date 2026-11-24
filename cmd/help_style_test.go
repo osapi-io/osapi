@@ -124,7 +124,7 @@ func (s *HelpStyleTestSuite) TestCommandShape() {
 				c.CommandPath(), c.Name())
 		} else if len(c.Commands()) == 0 && c.Runnable() {
 			s.Truef(command.Verbs[c.Name()] || command.Actions[c.Name()],
-				"%s: %q is not a verb; a command is <resource> <verb>, such as facts keys list",
+				"%s: %q is not a verb; a command is <resource> <verb>, such as agent facts list",
 				c.CommandPath(), c.Name())
 		}
 		for _, sub := range c.Commands() {

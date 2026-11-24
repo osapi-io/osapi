@@ -5,6 +5,7 @@ package gen
 import (
 	"github.com/labstack/echo/v5"
 
+	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/health"
 )
 
@@ -31,6 +32,12 @@ func decodeStatus(
 	c *echo.Context,
 ) (health.StatusInput, string, bool) {
 	var in health.StatusInput
+	if msg, ok := server.Query(c, "component", &in.Component); !ok {
+		return in, msg, false
+	}
+	if msg, ok := server.Valid(c, in); !ok {
+		return in, msg, false
+	}
 
 	return in, "", true
 }

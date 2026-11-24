@@ -9,11 +9,11 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoints/agent"
 )
 
-// decodeStatus reads the status method's input from the request.
-func decodeStatus(
+// decodeFacts reads the facts method's input from the request.
+func decodeFacts(
 	c *echo.Context,
-) (agent.StatusInput, string, bool) {
-	var in agent.StatusInput
+) (agent.FactsInput, string, bool) {
+	var in agent.FactsInput
 
 	return in, "", true
 }

@@ -16,9 +16,9 @@ func Routes(
 	return []server.Route{
 		{
 			Method:     http.MethodGet,
-			Path:       "/api/agent/status",
-			Permission: "health:read",
-			Handler:    server.Serve(s, agent.Group, "status", agent.Status, decodeStatus),
+			Path:       "/api/agent/facts",
+			Permission: "agent:read",
+			Handler:    server.Serve(s, agent.Group, "facts", agent.Facts, decodeFacts),
 		},
 		{
 			Method:     http.MethodGet,

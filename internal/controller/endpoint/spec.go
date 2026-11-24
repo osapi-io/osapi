@@ -107,7 +107,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindOption,
 			Name: `SubDoc("segment", "short")`,
-			Does: "Is the one line of help of the command that a Sub segment makes, such as trace in osapi client telemetry trace. Without it, the command says <Segment> commands.",
+			Does: "Is the one line of help of the command that a Sub segment makes, such as stale in osapi client file stale. Without it, the command says <Segment> commands.",
 			When: "For each Sub segment of the group, so its command says what it holds.",
 		},
 		{
@@ -158,7 +158,7 @@ var Spec = guide.Spec{
 			Kind: KindRefine,
 			Name: `.Sub("segment")`,
 			Does: "Puts a fixed segment after the group's name, before the key: /api/<group>/<segment>[/{key}]. When the segment is not the method's name, the CLI command is under it too: osapi client <group> <segment> <method>.",
-			When: "For a path beside the key, such as /api/agent/pending, or before it, such as /api/telemetry/trace/{id}.",
+			When: "For a path beside the key, such as /api/agent/pending, or with no key, such as /api/file/stale.",
 		},
 		{
 			Kind: KindRefine,
@@ -384,7 +384,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindDeps,
 			Name: "Traces",
-			Does: "The TraceReader: it reads one trace from the tracing backend that the config names, for osapi client telemetry trace get.",
+			Does: "The TraceReader: it reads one trace from the tracing backend that the config names, for osapi client file stale list.",
 			When: "For the telemetry group.",
 		},
 		{

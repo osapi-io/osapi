@@ -6,8 +6,8 @@
  */
 import type {
   AgentInfo,
-  ComponentList,
   ErrorResponse,
+  FactKeysResponse,
   ListAgentsResponse
 } from '../schemas';
 
@@ -265,50 +265,50 @@ export const undrainAgent = async (hostname: string, options?: Parameters<typeof
 );}
 
 
-export type getAgentStatusResponse200 = {
-  data: ComponentList
+export type getAgentFactsResponse200 = {
+  data: FactKeysResponse
   status: 200
 }
 
-export type getAgentStatusResponse401 = {
+export type getAgentFactsResponse401 = {
   data: ErrorResponse
   status: 401
 }
 
-export type getAgentStatusResponse403 = {
+export type getAgentFactsResponse403 = {
   data: ErrorResponse
   status: 403
 }
 
-export type getAgentStatusResponse500 = {
+export type getAgentFactsResponse500 = {
   data: ErrorResponse
   status: 500
 }
 
-export type getAgentStatusResponseSuccess = (getAgentStatusResponse200) & {
+export type getAgentFactsResponseSuccess = (getAgentFactsResponse200) & {
   headers: Headers;
 };
-export type getAgentStatusResponseError = (getAgentStatusResponse401 | getAgentStatusResponse403 | getAgentStatusResponse500) & {
+export type getAgentFactsResponseError = (getAgentFactsResponse401 | getAgentFactsResponse403 | getAgentFactsResponse500) & {
   headers: Headers;
 };
 
-export type getAgentStatusResponse = (getAgentStatusResponseSuccess | getAgentStatusResponseError)
+export type getAgentFactsResponse = (getAgentFactsResponseSuccess | getAgentFactsResponseError)
 
-export const getGetAgentStatusUrl = () => {
-
-
+export const getGetAgentFactsUrl = () => {
 
 
-  return `/api/agent/status`
+
+
+  return `/api/agent/facts`
 }
 
 /**
- * Each agent, with each of its sub-components, from the health status of the controller.
- * @summary Show the health of each agent
+ * Returns the fact keys that an input can refer to as @fact.<key>: the built-in keys and the custom keys that agents register.
+ * @summary List the fact keys
  */
-export const getAgentStatus = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getAgentStatusResponse> => {
+export const getAgentFacts = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getAgentFactsResponse> => {
 
-  return apiFetch<getAgentStatusResponse>(getGetAgentStatusUrl(),
+  return apiFetch<getAgentFactsResponse>(getGetAgentFactsUrl(),
   {
     ...options,
     method: 'GET'

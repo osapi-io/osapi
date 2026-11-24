@@ -32,14 +32,8 @@ type services struct {
 	// the host.
 	ContainerImage *ContainerImageService
 
-	// Controller calls the API's Controller group: the controller of the fleet.
-	Controller *ControllerService
-
 	// Disk calls the API's Disk group: get the disk usage of target hosts.
 	Disk *DiskService
-
-	// Facts calls the API's Facts group: fact key discovery for @fact. references.
-	Facts *FactsService
 
 	// File calls the API's File group: object Store file management operations.
 	File *FileService
@@ -70,9 +64,6 @@ type services struct {
 
 	// Memory calls the API's Memory group: get the memory usage of target hosts.
 	Memory *MemoryService
-
-	// NATS calls the API's NATS group: the NATS server of the fleet.
-	NATS *NATSService
 
 	// NTP calls the API's NTP group: the NTP servers of chrony, and its sync
 	// status.
@@ -124,12 +115,11 @@ type services struct {
 	// files and applied.
 	Sysctl *SysctlService
 
-	// Telemetry calls the API's Telemetry group: telemetry endpoints, such as the
-	// spans of a trace.
-	Telemetry *TelemetryService
-
 	// Timezone calls the API's Timezone group: the timezone of the host.
 	Timezone *TimezoneService
+
+	// Trace calls the API's Trace group: the spans of a trace.
+	Trace *TraceService
 
 	// UpdatePackages calls the API's UpdatePackages group: the updates the package
 	// index has for the host.
@@ -155,9 +145,7 @@ func (s *services) wire(c *Client) {
 	s.Command = &CommandService{client: c}
 	s.ContainerDocker = &ContainerDockerService{client: c}
 	s.ContainerImage = &ContainerImageService{client: c}
-	s.Controller = &ControllerService{client: c}
 	s.Disk = &DiskService{client: c}
-	s.Facts = &FactsService{client: c}
 	s.File = &FileService{client: c}
 	s.Group = &GroupService{client: c}
 	s.Health = &HealthService{client: c}
@@ -167,7 +155,6 @@ func (s *services) wire(c *Client) {
 	s.LogEntry = &LogEntryService{client: c}
 	s.LogSource = &LogSourceService{client: c}
 	s.Memory = &MemoryService{client: c}
-	s.NATS = &NATSService{client: c}
 	s.NTP = &NTPService{client: c}
 	s.NetworkConnectivity = &NetworkConnectivityService{client: c}
 	s.NetworkDNS = &NetworkDNSService{client: c}
@@ -182,8 +169,8 @@ func (s *services) wire(c *Client) {
 	s.Service = &ServiceService{client: c}
 	s.Status = &StatusService{client: c}
 	s.Sysctl = &SysctlService{client: c}
-	s.Telemetry = &TelemetryService{client: c}
 	s.Timezone = &TimezoneService{client: c}
+	s.Trace = &TraceService{client: c}
 	s.UpdatePackages = &UpdatePackagesService{client: c}
 	s.Uptime = &UptimeService{client: c}
 	s.User = &UserService{client: c}

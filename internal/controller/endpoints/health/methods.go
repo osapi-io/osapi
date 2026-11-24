@@ -56,7 +56,18 @@ func Ready(
 func Status(
 	ctx context.Context,
 	d Deps,
-	_ StatusInput,
+	in StatusInput,
 ) (StatusResponse, error) {
-	return d.Health.Status(ctx), nil
+	out := d.Health.Status(ctx)
+	if in.Component != "" {
+		kept := []ComponentEntry{}
+		for _, e := range out.Registry {
+			if e.Type == in.Component {
+				kept = append(kept, e)
+			}
+		}
+		out.Registry = kept
+	}
+
+	return out, nil
 }

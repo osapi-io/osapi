@@ -151,11 +151,11 @@ components:
       scheme: bearer
       type: http
 info:
-  title: Telemetry API
+  title: Trace API
   version: 1.0.0
 openapi: 3.0.0
 paths:
-  /api/telemetry/trace/{id}:
+  /api/trace/{id}:
     get:
       description: Returns each span of a trace, read from the tracing backend at telemetry.tracing.url. The backend gets the spans a few seconds after the request, so a trace of a request that just ran can be not found yet. A token with a target scope gets a trace only when each target that the trace records is in its scope.
       operationId: GetTrace
@@ -224,7 +224,7 @@ paths:
             - trace:read
       summary: Get the spans of a trace
       tags:
-        - telemetry
+        - trace
       x-osapi-area: fleet
       x-osapi-examples:
         - doc: Get the spans of a trace
@@ -236,8 +236,8 @@ paths:
             id: 26e448c9dbe1c4a8d216a98c675079c9
       x-osapi-method: get
 tags:
-  - description: Telemetry endpoints, such as the spans of a trace.
-    name: telemetry
-    x-displayName: Telemetry
+  - description: The spans of a trace.
+    name: trace
+    x-displayName: Trace
     x-osapi-area: fleet
-    x-osapi-group: telemetry
+    x-osapi-group: trace

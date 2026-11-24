@@ -234,7 +234,7 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 	}{
 		{
 			name:  "when the read role has trace:read, it is a 200",
-			path:  "/api/telemetry/trace/" + traceID,
+			path:  "/api/trace/" + traceID,
 			token: token("trace:read"),
 			setup: func() {
 				s.reader.EXPECT().Trace(gomock.Any(), traceID).
@@ -245,27 +245,27 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 		},
 		{
 			name:     "when there is no token, it is a 401",
-			path:     "/api/telemetry/trace/" + traceID,
+			path:     "/api/trace/" + traceID,
 			setup:    func() {},
 			wantCode: http.StatusUnauthorized,
 		},
 		{
 			name:     "when the token lacks trace:read, it is a 403",
-			path:     "/api/telemetry/trace/" + traceID,
+			path:     "/api/trace/" + traceID,
 			token:    token("agent:read"),
 			setup:    func() {},
 			wantCode: http.StatusForbidden,
 		},
 		{
 			name:     "when the ID is not 32 hexadecimal characters, it is a 400",
-			path:     "/api/telemetry/trace/NOT-A-TRACE",
+			path:     "/api/trace/NOT-A-TRACE",
 			token:    token("trace:read"),
 			setup:    func() {},
 			wantCode: http.StatusBadRequest,
 		},
 		{
 			name:      "when no backend is configured, it is a 503",
-			path:      "/api/telemetry/trace/" + traceID,
+			path:      "/api/trace/" + traceID,
 			token:     token("trace:read"),
 			noBackend: true,
 			setup:     func() {},
@@ -273,7 +273,7 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 		},
 		{
 			name:  "when the backend does not have the trace, it is a 404",
-			path:  "/api/telemetry/trace/" + traceID,
+			path:  "/api/trace/" + traceID,
 			token: token("trace:read"),
 			setup: func() {
 				s.reader.EXPECT().Trace(gomock.Any(), traceID).Return(nil, traces.ErrNotFound)
@@ -282,7 +282,7 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 		},
 		{
 			name:  "when the backend fails, it is a 500 that does not name the backend",
-			path:  "/api/telemetry/trace/" + traceID,
+			path:  "/api/trace/" + traceID,
 			token: token("trace:read"),
 			setup: func() {
 				s.reader.EXPECT().Trace(gomock.Any(), traceID).

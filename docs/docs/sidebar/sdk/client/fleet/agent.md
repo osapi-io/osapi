@@ -11,13 +11,13 @@ details.
 
 ## Methods
 
-| Method                               | Returns                         | Permission    | Description                    |
-| ------------------------------------ | ------------------------------- | ------------- | ------------------------------ |
-| [`List(ctx)`](#list)                 | `*Response[ListAgentsResponse]` | `agent:read`  | List active agents.            |
-| [`Status(ctx)`](#status)             | `*Response[ComponentList]`      | `health:read` | Show the health of each agent. |
-| [`Get(ctx, hostname)`](#get)         | `*Response[AgentInfo]`          | `agent:read`  | Get agent details.             |
-| [`Drain(ctx, hostname)`](#drain)     | `error`                         | `agent:write` | Drain an agent.                |
-| [`Undrain(ctx, hostname)`](#undrain) | `error`                         | `agent:write` | Undrain an agent.              |
+| Method                               | Returns                         | Permission    | Description         |
+| ------------------------------------ | ------------------------------- | ------------- | ------------------- |
+| [`List(ctx)`](#list)                 | `*Response[ListAgentsResponse]` | `agent:read`  | List active agents. |
+| [`Facts(ctx)`](#facts)               | `*Response[FactKeysResponse]`   | `agent:read`  | List the fact keys. |
+| [`Get(ctx, hostname)`](#get)         | `*Response[AgentInfo]`          | `agent:read`  | Get agent details.  |
+| [`Drain(ctx, hostname)`](#drain)     | `error`                         | `agent:write` | Drain an agent.     |
+| [`Undrain(ctx, hostname)`](#undrain) | `error`                         | `agent:write` | Undrain an agent.   |
 
 ### List
 
@@ -41,27 +41,27 @@ List active agents, `go run agent.go list`:
 resp, err := c.Agent.List(ctx)
 ```
 
-### Status
+### Facts
 
 ```go
-func (s *AgentService) Status(
+func (s *AgentService) Facts(
 	ctx context.Context,
-) (*Response[ComponentList], error)
+) (*Response[FactKeysResponse], error)
 ```
 
-Show the health of each agent.
+List the fact keys.
 
-Each agent, with each of its sub-components, from the health status of the
-controller.
+Returns the fact keys that an input can refer to as @fact.<key>: the built-in
+keys and the custom keys that agents register.
 
-It sends `GET /api/agent/status`, and needs the permission `health:read`.
+It sends `GET /api/agent/facts`, and needs the permission `agent:read`.
 
 The examples of the method's definition:
 
-Show the health of each agent, `go run agent.go status`:
+List the fact keys, `go run agent.go facts`:
 
 ```go
-resp, err := c.Agent.Status(ctx)
+resp, err := c.Agent.Facts(ctx)
 ```
 
 ### Get
@@ -171,28 +171,20 @@ The fields of each type are the properties of its schema in the API's spec.
 | `Verified`         | `bool`                       | Whether this agent's registration was signed by its stored key and claims the hostname it enrolled under. Only a verified registration decides where work is routed. True when the controller is not enforcing verification.  |
 | `Version`          | `string`                     | The build version of the agent binary. Absent for an agent that does not report it.                                                                                                                                           |
 
-### ComponentEntry
+### FactKeyEntry
 
-| Field        | Type               | Description                                                                                  |
-| ------------ | ------------------ | -------------------------------------------------------------------------------------------- |
-| `Address`    | `string`           | Listen address of a sub-component, such as :8080.                                            |
-| `Age`        | `string`           | Time since component started.                                                                |
-| `Components` | `[]ComponentEntry` | The sub-components of the component, such as its api and its metrics server, sorted by name. |
-| `Conditions` | `[]string`         | Active conditions.                                                                           |
-| `CPUPercent` | `float64`          | Process CPU usage percentage.                                                                |
-| `Hostname`   | `string`           | Component hostname.                                                                          |
-| `MemBytes`   | `int64`            | Process RSS memory in bytes.                                                                 |
-| `Status`     | `string`           | Component status.                                                                            |
-| `Type`       | `string`           | Component type (agent, controller, nats), or the name of a sub-component, such as api.       |
-| `URL`        | `string`           | Where a person opens a sub-component, from its url config key.                               |
-| `Version`    | `string`           | Build version of the component's binary.                                                     |
+| Field         | Type     | Description                                |
+| ------------- | -------- | ------------------------------------------ |
+| `Builtin`     | `bool`   | Whether this is a built-in fact key.       |
+| `Description` | `string` | Human-readable description of the fact.    |
+| `Key`         | `string` | The fact key, such as 'interface.primary'. |
 
-### ComponentList
+### FactKeysResponse
 
-| Field        | Type               | Description                                          |
-| ------------ | ------------------ | ---------------------------------------------------- |
-| `Items`      | `[]ComponentEntry` | Each component of the type, with its sub-components. |
-| `TotalItems` | `int`              | The number of components of the type.                |
+| Field        | Type             | Description                                |
+| ------------ | ---------------- | ------------------------------------------ |
+| `Items`      | `[]FactKeyEntry` | Available fact keys for @fact. references. |
+| `TotalItems` | `int`            | Total number of fact keys.                 |
 
 ### ListAgentsResponse
 

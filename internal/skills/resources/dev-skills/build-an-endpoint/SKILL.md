@@ -174,9 +174,9 @@ The CLI:
    In the API it is a part of an `in:"form"` multipart body. In the CLI its flag
    is the path of a local file, and the command sends the content of that file,
    such as `file upload --file`. Each command is `<group> <resource> <verb>`,
-   such as `telemetry trace get`: the verb is `list`, `get`, `create`, `update`,
+   such as `file stale list`: the verb is `list`, `get`, `create`, `update`,
    `delete`, or an action such as `retry`, never a noun. A verb that the group
-   has as a method already gets `.Use`, such as `facts keys list`. The group's
+   has as a method already gets `.Use`, such as `agent facts list`. The group's
    one line is the help of its command, and `CommandLong` adds more. Give each
    `.Sub` segment a `SubDoc("segment", "...")`, so its command says what it
    holds. The page of each names the permission that covers its commands. Delete

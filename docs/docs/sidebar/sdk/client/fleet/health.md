@@ -11,11 +11,11 @@ readiness, and detailed status.
 
 ## Methods
 
-| Method                       | Returns                     | Permission    | Description                         |
-| ---------------------------- | --------------------------- | ------------- | ----------------------------------- |
-| [`Liveness(ctx)`](#liveness) | `*Response[HealthResponse]` |               | Liveness probe.                     |
-| [`Ready(ctx)`](#ready)       | `*Response[ReadyResponse]`  |               | Readiness probe.                    |
-| [`Status(ctx)`](#status)     | `*Response[StatusResponse]` | `health:read` | System status and component health. |
+| Method                           | Returns                     | Permission    | Description                         |
+| -------------------------------- | --------------------------- | ------------- | ----------------------------------- |
+| [`Liveness(ctx)`](#liveness)     | `*Response[HealthResponse]` |               | Liveness probe.                     |
+| [`Ready(ctx)`](#ready)           | `*Response[ReadyResponse]`  |               | Readiness probe.                    |
+| [`Status(ctx, params)`](#status) | `*Response[StatusResponse]` | `health:read` | System status and component health. |
 
 ### Liveness
 
@@ -66,6 +66,7 @@ resp, err := c.Health.Ready(ctx)
 ```go
 func (s *HealthService) Status(
 	ctx context.Context,
+	params HealthStatusParams,
 ) (*Response[StatusResponse], error)
 ```
 
@@ -81,7 +82,14 @@ The examples of the method's definition:
 System status and component health, `go run health.go status`:
 
 ```go
-resp, err := c.Health.Status(ctx)
+resp, err := c.Health.Status(ctx, client.HealthStatusParams{})
+```
+
+System status and component health, with --component agent,
+`go run health.go status-2`:
+
+```go
+resp, err := c.Health.Status(ctx, client.HealthStatusParams{Component: "agent"})
 ```
 
 ## Types
