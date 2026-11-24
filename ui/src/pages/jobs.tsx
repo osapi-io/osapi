@@ -4,7 +4,7 @@ import { unwrap, usePolling } from "@/hooks/use-polling";
 import { useJob } from "@/hooks/use-job";
 import { enumLabel } from "@/lib/format";
 import { GetJobsStatus } from "@/sdk/gen/schemas";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useVimScroll } from "@/hooks/use-vim-scroll";
 import { useAuth } from "@/hooks/use-auth";
 import { ContentArea } from "@/components/layout/content-area";
@@ -39,6 +39,7 @@ import { Count } from "@/components/ui/count";
 import { JobView } from "@/components/domain/job-detail";
 import { formatTime, operationType } from "@/lib/format";
 import { IconButton } from "@/components/ui/icon-button";
+import { LinkedJob } from "@/components/domain/linked-job";
 
 /** A job as the list gives it. */
 type Job = NonNullable<ListJobsResponse["items"]>[number];
@@ -52,38 +53,6 @@ const STATUS_OPTIONS = [
     label: enumLabel(v),
   })),
 ];
-
-// LinkedJob is the job that /admin/jobs/:id names, such as the job of a
-// step's result on the Plans page: its detail, above the list, whether
-// or not the job is on the page of the list that shows.
-function LinkedJob({ id }: { id: string }) {
-  const { data: job, error: failed } = useJob(id);
-
-  return (
-    <div className="mb-4">
-      <SectionLabel>
-        Job <span className="font-mono">{id}</span>
-        <Link
-          to="/admin/jobs"
-          className="ml-3 text-xs text-text-muted transition-colors hover:text-text"
-        >
-          close
-        </Link>
-      </SectionLabel>
-      <Card>
-        <CardContent>
-          {failed ? (
-            <Text variant="muted">{failed}</Text>
-          ) : job ? (
-            <JobView job={job} />
-          ) : (
-            <Spinner size="inline" />
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
 
 export function Jobs() {
   const { id: linkedId } = useParams();

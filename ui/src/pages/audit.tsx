@@ -12,12 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { KVList } from "@/components/ui/kv-list";
-import { CodeBlock } from "@/components/ui/code-block";
-import { RunLinks } from "@/components/domain/run-links";
-import { ChainSection } from "@/components/domain/step-tree";
 import {
   Loader2,
   Download,
@@ -33,6 +28,8 @@ import type { AuditEntry, ListAuditResponse } from "@/sdk/gen/schemas";
 import { PermissionDenied } from "@/components/layout/permission-denied";
 import { Spinner } from "@/components/ui/spinner";
 import { formatTime } from "@/lib/format";
+import { AuditDetail } from "@/components/domain/audit-detail";
+import { FilterInput } from "@/components/ui/filter-input";
 
 const PAGE_SIZE = 20;
 
@@ -44,41 +41,6 @@ interface Filters {
   user: string;
   operation: string;
   status: string;
-}
-
-// AuditDetail is one entry in full: who, what, the result, the chain of
-// calls that its job made on each host, and the links to its job and its
-// trace.
-function AuditDetail({ entry }: { entry: AuditEntry }) {
-  return (
-    <div className="space-y-3 px-2 py-2">
-      <KVList
-        pairs={[
-          ["User", entry.user],
-          ["Roles", entry.roles.join(", ") || "-"],
-          ["Targets", entry.targets?.join(", ") || "each host"],
-          ["Source IP", entry.source_ip],
-          ["Operation", entry.operation_id || "-"],
-          ["Method", entry.method],
-          ["Path", entry.path],
-          ["Status", String(entry.response_code)],
-          ["Duration", `${entry.duration_ms}ms`],
-          ["Time", formatTime(entry.timestamp)],
-          ["ID", entry.id],
-        ]}
-      />
-      {entry.request_summary && (
-        <div>
-          <Text variant="label" as="p" className="mb-1">
-            Request, with each secret replaced
-          </Text>
-          <CodeBlock variant="json">{entry.request_summary}</CodeBlock>
-        </div>
-      )}
-      <ChainSection hosts={entry.steps ?? []} lines={entry.chain} />
-      <RunLinks jobId={entry.job_id} traceId={entry.trace_id} />
-    </div>
-  );
 }
 
 export function Audit() {
@@ -323,32 +285,5 @@ export function Audit() {
         </>
       )}
     </ContentArea>
-  );
-}
-
-function FilterInput({
-  label,
-  value,
-  placeholder,
-  className = "w-48",
-  onChange,
-}: {
-  label: string;
-  value: string;
-  placeholder: string;
-  className?: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <div className={className}>
-      <Text variant="label" as="label" className="mb-1 block">
-        {label}
-      </Text>
-      <Input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-      />
-    </div>
   );
 }
