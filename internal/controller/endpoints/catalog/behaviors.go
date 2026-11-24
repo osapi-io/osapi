@@ -24,6 +24,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/osapi-io/osapi/internal/validation/rule"
+
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
@@ -230,11 +232,7 @@ func fields(
 			Required: strings.Contains(","+rules+",", ",required,"),
 			Doc:      f.Tag.Get("doc"),
 			Secret:   behavior.Secret(f),
-		}
-		for _, rule := range strings.Split(rules, ",") {
-			if v, ok := strings.CutPrefix(rule, "oneof="); ok {
-				field.Options = strings.Fields(v)
-			}
+			Options:  rule.Options(rules, f.Type),
 		}
 		out = append(out, field)
 	}

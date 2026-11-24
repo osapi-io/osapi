@@ -20,6 +20,8 @@
 
 package types
 
+import "slices"
+
 // ContentType is how a deploy treats a file: as bytes, or as a template.
 type ContentType string
 
@@ -31,3 +33,13 @@ const (
 	// facts before it writes it.
 	ContentTemplate ContentType = "template"
 )
+
+// Values are each content type.
+func (ContentType) Values() []ContentType {
+	return []ContentType{ContentRaw, ContentTemplate}
+}
+
+// Valid reports whether c is one of the content types.
+func (c ContentType) Valid() bool {
+	return slices.Contains(c.Values(), c)
+}

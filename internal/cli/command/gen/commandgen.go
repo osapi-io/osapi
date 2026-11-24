@@ -36,6 +36,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/secret"
+	"github.com/osapi-io/osapi/internal/validation/rule"
 )
 
 const (
@@ -359,17 +360,12 @@ func lowerFirst(
 	return strings.ToLower(s[:1]) + s[1:]
 }
 
-// oneOf is the values of a field's oneof rule, joined with ", ", or "".
+// oneOf is the values that a field may have, as the spec's enum has them,
+// joined with ", ", or "".
 func oneOf(
 	f reflect.StructField,
 ) string {
-	for _, r := range strings.Split(f.Tag.Get("validate"), ",") {
-		if values, ok := strings.CutPrefix(r, "oneof="); ok {
-			return strings.Join(strings.Fields(values), ", ")
-		}
-	}
-
-	return ""
+	return strings.Join(rule.Options(f.Tag.Get("validate"), f.Type), ", ")
 }
 
 // structFields are the exported fields of t that JSON reads, when t is a

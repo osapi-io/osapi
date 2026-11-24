@@ -108,7 +108,7 @@ A `string`, one of `value`, `values`, `object`, `list`.
 | `In`       | `CatalogFieldIn`   | Where the field goes in the request: path, query or body. It is one of: path, query, body.                          |
 | `Kind`     | `CatalogFieldKind` | How a form takes the value: string, number, bool, list or object. It is one of: string, number, bool, list, object. |
 | `Name`     | `string`           | The json name of the field.                                                                                         |
-| `Options`  | `[]string`         | The values of a oneof rule.                                                                                         |
+| `Options`  | `[]string`         | The values that the field takes: those of its type with enum, or of its oneof rule.                                 |
 | `Required` | `bool`             | The request needs the field.                                                                                        |
 | `Secret`   | `bool`             | The field is a secret.                                                                                              |
 

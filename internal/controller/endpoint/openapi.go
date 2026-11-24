@@ -50,7 +50,7 @@ const reasonDoc = "Why the request failed, as a word that a program can branch o
 	"and the error is the message for a person, which can change between releases."
 
 // ErrorSchema is the schema of ErrorResponse, the body of each error
-// answer: its message, and its reason, one of types.Reasons, with what each means.
+// answer: its message, and its reason, one of the values of types.Reason, with what each means.
 func ErrorSchema() *openapi3.Schema {
 	text := func(doc string, example string) *openapi3.SchemaRef {
 		s := openapi3.NewStringSchema()
@@ -61,7 +61,7 @@ func ErrorSchema() *openapi3.Schema {
 	}
 	doc := reasonDoc
 	reason := openapi3.NewStringSchema()
-	for _, r := range types.Reasons {
+	for _, r := range types.Reason("").Values() {
 		doc += " " + string(r) + ": " + ReasonDocs[r]
 		reason.Enum = append(reason.Enum, string(r))
 	}
@@ -133,7 +133,6 @@ func OpenAPI(
 		params:   openapi3.ParametersMap{},
 		docs:     g.Docs,
 		examples: g.Examples,
-		enums:    g.Enums,
 	}
 	for _, m := range g.Methods {
 		op, err := b.operation(g, m)
@@ -161,7 +160,6 @@ type builder struct {
 	params   openapi3.ParametersMap
 	docs     map[reflect.Type]string
 	examples map[reflect.Type]map[string]string
-	enums    map[reflect.Type]func() []string
 }
 
 func (b *builder) operation(
@@ -330,7 +328,7 @@ func (b *builder) ref(
 	for t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
-	if values, ok := b.enums[t]; ok {
+	if values, ok := rule.Values(t); ok {
 		return b.enum(t, values), nil
 	}
 	if t.Kind() != reflect.Struct || t.Name() == "" || t == reflect.TypeFor[time.Time]() {
@@ -364,16 +362,16 @@ func (b *builder) ref(
 	return &openapi3.SchemaRef{Ref: ref}, nil
 }
 
-// enum is a $ref to the schema of t, a named string type, which it adds
-// the first time, with the values that values gives.
+// enum is a $ref to the schema of t, a closed set, which it adds the first
+// time, with the values of its Values.
 func (b *builder) enum(
 	t reflect.Type,
-	values func() []string,
+	values []string,
 ) *openapi3.SchemaRef {
 	if _, ok := b.schemas[t.Name()]; !ok {
 		s := openapi3.NewStringSchema()
 		s.Description = b.docs[t]
-		for _, v := range values() {
+		for _, v := range values {
 			s.Enum = append(s.Enum, v)
 		}
 		b.schemas[t.Name()] = openapi3.NewSchemaRef("", s)
@@ -505,8 +503,13 @@ func constrained(
 	f reflect.StructField,
 	property bool,
 ) (*openapi3.SchemaRef, error) {
+	v := f.Tag.Get("validate")
 	if s.Value == nil {
-		return s, nil
+		// A $ref, such as a closed set, keeps its constraints in the
+		// components; the tag is still checked.
+		_, err := rule.Apply(v, f.Type, target{&openapi3.Schema{}})
+
+		return s, err
 	}
 	if ex, ok := f.Tag.Lookup("example"); ok {
 		s.Value.Example = example(s.Value, ex)
@@ -519,8 +522,7 @@ func constrained(
 	if d, ok := f.Tag.Lookup("default"); ok && f.Tag.Get("in") != "path" {
 		s.Value.Default = example(s.Value, d)
 	}
-	v := f.Tag.Get("validate")
-	if _, err := rule.Apply(v, target{s.Value}); err != nil {
+	if _, err := rule.Apply(v, f.Type, target{s.Value}); err != nil {
 		return nil, err
 	}
 	if property && v != "" {

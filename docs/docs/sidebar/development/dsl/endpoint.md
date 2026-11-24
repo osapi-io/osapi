@@ -62,16 +62,6 @@ Use: For each type whose schema has a description, such as one that another
 group defines too: the full spec fails when two groups define one schema in
 different words.
 
-### `Enum[T](values)`
-
-Makes T, a named string type, a schema of the components, with the values that
-values returns as its enum. values runs when the spec is built, after each group
-and behavior registered. orval makes a union type of the values, and the SDK a
-string type.
-
-Use: For a field whose values are a set that osapi knows, such as a permission
-or an operation ID, so a client checks a value when it compiles.
-
 ### `Example[T]("field", "example")`
 
 Gives the field of T with that json name its example in the schema.
@@ -387,8 +377,8 @@ error of a backend.
 Gives a mapped error a reason other than the reason of its status, such as
 Conflict(behavior.ErrNotManaged, doc).Because(types.ReasonNotManaged). Each
 error answer is &#123;error, reason&#125;: the status is the class of the
-problem, the reason is the cause that a program branches on, one of
-types.Reasons, and the message is for a person. Each helper sets the reason of
+problem, the reason is the cause that a program branches on, one of the values
+of types.Reason, and the message is for a person. Each helper sets the reason of
 its status: NotFound not_found, Conflict conflict, Invalid invalid_request,
 Forbidden forbidden, Unavailable unavailable.
 
@@ -616,15 +606,17 @@ Use: For an ID of a fixed form, such as a trace ID of 32 hexadecimal characters.
 ### `validate:"..."`
 
 The rules the server checks before the method runs: a value that breaks one is a
-400 with &#123;"error": "..."&#125;. required makes the field required, oneof
-gives an enum, min, max and len the length of a string, the items of an array or
-the bounds of a number, startswith a pattern, and uuid, email, hostname, ip,
-ipv4, ipv6, cidr, url and uri a format. The spec carries these, and the whole
-tag in x-oapi-codegen-extra-tags. A custom rule, such as resource_name, needs
-its schema from rule.Register; a rule with none fails the spec. In an endpoint,
-the generated route checks them before the handler runs, and a handler runs only
-from its route: TestHandlersRunFromRoutes, in internal/controller/endpoints/all,
-fails a call of it from other code. The author writes no check.
+400 with &#123;"error": "..."&#125;. required makes the field required, enum
+gives the enum of a type with Values and Valid, such as types.ContentType, oneof
+an enum on a field with no such type, min, max and len the length of a string,
+the items of an array or the bounds of a number, startswith a pattern, and uuid,
+email, hostname, ip, ipv4, ipv6, cidr, url and uri a format. The spec carries
+these, and the whole tag in x-oapi-codegen-extra-tags. A custom rule, such as
+resource_name, needs its schema from rule.Register; a rule with none fails the
+spec. In an endpoint, the generated route checks them before the handler runs,
+and a handler runs only from its route: TestHandlersRunFromRoutes, in
+internal/controller/endpoints/all, fails a call of it from other code. The
+author writes no check.
 
 Use: On each input field. A field with no limit is validate:"omitempty";
 validate refuses an input field with no tag.

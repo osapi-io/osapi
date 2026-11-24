@@ -21,6 +21,10 @@
 package catalog
 
 import (
+	"maps"
+	"slices"
+
+	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
@@ -31,6 +35,24 @@ type GetInput struct{}
 // GetAgents. Its schema is an enum of each operation that needs a
 // permission.
 type OperationID string
+
+// Values are each operation that needs a permission, in order.
+func (OperationID) Values() []OperationID {
+	ops := authtoken.Operations()
+	ids := make([]OperationID, 0, len(ops))
+	for _, id := range slices.Sorted(maps.Keys(ops)) {
+		ids = append(ids, OperationID(id))
+	}
+
+	return ids
+}
+
+// Valid reports whether id is an operation that needs a permission.
+func (id OperationID) Valid() bool {
+	_, ok := authtoken.Operations()[string(id)]
+
+	return ok
+}
 
 // CatalogResponse is what the UI reads from the controller after sign-in:
 // the behaviors, the areas, the permissions and the roles, the permission
@@ -108,12 +130,12 @@ type CatalogMethod struct { //nolint:revive // the schema name is part of the AP
 // CatalogField is one input field of a method: a field of the form of a
 // step.
 type CatalogField struct { //nolint:revive // the schema name is part of the API
-	Name     string   `json:"name"              doc:"The json name of the field."                                       example:"servers"`
-	In       string   `json:"in"                doc:"Where the field goes in the request: path, query or body."         example:"body"    validate:"oneof=path query body"`
-	Kind     string   `json:"kind"              doc:"How a form takes the value: string, number, bool, list or object." example:"list"    validate:"oneof=string number bool list object"`
+	Name     string   `json:"name"              doc:"The json name of the field."                                                         example:"servers"`
+	In       string   `json:"in"                doc:"Where the field goes in the request: path, query or body."                           example:"body"    validate:"oneof=path query body"`
+	Kind     string   `json:"kind"              doc:"How a form takes the value: string, number, bool, list or object."                   example:"list"    validate:"oneof=string number bool list object"`
 	Required bool     `json:"required"          doc:"The request needs the field."`
 	Doc      string   `json:"doc"               doc:"What the field is."`
-	Options  []string `json:"options,omitempty" doc:"The values of a oneof rule."`
+	Options  []string `json:"options,omitempty" doc:"The values that the field takes: those of its type with enum, or of its oneof rule."`
 	Secret   bool     `json:"secret,omitempty"  doc:"The field is a secret."`
 }
 

@@ -3,6 +3,8 @@
 
 package types
 
+import "slices"
+
 // Permission constants, one for each permission osapi knows.
 const (
 	PermHealthRead          Permission = "health:read"
@@ -67,6 +69,78 @@ const (
 	PermSecretRead          Permission = "secret:read"
 	PermSecretWrite         Permission = "secret:write"
 )
+
+// Values are each permission that osapi knows.
+func (Permission) Values() []Permission {
+	return []Permission{
+		PermHealthRead,
+		PermTraceRead,
+		PermSecretUse,
+		PermSecretReveal,
+		PermCertificateRead,
+		PermCertificateWrite,
+		PermCommandExecute,
+		PermCommandShell,
+		PermConnectivityExecute,
+		PermDiskRead,
+		PermDnsRead,
+		PermDnsWrite,
+		PermDockerRead,
+		PermDockerWrite,
+		PermDockerExecute,
+		PermDockerExec,
+		PermFileRead,
+		PermFileWrite,
+		PermGroupRead,
+		PermGroupWrite,
+		PermHostnameRead,
+		PermHostnameWrite,
+		PermImageRead,
+		PermImageExecute,
+		PermImageWrite,
+		PermInterfaceRead,
+		PermInterfaceWrite,
+		PermLoadRead,
+		PermLogRead,
+		PermMemoryRead,
+		PermNtpRead,
+		PermNtpWrite,
+		PermOsRead,
+		PermPackageRead,
+		PermPackageWrite,
+		PermPowerExecute,
+		PermProcessRead,
+		PermProcessExecute,
+		PermScheduleRead,
+		PermScheduleWrite,
+		PermServiceRead,
+		PermServiceWrite,
+		PermServiceExecute,
+		PermStatusRead,
+		PermSysctlRead,
+		PermSysctlWrite,
+		PermTimezoneRead,
+		PermTimezoneWrite,
+		PermUptimeRead,
+		PermUserRead,
+		PermUserWrite,
+		PermAdmissionRead,
+		PermAdmissionWrite,
+		PermAgentRead,
+		PermAgentWrite,
+		PermAuditRead,
+		PermCatalogRead,
+		PermJobRead,
+		PermJobWrite,
+		PermSecretRead,
+		PermSecretWrite,
+	}
+}
+
+// Valid reports whether p is a permission that osapi knows.
+func (p Permission) Valid() bool {
+	return slices.Contains(p.Values(), p)
+}
 
 // Built-in role constants, one for each built-in role.
 const (

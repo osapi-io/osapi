@@ -20,7 +20,9 @@
 
 package types
 
-// Reason is the reason of an error answer, one of Reasons. A program
+import "slices"
+
+// Reason is the reason of an error answer, one of its Values. A program
 // branches on it, so a reason outside the list breaks the contract of the
 // spec's ErrorResponse.
 type Reason string
@@ -41,9 +43,16 @@ const (
 	ReasonServerError    Reason = "server_error"
 )
 
-// Reasons are each reason, in the order of the schema.
-var Reasons = []Reason{
-	ReasonInvalidRequest, ReasonUnauthorized, ReasonForbidden, ReasonNotFound,
-	ReasonNotManaged, ReasonNotInstalled, ReasonConflict, ReasonUnavailable,
-	ReasonServerError,
+// Values are each reason, in the order of the schema.
+func (Reason) Values() []Reason {
+	return []Reason{
+		ReasonInvalidRequest, ReasonUnauthorized, ReasonForbidden, ReasonNotFound,
+		ReasonNotManaged, ReasonNotInstalled, ReasonConflict, ReasonUnavailable,
+		ReasonServerError,
+	}
+}
+
+// Valid reports whether r is one of the reasons.
+func (r Reason) Valid() bool {
+	return slices.Contains(r.Values(), r)
 }

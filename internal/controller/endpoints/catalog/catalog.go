@@ -43,9 +43,7 @@ var Group = endpoint.Register(endpoint.Define(
 		"The behaviors, the permissions and the roles that the controller serves, for the UI."),
 	endpoint.Uses[Deps](),
 	endpoint.Doc[types.Permission]("A permission that osapi knows, as resource:verb."),
-	endpoint.Enum[types.Permission](permissionNames),
 	endpoint.Doc[OperationID]("An operationId of an operation that needs a permission."),
-	endpoint.Enum[OperationID](operationIDs),
 	endpoint.Get[GetInput, CatalogResponse]("get").
 		Handle(Get).
 		ID("GetCatalog").

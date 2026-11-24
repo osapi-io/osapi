@@ -52,6 +52,25 @@ func (g *got) Items() rule.Target {
 	return g.items
 }
 
+// shade is a closed set, as an enum of pkg/sdk/types is.
+type shade string
+
+func (shade) Values() []shade { return []shade{"light", "dark"} }
+
+func (c shade) Valid() bool { return c == "light" || c == "dark" }
+
+// listed has Values but no Valid, so it is not a closed set.
+type listed string
+
+func (listed) Values() []listed { return []listed{"a"} }
+
+// strange has Values and Valid, but its Values are not of its type.
+type strange string
+
+func (strange) Values() []string { return []string{"a"} }
+
+func (strange) Valid() bool { return true }
+
 type RulePublicTestSuite struct {
 	suite.Suite
 }
@@ -66,6 +85,7 @@ func (s *RulePublicTestSuite) TestApply() {
 	tests := []struct {
 		name         string
 		tag          string
+		typ          reflect.Type
 		validateFunc func(*got, bool, error)
 	}{
 		{
@@ -148,11 +168,61 @@ func (s *RulePublicTestSuite) TestApply() {
 				s.EqualError(err, "validate max=lots: not a number")
 			},
 		},
+		{
+			name: "when the type is a closed set, enum gives its values",
+			tag:  "required,enum",
+			typ:  reflect.TypeFor[*shade](),
+			validateFunc: func(g *got, required bool, err error) {
+				s.Require().NoError(err)
+				s.True(required)
+				s.Equal([]string{"light", "dark"}, g.enum)
+			},
+		},
+		{
+			name: "when a list holds a closed set, enum after dive gives each item's values",
+			tag:  "omitempty,dive,enum",
+			typ:  reflect.TypeFor[*[]shade](),
+			validateFunc: func(g *got, _ bool, err error) {
+				s.Require().NoError(err)
+				s.Empty(g.enum)
+				s.Require().NotNil(g.items)
+				s.Equal([]string{"light", "dark"}, g.items.enum)
+			},
+		},
+		{
+			name: "when the type is not a closed set, enum is an error",
+			tag:  "enum",
+			validateFunc: func(_ *got, _ bool, err error) {
+				s.EqualError(err, "validate enum on string: the type has no Values and Valid")
+			},
+		},
+		{
+			name: "when dive is on a type with no items, the rules after it keep the type",
+			tag:  "dive,enum",
+			typ:  reflect.TypeFor[shade](),
+			validateFunc: func(g *got, _ bool, err error) {
+				s.Require().NoError(err)
+				s.Equal([]string{"light", "dark"}, g.items.enum)
+			},
+		},
+		{
+			name: "when the type is a closed set, oneof is an error",
+			tag:  "oneof=light dark",
+			typ:  reflect.TypeFor[shade](),
+			validateFunc: func(_ *got, _ bool, err error) {
+				s.EqualError(err,
+					"validate oneof on rule_test.shade: the type has Values; use validate enum")
+			},
+		},
 	}
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			g := newGot()
-			required, err := rule.Apply(tc.tag, g)
+			typ := tc.typ
+			if typ == nil {
+				typ = reflect.TypeFor[string]()
+			}
+			required, err := rule.Apply(tc.tag, typ, g)
 			tc.validateFunc(g, required, err)
 		})
 	}
@@ -253,9 +323,75 @@ func (s *RulePublicTestSuite) TestDeclare() {
 	s.Contains(seen, "rule_test_after", "a rule declared after OnDeclare is passed on")
 
 	g := newGot()
-	_, err := rule.Apply("rule_test_before", g)
+	_, err := rule.Apply("rule_test_before", reflect.TypeFor[string](), g)
 	s.NoError(err)
 	s.Equal("^b$", g.pattern, "Declare registers the rule's schema")
+}
+
+func (s *RulePublicTestSuite) TestValues() {
+	tests := []struct {
+		name string
+		typ  reflect.Type
+		want []string
+		ok   bool
+	}{
+		{
+			name: "when the type is a closed set, they are its values",
+			typ:  reflect.TypeFor[*shade](),
+			want: []string{"light", "dark"},
+			ok:   true,
+		},
+		{name: "when the type is a string, there are none", typ: reflect.TypeFor[string]()},
+		{name: "when the type has no Valid, there are none", typ: reflect.TypeFor[listed]()},
+		{
+			name: "when Values is not of the type, there are none",
+			typ:  reflect.TypeFor[strange](),
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			got, ok := rule.Values(tc.typ)
+			s.Equal(tc.ok, ok)
+			s.Equal(tc.want, got)
+		})
+	}
+}
+
+func (s *RulePublicTestSuite) TestOptions() {
+	tests := []struct {
+		name string
+		tag  string
+		typ  reflect.Type
+		want []string
+	}{
+		{
+			name: "when the field has enum, they are the values of its type",
+			tag:  "omitempty,enum",
+			typ:  reflect.TypeFor[shade](),
+			want: []string{"light", "dark"},
+		},
+		{
+			name: "when a list has oneof after dive, they are each item's values",
+			tag:  "omitempty,max=3,dive,oneof=a b",
+			typ:  reflect.TypeFor[[]string](),
+			want: []string{"a", "b"},
+		},
+		{
+			name: "when the field has neither, there are none",
+			tag:  "required,min=1,startswith=/,email",
+			typ:  reflect.TypeFor[string](),
+		},
+		{
+			name: "when Apply refuses the tag, there are none",
+			tag:  "enum",
+			typ:  reflect.TypeFor[string](),
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, rule.Options(tc.tag, tc.typ))
+		})
+	}
 }
 
 func TestRulePublicTestSuite(t *testing.T) {

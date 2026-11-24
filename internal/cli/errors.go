@@ -40,7 +40,7 @@ const (
 	ReasonFatal = "fatal"
 	// ReasonError is any other failure the CLI cannot name more precisely.
 	ReasonError = "error"
-	// ReasonAPIError is an API answer with no reason of types.Reasons. The
+	// ReasonAPIError is an API answer with no reason that types.Reason lists. The
 	// API's own reasons are the words of types.Reason.
 	ReasonAPIError = "api_error"
 )

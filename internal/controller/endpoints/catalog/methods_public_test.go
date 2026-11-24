@@ -109,6 +109,8 @@ func (s *MethodsPublicTestSuite) TestSpecEnums() {
 	s.Len(ids, len(authtoken.Operations()))
 	s.Contains(ids, "GetCatalog")
 	s.True(slices.IsSorted(ids))
+	s.True(catalog.OperationID("GetCatalog").Valid())
+	s.False(catalog.OperationID("GetCatalogs").Valid())
 }
 
 func TestMethodsPublicTestSuite(

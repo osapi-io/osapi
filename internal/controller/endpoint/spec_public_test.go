@@ -204,14 +204,15 @@ func (s *SpecPublicTestSuite) TestSpecKinds() {
 // one means, so a client's typed reason and the server cannot drift.
 func (s *SpecPublicTestSuite) TestReasonsMatchTheSchema() {
 	reason := endpoint.ErrorSchema().Properties["reason"].Value
-	want := make([]any, 0, len(types.Reasons))
-	for _, r := range types.Reasons {
+	reasons := types.Reason("").Values()
+	want := make([]any, 0, len(reasons))
+	for _, r := range reasons {
 		want = append(want, string(r))
 		s.NotEmpty(endpoint.ReasonDocs[r], "%s has a doc", r)
 		s.Contains(reason.Description, string(r)+": "+endpoint.ReasonDocs[r])
 	}
 	s.Equal(want, reason.Enum)
-	s.Len(endpoint.ReasonDocs, len(types.Reasons))
+	s.Len(endpoint.ReasonDocs, len(reasons))
 }
 
 // TestReasons: each helper gives the reason of its status, Because names

@@ -33,6 +33,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/validation"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // motdIn uses a validate tag a behavior declares, which the validator learns
@@ -207,6 +208,63 @@ func (s *ValidationPublicTestSuite) TestVar() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			tt.validateFunc(validation.Var(context.Background(), tt.field, tt.tag))
+		})
+	}
+}
+
+// TestEnum: the enum rule is the Valid of the field's type, and a value it
+// refuses names each value of the type.
+func (s *ValidationPublicTestSuite) TestEnum() {
+	type deploy struct {
+		ContentType types.ContentType   `validate:"required,enum"`
+		Others      []types.ContentType `validate:"omitempty,dive,enum"`
+	}
+	tests := []struct {
+		name         string
+		field        any
+		tag          string
+		validateFunc func(string, bool)
+	}{
+		{
+			name:  "when the value is one of its type",
+			field: deploy{ContentType: types.ContentTemplate, Others: []types.ContentType{"raw"}},
+			validateFunc: func(_ string, ok bool) {
+				s.True(ok)
+			},
+		},
+		{
+			name:  "when the value is not one of its type",
+			field: deploy{ContentType: "zip"},
+			validateFunc: func(errMsg string, ok bool) {
+				s.False(ok)
+				s.Contains(errMsg, `"zip" is not one of raw, template`)
+			},
+		},
+		{
+			name:  "when an item is not one of its type",
+			field: deploy{ContentType: types.ContentRaw, Others: []types.ContentType{"zip"}},
+			validateFunc: func(errMsg string, ok bool) {
+				s.False(ok)
+				s.Contains(errMsg, "Others[0]")
+			},
+		},
+		{
+			name:  "when the type is not a closed set",
+			field: "raw",
+			tag:   "enum",
+			validateFunc: func(_ string, ok bool) {
+				s.False(ok)
+			},
+		},
+	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			if tt.tag != "" {
+				tt.validateFunc(validation.Var(context.Background(), tt.field, tt.tag))
+
+				return
+			}
+			tt.validateFunc(validation.Struct(context.Background(), tt.field))
 		})
 	}
 }
