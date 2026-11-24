@@ -5,6 +5,13 @@ description: >-
   the built UI, which the Go code embeds, and the Linux tuning that the tests
   need. Each job of the Go workflow that compiles Go starts with it.
 
+inputs:
+  ui:
+    description: >-
+      Build the UI. A job that only compiles and tests Go sets it to false: the
+      embed needs a file in ui/dist, not the built UI, and no Go test reads it.
+    default: "true"
+
 runs:
   using: composite
   steps:
@@ -13,10 +20,12 @@ runs:
       with:
         go-version-file: go.mod
     - name: Set up Node.js
+      if: inputs.ui == 'true'
       uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
         node-version: 24
     - name: Install Bun
+      if: inputs.ui == 'true'
       uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
     - name: Install just
       uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
@@ -27,6 +36,10 @@ runs:
       shell: bash
       run: |
         just go-deps
-        just react-deps
-        just react-build
+        if [ "${{ inputs.ui }}" = "true" ]; then
+          just react-deps
+          just react-build
+        else
+          mkdir -p ui/dist && touch ui/dist/.keep
+        fi
         just linux-tune

@@ -79,6 +79,10 @@ test: linux-tune
 # workflow.
 go_quick_checks := "just-fmt-check docs-fmt-check react-fmt-check react-unit react-generate-check go-mod-check go-pkg-check"
 go_slow_checks := "behavior-gen-check go-generate-check docs-gen-check cli-docs-gen-check behavior-scaffold-check endpoint-scaffold-check command-scaffold-check behavior-cover-check go-fmt-check go-vet examples-check spec-client-check sdk-gen-check"
+# One unit shard for each 13000 lines of test code, up to go_shard_max (10).
+# Test code fell to about 133000 lines as behaviors moved to generated tests,
+# and the shared 20000 gave 7 shards of over 3 minutes each.
+go_shard_weight := "13000"
 
 # Fail when a behavior that osapi dsl behavior create writes does not pass its tests
 #
