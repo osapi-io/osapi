@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // ConnectivityPingResult is the ConnectivityPingResult of the spec.
 type ConnectivityPingResult struct {
 	// Average round-trip time in milliseconds, with two decimals. Absent when no
@@ -34,18 +36,8 @@ type ConnectivityPingResult struct {
 	// Number of packets sent.
 	PacketsSent int `json:"packets_sent,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status ConnectivityPingResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// ConnectivityPingResultStatus: The status of the operation for this host.
-type ConnectivityPingResultStatus string
-
-// The values of ConnectivityPingResultStatus.
-const (
-	ConnectivityPingResultStatusOk      ConnectivityPingResultStatus = "ok"
-	ConnectivityPingResultStatusFailed  ConnectivityPingResultStatus = "failed"
-	ConnectivityPingResultStatusSkipped ConnectivityPingResultStatus = "skipped"
-	ConnectivityPingResultStatusTimeout ConnectivityPingResultStatus = "timeout"
-)

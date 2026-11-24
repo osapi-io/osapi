@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { DockerResultStatus } from './dockerResultStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface DockerResult {
   /** Whether the host changed */
@@ -17,6 +17,5 @@ export interface DockerResult {
   id?: string;
   /** The container */
   name?: string;
-  /** The status of the operation for this host. */
-  status: DockerResultStatus;
+  status: RowStatus;
 }

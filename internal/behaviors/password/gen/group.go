@@ -28,11 +28,11 @@ type UserPasswordUpdateRequest struct {
 
 // UserPasswordResult is the result of password on one host.
 type UserPasswordResult struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Name     *string `doc:"The user" json:"name,omitempty"`
-	Changed  *bool   `doc:"Whether the host changed" json:"changed,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Name     *string         `doc:"The user" json:"name,omitempty"`
+	Changed  *bool           `doc:"Whether the host changed" json:"changed,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // UserPasswordUpdateResponse is each target host's result.
@@ -59,6 +59,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("password_operations", "User password", "The password of a user"),
 	endpoint.CommandNotes("The [password behavior](../../../../../../reference/behaviors/security/user/password/password.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Put[UpdateRequest, UserPasswordUpdateResponse]("update").
 		Handle(HandleUpdate).
 		ID("PutNodeUserPassword").

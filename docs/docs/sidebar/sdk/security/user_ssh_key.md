@@ -138,6 +138,14 @@ resp, err := c.UserSSHKey.Delete(ctx, target, client.UserSSHKeyDeleteInput{
 
 The fields of each type are the properties of its schema in the API's spec.
 
+### RowStatus
+
+What happened on the host: ok, the operation ran and succeeded; failed, it ran
+and did not succeed; skipped, the host's OS family does not support it; timeout,
+the host did not answer, so nobody knows whether it ran.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+
 ### UserSSHKeyCreateInput
 
 | Field  | Type     | Description                                                                                   |
@@ -154,37 +162,25 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### UserSshkeyKey
 
-| Field         | Type                  | Description                                                                            |
-| ------------- | --------------------- | -------------------------------------------------------------------------------------- |
-| `Comment`     | `string`              | The comment after the key, such as alice@laptop.                                       |
-| `Error`       | `string`              | Error message if the agent failed.                                                     |
-| `Fingerprint` | `string`              | The SHA256 fingerprint of the key.                                                     |
-| `Hostname`    | `string`              | Hostname of the agent that produced this result.                                       |
-| `Options`     | `string`              | The options before the key, such as from="10.0.0.0/8".                                 |
-| `Status`      | `UserSshkeyKeyStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-| `Type`        | `string`              | The key type, such as ssh-ed25519.                                                     |
-
-### UserSshkeyKeyStatus
-
-The status of the operation for this host.
-
-A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+| Field         | Type        | Description                                                                                                                                                                                                              |
+| ------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Comment`     | `string`    | The comment after the key, such as alice@laptop.                                                                                                                                                                         |
+| `Error`       | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Fingerprint` | `string`    | The SHA256 fingerprint of the key.                                                                                                                                                                                       |
+| `Hostname`    | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `Options`     | `string`    | The options before the key, such as from="10.0.0.0/8".                                                                                                                                                                   |
+| `Status`      | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
+| `Type`        | `string`    | The key type, such as ssh-ed25519.                                                                                                                                                                                       |
 
 ### UserSshkeyResult
 
-| Field         | Type                     | Description                                                                            |
-| ------------- | ------------------------ | -------------------------------------------------------------------------------------- |
-| `Changed`     | `bool`                   | Whether the host changed.                                                              |
-| `Error`       | `string`                 | Error message if the agent failed.                                                     |
-| `Fingerprint` | `string`                 | The SHA256 fingerprint of the key.                                                     |
-| `Hostname`    | `string`                 | Hostname of the agent that produced this result.                                       |
-| `Status`      | `UserSshkeyResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-
-### UserSshkeyResultStatus
-
-The status of the operation for this host.
-
-A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+| Field         | Type        | Description                                                                                                                                                                                                              |
+| ------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Changed`     | `bool`      | Whether the host changed.                                                                                                                                                                                                |
+| `Error`       | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Fingerprint` | `string`    | The SHA256 fingerprint of the key.                                                                                                                                                                                       |
+| `Hostname`    | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `Status`      | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
 
 ## Example
 

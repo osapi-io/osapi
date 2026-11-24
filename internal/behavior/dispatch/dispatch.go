@@ -38,15 +38,24 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
-// Result statuses, as the hand-written handlers report them.
-const (
-	statusOK      = "ok"
-	statusFailed  = "failed"
-	statusSkipped = "skipped"
-	statusTimeout = "timeout"
-)
+// RowStatusDoc is the description of types.RowStatus in the spec.
+const RowStatusDoc = "What happened on the host: ok, the operation ran and succeeded; " +
+	"failed, it ran and did not succeed; skipped, the host's OS family does not support it; " +
+	"timeout, the host did not answer, so nobody knows whether it ran."
+
+// RowStatuses are the values of types.RowStatus, the enum of its schema.
+func RowStatuses() []string {
+	values := types.RowStatus("").Values()
+	out := make([]string, 0, len(values))
+	for _, v := range values {
+		out = append(out, string(v))
+	}
+
+	return out
+}
 
 // ErrInvalid is an input that the route's validate tags cannot see as
 // wrong: a template that reads a var that its behavior does not have, or an
@@ -225,7 +234,7 @@ func rows(
 
 	for _, row := range outputs {
 		row["hostname"] = host
-		row["status"] = statusOK
+		row["status"] = types.RowStatusOK
 		if m.Verb == behavior.VerbWrite {
 			if _, ok := row["changed"]; !ok && resp.Changed != nil {
 				row["changed"] = *resp.Changed
@@ -236,16 +245,18 @@ func rows(
 	return outputs
 }
 
+// failureStatus is the row status of a host whose job did not succeed, or
+// empty for a host whose job did.
 func failureStatus(
 	s job.Status,
-) string {
+) types.RowStatus {
 	switch s {
 	case job.StatusFailed:
-		return statusFailed
+		return types.RowStatusFailed
 	case job.StatusSkipped:
-		return statusSkipped
+		return types.RowStatusSkipped
 	case job.StatusTimeout:
-		return statusTimeout
+		return types.RowStatusTimeout
 	default:
 		return ""
 	}

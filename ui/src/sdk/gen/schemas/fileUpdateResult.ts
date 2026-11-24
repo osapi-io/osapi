@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { FileUpdateResultStatus } from './fileUpdateResultStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface FileUpdateResult {
   /** Whether the host changed */
@@ -17,6 +17,5 @@ export interface FileUpdateResult {
   path?: string;
   /** SHA-256 of the content that the file holds */
   sha256?: string;
-  /** The status of the operation for this host. */
-  status: FileUpdateResultStatus;
+  status: RowStatus;
 }

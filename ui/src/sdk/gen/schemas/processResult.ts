@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { ProcessResultStatus } from './processResultStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface ProcessResult {
   /** Whether the signal was sent */
@@ -17,6 +17,5 @@ export interface ProcessResult {
   pid?: number;
   /** The signal that was sent */
   signal?: string;
-  /** The status of the operation for this host. */
-  status: ProcessResultStatus;
+  status: RowStatus;
 }

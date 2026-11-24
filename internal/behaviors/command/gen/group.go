@@ -29,14 +29,14 @@ type CommandExecRequest struct {
 
 // CommandResult is the result of command on one host.
 type CommandResult struct {
-	Hostname   string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status     string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Stdout     *string `doc:"What it wrote to standard output" json:"stdout,omitempty"`
-	Stderr     *string `doc:"What it wrote to standard error" json:"stderr,omitempty"`
-	ExitCode   *int    `doc:"Its exit code" json:"exit_code,omitempty"`
-	DurationMs *int64  `doc:"How long it ran, in milliseconds" json:"duration_ms,omitempty"`
-	Changed    *bool   `doc:"Whether the host changed: true, since a command can change anything" json:"changed,omitempty"`
-	Error      *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname   string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status     types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Stdout     *string         `doc:"What it wrote to standard output" json:"stdout,omitempty"`
+	Stderr     *string         `doc:"What it wrote to standard error" json:"stderr,omitempty"`
+	ExitCode   *int            `doc:"Its exit code" json:"exit_code,omitempty"`
+	DurationMs *int64          `doc:"How long it ran, in milliseconds" json:"duration_ms,omitempty"`
+	Changed    *bool           `doc:"Whether the host changed: true, since a command can change anything" json:"changed,omitempty"`
+	Error      *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // CommandExecResponse is each target host's result.
@@ -91,6 +91,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("command_operations", "Command", "Run a command on target hosts"),
 	endpoint.CommandNotes("The [command behavior](../../../../../reference/behaviors/command/command/command.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Post[ExecRequest, CommandExecResponse]("exec").
 		Handle(HandleExec).
 		ID("PostNodeCommandExec").

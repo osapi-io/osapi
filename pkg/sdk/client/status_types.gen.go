@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // Entry is the Entry of the spec.
 type Entry struct {
 	// How long the host has run, in seconds.
@@ -37,21 +39,11 @@ type StatusEntry struct {
 	// OSInfo is the property os_info.
 	OSInfo Release `json:"os_info,omitzero"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status StatusEntryStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 
 	// Uptime is the property uptime.
 	Uptime Entry `json:"uptime,omitzero"`
 }
-
-// StatusEntryStatus: The status of the operation for this host.
-type StatusEntryStatus string
-
-// The values of StatusEntryStatus.
-const (
-	StatusEntryStatusOk      StatusEntryStatus = "ok"
-	StatusEntryStatusFailed  StatusEntryStatus = "failed"
-	StatusEntryStatusSkipped StatusEntryStatus = "skipped"
-	StatusEntryStatusTimeout StatusEntryStatus = "timeout"
-)

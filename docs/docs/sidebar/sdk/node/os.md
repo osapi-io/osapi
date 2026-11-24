@@ -45,18 +45,12 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### OsEntry
 
-| Field      | Type            | Description                                                                            |
-| ---------- | --------------- | -------------------------------------------------------------------------------------- |
-| `Error`    | `string`        | Error message if the agent failed.                                                     |
-| `Hostname` | `string`        | Hostname of the agent that produced this result.                                       |
-| `OSInfo`   | `Release`       |                                                                                        |
-| `Status`   | `OsEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-
-### OsEntryStatus
-
-The status of the operation for this host.
-
-A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+| Field      | Type        | Description                                                                                                                                                                                                              |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Error`    | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Hostname` | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `OSInfo`   | `Release`   |                                                                                                                                                                                                                          |
+| `Status`   | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
 
 ### Release
 
@@ -64,6 +58,14 @@ A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 | -------------- | -------- | ----------------------------------------------- |
 | `Distribution` | `string` | The distribution, such as ubuntu, or darwin.    |
 | `Version`      | `string` | The version of the distribution, such as 24.04. |
+
+### RowStatus
+
+What happened on the host: ok, the operation ran and succeeded; failed, it ran
+and did not succeed; skipped, the host's OS family does not support it; timeout,
+the host did not answer, so nobody knows whether it ran.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ## Example
 

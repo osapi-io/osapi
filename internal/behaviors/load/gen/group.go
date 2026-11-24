@@ -20,10 +20,10 @@ type GetRequest struct {
 
 // LoadEntry is the result of load on one host.
 type LoadEntry struct {
-	Hostname    string         `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status      string         `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	LoadAverage *load.Averages `doc:"The load averages of the host" json:"load_average,omitempty"`
-	Error       *string        `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname    string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status      types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	LoadAverage *load.Averages  `doc:"The load averages of the host" json:"load_average,omitempty"`
+	Error       *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // LoadGetResponse is each target host's result.
@@ -50,6 +50,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("load_operations", "Load", "Get the load averages of target hosts"),
 	endpoint.CommandNotes("The [load behavior](../../../../../reference/behaviors/node/load/load.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[GetRequest, LoadGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodeLoad").

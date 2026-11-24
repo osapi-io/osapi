@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // ServiceEntry is the ServiceEntry of the spec.
 type ServiceEntry struct {
 	// The Description= of its unit.
@@ -25,21 +27,11 @@ type ServiceEntry struct {
 	// What systemd says it does now, such as running, exited or dead.
 	State string `json:"state,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status ServiceEntryStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// ServiceEntryStatus: The status of the operation for this host.
-type ServiceEntryStatus string
-
-// The values of ServiceEntryStatus.
-const (
-	ServiceEntryStatusOk      ServiceEntryStatus = "ok"
-	ServiceEntryStatusFailed  ServiceEntryStatus = "failed"
-	ServiceEntryStatusSkipped ServiceEntryStatus = "skipped"
-	ServiceEntryStatusTimeout ServiceEntryStatus = "timeout"
-)
 
 // ServiceResult is the ServiceResult of the spec.
 type ServiceResult struct {
@@ -55,18 +47,8 @@ type ServiceResult struct {
 	// The service.
 	Name string `json:"name,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status ServiceResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// ServiceResultStatus: The status of the operation for this host.
-type ServiceResultStatus string
-
-// The values of ServiceResultStatus.
-const (
-	ServiceResultStatusOk      ServiceResultStatus = "ok"
-	ServiceResultStatusFailed  ServiceResultStatus = "failed"
-	ServiceResultStatusSkipped ServiceResultStatus = "skipped"
-	ServiceResultStatusTimeout ServiceResultStatus = "timeout"
-)

@@ -333,6 +333,14 @@ resp, err := c.Service.Stop(ctx, target, "app")
 
 The fields of each type are the properties of its schema in the API's spec.
 
+### RowStatus
+
+What happened on the host: ok, the operation ran and succeeded; failed, it ran
+and did not succeed; skipped, the host's OS family does not support it; timeout,
+the host did not answer, so nobody knows whether it ran.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+
 ### ServiceCreateInput
 
 | Field    | Type     | Description                                                         |
@@ -342,38 +350,26 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### ServiceEntry
 
-| Field         | Type                 | Description                                                                            |
-| ------------- | -------------------- | -------------------------------------------------------------------------------------- |
-| `Description` | `string`             | The Description= of its unit.                                                          |
-| `Enabled`     | `bool`               | Whether it starts at boot: the state of its unit file.                                 |
-| `Error`       | `string`             | Error message if the agent failed.                                                     |
-| `Hostname`    | `string`             | Hostname of the agent that produced this result.                                       |
-| `Managed`     | `bool`               | Whether osapi deployed it, so its writes and actions act on it.                        |
-| `Name`        | `string`             | The service, without .service.                                                         |
-| `State`       | `string`             | What systemd says it does now, such as running, exited or dead.                        |
-| `Status`      | `ServiceEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-
-### ServiceEntryStatus
-
-The status of the operation for this host.
-
-A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+| Field         | Type        | Description                                                                                                                                                                                                              |
+| ------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Description` | `string`    | The Description= of its unit.                                                                                                                                                                                            |
+| `Enabled`     | `bool`      | Whether it starts at boot: the state of its unit file.                                                                                                                                                                   |
+| `Error`       | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Hostname`    | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `Managed`     | `bool`      | Whether osapi deployed it, so its writes and actions act on it.                                                                                                                                                          |
+| `Name`        | `string`    | The service, without .service.                                                                                                                                                                                           |
+| `State`       | `string`    | What systemd says it does now, such as running, exited or dead.                                                                                                                                                          |
+| `Status`      | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
 
 ### ServiceResult
 
-| Field      | Type                  | Description                                                                            |
-| ---------- | --------------------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`                | Whether the host changed.                                                              |
-| `Error`    | `string`              | Error message if the agent failed.                                                     |
-| `Hostname` | `string`              | Hostname of the agent that produced this result.                                       |
-| `Name`     | `string`              | The service.                                                                           |
-| `Status`   | `ServiceResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-
-### ServiceResultStatus
-
-The status of the operation for this host.
-
-A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+| Field      | Type        | Description                                                                                                                                                                                                              |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Changed`  | `bool`      | Whether the host changed.                                                                                                                                                                                                |
+| `Error`    | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Hostname` | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `Name`     | `string`    | The service.                                                                                                                                                                                                             |
+| `Status`   | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
 
 ### ServiceUpdateInput
 

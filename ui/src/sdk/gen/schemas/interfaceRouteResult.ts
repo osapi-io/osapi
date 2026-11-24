@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { InterfaceRouteResultStatus } from './interfaceRouteResultStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface InterfaceRouteResult {
   /** Whether the host changed */
@@ -15,6 +15,5 @@ export interface InterfaceRouteResult {
   error?: string;
   /** Hostname of the agent that produced this result. */
   hostname: string;
-  /** The status of the operation for this host. */
-  status: InterfaceRouteResultStatus;
+  status: RowStatus;
 }

@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { UserPasswordResultStatus } from './userPasswordResultStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface UserPasswordResult {
   /** Whether the host changed */
@@ -15,6 +15,5 @@ export interface UserPasswordResult {
   hostname: string;
   /** The user */
   name?: string;
-  /** The status of the operation for this host. */
-  status: UserPasswordResultStatus;
+  status: RowStatus;
 }

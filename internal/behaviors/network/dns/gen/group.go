@@ -21,11 +21,11 @@ type GetRequest struct {
 
 // DnsEntry is the result of dns on one host.
 type DnsEntry struct {
-	Hostname      string    `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status        string    `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Servers       *[]string `doc:"The DNS servers" json:"servers,omitempty"`
-	SearchDomains *[]string `doc:"The search domains" json:"search_domains,omitempty"`
-	Error         *string   `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname      string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status        types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Servers       *[]string       `doc:"The DNS servers" json:"servers,omitempty"`
+	SearchDomains *[]string       `doc:"The search domains" json:"search_domains,omitempty"`
+	Error         *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // DnsGetResponse is each target host's result.
@@ -59,11 +59,11 @@ type DnsUpdateRequest struct {
 
 // DnsResult is the result of dns on one host.
 type DnsResult struct {
-	Hostname      string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status        string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	InterfaceName *string `doc:"The interface" json:"interface_name,omitempty"`
-	Changed       *bool   `doc:"Whether the host changed" json:"changed,omitempty"`
-	Error         *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname      string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status        types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	InterfaceName *string         `doc:"The interface" json:"interface_name,omitempty"`
+	Changed       *bool           `doc:"Whether the host changed" json:"changed,omitempty"`
+	Error         *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // DnsUpdateResponse is each target host's result.
@@ -111,6 +111,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("dns_operations", "DNS", "The DNS resolvers of each interface of the host"),
 	endpoint.CommandNotes("The [dns behavior](../../../../../reference/behaviors/networking/dns/dns.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[GetRequest, DnsGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodeDnsByKey").

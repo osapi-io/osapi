@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { DockerExecResultStatus } from './dockerExecResultStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface DockerExecResult {
   /** Always true: osapi cannot tell what the command changed */
@@ -15,8 +15,7 @@ export interface DockerExecResult {
   exit_code?: number;
   /** Hostname of the agent that produced this result. */
   hostname: string;
-  /** The status of the operation for this host. */
-  status: DockerExecResultStatus;
+  status: RowStatus;
   /** What the command wrote to standard error */
   stderr?: string;
   /** What the command wrote to standard output */

@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { TimezoneResultStatus } from './timezoneResultStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface TimezoneResult {
   /** Whether the host changed */
@@ -13,8 +13,7 @@ export interface TimezoneResult {
   error?: string;
   /** Hostname of the agent that produced this result. */
   hostname: string;
-  /** The status of the operation for this host. */
-  status: TimezoneResultStatus;
+  status: RowStatus;
   /** The timezone of the host */
   timezone?: string;
 }

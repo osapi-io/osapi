@@ -112,22 +112,16 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### CommandResult
 
-| Field        | Type                  | Description                                                                            |
-| ------------ | --------------------- | -------------------------------------------------------------------------------------- |
-| `Changed`    | `bool`                | Whether the host changed: true, since a command can change anything.                   |
-| `DurationMS` | `int64`               | How long it ran, in milliseconds.                                                      |
-| `Error`      | `string`              | Error message if the agent failed.                                                     |
-| `ExitCode`   | `int`                 | Its exit code.                                                                         |
-| `Hostname`   | `string`              | Hostname of the agent that produced this result.                                       |
-| `Status`     | `CommandResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-| `Stderr`     | `string`              | What it wrote to standard error.                                                       |
-| `Stdout`     | `string`              | What it wrote to standard output.                                                      |
-
-### CommandResultStatus
-
-The status of the operation for this host.
-
-A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+| Field        | Type        | Description                                                                                                                                                                                                              |
+| ------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Changed`    | `bool`      | Whether the host changed: true, since a command can change anything.                                                                                                                                                     |
+| `DurationMS` | `int64`     | How long it ran, in milliseconds.                                                                                                                                                                                        |
+| `Error`      | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `ExitCode`   | `int`       | Its exit code.                                                                                                                                                                                                           |
+| `Hostname`   | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `Status`     | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
+| `Stderr`     | `string`    | What it wrote to standard error.                                                                                                                                                                                         |
+| `Stdout`     | `string`    | What it wrote to standard output.                                                                                                                                                                                        |
 
 ### CommandShellInput
 
@@ -136,6 +130,14 @@ A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 | `Command` | `string` | The command line, which /bin/sh -c reads, such as ls -la /tmp \| grep log. |
 | `Cwd`     | `string` | The directory to run it in; the agent's own when empty.                    |
 | `Timeout` | `int`    | Seconds to let it run before it is stopped, up to 300; 30 when 0.          |
+
+### RowStatus
+
+What happened on the host: ok, the operation ran and succeeded; failed, it ran
+and did not succeed; skipped, the host's OS family does not support it; timeout,
+the host did not answer, so nobody knows whether it ran.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ## Example
 

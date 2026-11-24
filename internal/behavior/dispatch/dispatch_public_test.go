@@ -36,6 +36,7 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	jobmocks "github.com/osapi-io/osapi/internal/job/mocks"
 	"github.com/osapi-io/osapi/internal/secret"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 type provider struct{}
@@ -389,6 +390,26 @@ func (s *DispatchPublicTestSuite) TestRunBefore() {
 			account, "update", "server1", pwIn{Name: "web", Password: "boom"})
 		s.ErrorContains(err, "the controller step failed")
 	})
+}
+
+func (s *DispatchPublicTestSuite) TestRowStatuses() {
+	tests := []struct {
+		name string
+		want types.RowStatus
+	}{
+		{name: "when a host did not answer, timeout is in the enum", want: types.RowStatusTimeout},
+		{name: "when a host was skipped, skipped is in the enum", want: types.RowStatusSkipped},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			got := dispatch.RowStatuses()
+			s.Contains(got, string(tc.want))
+			for _, v := range got {
+				s.True(types.RowStatus(v).Valid(), v)
+			}
+		})
+	}
 }
 
 func TestDispatchPublicTestSuite(

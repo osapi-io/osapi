@@ -105,43 +105,31 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### ProcessEntry
 
-| Field        | Type                 | Description                                                                            |
-| ------------ | -------------------- | -------------------------------------------------------------------------------------- |
-| `Command`    | `string`             | Its full command line.                                                                 |
-| `CPUPercent` | `float64`            | Its CPU time as a percent of the time since it started.                                |
-| `Error`      | `string`             | Error message if the agent failed.                                                     |
-| `Hostname`   | `string`             | Hostname of the agent that produced this result.                                       |
-| `MemPercent` | `float64`            | Its resident memory as a percent of the host's memory.                                 |
-| `MemRSS`     | `int64`              | Its resident memory in bytes.                                                          |
-| `Name`       | `string`             | The name of the process.                                                               |
-| `PID`        | `int`                | The process ID.                                                                        |
-| `StartTime`  | `string`             | When it started, in RFC 3339.                                                          |
-| `State`      | `string`             | Its state, such as running or sleep.                                                   |
-| `Status`     | `ProcessEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-| `User`       | `string`             | The user that runs it.                                                                 |
-
-### ProcessEntryStatus
-
-The status of the operation for this host.
-
-A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+| Field        | Type        | Description                                                                                                                                                                                                              |
+| ------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Command`    | `string`    | Its full command line.                                                                                                                                                                                                   |
+| `CPUPercent` | `float64`   | Its CPU time as a percent of the time since it started.                                                                                                                                                                  |
+| `Error`      | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Hostname`   | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `MemPercent` | `float64`   | Its resident memory as a percent of the host's memory.                                                                                                                                                                   |
+| `MemRSS`     | `int64`     | Its resident memory in bytes.                                                                                                                                                                                            |
+| `Name`       | `string`    | The name of the process.                                                                                                                                                                                                 |
+| `PID`        | `int`       | The process ID.                                                                                                                                                                                                          |
+| `StartTime`  | `string`    | When it started, in RFC 3339.                                                                                                                                                                                            |
+| `State`      | `string`    | Its state, such as running or sleep.                                                                                                                                                                                     |
+| `Status`     | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
+| `User`       | `string`    | The user that runs it.                                                                                                                                                                                                   |
 
 ### ProcessResult
 
-| Field      | Type                  | Description                                                                            |
-| ---------- | --------------------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`                | Whether the signal was sent.                                                           |
-| `Error`    | `string`              | Error message if the agent failed.                                                     |
-| `Hostname` | `string`              | Hostname of the agent that produced this result.                                       |
-| `PID`      | `int`                 | The process ID.                                                                        |
-| `Signal`   | `string`              | The signal that was sent.                                                              |
-| `Status`   | `ProcessResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-
-### ProcessResultStatus
-
-The status of the operation for this host.
-
-A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+| Field      | Type        | Description                                                                                                                                                                                                              |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Changed`  | `bool`      | Whether the signal was sent.                                                                                                                                                                                             |
+| `Error`    | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Hostname` | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `PID`      | `int`       | The process ID.                                                                                                                                                                                                          |
+| `Signal`   | `string`    | The signal that was sent.                                                                                                                                                                                                |
+| `Status`   | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
 
 ### ProcessSignalInput
 
@@ -155,6 +143,14 @@ A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 The signal: TERM, KILL, HUP, INT, USR1 or USR2.
 
 A `string`, one of `TERM`, `KILL`, `HUP`, `INT`, `USR1`, `USR2`.
+
+### RowStatus
+
+What happened on the host: ok, the operation ran and succeeded; failed, it ran
+and did not succeed; skipped, the host's OS family does not support it; timeout,
+the host did not answer, so nobody knows whether it ran.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ## Example
 

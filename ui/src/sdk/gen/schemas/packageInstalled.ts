@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { PackageInstalledStatus } from './packageInstalledStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface PackageInstalled {
   /** The architecture it is built for, such as amd64 */
@@ -21,8 +21,7 @@ export interface PackageInstalled {
   name?: string;
   /** Its installed size in bytes */
   size?: number;
-  /** The status of the operation for this host. */
-  status: PackageInstalledStatus;
+  status: RowStatus;
   /** The installed version */
   version?: string;
 }

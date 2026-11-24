@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // DiskEntry is the DiskEntry of the spec.
 type DiskEntry struct {
 	// Each local filesystem.
@@ -13,18 +15,8 @@ type DiskEntry struct {
 	// Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status DiskEntryStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// DiskEntryStatus: The status of the operation for this host.
-type DiskEntryStatus string
-
-// The values of DiskEntryStatus.
-const (
-	DiskEntryStatusOk      DiskEntryStatus = "ok"
-	DiskEntryStatusFailed  DiskEntryStatus = "failed"
-	DiskEntryStatusSkipped DiskEntryStatus = "skipped"
-	DiskEntryStatusTimeout DiskEntryStatus = "timeout"
-)

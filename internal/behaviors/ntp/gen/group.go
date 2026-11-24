@@ -20,14 +20,14 @@ type GetRequest struct {
 
 // NtpStatus is the result of ntp on one host.
 type NtpStatus struct {
-	Hostname      string    `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status        string    `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Synchronized  *bool     `doc:"Whether chrony is synchronized to a source" json:"synchronized,omitempty"`
-	Stratum       *int      `doc:"The NTP stratum of the host" json:"stratum,omitempty"`
-	Offset        *string   `doc:"The offset of the system clock from NTP time, such as +0.000003422s" json:"offset,omitempty"`
-	CurrentSource *string   `doc:"The source that chrony follows now" json:"current_source,omitempty"`
-	Servers       *[]string `doc:"The sources that chrony has" json:"servers,omitempty"`
-	Error         *string   `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname      string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status        types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Synchronized  *bool           `doc:"Whether chrony is synchronized to a source" json:"synchronized,omitempty"`
+	Stratum       *int            `doc:"The NTP stratum of the host" json:"stratum,omitempty"`
+	Offset        *string         `doc:"The offset of the system clock from NTP time, such as +0.000003422s" json:"offset,omitempty"`
+	CurrentSource *string         `doc:"The source that chrony follows now" json:"current_source,omitempty"`
+	Servers       *[]string       `doc:"The sources that chrony has" json:"servers,omitempty"`
+	Error         *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // NtpGetResponse is each target host's result.
@@ -58,10 +58,10 @@ type NtpCreateRequest struct {
 
 // NtpResult is the result of ntp on one host.
 type NtpResult struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Changed  *bool   `doc:"Whether the host changed" json:"changed,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Changed  *bool           `doc:"Whether the host changed" json:"changed,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // NtpCreateResponse is each target host's result.
@@ -134,6 +134,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("ntp_operations", "NTP", "The NTP servers of chrony, and its sync status"),
 	endpoint.CommandNotes("The [ntp behavior](../../../../../reference/behaviors/config/ntp/ntp.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[GetRequest, NtpGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodeNtp").

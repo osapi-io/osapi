@@ -26,16 +26,16 @@ type ConnectivityPingRequest struct {
 
 // ConnectivityPingResult is the result of connectivity on one host.
 type ConnectivityPingResult struct {
-	Hostname        string   `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status          string   `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	PacketsSent     *int     `doc:"Number of packets sent" json:"packets_sent,omitempty"`
-	PacketsReceived *int     `doc:"Number of packets received" json:"packets_received,omitempty"`
-	PacketLoss      *float64 `doc:"Percentage of packet loss" json:"packet_loss,omitempty"`
-	MinRTT          *string  `doc:"Minimum round-trip time in milliseconds, with two decimals. Absent when no reply came back." json:"min_rtt,omitempty"`
-	AvgRTT          *string  `doc:"Average round-trip time in milliseconds, with two decimals. Absent when no reply came back." json:"avg_rtt,omitempty"`
-	MaxRTT          *string  `doc:"Maximum round-trip time in milliseconds, with two decimals. Absent when no reply came back." json:"max_rtt,omitempty"`
-	Changed         *bool    `doc:"Always false: a ping changes nothing on the host" json:"changed,omitempty"`
-	Error           *string  `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname        string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status          types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	PacketsSent     *int            `doc:"Number of packets sent" json:"packets_sent,omitempty"`
+	PacketsReceived *int            `doc:"Number of packets received" json:"packets_received,omitempty"`
+	PacketLoss      *float64        `doc:"Percentage of packet loss" json:"packet_loss,omitempty"`
+	MinRTT          *string         `doc:"Minimum round-trip time in milliseconds, with two decimals. Absent when no reply came back." json:"min_rtt,omitempty"`
+	AvgRTT          *string         `doc:"Average round-trip time in milliseconds, with two decimals. Absent when no reply came back." json:"avg_rtt,omitempty"`
+	MaxRTT          *string         `doc:"Maximum round-trip time in milliseconds, with two decimals. Absent when no reply came back." json:"max_rtt,omitempty"`
+	Changed         *bool           `doc:"Always false: a ping changes nothing on the host" json:"changed,omitempty"`
+	Error           *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // ConnectivityPingResponse is each target host's result.
@@ -62,6 +62,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("connectivity_operations", "Connectivity", "Whether the host reaches an address, by ICMP ping"),
 	endpoint.CommandNotes("The [connectivity behavior](../../../../../reference/behaviors/networking/connectivity/connectivity.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Post[PingRequest, ConnectivityPingResponse]("ping").
 		Handle(HandlePing).
 		ID("PostNodeConnectivityPing").

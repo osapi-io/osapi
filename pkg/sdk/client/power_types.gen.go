@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // PowerResult is the PowerResult of the spec.
 type PowerResult struct {
 	// reboot or shutdown.
@@ -19,18 +21,8 @@ type PowerResult struct {
 	// Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status PowerResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// PowerResultStatus: The status of the operation for this host.
-type PowerResultStatus string
-
-// The values of PowerResultStatus.
-const (
-	PowerResultStatusOk      PowerResultStatus = "ok"
-	PowerResultStatusFailed  PowerResultStatus = "failed"
-	PowerResultStatusSkipped PowerResultStatus = "skipped"
-	PowerResultStatusTimeout PowerResultStatus = "timeout"
-)

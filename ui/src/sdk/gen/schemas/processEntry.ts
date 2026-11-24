@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { ProcessEntryStatus } from './processEntryStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface ProcessEntry {
   /** Its full command line */
@@ -27,8 +27,7 @@ export interface ProcessEntry {
   start_time?: string;
   /** Its state, such as running or sleep */
   state?: string;
-  /** The status of the operation for this host. */
-  status: ProcessEntryStatus;
+  status: RowStatus;
   /** The user that runs it */
   user?: string;
 }

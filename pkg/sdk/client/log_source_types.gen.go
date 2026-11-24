@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // LogSourceSource is the LogSourceSource of the spec.
 type LogSourceSource struct {
 	// Error message if the agent failed.
@@ -13,18 +15,8 @@ type LogSourceSource struct {
 	// The syslog identifier, such as sshd.
 	Name string `json:"name,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status LogSourceSourceStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// LogSourceSourceStatus: The status of the operation for this host.
-type LogSourceSourceStatus string
-
-// The values of LogSourceSourceStatus.
-const (
-	LogSourceSourceStatusOk      LogSourceSourceStatus = "ok"
-	LogSourceSourceStatusFailed  LogSourceSourceStatus = "failed"
-	LogSourceSourceStatusSkipped LogSourceSourceStatus = "skipped"
-	LogSourceSourceStatusTimeout LogSourceSourceStatus = "timeout"
-)

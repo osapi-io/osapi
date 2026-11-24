@@ -20,10 +20,10 @@ type GetRequest struct {
 
 // HostnameEntry is the result of hostname on one host.
 type HostnameEntry struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Name     *string `doc:"The hostname of the host" json:"name,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Name     *string         `doc:"The hostname of the host" json:"name,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // HostnameGetResponse is each target host's result.
@@ -54,11 +54,11 @@ type HostnameUpdateRequest struct {
 
 // HostnameResult is the result of hostname on one host.
 type HostnameResult struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Name     *string `doc:"The hostname of the host" json:"name,omitempty"`
-	Changed  *bool   `doc:"Whether the host changed" json:"changed,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Name     *string         `doc:"The hostname of the host" json:"name,omitempty"`
+	Changed  *bool           `doc:"Whether the host changed" json:"changed,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // HostnameUpdateResponse is each target host's result.
@@ -85,6 +85,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("hostname_operations", "Hostname", "Get or set the hostname of target hosts"),
 	endpoint.CommandNotes("The [hostname behavior](../../../../../reference/behaviors/config/hostname/hostname.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[GetRequest, HostnameGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodeHostname").

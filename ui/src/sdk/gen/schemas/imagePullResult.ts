@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { ImagePullResultStatus } from './imagePullResultStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface ImagePullResult {
   /** Whether the pull got a new image: false when the host had it already */
@@ -19,6 +19,5 @@ export interface ImagePullResult {
   image_id?: string;
   /** Its size in bytes */
   size?: number;
-  /** The status of the operation for this host. */
-  status: ImagePullResultStatus;
+  status: RowStatus;
 }

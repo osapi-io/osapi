@@ -27,12 +27,12 @@ type PowerRebootRequest struct {
 
 // PowerResult is the result of power on one host.
 type PowerResult struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Action   *string `doc:"reboot or shutdown" json:"action,omitempty"`
-	Delay    *int    `doc:"Seconds before the host goes down." json:"delay,omitempty"`
-	Changed  *bool   `doc:"Always true: each run changes the host." json:"changed,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Action   *string         `doc:"reboot or shutdown" json:"action,omitempty"`
+	Delay    *int            `doc:"Seconds before the host goes down." json:"delay,omitempty"`
+	Changed  *bool           `doc:"Always true: each run changes the host." json:"changed,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // PowerRebootResponse is each target host's result.
@@ -86,6 +86,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("power_operations", "Power", "Reboot or shut down the host"),
 	endpoint.CommandNotes("The [power behavior](../../../../../reference/behaviors/node/power/power.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Post[RebootRequest, PowerRebootResponse]("reboot").
 		Handle(HandleReboot).
 		ID("PostNodePowerReboot").

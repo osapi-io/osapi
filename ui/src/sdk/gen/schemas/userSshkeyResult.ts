@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { UserSshkeyResultStatus } from './userSshkeyResultStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface UserSshkeyResult {
   /** Whether the host changed */
@@ -15,6 +15,5 @@ export interface UserSshkeyResult {
   fingerprint?: string;
   /** Hostname of the agent that produced this result. */
   hostname: string;
-  /** The status of the operation for this host. */
-  status: UserSshkeyResultStatus;
+  status: RowStatus;
 }

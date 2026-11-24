@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // FileDeleteResult is the FileDeleteResult of the spec.
 type FileDeleteResult struct {
 	// Whether the host changed.
@@ -16,21 +18,11 @@ type FileDeleteResult struct {
 	// Absolute path of the file.
 	Path string `json:"path,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status FileDeleteResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// FileDeleteResultStatus: The status of the operation for this host.
-type FileDeleteResultStatus string
-
-// The values of FileDeleteResultStatus.
-const (
-	FileDeleteResultStatusOk      FileDeleteResultStatus = "ok"
-	FileDeleteResultStatusFailed  FileDeleteResultStatus = "failed"
-	FileDeleteResultStatusSkipped FileDeleteResultStatus = "skipped"
-	FileDeleteResultStatusTimeout FileDeleteResultStatus = "timeout"
-)
 
 // FileStatus is the FileStatus of the spec.
 type FileStatus struct {
@@ -49,21 +41,11 @@ type FileStatus struct {
 	// in-sync, drifted, missing or unmanaged.
 	State string `json:"state,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status FileStatusStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// FileStatusStatus: The status of the operation for this host.
-type FileStatusStatus string
-
-// The values of FileStatusStatus.
-const (
-	FileStatusStatusOk      FileStatusStatus = "ok"
-	FileStatusStatusFailed  FileStatusStatus = "failed"
-	FileStatusStatusSkipped FileStatusStatus = "skipped"
-	FileStatusStatusTimeout FileStatusStatus = "timeout"
-)
 
 // FileUpdateRequestContentType: How the object is written: raw as it is, or
 // template rendered with .Facts, .Vars and .Hostname; the object's own when
@@ -93,18 +75,8 @@ type FileUpdateResult struct {
 	// SHA-256 of the content that the file holds.
 	SHA256 string `json:"sha256,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status FileUpdateResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// FileUpdateResultStatus: The status of the operation for this host.
-type FileUpdateResultStatus string
-
-// The values of FileUpdateResultStatus.
-const (
-	FileUpdateResultStatusOk      FileUpdateResultStatus = "ok"
-	FileUpdateResultStatusFailed  FileUpdateResultStatus = "failed"
-	FileUpdateResultStatusSkipped FileUpdateResultStatus = "skipped"
-	FileUpdateResultStatusTimeout FileUpdateResultStatus = "timeout"
-)

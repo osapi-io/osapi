@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { ImageResultStatus } from './imageResultStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface ImageResult {
   /** Whether the host changed */
@@ -15,6 +15,5 @@ export interface ImageResult {
   hostname: string;
   /** The image */
   image?: string;
-  /** The status of the operation for this host. */
-  status: ImageResultStatus;
+  status: RowStatus;
 }

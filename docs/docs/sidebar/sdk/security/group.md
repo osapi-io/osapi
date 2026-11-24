@@ -171,20 +171,14 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### GroupAccount
 
-| Field      | Type                 | Description                                                                            |
-| ---------- | -------------------- | -------------------------------------------------------------------------------------- |
-| `Error`    | `string`             | Error message if the agent failed.                                                     |
-| `GID`      | `int`                | Its numeric group ID.                                                                  |
-| `Hostname` | `string`             | Hostname of the agent that produced this result.                                       |
-| `Members`  | `[]string`           | The users it has as members, besides those whose primary group it is.                  |
-| `Name`     | `string`             | The group.                                                                             |
-| `Status`   | `GroupAccountStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-
-### GroupAccountStatus
-
-The status of the operation for this host.
-
-A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+| Field      | Type        | Description                                                                                                                                                                                                              |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Error`    | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `GID`      | `int`       | Its numeric group ID.                                                                                                                                                                                                    |
+| `Hostname` | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `Members`  | `[]string`  | The users it has as members, besides those whose primary group it is.                                                                                                                                                    |
+| `Name`     | `string`    | The group.                                                                                                                                                                                                               |
+| `Status`   | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
 
 ### GroupCreateInput
 
@@ -196,19 +190,13 @@ A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### GroupResult
 
-| Field      | Type                | Description                                                                            |
-| ---------- | ------------------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`              | Whether the host changed.                                                              |
-| `Error`    | `string`            | Error message if the agent failed.                                                     |
-| `Hostname` | `string`            | Hostname of the agent that produced this result.                                       |
-| `Name`     | `string`            | The group.                                                                             |
-| `Status`   | `GroupResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-
-### GroupResultStatus
-
-The status of the operation for this host.
-
-A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+| Field      | Type        | Description                                                                                                                                                                                                              |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Changed`  | `bool`      | Whether the host changed.                                                                                                                                                                                                |
+| `Error`    | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Hostname` | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `Name`     | `string`    | The group.                                                                                                                                                                                                               |
+| `Status`   | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
 
 ### GroupUpdateInput
 
@@ -216,6 +204,14 @@ A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 | --------- | ---------- | --------------------------------------------------------------- |
 | `Name`    | `string`   | The name of the path. The group to remove, such as developers.  |
 | `Members` | `[]string` | Its members, which replace the members it has; none when empty. |
+
+### RowStatus
+
+What happened on the host: ok, the operation ran and succeeded; failed, it ran
+and did not succeed; skipped, the host's OS family does not support it; timeout,
+the host did not answer, so nobody knows whether it ran.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ## Example
 

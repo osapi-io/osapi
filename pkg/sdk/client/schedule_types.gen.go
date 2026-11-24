@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // ScheduleCreateRequestContentType: The content type: raw, or template to
 // render the object with the agent's facts and vars; the object's own when
 // empty.
@@ -48,24 +50,14 @@ type ScheduleEntry struct {
 	// Where its file is: cron.d, or the interval.
 	Source string `json:"source,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status ScheduleEntryStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 
 	// The user it runs as.
 	User string `json:"user,omitempty"`
 }
-
-// ScheduleEntryStatus: The status of the operation for this host.
-type ScheduleEntryStatus string
-
-// The values of ScheduleEntryStatus.
-const (
-	ScheduleEntryStatusOk      ScheduleEntryStatus = "ok"
-	ScheduleEntryStatusFailed  ScheduleEntryStatus = "failed"
-	ScheduleEntryStatusSkipped ScheduleEntryStatus = "skipped"
-	ScheduleEntryStatusTimeout ScheduleEntryStatus = "timeout"
-)
 
 // ScheduleResult is the ScheduleResult of the spec.
 type ScheduleResult struct {
@@ -81,21 +73,11 @@ type ScheduleResult struct {
 	// The entry.
 	Name string `json:"name,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status ScheduleResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// ScheduleResultStatus: The status of the operation for this host.
-type ScheduleResultStatus string
-
-// The values of ScheduleResultStatus.
-const (
-	ScheduleResultStatusOk      ScheduleResultStatus = "ok"
-	ScheduleResultStatusFailed  ScheduleResultStatus = "failed"
-	ScheduleResultStatusSkipped ScheduleResultStatus = "skipped"
-	ScheduleResultStatusTimeout ScheduleResultStatus = "timeout"
-)
 
 // ScheduleUpdateRequestContentType: The content type, raw or template; the
 // object's own when empty.

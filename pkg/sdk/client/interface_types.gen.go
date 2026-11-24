@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // InterfaceCreateRequestType: The type: ethernet, the default, for an
 // interface the host has, or dummy for a dummy interface that netplan makes.
 type InterfaceCreateRequestType string
@@ -47,21 +49,11 @@ type InterfaceEntry struct {
 	// up or down.
 	State string `json:"state,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status InterfaceEntryStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// InterfaceEntryStatus: The status of the operation for this host.
-type InterfaceEntryStatus string
-
-// The values of InterfaceEntryStatus.
-const (
-	InterfaceEntryStatusOk      InterfaceEntryStatus = "ok"
-	InterfaceEntryStatusFailed  InterfaceEntryStatus = "failed"
-	InterfaceEntryStatusSkipped InterfaceEntryStatus = "skipped"
-	InterfaceEntryStatusTimeout InterfaceEntryStatus = "timeout"
-)
 
 // InterfaceResult is the InterfaceResult of the spec.
 type InterfaceResult struct {
@@ -77,21 +69,11 @@ type InterfaceResult struct {
 	// The interface.
 	Name string `json:"name,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status InterfaceResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// InterfaceResultStatus: The status of the operation for this host.
-type InterfaceResultStatus string
-
-// The values of InterfaceResultStatus.
-const (
-	InterfaceResultStatusOk      InterfaceResultStatus = "ok"
-	InterfaceResultStatusFailed  InterfaceResultStatus = "failed"
-	InterfaceResultStatusSkipped InterfaceResultStatus = "skipped"
-	InterfaceResultStatusTimeout InterfaceResultStatus = "timeout"
-)
 
 // InterfaceUpdateRequestType: The type: ethernet, the default, for an
 // interface the host has, or dummy for a dummy interface that netplan makes.

@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { PackageUpdatesResultStatus } from './packageUpdatesResultStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface PackageUpdatesResult {
   /** Whether the refresh got new index data */
@@ -13,6 +13,5 @@ export interface PackageUpdatesResult {
   error?: string;
   /** Hostname of the agent that produced this result. */
   hostname: string;
-  /** The status of the operation for this host. */
-  status: PackageUpdatesResultStatus;
+  status: RowStatus;
 }

@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // HostnameEntry is the HostnameEntry of the spec.
 type HostnameEntry struct {
 	// Error message if the agent failed.
@@ -13,21 +15,11 @@ type HostnameEntry struct {
 	// The hostname of the host.
 	Name string `json:"name,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status HostnameEntryStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// HostnameEntryStatus: The status of the operation for this host.
-type HostnameEntryStatus string
-
-// The values of HostnameEntryStatus.
-const (
-	HostnameEntryStatusOk      HostnameEntryStatus = "ok"
-	HostnameEntryStatusFailed  HostnameEntryStatus = "failed"
-	HostnameEntryStatusSkipped HostnameEntryStatus = "skipped"
-	HostnameEntryStatusTimeout HostnameEntryStatus = "timeout"
-)
 
 // HostnameResult is the HostnameResult of the spec.
 type HostnameResult struct {
@@ -43,18 +35,8 @@ type HostnameResult struct {
 	// The hostname of the host.
 	Name string `json:"name,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status HostnameResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// HostnameResultStatus: The status of the operation for this host.
-type HostnameResultStatus string
-
-// The values of HostnameResultStatus.
-const (
-	HostnameResultStatusOk      HostnameResultStatus = "ok"
-	HostnameResultStatusFailed  HostnameResultStatus = "failed"
-	HostnameResultStatusSkipped HostnameResultStatus = "skipped"
-	HostnameResultStatusTimeout HostnameResultStatus = "timeout"
-)

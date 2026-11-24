@@ -66,20 +66,22 @@ A `string`, one of `emerg`, `alert`, `crit`, `err`, `warning`, `notice`, `info`,
 
 ### LogEntry
 
-| Field       | Type             | Description                                                                            |
-| ----------- | ---------------- | -------------------------------------------------------------------------------------- |
-| `Error`     | `string`         | Error message if the agent failed.                                                     |
-| `Hostname`  | `string`         | Hostname of the agent that produced this result.                                       |
-| `Message`   | `string`         | The message.                                                                           |
-| `PID`       | `int`            | The process that wrote it.                                                             |
-| `Priority`  | `string`         | Its priority, by name.                                                                 |
-| `Status`    | `LogEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-| `Timestamp` | `string`         | When journald recorded it, in RFC 3339.                                                |
-| `Unit`      | `string`         | The syslog identifier that wrote it.                                                   |
+| Field       | Type        | Description                                                                                                                                                                                                              |
+| ----------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Error`     | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Hostname`  | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `Message`   | `string`    | The message.                                                                                                                                                                                                             |
+| `PID`       | `int`       | The process that wrote it.                                                                                                                                                                                               |
+| `Priority`  | `string`    | Its priority, by name.                                                                                                                                                                                                   |
+| `Status`    | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
+| `Timestamp` | `string`    | When journald recorded it, in RFC 3339.                                                                                                                                                                                  |
+| `Unit`      | `string`    | The syslog identifier that wrote it.                                                                                                                                                                                     |
 
-### LogEntryStatus
+### RowStatus
 
-The status of the operation for this host.
+What happened on the host: ok, the operation ran and succeeded; failed, it ran
+and did not succeed; skipped, the host's OS family does not support it; timeout,
+the host did not answer, so nobody knows whether it ran.
 
 A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 

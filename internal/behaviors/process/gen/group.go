@@ -20,18 +20,18 @@ type ListRequest struct {
 
 // ProcessEntry is the result of process on one host.
 type ProcessEntry struct {
-	Hostname   string   `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status     string   `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	PID        *int     `doc:"The process ID" json:"pid,omitempty"`
-	Name       *string  `doc:"The name of the process" json:"name,omitempty"`
-	User       *string  `doc:"The user that runs it" json:"user,omitempty"`
-	State      *string  `doc:"Its state, such as running or sleep" json:"state,omitempty"`
-	CPUPercent *float64 `doc:"Its CPU time as a percent of the time since it started" json:"cpu_percent,omitempty"`
-	MemPercent *float32 `doc:"Its resident memory as a percent of the host's memory" json:"mem_percent,omitempty"`
-	MemRSS     *int64   `doc:"Its resident memory in bytes" json:"mem_rss,omitempty"`
-	Command    *string  `doc:"Its full command line" json:"command,omitempty"`
-	StartTime  *string  `doc:"When it started, in RFC 3339" json:"start_time,omitempty"`
-	Error      *string  `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname   string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status     types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	PID        *int            `doc:"The process ID" json:"pid,omitempty"`
+	Name       *string         `doc:"The name of the process" json:"name,omitempty"`
+	User       *string         `doc:"The user that runs it" json:"user,omitempty"`
+	State      *string         `doc:"Its state, such as running or sleep" json:"state,omitempty"`
+	CPUPercent *float64        `doc:"Its CPU time as a percent of the time since it started" json:"cpu_percent,omitempty"`
+	MemPercent *float32        `doc:"Its resident memory as a percent of the host's memory" json:"mem_percent,omitempty"`
+	MemRSS     *int64          `doc:"Its resident memory in bytes" json:"mem_rss,omitempty"`
+	Command    *string         `doc:"Its full command line" json:"command,omitempty"`
+	StartTime  *string         `doc:"When it started, in RFC 3339" json:"start_time,omitempty"`
+	Error      *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // ProcessCollectionResponse is each target host's result.
@@ -84,12 +84,12 @@ type ProcessSignalRequest struct {
 
 // ProcessResult is the result of process on one host.
 type ProcessResult struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	PID      *int    `doc:"The process ID" json:"pid,omitempty"`
-	Signal   *string `doc:"The signal that was sent" json:"signal,omitempty"`
-	Changed  *bool   `doc:"Whether the signal was sent" json:"changed,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	PID      *int            `doc:"The process ID" json:"pid,omitempty"`
+	Signal   *string         `doc:"The signal that was sent" json:"signal,omitempty"`
+	Changed  *bool           `doc:"Whether the signal was sent" json:"changed,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // ProcessSignalResponse is each target host's result.
@@ -116,6 +116,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("process_operations", "Process", "The processes of the host"),
 	endpoint.CommandNotes("The [process behavior](../../../../../reference/behaviors/node/process/process.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, ProcessCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeProcess").

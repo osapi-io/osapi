@@ -20,12 +20,12 @@ type ListRequest struct {
 
 // GroupAccount is the result of group on one host.
 type GroupAccount struct {
-	Hostname string    `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string    `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Name     *string   `doc:"The group" json:"name,omitempty"`
-	GID      *int      `doc:"Its numeric group ID" json:"gid,omitempty"`
-	Members  *[]string `doc:"The users it has as members, besides those whose primary group it is" json:"members,omitempty"`
-	Error    *string   `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Name     *string         `doc:"The group" json:"name,omitempty"`
+	GID      *int            `doc:"Its numeric group ID" json:"gid,omitempty"`
+	Members  *[]string       `doc:"The users it has as members, besides those whose primary group it is" json:"members,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // GroupCollectionResponse is each target host's result.
@@ -79,11 +79,11 @@ type GroupCreateRequest struct {
 
 // GroupResult is the result of group on one host.
 type GroupResult struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Name     *string `doc:"The group" json:"name,omitempty"`
-	Changed  *bool   `doc:"Whether the host changed" json:"changed,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Name     *string         `doc:"The group" json:"name,omitempty"`
+	Changed  *bool           `doc:"Whether the host changed" json:"changed,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // GroupCreateResponse is each target host's result.
@@ -158,6 +158,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("group_operations", "Group", "The groups of the host"),
 	endpoint.CommandNotes("The [group behavior](../../../../../reference/behaviors/security/group/group.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, GroupCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeGroup").

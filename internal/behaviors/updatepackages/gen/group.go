@@ -20,12 +20,12 @@ type ListRequest struct {
 
 // PackageUpdatesAvailable is the result of updates on one host.
 type PackageUpdatesAvailable struct {
-	Hostname       string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status         string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Name           *string `doc:"The package" json:"name,omitempty"`
-	CurrentVersion *string `doc:"The installed version" json:"current_version,omitempty"`
-	NewVersion     *string `doc:"The version the index has" json:"new_version,omitempty"`
-	Error          *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname       string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status         types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Name           *string         `doc:"The package" json:"name,omitempty"`
+	CurrentVersion *string         `doc:"The installed version" json:"current_version,omitempty"`
+	NewVersion     *string         `doc:"The version the index has" json:"new_version,omitempty"`
+	Error          *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // PackageUpdatesCollectionResponse is each target host's result.
@@ -50,10 +50,10 @@ type UpdateRequest struct {
 
 // PackageUpdatesResult is the result of updates on one host.
 type PackageUpdatesResult struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Changed  *bool   `doc:"Whether the refresh got new index data" json:"changed,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Changed  *bool           `doc:"Whether the refresh got new index data" json:"changed,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // PackageUpdatesUpdateResponse is each target host's result.
@@ -80,6 +80,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("updates_operations", "Package updates", "The updates the package index has for the host"),
 	endpoint.CommandNotes("The [updates behavior](../../../../../../reference/behaviors/software/package/updates/updates.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, PackageUpdatesCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodePackageUpdates").

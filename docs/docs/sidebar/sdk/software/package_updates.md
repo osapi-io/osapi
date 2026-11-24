@@ -75,33 +75,29 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### PackageUpdatesAvailable
 
-| Field            | Type                            | Description                                                                            |
-| ---------------- | ------------------------------- | -------------------------------------------------------------------------------------- |
-| `CurrentVersion` | `string`                        | The installed version.                                                                 |
-| `Error`          | `string`                        | Error message if the agent failed.                                                     |
-| `Hostname`       | `string`                        | Hostname of the agent that produced this result.                                       |
-| `Name`           | `string`                        | The package.                                                                           |
-| `NewVersion`     | `string`                        | The version the index has.                                                             |
-| `Status`         | `PackageUpdatesAvailableStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-
-### PackageUpdatesAvailableStatus
-
-The status of the operation for this host.
-
-A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+| Field            | Type        | Description                                                                                                                                                                                                              |
+| ---------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `CurrentVersion` | `string`    | The installed version.                                                                                                                                                                                                   |
+| `Error`          | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Hostname`       | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `Name`           | `string`    | The package.                                                                                                                                                                                                             |
+| `NewVersion`     | `string`    | The version the index has.                                                                                                                                                                                               |
+| `Status`         | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
 
 ### PackageUpdatesResult
 
-| Field      | Type                         | Description                                                                            |
-| ---------- | ---------------------------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`                       | Whether the refresh got new index data.                                                |
-| `Error`    | `string`                     | Error message if the agent failed.                                                     |
-| `Hostname` | `string`                     | Hostname of the agent that produced this result.                                       |
-| `Status`   | `PackageUpdatesResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type        | Description                                                                                                                                                                                                              |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Changed`  | `bool`      | Whether the refresh got new index data.                                                                                                                                                                                  |
+| `Error`    | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Hostname` | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `Status`   | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
 
-### PackageUpdatesResultStatus
+### RowStatus
 
-The status of the operation for this host.
+What happened on the host: ok, the operation ran and succeeded; failed, it ran
+and did not succeed; skipped, the host's OS family does not support it; timeout,
+the host did not answer, so nobody knows whether it ran.
 
 A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 

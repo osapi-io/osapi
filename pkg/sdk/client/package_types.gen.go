@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // PackageInstalled is the PackageInstalled of the spec.
 type PackageInstalled struct {
 	// The architecture it is built for, such as amd64.
@@ -25,24 +27,14 @@ type PackageInstalled struct {
 	// Its installed size in bytes.
 	Size int64 `json:"size,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status PackageInstalledStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 
 	// The installed version.
 	Version string `json:"version,omitempty"`
 }
-
-// PackageInstalledStatus: The status of the operation for this host.
-type PackageInstalledStatus string
-
-// The values of PackageInstalledStatus.
-const (
-	PackageInstalledStatusOk      PackageInstalledStatus = "ok"
-	PackageInstalledStatusFailed  PackageInstalledStatus = "failed"
-	PackageInstalledStatusSkipped PackageInstalledStatus = "skipped"
-	PackageInstalledStatusTimeout PackageInstalledStatus = "timeout"
-)
 
 // PackageResult is the PackageResult of the spec.
 type PackageResult struct {
@@ -58,18 +50,8 @@ type PackageResult struct {
 	// The package.
 	Name string `json:"name,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status PackageResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// PackageResultStatus: The status of the operation for this host.
-type PackageResultStatus string
-
-// The values of PackageResultStatus.
-const (
-	PackageResultStatusOk      PackageResultStatus = "ok"
-	PackageResultStatusFailed  PackageResultStatus = "failed"
-	PackageResultStatusSkipped PackageResultStatus = "skipped"
-	PackageResultStatusTimeout PackageResultStatus = "timeout"
-)

@@ -20,15 +20,15 @@ type ListRequest struct {
 
 // PackageInstalled is the result of package on one host.
 type PackageInstalled struct {
-	Hostname     string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status       string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Name         *string `doc:"The package" json:"name,omitempty"`
-	Version      *string `doc:"The installed version" json:"version,omitempty"`
-	Architecture *string `doc:"The architecture it is built for, such as amd64" json:"architecture,omitempty"`
-	Manager      *string `doc:"The package database that has it: dpkg, rpm or brew" json:"manager,omitempty"`
-	Description  *string `doc:"Its one-line summary" json:"description,omitempty"`
-	Size         *int64  `doc:"Its installed size in bytes" json:"size,omitempty"`
-	Error        *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname     string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status       types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Name         *string         `doc:"The package" json:"name,omitempty"`
+	Version      *string         `doc:"The installed version" json:"version,omitempty"`
+	Architecture *string         `doc:"The architecture it is built for, such as amd64" json:"architecture,omitempty"`
+	Manager      *string         `doc:"The package database that has it: dpkg, rpm or brew" json:"manager,omitempty"`
+	Description  *string         `doc:"Its one-line summary" json:"description,omitempty"`
+	Size         *int64          `doc:"Its installed size in bytes" json:"size,omitempty"`
+	Error        *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // PackageCollectionResponse is each target host's result.
@@ -81,11 +81,11 @@ type PackageCreateRequest struct {
 
 // PackageResult is the result of package on one host.
 type PackageResult struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Name     *string `doc:"The package" json:"name,omitempty"`
-	Changed  *bool   `doc:"Whether the host changed" json:"changed,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Name     *string         `doc:"The package" json:"name,omitempty"`
+	Changed  *bool           `doc:"Whether the host changed" json:"changed,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // PackageCreateResponse is each target host's result.
@@ -133,6 +133,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("package_operations", "Package", "The packages installed on the host"),
 	endpoint.CommandNotes("The [package behavior](../../../../../reference/behaviors/software/package/package.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, PackageCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodePackage").

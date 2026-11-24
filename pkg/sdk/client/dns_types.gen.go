@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // DnsEntry is the DnsEntry of the spec.
 type DnsEntry struct {
 	// Error message if the agent failed.
@@ -16,21 +18,11 @@ type DnsEntry struct {
 	// The DNS servers.
 	Servers []string `json:"servers,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status DnsEntryStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// DnsEntryStatus: The status of the operation for this host.
-type DnsEntryStatus string
-
-// The values of DnsEntryStatus.
-const (
-	DnsEntryStatusOk      DnsEntryStatus = "ok"
-	DnsEntryStatusFailed  DnsEntryStatus = "failed"
-	DnsEntryStatusSkipped DnsEntryStatus = "skipped"
-	DnsEntryStatusTimeout DnsEntryStatus = "timeout"
-)
 
 // DnsResult is the DnsResult of the spec.
 type DnsResult struct {
@@ -46,18 +38,8 @@ type DnsResult struct {
 	// The interface.
 	InterfaceName string `json:"interface_name,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status DnsResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// DnsResultStatus: The status of the operation for this host.
-type DnsResultStatus string
-
-// The values of DnsResultStatus.
-const (
-	DnsResultStatusOk      DnsResultStatus = "ok"
-	DnsResultStatusFailed  DnsResultStatus = "failed"
-	DnsResultStatusSkipped DnsResultStatus = "skipped"
-	DnsResultStatusTimeout DnsResultStatus = "timeout"
-)

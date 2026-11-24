@@ -75,26 +75,28 @@ The fields of each type are the properties of its schema in the API's spec.
 | `Distribution` | `string` | The distribution, such as ubuntu, or darwin.    |
 | `Version`      | `string` | The version of the distribution, such as 24.04. |
 
-### StatusEntry
+### RowStatus
 
-| Field         | Type                | Description                                                                            |
-| ------------- | ------------------- | -------------------------------------------------------------------------------------- |
-| `Disks`       | `[]Disk`            | Each local filesystem.                                                                 |
-| `Error`       | `string`            | Error message if the agent failed.                                                     |
-| `Errors`      | `[]string`          | Each read that failed, as name: error. The other fields still answer.                  |
-| `Hostname`    | `string`            | Hostname of the agent that produced this result.                                       |
-| `LoadAverage` | `Averages`          |                                                                                        |
-| `Memory`      | `Usage`             |                                                                                        |
-| `Name`        | `string`            | The hostname of the host, as the hostname command prints it.                           |
-| `OSInfo`      | `Release`           |                                                                                        |
-| `Status`      | `StatusEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-| `Uptime`      | `Entry`             |                                                                                        |
-
-### StatusEntryStatus
-
-The status of the operation for this host.
+What happened on the host: ok, the operation ran and succeeded; failed, it ran
+and did not succeed; skipped, the host's OS family does not support it; timeout,
+the host did not answer, so nobody knows whether it ran.
 
 A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+
+### StatusEntry
+
+| Field         | Type        | Description                                                                                                                                                                                                              |
+| ------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Disks`       | `[]Disk`    | Each local filesystem.                                                                                                                                                                                                   |
+| `Error`       | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Errors`      | `[]string`  | Each read that failed, as name: error. The other fields still answer.                                                                                                                                                    |
+| `Hostname`    | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `LoadAverage` | `Averages`  |                                                                                                                                                                                                                          |
+| `Memory`      | `Usage`     |                                                                                                                                                                                                                          |
+| `Name`        | `string`    | The hostname of the host, as the hostname command prints it.                                                                                                                                                             |
+| `OSInfo`      | `Release`   |                                                                                                                                                                                                                          |
+| `Status`      | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
+| `Uptime`      | `Entry`     |                                                                                                                                                                                                                          |
 
 ### Usage
 

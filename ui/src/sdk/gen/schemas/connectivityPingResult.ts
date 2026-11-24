@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { ConnectivityPingResultStatus } from './connectivityPingResultStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface ConnectivityPingResult {
   /** Average round-trip time in milliseconds, with two decimals. Absent when no reply came back. */
@@ -25,6 +25,5 @@ export interface ConnectivityPingResult {
   packets_received?: number;
   /** Number of packets sent */
   packets_sent?: number;
-  /** The status of the operation for this host. */
-  status: ConnectivityPingResultStatus;
+  status: RowStatus;
 }

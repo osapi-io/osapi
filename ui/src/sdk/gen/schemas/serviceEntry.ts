@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { ServiceEntryStatus } from './serviceEntryStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface ServiceEntry {
   /** The Description= of its unit */
@@ -21,6 +21,5 @@ export interface ServiceEntry {
   name?: string;
   /** What systemd says it does now, such as running, exited or dead */
   state?: string;
-  /** The status of the operation for this host. */
-  status: ServiceEntryStatus;
+  status: RowStatus;
 }

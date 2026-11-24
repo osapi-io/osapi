@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // GetNodeLogPriority: Only the entries at this priority or above.
 type GetNodeLogPriority string
 
@@ -34,9 +36,10 @@ type LogEntry struct {
 	// Its priority, by name.
 	Priority string `json:"priority,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status LogEntryStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 
 	// When journald recorded it, in RFC 3339.
 	Timestamp string `json:"timestamp,omitempty"`
@@ -44,14 +47,3 @@ type LogEntry struct {
 	// The syslog identifier that wrote it.
 	Unit string `json:"unit,omitempty"`
 }
-
-// LogEntryStatus: The status of the operation for this host.
-type LogEntryStatus string
-
-// The values of LogEntryStatus.
-const (
-	LogEntryStatusOk      LogEntryStatus = "ok"
-	LogEntryStatusFailed  LogEntryStatus = "failed"
-	LogEntryStatusSkipped LogEntryStatus = "skipped"
-	LogEntryStatusTimeout LogEntryStatus = "timeout"
-)

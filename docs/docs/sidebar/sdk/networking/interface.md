@@ -226,42 +226,30 @@ A `string`, one of `ethernet`, `dummy`.
 
 ### InterfaceEntry
 
-| Field       | Type                   | Description                                                                            |
-| ----------- | ---------------------- | -------------------------------------------------------------------------------------- |
-| `Addresses` | `[]string`             | Each of its addresses, in CIDR notation.                                               |
-| `DHCP4`     | `bool`                 | Whether DHCP gave it an IPv4 address: a route of it has proto dhcp.                    |
-| `Error`     | `string`               | Error message if the agent failed.                                                     |
-| `Hostname`  | `string`               | Hostname of the agent that produced this result.                                       |
-| `IPv4`      | `string`               | Its first IPv4 address that is not link-local.                                         |
-| `IPv6`      | `string`               | Its first IPv6 address that is not link-local.                                         |
-| `MAC`       | `string`               | Its MAC address; empty for one without, such as lo.                                    |
-| `MTU`       | `int`                  | Its MTU.                                                                               |
-| `Name`      | `string`               | The interface.                                                                         |
-| `Primary`   | `bool`                 | Whether it has the default route.                                                      |
-| `State`     | `string`               | up or down.                                                                            |
-| `Status`    | `InterfaceEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-
-### InterfaceEntryStatus
-
-The status of the operation for this host.
-
-A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+| Field       | Type        | Description                                                                                                                                                                                                              |
+| ----------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Addresses` | `[]string`  | Each of its addresses, in CIDR notation.                                                                                                                                                                                 |
+| `DHCP4`     | `bool`      | Whether DHCP gave it an IPv4 address: a route of it has proto dhcp.                                                                                                                                                      |
+| `Error`     | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Hostname`  | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `IPv4`      | `string`    | Its first IPv4 address that is not link-local.                                                                                                                                                                           |
+| `IPv6`      | `string`    | Its first IPv6 address that is not link-local.                                                                                                                                                                           |
+| `MAC`       | `string`    | Its MAC address; empty for one without, such as lo.                                                                                                                                                                      |
+| `MTU`       | `int`       | Its MTU.                                                                                                                                                                                                                 |
+| `Name`      | `string`    | The interface.                                                                                                                                                                                                           |
+| `Primary`   | `bool`      | Whether it has the default route.                                                                                                                                                                                        |
+| `State`     | `string`    | up or down.                                                                                                                                                                                                              |
+| `Status`    | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
 
 ### InterfaceResult
 
-| Field      | Type                    | Description                                                                            |
-| ---------- | ----------------------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`                  | Whether the host changed.                                                              |
-| `Error`    | `string`                | Error message if the agent failed.                                                     |
-| `Hostname` | `string`                | Hostname of the agent that produced this result.                                       |
-| `Name`     | `string`                | The interface.                                                                         |
-| `Status`   | `InterfaceResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-
-### InterfaceResultStatus
-
-The status of the operation for this host.
-
-A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+| Field      | Type        | Description                                                                                                                                                                                                              |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Changed`  | `bool`      | Whether the host changed.                                                                                                                                                                                                |
+| `Error`    | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Hostname` | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `Name`     | `string`    | The interface.                                                                                                                                                                                                           |
+| `Status`   | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
 
 ### InterfaceUpdateInput
 
@@ -284,6 +272,14 @@ The type: ethernet, the default, for an interface the host has, or dummy for a
 dummy interface that netplan makes.
 
 A `string`, one of `ethernet`, `dummy`.
+
+### RowStatus
+
+What happened on the host: ok, the operation ran and succeeded; failed, it ran
+and did not succeed; skipped, the host's OS family does not support it; timeout,
+the host did not answer, so nobody knows whether it ran.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ## Example
 

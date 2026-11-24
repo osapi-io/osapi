@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { UserSshkeyKeyStatus } from './userSshkeyKeyStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface UserSshkeyKey {
   /** The comment after the key, such as alice@laptop */
@@ -17,8 +17,7 @@ export interface UserSshkeyKey {
   hostname: string;
   /** The options before the key, such as from="10.0.0.0/8" */
   options?: string;
-  /** The status of the operation for this host. */
-  status: UserSshkeyKeyStatus;
+  status: RowStatus;
   /** The key type, such as ssh-ed25519 */
   type?: string;
 }

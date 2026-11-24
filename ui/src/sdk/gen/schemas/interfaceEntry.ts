@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { InterfaceEntryStatus } from './interfaceEntryStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface InterfaceEntry {
   /** Each of its addresses, in CIDR notation */
@@ -29,6 +29,5 @@ export interface InterfaceEntry {
   primary?: boolean;
   /** up or down */
   state?: string;
-  /** The status of the operation for this host. */
-  status: InterfaceEntryStatus;
+  status: RowStatus;
 }

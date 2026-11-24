@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { CertificateResultStatus } from './certificateResultStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface CertificateResult {
   /** Whether the host changed */
@@ -15,6 +15,5 @@ export interface CertificateResult {
   hostname: string;
   /** The CA */
   name?: string;
-  /** The status of the operation for this host. */
-  status: CertificateResultStatus;
+  status: RowStatus;
 }

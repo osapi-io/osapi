@@ -6,7 +6,7 @@ interface ResultSummaryProps {
   jobId?: string;
 }
 
-const order: HostOutcome[] = ["ok", "changed", "skipped", "failed"];
+const order: HostOutcome[] = ["ok", "changed", "skipped", "timeout", "failed"];
 
 /**
  * ResultSummary is the line under a result, as the CLI's printSummary

@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { SysctlEntryStatus } from './sysctlEntryStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface SysctlEntry {
   /** Error message if the agent failed. */
@@ -15,8 +15,7 @@ export interface SysctlEntry {
   key?: string;
   /** Whether osapi manages it: a file of its own sets it at boot */
   managed?: boolean;
-  /** The status of the operation for this host. */
-  status: SysctlEntryStatus;
+  status: RowStatus;
   /** Current runtime value */
   value?: string;
 }

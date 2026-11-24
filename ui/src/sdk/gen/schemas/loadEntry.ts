@@ -5,7 +5,7 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { Averages } from './averages';
-import type { LoadEntryStatus } from './loadEntryStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface LoadEntry {
   /** Error message if the agent failed. */
@@ -13,6 +13,5 @@ export interface LoadEntry {
   /** Hostname of the agent that produced this result. */
   hostname: string;
   load_average?: Averages;
-  /** The status of the operation for this host. */
-  status: LoadEntryStatus;
+  status: RowStatus;
 }

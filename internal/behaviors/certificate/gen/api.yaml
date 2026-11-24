@@ -121,15 +121,7 @@ components:
           description: system for a CA of the distribution, local for one an administrator added
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
         subject:
           description: Its subject, such as CN=ISRG Root X1,O=Internet Security Research Group,C=US
           type: string
@@ -168,15 +160,7 @@ components:
           description: The CA
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -231,6 +215,14 @@ components:
           example: not_found
           type: string
       type: object
+    RowStatus:
+      description: 'What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host''s OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran.'
+      enum:
+        - ok
+        - failed
+        - skipped
+        - timeout
+      type: string
   securitySchemes:
     BearerAuth:
       bearerFormat: JWT

@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { GroupAccountStatus } from './groupAccountStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface GroupAccount {
   /** Error message if the agent failed. */
@@ -17,6 +17,5 @@ export interface GroupAccount {
   members?: string[];
   /** The group */
   name?: string;
-  /** The status of the operation for this host. */
-  status: GroupAccountStatus;
+  status: RowStatus;
 }

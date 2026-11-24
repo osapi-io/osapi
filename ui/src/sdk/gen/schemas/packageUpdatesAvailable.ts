@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { PackageUpdatesAvailableStatus } from './packageUpdatesAvailableStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface PackageUpdatesAvailable {
   /** The installed version */
@@ -17,6 +17,5 @@ export interface PackageUpdatesAvailable {
   name?: string;
   /** The version the index has */
   new_version?: string;
-  /** The status of the operation for this host. */
-  status: PackageUpdatesAvailableStatus;
+  status: RowStatus;
 }

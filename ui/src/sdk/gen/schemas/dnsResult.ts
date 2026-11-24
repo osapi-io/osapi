@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { DnsResultStatus } from './dnsResultStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface DnsResult {
   /** Whether the host changed */
@@ -15,6 +15,5 @@ export interface DnsResult {
   hostname: string;
   /** The interface */
   interface_name?: string;
-  /** The status of the operation for this host. */
-  status: DnsResultStatus;
+  status: RowStatus;
 }

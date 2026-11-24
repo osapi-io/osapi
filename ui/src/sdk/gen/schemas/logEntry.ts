@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { LogEntryStatus } from './logEntryStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface LogEntry {
   /** Error message if the agent failed. */
@@ -17,8 +17,7 @@ export interface LogEntry {
   pid?: number;
   /** Its priority, by name */
   priority?: string;
-  /** The status of the operation for this host. */
-  status: LogEntryStatus;
+  status: RowStatus;
   /** When journald recorded it, in RFC 3339 */
   timestamp?: string;
   /** The syslog identifier that wrote it */

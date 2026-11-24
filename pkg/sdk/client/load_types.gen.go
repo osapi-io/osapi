@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // LoadEntry is the LoadEntry of the spec.
 type LoadEntry struct {
 	// Error message if the agent failed.
@@ -13,18 +15,8 @@ type LoadEntry struct {
 	// LoadAverage is the property load_average.
 	LoadAverage Averages `json:"load_average,omitzero"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status LoadEntryStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// LoadEntryStatus: The status of the operation for this host.
-type LoadEntryStatus string
-
-// The values of LoadEntryStatus.
-const (
-	LoadEntryStatusOk      LoadEntryStatus = "ok"
-	LoadEntryStatusFailed  LoadEntryStatus = "failed"
-	LoadEntryStatusSkipped LoadEntryStatus = "skipped"
-	LoadEntryStatusTimeout LoadEntryStatus = "timeout"
-)

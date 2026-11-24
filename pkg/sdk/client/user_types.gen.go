@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // UserAccount is the UserAccount of the spec.
 type UserAccount struct {
 	// Error message if the agent failed.
@@ -28,24 +30,14 @@ type UserAccount struct {
 	// Its login shell.
 	Shell string `json:"shell,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status UserAccountStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 
 	// Its numeric user ID.
 	UID int `json:"uid,omitempty"`
 }
-
-// UserAccountStatus: The status of the operation for this host.
-type UserAccountStatus string
-
-// The values of UserAccountStatus.
-const (
-	UserAccountStatusOk      UserAccountStatus = "ok"
-	UserAccountStatusFailed  UserAccountStatus = "failed"
-	UserAccountStatusSkipped UserAccountStatus = "skipped"
-	UserAccountStatusTimeout UserAccountStatus = "timeout"
-)
 
 // UserResult is the UserResult of the spec.
 type UserResult struct {
@@ -61,21 +53,11 @@ type UserResult struct {
 	// The user.
 	Name string `json:"name,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status UserResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// UserResultStatus: The status of the operation for this host.
-type UserResultStatus string
-
-// The values of UserResultStatus.
-const (
-	UserResultStatusOk      UserResultStatus = "ok"
-	UserResultStatusFailed  UserResultStatus = "failed"
-	UserResultStatusSkipped UserResultStatus = "skipped"
-	UserResultStatusTimeout UserResultStatus = "timeout"
-)
 
 // UserUpdateRequestLock: Whether to refuse logins with its password: locked
 // refuses them, unlocked allows them.

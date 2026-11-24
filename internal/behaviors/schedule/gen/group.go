@@ -20,15 +20,15 @@ type ListRequest struct {
 
 // ScheduleEntry is the result of schedule on one host.
 type ScheduleEntry struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Name     *string `doc:"The entry" json:"name,omitempty"`
-	Object   *string `doc:"The object it was deployed from" json:"object,omitempty"`
-	Schedule *string `doc:"Its cron expression, for an entry in /etc/cron.d" json:"schedule,omitempty"`
-	Interval *string `doc:"Its interval, for a script in /etc/cron.daily and the like" json:"interval,omitempty"`
-	User     *string `doc:"The user it runs as" json:"user,omitempty"`
-	Source   *string `doc:"Where its file is: cron.d, or the interval" json:"source,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Name     *string         `doc:"The entry" json:"name,omitempty"`
+	Object   *string         `doc:"The object it was deployed from" json:"object,omitempty"`
+	Schedule *string         `doc:"Its cron expression, for an entry in /etc/cron.d" json:"schedule,omitempty"`
+	Interval *string         `doc:"Its interval, for a script in /etc/cron.daily and the like" json:"interval,omitempty"`
+	User     *string         `doc:"The user it runs as" json:"user,omitempty"`
+	Source   *string         `doc:"Where its file is: cron.d, or the interval" json:"source,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // ScheduleCollectionResponse is each target host's result.
@@ -86,11 +86,11 @@ type ScheduleCreateRequest struct {
 
 // ScheduleResult is the result of schedule on one host.
 type ScheduleResult struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Name     *string `doc:"The entry" json:"name,omitempty"`
-	Changed  *bool   `doc:"Whether the host changed" json:"changed,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Name     *string         `doc:"The entry" json:"name,omitempty"`
+	Changed  *bool           `doc:"Whether the host changed" json:"changed,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // ScheduleCreateResponse is each target host's result.
@@ -169,6 +169,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("schedule_operations", "Schedule", "The cron entries that osapi deploys"),
 	endpoint.CommandNotes("The [schedule behavior](../../../../../reference/behaviors/config/schedule/schedule.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, ScheduleCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeSchedule").

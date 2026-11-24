@@ -77,37 +77,33 @@ resp, err := c.Timezone.Update(ctx, target, client.TimezoneUpdateInput{Timezone:
 
 The fields of each type are the properties of its schema in the API's spec.
 
-### TimezoneEntry
+### RowStatus
 
-| Field       | Type                  | Description                                                                            |
-| ----------- | --------------------- | -------------------------------------------------------------------------------------- |
-| `Error`     | `string`              | Error message if the agent failed.                                                     |
-| `Hostname`  | `string`              | Hostname of the agent that produced this result.                                       |
-| `Status`    | `TimezoneEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-| `Timezone`  | `string`              | The IANA name of the timezone, such as America/New_York.                               |
-| `UTCOffset` | `string`              | The offset from UTC now, such as -05:00.                                               |
-
-### TimezoneEntryStatus
-
-The status of the operation for this host.
+What happened on the host: ok, the operation ran and succeeded; failed, it ran
+and did not succeed; skipped, the host's OS family does not support it; timeout,
+the host did not answer, so nobody knows whether it ran.
 
 A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+
+### TimezoneEntry
+
+| Field       | Type        | Description                                                                                                                                                                                                              |
+| ----------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Error`     | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Hostname`  | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `Status`    | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
+| `Timezone`  | `string`    | The IANA name of the timezone, such as America/New_York.                                                                                                                                                                 |
+| `UTCOffset` | `string`    | The offset from UTC now, such as -05:00.                                                                                                                                                                                 |
 
 ### TimezoneResult
 
-| Field      | Type                   | Description                                                                            |
-| ---------- | ---------------------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`                 | Whether the host changed.                                                              |
-| `Error`    | `string`               | Error message if the agent failed.                                                     |
-| `Hostname` | `string`               | Hostname of the agent that produced this result.                                       |
-| `Status`   | `TimezoneResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-| `Timezone` | `string`               | The timezone of the host.                                                              |
-
-### TimezoneResultStatus
-
-The status of the operation for this host.
-
-A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+| Field      | Type        | Description                                                                                                                                                                                                              |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Changed`  | `bool`      | Whether the host changed.                                                                                                                                                                                                |
+| `Error`    | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Hostname` | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `Status`   | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
+| `Timezone` | `string`    | The timezone of the host.                                                                                                                                                                                                |
 
 ### TimezoneUpdateInput
 

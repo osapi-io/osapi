@@ -44,21 +44,23 @@ resp, err := c.Uptime.Get(ctx, target)
 
 The fields of each type are the properties of its schema in the API's spec.
 
-### UptimeEntry
+### RowStatus
 
-| Field      | Type                | Description                                                                            |
-| ---------- | ------------------- | -------------------------------------------------------------------------------------- |
-| `Error`    | `string`            | Error message if the agent failed.                                                     |
-| `Hostname` | `string`            | Hostname of the agent that produced this result.                                       |
-| `Seconds`  | `int`               | How long the host has run, in seconds.                                                 |
-| `Status`   | `UptimeEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-| `Uptime`   | `string`            | How long the host has run, in days, hours and minutes.                                 |
-
-### UptimeEntryStatus
-
-The status of the operation for this host.
+What happened on the host: ok, the operation ran and succeeded; failed, it ran
+and did not succeed; skipped, the host's OS family does not support it; timeout,
+the host did not answer, so nobody knows whether it ran.
 
 A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+
+### UptimeEntry
+
+| Field      | Type        | Description                                                                                                                                                                                                              |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Error`    | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Hostname` | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `Seconds`  | `int`       | How long the host has run, in seconds.                                                                                                                                                                                   |
+| `Status`   | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
+| `Uptime`   | `string`    | How long the host has run, in days, hours and minutes.                                                                                                                                                                   |
 
 ## Example
 

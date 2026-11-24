@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { HostnameEntryStatus } from './hostnameEntryStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface HostnameEntry {
   /** Error message if the agent failed. */
@@ -13,6 +13,5 @@ export interface HostnameEntry {
   hostname: string;
   /** The hostname of the host */
   name?: string;
-  /** The status of the operation for this host. */
-  status: HostnameEntryStatus;
+  status: RowStatus;
 }

@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // CertificateEntry is the CertificateEntry of the spec.
 type CertificateEntry struct {
 	// Whether the host trusts it: false for a system CA that the trust store turns
@@ -36,25 +38,15 @@ type CertificateEntry struct {
 	// system for a CA of the distribution, local for one an administrator added.
 	Source string `json:"source,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status CertificateEntryStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 
 	// Its subject, such as CN=ISRG Root X1,O=Internet Security Research
 	// Group,C=US.
 	Subject string `json:"subject,omitempty"`
 }
-
-// CertificateEntryStatus: The status of the operation for this host.
-type CertificateEntryStatus string
-
-// The values of CertificateEntryStatus.
-const (
-	CertificateEntryStatusOk      CertificateEntryStatus = "ok"
-	CertificateEntryStatusFailed  CertificateEntryStatus = "failed"
-	CertificateEntryStatusSkipped CertificateEntryStatus = "skipped"
-	CertificateEntryStatusTimeout CertificateEntryStatus = "timeout"
-)
 
 // CertificateResult is the CertificateResult of the spec.
 type CertificateResult struct {
@@ -70,18 +62,8 @@ type CertificateResult struct {
 	// The CA.
 	Name string `json:"name,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status CertificateResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// CertificateResultStatus: The status of the operation for this host.
-type CertificateResultStatus string
-
-// The values of CertificateResultStatus.
-const (
-	CertificateResultStatusOk      CertificateResultStatus = "ok"
-	CertificateResultStatusFailed  CertificateResultStatus = "failed"
-	CertificateResultStatusSkipped CertificateResultStatus = "skipped"
-	CertificateResultStatusTimeout CertificateResultStatus = "timeout"
-)

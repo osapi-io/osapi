@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { DockerEntryStatus } from './dockerEntryStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface DockerEntry {
   /** When it was created, RFC 3339 */
@@ -31,8 +31,7 @@ export interface DockerEntry {
   ports?: string[];
   /** running, exited, created, paused or restarting */
   state?: string;
-  /** The status of the operation for this host. */
-  status: DockerEntryStatus;
+  status: RowStatus;
   /** What docker says of its state, such as Up 2 minutes */
   summary?: string;
 }

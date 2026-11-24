@@ -10920,15 +10920,7 @@ components:
           description: system for a CA of the distribution, local for one an administrator added
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
         subject:
           description: Its subject, such as CN=ISRG Root X1,O=Internet Security Research Group,C=US
           type: string
@@ -10967,15 +10959,7 @@ components:
           description: The CA
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -11005,6 +10989,14 @@ components:
       required:
         - results
       type: object
+    RowStatus:
+      description: 'What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host''s OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran.'
+      enum:
+        - ok
+        - failed
+        - skipped
+        - timeout
+      type: string
     CommandExecRequest:
       properties:
         args:
@@ -11071,15 +11063,7 @@ components:
           description: Hostname of the agent that produced this result.
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
         stderr:
           description: What it wrote to standard error
           type: string
@@ -11187,15 +11171,7 @@ components:
           description: Number of packets sent
           type: integer
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -11234,15 +11210,7 @@ components:
           description: Hostname of the agent that produced this result.
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -11298,15 +11266,7 @@ components:
             type: string
           type: array
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -11342,15 +11302,7 @@ components:
           description: The interface
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -11565,15 +11517,7 @@ components:
           description: running, exited, created, paused or restarting
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
         summary:
           description: What docker says of its state, such as Up 2 minutes
           type: string
@@ -11643,15 +11587,7 @@ components:
           description: Hostname of the agent that produced this result.
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
         stderr:
           description: What the command wrote to standard error
           type: string
@@ -11696,15 +11632,7 @@ components:
           description: The container
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -11793,15 +11721,7 @@ components:
           description: Absolute path of the file
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -11840,15 +11760,7 @@ components:
           description: in-sync, drifted, missing or unmanaged
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -11939,15 +11851,7 @@ components:
           description: SHA-256 of the content that the file holds
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -11972,15 +11876,7 @@ components:
           description: The group
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -12087,15 +11983,7 @@ components:
           description: The group
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -12140,15 +12028,7 @@ components:
           description: The hostname of the host
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -12184,15 +12064,7 @@ components:
           description: The hostname of the host
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -12283,15 +12155,7 @@ components:
           description: Its size, as docker prints it, such as 7.8MB
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
         tag:
           description: Its tag, such as 3.20
           type: string
@@ -12348,15 +12212,7 @@ components:
           format: int64
           type: integer
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -12376,15 +12232,7 @@ components:
           description: The image
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -12535,15 +12383,7 @@ components:
           description: up or down
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -12579,15 +12419,7 @@ components:
           description: The interface
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -12782,15 +12614,7 @@ components:
           description: The scope, such as link; empty for a global route
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -12810,15 +12634,7 @@ components:
           description: Hostname of the agent that produced this result.
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -12894,15 +12710,7 @@ components:
         load_average:
           $ref: '#/components/schemas/Averages'
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -12957,15 +12765,7 @@ components:
           description: Its priority, by name
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
         timestamp:
           description: When journald recorded it, in RFC 3339
           type: string
@@ -13004,15 +12804,7 @@ components:
           description: The syslog identifier, such as sshd
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -13028,15 +12820,7 @@ components:
         memory:
           $ref: '#/components/schemas/Usage'
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -13148,15 +12932,7 @@ components:
           description: Hostname of the agent that produced this result.
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -13181,15 +12957,7 @@ components:
             type: string
           type: array
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
         stratum:
           description: The NTP stratum of the host
           type: integer
@@ -13242,15 +13010,7 @@ components:
         os_info:
           $ref: '#/components/schemas/Release'
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -13391,15 +13151,7 @@ components:
           format: int64
           type: integer
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
         version:
           description: The installed version
           type: string
@@ -13422,15 +13174,7 @@ components:
           description: The package
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -13453,15 +13197,7 @@ components:
           description: The version the index has
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -13494,15 +13230,7 @@ components:
           description: Hostname of the agent that produced this result.
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -13571,15 +13299,7 @@ components:
           description: Hostname of the agent that produced this result.
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -13665,15 +13385,7 @@ components:
           description: Its state, such as running or sleep
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
         user:
           description: The user that runs it
           type: string
@@ -13715,15 +13427,7 @@ components:
           description: The signal that was sent
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -13889,15 +13593,7 @@ components:
           description: 'Where its file is: cron.d, or the interval'
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
         user:
           description: The user it runs as
           type: string
@@ -13936,15 +13632,7 @@ components:
           description: The entry
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -14124,15 +13812,7 @@ components:
           description: What systemd says it does now, such as running, exited or dead
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -14184,15 +13864,7 @@ components:
           description: The service
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -14297,15 +13969,7 @@ components:
         os_info:
           $ref: '#/components/schemas/Release'
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
         uptime:
           $ref: '#/components/schemas/Entry'
       required:
@@ -14410,15 +14074,7 @@ components:
           description: 'Whether osapi manages it: a file of its own sets it at boot'
           type: boolean
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
         value:
           description: Current runtime value
           type: string
@@ -14457,15 +14113,7 @@ components:
           description: Parameter name
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -14506,15 +14154,7 @@ components:
           description: Hostname of the agent that produced this result.
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
         timezone:
           description: The IANA name of the timezone, such as America/New_York
           type: string
@@ -14553,15 +14193,7 @@ components:
           description: Hostname of the agent that produced this result.
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
         timezone:
           description: The timezone of the host
           type: string
@@ -14609,15 +14241,7 @@ components:
           description: How long the host has run, in seconds
           type: integer
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
         uptime:
           description: How long the host has run, in days, hours and minutes
           type: string
@@ -14670,15 +14294,7 @@ components:
           description: Its login shell
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
         uid:
           description: Its numeric user ID
           type: integer
@@ -14824,15 +14440,7 @@ components:
           description: The user
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -14900,15 +14508,7 @@ components:
           description: The user
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -15029,15 +14629,7 @@ components:
           description: The options before the key, such as from="10.0.0.0/8"
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
         type:
           description: The key type, such as ssh-ed25519
           type: string
@@ -15060,15 +14652,7 @@ components:
           description: Hostname of the agent that produced this result.
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status

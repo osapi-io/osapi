@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { NtpStatusStatus } from './ntpStatusStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface NtpStatus {
   /** The source that chrony follows now */
@@ -17,8 +17,7 @@ export interface NtpStatus {
   offset?: string;
   /** The sources that chrony has */
   servers?: string[];
-  /** The status of the operation for this host. */
-  status: NtpStatusStatus;
+  status: RowStatus;
   /** The NTP stratum of the host */
   stratum?: number;
   /** Whether chrony is synchronized to a source */

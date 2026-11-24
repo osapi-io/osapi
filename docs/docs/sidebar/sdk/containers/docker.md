@@ -249,28 +249,22 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### DockerEntry
 
-| Field      | Type                | Description                                                                            |
-| ---------- | ------------------- | -------------------------------------------------------------------------------------- |
-| `Created`  | `string`            | When it was created, RFC 3339.                                                         |
-| `EnvNames` | `[]string`          | The names of its environment variables; osapi never reads their values.                |
-| `Error`    | `string`            | Error message if the agent failed.                                                     |
-| `Health`   | `string`            | The state of its health check: healthy, unhealthy or starting; empty without one.      |
-| `Hostname` | `string`            | Hostname of the agent that produced this result.                                       |
-| `ID`       | `string`            | The container's full ID.                                                               |
-| `Image`    | `string`            | The image it runs.                                                                     |
-| `Mounts`   | `[]string`          | The mounts, source:destination, with :ro when read only.                               |
-| `Name`     | `string`            | The container's name.                                                                  |
-| `Networks` | `[]string`          | The networks, with the container's address and gateway on each.                        |
-| `Ports`    | `[]string`          | The published ports, host:port->container port.                                        |
-| `State`    | `string`            | running, exited, created, paused or restarting.                                        |
-| `Status`   | `DockerEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-| `Summary`  | `string`            | What docker says of its state, such as Up 2 minutes.                                   |
-
-### DockerEntryStatus
-
-The status of the operation for this host.
-
-A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+| Field      | Type        | Description                                                                                                                                                                                                              |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Created`  | `string`    | When it was created, RFC 3339.                                                                                                                                                                                           |
+| `EnvNames` | `[]string`  | The names of its environment variables; osapi never reads their values.                                                                                                                                                  |
+| `Error`    | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Health`   | `string`    | The state of its health check: healthy, unhealthy or starting; empty without one.                                                                                                                                        |
+| `Hostname` | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `ID`       | `string`    | The container's full ID.                                                                                                                                                                                                 |
+| `Image`    | `string`    | The image it runs.                                                                                                                                                                                                       |
+| `Mounts`   | `[]string`  | The mounts, source:destination, with :ro when read only.                                                                                                                                                                 |
+| `Name`     | `string`    | The container's name.                                                                                                                                                                                                    |
+| `Networks` | `[]string`  | The networks, with the container's address and gateway on each.                                                                                                                                                          |
+| `Ports`    | `[]string`  | The published ports, host:port->container port.                                                                                                                                                                          |
+| `State`    | `string`    | running, exited, created, paused or restarting.                                                                                                                                                                          |
+| `Status`   | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
+| `Summary`  | `string`    | What docker says of its state, such as Up 2 minutes.                                                                                                                                                                     |
 
 ### DockerExecInput
 
@@ -283,38 +277,26 @@ A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### DockerExecResult
 
-| Field      | Type                     | Description                                                                            |
-| ---------- | ------------------------ | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`                   | Always true: osapi cannot tell what the command changed.                               |
-| `Error`    | `string`                 | Error message if the agent failed.                                                     |
-| `ExitCode` | `int`                    | The command's exit code.                                                               |
-| `Hostname` | `string`                 | Hostname of the agent that produced this result.                                       |
-| `Status`   | `DockerExecResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-| `Stderr`   | `string`                 | What the command wrote to standard error.                                              |
-| `Stdout`   | `string`                 | What the command wrote to standard output.                                             |
-
-### DockerExecResultStatus
-
-The status of the operation for this host.
-
-A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+| Field      | Type        | Description                                                                                                                                                                                                              |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Changed`  | `bool`      | Always true: osapi cannot tell what the command changed.                                                                                                                                                                 |
+| `Error`    | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `ExitCode` | `int`       | The command's exit code.                                                                                                                                                                                                 |
+| `Hostname` | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `Status`   | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
+| `Stderr`   | `string`    | What the command wrote to standard error.                                                                                                                                                                                |
+| `Stdout`   | `string`    | What the command wrote to standard output.                                                                                                                                                                               |
 
 ### DockerResult
 
-| Field      | Type                 | Description                                                                            |
-| ---------- | -------------------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`               | Whether the host changed.                                                              |
-| `Error`    | `string`             | Error message if the agent failed.                                                     |
-| `Hostname` | `string`             | Hostname of the agent that produced this result.                                       |
-| `ID`       | `string`             | The container's full ID, for create.                                                   |
-| `Name`     | `string`             | The container.                                                                         |
-| `Status`   | `DockerResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-
-### DockerResultStatus
-
-The status of the operation for this host.
-
-A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+| Field      | Type        | Description                                                                                                                                                                                                              |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Changed`  | `bool`      | Whether the host changed.                                                                                                                                                                                                |
+| `Error`    | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Hostname` | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `ID`       | `string`    | The container's full ID, for create.                                                                                                                                                                                     |
+| `Name`     | `string`    | The container.                                                                                                                                                                                                           |
+| `Status`   | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
 
 ### DockerStopInput
 
@@ -328,6 +310,14 @@ A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 Only the containers in this state: running, stopped or all, the default.
 
 A `string`, one of `running`, `stopped`, `all`.
+
+### RowStatus
+
+What happened on the host: ok, the operation ran and succeeded; failed, it ran
+and did not succeed; skipped, the host's OS family does not support it; timeout,
+the host did not answer, so nobody knows whether it ran.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ## Example
 

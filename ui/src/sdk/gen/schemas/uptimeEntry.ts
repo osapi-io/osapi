@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { UptimeEntryStatus } from './uptimeEntryStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface UptimeEntry {
   /** Error message if the agent failed. */
@@ -13,8 +13,7 @@ export interface UptimeEntry {
   hostname: string;
   /** How long the host has run, in seconds */
   seconds?: number;
-  /** The status of the operation for this host. */
-  status: UptimeEntryStatus;
+  status: RowStatus;
   /** How long the host has run, in days, hours and minutes */
   uptime?: string;
 }

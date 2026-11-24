@@ -21,12 +21,12 @@ type GetRequest struct {
 
 // FileStatus is the result of file on one host.
 type FileStatus struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Path     *string `doc:"Absolute path of the file" json:"path,omitempty"`
-	State    *string `doc:"in-sync, drifted, missing or unmanaged" json:"state,omitempty"`
-	SHA256   *string `doc:"SHA-256 of the file on the host, when it is there" json:"sha256,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Path     *string         `doc:"Absolute path of the file" json:"path,omitempty"`
+	State    *string         `doc:"in-sync, drifted, missing or unmanaged" json:"state,omitempty"`
+	SHA256   *string         `doc:"SHA-256 of the file on the host, when it is there" json:"sha256,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // FileGetResponse is each target host's result.
@@ -63,12 +63,12 @@ type FileUpdateRequest struct {
 
 // FileUpdateResult is the result of file on one host.
 type FileUpdateResult struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Path     *string `doc:"Absolute path of the file" json:"path,omitempty"`
-	SHA256   *string `doc:"SHA-256 of the content that the file holds" json:"sha256,omitempty"`
-	Changed  *bool   `doc:"Whether the host changed" json:"changed,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Path     *string         `doc:"Absolute path of the file" json:"path,omitempty"`
+	SHA256   *string         `doc:"SHA-256 of the content that the file holds" json:"sha256,omitempty"`
+	Changed  *bool           `doc:"Whether the host changed" json:"changed,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // FileUpdateResponse is each target host's result.
@@ -99,11 +99,11 @@ type FileDeleteRequest struct {
 
 // FileDeleteResult is the result of file on one host.
 type FileDeleteResult struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Path     *string `doc:"Absolute path of the file" json:"path,omitempty"`
-	Changed  *bool   `doc:"Whether the host changed" json:"changed,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Path     *string         `doc:"Absolute path of the file" json:"path,omitempty"`
+	Changed  *bool           `doc:"Whether the host changed" json:"changed,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // FileDeleteResponse is each target host's result.
@@ -130,6 +130,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("file_operations", "File", "Files of the object store, deployed to the host"),
 	endpoint.CommandNotes("The [file behavior](../../../../../reference/behaviors/config/file/file.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[GetRequest, FileGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodeFile").

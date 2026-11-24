@@ -37,6 +37,7 @@ import (
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/secret"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // Flag is one CLI flag derived from an input field.
@@ -238,7 +239,7 @@ func Table(
 	for _, res := range r.Results {
 		row := cli.ResultRow{
 			Hostname: fmt.Sprint(res["hostname"]),
-			Status:   fmt.Sprint(res["status"]),
+			Status:   types.RowStatus(fmt.Sprint(res["status"])),
 		}
 		if e, ok := res["error"].(string); ok && e != "" {
 			row.Error = &e

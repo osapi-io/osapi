@@ -20,14 +20,14 @@ type ListRequest struct {
 
 // ServiceEntry is the result of service on one host.
 type ServiceEntry struct {
-	Hostname    string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status      string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Name        *string `doc:"The service, without .service" json:"name,omitempty"`
-	State       *string `doc:"What systemd says it does now, such as running, exited or dead" json:"state,omitempty"`
-	Enabled     *bool   `doc:"Whether it starts at boot: the state of its unit file" json:"enabled,omitempty"`
-	Description *string `doc:"The Description= of its unit" json:"description,omitempty"`
-	Managed     *bool   `doc:"Whether osapi deployed it, so its writes and actions act on it" json:"managed,omitempty"`
-	Error       *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname    string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status      types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Name        *string         `doc:"The service, without .service" json:"name,omitempty"`
+	State       *string         `doc:"What systemd says it does now, such as running, exited or dead" json:"state,omitempty"`
+	Enabled     *bool           `doc:"Whether it starts at boot: the state of its unit file" json:"enabled,omitempty"`
+	Description *string         `doc:"The Description= of its unit" json:"description,omitempty"`
+	Managed     *bool           `doc:"Whether osapi deployed it, so its writes and actions act on it" json:"managed,omitempty"`
+	Error       *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // ServiceCollectionResponse is each target host's result.
@@ -80,11 +80,11 @@ type ServiceCreateRequest struct {
 
 // ServiceResult is the result of service on one host.
 type ServiceResult struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Name     *string `doc:"The service" json:"name,omitempty"`
-	Changed  *bool   `doc:"Whether the host changed" json:"changed,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Name     *string         `doc:"The service" json:"name,omitempty"`
+	Changed  *bool           `doc:"Whether the host changed" json:"changed,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // ServiceCreateResponse is each target host's result.
@@ -264,6 +264,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("service_operations", "Service", "The systemd services of the host"),
 	endpoint.CommandNotes("The [service behavior](../../../../../reference/behaviors/services/service/service.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, ServiceCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeService").
