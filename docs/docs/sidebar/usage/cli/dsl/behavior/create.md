@@ -7,9 +7,9 @@ Then change the types, the provider and the examples to what the behavior
 manages. Writes nothing when the name is taken. The behavior is directly under
 node: its routes are `/api/node/{hostname}/<name>` and its commands
 `osapi client node <name>`. To nest it under a parent, add `behavior.Of` or
-`behavior.Under` to its definition. \[Your first
-behavior](../../../../development/your-first-behavior.md) walks through the
-rest.
+`behavior.Under` to its definition.
+[Your first behavior](../../../../development/your-first-behavior.md) walks
+through the rest.
 
 A new behavior is one an operator calls, with an API and commands. Work that two
 behaviors share, such as writing a file, becomes an internal behavior that the

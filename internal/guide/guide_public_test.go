@@ -144,6 +144,21 @@ func (s *GuidePublicTestSuite) TestMDX() {
 			want: `Uses\[Deps]()`,
 		},
 		{
+			name: "when the text has a link, it stays a link",
+			in:   "Refer to [Configuration](../../configuration.md) and [a <b>](x.md).",
+			want: "Refer to [Configuration](../../configuration.md) and [a &lt;b&gt;](x.md).",
+		},
+		{
+			name: "when the text calls a generic function, it is not a link",
+			in:   "Settings[T](h) and Require[P](h, b)",
+			want: `Settings\[T](h) and Require\[P](h, b)`,
+		},
+		{
+			name: "when a link starts the text",
+			in:   "[a](b.md)",
+			want: "[a](b.md)",
+		},
+		{
 			name: "when the text has two asterisks",
 			in:   "/etc/a/osapi-*.crt, /etc/b/osapi-*.crt",
 			want: `/etc/a/osapi-\*.crt, /etc/b/osapi-\*.crt`,

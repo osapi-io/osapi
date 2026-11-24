@@ -22,6 +22,7 @@ package guide
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -141,18 +142,42 @@ var mdxEscapes = strings.NewReplacer(
 	"<", "&lt;", ">", "&gt;", "{", "&#123;", "}", "&#125;", "[", "\\[", "*", "\\*",
 )
 
+// mdLink is a Markdown link with text and a target, such as
+// [Configuration](../configuration.md), after the start or a character that
+// is not a letter, a digit or _. Uses[Deps]() has no target, and
+// Settings[T](h) is a call of a generic function, so neither is one.
+var mdLink = regexp.MustCompile(`(?:^|[^\w])(\[([^\[\]]+)\]\(([^()\s]+)\))`)
+
 // MDX escapes the characters of s that MDX would parse, outside code spans:
 // osapi-<key>.conf is a tag to MDX, {key} an expression and *x* emphasis.
-// Inside a code span MDX reads nothing, so the text there stays as it is.
+// Inside a code span MDX reads nothing, so the text there stays as it is. A
+// Markdown link stays a link: only its text is escaped.
 func MDX(
 	s string,
 ) string {
 	parts := strings.Split(s, "`")
 	for i := 0; i < len(parts); i += 2 {
-		parts[i] = mdxEscapes.Replace(parts[i])
+		parts[i] = escapeOutsideLinks(parts[i])
 	}
 
 	return strings.Join(parts, "`")
+}
+
+// escapeOutsideLinks is s with mdxEscapes applied, except to the brackets and
+// the target of each Markdown link.
+func escapeOutsideLinks(
+	s string,
+) string {
+	var b strings.Builder
+	last := 0
+	for _, m := range mdLink.FindAllStringSubmatchIndex(s, -1) {
+		b.WriteString(mdxEscapes.Replace(s[last:m[2]]))
+		b.WriteString("[" + mdxEscapes.Replace(s[m[4]:m[5]]) + "](" + s[m[6]:m[7]] + ")")
+		last = m[1]
+	}
+	b.WriteString(mdxEscapes.Replace(s[last:]))
+
+	return b.String()
 }
 
 // Generated is the first line of the body of each page that a command of
