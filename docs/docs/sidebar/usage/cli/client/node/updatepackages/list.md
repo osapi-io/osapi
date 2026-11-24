@@ -75,7 +75,7 @@ With `--json`, the API's response:
 ## Permission
 
 It needs the `updatepackages:read` permission.
-`osapi token roles get --name <role>` shows what a role grants.
+`osapi controller role get --name <role>` shows what a role grants.
 
 ## Flags
 

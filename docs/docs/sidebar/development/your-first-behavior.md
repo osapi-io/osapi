@@ -49,7 +49,7 @@ Reading on is how you review what it wrote.
 Before you write anything, ask the binary what it has:
 
 ```bash
-go run . behavior list
+go run . dsl behavior list
 ```
 
 The list comes from the registry of the binary, so it is always current. If a
@@ -58,7 +58,7 @@ behavior similar to `motd` is there, extend it. Do not add a second one.
 ## Create it
 
 ```bash
-go run . behavior create --name motd --description "The message shown at login"
+go run . dsl behavior create --name motd --description "The message shown at login"
 ```
 
 That writes `internal/behaviors/motd/` and registers it with one import in
@@ -81,7 +81,7 @@ the `gen/` directory, and notice that it passes before we change anything:
 
 ```bash
 go generate ./internal/behaviors/motd/mocks ./internal/behaviors/all
-go run . behavior validate
+go run . dsl behavior validate
 just test
 ```
 
@@ -201,8 +201,8 @@ provider checks for it.
 
 ```bash
 go generate ./internal/behaviors/all
-go run . behavior validate
-go run . behavior get --name motd
+go run . dsl behavior validate
+go run . dsl behavior get --name motd
 go run . config get --key behaviors.motd.path
 ```
 

@@ -8,7 +8,7 @@ set allow-duplicate-variables
 
 react_dir := "ui"
 
-# The skills, the ones `osapi init` installs and the ones in .claude/, are
+# The skills, the ones `osapi skill install` installs and the ones in .claude/, are
 # written by hand, so md formats them. The shared recipe keeps their YAML
 # frontmatter.
 
@@ -80,7 +80,7 @@ test: linux-tune
 go_quick_checks := "just-fmt-check docs-fmt-check react-fmt-check react-unit react-generate-check go-mod-check go-pkg-check"
 go_slow_checks := "behavior-gen-check go-generate-check docs-gen-check cli-docs-gen-check behavior-scaffold-check endpoint-scaffold-check command-scaffold-check behavior-cover-check go-fmt-check go-vet examples-check spec-client-check sdk-gen-check"
 
-# Fail when a behavior that osapi behavior create writes does not pass its tests
+# Fail when a behavior that osapi dsl behavior create writes does not pass its tests
 #
 # The scaffold must keep up with the checks of behaviortest, as each behavior
 # must. The recipe writes a behavior in a copy of the checkout, generates it,
@@ -97,8 +97,8 @@ behavior-scaffold-check:
     rsync -a --exclude .git --exclude .worktrees --exclude node_modules \
         --exclude /dist --exclude /examples --exclude /docs/build ./ "$tmp/"
     cd "$tmp"
-    go run . behavior create --name scaffoldcheck --description "A scaffold check" >/dev/null
-    go run . behavior create --name scaffoldchain --description "A scaffold check" \
+    go run . dsl behavior create --name scaffoldcheck --description "A scaffold check" >/dev/null
+    go run . dsl behavior create --name scaffoldchain --description "A scaffold check" \
         --requires managedfile >/dev/null
     go generate ./internal/behaviors/scaffoldcheck/mocks \
         ./internal/behaviors/scaffoldchain/mocks ./internal/behaviors/all
@@ -114,7 +114,7 @@ behavior-scaffold-check:
         exit 1
     fi
 
-# Fail when a group that osapi controller endpoint create writes does not pass
+# Fail when a group that osapi dsl endpoint create writes does not pass
 # its tests
 #
 # As behavior-scaffold-check does for behaviors: the recipe writes a group in
@@ -128,12 +128,12 @@ endpoint-scaffold-check:
     rsync -a --exclude .git --exclude .worktrees --exclude node_modules \
         --exclude /dist --exclude /examples --exclude /docs/build ./ "$tmp/"
     cd "$tmp"
-    go run . controller endpoint create --name scaffoldcheck --description "A scaffold check" >/dev/null
+    go run . dsl endpoint create --name scaffoldcheck --description "A scaffold check" >/dev/null
     go generate ./internal/controller/endpoints/all
-    go run . controller endpoint validate >/dev/null
+    go run . dsl endpoint validate >/dev/null
     go test -count=1 ./internal/controller/endpoints/scaffoldcheck/... ./internal/controller/endpoints/all/ ./internal/controller/
 
-# Fail when a group that osapi cli command create writes does not pass its tests
+# Fail when a group that osapi dsl command create writes does not pass its tests
 #
 # As endpoint-scaffold-check does for endpoint groups: the recipe writes a
 # local group in a copy of the checkout, generates it, and runs its tests,
@@ -147,9 +147,9 @@ command-scaffold-check:
     rsync -a --exclude .git --exclude .worktrees --exclude node_modules \
         --exclude /dist --exclude /examples --exclude /docs/build ./ "$tmp/"
     cd "$tmp"
-    go run . cli command create --name scaffoldcheck --description "A scaffold check" >/dev/null
+    go run . dsl command create --name scaffoldcheck --description "A scaffold check" >/dev/null
     go generate ./internal/cli/commands/all
-    go run . cli command validate >/dev/null
+    go run . dsl command validate >/dev/null
     go test -count=1 ./internal/cli/commands/scaffoldcheck/... ./internal/cli/commands/all/ ./cmd/
 
 # Fail when a behavior's own code is not fully covered
@@ -235,9 +235,7 @@ examples-check:
 # format them as the site formatter does.
 cli-docs-generate:
     just _docs-bun-install
-    go run . cli docs generate --dir docs/docs/sidebar/usage/cli
-    go run . cli docs dsl generate --dir docs/docs/sidebar/development/dsl
-    go run . cli docs reference generate
+    go run . dsl docs generate
     cd docs && bun run prettier docs/sidebar/usage/cli docs/sidebar/development/dsl docs/sidebar/reference docs/sidebar/features docs/sidebar/usage/configuration.md --write --config prettier.config.js --ignore-path .prettierignore > /dev/null
 
 # The CLI reference pages are generated from the cobra command tree. A command

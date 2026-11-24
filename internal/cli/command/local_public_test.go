@@ -179,6 +179,20 @@ func (s *LocalPublicTestSuite) TestRegistry() {
 		}
 	}
 	s.Less(ia, ib, "All is by command path")
+	// Two flat groups under one parent have one command path: their path
+	// orders them.
+	y := command.Register(command.Define("zzflaty", "Y", command.Flat(), command.Under("zzflat")))
+	x := command.Register(command.Define("zzflatx", "X", command.Flat(), command.Under("zzflat")))
+	ix, iy := -1, -1
+	for i, g := range command.All() {
+		switch g {
+		case x:
+			ix = i
+		case y:
+			iy = i
+		}
+	}
+	s.Less(ix, iy, "a tie of command path is by path")
 	s.PanicsWithValue(`command: group "zzregb" registered twice`, func() {
 		command.Register(command.Define("zzregb", "B again"))
 	})

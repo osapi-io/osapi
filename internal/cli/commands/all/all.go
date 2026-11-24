@@ -23,8 +23,8 @@ package all
 
 import (
 	// Each import registers its group.
-	_ "github.com/osapi-io/osapi/internal/cli/commands/admission"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/agentcmd"
+	_ "github.com/osapi-io/osapi/internal/cli/commands/agentkey"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/behaviordsl"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/chain"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/clidocs"
@@ -33,9 +33,9 @@ import (
 	_ "github.com/osapi-io/osapi/internal/cli/commands/controllercmd"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/controllerkey"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/endpointdsl"
-	_ "github.com/osapi-io/osapi/internal/cli/commands/initcmd"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/natsserver"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/natssetup"
+	_ "github.com/osapi-io/osapi/internal/cli/commands/role"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/skill"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/startcmd"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/token"

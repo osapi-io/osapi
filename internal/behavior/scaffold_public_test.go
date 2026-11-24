@@ -226,7 +226,7 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 			doc:      "x",
 			requires: []string{"nosuch"},
 			wantErr: `requires "nosuch", which is not a registered behavior: ` +
-				"osapi behavior list names each one",
+				"osapi dsl behavior list names each one",
 		},
 		{
 			name:     "when a required behavior is named twice",

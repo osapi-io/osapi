@@ -112,7 +112,7 @@ func (s *AdmissionService) Admit(
 Admit a pending machine.
 
 Admits a pending machine. The fingerprint must be the one that
-`osapi agent admission get` prints on the machine: it proves that the request
+`osapi agent key fingerprint` prints on the machine: it proves that the request
 came from the machine the operator is looking at.
 
 It sends `POST /api/admission/{machine_id}/admit`, and needs the permission
@@ -205,10 +205,10 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### AdmissionAdmitInput
 
-| Field         | Type     | Description                                                           |
-| ------------- | -------- | --------------------------------------------------------------------- |
-| `MachineID`   | `string` | The machine_id of the path. The machine ID of the node.               |
-| `Fingerprint` | `string` | The fingerprint that osapi agent admission get prints on the machine. |
+| Field         | Type     | Description                                                             |
+| ------------- | -------- | ----------------------------------------------------------------------- |
+| `MachineID`   | `string` | The machine_id of the path. The machine ID of the node.                 |
+| `Fingerprint` | `string` | The fingerprint that osapi agent key fingerprint prints on the machine. |
 
 ### AdmissionRejectInput
 

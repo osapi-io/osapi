@@ -25,6 +25,7 @@ import (
 	"log/slog"
 	"testing"
 
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/cli/command"
@@ -84,6 +85,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 		{
 			name: "when the group is valid",
 			group: command.Define("zzvalid", "Valid",
+				command.Under(command.ParentDSL),
 				command.Uses[localDeps](),
 				command.Method[roleIn, roleOut]("list").
 					Short("List roles").
@@ -96,6 +98,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 		{
 			name: "when an example names a flag that the command does not have",
 			group: command.Define("zzexflag", "Example flags",
+				command.Under(command.ParentDSL),
 				command.Uses[localDeps](),
 				command.Method[shortIn, roleOut]("get").
 					Short("Get a role").
@@ -127,11 +130,12 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 			),
 			want: []string{
 				`the group is Under "contoller", which is not one of KnownParents; use a command.Parent constant.`,
+				`"contoller" is not a group of RootGroups.`,
 			},
 		},
 		{
 			name:  "when the group has a bad word, no methods and no Uses",
-			group: command.Define("Bad", "Bad", command.Under(command.ParentCLI, "Up")),
+			group: command.Define("Bad", "Bad", command.Under(command.ParentDSL, "Up")),
 			want: []string{
 				`the word "Up" is not lowercase letters and digits.`,
 				`the word "Bad" is not lowercase letters and digits.`,
@@ -144,6 +148,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 			group: command.Define(
 				"zznames",
 				"Names",
+				command.Under(command.ParentDSL),
 				command.Uses[localDeps](),
 				command.Method[struct{}, greetOut](
 					"List",
@@ -176,7 +181,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 			},
 		},
 		{
-			name: "when a flat group's command is at the root, its word is one of Roots",
+			name: "when a flat group's command is at the root, it is a leaf of RootGroups",
 			group: command.Define(
 				"zzflatv",
 				"Flat",
@@ -199,7 +204,57 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 						return greetOut{}, nil
 					}),
 			),
-			want: []string{`"frob" is not a word of Roots, for a command of the root.`},
+			want: []string{
+				`"frob" is not a command of the root; only the leaves of RootGroups are.`,
+			},
+		},
+		{
+			name: "when a group is at the root, its name is a group of RootGroups",
+			group: command.Define("zzroot", "Root",
+				command.Uses[localDeps](),
+				command.Method[roleIn, roleOut]("list").
+					Short("List roles").
+					Example("--roles a").
+					Prints(roleOut{}).
+					Fails("no roles", roleIn{}).
+					Fails("an unknown role", roleIn{Roles: []string{"c"}}).
+					Handle(handleRoles),
+			),
+			want: []string{`"zzroot" is not a group of RootGroups.`},
+		},
+		{
+			name: "when a group is under a leaf of RootGroups, it is refused",
+			group: command.Define("zzleaf", "Leaf", command.Under("version"),
+				command.Uses[localDeps](),
+				command.Method[roleIn, roleOut]("list").
+					Short("List roles").
+					Example("--roles a").
+					Prints(roleOut{}).
+					Fails("no roles", roleIn{}).
+					Fails("an unknown role", roleIn{Roles: []string{"c"}}).
+					Handle(handleRoles),
+			),
+			want: []string{
+				`the group is Under "version", which is not one of KnownParents; use a command.Parent constant.`,
+				`"version" is not a group of RootGroups.`,
+			},
+		},
+		{
+			name: "when a local group is under client, it is refused",
+			group: command.Define("zzclient", "Client", command.Under("client"),
+				command.Uses[localDeps](),
+				command.Method[roleIn, roleOut]("list").
+					Short("List roles").
+					Example("--roles a").
+					Prints(roleOut{}).
+					Fails("no roles", roleIn{}).
+					Fails("an unknown role", roleIn{Roles: []string{"c"}}).
+					Handle(handleRoles),
+			),
+			want: []string{
+				`the group is Under "client", which is not one of KnownParents; use a command.Parent constant.`,
+				"a local group calls no API, so it is not under client.",
+			},
 		},
 		{
 			name: "when a flat group is under a parent, its words are verbs or actions",
@@ -208,7 +263,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 				"Flat",
 				command.Uses[localDeps](),
 				command.Flat(),
-				command.Under(command.ParentCLI),
+				command.Under(command.ParentDSL),
 				command.Method[struct{}, greetOut](
 					"version",
 				).Short("X").
@@ -225,6 +280,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 			group: command.Define(
 				"zzflags",
 				"Flags",
+				command.Under(command.ParentDSL),
 				command.Uses[localDeps](),
 				command.Method[string, greetOut](
 					"get",
@@ -254,6 +310,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 		{
 			name: "when a process is valid",
 			group: command.Define("zzproc", "Process",
+				command.Under(command.ParentDSL),
 				command.Uses[localDeps](),
 				command.Process("start").Short("Start it").
 					Example("").
@@ -266,6 +323,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 		{
 			name: "when a process logs before an Example, or logs nothing",
 			group: command.Define("zzproc", "Process",
+				command.Under(command.ParentDSL),
 				command.Uses[localDeps](),
 				command.Process("start").Short("Start it").
 					Logs(command.LogLine{Level: slog.LevelInfo, Msg: "started"}).
@@ -282,6 +340,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 		{
 			name: "when a method Logs, which only a process does",
 			group: command.Define("zzlogs", "Logs",
+				command.Under(command.ParentDSL),
 				command.Uses[localDeps](),
 				command.Method[struct{}, greetOut]("get").Short("X").Example("").Prints(greetOut{}).
 					Logs(command.LogLine{Level: slog.LevelInfo, Msg: "started"}).
@@ -294,6 +353,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 		{
 			name: "when a method has a Flag, which only a process has",
 			group: command.Define("zzflag", "Flag",
+				command.Under(command.ParentDSL),
 				command.Uses[localDeps](),
 				command.Method[struct{}, greetOut]("get").Short("X").Example("").Prints(greetOut{}).
 					Flag("agent.max_jobs").
@@ -306,6 +366,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 		{
 			name: "when a process's Setup is not its signature, and it Fails",
 			group: command.Define("zzproc", "Process",
+				command.Under(command.ParentDSL),
 				command.Uses[localDeps](),
 				command.Process("start").Short("Start it").
 					Example("").
@@ -322,6 +383,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 		{
 			name: "when a rule has no Fails, or a Fails is not the input",
 			group: command.Define("zzfails", "Fails",
+				command.Under(command.ParentDSL),
 				command.Uses[localDeps](),
 				command.Method[greetIn, greetOut]("get").Short("X").Example("--name a").
 					Prints(greetOut{}).
@@ -342,6 +404,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 		{
 			name: "when Prints comes first, gives another type, or no example prints",
 			group: command.Define("zzprints", "Prints",
+				command.Under(command.ParentDSL),
 				command.Uses[localDeps](),
 				command.Method[struct{}, greetOut]("get").Short("X").
 					Prints(greetOut{}).
@@ -363,6 +426,7 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 		{
 			name: "when a method has a handler and the group Uses no type",
 			group: command.Define("zzhandler", "Handler",
+				command.Under(command.ParentDSL),
 				command.Method[struct{}, greetOut]("get").Short("X").Example("").Prints(greetOut{}).
 					Handle(func(context.Context, localDeps, struct{}) (greetOut, error) {
 						return greetOut{}, nil
@@ -462,6 +526,31 @@ func (s *ValidatePublicTestSuite) TestGlobalFlag() {
 			s.Equal(tc.want, command.GlobalFlag(tc.flag))
 		})
 	}
+}
+
+// TestRootGroups holds the root to its closed list: each word once, with a
+// purpose, and DescribeRoot gives each command of the root its purpose.
+func (s *ValidatePublicTestSuite) TestRootGroups() {
+	seen := map[string]bool{}
+	for _, r := range command.RootGroups {
+		s.False(seen[r.Name], "%s is in RootGroups once", r.Name)
+		seen[r.Name] = true
+		s.NotEmpty(r.Purpose, r.Name)
+		got, ok := command.Root(r.Name)
+		s.True(ok)
+		s.Equal(r, got)
+	}
+	_, ok := command.Root("token")
+	s.False(ok, "a word that is not in RootGroups")
+
+	root := &cobra.Command{Use: "osapi"}
+	version := &cobra.Command{Use: "version", Short: "x"}
+	other := &cobra.Command{Use: "help", Short: "Help about any command"}
+	root.AddCommand(version, other)
+	command.DescribeRoot(root)
+	want, _ := command.Root("version")
+	s.Equal(want.Purpose, version.Short)
+	s.Equal("Help about any command", other.Short, "a word of cobra keeps its help")
 }
 
 func TestValidatePublicTestSuite(

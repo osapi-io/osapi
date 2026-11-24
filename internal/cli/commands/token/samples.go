@@ -35,22 +35,6 @@ var (
 		Roles:   []string{"read"},
 	}
 
-	sampleRoles = RolesOutput{Roles: []Role{
-		{Name: "admin", Source: "built-in"},
-		{Name: "operator", Source: "built-in"},
-		{Name: "automation", Source: "built-in"},
-		{Name: "auditor", Source: "built-in"},
-		{Name: "read", Source: "built-in"},
-		{Name: "observer", Source: "built-in"},
-		{Name: "dns-ops", Source: "config"},
-	}}
-
-	sampleRole = Role{
-		Name:        "admin",
-		Source:      "built-in",
-		Permissions: []string{"status:read", "file:read", "file:write", "health:read"},
-	}
-
 	sampleClaims = Claims{
 		Subject:              "user123",
 		Roles:                []string{"read"},

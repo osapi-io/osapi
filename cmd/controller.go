@@ -27,8 +27,8 @@ import (
 // controllerCmd is the controller's command. Its start is the controller
 // group of the command DSL.
 var controllerCmd = &cobra.Command{
-	Use:   "controller",
-	Short: "Manage the controller process",
+	Use: "controller",
+	// Its help is its purpose in command.RootGroups, which DescribeRoot gives it.
 	Long: "The controller serves the REST API, writes its heartbeat, and watches\n" +
 		"conditions to send notifications.",
 }

@@ -46,7 +46,7 @@ const (
 	KindNotYet     = "not-yet"
 )
 
-// Spec is every term of the behavior DSL. osapi behavior spec get prints it, so
+// Spec is every term of the behavior DSL. osapi dsl behavior spec get prints it, so
 // an author, or an agent, learns the DSL from the binary that it builds. A
 // test fails on an exported option, method, refinement or example part of
 // this package without an entry, and on a field tag that this package reads
@@ -71,7 +71,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindDefinition,
 			Name: `Register(Define(name, doc, options...))`,
-			Does: "Declares the behavior and adds it to the registry. The agent, the server, the CLI and the generator read the registry. The name is the route, the command, the permission and the docs page: lowercase letters and digits, no dash. The Go package is where the definition lives, which osapi behavior create --package sets when the name is a Go keyword.",
+			Does: "Declares the behavior and adds it to the registry. The agent, the server, the CLI and the generator read the registry. The name is the route, the command, the permission and the docs page: lowercase letters and digits, no dash. The Go package is where the definition lives, which osapi dsl behavior create --package sets when the name is a Go keyword.",
 			When: "One time, in behavior.go: var Behavior = behavior.Register(behavior.Define(...)).",
 		},
 
@@ -109,12 +109,12 @@ var Spec = guide.Spec{
 			Kind: KindOption,
 			Name: `Area(area.Name)`,
 			Does: "Puts a served behavior in an area, one of area.All: its section of the UI's Behaviors page and of the list of steps of the Plans page, the folder of its SDK page, of its reference page and of its chain's page, and its section of the docs site's SDK and Behaviors menus. Use a constant of package area, such as area.Config or area.Hardware. area.All has the label and the order of each area.",
-			When: "On each behavior with API. behavior validate refuses a served behavior with none.",
+			When: "On each behavior with API. dsl behavior validate refuses a served behavior with none.",
 		},
 		{
 			Kind: KindOption,
 			Name: `Under(GroupName)`,
-			Does: "Nests the behavior in a group: its routes, commands and directory. The permissions keep the behavior's name: dns under network needs dns:read. Use a constant, such as GroupNetwork; behavior validate refuses a group outside KnownGroups, because a misspelled group makes a new route and command.",
+			Does: "Nests the behavior in a group: its routes, commands and directory. The permissions keep the behavior's name: dns under network needs dns:read. Use a constant, such as GroupNetwork; dsl behavior validate refuses a group outside KnownGroups, because a misspelled group makes a new route and command.",
 			When: "When the behavior belongs to a group, such as network. Add the group's constant to KnownGroups first.",
 		},
 		{
@@ -132,7 +132,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindOption,
 			Name: `Platform(PlatformDebian, build)`,
-			Does: "Builds the provider on that platform: a distribution, darwin, or linux for each Linux host without its own. On another platform, the methods report skipped. Use a constant: PlatformDebian, PlatformSUSE, PlatformDarwin or PlatformLinux. behavior validate refuses a name outside KnownPlatforms, here and in On, RunsOnPlatform and OnPlatform.",
+			Does: "Builds the provider on that platform: a distribution, darwin, or linux for each Linux host without its own. On another platform, the methods report skipped. Use a constant: PlatformDebian, PlatformSUSE, PlatformDarwin or PlatformLinux. dsl behavior validate refuses a name outside KnownPlatforms, here and in On, RunsOnPlatform and OnPlatform.",
 			When: "One time for each platform that the behavior supports.",
 		},
 		{
@@ -299,7 +299,7 @@ var Spec = guide.Spec{
 			Does: "Makes the action's permission <name>:<verb> in place of <name>:execute, such as " +
 				"docker:exec with behavior.VerbExec. Thus the action does not share a permission " +
 				"with the other actions of its behavior, which the operator role gets. Only the admin " +
-				"role gets the verb: behavior.VerbExec or behavior.VerbShell. behavior validate refuses " +
+				"role gets the verb: behavior.VerbExec or behavior.VerbShell. dsl behavior validate refuses " +
 				"it on a method that is not an action, and a different verb.",
 			When: "For an action that runs a command that the caller gives, such as docker exec, " +
 				"when the other actions of its behavior are for the operator role, such as docker start.",
@@ -307,19 +307,19 @@ var Spec = guide.Spec{
 		{
 			Kind: KindRefine,
 			Name: ".Shell() on an action",
-			Does: "Is .PermitAs(behavior.VerbShell): the action's permission is <name>:shell. Only the admin role gets a shell permission. behavior validate refuses it on a method that is not an action.",
+			Does: "Is .PermitAs(behavior.VerbShell): the action's permission is <name>:shell. Only the admin role gets a shell permission. dsl behavior validate refuses it on a method that is not an action.",
 			When: "For an action that runs a shell command line, such as command shell.",
 		},
 		{
 			Kind: KindRefine,
 			Name: `.Always()`,
-			Does: "Marks an action that changes the host each time it runs, such as restart. Its output reports changed: true on each run, and the generated test does not run it again to see changed: false. behavior validate refuses it on a method that is not an action.",
+			Does: "Marks an action that changes the host each time it runs, such as restart. Its output reports changed: true on each run, and the generated test does not run it again to see changed: false. dsl behavior validate refuses it on a method that is not an action.",
 			When: "On an action that has no state to compare, so a second run is not unchanged.",
 		},
 		{
 			Kind: KindRefine,
 			Name: `.Disrupts("why")`,
-			Does: "Marks a method that takes the host down, such as a reboot or a shutdown, and says why. Its examples run on the fake host, but the integration test never runs them on a live host. behavior validate refuses it with no reason.",
+			Does: "Marks a method that takes the host down, such as a reboot or a shutdown, and says why. Its examples run on the fake host, but the integration test never runs them on a live host. dsl behavior validate refuses it with no reason.",
 			When: "On a method whose run would take down the host that the test runs on.",
 		},
 		{
@@ -362,7 +362,7 @@ var Spec = guide.Spec{
 			Name: ".AdminOnly() on a method",
 			Does: "Makes the permission of the method's verb, such as <name>:write, one that only the " +
 				"admin role grants. With no mark, admin gets each permission; operator each read and each execute permission, and automation each read and each write permission, that is not admin only; read each read that is not admin only; auditor and observer get their lists. An action's permission is " +
-				"<name>:execute. Each method with the same verb must agree. osapi token roles get " +
+				"<name>:execute. Each method with the same verb must agree. osapi controller role get " +
 				"--name automation shows what a role gets.",
 			When: "For a write that is a trust decision or reaches root, which automation must not make, such as an account or a cron entry.",
 		},
@@ -486,7 +486,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindCompose,
 			Name: "Chains",
-			Does: "A behavior that requires others calls them on the same host, in the same job: dns calls netplan, and netplan calls managedfile. osapi behavior chain spec get has how to build one, its rules and the building blocks in this binary; osapi behavior chain get shows what each call sends and gets.",
+			Does: "A behavior that requires others calls them on the same host, in the same job: dns calls netplan, and netplan calls managedfile. osapi dsl chain spec get has how to build one, its rules and the building blocks in this binary; osapi dsl chain get shows what each call sends and gets.",
 			When: "Before a provider does generic work itself, such as writing a file that osapi manages.",
 		},
 
@@ -620,7 +620,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindGenerated,
 			Name: "docs/docs/sidebar/reference/behaviors/<area>/<name>/",
-			Does: "The docs page of the behavior, in the folder of its area, or of internal for an internal behavior: the output of osapi behavior get and osapi behavior method get, as markdown, from just cli-docs-generate (osapi cli docs reference generate).",
+			Does: "The docs page of the behavior, in the folder of its area, or of internal for an internal behavior: the output of osapi dsl behavior get and osapi dsl behavior method get, as markdown, from just cli-docs-generate (osapi dsl docs generate).",
 			When: "Change the definition, then run just cli-docs-generate. A page that shows the wrong thing is fixed in the definition, or in the get command that shows it.",
 		},
 		{

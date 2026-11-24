@@ -20,7 +20,7 @@
 
 // Package behaviortest runs a behavior's examples and refusals against a fake
 // host, so a behavior's provider is tested from its definition. A behavior's
-// own test calls Run; osapi behavior create writes that line.
+// own test calls Run; osapi dsl behavior create writes that line.
 package behaviortest
 
 import (

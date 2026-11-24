@@ -1,6 +1,6 @@
 # Version
 
-Display the version of osapi.
+Show the version of this binary.
 
 The build of this binary: the version that each component reports, the commit
 and the tree it was built from, and the Go that built it.

@@ -80,13 +80,13 @@ type Method struct {
 // MethodInput is the group and the method to show.
 type MethodInput struct {
 	Name   string `json:"name"   validate:"required" doc:"The endpoint group, such as agent"`
-	Method string `json:"method" validate:"required" doc:"The method, from osapi controller endpoint get"`
+	Method string `json:"method" validate:"required" doc:"The method, from osapi dsl endpoint get"`
 }
 
 // MethodOutput is one method of a group in full: its route, permission and
 // command, its input fields with where each comes from and its constraints,
 // its output, its examples and what it refuses. It is the shape of osapi
-// behavior method get. --json has the JSON Schema of the input and the
+// dsl behavior method get. --json has the JSON Schema of the input and the
 // output.
 type MethodOutput struct {
 	_           struct{}         `title:"Method"`

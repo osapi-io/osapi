@@ -20,9 +20,9 @@ as sysctl and the systemd journal. The
 [reference page](reference/behaviors/behaviors.mdx) of each behavior gives its
 platforms.
 
-An agent uses osapi through the skills that `osapi init` installs. The agent
-does not guess commands. It asks osapi which behaviors exist, and what each one
-accepts. A person uses the same CLI.
+An agent uses osapi through the skills that `osapi skill install` installs. The
+agent does not guess commands. It asks osapi which behaviors exist, and what
+each one accepts. A person uses the same CLI.
 
 osapi starts with behaviors on hosts. Next come workflows, behaviors that run on
 one system, and scheduled automation. [Core concepts](concepts.md) tells what
@@ -75,7 +75,7 @@ controller signs tokens with a key, and the CLI sends one:
 export OSAPI_API_SERVER_SECURITY_SIGNING_KEY=$(openssl rand -hex 32)
 osapi start &
 
-osapi token generate -r admin -u admin@example.com
+osapi controller token generate -r admin -u admin@example.com
 export OSAPI_API_CLIENT_SECURITY_BEARER_TOKEN=<token from above>
 ```
 
@@ -87,8 +87,8 @@ export OSAPI_API_CLIENT_SECURITY_BEARER_TOKEN=<token from above>
 In the repository you work from:
 
 ```bash
-osapi init                  # Claude Code, the default
-osapi init --tool codex     # Codex
+osapi skill install                  # Claude Code, the default
+osapi skill install --tool codex     # Codex
 ```
 
 It installs two skills: `osapi`, which operates hosts, and `osapi-operations`,
@@ -129,8 +129,8 @@ A write reports if it changed the host. When you run it again, it reports
 ### 5. See what exists
 
 ```bash
-osapi behavior list                        # every behavior and its methods
-osapi behavior get --name sysctl           # routes, inputs, platforms, permissions
+osapi dsl behavior list                        # every behavior and its methods
+osapi dsl behavior get --name sysctl           # routes, inputs, platforms, permissions
 ```
 
 The agent reads the same thing as JSON before it runs anything, which is how it
@@ -141,7 +141,7 @@ knows what each field accepts.
 Ask an agent in a checkout of osapi: _"Add a behavior that manages the message
 of the day"_. Its `build-a-behavior` skill writes the behavior. It asks about
 what it must decide, writes the definition and the provider, and runs the
-checks. Or start a behavior yourself with `osapi behavior create`. In both
+checks. Or start a behavior yourself with `osapi dsl behavior create`. In both
 cases, the result is one directory, and osapi generates its API, command, docs
 and tests.
 [Building a behavior with an agent](development/building-with-an-agent.md) gives
@@ -173,8 +173,8 @@ does not run on its platform.
   skills, and what comes next
 - [Behaviors](reference/behaviors/behaviors.mdx): every behavior, generated from
   its definition
-- [Working with an agent](usage/agents.md): `osapi init`, the skills, and the
-  prompts
+- [Working with an agent](usage/agents.md): `osapi skill install`, the skills,
+  and the prompts
 - [Features](features/features.mdx): what OSAPI can manage and how each feature
   works
 - [Architecture](architecture/architecture.md): how the three processes (NATS,
@@ -198,7 +198,7 @@ does not run on its platform.
   osapi generates its API, CLI command, permission, docs and tests.
 - **Each behavior is shared.** When a behavior merges, each osapi user gets it:
   in the API, the CLI and the docs. The agent finds it with
-  `osapi behavior get`.
+  `osapi dsl behavior get`.
 - **A fleet without SSH.** An agent on each host connects out to the message
   bus. A request becomes a job. A slow host does not block the others.
 - **Safe to run again.** Each write reports `changed`. A second run reports

@@ -27,7 +27,7 @@ import (
 func init() {
 	dsl.Register(dsl.DSL{
 		Name:        "endpoint",
-		Command:     []string{"controller", "endpoint"},
+		Command:     []string{"dsl", "endpoint"},
 		Skill:       "build-an-endpoint",
 		Page:        "endpoint.md",
 		Permissions: declaredPermissions,

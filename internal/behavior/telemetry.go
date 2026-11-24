@@ -246,7 +246,7 @@ func InputAttributes(
 	for i := range t.NumField() {
 		f := t.Field(i)
 		// A secret is never recorded, whatever its telemetry tag says;
-		// behavior validate refuses that pairing.
+		// dsl behavior validate refuses that pairing.
 		name := JSONName(f)
 		if !f.IsExported() || Secret(f) || !slices.Contains(fields, name) {
 			continue

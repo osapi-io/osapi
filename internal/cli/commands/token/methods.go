@@ -68,61 +68,6 @@ func Generate(
 	}, nil
 }
 
-// Roles is each built-in role, then each custom role of the config, by
-// name, with what each grants.
-func Roles(
-	_ context.Context,
-	d Deps,
-	_ RolesInput,
-) (RolesOutput, error) {
-	custom, err := d.Config.CustomRoles()
-	if err != nil {
-		return RolesOutput{}, err
-	}
-
-	roles := make([]Role, 0, 3+len(custom))
-	for _, name := range authtoken.Roles() {
-		perms, _ := authtoken.RolePermissions(name)
-		roles = append(
-			roles,
-			Role{Name: string(name), Source: "built-in", Permissions: authtoken.Strings(perms)},
-		)
-	}
-	names := make([]string, 0, len(custom))
-	for name := range custom {
-		names = append(names, string(name))
-	}
-	sort.Strings(names)
-	for _, name := range names {
-		roles = append(roles, Role{
-			Name:        name,
-			Source:      "config",
-			Permissions: authtoken.Strings(custom[authtoken.Role(name)]),
-		})
-	}
-
-	return RolesOutput{Roles: roles}, nil
-}
-
-// RoleGet is one role, built-in or of the config, with what it grants.
-func RoleGet(
-	ctx context.Context,
-	d Deps,
-	in RoleInput,
-) (Role, error) {
-	all, err := Roles(ctx, d, RolesInput{})
-	if err != nil {
-		return Role{}, err
-	}
-	for _, r := range all.Roles {
-		if r.Name == in.Name {
-			return r, nil
-		}
-	}
-
-	return Role{}, fmt.Errorf("role %q: %w", in.Name, ErrNoRole)
-}
-
 // ErrNoRole is a role that neither the built-in roles nor the config have.
 var ErrNoRole = errors.New("no such role")
 

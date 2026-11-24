@@ -112,8 +112,8 @@ With the default settings, each example does this on the host:
 
 ## Permission
 
-It needs the `ntp:write` permission. `osapi token roles get --name <role>` shows
-what a role grants.
+It needs the `ntp:write` permission. `osapi controller role get --name <role>`
+shows what a role grants.
 
 ## Flags
 

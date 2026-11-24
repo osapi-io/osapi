@@ -11,7 +11,7 @@ import (
 )
 
 var skillListCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi skill list\n\x1b[1;38;2;0;213;255mSkills (3):\x1b[0m\n  \x1b[38;2;10;143;176mNAME              \x1b[0m\x1b[38;2;10;143;176mINSTALLED BY INIT\x1b[0m\n  \x1b[1mbuild-a-behavior\x1b[0m  no\n  \x1b[1mosapi\x1b[0m             yes\n  \x1b[1mosapi-operations\x1b[0m  yes\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"items\": [\n    {\n      \"name\": \"build-a-behavior\",\n      \"description\": \"Build or change an osapi behavior.\",\n      \"init\": false,\n      \"references\": [\n        \"references/services.md\"\n      ]\n    },\n    {\n      \"name\": \"osapi\",\n      \"description\": \"Operate a fleet of hosts through osapi.\",\n      \"init\": true,\n      \"references\": [\n        \"references/behaviors.md\",\n        \"references/targets.md\"\n      ]\n    },\n    {\n      \"name\": \"osapi-operations\",\n      \"description\": \"Run and configure the components of osapi.\",\n      \"init\": true,\n      \"references\": [\n        \"references/config.md\",\n        \"references/tokens.md\"\n      ]\n    }\n  ]\n}\n```"},
+	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi skill list\n\x1b[1;38;2;0;213;255mSkills (3):\x1b[0m\n  \x1b[38;2;10;143;176mNAME              \x1b[0m\x1b[38;2;10;143;176mINSTALLED BY INIT\x1b[0m\n  \x1b[1mbuild-a-behavior\x1b[0m  no\n  \x1b[1mosapi\x1b[0m             yes\n  \x1b[1mosapi-operations\x1b[0m  yes\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"items\": [\n    {\n      \"name\": \"build-a-behavior\",\n      \"description\": \"Build or change an osapi dsl behavior.\",\n      \"init\": false,\n      \"references\": [\n        \"references/services.md\"\n      ]\n    },\n    {\n      \"name\": \"osapi\",\n      \"description\": \"Operate a fleet of hosts through osapi.\",\n      \"init\": true,\n      \"references\": [\n        \"references/behaviors.md\",\n        \"references/targets.md\"\n      ]\n    },\n    {\n      \"name\": \"osapi-operations\",\n      \"description\": \"Run and configure the components of osapi.\",\n      \"init\": true,\n      \"references\": [\n        \"references/config.md\",\n        \"references/tokens.md\"\n      ]\n    }\n  ]\n}\n```"},
 	Args:        cobra.NoArgs,
 	Example:     "  osapi skill list\n  osapi skill list --json",
 	RunE: func(cmd *cobra.Command, _ []string) error {
@@ -22,7 +22,7 @@ var skillListCmd = &cobra.Command{
 }
 
 var skillGetCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi skill get --name build-a-behavior\n---\nname: build-a-behavior\ndescription: Build or change an osapi behavior.\n---\n\n# Build a behavior\n\nA behavior is the typed definition under internal/behaviors/<name>/.\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"name\": \"build-a-behavior\",\n  \"content\": \"---\\nname: build-a-behavior\\ndescription: Build or change an osapi behavior.\\n---\\n\\n# Build a behavior\\n\\nA behavior is the typed definition under internal/behaviors/\\u003cname\\u003e/.\\n\"\n}\n```"},
+	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi skill get --name build-a-behavior\n---\nname: build-a-behavior\ndescription: Build or change an osapi dsl behavior.\n---\n\n# Build a behavior\n\nA behavior is the typed definition under internal/behaviors/<name>/.\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"name\": \"build-a-behavior\",\n  \"content\": \"---\\nname: build-a-behavior\\ndescription: Build or change an osapi dsl behavior.\\n---\\n\\n# Build a behavior\\n\\nA behavior is the typed definition under internal/behaviors/\\u003cname\\u003e/.\\n\"\n}\n```"},
 	Args:        cobra.NoArgs,
 	Example:     "  osapi skill get --name build-a-behavior\n  osapi skill get --name build-a-behavior --reference references/services.md",
 	Long:        "It prints the file as it is. `--json` has the name, the reference and the\ncontent.",
@@ -36,9 +36,26 @@ var skillGetCmd = &cobra.Command{
 	Use:   "get",
 }
 
+var skillInstallCmd = &cobra.Command{
+	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi skill install\n\x1b[1;38;2;0;213;255mSkills:\x1b[0m\n  \x1b[38;2;10;143;176mVersion:\x1b[0m  v1.4.0\n  \x1b[38;2;10;143;176mTools:\x1b[0m    claude\n  \x1b[38;2;10;143;176mChanged:\x1b[0m  5\n\n\x1b[1;38;2;255;0;255mFiles (5):\x1b[0m\n  \x1b[38;2;176;48;176mFILE                                                  \x1b[0m\x1b[38;2;176;48;176mSTATUS\x1b[0m\n  .claude/skills/osapi/SKILL.md                         created\n  .claude/skills/osapi/references/behaviors.md          created\n  .claude/skills/osapi-operations/SKILL.md              created\n  .claude/skills/osapi-operations/references/config.md  created\n  CLAUDE.md                                             updated\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"version\": \"v1.4.0\",\n  \"tools\": [\n    \"claude\"\n  ],\n  \"changed\": 5,\n  \"files\": [\n    {\n      \"path\": \".claude/skills/osapi/SKILL.md\",\n      \"status\": \"created\"\n    },\n    {\n      \"path\": \".claude/skills/osapi/references/behaviors.md\",\n      \"status\": \"created\"\n    },\n    {\n      \"path\": \".claude/skills/osapi-operations/SKILL.md\",\n      \"status\": \"created\"\n    },\n    {\n      \"path\": \".claude/skills/osapi-operations/references/config.md\",\n      \"status\": \"created\"\n    },\n    {\n      \"path\": \"CLAUDE.md\",\n      \"status\": \"updated\"\n    }\n  ]\n}\n```"},
+	Args:        cobra.NoArgs,
+	Example:     "  osapi skill install\n  osapi skill install --tool claude --tool codex\n  osapi skill install --path ./ops-repo --json",
+	Long:        "The command writes the skills in this binary for each `--tool`. It also\nwrites a short section, with links to the skills, in the instructions file\nof that tool: `CLAUDE.md` or `AGENTS.md`. It does not change text outside\nthe osapi section.\n\nRun it again after you upgrade osapi. It writes the skills again to agree\nwith the binary. It removes the files that an older version installed.\nThus the agent does not read a skill about operations that the binary does\nnot have now.",
+	RunE: func(cmd *cobra.Command, _ []string) error {
+		path, _ := cmd.Flags().GetString("path")
+		tools, _ := cmd.Flags().GetStringSlice("tool")
+
+		return clicommand.Run(cmd, skill.Group, "install", skill.InstallInput{Path: path, Tools: tools})
+	},
+	Short: "Install the skills of this binary into a repository",
+	Use:   "install",
+}
+
 func init() {
 	skillGetCmd.Flags().String("name", "", "Name of the skill")
 	_ = skillGetCmd.MarkFlagRequired("name")
 	skillGetCmd.Flags().String("reference", "", "A reference file of the skill, relative to its directory")
-	clicommand.AddCommands(skill.Group, skillListCmd, skillGetCmd)
+	skillInstallCmd.Flags().String("path", ".", "The repository to install into; the current directory without it")
+	skillInstallCmd.Flags().StringSlice("tool", nil, "Agent tool to install for: claude, codex (repeatable); claude without it (claude, codex)")
+	clicommand.AddCommands(skill.Group, skillListCmd, skillGetCmd, skillInstallCmd)
 }

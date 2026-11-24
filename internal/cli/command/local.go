@@ -31,7 +31,7 @@ import (
 )
 
 // LocalGroup is a group of local commands: commands that run in the CLI
-// process, with no API, such as osapi token generate. Define makes one; its
+// process, with no API, such as osapi controller token generate. Define makes one; its
 // gen/cli.go makes a cobra command for each method, and Run runs it.
 type LocalGroup struct {
 	// Name is the group's command, the first word under its path.
@@ -52,7 +52,7 @@ type LocalGroup struct {
 	// sets.
 	Long string
 	// SubDocs are the one line of help of each command that a Sub makes,
-	// such as roles in osapi token roles list, which SubDoc sets.
+	// such as roles in osapi controller role list, which SubDoc sets.
 	SubDocs map[string]string
 
 	provide func() any
@@ -93,7 +93,7 @@ func Uses[D any]() Option {
 }
 
 // SubDoc is the one line of help of the command that the Sub segment makes,
-// such as roles in osapi token roles list.
+// such as roles in osapi controller role list.
 func SubDoc(
 	segment string,
 	short string,
@@ -118,34 +118,33 @@ func Long(
 // under the group's parent, the root or the words of Under. osapi version is
 // the method version of a flat group at the root; osapi controller start
 // would be the method start of a flat group Under controller. A command
-// directly under the root has a word of Roots, and any other has a verb or
+// directly under the root is a leaf of RootGroups, and any other has a verb or
 // an action.
 func Flat() Option {
 	return optionFunc(func(g *LocalGroup) { g.Flat = true })
 }
 
 // Parent is a command that local groups go under, such as controller for
-// osapi controller endpoint. A misspelled parent made a new command at the
+// osapi dsl endpoint. A misspelled parent made a new command at the
 // root with no error, so validate refuses a word outside KnownParents.
 type Parent string
 
 // The commands that local groups go under.
 const (
 	ParentAgent      Parent = "agent"
-	ParentBehavior   Parent = "behavior"
-	ParentCLI        Parent = "cli"
 	ParentController Parent = "controller"
+	ParentDSL        Parent = "dsl"
 	ParentNATS       Parent = "nats"
 )
 
 // KnownParents are the commands that a group can be Under. Add a constant
 // here to make a new one.
 func KnownParents() []Parent {
-	return []Parent{ParentAgent, ParentBehavior, ParentCLI, ParentController, ParentNATS}
+	return []Parent{ParentAgent, ParentController, ParentDSL, ParentNATS}
 }
 
 // Under puts the group's command under the command of words, such as
-// ParentController for osapi controller endpoint. Without it, the group is
+// ParentController for osapi dsl endpoint. Without it, the group is
 // under the root.
 func Under(
 	words ...Parent,
@@ -199,7 +198,14 @@ func All() []*LocalGroup {
 		out = append(out, g)
 	}
 	sort.Slice(out, func(i, j int) bool {
-		return strings.Join(out[i].CommandPath(), " ") < strings.Join(out[j].CommandPath(), " ")
+		a, b := strings.Join(out[i].CommandPath(), " "), strings.Join(out[j].CommandPath(), " ")
+		if a != b {
+			return a < b
+		}
+
+		// Two flat groups under one parent have the same command path, as
+		// nats start and nats setup do. Their path keeps the order fixed.
+		return out[i].Path() < out[j].Path()
 	})
 
 	return out
@@ -277,9 +283,9 @@ func (g *LocalGroup) CommandPath() []string {
 	return append(append([]string(nil), g.Parents...), g.Name)
 }
 
-// Path is the group's words and its name, such as controller endpoint, or
+// Path is the group's words and its name, such as dsl endpoint, or
 // version for a flat group at the root: the key that Register and Lookup
-// use, and the name that a problem and cli command get give it.
+// use, and the name that a problem and dsl command get give it.
 func (g *LocalGroup) Path() string {
 	return strings.Join(append(append([]string(nil), g.Parents...), g.Name), " ")
 }
@@ -338,7 +344,7 @@ func Method[In, Out any](
 }
 
 // Process is a local command named name that runs a process until the
-// context ends, such as osapi nats server start: it has no input and no
+// context ends, such as osapi nats start: it has no input and no
 // output. Setup sets what it runs.
 func Process(
 	name string,
@@ -445,7 +451,7 @@ func (m *LocalMethod) Logs(
 }
 
 // Sub puts the command under a command of its own in the group, such as
-// roles in osapi token roles list.
+// roles in osapi controller role list.
 func (m *LocalMethod) Sub(
 	segment string,
 ) *LocalMethod {

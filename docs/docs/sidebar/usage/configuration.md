@@ -58,8 +58,8 @@ Two keys have no default. You must set them:
 | `controller.client.security.bearer_token` | JWT sent with client requests |
 
 Make a signing key with `openssl rand -hex 32`. It must have 32 characters or
-more. Make a bearer token with `osapi token generate`. Durations are Go
-durations, for example `30s`, `5m` or `168h`. osapi does not accept a `d`
+more. Make a bearer token with `osapi controller token generate`. Durations are
+Go durations, for example `30s`, `5m` or `168h`. osapi does not accept a `d`
 suffix.
 
 Each bucket name and each namespace must be a name that NATS accepts for a

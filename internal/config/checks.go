@@ -65,7 +65,7 @@ var Checks = guide.Checks{
 	{
 		Rule:     RuleSetting,
 		Requires: "Each setting of a behavior, under behaviors.<name>, passes its validate rule.",
-		Fix:      "Set the key to a value that its rule allows. osapi behavior get --name <name> lists the settings of the behavior.",
+		Fix:      "Set the key to a value that its rule allows. osapi dsl behavior get --name <name> lists the settings of the behavior.",
 	},
 	{
 		Rule:     RuleBucket,

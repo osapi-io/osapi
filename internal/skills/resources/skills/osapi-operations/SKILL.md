@@ -24,7 +24,7 @@ skill.
 1. **Ask the binary, not memory.** `osapi help <command> --json` gives every
    command's flags. `osapi config list --json` gives every setting with its
    value, source, type, default, environment variable and description.
-   `osapi controller endpoint get --name <group> --json` gives the routes and
+   `osapi dsl endpoint get --name <group> --json` gives the routes and
    permissions of the controller's own operations, such as the agent group. They
    all change between releases.
 2. **Check the config before you start osapi.** Run `osapi config validate`

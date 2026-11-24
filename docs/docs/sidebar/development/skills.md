@@ -13,7 +13,7 @@ The skills are in `internal/skills/resources/`. Each skill is one directory:
 
 ```
 internal/skills/resources/
-  skills/                  the skills that osapi init installs
+  skills/                  the skills that osapi skill install installs
     osapi/
     osapi-operations/
   dev-skills/              the skills for a person who changes osapi
@@ -27,14 +27,14 @@ internal/skills/resources/
 ```
 
 `internal/skills` embeds all of `resources/`. It also has the code that installs
-the skills (`osapi init`) and serves them (`osapi skill`).
+the skills (`osapi skill install`) and serves them (`osapi skill`).
 
-- `osapi init` writes each skill in `skills/` into a repository.
+- `osapi skill install` writes each skill in `skills/` into a repository.
 - `osapi skill list` lists each skill. `osapi skill get --name <skill>` prints
   its `SKILL.md`, and `--reference <file>` prints one of its other files.
 
-A skill in `dev-skills/` is only for a checkout of osapi. `osapi init` does not
-install it. The checkout has a short pointer at
+A skill in `dev-skills/` is only for a checkout of osapi. `osapi skill install`
+does not install it. The checkout has a short pointer at
 `.claude/skills/<skill>/SKILL.md`. The pointer has the frontmatter of the skill,
 so that agents find it. Its body tells the agent to run
 `go run . skill get --name <skill>` and obey the output.
@@ -44,9 +44,9 @@ so that agents find it. Its body tells the agent to run
 The embedded skills are how a person and an agent learn osapi. Thus a change to
 osapi that adds or changes a command, a flag, a DSL option or a check updates
 each skill that tells about it, in the same pull request. That includes the
-skills that `osapi init` installs, not only the skills in `dev-skills/`. Do not
-wait until a feature is complete. Write in the skill what is not built yet, so
-that an agent stops there and does not build around it.
+skills that `osapi skill install` installs, not only the skills in
+`dev-skills/`. Do not wait until a feature is complete. Write in the skill what
+is not built yet, so that an agent stops there and does not build around it.
 
 ## Change a skill
 

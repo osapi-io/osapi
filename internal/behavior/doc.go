@@ -26,7 +26,7 @@
 //
 // # Starting one
 //
-// osapi behavior create --name <name> --description "..." writes the standard
+// osapi dsl behavior create --name <name> --description "..." writes the standard
 // layout under internal/behaviors/<name>/, a working behavior that, once go
 // generate has written its mock and gen/, builds, validates and passes every
 // test. internal/behaviors/sysctl is the reference. Every file with code has a test
@@ -45,7 +45,7 @@
 //	                 for each Go file
 //
 // Nothing outside the directory changes but its import in internal/behaviors/all,
-// which osapi behavior create adds.
+// which osapi dsl behavior create adds.
 //
 // # The definition
 //
@@ -131,14 +131,14 @@
 //     missing required field are checked against the generated spec;
 //   - every example's flags, given to its generated command, send its input.
 //
-// A behavior's own test calls behaviortest.Run, which osapi behavior create
+// A behavior's own test calls behaviortest.Run, which osapi dsl behavior create
 // writes; the examples and refusals reach the methods through the provider. A
 // test by hand is only for what an example cannot show.
 //
 // # Checking one
 //
 //	go generate ./internal/behaviors/all   write gen/, the spec and the docs pages
-//	osapi behavior validate          the rules, see Validate
-//	osapi behavior get --name <name> what was registered: routes, schemas
+//	osapi dsl behavior validate          the rules, see Validate
+//	osapi dsl behavior get --name <name> what was registered: routes, schemas
 //	just test                        including behavior-gen-check
 package behavior

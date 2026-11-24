@@ -39,7 +39,7 @@ var Group = command.Register(command.Define(
 			"and the agents with that server.\n\n"+
 			"Run it again after you change the settings of a stream or a bucket. Each\n"+
 			"stream and bucket is created or updated to match the config, so running it\n"+
-			"again changes nothing. `osapi nats server start` does the same for the\n"+
+			"again changes nothing. `osapi nats start` does the same for the\n"+
 			"embedded server when the server starts. Thus a deployment that runs the\n"+
 			"NATS server of osapi does not need this command.").
 		Example("-f /etc/osapi/osapi.yaml").

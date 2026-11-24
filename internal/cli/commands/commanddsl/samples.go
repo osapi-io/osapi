@@ -28,15 +28,15 @@ var (
 	sampleList = ListOutput{
 		Items: []Summary{
 			{
-				Command: "osapi token generate",
+				Command: "osapi controller token generate",
 				Layer:   "command",
-				Group:   "token",
+				Group:   "controller token",
 				Doc:     "Generate a new token",
 			},
 			{
-				Command: "osapi token validate",
+				Command: "osapi controller token validate",
 				Layer:   "command",
-				Group:   "token",
+				Group:   "controller token",
 				Doc:     "Validate a token for authenticity and claims",
 			},
 			{
@@ -73,18 +73,18 @@ var (
 	}
 
 	sampleGet = GetOutput{
-		Name: "token",
+		Name: "controller token",
 		Doc:  "Generate and validate API tokens",
 		Commands: []Command{
 			{
-				Command: "osapi token generate",
+				Command: "osapi controller token generate",
 				Method:  "generate",
 				Short:   "Generate a new token",
 				Fails:   []string{"no roles", "no subject"},
 				Flags:   []Flag{sampleFlagRoles, sampleFlagSubject},
 			},
 			{
-				Command: "osapi token roles list",
+				Command: "osapi controller role list",
 				Method:  "roles list",
 				Short:   "List the roles and the permissions each grants",
 			},
@@ -92,7 +92,7 @@ var (
 	}
 
 	sampleMethod = MethodOutput{
-		Command:    "osapi token generate",
+		Command:    "osapi controller token generate",
 		Method:     "generate",
 		Doc:        "Generate a new token",
 		Flags:      []Flag{sampleFlagRoles, sampleFlagSubject},
@@ -119,7 +119,7 @@ var (
 		Next: []Step{
 			{Command: "go generate ./internal/cli/commands/all"},
 			{Command: "go test ./internal/cli/commands/widget/..."},
-			{Command: "go run . cli command validate"},
+			{Command: "go run . dsl command validate"},
 			{Command: "mise exec -- just cli-docs-generate"},
 		},
 	}

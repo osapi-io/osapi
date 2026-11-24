@@ -490,7 +490,7 @@ func ValidateBehavior(
 			add(m.Name, RuleVerb, "%q is a synonym; name the method %q", m.Name, use)
 		} else if m.Action && (!command.Actions[verb] || command.Verbs[verb] || readVerbs[verb]) {
 			add(m.Name, RuleVerb, "an action is named for what it does, with one of the CLI's "+
-				"actions (osapi cli command spec get), not %q", m.Name)
+				"actions (osapi dsl command spec get), not %q", m.Name)
 		} else if m.Verb == VerbRead && !readVerbs[verb] {
 			add(m.Name, RuleVerb, "a read is named list, get or status, not %q", m.Name)
 		} else if m.Verb == VerbWrite && !m.Action && !writeVerbs[verb] {

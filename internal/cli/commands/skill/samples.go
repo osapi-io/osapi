@@ -28,7 +28,7 @@ var (
 	sampleList = ListOutput{Items: []skills.Skill{
 		{
 			Name:        "build-a-behavior",
-			Description: "Build or change an osapi behavior.",
+			Description: "Build or change an osapi dsl behavior.",
 			References:  []string{"references/services.md"},
 		},
 		{
@@ -48,8 +48,23 @@ var (
 	sampleGet = GetOutput{
 		Name: "build-a-behavior",
 		Content: "---\nname: build-a-behavior\n" +
-			"description: Build or change an osapi behavior.\n---\n\n" +
+			"description: Build or change an osapi dsl behavior.\n---\n\n" +
 			"# Build a behavior\n\n" +
 			"A behavior is the typed definition under internal/behaviors/<name>/.\n",
 	}
 )
+
+// sampleInstall is the sample output of the install example, which the docs page of the command
+// shows as the CLI prints it.
+var sampleInstall = InstallOutput{
+	Version: "v1.4.0",
+	Tools:   []string{"claude"},
+	Changed: 5,
+	Files: []skills.Result{
+		{Path: ".claude/skills/osapi/SKILL.md", Status: skills.Created},
+		{Path: ".claude/skills/osapi/references/behaviors.md", Status: skills.Created},
+		{Path: ".claude/skills/osapi-operations/SKILL.md", Status: skills.Created},
+		{Path: ".claude/skills/osapi-operations/references/config.md", Status: skills.Created},
+		{Path: "CLAUDE.md", Status: skills.Updated},
+	},
+}

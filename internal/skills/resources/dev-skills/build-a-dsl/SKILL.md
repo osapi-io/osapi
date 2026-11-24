@@ -45,12 +45,12 @@ commands, its skill or its page, unless its `Without` says why:
 
 This skill gives a procedure and decisions. The binary tells you about each DSL:
 
-- `behavior spec get`, `behavior chain spec get`, `controller endpoint spec get`
-  and `cli command spec get` tell each part of a DSL.
-- `behavior validate`, `behavior chain validate`, `controller endpoint validate`
-  and `cli command validate` tell each rule, with `--help` for the rules.
-- `behavior method get`, `controller endpoint method get` and
-  `cli command method get` show one method the same way.
+- `dsl behavior spec get`, `dsl chain spec get`, `dsl endpoint spec get` and
+  `dsl command spec get` tell each part of a DSL.
+- `dsl behavior validate`, `dsl chain validate`, `dsl endpoint validate` and
+  `dsl command validate` tell each rule, with `--help` for the rules.
+- `dsl behavior method get`, `dsl endpoint method get` and
+  `dsl command method get` show one method the same way.
 
 `references/parts.md` names each part, where it is, and what a new DSL does for
 it. Read it before you start.

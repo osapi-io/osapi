@@ -171,7 +171,7 @@ var CLI Option = optionFunc(func(b *Behavior) { b.CLI = true })
 // GroupName is a group that behaviors nest under. The group is a path
 // segment and a CLI command. It is not in a permission: dns under network
 // needs dns:read. Thus a misspelled group makes a new route and command with
-// no error, and behavior validate refuses a name outside KnownGroups.
+// no error, and dsl behavior validate refuses a name outside KnownGroups.
 type GroupName string
 
 // The groups that behaviors nest under.
@@ -201,7 +201,7 @@ func Under(
 
 // Area puts a served behavior in an area, one of area.All:
 // Area(area.Hardware) puts disk under Hardware on the UI's Behaviors page,
-// and its SDK page under Hardware. behavior validate
+// and its SDK page under Hardware. dsl behavior validate
 // refuses a behavior with API and no area, or an area that is not one of
 // area.All.
 func Area(
@@ -496,7 +496,7 @@ func covers(
 
 // Always marks an action that changes the host each time it runs, such as
 // restart: it reports changed: true on each run, and the generated test does
-// not run it a second time to see changed: false. behavior validate refuses it
+// not run it a second time to see changed: false. dsl behavior validate refuses it
 // on a method that is not an action.
 func (m *Method) Always() *Method {
 	m.AlwaysChanges = true
@@ -507,7 +507,7 @@ func (m *Method) Always() *Method {
 // Disrupts marks a method that takes the host down, such as a reboot, and
 // says why. Its examples run on the fake host as each example does, but the
 // integration test never runs them on a live host, because the host would
-// go down under the test. behavior validate refuses it without a reason.
+// go down under the test. dsl behavior validate refuses it without a reason.
 func (m *Method) Disrupts(
 	why string,
 ) *Method {
@@ -544,7 +544,7 @@ func (m *Method) Explain(
 // <name>:execute, such as docker:exec for docker exec. Thus the action
 // does not share a permission with the other actions of its behavior. The
 // verb is one that only the admin role gets: VerbShell or VerbExec.
-// behavior validate refuses it on a method that is not an action, and a
+// dsl behavior validate refuses it on a method that is not an action, and a
 // verb that is not one of these.
 func (m *Method) PermitAs(
 	verb Verb,
@@ -650,7 +650,7 @@ func Read[P any, In any, Out any](
 
 // Write declares a method that changes the host. Its output type reports
 // whether anything changed, through a Changed bool field tagged
-// json:"changed"; behavior validate fails a write without one.
+// json:"changed"; dsl behavior validate fails a write without one.
 func Write[P any, In any, Out any](
 	name string,
 	fn func(ctx context.Context, p P, in In) (Out, error),
@@ -663,7 +663,7 @@ func Write[P any, In any, Out any](
 // is <group>:execute. It is a write in each other way: a modify job, and an
 // output that reports Changed. Its route is POST on the method's path with its name after it,
 // /service/{name}/restart, so two actions on one item have two routes. The
-// name is one of the CLI's actions, osapi cli command spec get lists them.
+// name is one of the CLI's actions, osapi dsl command spec get lists them.
 func Action[P any, In any, Out any](
 	name string,
 	fn func(ctx context.Context, p P, in In) (Out, error),

@@ -38,7 +38,7 @@ input always does the same thing.
 
 ## ✨ Features
 
-- 🤖 The agent asks the binary. `osapi behavior get`, `osapi help --json` and
+- 🤖 The agent asks the binary. `osapi dsl behavior get`, `osapi help --json` and
   `osapi skill get` give each input, output, permission and skill. The agent
   reads them before it acts.
 - 🛠️ The agent can build a behavior. A behavior is one directory. osapi
@@ -62,7 +62,7 @@ tells how the parts fit together.
 
 ## 💬 What you can ask
 
-Install the skills with `osapi init`, then ask your agent:
+Install the skills with `osapi skill install`, then ask your agent:
 
 - _"Set vm.swappiness to 10 on each host in group:web, and tell me which hosts
   changed."_
@@ -106,7 +106,7 @@ pushes configuration over SSH. osapi is built for an agent:
 The [docs][getting started] give these steps:
 
 1. Start osapi.
-2. Give your agent its skills with `osapi init`.
+2. Give your agent its skills with `osapi skill install`.
 3. Ask for what you want.
 4. Run the same operations from the CLI.
 

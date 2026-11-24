@@ -135,7 +135,7 @@ export function AdmissionCard({
             autoFocus
             placeholder={
               form === "admit"
-                ? "Fingerprint from osapi agent admission"
+                ? "Fingerprint from osapi agent key fingerprint"
                 : "Reason (optional)"
             }
             value={value}

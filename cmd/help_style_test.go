@@ -40,6 +40,23 @@ type HelpStyleTestSuite struct {
 }
 
 func (s *HelpStyleTestSuite) TestEveryCommand() {
+	// The root is a closed list: each word under it is one of
+	// command.RootGroups, with its purpose as its help. help and completion
+	// are cobra's own.
+	for _, c := range rootCmd.Commands() {
+		if c.Name() == "help" || c.Name() == "completion" {
+			continue
+		}
+		r, ok := command.Root(c.Name())
+		s.Truef(ok, "osapi %s: %q is not a word of command.RootGroups", c.Name(), c.Name())
+		s.Equalf(
+			r.Purpose,
+			c.Short,
+			"osapi %s: the help is the purpose in command.RootGroups",
+			c.Name(),
+		)
+	}
+
 	var walk func(c *cobra.Command)
 	walk = func(c *cobra.Command) {
 		path := c.CommandPath()
@@ -61,7 +78,7 @@ func (s *HelpStyleTestSuite) TestEveryCommand() {
 
 // TestCommandShape holds each command under osapi client, and each command
 // of a local group, to <resource> <verb>, with the verbs and actions of the
-// command layer, or a command of the root to a word of command.Roots, and each flag's help to its own words: a required flag is
+// command layer, each word of the root to command.RootGroups, and each flag's help to its own words: a required flag is
 // marked by MarkFlagRequired, which --help shows, not by its text.
 func (s *HelpStyleTestSuite) TestCommandShape() {
 	client, _, err := rootCmd.Find([]string{"client"})
@@ -101,8 +118,9 @@ func (s *HelpStyleTestSuite) TestCommandShape() {
 			)
 		})
 		if len(c.Commands()) == 0 && c.Runnable() && c.Parent() == rootCmd {
-			s.Truef(command.Roots[c.Name()],
-				"%s: %q is not a word of command.Roots, for a command of the root",
+			r, _ := command.Root(c.Name())
+			s.Truef(r.Leaf,
+				"%s: %q is not a leaf of command.RootGroups, for a command of the root",
 				c.CommandPath(), c.Name())
 		} else if len(c.Commands()) == 0 && c.Runnable() {
 			s.Truef(command.Verbs[c.Name()] || command.Actions[c.Name()],

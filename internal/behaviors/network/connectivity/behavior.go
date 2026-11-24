@@ -59,7 +59,7 @@ round-trip min/avg/max/stddev = 0.081/0.135/0.173/0.040 ms
 
 // Behavior is the connectivity definition. The routes, the agent's
 // dispatch, the CLI commands, the spec, the docs pages and the tests of
-// every layer above the provider are built from it. osapi behavior spec get
+// every layer above the provider are built from it. osapi dsl behavior spec get
 // lists every option.
 var Behavior = behavior.Register(behavior.Define(
 	"connectivity", "Whether the host reaches an address, by ICMP ping",

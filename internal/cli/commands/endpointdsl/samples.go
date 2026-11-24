@@ -120,7 +120,7 @@ var (
 			{Command: "go generate ./internal/controller/endpoints/all"},
 			{Command: "mise exec -- just generate"},
 			{Command: "go test ./internal/controller/endpoints/trace/..."},
-			{Command: "go run . controller endpoint validate"},
+			{Command: "go run . dsl endpoint validate"},
 		},
 	}
 

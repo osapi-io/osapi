@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package token is the token group of local commands: osapi token generate,
+// Package token is the token group of local commands: osapi controller token generate,
 // roles list and validate, which sign and read the bearer tokens of the API
 // with the signing key of the config. They run in the CLI, and call no API.
 package skill
@@ -45,4 +45,19 @@ type GetOutput struct {
 	Name      string `json:"name"`
 	Reference string `json:"reference,omitempty"`
 	Content   string `json:"content"             render:"body"`
+}
+
+// InstallInput is where to install the skills, and for which tools.
+type InstallInput struct {
+	Path  string   `json:"path" validate:"omitempty"                         doc:"The repository to install into; the current directory without it"         default:"."`
+	Tools []string `json:"tool" validate:"omitempty,dive,oneof=claude codex" doc:"Agent tool to install for: claude, codex (repeatable); claude without it"`
+}
+
+// InstallOutput is each file install wrote, and how many changed.
+type InstallOutput struct {
+	_       struct{}        `title:"Skills"`
+	Version string          `               json:"version"`
+	Tools   []string        `               json:"tools"`
+	Changed int             `               json:"changed"`
+	Files   []skills.Result `               json:"files"`
 }

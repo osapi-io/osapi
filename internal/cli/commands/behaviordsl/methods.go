@@ -77,7 +77,7 @@ func find(
 		}
 	}
 
-	return nil, fmt.Errorf("no behavior named %q: osapi behavior list shows them", name)
+	return nil, fmt.Errorf("no behavior named %q: osapi dsl behavior list shows them", name)
 }
 
 // Get is the behavior with the name.
@@ -185,7 +185,7 @@ func MethodGet(
 	m := b.Method(in.Method)
 	if m == nil {
 		return MethodOutput{}, fmt.Errorf(
-			"behavior %s has no method %q: osapi behavior get --name %s shows them",
+			"behavior %s has no method %q: osapi dsl behavior get --name %s shows them",
 			b.Name,
 			in.Method,
 			b.Name,
@@ -265,7 +265,7 @@ func Create(
 	}
 	steps = append(steps,
 		"go generate ./internal/behaviors/all",
-		"osapi behavior validate",
+		"osapi dsl behavior validate",
 		"just test",
 	)
 	for _, step := range steps {

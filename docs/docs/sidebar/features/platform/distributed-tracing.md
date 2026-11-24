@@ -74,7 +74,7 @@ osapi-controller  GET /api/node/:hostname/package
 A behavior adds `behavior.<name>.<method>` under `job.process`, and its commands
 and file changes are under that span. A behavior that it requires is a span of
 its own under it, for example `behavior.managedfile.update` under
-`behavior.sysctl.create`. `osapi behavior get --name <name>` lists the spans
+`behavior.sysctl.create`. `osapi dsl behavior get --name <name>` lists the spans
 that a behavior can make. The tree above leaves out the `kv.put` of each status
 event.
 

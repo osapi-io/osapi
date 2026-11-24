@@ -93,7 +93,7 @@ var (
 				"calls netplan, and netplan calls managedfile. The chain has the name of " +
 				"the behavior at its top. It is not declared on its own: Requires on each " +
 				"behavior makes it.",
-			When: "osapi behavior chain list shows each chain; osapi behavior chain " +
+			When: "osapi dsl chain list shows each chain; osapi dsl chain " +
 				"get --name <behavior> shows its tree.",
 		}},
 	}}}

@@ -74,7 +74,7 @@ func Get(
 	}
 	if b == nil {
 		return GetOutput{}, fmt.Errorf(
-			"no behavior %q: osapi behavior chain list shows each chain", in.Name)
+			"no behavior %q: osapi dsl chain list shows each chain", in.Name)
 	}
 
 	out := GetOutput{

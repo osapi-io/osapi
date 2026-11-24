@@ -208,7 +208,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 			name: "when there is no such behavior, it says where to look",
 			in:   chain.GetInput{Name: "nosuch"},
 			validateFunc: func(_ chain.GetOutput, err error) {
-				s.ErrorContains(err, "osapi behavior chain list")
+				s.ErrorContains(err, "osapi dsl chain list")
 			},
 		},
 	}

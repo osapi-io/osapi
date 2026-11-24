@@ -358,7 +358,7 @@ type ServerSecurity struct {
 // ClientSecurity represents security-related settings for the client.
 type ClientSecurity struct {
 	// BearerToken is the JWT used for role-based access control.
-	BearerToken string `mapstructure:"bearer_token" validate:"required" mask:"password" doc:"JWT bearer token for client requests (required). Generate with osapi token generate."`
+	BearerToken string `mapstructure:"bearer_token" validate:"required" mask:"password" doc:"JWT bearer token for client requests (required). Generate with osapi controller token generate."`
 }
 
 // CORS represents the CORS (Cross-Origin Resource Sharing) settings.

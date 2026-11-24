@@ -108,7 +108,7 @@ func hasField(
 	return false
 }
 
-// Checks are the rules Validate applies. osapi controller endpoint
+// Checks are the rules Validate applies. osapi dsl endpoint
 // validate --help prints each one, and each problem carries the fix of its
 // rule, so an author or an agent can read the rules before breaking one.
 // The tests trigger each rule, and fail on a rule without a check.
@@ -116,7 +116,7 @@ var Checks = guide.Checks{
 	{
 		Rule:     RuleExample,
 		Requires: "Each flag that an Example names is a flag of the method's command: a field of its input, a field of the struct that in:\"body\" names, or --json, --debug or --osapi-file.",
-		Fix:      "Spell each flag of the example as the command has it: osapi controller endpoint get --name <group> lists the methods, and the command's --help lists its flags.",
+		Fix:      "Spell each flag of the example as the command has it: osapi dsl endpoint get --name <group> lists the methods, and the command's --help lists its flags.",
 	},
 	{
 		Rule:     RulePrints,

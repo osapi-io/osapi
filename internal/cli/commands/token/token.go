@@ -18,9 +18,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package token is the token group of local commands: osapi token generate,
-// roles list and validate, which sign and read the bearer tokens of the API
-// with the signing key of the config. They run in the CLI, and call no API.
+// Package token is the token group of local commands: osapi controller
+// token generate and validate, which sign and read the bearer tokens of the
+// API with the signing key of the controller's config. They run in the CLI,
+// and call no API.
 package token
 
 import (
@@ -28,12 +29,12 @@ import (
 )
 
 // Group is the token group's definition. The commands, their flags, their
-// help and their pages come from it. osapi cli command spec get lists every
+// help and their pages come from it. osapi dsl command spec get lists every
 // option.
 var Group = command.Register(command.Define(
 	"token", "Generate and validate API tokens",
 	command.Uses[Deps](),
-	command.SubDoc("roles", "Read the roles and what each grants"),
+	command.Under(command.ParentController),
 	command.Method[GenerateInput, GenerateOutput]("generate").
 		Short("Generate a new token").
 		Example("--subject user123 --roles=read").
@@ -49,26 +50,6 @@ var Group = command.Register(command.Define(
 			Roles: []string{"read"}, Subject: "ops", Targets: []string{"_all"},
 		}).
 		Handle(Generate),
-	command.Method[RolesInput, RolesOutput]("list").
-		Sub("roles").
-		Short("List the roles and the permissions each grants").
-		Long("The list has the permissions of each behavior, so it is correct for the\n"+
-			"binary that you run. A custom role from the config's\n"+
-			"`controller.api.security.roles` gets a column of its own. Without a config\n"+
-			"file it shows the built-in roles only. A behavior's permissions are\n"+
-			"`<name>:<verb>`, such as `dns:read` and `dns:write`. A rule gives each\n"+
-			"built-in role its permissions. Use this list, not a table in the docs.").
-		Example("").
-		Prints(sampleRoles).
-		Example("--json").
-		Handle(Roles),
-	command.Method[RoleInput, Role]("get").
-		Sub("roles").
-		Short("Show a role and each permission it grants").
-		Example("--name admin").
-		Prints(sampleRole).
-		Fails("no name", RoleInput{}).
-		Handle(RoleGet),
 	command.Method[ValidateInput, Claims]("validate").
 		Short("Validate a token for authenticity and claims").
 		Example("--token eyJhbGciOiJIUzI1NiIs...").

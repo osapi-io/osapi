@@ -99,9 +99,9 @@ func section(
 
 This repository operates hosts through osapi (version ` + version + `). Use the
 osapi skill to change hosts and the osapi-operations skill to run osapi itself. Run ` + "`osapi help <command> --json`" + ` before a command and
-` + "`osapi behavior method get --name <behavior> --method <method> --json`" + ` before a request,
+` + "`osapi dsl behavior method get --name <behavior> --method <method> --json`" + ` before a request,
 and pass ` + "`--json`" + ` to every command. This section is written by
-` + "`osapi init`" + `; edit outside it.
+` + "`osapi skill install`" + `; edit outside it.
 ` + endMarker + "\n"
 }
 

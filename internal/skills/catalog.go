@@ -37,7 +37,7 @@ type Skill struct {
 	Name string `json:"name"`
 	// Description is the description in its frontmatter.
 	Description string `json:"description" table:"-"`
-	// Init is true when `osapi init` installs the skill.
+	// Init is true when `osapi skill install` installs the skill.
 	Init bool `json:"init" label:"Installed by init"`
 	// References are the other files of the skill, relative to its directory.
 	References []string `json:"references" table:"-"`
@@ -47,7 +47,7 @@ type Skill struct {
 // have.
 var ErrNotFound = errors.New("not found")
 
-// Catalog lists the skills in installed, which `osapi init` writes, and in
+// Catalog lists the skills in installed, which `osapi skill install` writes, and in
 // dev, which it does not. Each is a directory of skills. The list is sorted by
 // name.
 func Catalog(

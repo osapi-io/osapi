@@ -24,7 +24,7 @@ The command prints:
 $ osapi skill get --name build-a-behavior
 ---
 name: build-a-behavior
-description: Build or change an osapi behavior.
+description: Build or change an osapi dsl behavior.
 ---
 
 # Build a behavior
@@ -37,7 +37,7 @@ With `--json`, the command prints:
 ```json
 {
   "name": "build-a-behavior",
-  "content": "---\nname: build-a-behavior\ndescription: Build or change an osapi behavior.\n---\n\n# Build a behavior\n\nA behavior is the typed definition under internal/behaviors/\u003cname\u003e/.\n"
+  "content": "---\nname: build-a-behavior\ndescription: Build or change an osapi dsl behavior.\n---\n\n# Build a behavior\n\nA behavior is the typed definition under internal/behaviors/\u003cname\u003e/.\n"
 }
 ```
 

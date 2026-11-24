@@ -176,6 +176,21 @@ func removeStale(
 	})
 }
 
+// rootTable is each command directly under the root, with its help: the
+// purpose that command.RootGroups gives each word.
+func rootTable(
+	subs []*cobra.Command,
+) string {
+	var b strings.Builder
+	b.WriteString("| Command | Purpose |\n| --- | --- |\n")
+	for _, c := range subs {
+		fmt.Fprintf(&b, "| `osapi %s` | %s |\n", c.Name(), guide.MDX(c.Short))
+	}
+	b.WriteString("\n")
+
+	return b.String()
+}
+
 // Title is the title of the page of a command: its name, with each word
 // capitalized and each acronym in capitals.
 func Title(
@@ -218,11 +233,14 @@ func Page(
 		if c.Example != "" {
 			fmt.Fprintf(&b, "```bash\n%s\n```\n\n", strings.TrimRight(dedent(c.Example), "\n"))
 		}
+		if len(path) == 0 {
+			b.WriteString(rootTable(subs))
+		}
 		b.WriteString("import DocCardList from '@theme/DocCardList';\n\n<DocCardList />\n")
 		if p := c.Annotations[Permission]; p != "" {
 			fmt.Fprintf(
 				&b,
-				"\n## Permission\n\nEach command needs the `%s` permission. `osapi token roles get --name <role>` shows what a role grants.\n",
+				"\n## Permission\n\nEach command needs the `%s` permission. `osapi controller role get --name <role>` shows what a role grants.\n",
 				p,
 			)
 		}
@@ -251,7 +269,7 @@ func Page(
 	if p := c.Annotations[Permission]; p != "" {
 		fmt.Fprintf(
 			&b,
-			"\n## Permission\n\nIt needs the `%s` permission. `osapi token roles get --name <role>` shows what a role grants.\n",
+			"\n## Permission\n\nIt needs the `%s` permission. `osapi controller role get --name <role>` shows what a role grants.\n",
 			p,
 		)
 	}

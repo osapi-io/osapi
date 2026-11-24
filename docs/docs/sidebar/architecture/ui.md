@@ -32,8 +32,8 @@ you need no more network configuration.
 ## Authentication and authorization
 
 The UI uses the same JWT authentication as the rest of osapi.
-`osapi token generate` makes the tokens. A token has a `roles` claim with a list
-of role names, such as `admin`, `operator` or `read`.
+`osapi controller token generate` makes the tokens. A token has a `roles` claim
+with a list of role names, such as `admin`, `operator` or `read`.
 
 ### RBAC model
 
@@ -98,7 +98,7 @@ The catalog of what osapi manages on a host, by area:
 
 ### A behavior (`/behaviors/<name>`)
 
-One behavior, as `osapi behavior get` and `osapi behavior chain get` print it:
+One behavior, as `osapi dsl behavior get` and `osapi dsl chain get` print it:
 its area, its platforms, and the behaviors that it calls and that call it. Each
 method has:
 
@@ -177,5 +177,6 @@ command prints after its job ID, or open `/admin/traces/:id`. The page needs
 ### Sign in
 
 JWT authentication: a field to paste a token, with validation. The page reads
-the roles from the JWT claims, and shows a CLI hint for `osapi token generate`.
-The page shows when the session has no token, on each route.
+the roles from the JWT claims, and shows a CLI hint for
+`osapi controller token generate`. The page shows when the session has no token,
+on each route.

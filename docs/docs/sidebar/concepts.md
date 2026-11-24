@@ -24,8 +24,8 @@ The examples of a behavior are also its tests. Thus the docs page shows what
 really runs.
 
 ```bash
-osapi behavior list                  # each behavior in this build
-osapi behavior get --name sysctl     # its methods, inputs, platforms and permissions
+osapi dsl behavior list                  # each behavior in this build
+osapi dsl behavior get --name sysctl     # its methods, inputs, platforms and permissions
 ```
 
 Refer to [Behaviors](reference/behaviors/behaviors.mdx).
@@ -39,7 +39,7 @@ A behavior has methods. A method is a read or a write:
   again with the same input, it reports `changed: false`.
 
 A method has a typed input and a typed output. The agent reads them with
-`osapi behavior get --json` before it makes a request.
+`osapi dsl behavior get --json` before it makes a request.
 
 ## Building block
 
@@ -84,7 +84,8 @@ agent signs each answer. Refer to
 
 ## Skill
 
-A skill tells an agent how to use osapi. `osapi init` installs two skills:
+A skill tells an agent how to use osapi. `osapi skill install` installs two
+skills:
 
 - `osapi`, which reads and changes hosts
 - `osapi-operations`, which runs osapi itself

@@ -68,8 +68,8 @@ for id in "${ids[@]}"; do
 		check "$id" "nothing in the checkout changed" "[ -z \"\$(git status --porcelain --untracked-files=all)\" ]"
 		check "$id" "the answer says that it is a$( [ "$expects" = endpoint ] && echo 'n') $expects" "$answer | grep -qi '$expects'"
 	else
-		check "$id" "controller endpoint validate passes" "go run . controller endpoint validate"
-		check "$id" "the group is registered under its name" "go run . controller endpoint get --name $g --json"
+		check "$id" "dsl endpoint validate passes" "go run . dsl endpoint validate"
+		check "$id" "the group is registered under its name" "go run . dsl endpoint get --name $g --json"
 		check "$id" "its package tests pass with 100% coverage" "go test -cover ./internal/controller/endpoints/$g/ | tee /dev/stderr | grep -q 'coverage: 100.0%'"
 		check "$id" "every test in internal/controller/endpoints/all passes" "go test -count=1 ./internal/controller/endpoints/all/"
 		check "$id" "generated files are current" "before=\$(git status --porcelain); mise exec -- just generate && mise exec -- just cli-docs-generate && [ \"\$before\" = \"\$(git status --porcelain)\" ]"
@@ -79,7 +79,7 @@ for id in "${ids[@]}"; do
 		[ "$(field "$id" refusals)" = "True" ] && check "$id" "at least one refusal is declared with Fails" "grep -rqE '(^|[.[:space:]])Fails\\(' internal/controller/endpoints/$g/"
 		permission=$(field "$id" permission)
 		[ -n "$permission" ] && check "$id" "a write needs $permission" \
-			"go run . controller endpoint get --name $g --json | python3 -c 'import json,sys; sys.exit(0 if \"$permission\" in [m[\"permission\"] for m in json.load(sys.stdin)[\"methods\"]] else 1)'"
+			"go run . dsl endpoint get --name $g --json | python3 -c 'import json,sys; sys.exit(0 if \"$permission\" in [m[\"permission\"] for m in json.load(sys.stdin)[\"methods\"]] else 1)'"
 	fi
 
 	(cd "$work" && git status --porcelain --untracked-files=all) >"$out/$id.changed.txt"

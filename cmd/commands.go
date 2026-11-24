@@ -38,8 +38,8 @@ import (
 	"github.com/osapi-io/osapi/internal/bus"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/cli/command"
-	"github.com/osapi-io/osapi/internal/cli/commands/admission"
 	"github.com/osapi-io/osapi/internal/cli/commands/agentcmd"
+	"github.com/osapi-io/osapi/internal/cli/commands/agentkey"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/all/gen"
 	"github.com/osapi-io/osapi/internal/cli/commands/behaviordsl"
 	"github.com/osapi-io/osapi/internal/cli/commands/clidocs"
@@ -48,9 +48,9 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/commands/controllercmd"
 	"github.com/osapi-io/osapi/internal/cli/commands/controllerkey"
 	"github.com/osapi-io/osapi/internal/cli/commands/endpointdsl"
-	"github.com/osapi-io/osapi/internal/cli/commands/initcmd"
 	"github.com/osapi-io/osapi/internal/cli/commands/natsserver"
 	"github.com/osapi-io/osapi/internal/cli/commands/natssetup"
+	"github.com/osapi-io/osapi/internal/cli/commands/role"
 	"github.com/osapi-io/osapi/internal/cli/commands/skill"
 	"github.com/osapi-io/osapi/internal/cli/commands/startcmd"
 	"github.com/osapi-io/osapi/internal/cli/commands/token"
@@ -69,14 +69,19 @@ func init() {
 	command.Provide(token.Group, func() token.Deps {
 		return token.Deps{Tokens: authtoken.New(logger), Config: tokenConfig{}}
 	})
+	command.Provide(role.Group, func() role.Deps {
+		return role.Deps{Config: tokenConfig{}}
+	})
 	command.Provide(configcmd.Group, func() configcmd.Deps {
 		return configcmd.Deps{File: func() string { return viper.GetString("osapiFile") }}
 	})
 	command.Provide(skill.Group, func() skill.Deps {
-		return skill.Deps{Installed: skills.Installed(), Dev: skills.Dev()}
-	})
-	command.Provide(initcmd.Group, func() initcmd.Deps {
-		return initcmd.Deps{FS: appFs, Source: skills.Installed(), Version: displayVersion}
+		return skill.Deps{
+			Installed: skills.Installed(),
+			Dev:       skills.Dev(),
+			FS:        appFs,
+			Version:   displayVersion,
+		}
 	})
 	command.Provide(natsserver.Group, natsDeps)
 	command.Provide(agentcmd.Group, agentDeps)
@@ -87,10 +92,10 @@ func init() {
 	command.Provide(natssetup.Group, func() natssetup.Deps {
 		return natssetup.Deps{Config: appConfig, Logger: logger, Prepare: bus.Prepare}
 	})
-	command.Provide(admission.Group, func() admission.Deps {
+	command.Provide(agentkey.Group, func() agentkey.Deps {
 		fs := osfs.NewWithNoIdm()
 
-		return admission.Deps{
+		return agentkey.Deps{
 			FS:     fs,
 			KeyDir: appConfig.Agent.PKI.KeyDir,
 			Identity: func() (*identity.Identity, error) {
@@ -124,13 +129,13 @@ func init() {
 		Print:     cli.Printer{},
 		// These are written by hand, and their inits run after this one: a
 		// group goes Under them.
-	}, natsCmd, agentCmd, controllerCmd, cliCmd); err != nil {
+	}, natsCmd, agentCmd, controllerCmd, dslCmd); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
-// tokenConfig is the config the token group reads.
+// tokenConfig is the config that the token and role groups read.
 type tokenConfig struct{}
 
 // SigningKey is controller.api.security.signing_key of the config that
@@ -139,7 +144,7 @@ func (tokenConfig) SigningKey() string {
 	return appConfig.Controller.API.Security.SigningKey
 }
 
-// CustomRoles are the roles of the config file, read here: roles list
+// CustomRoles are the roles of the config file, read here: role list
 // needs no config file, so osapi does not read one at startup for it.
 func (tokenConfig) CustomRoles() (authtoken.CustomRoles, error) {
 	var c config.Config
@@ -155,7 +160,7 @@ func (tokenConfig) CustomRoles() (authtoken.CustomRoles, error) {
 }
 
 // dslPages are the DSLs of the binary as pages of the docs site, each from the
-// spec that its spec get command prints. osapi cli docs dsl generate writes
+// spec that its spec get command prints. osapi dsl docs generate writes
 // them.
 func dslPages() []clidocs.DSL {
 	return []clidocs.DSL{
@@ -164,7 +169,7 @@ func dslPages() []clidocs.DSL {
 			Title:    "Behavior DSL",
 			Position: 2,
 			Intro: "Each part of a behavior definition: what it makes osapi do, and when to use it. " +
-				"`osapi behavior spec get` prints the same list from this build. " +
+				"`osapi dsl behavior spec get` prints the same list from this build. " +
 				"[Building a behavior](../behaviors.md) tells how to write one.",
 			Spec: collectors.Append(behavior.CurrentSpec(job.FactKeys()...)),
 		},
@@ -172,20 +177,20 @@ func dslPages() []clidocs.DSL {
 			Slug: "chain", Title: "Chains", Position: 3,
 			Intro: "How a behavior builds on others and calls them on the same host, what occurs " +
 				"when a step fails, and the building blocks of this build. " +
-				"`osapi behavior chain spec get` prints the same list.",
+				"`osapi dsl chain spec get` prints the same list.",
 			Spec: behavior.CurrentChainSpec(),
 		},
 		{
 			Slug: "endpoint", Title: "Endpoint DSL", Position: 4,
 			Intro: "Each part of an endpoint group: a route of the controller, its spec and its " +
-				"commands. `osapi controller endpoint spec get` prints the same list from this build. " +
+				"commands. `osapi dsl endpoint spec get` prints the same list from this build. " +
 				"[Building an endpoint](../endpoints.md) tells how to write one.",
 			Spec: endpoint.Spec,
 		},
 		{
 			Slug: "command", Title: "Command DSL", Position: 5,
 			Intro: "Each part of a local group: a command that runs in the CLI and calls no API. " +
-				"`osapi cli command spec get` prints the same list from this build. " +
+				"`osapi dsl command spec get` prints the same list from this build. " +
 				"[Building a command](../commands.md) tells how to write one.",
 			Spec: command.Spec,
 		},

@@ -30,12 +30,12 @@ import "github.com/osapi-io/osapi/internal/cli/command"
 var Group = command.Register(command.Define(
 	"command",
 	"List, describe and validate the local commands, and print their DSL",
-	command.Under(command.ParentCLI),
+	command.Under(command.ParentDSL),
 	command.Long("A local command runs in the CLI process and calls no API, such as\n"+
-		"`osapi token generate`. Its group is a definition in\n"+
+		"`osapi controller token generate`. Its group is a definition in\n"+
 		"`internal/cli/commands/<group>`, and its commands, flags, help and pages\n"+
 		"come from it. A command that calls the API is an endpoint\n"+
-		"(`osapi controller endpoint`) or a behavior (`osapi behavior`). These\n"+
+		"(`osapi dsl endpoint`) or a behavior (`osapi dsl behavior`). These\n"+
 		"commands read the definitions in the binary. Thus they need no config file\n"+
 		"and no running controller."),
 	command.Uses[Deps](),
@@ -55,11 +55,11 @@ var Group = command.Register(command.Define(
 		Handle(List),
 	command.Method[GetInput, GetOutput]("get").
 		Short("Describe one group: its commands, and the flags and refusals of a local group").
-		Long("`--name` is the command path of the group, such as `token` or `agent`: a\n"+
+		Long("`--name` is the command path of the group, such as `controller token` or `agent`: a\n"+
 			"local group, or the group of an endpoint or a behavior. A command of a\n"+
 			"local group also has its flags, each with the validate tag of its field,\n"+
 			"and the inputs that its `.Fails` declares, which `TestRefusals` runs.").
-		Example("--name token").
+		Example(`--name "controller token"`).
 		Prints(sampleGet).
 		Example("--name agent --json").
 		Fails("no name", GetInput{}).
@@ -68,14 +68,14 @@ var Group = command.Register(command.Define(
 		Sub("method").
 		Short("Show one method of a local group: its command, flags, output, examples and refusals").
 		Long("Each flag has the validate tag of its field. `--json` has the JSON Schema of\n"+
-			"the output. `osapi behavior method get` and `osapi controller endpoint\n"+
+			"the output. `osapi dsl behavior method get` and `osapi dsl endpoint\n"+
 			"method get` show a method of a behavior and of an endpoint group the same\n"+
 			"way.").
-		Example("--name token --method generate").
+		Example(`--name "controller token" --method generate`).
 		Prints(sampleMethod).
-		Example("--name token --method generate --json").
+		Example(`--name "controller token" --method generate --json`).
 		Fails("no name", MethodInput{Method: "list"}).
-		Fails("no method", MethodInput{Name: "token"}).
+		Fails("no method", MethodInput{Name: "controller token"}).
 		Handle(MethodGet),
 	command.Method[CreateInput, CreateOutput]("create").
 		Short("Write a new local group that builds and passes its tests").
@@ -83,7 +83,7 @@ var Group = command.Register(command.Define(
 			"current directory, and adds its import to `internal/cli/commands/all`. The\n"+
 			"group has a list and a get, an empty `Deps` and the tests of its methods.\n"+
 			"Then run the steps that it prints. While its `Deps` is empty, the CLI\n"+
-			"needs no wiring. `osapi cli command spec get` lists each part of the DSL.").
+			"needs no wiring. `osapi dsl command spec get` lists each part of the DSL.").
 		Example(`--name widget --description "The widgets of this host"`).
 		Prints(sampleCreate).
 		Fails("no name", CreateInput{Description: "x"}).
@@ -95,7 +95,7 @@ var Group = command.Register(command.Define(
 		Long("Print each part of the command DSL, what it makes osapi do and when to use\n"+
 			"it. The list comes from this binary. Thus it agrees with the build that\n"+
 			"you run. Read it before you write a local group, then check the result\n"+
-			"with `osapi cli command validate`.").
+			"with `osapi dsl command validate`.").
 		Example("").
 		Prints(sampleSpec).
 		Example("--json").
@@ -103,7 +103,7 @@ var Group = command.Register(command.Define(
 	command.Method[ValidateInput, ValidateOutput]("validate").
 		Short("Check every local group against the rules of a definition, and the output of every group").
 		Long("It prints each problem with its group, method, rule and message, then the\n"+
-			"fix of each rule, and exits 1 when a rule fails. `osapi cli command spec\n"+
+			"fix of each rule, and exits 1 when a rule fails. `osapi dsl command spec\n"+
 			"get` describes each part of a group.\n\n"+
 			"The rules:\n\n"+command.Checks.Help()).
 		Example("").

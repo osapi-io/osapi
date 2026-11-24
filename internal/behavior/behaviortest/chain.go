@@ -86,7 +86,7 @@ func Chains(
 
 // ChainProblems are the problems of the chain rules that need a run of the
 // examples of b: a call to a behavior that the caller does not require, and
-// a requirement of b that no example calls. osapi behavior chain validate
+// a requirement of b that no example calls. osapi dsl chain validate
 // reports them, and Run fails the tests of b on them.
 func ChainProblems(
 	b *behavior.Behavior,

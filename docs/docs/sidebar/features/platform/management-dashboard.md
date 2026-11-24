@@ -35,9 +35,9 @@ When disabled, the controller serves only the REST API.
 ## Authentication
 
 The UI uses the same JWT-based authentication as the CLI and API. Generate a
-token with `osapi token generate` and paste it on the sign-in page. The token's
-`roles` claim determines what the user can see and do. The UI shows and hides
-each control by the permissions of the token's roles.
+token with `osapi controller token generate` and paste it on the sign-in page.
+The token's `roles` claim determines what the user can see and do. The UI shows
+and hides each control by the permissions of the token's roles.
 [Roles and permissions](authentication.md#roles-and-permissions) lists the
 built-in roles.
 

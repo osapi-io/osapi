@@ -7,7 +7,7 @@
       "behavior": "motd",
       "expected_output": "internal/behaviors/motd with get and update, a Debian provider writing the file named by a setting, examples whose effects test the provider, and every check passing.",
       "assertions": [
-        "behavior validate passes",
+        "dsl behavior validate passes",
         "the behavior is registered under its name",
         "its package tests pass with 100% coverage",
         "every test in internal/behaviors/all passes",
@@ -24,7 +24,7 @@
       "behavior": "modules",
       "expected_output": "internal/behaviors/modules with list, create and delete, a keyed method, a Debian provider running modprobe with sudo declared, refusals for bad module names, and every check passing.",
       "assertions": [
-        "behavior validate passes",
+        "dsl behavior validate passes",
         "the behavior is registered under its name",
         "its package tests pass with 100% coverage",
         "every test in internal/behaviors/all passes",
@@ -46,7 +46,7 @@
       "behavior": "aptpkg",
       "expected_output": "An internal behavior: no API, CLI, routes or gen/ directory, apt-get declared with Sudo, examples whose effects test the provider, and every check passing.",
       "assertions": [
-        "behavior validate passes",
+        "dsl behavior validate passes",
         "the behavior is registered under its name",
         "its package tests pass with 100% coverage",
         "every test in internal/behaviors/all passes",
@@ -66,7 +66,7 @@
       "behavior": "issue",
       "expected_output": "A served behavior that requires managedfile and writes the banner through it rather than writing the file itself, and every check passing.",
       "assertions": [
-        "behavior validate passes",
+        "dsl behavior validate passes",
         "the behavior is registered under its name",
         "its package tests pass with 100% coverage",
         "every test in internal/behaviors/all passes",
@@ -84,7 +84,7 @@
       "behavior": "loadavg",
       "expected_output": "A served behavior with one read method and a single provider declared for linux, so every distribution gets it and macOS reports skipped, and every check passing.",
       "assertions": [
-        "behavior validate passes",
+        "dsl behavior validate passes",
         "the behavior is registered under its name",
         "its package tests pass with 100% coverage",
         "every test in internal/behaviors/all passes",
@@ -124,7 +124,7 @@
       "behavior": "apptoken",
       "expected_output": "A served behavior whose token input is tagged secret, so it is kept out of the audit log, traces and spec examples, and whose read reports whether a token is set rather than the token.",
       "assertions": [
-        "behavior validate passes",
+        "dsl behavior validate passes",
         "the behavior is registered under its name",
         "its package tests pass with 100% coverage",
         "every test in internal/behaviors/all passes",
@@ -143,7 +143,7 @@
       "dir": "network/neighbors",
       "expected_output": "A grouped behavior under internal/behaviors/network/neighbors, declared with Under(\"network\") and served at /api/node/{hostname}/network/neighbors, with a list method parsing ip neigh's output.",
       "assertions": [
-        "behavior validate passes",
+        "dsl behavior validate passes",
         "the behavior is registered under its name",
         "its package tests pass with 100% coverage",
         "every test in internal/behaviors/all passes",

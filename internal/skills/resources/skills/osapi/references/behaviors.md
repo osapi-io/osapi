@@ -4,12 +4,12 @@ A behavior is an area of a host osapi manages, such as `sysctl`. Each has
 methods, and each method has a typed input and output.
 
 ```sh
-osapi behavior list --json                                      # every behavior and its methods
-osapi behavior get --name sysctl --json                         # surfaces, methods, chains, telemetry
-osapi behavior method get --name sysctl --method update --json  # one method's input and output schema
+osapi dsl behavior list --json                                      # every behavior and its methods
+osapi dsl behavior get --name sysctl --json                         # surfaces, methods, chains, telemetry
+osapi dsl behavior method get --name sysctl --method update --json  # one method's input and output schema
 ```
 
-`behavior get --json` gives, for the behavior:
+`dsl behavior get --json` gives, for the behavior:
 
 - `api` and `cli`: whether it is served over REST and has commands.
 - `platforms`: where it runs. On any other platform its methods report
@@ -27,7 +27,7 @@ And per method, in `methods`:
 - `route` and `http_method`: where the API serves it. Empty when it has no API.
 - `permission`: what your token needs, such as `sysctl:write`.
 
-`behavior method get --json` gives one method in full: the fields above, and
+`dsl behavior method get --json` gives one method in full: the fields above, and
 
 - `input`: JSON Schema. Each property is a flag of the same name; `required`
   lists the ones you must pass. `pattern`, `enum`, `minLength` and the rest are
@@ -49,7 +49,7 @@ Most operations on a host are not behaviors yet. Their commands are under
 `osapi client node package get`. `osapi help client node --json` lists them, and
 `osapi help client node <domain> <command> --json` gives the flags of one. They
 take the same `--target` and return one result for each host, in the same way.
-When a domain moves to a behavior, `behavior list` shows it.
+When a domain moves to a behavior, `dsl behavior list` shows it.
 
 The operations of osapi itself, such as the agents and the jobs, are not on a
 host. [endpoints.md](endpoints.md) tells about them.

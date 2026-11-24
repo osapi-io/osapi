@@ -182,7 +182,7 @@ var (
 			{Step: "go generate ./internal/behaviors/motd/mocks ./internal/behaviors/all"},
 			{Step: "change the types, the provider and the examples in internal/behaviors/motd"},
 			{Step: "go generate ./internal/behaviors/all"},
-			{Step: "osapi behavior validate"},
+			{Step: "osapi dsl behavior validate"},
 			{Step: "just test"},
 		},
 	}

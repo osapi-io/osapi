@@ -29,6 +29,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	"github.com/osapi-io/osapi/internal/guide"
 	"github.com/osapi-io/osapi/internal/validation"
 	"github.com/osapi-io/osapi/internal/validation/rule"
@@ -61,13 +63,71 @@ var Actions = map[string]bool{
 	"generate": true, "validate": true, "setup": true, "passwd": true,
 }
 
-// Roots are the words of the commands directly under osapi that name what
-// they do for the tool itself, as each command line tool has: osapi version,
-// osapi init. The root is the first thing a person reads, so add a word here
-// only for a command that belongs there, as a decision; any other command is
-// <resource> <verb>.
-var Roots = map[string]bool{
-	"version": true, "init": true, "start": true,
+// RootGroup is a word directly under osapi, and what goes under it.
+type RootGroup struct {
+	// Name is the word, such as controller.
+	Name string
+	// Purpose says what goes under the word, in one line: the help of its
+	// command, and its row on the CLI page of the docs site.
+	Purpose string
+	// Leaf is true for a command of the root itself, with no words under
+	// it, such as version.
+	Leaf bool
+}
+
+// RootGroups are the words directly under osapi, a closed list. A command
+// goes where it runs and what it touches: client for a call to the API,
+// controller, agent or nats for the process or the files of that component
+// on this host, config for the config that each component reads, dsl for
+// the definitions of osapi, and skill for the skills in the binary. Only
+// start and version act on the whole binary or host. TestCommandShape fails
+// on any other word. A new word is a decision of the owner, recorded in the
+// specs cli.md.
+var RootGroups = []RootGroup{
+	{Name: "start", Purpose: "Start each component of osapi on this host", Leaf: true},
+	{Name: "version", Purpose: "Show the version of this binary", Leaf: true},
+	{
+		Name:    "controller",
+		Purpose: "Run the controller on this host, and work on its key, its tokens and its roles",
+	},
+	{Name: "agent", Purpose: "Run the agent on this host, and work on its key"},
+	{
+		Name:    "nats",
+		Purpose: "Run the embedded NATS server on this host, or prepare a NATS server",
+	},
+	{Name: "config", Purpose: "List, get and validate the config that each component reads"},
+	{
+		Name:    "skill",
+		Purpose: "Show the agent skills in this binary, and install them into a repository",
+	},
+	{Name: "dsl", Purpose: "Describe, check and document the definitions of osapi, for authors"},
+	{Name: "client", Purpose: "Call the API of the controller"},
+}
+
+// Root is the RootGroup of word, and false for a word that is not one.
+func Root(
+	word string,
+) (RootGroup, bool) {
+	for _, r := range RootGroups {
+		if r.Name == word {
+			return r, true
+		}
+	}
+
+	return RootGroup{}, false
+}
+
+// DescribeRoot gives each command directly under root the purpose of its
+// word in RootGroups as its help, so that osapi --help and the CLI page of
+// the docs site list each word with its purpose from one list.
+func DescribeRoot(
+	root *cobra.Command,
+) {
+	for _, c := range root.Commands() {
+		if r, ok := Root(c.Name()); ok {
+			c.Short = r.Purpose
+		}
+	}
 }
 
 // The rules Validate checks, by the name a Problem reports.
@@ -76,6 +136,7 @@ const (
 	RuleMethods  = "methods"
 	RuleUnique   = "unique"
 	RuleVerb     = "verb"
+	RuleRoot     = "root"
 	RuleHelp     = "help"
 	RuleFlag     = "flag"
 	RuleDoc      = "doc"
@@ -88,7 +149,7 @@ const (
 	RulePrints   = "prints"
 )
 
-// Checks are the rules Validate applies. osapi cli command validate --help
+// Checks are the rules Validate applies. osapi dsl command validate --help
 // prints each one, and each problem carries the fix of its rule, so an
 // author or an agent can read the rules before breaking one. The tests
 // trigger each rule, and fail on a rule without a check.
@@ -110,8 +171,13 @@ var Checks = guide.Checks{
 	},
 	{
 		Rule:     RuleVerb,
-		Requires: "The last word of each command is a verb (list, get, create, update, delete) or an action in command.Actions, as TestCommandShape holds each command to. A command directly under the root, of a Flat group, has a word of command.Roots instead.",
-		Fix:      "Name the method for a verb, and put a noun before it with .Sub, such as roles list. Add a word to command.Actions only for a real action, never for a noun, and to command.Roots only for a command that belongs at the root.",
+		Requires: "The last word of each command is a verb (list, get, create, update, delete) or an action in command.Actions, as TestCommandShape holds each command to.",
+		Fix:      "Name the method for a verb, and put a noun before it with .Sub, such as key fingerprint. Add a word to command.Actions only for a real action, never for a noun.",
+	},
+	{
+		Rule:     RuleRoot,
+		Requires: "A command goes where it runs and what it touches. Its first word is one of command.RootGroups: controller, agent or nats for the process or the files of that component on this host, config for the config that each component reads, dsl for the definitions of osapi, skill for the skills in the binary, and client for a call to the API. A local group calls no API, so it is never under client. Only start and version are commands of the root itself.",
+		Fix:      "Put the group Under the command.Parent of the component whose process or files it works on, or of dsl for a command for authors. Add a word to command.RootGroups only as a decision of the owner, recorded in the specs cli.md.",
 	},
 	{
 		Rule:     RuleHelp,
@@ -140,8 +206,8 @@ var Checks = guide.Checks{
 	},
 	{
 		Rule:     RuleSubDoc,
-		Requires: "Each Sub segment that makes a command of its own, such as roles in osapi token roles list, has a SubDoc: the one line of help of that command.",
-		Fix:      "Add command.SubDoc(\"segment\", \"...\") to Define, with what the segment's commands do, such as Read the roles and what each grants.",
+		Requires: "Each Sub segment that makes a command of its own, such as method in osapi dsl behavior method get, has a SubDoc: the one line of help of that command.",
+		Fix:      "Add command.SubDoc(\"segment\", \"...\") to Define, with what the segment's commands do, such as Show one method of a behavior in full.",
 	},
 	{
 		Rule:     RuleHandler,
@@ -151,7 +217,7 @@ var Checks = guide.Checks{
 	{
 		Rule:     RuleTag,
 		Requires: "Each tag key of an output field is one of command.KnownTags. Each render tag is one the output knows: -, bytes, age, time, duration, duration=ms, status or short=N with N above 0. An empty tag is on a list, and a title tag is on the blank field _ of the output type.",
-		Fix:      "Use a render value that osapi cli command spec get lists, put empty on a list field, and put title on a field _ struct{} of the output type.",
+		Fix:      "Use a render value that osapi dsl command spec get lists, put empty on a list field, and put title on a field _ struct{} of the output type.",
 	},
 	{
 		Rule:     RuleSays,
@@ -228,6 +294,14 @@ func Validate(
 			))
 		}
 	}
+	if words := g.CommandPath(); len(words) > 0 {
+		switch r, ok := Root(words[0]); {
+		case !ok || r.Leaf:
+			add("", RuleRoot, fmt.Sprintf("%q is not a group of RootGroups.", words[0]))
+		case r.Name == "client":
+			add("", RuleRoot, "a local group calls no API, so it is not under client.")
+		}
+	}
 	if len(g.Methods) == 0 {
 		add("", RuleMethods, "the group has no methods.")
 	}
@@ -248,11 +322,14 @@ func Validate(
 		seen[m.MethodName()] = true
 		switch {
 		case g.Flat && len(g.Parents) == 0 && m.sub == "":
-			if !Roots[m.Name] {
+			if r, ok := Root(m.Name); !ok || !r.Leaf {
 				add(
 					m.Name,
-					RuleVerb,
-					fmt.Sprintf("%q is not a word of Roots, for a command of the root.", m.Name),
+					RuleRoot,
+					fmt.Sprintf(
+						"%q is not a command of the root; only the leaves of RootGroups are.",
+						m.Name,
+					),
 				)
 			}
 		case !Verbs[m.Name] && !Actions[m.Name]:

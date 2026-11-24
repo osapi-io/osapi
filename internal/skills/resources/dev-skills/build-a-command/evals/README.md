@@ -7,8 +7,8 @@ checks. When it stops, `run.sh` checks what it left:
 
 | Check                                 | How                                                                  |
 | ------------------------------------- | -------------------------------------------------------------------- |
-| The definition breaks no rule         | `go run . cli command validate`                                      |
-| It is registered under its name       | `go run . cli command get --name <group> --json`                     |
+| The definition breaks no rule         | `go run . dsl command validate`                                      |
+| It is registered under its name       | `go run . dsl command get --name <group> --json`                     |
 | Its own tests pass with 100% coverage | `go test -cover ./internal/cli/commands/<group>/`                    |
 | Every local group is valid            | `go test ./internal/cli/commands/all/`                               |
 | Generated files are current           | `go generate` and `just cli-docs-generate` change nothing            |

@@ -47,7 +47,7 @@ type PlatformProvider struct {
 // ErrUnsupported, its methods are skipped rather than failed.
 //
 // The provider P must implement the provider type of every method, which
-// osapi behavior validate checks.
+// osapi dsl behavior validate checks.
 func Platform[H any, P any](
 	name PlatformName,
 	build func(h H) (P, error),
@@ -171,7 +171,7 @@ func RunsIfPresent(
 // "*" is any path: a behavior such as managedfile, which writes the path its
 // caller names, declares it, and each behavior that requires it declares its
 // own paths. The examples fail on a path that is not declared, and the docs
-// page and behavior get list them. Each such call is a file span in a trace.
+// page and dsl behavior get list them. Each such call is a file span in a trace.
 func Writes(
 	paths ...string,
 ) Option {

@@ -107,8 +107,8 @@ func referencePages() ([]clidocs.Page, error) {
 		pages = append(pages, clidocs.Page{
 			Path:  referenceDir + "behaviors/" + behaviorcommand.ReferencePage(b),
 			Title: b.Title,
-			Intro: b.Doc + ". `osapi behavior get --name " + b.Name +
-				"` and `osapi behavior method get` show the same." + chainLink(b, up),
+			Intro: b.Doc + ". `osapi dsl behavior get --name " + b.Name +
+				"` and `osapi dsl behavior method get` show the same." + chainLink(b, up),
 			Parts: parts,
 		})
 	}
@@ -155,7 +155,7 @@ func referencePages() ([]clidocs.Page, error) {
 			Path:  referenceDir + "chains/" + chainPage(b),
 			Title: b.Title,
 			Intro: "The behaviors that " + b.Name + " calls, and each call that its examples make. " +
-				"`osapi behavior chain get --name " + b.Name + "` shows the same.",
+				"`osapi dsl chain get --name " + b.Name + "` shows the same.",
 			Parts: []clidocs.Part{
 				{Group: "chain", Out: got, Link: columns(func(name string) string {
 					return "../../behaviors/" + behaviorPage(name)
@@ -185,7 +185,7 @@ func referencePages() ([]clidocs.Page, error) {
 		pages = append(pages, clidocs.Page{
 			Path:  referenceDir + "endpoints/" + endpointPage(g.Name),
 			Title: endpointTitle(g),
-			Intro: g.Doc + ". `osapi controller endpoint get --name " + g.Name + "` shows the same.",
+			Intro: g.Doc + ". `osapi dsl endpoint get --name " + g.Name + "` shows the same.",
 			Parts: []clidocs.Part{{Group: "endpoint", Out: got}},
 		})
 	}
@@ -205,15 +205,24 @@ func referencePages() ([]clidocs.Page, error) {
 		if len(g.CommandPath()) == 0 {
 			continue
 		}
-		name := strings.Join(g.CommandPath(), " ")
-		got, err := commanddsl.Get(ctx, md, commanddsl.GetInput{Name: name})
+		// A flat group is found by its path, its words and its name, as
+		// nats setup: two flat groups under nats have the same command
+		// path, and so does the endpoint group nats. Its page has the name
+		// of its command path when its name is the last word of it, as
+		// agent, and the name of its path when not, as nats setup.
+		words := g.CommandPath()
+		if g.Flat && g.Name != words[len(words)-1] {
+			words = append(words, g.Name)
+		}
+		name := strings.Join(words, " ")
+		got, err := commanddsl.Get(ctx, md, commanddsl.GetInput{Name: g.Path()})
 		if err != nil {
 			return nil, err
 		}
 		pages = append(pages, clidocs.Page{
-			Path:  referenceDir + "cli/" + strings.Join(g.CommandPath(), "-") + ".md",
+			Path:  referenceDir + "cli/" + strings.Join(words, "-") + ".md",
 			Title: "osapi " + name,
-			Intro: g.Doc + ". `osapi cli command get --name " + name + "` shows the same.",
+			Intro: g.Doc + ". `osapi dsl command get --name " + g.Path() + "` shows the same.",
 			Parts: []clidocs.Part{
 				{Group: "command", Out: got, Link: func(h string, cell string) string {
 					if h == cli.HeadingLink || h == "COMMAND" {
@@ -243,7 +252,7 @@ func column(
 	}
 }
 
-// cliPage is the page of the CLI reference of a command, such as osapi token
+// cliPage is the page of the CLI reference of a command, such as osapi controller token
 // generate, from a directory one level under the reference: a command with
 // commands under it is the index page of its directory.
 func cliPage(

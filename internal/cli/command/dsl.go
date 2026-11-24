@@ -27,7 +27,7 @@ import (
 func init() {
 	dsl.Register(dsl.DSL{
 		Name:    "command",
-		Command: []string{"cli", "command"},
+		Command: []string{"dsl", "command"},
 		Skill:   "build-a-command",
 		Page:    "command.md",
 		Without: map[string]string{

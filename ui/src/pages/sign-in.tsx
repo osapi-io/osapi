@@ -106,7 +106,7 @@ export function SignIn() {
                 Generate a token with the OSAPI CLI:
               </Text>
               <Text variant="mono-primary" as="code" className="mt-1 block">
-                osapi token generate
+                osapi controller token generate
               </Text>
             </InfoBox>
           </CardContent>

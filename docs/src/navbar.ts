@@ -144,7 +144,7 @@ function behaviorPages(dir: string): Page[] {
 
 // behaviorItems are the reference pages of the behaviors, which the registry
 // generates: a section for each area, with the page of each of its
-// behaviors, by its title. osapi cli docs reference writes the page of each
+// behaviors, by its title. osapi dsl docs generate writes the page of each
 // behavior in a folder of its own, in the folder of its area, or of its
 // parent when Of nests it, and the _category_.json of each area's folder,
 // from area.All in Go, so the sections have the labels and the order of the

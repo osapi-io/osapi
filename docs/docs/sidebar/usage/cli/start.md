@@ -1,6 +1,6 @@
 # Start
 
-Start all components (NATS, controller, agent).
+Start each component of osapi on this host.
 
 This runs the embedded NATS server, the API server and the agent together. Use
 it for a deployment on one host. For a deployment on more than one host, start

@@ -11,9 +11,9 @@ import (
 )
 
 var tokenGenerateCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi token generate --subject user123 --roles=read\n\x1b[1;38;2;0;213;255mToken:\x1b[0m\n  \x1b[38;2;10;143;176mToken:\x1b[0m    eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwicm9sZXMiOlsicmVhZCJdfQ.Xq3a8Zt0n2Jv5k7XqW1yR4sB6cD9eF0gH2iJ3kL5mN8\n  \x1b[38;2;10;143;176mSubject:\x1b[0m  user123\n  \x1b[38;2;10;143;176mRoles:\x1b[0m    read\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwicm9sZXMiOlsicmVhZCJdfQ.Xq3a8Zt0n2Jv5k7XqW1yR4sB6cD9eF0gH2iJ3kL5mN8\",\n  \"subject\": \"user123\",\n  \"roles\": [\n    \"read\"\n  ]\n}\n```"},
+	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi controller token generate --subject user123 --roles=read\n\x1b[1;38;2;0;213;255mToken:\x1b[0m\n  \x1b[38;2;10;143;176mToken:\x1b[0m    eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwicm9sZXMiOlsicmVhZCJdfQ.Xq3a8Zt0n2Jv5k7XqW1yR4sB6cD9eF0gH2iJ3kL5mN8\n  \x1b[38;2;10;143;176mSubject:\x1b[0m  user123\n  \x1b[38;2;10;143;176mRoles:\x1b[0m    read\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwicm9sZXMiOlsicmVhZCJdfQ.Xq3a8Zt0n2Jv5k7XqW1yR4sB6cD9eF0gH2iJ3kL5mN8\",\n  \"subject\": \"user123\",\n  \"roles\": [\n    \"read\"\n  ]\n}\n```"},
 	Args:        cobra.NoArgs,
-	Example:     "  osapi token generate --subject user123 --roles=read\n  osapi token generate --subject svc@example.com --roles=read \\\n    -p status:read -p health:read\n  osapi token generate --subject team-web --roles=operator \\\n    -t group:web -t web-01",
+	Example:     "  osapi controller token generate --subject user123 --roles=read\n  osapi controller token generate --subject svc@example.com --roles=read \\\n    -p status:read -p health:read\n  osapi controller token generate --subject team-web --roles=operator \\\n    -t group:web -t web-01",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		roles, _ := cmd.Flags().GetStringSlice("roles")
 		subject, _ := cmd.Flags().GetString("subject")
@@ -26,41 +26,10 @@ var tokenGenerateCmd = &cobra.Command{
 	Use:   "generate",
 }
 
-var tokenRolesListCmd = &cobra.Command{
-	Annotations: map[string]string{
-		clicommand.SubKey: "roles",
-		reference.Result:  "The command prints:\n\n```ansi\n$ osapi token roles list\n\x1b[1;38;2;0;213;255mRoles (7):\x1b[0m\n  \x1b[38;2;10;143;176mNAME        \x1b[0m\x1b[38;2;10;143;176mSOURCE\x1b[0m\n  \x1b[1madmin\x1b[0m       built-in\n  \x1b[1moperator\x1b[0m    built-in\n  \x1b[1mautomation\x1b[0m  built-in\n  \x1b[1mauditor\x1b[0m     built-in\n  \x1b[1mread\x1b[0m        built-in\n  \x1b[1mobserver\x1b[0m    built-in\n  \x1b[1mdns-ops\x1b[0m     config\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"roles\": [\n    {\n      \"name\": \"admin\",\n      \"source\": \"built-in\",\n      \"permissions\": null\n    },\n    {\n      \"name\": \"operator\",\n      \"source\": \"built-in\",\n      \"permissions\": null\n    },\n    {\n      \"name\": \"automation\",\n      \"source\": \"built-in\",\n      \"permissions\": null\n    },\n    {\n      \"name\": \"auditor\",\n      \"source\": \"built-in\",\n      \"permissions\": null\n    },\n    {\n      \"name\": \"read\",\n      \"source\": \"built-in\",\n      \"permissions\": null\n    },\n    {\n      \"name\": \"observer\",\n      \"source\": \"built-in\",\n      \"permissions\": null\n    },\n    {\n      \"name\": \"dns-ops\",\n      \"source\": \"config\",\n      \"permissions\": null\n    }\n  ]\n}\n```",
-	},
-	Args:    cobra.NoArgs,
-	Example: "  osapi token roles list\n  osapi token roles list --json",
-	Long:    "The list has the permissions of each behavior, so it is correct for the\nbinary that you run. A custom role from the config's\n`controller.api.security.roles` gets a column of its own. Without a config\nfile it shows the built-in roles only. A behavior's permissions are\n`<name>:<verb>`, such as `dns:read` and `dns:write`. A rule gives each\nbuilt-in role its permissions. Use this list, not a table in the docs.",
-	RunE: func(cmd *cobra.Command, _ []string) error {
-		return clicommand.Run(cmd, token.Group, "roles list", token.RolesInput{})
-	},
-	Short: "List the roles and the permissions each grants",
-	Use:   "list",
-}
-
-var tokenRolesGetCmd = &cobra.Command{
-	Annotations: map[string]string{
-		clicommand.SubKey: "roles",
-		reference.Result:  "The command prints:\n\n```ansi\n$ osapi token roles get --name admin\n\x1b[1;38;2;0;213;255mRole:\x1b[0m\n  \x1b[38;2;10;143;176mName:\x1b[0m         admin\n  \x1b[38;2;10;143;176mSource:\x1b[0m       built-in\n  \x1b[38;2;10;143;176mPermissions:\x1b[0m  status:read, file:read, file:write, health:read\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"name\": \"admin\",\n  \"source\": \"built-in\",\n  \"permissions\": [\n    \"status:read\",\n    \"file:read\",\n    \"file:write\",\n    \"health:read\"\n  ]\n}\n```",
-	},
-	Args:    cobra.NoArgs,
-	Example: "  osapi token roles get --name admin",
-	RunE: func(cmd *cobra.Command, _ []string) error {
-		name, _ := cmd.Flags().GetString("name")
-
-		return clicommand.Run(cmd, token.Group, "roles get", token.RoleInput{Name: name})
-	},
-	Short: "Show a role and each permission it grants",
-	Use:   "get",
-}
-
 var tokenValidateCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi token validate --token eyJhbGciOiJIUzI1NiIs...\n\x1b[1;38;2;0;213;255mToken:\x1b[0m\n  \x1b[38;2;10;143;176mSubject:\x1b[0m                user123\n  \x1b[38;2;10;143;176mRoles:\x1b[0m                  read\n  \x1b[38;2;10;143;176mEffective permissions:\x1b[0m  file:read, health:read, status:read\n  \x1b[38;2;10;143;176mAudience:\x1b[0m               osapi\n  \x1b[38;2;10;143;176mIssued at:\x1b[0m              2026-01-15 09:00:00\n  \x1b[38;2;10;143;176mExpires at:\x1b[0m             2026-04-15 09:00:00\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"subject\": \"user123\",\n  \"roles\": [\n    \"read\"\n  ],\n  \"effective_permissions\": [\n    \"file:read\",\n    \"health:read\",\n    \"status:read\"\n  ],\n  \"audience\": [\n    \"osapi\"\n  ],\n  \"issued_at\": \"2026-01-15T09:00:00Z\",\n  \"expires_at\": \"2026-04-15T09:00:00Z\"\n}\n```"},
+	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi controller token validate --token eyJhbGciOiJIUzI1NiIs...\n\x1b[1;38;2;0;213;255mToken:\x1b[0m\n  \x1b[38;2;10;143;176mSubject:\x1b[0m                user123\n  \x1b[38;2;10;143;176mRoles:\x1b[0m                  read\n  \x1b[38;2;10;143;176mEffective permissions:\x1b[0m  file:read, health:read, status:read\n  \x1b[38;2;10;143;176mAudience:\x1b[0m               osapi\n  \x1b[38;2;10;143;176mIssued at:\x1b[0m              2026-01-15 09:00:00\n  \x1b[38;2;10;143;176mExpires at:\x1b[0m             2026-04-15 09:00:00\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"subject\": \"user123\",\n  \"roles\": [\n    \"read\"\n  ],\n  \"effective_permissions\": [\n    \"file:read\",\n    \"health:read\",\n    \"status:read\"\n  ],\n  \"audience\": [\n    \"osapi\"\n  ],\n  \"issued_at\": \"2026-01-15T09:00:00Z\",\n  \"expires_at\": \"2026-04-15T09:00:00Z\"\n}\n```"},
 	Args:        cobra.NoArgs,
-	Example:     "  osapi token validate --token eyJhbGciOiJIUzI1NiIs...",
+	Example:     "  osapi controller token validate --token eyJhbGciOiJIUzI1NiIs...",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		tokenFlag, _ := cmd.Flags().GetString("token")
 
@@ -75,11 +44,9 @@ func init() {
 	_ = tokenGenerateCmd.MarkFlagRequired("roles")
 	tokenGenerateCmd.Flags().StringP("subject", "u", "", "Subject for the token (e.g., user ID or unique identifier)")
 	_ = tokenGenerateCmd.MarkFlagRequired("subject")
-	tokenGenerateCmd.Flags().StringSliceP("permissions", "p", nil, "Direct permissions, which override the roles; osapi token roles get --name admin lists each one")
+	tokenGenerateCmd.Flags().StringSliceP("permissions", "p", nil, "Direct permissions, which override the roles; osapi controller role get --name admin lists each one")
 	tokenGenerateCmd.Flags().StringSliceP("targets", "t", nil, "Hosts the token may act on: hostnames and labels, such as group:web; without it, each host")
-	tokenRolesGetCmd.Flags().String("name", "", "The role, such as admin, or a custom role of the config")
-	_ = tokenRolesGetCmd.MarkFlagRequired("name")
 	tokenValidateCmd.Flags().StringP("token", "t", "", "The Token string")
 	_ = tokenValidateCmd.MarkFlagRequired("token")
-	clicommand.AddCommands(token.Group, tokenGenerateCmd, tokenRolesListCmd, tokenRolesGetCmd, tokenValidateCmd)
+	clicommand.AddCommands(token.Group, tokenGenerateCmd, tokenValidateCmd)
 }

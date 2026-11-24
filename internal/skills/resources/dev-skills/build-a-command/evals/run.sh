@@ -68,8 +68,8 @@ for id in "${ids[@]}"; do
 		check "$id" "nothing in the checkout changed" "[ -z \"\$(git status --porcelain --untracked-files=all)\" ]"
 		check "$id" "the answer says that it is a$( [ "$expects" = endpoint ] && echo 'n') $expects" "$answer | grep -qi '$expects'"
 	else
-		check "$id" "cli command validate passes" "go run . cli command validate"
-		check "$id" "the group is registered under its name" "go run . cli command get --name $g --json"
+		check "$id" "dsl command validate passes" "go run . dsl command validate"
+		check "$id" "the group is registered under its name" "go run . dsl command get --name $g --json"
 		check "$id" "its package tests pass with 100% coverage" "go test -cover ./internal/cli/commands/$g/ | tee /dev/stderr | grep -q 'coverage: 100.0%'"
 		check "$id" "every test in internal/cli/commands/all passes" "go test -count=1 ./internal/cli/commands/all/"
 		check "$id" "generated files are current" "before=\$(git status --porcelain); go generate ./internal/cli/commands/all && mise exec -- just cli-docs-generate && [ \"\$before\" = \"\$(git status --porcelain)\" ]"

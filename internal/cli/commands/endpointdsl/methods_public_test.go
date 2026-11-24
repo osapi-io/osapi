@@ -76,7 +76,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 			name: "when no group has the name, it says to list them",
 			in:   endpointdsl.GetInput{Name: "nosuch"},
 			validateFunc: func(_ endpointdsl.GetOutput, err error) {
-				s.ErrorContains(err, "osapi controller endpoint list")
+				s.ErrorContains(err, "osapi dsl endpoint list")
 			},
 		},
 	}
@@ -182,14 +182,14 @@ func (s *MethodsPublicTestSuite) TestMethodGet() {
 			name: "when the group has no such method, it says how to list them",
 			in:   endpointdsl.MethodInput{Name: "agent", Method: "nope"},
 			validateFunc: func(_ endpointdsl.MethodOutput, err error) {
-				s.ErrorContains(err, "osapi controller endpoint get --name agent")
+				s.ErrorContains(err, "osapi dsl endpoint get --name agent")
 			},
 		},
 		{
 			name: "when there is no such group, it says how to list them",
 			in:   endpointdsl.MethodInput{Name: "nope", Method: "list"},
 			validateFunc: func(_ endpointdsl.MethodOutput, err error) {
-				s.ErrorContains(err, "osapi controller endpoint list")
+				s.ErrorContains(err, "osapi dsl endpoint list")
 			},
 		},
 	}

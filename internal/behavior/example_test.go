@@ -214,7 +214,7 @@ func ExamplePlatform() {
 	// true
 }
 
-// ValidateBehavior reports what a definition gets wrong, as osapi behavior
+// ValidateBehavior reports what a definition gets wrong, as osapi dsl behavior
 // validate does for every registered one.
 func ExampleValidateBehavior() {
 	b := behavior.Define("motd", "The message shown at login",

@@ -55,11 +55,8 @@ var (
 		"help":       true,
 		"completion": true,
 		"config":     true,
-		"roles":      true,
+		"role":       true,
 		"skill":      true,
-		"init":       true,
-		"endpoint":   true,
-		"behavior":   true,
 	}
 )
 
@@ -114,6 +111,11 @@ func init() {
 	// again for the file's keys, but by then the path has been chosen.
 	viper.SetEnvPrefix(config.EnvPrefix)
 	viper.AutomaticEnv()
+
+	// Each word under the root gets its purpose from command.RootGroups.
+	// The groups attach in the inits of commands.go and the hand-written
+	// parents, which run before this one.
+	command.DescribeRoot(rootCmd)
 }
 
 // skipConfig reports whether the command being run needs no config file.

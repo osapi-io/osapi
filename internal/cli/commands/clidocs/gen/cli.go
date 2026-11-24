@@ -11,56 +11,20 @@ import (
 )
 
 var docsGenerateCmd = &cobra.Command{
-	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi cli docs generate\n\x1b[1;38;2;0;213;255mCLI reference:\x1b[0m\n  \x1b[38;2;10;143;176mDir:\x1b[0m    docs/docs/sidebar/usage/cli\n  \x1b[38;2;10;143;176mPages:\x1b[0m  171\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"dir\": \"docs/docs/sidebar/usage/cli\",\n  \"pages\": 171\n}\n```"},
+	Annotations: map[string]string{reference.Result: "The command prints:\n\n```ansi\n$ osapi dsl docs generate\n\x1b[1;38;2;0;213;255mDocs:\x1b[0m\n  \x1b[38;2;10;143;176mCLI pages:\x1b[0m        244\n  \x1b[38;2;10;143;176mDSL pages:\x1b[0m        4\n  \x1b[38;2;10;143;176mReference pages:\x1b[0m  93\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"cli\": 244,\n  \"dsl\": 4,\n  \"reference\": 93\n}\n```"},
 	Args:        cobra.NoArgs,
-	Example:     "  osapi cli docs generate\n  osapi cli docs generate --dir /tmp/cli",
-	Long:        "It writes a page for each command of this binary into `--dir`, and\nremoves each page there that no command has. `just cli-docs-generate`\nruns it, and `just test` checks that the pages match the binary.",
-	RunE: func(cmd *cobra.Command, _ []string) error {
-		dir, _ := cmd.Flags().GetString("dir")
-
-		return clicommand.Run(cmd, clidocs.Group, "generate", clidocs.GenerateInput{Dir: dir})
-	},
-	Short: "Write the CLI reference pages of the docs site",
-	Use:   "generate",
-}
-
-var docsDslGenerateCmd = &cobra.Command{
-	Annotations: map[string]string{
-		clicommand.SubKey: "dsl",
-		reference.Result:  "The command prints:\n\n```ansi\n$ osapi cli docs dsl generate\n\x1b[1;38;2;0;213;255mDSL reference:\x1b[0m\n  \x1b[38;2;10;143;176mDir:\x1b[0m    docs/docs/sidebar/development/dsl\n  \x1b[38;2;10;143;176mPages:\x1b[0m  7\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"dir\": \"docs/docs/sidebar/development/dsl\",\n  \"pages\": 7\n}\n```",
-	},
-	Args:    cobra.NoArgs,
-	Example: "  osapi cli docs dsl generate\n  osapi cli docs dsl generate --dir /tmp/dsl",
-	Long:    "It writes a page for each DSL of this binary into `--dir`: the behavior\nDSL, chains, the endpoint DSL and the command DSL. Each page lists what the\n`spec get` command of the DSL prints, from the same spec. It removes each\ngenerated page there that no DSL has, and keeps a page that a person wrote.\n`just cli-docs-generate` runs it, and `just test` checks that the pages\nmatch the binary.",
-	RunE: func(cmd *cobra.Command, _ []string) error {
-		dir, _ := cmd.Flags().GetString("dir")
-
-		return clicommand.Run(cmd, clidocs.Group, "dsl generate", clidocs.DSLInput{Dir: dir})
-	},
-	Short: "Write the DSL reference pages of the docs site",
-	Use:   "generate",
-}
-
-var docsReferenceGenerateCmd = &cobra.Command{
-	Annotations: map[string]string{
-		clicommand.SubKey: "reference",
-		reference.Result:  "The command prints:\n\n```ansi\n$ osapi cli docs reference generate\n\x1b[1;38;2;0;213;255mReference:\x1b[0m\n  \x1b[38;2;10;143;176mPages:\x1b[0m  73\n```\n\nWith `--json`, the command prints:\n\n```json\n{\n  \"pages\": 73\n}\n```",
-	},
-	Args:    cobra.NoArgs,
-	Example: "  osapi cli docs reference generate\n  osapi cli docs reference generate --root ~/src/osapi",
-	Long:    "It writes a page for each behavior, chain, endpoint group and local group\nof this binary under `docs/docs/sidebar/reference`. Each page is the output\nof the `list` or `get` command that shows it, such as `osapi behavior get\n--name dns`, printed as markdown. Thus a page shows what its command shows.\nIt removes each generated page there that no command writes now. `just\ncli-docs-generate` runs it, and `just test` checks that the pages match the\nbinary.",
+	Example:     "  osapi dsl docs generate\n  osapi dsl docs generate --root ~/src/osapi",
+	Long:        "It writes each generated page of the docs site from this binary, and\nremoves each generated page that no command, DSL or group has now:\n\n- a page for each command, under `docs/docs/sidebar/usage/cli`;\n- a page for each DSL, under `docs/docs/sidebar/development/dsl`, from the\n  spec that the `spec get` command of the DSL prints;\n- a page for each behavior, chain, endpoint group and local group, under\n  `docs/docs/sidebar/reference`, from the output of its `list` or `get`\n  command, such as `osapi dsl behavior get --name dns`.\n\nA DSL page that a person wrote stays. `just cli-docs-generate` runs it, and\n`just test` checks that the pages match the binary.",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		root, _ := cmd.Flags().GetString("root")
 
-		return clicommand.Run(cmd, clidocs.Group, "reference generate", clidocs.ReferenceInput{Root: root})
+		return clicommand.Run(cmd, clidocs.Group, "generate", clidocs.GenerateInput{Root: root})
 	},
-	Short: "Write the reference pages of the docs site",
+	Short: "Write the CLI, DSL and reference pages of the docs site",
 	Use:   "generate",
 }
 
 func init() {
-	docsGenerateCmd.Flags().String("dir", "docs/docs/sidebar/usage/cli", "Directory of the CLI reference pages")
-	docsDslGenerateCmd.Flags().String("dir", "docs/docs/sidebar/development/dsl", "Directory of the DSL pages")
-	docsReferenceGenerateCmd.Flags().String("root", ".", "Root of the osapi repository")
-	clicommand.AddCommands(clidocs.Group, docsGenerateCmd, docsDslGenerateCmd, docsReferenceGenerateCmd)
+	docsGenerateCmd.Flags().String("root", ".", "Root of the osapi repository")
+	clicommand.AddCommands(clidocs.Group, docsGenerateCmd)
 }

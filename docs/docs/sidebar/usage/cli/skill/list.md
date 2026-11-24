@@ -33,7 +33,7 @@ With `--json`, the command prints:
   "items": [
     {
       "name": "build-a-behavior",
-      "description": "Build or change an osapi behavior.",
+      "description": "Build or change an osapi dsl behavior.",
       "init": false,
       "references": ["references/services.md"]
     },

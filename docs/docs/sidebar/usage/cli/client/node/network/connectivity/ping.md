@@ -173,7 +173,7 @@ The command fails in these cases:
 ## Permission
 
 It needs the `connectivity:execute` permission.
-`osapi token roles get --name <role>` shows what a role grants.
+`osapi controller role get --name <role>` shows what a role grants.
 
 ## Flags
 

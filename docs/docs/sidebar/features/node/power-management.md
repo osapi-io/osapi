@@ -16,8 +16,8 @@ Power operations call `shutdown` on the agent host:
 message, not an option. The agent records the scheduled action and returns
 `changed: true` before the system stops. If the platform does not support the
 operation, for example on macOS agents or in a container, the job returns
-`status: skipped`. Power is a behavior: `osapi behavior get --name power` shows
-its definition.
+`status: skipped`. Power is a behavior: `osapi dsl behavior get --name power`
+shows its definition.
 
 ### Minimum delay
 

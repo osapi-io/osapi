@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package token is the token group of local commands: osapi token generate,
+// Package token is the token group of local commands: osapi controller token generate,
 // roles list and validate, which sign and read the bearer tokens of the API
 // with the signing key of the config. They run in the CLI, and call no API.
 package skill_test
@@ -29,6 +29,8 @@ import (
 	"testing"
 	"testing/fstest"
 
+	"github.com/avfs/avfs/vfs/memfs"
+	"github.com/avfs/avfs/vfs/rofs"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/cli/commands/skill"
@@ -111,6 +113,90 @@ func (s *MethodsPublicTestSuite) TestGet() {
 			tc.validateFunc(skill.Get(context.Background(), s.deps, tc.in))
 		})
 	}
+}
+
+func (s *MethodsPublicTestSuite) TestInstall() {
+	src := fstest.MapFS{
+		"osapi/SKILL.md": {
+			Data: []byte("---\nname: osapi\ndescription: Operate hosts.\n---\nbody\n"),
+		},
+	}
+	version := func() string { return "v1.2.3" }
+
+	tests := []struct {
+		name         string
+		deps         func() skill.Deps
+		in           skill.InstallInput
+		validateFunc func(skill.InstallOutput, error)
+	}{
+		{
+			name: "when no tool is given, it installs for claude into the current directory",
+			deps: func() skill.Deps {
+				fs := memfs.New()
+				s.Require().NoError(fs.MkdirAll("/repo", 0o755))
+				s.Require().NoError(fs.Chdir("/repo"))
+
+				return skill.Deps{FS: fs, Installed: src, Version: version}
+			},
+			validateFunc: func(got skill.InstallOutput, err error) {
+				s.Require().NoError(err)
+				s.Equal([]string{"claude"}, got.Tools)
+				s.Equal("v1.2.3", got.Version)
+				s.Positive(got.Changed)
+				s.Equal(len(got.Files), got.Changed, "each file is new")
+			},
+		},
+		{
+			name: "when a path and tools are given, it installs for each",
+			deps: func() skill.Deps {
+				fs := memfs.New()
+				s.Require().NoError(fs.MkdirAll("/ops", 0o755))
+
+				return skill.Deps{FS: fs, Installed: src, Version: version}
+			},
+			in: skill.InstallInput{Path: "/ops", Tools: []string{"claude", "codex"}},
+			validateFunc: func(got skill.InstallOutput, err error) {
+				s.Require().NoError(err)
+				s.Equal([]string{"claude", "codex"}, got.Tools)
+			},
+		},
+		{
+			name: "when the file system is read only, it is the error",
+			deps: func() skill.Deps {
+				return skill.Deps{FS: rofs.New(memfs.New()), Installed: src, Version: version}
+			},
+			in: skill.InstallInput{Path: "/repo"},
+			validateFunc: func(_ skill.InstallOutput, err error) {
+				s.Error(err)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.validateFunc(skill.Install(context.Background(), tc.deps(), tc.in))
+		})
+	}
+}
+
+// TestInstallAgain counts only the files that change: a second run on the same
+// repository changes none.
+func (s *MethodsPublicTestSuite) TestInstallAgain() {
+	fs := memfs.New()
+	s.Require().NoError(fs.MkdirAll("/repo", 0o755))
+	d := skill.Deps{
+		FS: fs,
+		Installed: fstest.MapFS{
+			"osapi/SKILL.md": {Data: []byte("---\nname: osapi\ndescription: x\n---\n")},
+		},
+		Version: func() string { return "v1" },
+	}
+	_, err := skill.Install(context.Background(), d, skill.InstallInput{Path: "/repo"})
+	s.Require().NoError(err)
+
+	got, err := skill.Install(context.Background(), d, skill.InstallInput{Path: "/repo"})
+	s.Require().NoError(err)
+	s.Zero(got.Changed)
 }
 
 func TestMethodsPublicTestSuite(
