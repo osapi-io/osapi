@@ -30,56 +30,68 @@ type StatusPublicTestSuite struct {
 	suite.Suite
 }
 
-func (s *StatusPublicTestSuite) TestValues() {
+func (s *StatusPublicTestSuite) TestJobStatus() {
 	tests := []struct {
-		name    string
-		values  []string
-		has     []string
-		hasNot  []string
-		isFirst string
+		name   string
+		status types.JobStatus
+		want   bool
 	}{
 		{
-			name:   "when a job has a status, it is a status of the job and not of a host",
-			values: types.JobStatus("").Values(),
-			has: []string{
-				string(types.JobStatusPartialFailure),
-				string(types.JobStatusSkipped),
-			},
-			hasNot: []string{
-				string(types.AgentJobStatusTimeout),
-				string(types.AgentJobStatusStarted),
-			},
-			isFirst: string(types.JobStatusSubmitted),
+			name:   "when a job completed on some agents and failed on others, it is a status",
+			status: types.JobStatusPartialFailure,
+			want:   true,
 		},
 		{
-			name:   "when a host has a status, it is a status of the host and not of the job",
-			values: types.AgentJobStatus("").Values(),
-			has: []string{
-				string(types.AgentJobStatusRetried),
-				string(types.AgentJobStatusTimeout),
-			},
-			hasNot: []string{
-				string(types.JobStatusPartialFailure),
-				string(types.JobStatusProcessing),
-			},
-			isFirst: string(types.AgentJobStatusSubmitted),
+			name:   "when each agent skipped a job, it is a status",
+			status: types.JobStatusSkipped,
+			want:   true,
+		},
+		{
+			name:   "when a word is the status of a host, it is not a status of a job",
+			status: types.JobStatus(types.AgentJobStatusTimeout),
+		},
+		{
+			name:   "when a word is pending, it is not a status",
+			status: "pending",
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.Equal(tc.isFirst, tc.values[0])
-			s.Subset(tc.values, tc.has)
-			for _, v := range tc.hasNot {
-				s.NotContains(tc.values, v)
-			}
-			seen := map[string]bool{}
-			for _, v := range tc.values {
-				s.False(seen[v], "%s is a value twice", v)
-				seen[v] = true
-			}
+			s.Equal(tc.want, tc.status.Valid())
 		})
 	}
+	s.Equal(types.JobStatusSubmitted, types.JobStatus("").Values()[0])
+}
+
+func (s *StatusPublicTestSuite) TestAgentJobStatus() {
+	tests := []struct {
+		name   string
+		status types.AgentJobStatus
+		want   bool
+	}{
+		{
+			name:   "when the controller retried a job, it is a status",
+			status: types.AgentJobStatusRetried,
+			want:   true,
+		},
+		{
+			name:   "when an agent did not answer, it is a status",
+			status: types.AgentJobStatusTimeout,
+			want:   true,
+		},
+		{
+			name:   "when a word is the status of a job, it is not a status of a host",
+			status: types.AgentJobStatus(types.JobStatusPartialFailure),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, tc.status.Valid())
+		})
+	}
+	s.Equal(types.AgentJobStatusSubmitted, types.AgentJobStatus("").Values()[0])
 }
 
 func TestStatusPublicTestSuite(

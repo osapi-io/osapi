@@ -37,6 +37,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/authtoken"
+	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 	jobgroup "github.com/osapi-io/osapi/internal/controller/endpoints/job"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/job/gen"
@@ -99,6 +100,20 @@ func (s *MethodsPublicTestSuite) TearDownSubTest() {
 
 func (s *MethodsPublicTestSuite) deps() jobgroup.Deps {
 	return jobgroup.Deps{Jobs: s.jobs}
+}
+
+// TestSpecStatuses: the spec has an enum for the status of a job and for the
+// status of a job on a host, so a client checks a value when it compiles.
+func (s *MethodsPublicTestSuite) TestSpecStatuses() {
+	doc, err := endpoint.OpenAPI(jobgroup.Group)
+	s.Require().NoError(err)
+
+	job := doc.Components.Schemas["JobStatus"].Value.Enum
+	s.Contains(job, string(types.JobStatusSkipped))
+	s.NotContains(job, string(types.AgentJobStatusTimeout))
+	host := doc.Components.Schemas["AgentJobStatus"].Value.Enum
+	s.Contains(host, string(types.AgentJobStatusTimeout))
+	s.NotContains(host, string(types.JobStatusPartialFailure))
 }
 
 func (s *MethodsPublicTestSuite) TestList() {
