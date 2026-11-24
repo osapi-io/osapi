@@ -28,43 +28,12 @@ on:
 permissions:
   contents: read
 
-# The same jobs in each Go repository of osapi-io. `just go-ci-checks` and
-# `just go-unit-plan` decide the jobs, from the lists that `just test` runs,
-# so a laptop and CI run the same checks. .github/actions/setup has the setup
-# of this repository.
+# Each job starts at once: no job waits for a plan. The check jobs call the
+# recipes of go_slow_checks, and the quick job checks that this workflow names
+# each of them. The unit shards each run go-unit-plan and take their own
+# packages. .github/actions/setup has the setup of this repository.
 jobs:
-  plan:
-    runs-on: ubuntu-latest
-    outputs:
-      checks: ${{ steps.plan.outputs.checks }}
-      units: ${{ steps.plan.outputs.units }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Set up Go
-        uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
-        with:
-          go-version-file: go.mod
-      - name: Install just
-        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
-      - name: Fetch justfiles
-        run: just fetch
-      - name: Plan the jobs
-        id: plan
-        # Each recipe runs on a line of its own, so that its failure fails the
-        # step. Inside `echo "$(...)"`, a failure leaves an empty matrix.
-        # go-vet runs in the lint job, and the generation checks in the
-        # generated job, which both start with the plan; the check jobs run
-        # the rest.
-        run: |
-          checks=$(just go-ci-checks | jq -c '.check -= ["go-vet","behavior-gen-check","go-generate-check","docs-gen-check","cli-docs-gen-check","sdk-gen-check"]')
-          units=$(just go-unit-plan)
-          echo "checks=$checks" >> "$GITHUB_OUTPUT"
-          echo "units=$units" >> "$GITHUB_OUTPUT"
-
-  # golangci-lint is the longest check, so it starts at once, with no wait
-  # for the plan, and does not queue behind the other jobs for a runner.
-  # golangci-lint is the longest check, so it starts at once, with no wait
-  # for the plan. It runs the prebuilt release of the version that go.mod
+  # golangci-lint runs the prebuilt release of the version that go.mod
   # pins: through go tool, a cold runner compiled golangci-lint itself first,
   # which took most of the job.
   lint:
@@ -108,28 +77,60 @@ jobs:
             exit 1
           fi
 
-  check:
-    needs: plan
+  # The checks of go_quick_checks, together, and a test that this workflow
+  # runs each check of go_slow_checks.
+  quick:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJSON(needs.plan.outputs.checks) }}
-    name: ${{ matrix.check }}
+    name: quick checks
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
         with:
-          # Only the job of the UI checks installs the UI packages.
-          ui: ${{ contains(matrix.check, 'react') && 'true' || 'false' }}
-      - name: ${{ matrix.check }}
-        run: for check in ${{ matrix.check }}; do just "$check"; done
+          ui: "true"
+      - name: This workflow runs each slow check
+        run: |
+          ran="go-vet behavior-gen-check go-generate-check docs-gen-check cli-docs-gen-check sdk-gen-check behavior-scaffold-check endpoint-scaffold-check command-scaffold-check behavior-cover-check go-fmt-check examples-check spec-client-check"
+          want=$(just --evaluate go_slow_checks | tr ' ' '\n' | sort)
+          have=$(echo "$ran" | tr ' ' '\n' | sort)
+          if [ "$want" != "$have" ]; then
+            echo "go.yml and go_slow_checks disagree:" >&2
+            diff <(echo "$want") <(echo "$have") >&2 || true
+            exit 1
+          fi
+      - name: Quick checks
+        run: for check in $(just --evaluate go_quick_checks); do just "$check"; done
 
-  unit:
-    needs: plan
+  # Each slow check but go-vet (the lint job) and the generation checks (the
+  # generated job).
+  check:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.plan.outputs.units) }}
+      matrix:
+        check:
+          - behavior-scaffold-check
+          - endpoint-scaffold-check
+          - command-scaffold-check
+          - behavior-cover-check
+          - go-fmt-check
+          - examples-check
+          - spec-client-check
+    name: ${{ matrix.check }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - name: ${{ matrix.check }}
+        run: just ${{ matrix.check }}
+
+  # go-unit-plan makes at most go_shard_max (10) shards. Each shard plans
+  # them again, the same each time, and runs its own; a shard with no
+  # packages has nothing to do.
+  unit:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     name: unit ${{ matrix.shard }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -137,7 +138,13 @@ jobs:
         with:
           js: "false"
       - name: Unit tests, shard ${{ matrix.shard }}
-        run: just go-unit-shard ${{ matrix.shard }} "${{ matrix.packages }}"
+        run: |
+          packages=$(just go-unit-plan | jq -r --argjson i ${{ matrix.shard }} '.include[] | select(.shard == $i) | .packages')
+          if [ -z "$packages" ]; then
+            echo "shard ${{ matrix.shard }}: no packages"
+            exit 0
+          fi
+          just go-unit-shard ${{ matrix.shard }} "$packages"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cover-${{ matrix.shard }}
