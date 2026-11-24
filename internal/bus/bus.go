@@ -24,6 +24,8 @@ package bus
 import (
 	"errors"
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	natsserver "github.com/nats-io/nats-server/v2/server"
@@ -139,6 +141,27 @@ func ServerOptions(
 	}
 
 	return opts, nil
+}
+
+// JetStreamKey reads the key of the JetStream store from the file of cfg,
+// or is "" when no file is set. A file with no key is an error, because an
+// empty key turns the encryption off.
+func JetStreamKey(
+	cfg config.NATSServerJetStream,
+) (string, error) {
+	if cfg.KeyFile == "" {
+		return "", nil
+	}
+	b, err := os.ReadFile(cfg.KeyFile)
+	if err != nil {
+		return "", fmt.Errorf("read the JetStream key: %w", err)
+	}
+	key := strings.TrimSpace(string(b))
+	if key == "" {
+		return "", fmt.Errorf("the JetStream key file %s is empty", cfg.KeyFile)
+	}
+
+	return key, nil
 }
 
 // ServerClientAuth is how the embedded server's own setup and

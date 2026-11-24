@@ -289,6 +289,59 @@ func (suite *BusPublicTestSuite) TestBuildNATSServerOptions() {
 	}
 }
 
+func (suite *BusPublicTestSuite) TestJetStreamKey() {
+	dir := suite.T().TempDir()
+	write := func(name, content string) string {
+		path := filepath.Join(dir, name)
+		suite.Require().NoError(os.WriteFile(path, []byte(content), 0o600))
+
+		return path
+	}
+	key := write("js.key", "  thekey\n")
+	empty := write("empty.key", " \n")
+
+	tests := []struct {
+		name    string
+		cfg     config.NATSServerJetStream
+		want    string
+		wantErr string
+	}{
+		{
+			name: "when no file is set, no key",
+		},
+		{
+			name: "when key_file is set, its key without whitespace",
+			cfg:  config.NATSServerJetStream{KeyFile: key},
+			want: "thekey",
+		},
+		{
+			name:    "when key_file does not exist",
+			cfg:     config.NATSServerJetStream{KeyFile: filepath.Join(dir, "missing.key")},
+			wantErr: "read the JetStream key",
+		},
+		{
+			name:    "when key_file is empty",
+			cfg:     config.NATSServerJetStream{KeyFile: empty},
+			wantErr: "is empty",
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			got, err := bus.JetStreamKey(tc.cfg)
+
+			if tc.wantErr != "" {
+				suite.ErrorContains(err, tc.wantErr)
+				suite.Empty(got)
+
+				return
+			}
+			suite.Require().NoError(err)
+			suite.Equal(tc.want, got)
+		})
+	}
+}
+
 func (suite *BusPublicTestSuite) TestBuildNATSServerClientAuth() {
 	tests := []struct {
 		name string
