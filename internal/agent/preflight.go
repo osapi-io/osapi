@@ -330,3 +330,28 @@ func MissingPrograms(
 
 	return missing
 }
+
+// refreshPrograms finds the missing programs again, as the heartbeat does
+// each time, so a program installed after the start leaves the list with no
+// restart. It logs a warning for a program that goes missing, and an info
+// line for one that it finds.
+func (a *Agent) refreshPrograms() {
+	now := MissingPrograms(detectFn())
+	for _, p := range now {
+		if !slices.Contains(a.missingPrograms, p) {
+			a.logger.Warn(
+				"a behavior's program is not installed; the behavior fails until it is",
+				slog.String("program", p),
+			)
+		}
+	}
+	for _, p := range a.missingPrograms {
+		if !slices.Contains(now, p) {
+			a.logger.Info(
+				"a behavior's program is installed now",
+				slog.String("program", p),
+			)
+		}
+	}
+	a.missingPrograms = now
+}

@@ -160,7 +160,8 @@ type Agent struct {
 	consumerErrMu sync.Mutex
 
 	// missingPrograms are the behaviors' programs that this host lacks,
-	// found at start. The heartbeat reports them.
+	// found at start and again on each heartbeat, which reports them. Only
+	// the heartbeat goroutine writes it after the start.
 	missingPrograms []string
 
 	// subComponents reports the status of internal services in heartbeat.
