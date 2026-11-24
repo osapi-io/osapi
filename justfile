@@ -73,10 +73,9 @@ test: linux-tune
     just react-build
     just go-test
 
-# The checks of `just test`, which the shared go-test runs and CI reads
-# (`just go-ci-checks`): the quick checks share one job, and each slow check is
-# a job. A check added here runs on a laptop and in CI, with no change to the
-# workflow.
+# The checks of `just test`, which the shared go-test runs. In CI the quick
+# checks share one job; .github/workflows/go.yml names each slow check, and
+# its quick job fails when a check here is not in the workflow.
 go_quick_checks := "just-fmt-check docs-fmt-check react-fmt-check react-lint react-typecheck react-unit react-generate-check go-mod-check go-pkg-check"
 go_slow_checks := "behavior-gen-check go-generate-check docs-gen-check cli-docs-gen-check behavior-scaffold-check endpoint-scaffold-check command-scaffold-check behavior-cover-check go-fmt-check go-vet examples-check spec-client-check sdk-gen-check"
 # One unit shard for each 13000 lines of test code, up to go_shard_max (10).
