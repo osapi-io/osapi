@@ -131,7 +131,6 @@ var Group = endpoint.Define(
 	endpoint.Tag("file_operations", "File", "Files of the object store, deployed to the host"),
 	endpoint.CommandNotes("The [file behavior](../../../../../reference/behaviors/config/file/file.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
-	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[GetRequest, FileGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodeFile").

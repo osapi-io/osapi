@@ -135,7 +135,6 @@ var Group = endpoint.Define(
 	endpoint.Tag("ntp_operations", "NTP", "The NTP servers of chrony, and its sync status"),
 	endpoint.CommandNotes("The [ntp behavior](../../../../../reference/behaviors/config/ntp/ntp.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
-	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[GetRequest, NtpGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodeNtp").

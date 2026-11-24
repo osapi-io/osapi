@@ -51,7 +51,6 @@ var Group = endpoint.Define(
 	endpoint.Tag("source_operations", "Log source", "The sources that write to the systemd journal"),
 	endpoint.CommandNotes("The [source behavior](../../../../../../reference/behaviors/logs/log/source/source.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
-	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, LogSourceCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeLogSource").

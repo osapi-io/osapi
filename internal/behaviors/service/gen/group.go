@@ -265,7 +265,6 @@ var Group = endpoint.Define(
 	endpoint.Tag("service_operations", "Service", "The systemd services of the host"),
 	endpoint.CommandNotes("The [service behavior](../../../../../reference/behaviors/services/service/service.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
-	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, ServiceCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeService").

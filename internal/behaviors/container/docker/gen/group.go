@@ -237,7 +237,6 @@ var Group = endpoint.Define(
 	endpoint.Tag("docker_operations", "Container", "The Docker containers of the host"),
 	endpoint.CommandNotes("The [docker behavior](../../../../../reference/behaviors/containers/docker/docker.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
-	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, DockerCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeDocker").

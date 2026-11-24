@@ -159,7 +159,6 @@ var Group = endpoint.Define(
 	endpoint.Tag("sysctl_operations", "Sysctl", "Kernel parameters, written to sysctl.d files and applied"),
 	endpoint.CommandNotes("The [sysctl behavior](../../../../../reference/behaviors/config/sysctl/sysctl.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
-	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, SysctlCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeSysctl").

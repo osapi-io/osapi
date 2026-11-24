@@ -172,7 +172,6 @@ var Group = endpoint.Define(
 	endpoint.Tag("user_operations", "User", "The users of the host"),
 	endpoint.CommandNotes("The [user behavior](../../../../../reference/behaviors/security/user/user.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
-	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, UserCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeUser").

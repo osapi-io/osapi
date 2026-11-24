@@ -127,7 +127,6 @@ var Group = endpoint.Define(
 	endpoint.Tag("image_operations", "Container image", "The Docker images of the host"),
 	endpoint.CommandNotes("The [image behavior](../../../../../reference/behaviors/containers/image/image.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
-	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, ImageCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeImage").

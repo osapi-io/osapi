@@ -194,8 +194,6 @@ func groupFile(
 		// client has one type for it.
 		jen.Qual(endpointPath, "Doc").Index(jen.Qual(typesPath, "RowStatus")).Call(
 			jen.Qual(dispatchPath, "RowStatusDoc")),
-		jen.Qual(endpointPath, "Enum").Index(jen.Qual(typesPath, "RowStatus")).Call(
-			jen.Qual(dispatchPath, "RowStatuses")),
 	}, methods...)
 
 	f.Comment("Group is " + b.Name + " as an endpoint group, which its spec comes from.")

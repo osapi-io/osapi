@@ -81,7 +81,6 @@ var Group = endpoint.Define(
 	endpoint.Tag("updates_operations", "Package updates", "The updates the package index has for the host"),
 	endpoint.CommandNotes("The [updates behavior](../../../../../../reference/behaviors/software/package/updates/updates.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
-	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, PackageUpdatesCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodePackageUpdates").

@@ -180,7 +180,6 @@ var Group = endpoint.Define(
 	endpoint.Tag("interface_operations", "Interface", "The network interfaces of the host"),
 	endpoint.CommandNotes("The [interface behavior](../../../../../reference/behaviors/networking/interface/interface.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
-	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, InterfaceCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeInterface").

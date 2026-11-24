@@ -170,7 +170,6 @@ var Group = endpoint.Define(
 	endpoint.Tag("schedule_operations", "Schedule", "The cron entries that osapi deploys"),
 	endpoint.CommandNotes("The [schedule behavior](../../../../../reference/behaviors/config/schedule/schedule.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
-	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, ScheduleCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeSchedule").

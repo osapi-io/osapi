@@ -112,7 +112,6 @@ var Group = endpoint.Define(
 	endpoint.Tag("dns_operations", "DNS", "The DNS resolvers of each interface of the host"),
 	endpoint.CommandNotes("The [dns behavior](../../../../../reference/behaviors/networking/dns/dns.md) page tells where the behavior runs, what it is built on and its settings."),
 	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
-	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[GetRequest, DnsGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodeDnsByKey").
