@@ -39,7 +39,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoints/health/mocks"
 )
 
-const signingKey = "test-signing-key-for-the-health-group"
+var signingKey = authtoken.Key{ID: "test", Secret: "test-signing-key-for-the-health-group"}
 
 var degraded = health.StatusResponse{
 	Status:  "degraded",
@@ -255,7 +255,12 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			tc.setup()
-			srv := server.New(slog.Default(), signingKey, nil, health.Deps{Health: s.reporter})
+			srv := server.New(
+				slog.Default(),
+				authtoken.Keys{signingKey},
+				nil,
+				health.Deps{Health: s.reporter},
+			)
 			e := echo.New()
 			srv.Mount(e, gen.Routes(srv))
 			req := httptest.NewRequest(http.MethodGet, tc.path, nil)

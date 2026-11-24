@@ -47,10 +47,12 @@ import (
 )
 
 const (
-	signingKey = "test-signing-key-for-the-job-group"
-	jobID      = "550e8400-e29b-41d4-a716-446655440000"
-	newJobID   = "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+	jobID    = "550e8400-e29b-41d4-a716-446655440000"
+	newJobID = "7c9e6679-7425-40de-944b-e07fc1f90ae7"
 )
+
+// signingKey signs every token a case sends.
+var signingKey = authtoken.Key{ID: "test", Secret: "test-signing-key-for-the-job-group"}
 
 var when = time.Date(2026, 11, 17, 8, 0, 0, 0, time.UTC)
 
@@ -750,7 +752,7 @@ func (s *MethodsPublicTestSuite) TestRoutes() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			tc.setup()
-			srv := server.New(slog.Default(), signingKey, nil, s.deps())
+			srv := server.New(slog.Default(), authtoken.Keys{signingKey}, nil, s.deps())
 			e := echo.New()
 			srv.Mount(e, gen.Routes(srv))
 			req := httptest.NewRequest(tc.method, tc.path, strings.NewReader(tc.body))

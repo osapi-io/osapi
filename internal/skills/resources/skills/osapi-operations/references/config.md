@@ -14,9 +14,9 @@ underscores: `controller.api.port` is `OSAPI_CONTROLLER_API_PORT`.
 `default` or `unset`. If a value is not the value that you set, usually an
 environment variable replaces the value in the file.
 
-Two keys have no default: `controller.api.security.signing_key`, at least 32
-characters, from `openssl rand -hex 32`, and
-`controller.client.security.bearer_token`, from
+Two keys have no default: `controller.api.security.signing_keys`, a list of
+`{id, key}` with each key at least 32 characters, from `openssl rand -hex 32`,
+and `controller.client.security.bearer_token`, from
 `osapi controller token generate`.
 
 Durations are Go durations, `30s`, `5m`, `168h`. A `d` suffix is rejected.

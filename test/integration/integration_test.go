@@ -39,7 +39,12 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const signingKey = "1dcf49fb9ad538f8b70fdb4ccb73c78692022e3191dba86f63308f0c3ee0e3c3"
+// signingKey is the key of controller.api.security.signing_keys in
+// osapi.yaml here.
+var signingKey = authtoken.Key{
+	ID:     "integration",
+	Secret: "1dcf49fb9ad538f8b70fdb4ccb73c78692022e3191dba86f63308f0c3ee0e3c3",
+}
 
 var (
 	binaryPath string

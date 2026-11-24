@@ -31,11 +31,13 @@ var (
 
 	sampleGenerate = GenerateOutput{
 		Token:   sampleToken,
+		KeyID:   "2026-11",
 		Subject: "user123",
 		Roles:   []string{"read"},
 	}
 
 	sampleClaims = Claims{
+		KeyID:                "2026-11",
 		Subject:              "user123",
 		Roles:                []string{"read"},
 		EffectivePermissions: []string{"file:read", "health:read", "status:read"},

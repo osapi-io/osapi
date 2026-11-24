@@ -27,10 +27,10 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-// Generate generates a signed JWT with the given roles, optional permissions
-// and optional target scope.
+// Generate generates a JWT signed with key, with the given roles, optional
+// permissions and optional target scope. The kid header is the ID of key.
 func (t *Token) Generate(
-	signingKey string,
+	key Key,
 	roles []string,
 	subject string,
 	permissions []string,
@@ -60,6 +60,7 @@ func (t *Token) Generate(
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token.Header["kid"] = key.ID
 
-	return token.SignedString([]byte(signingKey))
+	return token.SignedString([]byte(key.Secret))
 }

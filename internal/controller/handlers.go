@@ -72,7 +72,7 @@ func handlers(
 	d handlerDeps,
 ) []func(e *echo.Echo) {
 	startTime := time.Now()
-	signingKey := d.cfg.Controller.API.Security.SigningKey
+	signingKeys := d.cfg.Controller.API.Security.Keys()
 
 	// Build custom roles map from config.
 	var customRoles authtoken.CustomRoles
@@ -93,7 +93,7 @@ func handlers(
 		handlers,
 		endpointserver.Handler(
 			d.log,
-			signingKey,
+			signingKeys,
 			customRoles,
 			agent.Deps{Jobs: d.jobs},
 			admissionDeps(d),

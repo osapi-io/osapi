@@ -1,8 +1,11 @@
 # Tokens
 
-A token is a JWT signed with `controller.api.security.signing_key`. The
-controller refuses a token signed with any other key, so a token made on one
-install does not work on another.
+A token is a JWT signed with the first key of
+`controller.api.security.signing_keys`, with that key's `id` as its `kid`. The
+controller verifies a token with the key that its `kid` names, and refuses a
+token with no `kid` or an unknown one, so a token made on one install does not
+work on another, and a token stops when its key leaves the list.
+`token validate` shows the `kid`.
 
 ```sh
 osapi controller token generate --roles admin --subject ops@example.com --json

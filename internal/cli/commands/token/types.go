@@ -32,7 +32,9 @@ type GenerateInput struct {
 
 // GenerateOutput is a new token, with what it carries.
 type GenerateOutput struct {
-	Token       string   `json:"token"`
+	Token string `json:"token"`
+	// KeyID is the kid of the token: the ID of the key that signed it.
+	KeyID       string   `json:"kid"                   label:"Key ID"`
 	Subject     string   `json:"subject"`
 	Roles       []string `json:"roles"`
 	Permissions []string `json:"permissions,omitempty"`
@@ -46,6 +48,8 @@ type ValidateInput struct {
 
 // Claims are what a valid token carries.
 type Claims struct {
+	// KeyID is the kid of the token: the ID of the key that signed it.
+	KeyID       string   `json:"kid"                   label:"Key ID"`
 	Subject     string   `json:"subject"`
 	Roles       []string `json:"roles"`
 	Permissions []string `json:"permissions,omitempty"`

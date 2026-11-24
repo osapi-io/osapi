@@ -39,7 +39,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoints/admission/mocks"
 )
 
-const signingKey = "test-signing-key-for-the-admission-group"
+var signingKey = authtoken.Key{ID: "test", Secret: "test-signing-key-for-the-admission-group"}
 
 // HTTPPublicTestSuite runs requests through the admission group's generated
 // routes, with the auth, the decoding and the status mapping of the
@@ -78,7 +78,7 @@ func (s *HTTPPublicTestSuite) serve(
 	deps admission.Deps,
 	method, path, body, tok string,
 ) *httptest.ResponseRecorder {
-	srv := server.New(slog.Default(), signingKey, nil, deps)
+	srv := server.New(slog.Default(), authtoken.Keys{signingKey}, nil, deps)
 	e := echo.New()
 	srv.Mount(e, gen.Routes(srv))
 

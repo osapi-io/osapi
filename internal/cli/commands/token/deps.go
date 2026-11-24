@@ -34,7 +34,7 @@ type Deps struct {
 // Tokens signs and checks tokens. *authtoken.Token is one.
 type Tokens interface {
 	Generate(
-		signingKey string,
+		key authtoken.Key,
 		roles []string,
 		subject string,
 		permissions []string,
@@ -42,14 +42,15 @@ type Tokens interface {
 	) (string, error)
 	Validate(
 		tokenString string,
-		signingKey string,
+		keys authtoken.Keys,
 	) (*authtoken.CustomClaims, error)
 }
 
 // Config is what the methods read from the osapi config.
 type Config interface {
-	// SigningKey is controller.api.security.signing_key.
-	SigningKey() string
+	// SigningKeys are controller.api.security.signing_keys. The first
+	// signs.
+	SigningKeys() authtoken.Keys
 	// CustomRoles are the roles of controller.api.security.roles, each with
 	// its permissions. Without a config file there are none.
 	CustomRoles() (authtoken.CustomRoles, error)

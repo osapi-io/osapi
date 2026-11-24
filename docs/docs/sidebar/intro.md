@@ -72,7 +72,7 @@ Attestations are also visible on the [package page][ghcr].
 controller signs tokens with a key, and the CLI sends one:
 
 ```bash
-export OSAPI_API_SERVER_SECURITY_SIGNING_KEY=$(openssl rand -hex 32)
+export OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEYS=main=$(openssl rand -hex 32)
 osapi start &
 
 osapi controller token generate -r admin -u admin@example.com

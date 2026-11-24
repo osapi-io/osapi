@@ -145,10 +145,10 @@ func init() {
 // tokenConfig is the config that the token and role groups read.
 type tokenConfig struct{}
 
-// SigningKey is controller.api.security.signing_key of the config that
+// SigningKeys are controller.api.security.signing_keys of the config that
 // osapi read at startup.
-func (tokenConfig) SigningKey() string {
-	return appConfig.Controller.API.Security.SigningKey
+func (tokenConfig) SigningKeys() authtoken.Keys {
+	return appConfig.Controller.API.Security.Keys()
 }
 
 // CustomRoles are the roles of the config file, read here: role list

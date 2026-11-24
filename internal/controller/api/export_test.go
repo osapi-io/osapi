@@ -41,11 +41,11 @@ func ExportAuditMiddleware(
 func ExportScopeMiddleware(
 	next StrictHandlerFunc,
 	tokenManager *authtoken.Token,
-	signingKey string,
+	signingKeys authtoken.Keys,
 	contextKey string,
 	customRoles authtoken.CustomRoles,
 ) StrictHandlerFunc {
-	return ScopeMiddleware(next, tokenManager, signingKey, contextKey, customRoles)
+	return ScopeMiddleware(next, tokenManager, signingKeys, contextKey, customRoles)
 }
 
 // ExportUntraced exposes untraced for testing.

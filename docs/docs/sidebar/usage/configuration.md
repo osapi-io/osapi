@@ -52,15 +52,19 @@ key and the fix. `osapi config validate --help` lists each rule with its fix.
 
 Two keys have no default. You must set them:
 
-| Key                                       | Purpose                       |
-| ----------------------------------------- | ----------------------------- |
-| `controller.api.security.signing_key`     | HS256 key for signing JWTs    |
-| `controller.client.security.bearer_token` | JWT sent with client requests |
+| Key                                       | Purpose                                 |
+| ----------------------------------------- | --------------------------------------- |
+| `controller.api.security.signing_keys`    | HS256 keys for JWTs, each an id and key |
+| `controller.client.security.bearer_token` | JWT sent with client requests           |
 
 Make a signing key with `openssl rand -hex 32`. It must have 32 characters or
-more. Make a bearer token with `osapi controller token generate`. Durations are
-Go durations, for example `30s`, `5m` or `168h`. osapi does not accept a `d`
-suffix.
+more. The first key of the list signs. Each key verifies the tokens with its
+`id` as `kid`.
+[Authentication](../features/platform/authentication.md#jwt-signing) has the
+list. In the environment, `OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEYS` takes
+`id=key` pairs with a comma between them. Make a bearer token with
+`osapi controller token generate`. Durations are Go durations, for example
+`30s`, `5m` or `168h`. osapi does not accept a `d` suffix.
 
 Each bucket name and each namespace must be a name that NATS accepts for a
 bucket: letters, digits, `-` and `_` only. Two settings must not name the same

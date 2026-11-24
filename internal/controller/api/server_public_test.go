@@ -72,7 +72,7 @@ func (s *ServerPublicTestSuite) TestNew() {
 				Controller: config.Controller{
 					API: config.APIServer{
 						Security: config.ServerSecurity{
-							SigningKey: "test-key",
+							SigningKeys: []config.SigningKey{{ID: "test", Key: "test-key"}},
 						},
 					},
 				},
@@ -88,7 +88,7 @@ func (s *ServerPublicTestSuite) TestNew() {
 				Controller: config.Controller{
 					API: config.APIServer{
 						Security: config.ServerSecurity{
-							SigningKey: "test-key",
+							SigningKeys: []config.SigningKey{{ID: "test", Key: "test-key"}},
 							Roles: map[client.Role]config.CustomRole{
 								"ops": {
 									Permissions: []client.Permission{"status:read", "health:read"},
@@ -109,7 +109,7 @@ func (s *ServerPublicTestSuite) TestNew() {
 				Controller: config.Controller{
 					API: config.APIServer{
 						Security: config.ServerSecurity{
-							SigningKey: "test-key",
+							SigningKeys: []config.SigningKey{{ID: "test", Key: "test-key"}},
 						},
 					},
 				},
@@ -128,7 +128,7 @@ func (s *ServerPublicTestSuite) TestNew() {
 				Controller: config.Controller{
 					API: config.APIServer{
 						Security: config.ServerSecurity{
-							SigningKey: "test-key",
+							SigningKeys: []config.SigningKey{{ID: "test", Key: "test-key"}},
 						},
 					},
 				},
@@ -147,7 +147,7 @@ func (s *ServerPublicTestSuite) TestNew() {
 				Controller: config.Controller{
 					API: config.APIServer{
 						Security: config.ServerSecurity{
-							SigningKey: "test-key",
+							SigningKeys: []config.SigningKey{{ID: "test", Key: "test-key"}},
 							CORS: config.CORS{
 								AllowOrigins: []string{
 									"http://localhost:3000",
@@ -178,7 +178,7 @@ func (s *ServerPublicTestSuite) TestNew() {
 				Controller: config.Controller{
 					API: config.APIServer{
 						Security: config.ServerSecurity{
-							SigningKey: "test-key",
+							SigningKeys: []config.SigningKey{{ID: "test", Key: "test-key"}},
 						},
 					},
 				},
@@ -245,7 +245,7 @@ func (s *ServerPublicTestSuite) TestStartAndStop() {
 					API: config.APIServer{
 						Port: 0,
 						Security: config.ServerSecurity{
-							SigningKey: "test-key",
+							SigningKeys: []config.SigningKey{{ID: "test", Key: "test-key"}},
 						},
 					},
 				},
@@ -292,7 +292,7 @@ func (s *ServerPublicTestSuite) TestStartErrorPath() {
 					API: config.APIServer{
 						Port: port,
 						Security: config.ServerSecurity{
-							SigningKey: "test-key",
+							SigningKeys: []config.SigningKey{{ID: "test", Key: "test-key"}},
 						},
 					},
 				},
@@ -327,7 +327,7 @@ func (s *ServerPublicTestSuite) TestStopErrorPath() {
 					API: config.APIServer{
 						Port: port,
 						Security: config.ServerSecurity{
-							SigningKey: "test-key",
+							SigningKeys: []config.SigningKey{{ID: "test", Key: "test-key"}},
 						},
 					},
 				},
@@ -496,7 +496,7 @@ func (s *ServerPublicTestSuite) TestStartLogsThroughLogger() {
 						Host: "127.0.0.1",
 						Port: 0,
 						Security: config.ServerSecurity{
-							SigningKey: "test-key",
+							SigningKeys: []config.SigningKey{{ID: "test", Key: "test-key"}},
 						},
 					},
 				},

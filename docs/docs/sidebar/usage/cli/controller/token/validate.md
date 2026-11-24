@@ -19,6 +19,7 @@ The command prints:
 ```ansi
 $ osapi controller token validate --token eyJhbGciOiJIUzI1NiIs...
 [1;38;2;0;213;255mToken:[0m
+  [38;2;10;143;176mKey ID:[0m                 2026-11
   [38;2;10;143;176mSubject:[0m                user123
   [38;2;10;143;176mRoles:[0m                  read
   [38;2;10;143;176mEffective permissions:[0m  file:read, health:read, status:read
@@ -31,6 +32,7 @@ With `--json`, the command prints:
 
 ```json
 {
+  "kid": "2026-11",
   "subject": "user123",
   "roles": ["read"],
   "effective_permissions": ["file:read", "health:read", "status:read"],

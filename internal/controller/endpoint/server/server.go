@@ -60,7 +60,7 @@ type Route struct {
 type Server struct {
 	logger      *slog.Logger
 	tokens      api.TokenValidator
-	signingKey  string
+	signingKeys authtoken.Keys
 	customRoles authtoken.CustomRoles
 	deps        map[reflect.Type]any
 }
@@ -69,14 +69,14 @@ type Server struct {
 // each group Uses, one of each type.
 func New(
 	logger *slog.Logger,
-	signingKey string,
+	signingKeys authtoken.Keys,
 	customRoles authtoken.CustomRoles,
 	deps ...any,
 ) *Server {
 	s := &Server{
 		logger:      logger.With(slog.String("subsystem", "controller.endpoint")),
 		tokens:      authtoken.New(logger),
-		signingKey:  signingKey,
+		signingKeys: signingKeys,
 		customRoles: customRoles,
 		deps:        make(map[reflect.Type]any, len(deps)),
 	}
@@ -121,11 +121,11 @@ func Register(
 // Handler returns the route registrations for every registered group.
 func Handler(
 	logger *slog.Logger,
-	signingKey string,
+	signingKeys authtoken.Keys,
 	customRoles authtoken.CustomRoles,
 	deps ...any,
 ) []func(e *echo.Echo) {
-	s := New(logger, signingKey, customRoles, deps...)
+	s := New(logger, signingKeys, customRoles, deps...)
 
 	return []func(e *echo.Echo){
 		func(e *echo.Echo) {
@@ -161,7 +161,7 @@ func (s *Server) authorize(
 			return nil, r.Handler(c)
 		},
 		s.tokens,
-		s.signingKey,
+		s.signingKeys,
 		scopesKey,
 		s.customRoles,
 	)

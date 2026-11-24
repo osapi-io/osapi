@@ -26,10 +26,10 @@ The command prints:
 ```ansi
 $ osapi config list
 [1;38;2;0;213;255mSettings (3):[0m
-  [38;2;10;143;176mKEY                                  [0m[38;2;10;143;176mVALUE     [0m[38;2;10;143;176mSOURCE   [0m[38;2;10;143;176mENV[0m
-  controller.api.port                  8080      file     OSAPI_CONTROLLER_API_PORT
-  controller.api.security.signing_key  ********  env      OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEY
-  nats.server.port                     4222      default  OSAPI_NATS_SERVER_PORT
+  [38;2;10;143;176mKEY                                   [0m[38;2;10;143;176mVALUE     [0m[38;2;10;143;176mSOURCE   [0m[38;2;10;143;176mENV[0m
+  controller.api.port                   8080      file     OSAPI_CONTROLLER_API_PORT
+  controller.api.security.signing_keys  ********  env      OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEYS
+  nats.server.port                      4222      default  OSAPI_NATS_SERVER_PORT
   [38;2;10;143;176mFile:[0m  /etc/osapi/osapi.yaml
 ```
 
@@ -50,11 +50,11 @@ With `--json`, the command prints:
       "doc": "Port the REST API server listens on."
     },
     {
-      "name": "controller.api.security.signing_key",
+      "name": "controller.api.security.signing_keys",
       "value": "********",
       "source": "env",
-      "env": "OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEY",
-      "type": "string",
+      "env": "OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEYS",
+      "type": "list",
       "secret": true
     },
     {

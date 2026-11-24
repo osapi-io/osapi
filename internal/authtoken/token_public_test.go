@@ -36,12 +36,16 @@ type AuthTokenPublicTestSuite struct {
 	suite.Suite
 
 	token      *authtoken.Token
-	signingKey string
+	signingKey authtoken.Key
+	oldKey     authtoken.Key
+	keys       authtoken.Keys
 }
 
 func (s *AuthTokenPublicTestSuite) SetupTest() {
 	s.token = authtoken.New(slog.Default())
-	s.signingKey = "test-signing-key-for-jwt-operations"
+	s.signingKey = authtoken.Key{ID: "2026-11", Secret: "test-signing-key-for-jwt-operations"}
+	s.oldKey = authtoken.Key{ID: "2026-08", Secret: "test-old-signing-key-for-jwt-tests"}
+	s.keys = authtoken.Keys{s.signingKey, s.oldKey}
 }
 
 func (s *AuthTokenPublicTestSuite) TestNew() {
@@ -60,7 +64,7 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 	tests := []struct {
 		name         string
 		tokenFunc    func() string
-		signingKey   string
+		signingKeys  authtoken.Keys
 		expectError  bool
 		errContains  string
 		validateFunc func(*authtoken.CustomClaims)
@@ -71,13 +75,53 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 				t, _ := s.token.Generate(s.signingKey, []string{"admin"}, "test-subject", nil, nil)
 				return t
 			},
-			signingKey:  s.signingKey,
+			signingKeys: s.keys,
 			expectError: false,
 			validateFunc: func(claims *authtoken.CustomClaims) {
 				s.Equal([]string{"admin"}, claims.Roles)
 				s.Equal("test-subject", claims.Subject)
 				s.Equal("osapi", claims.Issuer)
+				s.Equal("2026-11", claims.KeyID)
 			},
+		},
+		{
+			name: "when an older key of the list signed the token, its key verifies it",
+			tokenFunc: func() string {
+				t, _ := s.token.Generate(s.oldKey, []string{"read"}, "test-subject", nil, nil)
+				return t
+			},
+			signingKeys: s.keys,
+			validateFunc: func(claims *authtoken.CustomClaims) {
+				s.Equal("2026-08", claims.KeyID)
+				s.Equal([]string{"read"}, claims.Roles)
+			},
+		},
+		{
+			name: "when the key of the token is no longer in the list, the token is refused",
+			tokenFunc: func() string {
+				t, _ := s.token.Generate(s.oldKey, []string{"read"}, "test-subject", nil, nil)
+				return t
+			},
+			signingKeys: authtoken.Keys{s.signingKey},
+			expectError: true,
+			errContains: `unknown kid "2026-08"`,
+		},
+		{
+			name: "when the token has no kid, it is refused",
+			tokenFunc: func() string {
+				claims := authtoken.CustomClaims{
+					Roles: []string{"admin"},
+					RegisteredClaims: jwt.RegisteredClaims{
+						ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
+					},
+				}
+				t, _ := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).
+					SignedString([]byte(s.signingKey.Secret))
+				return t
+			},
+			signingKeys: s.keys,
+			expectError: true,
+			errContains: "token has no kid",
 		},
 		{
 			name: "when the token has a target scope, it is in the claims",
@@ -88,7 +132,7 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 				)
 				return t
 			},
-			signingKey: s.signingKey,
+			signingKeys: s.keys,
 			validateFunc: func(claims *authtoken.CustomClaims) {
 				s.Equal([]string{"group:web", "web-01"}, claims.Targets)
 			},
@@ -101,7 +145,7 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 				)
 				return t
 			},
-			signingKey:  s.signingKey,
+			signingKeys: s.keys,
 			expectError: true,
 			errContains: "Targets",
 		},
@@ -111,7 +155,7 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 				t, _ := s.token.Generate(s.signingKey, []string{"read"}, "test-subject", nil, nil)
 				return t
 			},
-			signingKey:  "wrong-key",
+			signingKeys: authtoken.Keys{{ID: "2026-11", Secret: "wrong-key"}},
 			expectError: true,
 			errContains: "signature is invalid",
 		},
@@ -120,7 +164,7 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 			tokenFunc: func() string {
 				return "not-a-valid-jwt-token"
 			},
-			signingKey:  s.signingKey,
+			signingKeys: s.keys,
 			expectError: true,
 			errContains: "invalid number of segments",
 		},
@@ -129,7 +173,7 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 			tokenFunc: func() string {
 				return ""
 			},
-			signingKey:  s.signingKey,
+			signingKeys: s.keys,
 			expectError: true,
 			errContains: "invalid number of segments",
 		},
@@ -144,7 +188,7 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 				)
 				return header + "." + payload + "."
 			},
-			signingKey:  s.signingKey,
+			signingKeys: s.keys,
 			expectError: true,
 			errContains: "unexpected signing method",
 		},
@@ -161,10 +205,11 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 					},
 				}
 				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-				t, _ := token.SignedString([]byte(s.signingKey))
+				token.Header["kid"] = s.signingKey.ID
+				t, _ := token.SignedString([]byte(s.signingKey.Secret))
 				return t
 			},
-			signingKey:  s.signingKey,
+			signingKeys: s.keys,
 			expectError: true,
 			errContains: "Roles",
 		},
@@ -174,7 +219,7 @@ func (s *AuthTokenPublicTestSuite) TestValidate() {
 		s.Run(tt.name, func() {
 			tokenString := tt.tokenFunc()
 
-			claims, err := s.token.Validate(tokenString, tt.signingKey)
+			claims, err := s.token.Validate(tokenString, tt.signingKeys)
 
 			if tt.expectError {
 				s.Error(err)
@@ -239,7 +284,35 @@ func (s *AuthTokenPublicTestSuite) TestGenerateAndValidateRoundTrip() {
 			s.NoError(err)
 			s.NotEmpty(tokenString)
 
-			tt.validateFunc(s.token.Validate(tokenString, s.signingKey))
+			tt.validateFunc(s.token.Validate(tokenString, s.keys))
+		})
+	}
+}
+
+func (s *AuthTokenPublicTestSuite) TestSigner() {
+	tests := []struct {
+		name   string
+		keys   authtoken.Keys
+		wantID string
+		wantOK bool
+	}{
+		{
+			name:   "when there are keys, the first signs",
+			keys:   s.keys,
+			wantID: "2026-11",
+			wantOK: true,
+		},
+		{
+			name: "when there is no key, nothing signs",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			key, ok := tt.keys.Signer()
+
+			s.Equal(tt.wantOK, ok)
+			s.Equal(tt.wantID, key.ID)
 		})
 	}
 }

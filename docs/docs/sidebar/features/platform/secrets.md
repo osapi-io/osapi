@@ -14,9 +14,16 @@ A password is the exception. `osapi client node user create` and
 `osapi client node user password update` send the password to the controller,
 which hashes it before it queues the job. The job and NATS have only the hash.
 
-The settings that are secrets, such as the JWT signing key and the NATS
-passwords, are in `osapi.yaml` or in the environment. The controller masks them
-when it logs its config. Refer to [Configuration](../../usage/configuration.md).
+The settings that are secrets, such as the JWT signing keys and the NATS
+passwords, are in `osapi.yaml` or in the environment. `osapi config list` and
+`osapi config get` print them as `********`. Refer to
+[Configuration](../../usage/configuration.md).
+
+The controller accepts tokens from more than one signing key. Each token has the
+`id` of its key in its `kid` header. To change the key, put a new key first in
+`controller.api.security.signing_keys`, then remove the old key when its tokens
+expire. [Authentication](authentication.md#change-the-signing-key) has the
+steps.
 
 ## What comes next
 
