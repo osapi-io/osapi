@@ -17,7 +17,9 @@ controller:
   #   delete_after: ""
   api:
     port: 8080
-    job_timeout: 30s
+    # Longer than the default 30s: a refresh of the package index on a CI
+    # runner can take more, and the next write then waits behind it (#1271).
+    job_timeout: 2m
     security:
       signing_key: 1dcf49fb9ad538f8b70fdb4ccb73c78692022e3191dba86f63308f0c3ee0e3c3
       cors:
