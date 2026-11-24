@@ -77,13 +77,7 @@ func (a *Agent) Start() {
 		}
 	}
 
-	a.missingPrograms = MissingPrograms(detectFn())
-	for _, p := range a.missingPrograms {
-		a.logger.Warn(
-			"a behavior's program is not installed; the behavior fails until it is",
-			slog.String("program", p),
-		)
-	}
+	a.refreshPrograms()
 
 	// A ping needs the agent's group in net.ipv4.ping_group_range, whatever
 	// the privileges of the agent, so this runs on each start.

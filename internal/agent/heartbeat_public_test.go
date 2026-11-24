@@ -26,6 +26,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 	"testing"
 	"time"
 
@@ -39,6 +40,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/agent"
 	"github.com/osapi-io/osapi/internal/agent/identity"
+	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/mocks"
@@ -456,6 +458,54 @@ func (s *HeartbeatLowLevelPublicTestSuite) TestWriteRegistrationHasFamily() {
 
 		s.Require().NotNil(got.OSInfo)
 		s.Equal("suse", got.OSInfo.Family)
+	})
+}
+
+func (s *HeartbeatLowLevelPublicTestSuite) TestWriteRegistrationFindsProgramsAgain() {
+	s.Run("a program installed after the start leaves the list at the next heartbeat", func() {
+		agent.SetPlatformFns(func() string { return "debian" }, func() bool { return false })
+		defer agent.ResetPlatformFns()
+		behavior.Register(behavior.Define("ntp", "NTP", behavior.Node, behavior.Runs("chronyc")))
+		defer behavior.Reset()
+		installed := false
+		agent.SetLookPath(func(p string) (string, error) {
+			if installed || !strings.HasSuffix(p, "chronyc") {
+				return "/usr/bin/" + p, nil
+			}
+
+			return "", errors.New("not found")
+		})
+		defer agent.ResetLookPath()
+
+		var got []job.AgentRegistration
+		s.mockKV.EXPECT().
+			KVPut(gomock.Any(), "registry", "agents.test_machine_id", gomock.Any()).
+			DoAndReturn(func(_ context.Context, _, _ string, data []byte) (uint64, error) {
+				var reg job.AgentRegistration
+				s.Require().NoError(json.Unmarshal(data, &reg))
+				got = append(got, reg)
+
+				return 1, nil
+			}).
+			Times(2)
+
+		agent.ExportWriteRegistration(
+			context.Background(),
+			s.testAgent,
+			"test-machine-id",
+			"test-agent",
+		)
+		installed = true
+		agent.ExportWriteRegistration(
+			context.Background(),
+			s.testAgent,
+			"test-machine-id",
+			"test-agent",
+		)
+
+		s.Require().Len(got, 2)
+		s.Equal([]string{"chronyc"}, got[0].MissingPrograms)
+		s.Empty(got[1].MissingPrograms)
 	})
 }
 

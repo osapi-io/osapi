@@ -125,6 +125,7 @@ func (a *Agent) writeRegistration(
 ) {
 	a.handleDrainDetection(ctx, machineID, hostname)
 	a.writeSeen(ctx, machineID)
+	a.refreshPrograms()
 
 	reg := job.AgentRegistration{
 		MachineID:       machineID,
