@@ -29,7 +29,7 @@ import (
 // Config represents the root structure of the YAML configuration file.
 // This struct is used to unmarshal configuration data from Viper.
 type Config struct {
-	Controller Controller  `mapstructure:"controller"      mask:"struct"`
+	Controller Controller  `mapstructure:"controller"`
 	Agent      AgentConfig `mapstructure:"agent,omitempty"`
 	NATS       NATS        `mapstructure:"nats"`
 	Telemetry  Telemetry   `mapstructure:"telemetry"`
@@ -318,7 +318,7 @@ type NATSConnection struct {
 // Controller holds the control plane configuration.
 type Controller struct {
 	Client        Client              `mapstructure:"client"`
-	API           APIServer           `mapstructure:"api"                     mask:"struct"`
+	API           APIServer           `mapstructure:"api"`
 	NATS          NATSConnection      `mapstructure:"nats"`
 	Metrics       MetricsServer       `mapstructure:"metrics"`
 	Notifications NotificationsConfig `mapstructure:"notifications,omitempty"`
@@ -356,7 +356,7 @@ type APIServer struct {
 	// Port the server will bind to.
 	Port int `mapstructure:"port" doc:"Port the REST API server listens on." validate:"min=1,max=65535"`
 	// Security contains security-related configuration for the server, such as CORS and tokens.
-	Security ServerSecurity `mapstructure:"security" mask:"struct"`
+	Security ServerSecurity `mapstructure:"security"`
 	// JobTimeout is how long the controller waits for agent responses
 	// before returning partial results. Uses Go duration format.
 	// Defaults to 30s when empty.
@@ -368,7 +368,7 @@ type Client struct {
 	// URL the client will connect to
 	URL string `mapstructure:"url" doc:"Base URL the CLI client connects to."`
 	// Security contains security-related configuration for the client, such as access tokens.
-	Security ClientSecurity `mapstructure:"security" mask:"struct"`
+	Security ClientSecurity `mapstructure:"security"`
 }
 
 // CustomRole defines a named set of permissions that can be assigned to tokens.
