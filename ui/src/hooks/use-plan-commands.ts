@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from "react";
 import { useCommands } from "@/hooks/use-commands";
 import type { StepDef } from "@/lib/catalog-index";
 
@@ -23,6 +24,14 @@ export function usePlanCommands({
   allowed,
   add,
 }: PlanCommands) {
+  // The callbacks are read when a command runs, not when the commands are
+  // registered. A caller's callback is often a new function on each render,
+  // and registering on each new one re-renders the page, which registers
+  // again: a loop that never lets a navigation away from the page finish.
+  const calls = useRef({ run, clear, showYAML, add });
+  useLayoutEffect(() => {
+    calls.current = { run, clear, showYAML, add };
+  });
   useCommands(
     [
       {
@@ -31,7 +40,7 @@ export function usePlanCommands({
         description: "Run the plan",
         category: "actions",
         action: () => {
-          if (canRun && !running) run();
+          if (canRun && !running) calls.current.run();
         },
       },
       {
@@ -39,14 +48,14 @@ export function usePlanCommands({
         name: "clear",
         description: "Remove each step",
         category: "actions",
-        action: () => clear(),
+        action: () => calls.current.clear(),
       },
       {
         id: "cmd:yaml",
         name: "yaml",
         description: "Show the plan as YAML",
         category: "actions",
-        action: () => showYAML(),
+        action: () => calls.current.showYAML(),
       },
       ...defs
         .filter((d) => allowed(d.permission))
@@ -55,9 +64,9 @@ export function usePlanCommands({
           name: d.run.replace(".", " "),
           description: d.doc,
           category: "steps",
-          action: () => add(d),
+          action: () => calls.current.add(d),
         })),
     ],
-    [canRun, running, run, clear, showYAML, defs, allowed, add],
+    [canRun, running, defs, allowed],
   );
 }
