@@ -32,6 +32,13 @@ permissions:
 # recipes of go_slow_checks, and the quick job checks that this workflow names
 # each of them. The unit shards each run go-unit-plan and take their own
 # packages. .github/actions/setup has the setup of this repository.
+
+# A new push to a pull request cancels its run in progress, so a stale run
+# holds no runner. A push to main is never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   # On main, fill the shared Go cache once a week, or when go.sum changes:
   # compile each package, and each test with the race detector, as the
