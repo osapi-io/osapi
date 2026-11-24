@@ -8,32 +8,32 @@ health of all of the deployment from one endpoint.
 
 ## Endpoints
 
-| Endpoint         | Auth Required | Description                                   |
-| ---------------- | ------------- | --------------------------------------------- |
-| `/health`        | No            | Liveness probe: does the process run?         |
-| `/health/ready`  | No            | Readiness probe: is it ready for traffic?     |
-| `/health/status` | Yes           | Detailed status with component health metrics |
+| Endpoint             | Auth Required | Description                                   |
+| -------------------- | ------------- | --------------------------------------------- |
+| `/api/health`        | No            | Liveness probe: does the process run?         |
+| `/api/health/ready`  | No            | Readiness probe: is it ready for traffic?     |
+| `/api/health/status` | Yes           | Detailed status with component health metrics |
 
-### Liveness (`/health`)
+### Liveness (`/api/health`)
 
 Always returns `200 OK` if the process runs. Use it in container orchestrators,
 for example in a Kubernetes liveness probe, to find processes that do not
 respond.
 
-### Readiness (`/health/ready`)
+### Readiness (`/api/health/ready`)
 
 Checks connectivity to NATS and KV stores. Returns `200 OK` when the controller
 can process requests, or `503 Service Unavailable` when dependencies are down.
 Use this for load balancer health checks to avoid routing traffic to an unready
 instance.
 
-### Status (`/health/status`)
+### Status (`/api/health/status`)
 
 Returns the health of each component, with system metrics (uptime, goroutine
 count, memory use). It needs authentication with the `health:read` permission.
 Use it for dashboards and monitoring. It answers 200 when a component is not
 healthy, with the overall status `degraded`: the request worked. Use
-`/health/ready` to route traffic.
+`/api/health/ready` to route traffic.
 
 ## Component registry
 
@@ -49,9 +49,9 @@ heartbeat:
 | RSS bytes   | Resident set size (physical memory used) |
 | Goroutines  | Number of active goroutines              |
 
-The `/health/status` response has a `components` table that puts these heartbeat
-records together. If the registry key of a component expired (the TTL ended
-without a new heartbeat), osapi reports the component as unreachable.
+The `/api/health/status` response has a `components` table that puts these
+heartbeat records together. If the registry key of a component expired (the TTL
+ended without a new heartbeat), osapi reports the component as unreachable.
 
 Each row has the build version of the component's binary, so a mixed fleet shows
 which hosts run an older build. Example registry output:
@@ -71,9 +71,9 @@ Components (3):
 ## Sub-Component health
 
 Each component publishes the status of its internal services with its heartbeat.
-The `/health/status` endpoint puts these parts together from the registry. Thus
-an operator can see the health of each internal service on all hosts, also in a
-deployment with many nodes.
+The `/api/health/status` endpoint puts these parts together from the registry.
+Thus an operator can see the health of each internal service on all hosts, also
+in a deployment with many nodes.
 
 Each component reports only its own sub-components. The answer lists them under
 the component's registry entry, as `components`, sorted by name. The tables name
@@ -116,9 +116,10 @@ and re-notification settings.
 
 ## Configuration
 
-The health check endpoints (`/health` and `/health/ready`) need no
-authentication. They must work before clients have tokens. The `/health/status`
-endpoint needs a valid JWT with the `health:read` permission.
+The health check endpoints (`/api/health` and `/api/health/ready`) need no
+authentication. They must work before clients have tokens. The
+`/api/health/status` endpoint needs a valid JWT with the `health:read`
+permission.
 
 Health checks need only the standard server and authentication settings. Refer
 to [Configuration](../../usage/configuration.md) for the full reference,
