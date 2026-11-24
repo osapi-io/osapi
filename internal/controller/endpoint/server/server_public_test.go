@@ -36,6 +36,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
 	"github.com/osapi-io/osapi/internal/secret"
+	"github.com/osapi-io/osapi/internal/secret/vault"
 )
 
 var signingKey = authtoken.Key{ID: "test", Secret: "test-signing-key-for-the-endpoint-server"}
@@ -287,59 +288,293 @@ func (s *ServerPublicTestSuite) TestServe() {
 }
 
 type loginInput struct {
-	Password secret.Value `json:"password" validate:"required"`
+	Hostname string                  `json:"-"`
+	Password secret.Value            `json:"password"      validate:"required,no_linebreak"`
+	Env      map[string]secret.Value `json:"env,omitempty"`
 }
 
-// TestServeRefusesAReference: no vault exists, so a reference names a vault
-// that does not exist. The route refuses it, and never gives it to the
-// handler as the value.
-func (s *ServerPublicTestSuite) TestServeRefusesAReference() {
+// fakeVault is a vault of keys, with an error for each Get when err is
+// set.
+type fakeVault struct {
+	name string
+	keys map[string]string
+	err  error
+}
+
+func (v fakeVault) Name() string { return v.name }
+
+func (v fakeVault) Get(
+	_ context.Context,
+	key string,
+) ([]byte, vault.Meta, error) {
+	if v.err != nil {
+		return nil, vault.Meta{}, v.err
+	}
+	value, ok := v.keys[key]
+	if !ok {
+		return nil, vault.Meta{}, vault.ErrNotFound
+	}
+
+	return []byte(value), vault.Meta{Key: key, Version: 1}, nil
+}
+
+func (fakeVault) Put(context.Context, string, []byte) (vault.Meta, error) {
+	return vault.Meta{}, nil
+}
+
+func (fakeVault) Delete(context.Context, string) error { return nil }
+
+func (fakeVault) List(context.Context) ([]vault.Meta, error) { return nil, nil }
+
+// fakeVaults are vaults by name, each with its spec.
+type fakeVaults map[string]struct {
+	spec  vault.Spec
+	vault fakeVault
+}
+
+func (f fakeVaults) Get(
+	name string,
+) (vault.Vault, bool) {
+	v, ok := f[name]
+
+	return v.vault, ok
+}
+
+func (f fakeVaults) Spec(
+	name string,
+) (vault.Spec, bool) {
+	v, ok := f[name]
+
+	return v.spec, ok
+}
+
+// TestServeResolvesAReference: the route resolves each reference from its
+// vault, after the limits of use, and gives the handler the value. Each
+// refusal names the reference, never a value.
+func (s *ServerPublicTestSuite) TestServeResolvesAReference() {
 	g := endpoint.Define("login", "Logins",
 		endpoint.Uses[deps](),
 		endpoint.Post[loginInput, thing]("make").Public().
 			Handle(func(context.Context, deps, loginInput) (thing, error) { return thing{}, nil }),
 	)
+	vaults := fakeVaults{
+		"default": {
+			spec: vault.Spec{Name: "default", Type: "nats"},
+			vault: fakeVault{
+				name: "default",
+				keys: map[string]string{"pw": "hunter2", "nl": "a\nb"},
+			},
+		},
+		"prod": {
+			spec: vault.Spec{
+				Name:    "prod",
+				Type:    "nats",
+				Targets: []string{"web-01", "group:prod"},
+			},
+			vault: fakeVault{name: "prod", keys: map[string]string{"pw": "prod-pw"}},
+		},
+		"down": {
+			spec:  vault.Spec{Name: "down", Type: "nats"},
+			vault: fakeVault{name: "down", err: errors.New("nats: timeout")},
+		},
+	}
+	user := token("login:write", "secret:use")
 	tests := []struct {
 		name     string
+		vaults   server.Vaults
+		host     string
+		token    string
 		password secret.Value
+		env      map[string]secret.Value
 		wantCode int
 		wantBody string
+		wantGot  loginInput
 	}{
 		{
-			name:     "when the secret is a reference, it is a 400 that names the vault",
+			name:     "when the secret is a reference, the handler gets its value",
+			vaults:   vaults,
+			host:     "web-01",
+			token:    user,
+			password: "secret://default/pw",
+			env:      map[string]secret.Value{"A": "secret://default/pw", "B": "literal"},
+			wantCode: http.StatusOK,
+			wantGot: loginInput{
+				Hostname: "web-01", Password: "hunter2",
+				Env: map[string]secret.Value{"A": "hunter2", "B": "literal"},
+			},
+		},
+		{
+			name:     "when the secret is a value, the handler gets it",
+			host:     "web-01",
+			token:    token("login:write"),
+			password: "hunter2",
+			wantCode: http.StatusOK,
+			wantGot:  loginInput{Hostname: "web-01", Password: "hunter2"},
+		},
+		{
+			name:     "when the controller has no vault, it is a 400 that names the vault",
+			host:     "web-01",
+			token:    user,
 			password: "secret://default/pw",
 			wantCode: http.StatusBadRequest,
 			wantBody: `{"error":"secret://default/pw: the vault \"default\" does not exist","reason":"invalid_request"}`,
 		},
 		{
-			name:     "when the secret is a value, the handler gets it",
-			password: "hunter2",
+			name:     "when the vault does not exist, it is a 400 that names it",
+			vaults:   vaults,
+			host:     "web-01",
+			token:    user,
+			password: "secret://other/pw",
+			wantCode: http.StatusBadRequest,
+			wantBody: `{"error":"secret://other/pw: the vault \"other\" does not exist","reason":"invalid_request"}`,
+		},
+		{
+			name:     "when the reference has no key, it is a 400 that gives the form",
+			vaults:   vaults,
+			host:     "web-01",
+			token:    user,
+			password: "secret://default",
+			wantCode: http.StatusBadRequest,
+			wantBody: `{"error":"secret://default: a reference is secret://<vault>/<key>","reason":"invalid_request"}`,
+		},
+		{
+			name:     "when the key is not a name that a vault takes, it is a 400",
+			vaults:   vaults,
+			host:     "web-01",
+			token:    user,
+			password: "secret://default/a.b",
+			wantCode: http.StatusBadRequest,
+			wantBody: `{"error":"secret://default/a.b: key \"a.b\": a key is 1 to 128 letters, digits, - or _, such as registry-token","reason":"invalid_request"}`,
+		},
+		{
+			name:     "when the token does not have secret:use, it is a 403",
+			vaults:   vaults,
+			host:     "web-01",
+			token:    token("login:write"),
+			password: "secret://default/pw",
+			wantCode: http.StatusForbidden,
+			wantBody: `{"error":"secret://default/pw: the token does not have the permission secret:use","reason":"forbidden"}`,
+		},
+		{
+			name:     "when the token does not have secret:use, a key that is not there is a 403 too",
+			vaults:   vaults,
+			host:     "web-01",
+			token:    token("login:write"),
+			password: "secret://default/none",
+			wantCode: http.StatusForbidden,
+			wantBody: `{"error":"secret://default/none: the token does not have the permission secret:use","reason":"forbidden"}`,
+		},
+		{
+			name:     "when the host is in the targets of the vault, the handler gets the value",
+			vaults:   vaults,
+			host:     "web-01",
+			token:    user,
+			password: "secret://prod/pw",
 			wantCode: http.StatusOK,
-			wantBody: `{"name":""}`,
+			wantGot:  loginInput{Hostname: "web-01", Password: "prod-pw"},
+		},
+		{
+			name:     "when the host is outside the targets of the vault, it is a 403",
+			vaults:   vaults,
+			host:     "db-01",
+			token:    user,
+			password: "secret://prod/pw",
+			wantCode: http.StatusForbidden,
+			wantBody: `{"error":"secret://prod/pw: the vault \"prod\" gives its secrets only to web-01, group:prod, not to \"db-01\"","reason":"forbidden"}`,
+		},
+		{
+			name:     "when the target is _all and the vault has targets, it is a 403",
+			vaults:   vaults,
+			host:     "_all",
+			token:    user,
+			password: "secret://prod/pw",
+			wantCode: http.StatusForbidden,
+			wantBody: `{"error":"secret://prod/pw: the vault \"prod\" gives its secrets only to web-01, group:prod, not to \"_all\"","reason":"forbidden"}`,
+		},
+		{
+			name:     "when the request names no host and the vault has targets, it is a 403",
+			vaults:   vaults,
+			token:    user,
+			password: "secret://prod/pw",
+			wantCode: http.StatusForbidden,
+			wantBody: `{"error":"secret://prod/pw: the vault \"prod\" gives its secrets only to web-01, group:prod, and the request names no host","reason":"forbidden"}`,
+		},
+		{
+			name:     "when the key is not there, it is a 400 that names it",
+			vaults:   vaults,
+			host:     "web-01",
+			token:    user,
+			password: "secret://default/none",
+			wantCode: http.StatusBadRequest,
+			wantBody: `{"error":"secret://default/none: the vault \"default\" has no key \"none\"","reason":"invalid_request"}`,
+		},
+		{
+			name:     "when the vault does not answer, it is a 500 that does not give the cause",
+			vaults:   vaults,
+			host:     "web-01",
+			token:    user,
+			password: "secret://down/pw",
+			wantCode: http.StatusInternalServerError,
+			wantBody: `{"error":"secret://down/pw: the vault could not be read","reason":"server_error"}`,
+		},
+		{
+			name:     "when the value fails a validate tag of its field, it is a 400 without the value",
+			vaults:   vaults,
+			host:     "web-01",
+			token:    user,
+			password: "secret://default/nl",
+			wantCode: http.StatusBadRequest,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			srv := server.New(slog.Default(), authtoken.Keys{signingKey}, nil, deps{})
+			given := []any{deps{}}
+			if tc.vaults != nil {
+				given = append(given, server.Secrets{Vaults: tc.vaults})
+			}
+			srv := server.New(slog.Default(), authtoken.Keys{signingKey}, nil, given...)
 			e := echo.New()
 			m := g.Method("make")
+			route, path := "/api/login/:hostname", "/api/login/"+tc.host
+			if tc.host == "" {
+				route, path = "/api/login", "/api/login"
+			}
+			var got loginInput
 			srv.Mount(e, []server.Route{{
-				Method: m.HTTPMethod(),
-				Path:   server.Path(g, m),
+				Method:     m.HTTPMethod(),
+				Path:       route,
+				Permission: "login:write",
 				Handler: server.Serve(srv, g, "make",
-					func(context.Context, deps, loginInput) (thing, error) { return thing{}, nil },
-					func(*echo.Context) (loginInput, string, bool) {
-						return loginInput{Password: tc.password}, "", true
+					func(_ context.Context, _ deps, in loginInput) (thing, error) {
+						got = in
+
+						return thing{}, nil
+					},
+					func(c *echo.Context) (loginInput, string, bool) {
+						return loginInput{
+							Hostname: c.Param("hostname"), Password: tc.password, Env: tc.env,
+						}, "", true
 					}),
 			}})
+			req := httptest.NewRequest(m.HTTPMethod(), path, nil)
+			req.Header.Set("Authorization", "Bearer "+tc.token)
 			rec := httptest.NewRecorder()
-			e.ServeHTTP(rec, httptest.NewRequest(m.HTTPMethod(), "/api/login", nil))
+			e.ServeHTTP(rec, req)
 
 			s.Equal(tc.wantCode, rec.Code, rec.Body.String())
-			s.JSONEq(tc.wantBody, rec.Body.String())
+			if tc.wantBody != "" {
+				s.JSONEq(tc.wantBody, rec.Body.String())
+			}
+			s.NotContains(rec.Body.String(), "hunter2", "a refusal never gives a value")
+			s.NotContains(rec.Body.String(), "a\\nb", "a refusal never gives a value")
+			s.Equal(tc.wantGot, got)
 		})
 	}
+}
+
+func (s *ServerPublicTestSuite) TestRefusal() {
+	s.Equal("secret://v/k: gone", server.ExportRefusal(errors.New("secret://v/k: gone")))
 }
 
 func (s *ServerPublicTestSuite) TestDeps() {

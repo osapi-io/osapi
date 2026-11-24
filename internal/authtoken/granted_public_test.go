@@ -1,0 +1,70 @@
+// Copyright (c) 2024 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
+package authtoken_test
+
+import (
+	"context"
+	"testing"
+
+	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi/internal/authtoken"
+)
+
+type GrantedPublicTestSuite struct {
+	suite.Suite
+}
+
+func (s *GrantedPublicTestSuite) TestGranted() {
+	tests := []struct {
+		name string
+		ctx  context.Context
+		want bool
+	}{
+		{
+			name: "when the token has the permission, it is granted",
+			ctx: authtoken.WithPermissions(context.Background(),
+				map[authtoken.Permission]bool{"secret:use": true}),
+			want: true,
+		},
+		{
+			name: "when the token does not have the permission, it is not granted",
+			ctx: authtoken.WithPermissions(context.Background(),
+				map[authtoken.Permission]bool{"file:write": true}),
+		},
+		{
+			name: "when there is no token, it is not granted",
+			ctx:  context.Background(),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, authtoken.Granted(tc.ctx, "secret:use"))
+		})
+	}
+}
+
+func TestGrantedPublicTestSuite(
+	t *testing.T,
+) {
+	suite.Run(t, new(GrantedPublicTestSuite))
+}

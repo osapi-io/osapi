@@ -59,8 +59,8 @@ func Describe(
 // reference, or Redacted for a literal, so a log line, a span, a chain
 // record or an audit entry never has the value. Reveal gives it, where a
 // provider gives it to a command's standard input, an environment or a
-// file. The controller resolves a reference; until a vault exists, the
-// route refuses one.
+// file. The route of each method resolves a reference from its vault,
+// before the handler gets the input.
 //
 // It is a string to JSON and to the validate tags, so a request carries it
 // as a string and no_linebreak checks it as one. A conversion to string
@@ -111,15 +111,28 @@ func (v Value) MarshalJSON() ([]byte, error) {
 }
 
 // Unresolved is the error of the reference ref, which no vault resolves.
-// No vault exists yet (osapi #1241), so the route of each method and a
-// command refuse each reference with it: a reference is never sent as
-// the value.
+// A command of the command DSL has no vault yet, so it refuses each
+// reference with it: a reference is never sent as the value.
 func Unresolved(
 	ref string,
 ) error {
 	vault, _, _ := strings.Cut(strings.TrimPrefix(ref, Scheme), "/")
 
 	return fmt.Errorf("%s: the vault %q does not exist", ref, vault)
+}
+
+// Parse is the vault and the key of the reference ref,
+// secret://<vault>/<key>. A ref that is not a reference, or that has no
+// vault or no key, is an error that gives the form.
+func Parse(
+	ref string,
+) (string, string, error) {
+	vault, key, ok := strings.Cut(strings.TrimPrefix(ref, Scheme), "/")
+	if !strings.HasPrefix(ref, Scheme) || !ok || vault == "" || key == "" {
+		return "", "", fmt.Errorf("%s: a reference is %s<vault>/<key>", ref, Scheme)
+	}
+
+	return vault, key, nil
 }
 
 // LogValue is String, so slog never logs a literal value.

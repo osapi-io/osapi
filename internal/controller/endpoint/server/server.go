@@ -199,14 +199,13 @@ func Serve[D, In, Out any](
 			return c.JSON(http.StatusBadRequest,
 				endpoint.ErrorResponse{Error: msg, Reason: endpoint.ReasonInvalidRequest})
 		}
-		// The controller has no vault yet (osapi #1241), so a reference
-		// names a vault that does not exist: it is refused, not sent as the
-		// value.
-		if refs := secret.References(in); len(refs) > 0 {
-			return c.JSON(http.StatusBadRequest, endpoint.ErrorResponse{
-				Error:  secret.Unresolved(refs[0]).Error(),
-				Reason: endpoint.ReasonInvalidRequest,
-			})
+		// Each reference becomes its value here, so the handler, and the
+		// job that it queues, get the value. The job keeps it until the
+		// controller seals it (osapi #1247).
+		if len(secret.References(in)) > 0 {
+			if r := resolve(c, s, &in); r != nil {
+				return c.JSON(r.code, r.resp)
+			}
 		}
 
 		out, err := run(c.Request().Context(), deps, in)

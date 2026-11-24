@@ -23,6 +23,7 @@ package secret_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"testing"
@@ -194,6 +195,98 @@ func (s *SecretPublicTestSuite) TestReferences() {
 	)
 	s.Empty(secret.References(nil))
 	s.Empty(secret.References(any(input{Password: "literal"})))
+}
+
+func (s *SecretPublicTestSuite) TestResolve() {
+	ref := secret.Value("secret://v/ptr")
+	in := &input{
+		embedded: embedded{Key: "secret://v/key"},
+		Password: "secret://v/password",
+		Env:      map[string]secret.Value{"B": "secret://v/b", "A": "literal"},
+		List:     []secret.Value{"secret://v/list"},
+		Pair:     [2]secret.Value{"secret://v/pair", ""},
+		Ptr:      &ref,
+		Inner:    inner{Token: "secret://v/token"},
+		Inners:   []*inner{{Token: "secret://v/inners"}, nil},
+		hidden:   "secret://v/hidden",
+	}
+	var asked []string
+	err := secret.Resolve(in, func(ref string) (string, error) {
+		asked = append(asked, ref)
+
+		return "value of " + ref, nil
+	})
+
+	s.Require().NoError(err)
+	s.Equal(secret.Value("value of secret://v/key"), in.Key)
+	s.Equal(secret.Value("value of secret://v/password"), in.Password)
+	s.Equal(map[string]secret.Value{"B": "value of secret://v/b", "A": "literal"}, in.Env)
+	s.Equal([]secret.Value{"value of secret://v/list"}, in.List)
+	s.Equal([2]secret.Value{"value of secret://v/pair", ""}, in.Pair)
+	s.Equal(secret.Value("value of secret://v/ptr"), *in.Ptr)
+	s.Equal(secret.Value("value of secret://v/token"), in.Inner.Token)
+	s.Equal(secret.Value("value of secret://v/inners"), in.Inners[0].Token)
+	s.Equal(secret.Value("secret://v/hidden"), in.hidden, "a field that is not exported stays")
+	s.Len(asked, 8, "a literal and an empty value are not asked for")
+
+	failed := &input{Password: "secret://v/a", Ptr: &ref}
+	err = secret.Resolve(failed, func(ref string) (string, error) {
+		return "", errors.New(ref + ": gone")
+	})
+	s.EqualError(err, "secret://v/a: gone", "the first error stops it")
+	s.Equal(secret.Value("secret://v/a"), failed.Password)
+
+	s.NoError(
+		secret.Resolve(input{Password: "secret://v/a"}, nil),
+		"a value that is not a pointer does not change",
+	)
+}
+
+func (s *SecretPublicTestSuite) TestParse() {
+	tests := []struct {
+		name      string
+		ref       string
+		wantVault string
+		wantKey   string
+		wantErr   string
+	}{
+		{
+			name:      "when the reference has a vault and a key, it gives both",
+			ref:       "secret://default/registry-token",
+			wantVault: "default",
+			wantKey:   "registry-token",
+		},
+		{
+			name:    "when the reference has no key, it is an error",
+			ref:     "secret://default",
+			wantErr: "secret://default: a reference is secret://<vault>/<key>",
+		},
+		{
+			name:    "when the reference has no vault, it is an error",
+			ref:     "secret:///key",
+			wantErr: "secret:///key: a reference is secret://<vault>/<key>",
+		},
+		{
+			name:    "when it is not a reference, it is an error",
+			ref:     "default/key",
+			wantErr: "default/key: a reference is secret://<vault>/<key>",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			vault, key, err := secret.Parse(tc.ref)
+
+			if tc.wantErr != "" {
+				s.EqualError(err, tc.wantErr)
+
+				return
+			}
+			s.Require().NoError(err)
+			s.Equal(tc.wantVault, vault)
+			s.Equal(tc.wantKey, key)
+		})
+	}
 }
 
 func (s *SecretPublicTestSuite) TestIsAndFields() {

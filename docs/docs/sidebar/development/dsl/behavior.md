@@ -728,11 +728,11 @@ and x-osapi-secret in the spec, with a description that says what it takes;
 never recorded on a span; its reference or \[redacted] in a chain record. Its
 flag takes a reference, or - to read the value from standard input, and refuses
 a value; an example with a value shows -. The provider reads it with Reveal. The
-route refuses a reference until a vault exists, and the job has the value until
-the controller seals it. The secret rule refuses one with telemetry:"attr", one
-that is the key, and one in a read, which goes in the query. A chain gives a
-secret only to a secret.Value of the behavior it calls: the tests of the
-examples check it.
+route resolves a reference from its vault, after the limits of use: secret:use,
+and the targets of the vault. The job has the value until the controller seals
+it. The secret rule refuses one with telemetry:"attr", one that is the key, and
+one in a read, which goes in the query. A chain gives a secret only to a
+secret.Value of the behavior it calls: the tests of the examples check it.
 
 Use: On each input that holds a password, a key or a token. Not a string: a
 string whose name is on the audit denylist fails TestSecretsAreTyped.

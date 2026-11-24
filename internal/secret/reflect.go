@@ -112,6 +112,73 @@ func References(
 	return refs
 }
 
+// Resolve replaces each reference in *x, at each depth, with the value
+// that fn gives for it. x is a pointer. The first error of fn stops it, and
+// is its error.
+func Resolve(
+	x any,
+	fn func(ref string) (string, error),
+) error {
+	var err error
+	set(reflect.ValueOf(x), func(v Value) Value {
+		if err != nil || !v.IsReference() {
+			return v
+		}
+		value, e := fn(string(v))
+		if e != nil {
+			err = e
+
+			return v
+		}
+
+		return Value(value)
+	})
+
+	return err
+}
+
+// set replaces each Value in v, at each depth, with what fn gives for it.
+// v is settable, or holds a pointer, a slice or a map, whose elements are.
+func set(
+	v reflect.Value,
+	fn func(Value) Value,
+) {
+	if !v.IsValid() {
+		return
+	}
+	if v.Type() == valueType {
+		if v.CanSet() {
+			v.SetString(string(fn(Value(v.String()))))
+		}
+
+		return
+	}
+	switch v.Kind() {
+	case reflect.Pointer:
+		set(v.Elem(), fn)
+	case reflect.Struct:
+		for i := range v.NumField() {
+			if f := v.Type().Field(i); f.IsExported() || f.Anonymous {
+				set(v.Field(i), fn)
+			}
+		}
+	case reflect.Slice, reflect.Array:
+		for i := range v.Len() {
+			set(v.Index(i), fn)
+		}
+	case reflect.Map:
+		// The element of a map is not settable, so a copy changes and
+		// goes back in.
+		iter := v.MapRange()
+		for iter.Next() {
+			e := reflect.New(v.Type().Elem()).Elem()
+			e.Set(iter.Value())
+			set(e, fn)
+			v.SetMapIndex(iter.Key(), e)
+		}
+	}
+}
+
 // walk calls fn with each Value in v, at each depth.
 func walk(
 	v reflect.Value,

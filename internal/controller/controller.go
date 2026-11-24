@@ -192,6 +192,7 @@ func newController(
 		objBucket:       objBucket,
 		fileStateBucket: fileStateBucket,
 		admission:       watcher,
+		vaults:          vaults,
 		version:         o.version,
 	}))
 

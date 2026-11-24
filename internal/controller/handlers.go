@@ -43,6 +43,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoints/telemetry"
 	"github.com/osapi-io/osapi/internal/controller/health"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/secret/vault"
 	"github.com/osapi-io/osapi/internal/telemetry/traces"
 	uiassets "github.com/osapi-io/osapi/ui"
 
@@ -62,6 +63,7 @@ type handlerDeps struct {
 	objBucket       string
 	fileStateBucket string
 	admission       *admission.Watcher
+	vaults          *vault.Set
 	// version is the build version of the binary.
 	version string
 }
@@ -102,6 +104,7 @@ func handlers(
 			jobEndpoint.Deps{Jobs: d.jobs},
 			healthEndpoint.Deps{Health: reporter},
 			fileDeps(d.nats, d.objBucket, d.fileStateBucket),
+			secretsDeps(d),
 			// Each behavior's endpoint group, which the gen packages that
 			// internal/behaviors/all/gen imports register.
 			dispatch.Deps{JobClient: d.jobs},
@@ -141,6 +144,20 @@ func admissionDeps(
 	deps := admissionEndpoint.Deps{Jobs: d.jobs}
 	if d.admission != nil {
 		deps.Store = d.admission
+	}
+
+	return deps
+}
+
+// secretsDeps is what each route resolves a reference with. A controller
+// with no vault set gives no vaults, not an interface that holds a nil
+// pointer, so a route answers that the vault does not exist.
+func secretsDeps(
+	d handlerDeps,
+) endpointserver.Secrets {
+	var deps endpointserver.Secrets
+	if d.vaults != nil {
+		deps.Vaults = d.vaults
 	}
 
 	return deps
