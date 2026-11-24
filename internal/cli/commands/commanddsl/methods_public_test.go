@@ -291,14 +291,14 @@ func (s *MethodsPublicTestSuite) TestCreate() {
 	d.Dir = dir
 
 	got, err := commanddsl.Create(context.Background(), d,
-		commanddsl.CreateInput{Name: "gizmo", Description: "Gizmos"})
+		commanddsl.CreateInput{Name: "gizmo", Description: "Gizmos", Under: "controller"})
 	s.Require().NoError(err)
 	s.Equal("gizmo", got.Name)
 	s.NotEmpty(got.Files)
 	s.Contains(got.Next, commanddsl.Step{Command: "go test ./internal/cli/commands/gizmo/..."})
 
 	_, err = commanddsl.Create(context.Background(), d,
-		commanddsl.CreateInput{Name: "Bad", Description: "x"})
+		commanddsl.CreateInput{Name: "Bad", Description: "x", Under: "controller"})
 	s.Error(err)
 }
 

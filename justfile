@@ -147,7 +147,7 @@ command-scaffold-check:
     rsync -a --exclude .git --exclude .worktrees --exclude node_modules \
         --exclude /dist --exclude /examples --exclude /docs/build ./ "$tmp/"
     cd "$tmp"
-    go run . dsl command create --name scaffoldcheck --description "A scaffold check" >/dev/null
+    go run . dsl command create --name scaffoldcheck --description "A scaffold check" --under controller >/dev/null
     go generate ./internal/cli/commands/all
     go run . dsl command validate >/dev/null
     go test -count=1 ./internal/cli/commands/scaffoldcheck/... ./internal/cli/commands/all/ ./cmd/

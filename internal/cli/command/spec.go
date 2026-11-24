@@ -402,8 +402,8 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindCheck,
-			Name: "osapi dsl command create --name <group> --description \"...\"",
-			Does: "Writes a new group under internal/cli/commands/<group>: a list and a get, an empty Deps, its types and the tests of its methods, and adds its import to internal/cli/commands/all. It builds, validates and passes its tests; command-scaffold-check in just test holds it to that.",
+			Name: "osapi dsl command create --name <group> --description \"...\" --under <word>",
+			Does: "Writes a new group under internal/cli/commands/<group>, Under the word of the root that --under names (agent, controller, dsl or nats): a list and a get, an empty Deps, its types and the tests of its methods, and adds its import to internal/cli/commands/all. It builds, validates and passes its tests; command-scaffold-check in just test holds it to that.",
 			When: "To start a new group. Then run go generate ./internal/cli/commands/all and just cli-docs-generate, and change it.",
 		},
 		{

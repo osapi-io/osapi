@@ -3,10 +3,13 @@
 Write a new local group that builds and passes its tests.
 
 It writes `internal/cli/commands/<name>/` in the osapi checkout in the current
-directory, and adds its import to `internal/cli/commands/all`. The group has a
-list and a get, an empty `Deps` and the tests of its methods. Then run the steps
-that it prints. While its `Deps` is empty, the CLI needs no wiring.
-`osapi dsl command spec get` lists each part of the DSL.
+directory, under the word of the root that `--under` names, and adds its import
+to `internal/cli/commands/all`. A local group goes where it runs: `controller`,
+`agent` or `nats` for the process or the files of that component, or `dsl` for a
+command for authors. The group has a list and a get, an empty `Deps` and the
+tests of its methods. Then run the steps that it prints. While its `Deps` is
+empty, the CLI needs no wiring. `osapi dsl command spec get` lists each part of
+the DSL.
 
 ```bash
 osapi dsl command create [flags]
@@ -15,7 +18,7 @@ osapi dsl command create [flags]
 ## Examples
 
 ```bash
-osapi dsl command create --name widget --description "The widgets of this host"
+osapi dsl command create --name widget --description "The widgets of this host" --under controller
 ```
 
 ## Result
@@ -23,7 +26,7 @@ osapi dsl command create --name widget --description "The widgets of this host"
 The command prints:
 
 ```ansi
-$ osapi dsl command create --name widget --description "The widgets of this host"
+$ osapi dsl command create --name widget --description "The widgets of this host" --under controller
 [1;38;2;0;213;255mLocal group:[0m
   [38;2;10;143;176mName:[0m  widget
 
@@ -88,10 +91,11 @@ With `--json`, the command prints:
 
 ## Flags
 
-| Flag            | Description                                          | Default |
-| --------------- | ---------------------------------------------------- | ------- |
-| `--description` | What the group is, in one line (required)            |         |
-| `--name`        | The group's name: its command under osapi (required) |         |
+| Flag            | Description                                                                                                                             | Default |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `--description` | What the group is, in one line (required)                                                                                               |         |
+| `--name`        | The group's name: its command under osapi (required)                                                                                    |         |
+| `--under`       | The word of the root that the group goes under, where it runs: agent, controller, dsl or nats (agent, controller, dsl, nats) (required) |         |
 
 ## Global flags
 

@@ -63,10 +63,12 @@ The design is `components/osapi/commands.md` in osapi-io/specs. Read it first.
 ## Build a new group
 
 1. Write it:
-   `go run . dsl command create --name <group> --description "<one line>"`, then
-   `go generate ./internal/cli/commands/all`. The group has a list and a get, an
-   empty `Deps`, its types and the tests of its methods. It builds, validates
-   and passes its tests before you change it.
+   `go run . dsl command create --name <group> --description "<one line>" --under <word>`,
+   then `go generate ./internal/cli/commands/all`. `--under` is the word of the
+   root where the group runs: `controller`, `agent` or `nats` for the process or
+   the files of that component, or `dsl` for a command for authors. The group
+   has a list and a get, an empty `Deps`, its types and the tests of its
+   methods. It builds, validates and passes its tests before you change it.
 2. Change it in this order: `types.go`, `deps.go`, `methods.go`, then
    `<group>.go`. Decide each method with the user first. "Decide first" below
    has the questions.

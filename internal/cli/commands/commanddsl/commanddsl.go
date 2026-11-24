@@ -80,14 +80,21 @@ var Group = command.Register(command.Define(
 	command.Method[CreateInput, CreateOutput]("create").
 		Short("Write a new local group that builds and passes its tests").
 		Long("It writes `internal/cli/commands/<name>/` in the osapi checkout in the\n"+
-			"current directory, and adds its import to `internal/cli/commands/all`. The\n"+
+			"current directory, under the word of the root that `--under` names, and adds\n"+
+			"its import to `internal/cli/commands/all`. A local group goes where it runs:\n"+
+			"`controller`, `agent` or `nats` for the process or the files of that\n"+
+			"component, or `dsl` for a command for authors. The\n"+
 			"group has a list and a get, an empty `Deps` and the tests of its methods.\n"+
 			"Then run the steps that it prints. While its `Deps` is empty, the CLI\n"+
 			"needs no wiring. `osapi dsl command spec get` lists each part of the DSL.").
-		Example(`--name widget --description "The widgets of this host"`).
+		Example(`--name widget --description "The widgets of this host" --under controller`).
 		Prints(sampleCreate).
-		Fails("no name", CreateInput{Description: "x"}).
-		Fails("no description", CreateInput{Name: "x"}).
+		Fails("no name", CreateInput{Description: "x", Under: "dsl"}).
+		Fails("no description", CreateInput{Name: "x", Under: "dsl"}).
+		Fails("no under", CreateInput{Name: "x", Description: "x"}).
+		Fails("an under that is not a parent", CreateInput{
+			Name: "x", Description: "x", Under: "client",
+		}).
 		Handle(Create),
 	command.Method[SpecInput, SpecOutput]("get").
 		Sub("spec").

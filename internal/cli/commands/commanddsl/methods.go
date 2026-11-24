@@ -250,7 +250,7 @@ func Create(
 	d Deps,
 	in CreateInput,
 ) (CreateOutput, error) {
-	files, err := command.Scaffold(d.Dir, in.Name, in.Description)
+	files, err := command.Scaffold(d.Dir, in.Name, in.Description, command.Parent(in.Under))
 	if err != nil {
 		return CreateOutput{}, err
 	}

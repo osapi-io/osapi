@@ -32,6 +32,7 @@ import (
 // every option.
 var Group = command.Register(command.Define(
 	"widget", "Widgets of this host",
+	command.Under(command.ParentController),
 	command.Uses[Deps](),
 	command.Method[ListInput, WidgetList]("list").
 		Short("List the widget items").

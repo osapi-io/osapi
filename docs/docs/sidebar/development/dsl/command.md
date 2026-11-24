@@ -539,9 +539,10 @@ attaches them under the root.
 Use: After each change to a group. go-generate-check fails when a gen/ file is
 stale. Never edit a gen/ file.
 
-### `osapi dsl command create --name <group> --description "..."`
+### `osapi dsl command create --name <group> --description "..." --under <word>`
 
-Writes a new group under internal/cli/commands/&lt;group&gt;: a list and a get,
+Writes a new group under internal/cli/commands/&lt;group&gt;, Under the word of
+the root that --under names (agent, controller, dsl or nats): a list and a get,
 an empty Deps, its types and the tests of its methods, and adds its import to
 internal/cli/commands/all. It builds, validates and passes its tests;
 command-scaffold-check in just test holds it to that.

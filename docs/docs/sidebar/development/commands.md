@@ -19,7 +19,9 @@ a typed Go function. `internal/cli/commands/token` is a complete group.
 ## Steps
 
 1. Write the layout:
-   `go run . dsl command create --name <group> --description "..."`.
+   `go run . dsl command create --name <group> --description "..." --under <word>`.
+   `--under` is the word of the root where the group runs: `controller`, `agent`
+   or `nats`, or `dsl` for a command for authors.
 2. Read the [Command DSL](dsl/command.md) reference, or
    `go run . dsl command spec get`. It lists each part of the DSL, what it does
    and when to use it.
