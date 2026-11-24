@@ -17,7 +17,7 @@ var vaultKeyCreateCmd = &cobra.Command{
 	},
 	Args:    cobra.NoArgs,
 	Example: "  osapi controller vault key create --name default",
-	Long:    "The command writes a new random AES-256 key to the `key_file` of the\nvault in `controller.secrets.vaults`, with the mode 0600. The vault\nencrypts each value with this key. The command does not replace a key that\nexists, because each value under it would then not decrypt. Use `rotate`\nfor that. It prints the ID of the key, not the key.",
+	Long:    "The command writes a new random AES-256 key to the `key_file` of the\nvault in `controller.secrets.vaults`, with the mode 0600. The vault\nencrypts each value with this key. The command does not replace a key that\nexists, because each value under it would then not decrypt. Use `rotate`\nfor that. It prints the ID of the key, not the key. The controller makes\nthe key at start when the file is not there, so run this only to make the\nkey before that.",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		name, _ := cmd.Flags().GetString("name")
 

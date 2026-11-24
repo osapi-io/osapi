@@ -30,6 +30,10 @@ import (
 // EnvPrefix is the prefix of every environment variable that sets a key.
 const EnvPrefix = "OSAPI"
 
+// DefaultVaultKeyFile is the key file of the default vault, which the
+// controller makes when it is not there.
+const DefaultVaultKeyFile = "/etc/osapi/secrets.key"
+
 // Defaults are the values a key takes when neither the config file nor the
 // environment sets it. Every name here is a key of Config, which a test
 // checks, so a default cannot be set on a key that does not exist.
@@ -46,6 +50,14 @@ var Defaults = map[string]any{
 	"controller.pki.auto_admit":            false,
 	"controller.pki.rotation_grace_period": "24h",
 	"controller.pki.delete_after":          "",
+
+	// The vault that secret://default/<key> names. The controller makes
+	// its key at its first start.
+	"controller.secrets.vaults": []map[string]any{{
+		"name":     "default",
+		"type":     "nats",
+		"key_file": DefaultVaultKeyFile,
+	}},
 
 	"nats.server.host":         "localhost",
 	"nats.server.port":         4222,

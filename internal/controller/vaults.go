@@ -22,9 +22,11 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 
+	"github.com/avfs/avfs"
 	"github.com/avfs/avfs/vfs/osfs"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
@@ -32,9 +34,7 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/secret/vault"
-
-	// The nats type of vault, which controller.secrets.vaults can name.
-	_ "github.com/osapi-io/osapi/internal/secret/vault/natsvault"
+	"github.com/osapi-io/osapi/internal/secret/vault/natsvault"
 )
 
 // openVaults makes each vault of controller.secrets.vaults from its type.
@@ -47,6 +47,14 @@ func openVaults(
 	conn *jobclient.Connection,
 	cfg config.Config,
 ) (*vault.Set, error) {
+	if err := makeVaultKeys(
+		ctx,
+		log,
+		osfs.NewWithNoIdm(),
+		cfg.Controller.Secrets.Vaults,
+	); err != nil {
+		return nil, err
+	}
 	set, err := OpenVaults(ctx, conn.NATS, cfg)
 	if err != nil {
 		return nil, err
@@ -85,4 +93,35 @@ func OpenVaults(
 		FS:        osfs.NewWithNoIdm(),
 		LookupEnv: os.LookupEnv,
 	}, cfg.Controller.Secrets.Vaults)
+}
+
+// makeVaultKeys makes the key file of each nats vault whose key_file is not
+// there, as osapi controller vault key create does, so the default vault
+// works at the first start. It never replaces a key that is there: each
+// value under it would then not decrypt. A vault whose key is in key_env
+// gets no file.
+func makeVaultKeys(
+	ctx context.Context,
+	log *slog.Logger,
+	vfs avfs.VFS,
+	specs []vault.Spec,
+) error {
+	for _, spec := range specs {
+		if spec.Type != natsvault.TypeName || spec.KeyFile == "" || spec.KeyEnv != "" {
+			continue
+		}
+		if _, err := vfs.Stat(spec.KeyFile); err == nil {
+			continue
+		}
+		ring, err := natsvault.CreateKey(ctx, vfs, spec.KeyFile)
+		if err != nil {
+			return fmt.Errorf("vault %q: make its key: %w", spec.Name, err)
+		}
+		log.Info("vault key created",
+			slog.String("name", spec.Name),
+			slog.String("key_file", spec.KeyFile),
+			slog.String("key_id", ring.ID()))
+	}
+
+	return nil
 }

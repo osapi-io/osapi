@@ -21,8 +21,9 @@ controller:
   #   auto_admit: false
   #   rotation_grace_period: 24h
   #   delete_after: ""
-  # The vaults that a secret://<vault>/<key> reference names. Make the key
-  # of a nats vault with: osapi controller vault key create --name default
+  # The vaults that a secret://<vault>/<key> reference names. With no list,
+  # the controller has the vault below, and it makes the key file of a nats
+  # vault at start when the file is not there.
   # secrets:
   #   vaults:
   #     - name: default

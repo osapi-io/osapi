@@ -68,11 +68,11 @@ The controller accepts tokens from more than one signing key. Each token has the
 expire. [Authentication](authentication.md#change-the-signing-key) has the
 steps.
 
-The controller can have vaults, which keep secrets encrypted in NATS.
-[Configuration](../../usage/configuration.md#vaults) tells how to add a vault
-and make its key with `osapi controller vault key create`. A signing key and the
-bearer token can be a reference to a key in a vault, such as
-`secret://default/jwt-signing-key`.
+The controller has vaults, which keep secrets encrypted in NATS. With no config,
+it has the vault `default`, and it makes the key of that vault at its first
+start. [Configuration](../../usage/configuration.md#vaults) tells how to add a
+vault. A signing key and the bearer token can be a reference to a key in a
+vault, such as `secret://default/jwt-signing-key`.
 [References in the config](../../usage/configuration.md#references-in-the-config)
 tells which settings take one.
 

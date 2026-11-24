@@ -39,7 +39,9 @@ var Group = command.Register(command.Define(
 			"vault in `controller.secrets.vaults`, with the mode 0600. The vault\n"+
 			"encrypts each value with this key. The command does not replace a key that\n"+
 			"exists, because each value under it would then not decrypt. Use `rotate`\n"+
-			"for that. It prints the ID of the key, not the key.").
+			"for that. It prints the ID of the key, not the key. The controller makes\n"+
+			"the key at start when the file is not there, so run this only to make the\n"+
+			"key before that.").
 		Example("--name default").
 		Prints(sampleCreate).
 		Fails("no name", Input{}).

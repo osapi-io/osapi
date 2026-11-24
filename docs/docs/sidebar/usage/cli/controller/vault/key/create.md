@@ -6,7 +6,8 @@ The command writes a new random AES-256 key to the `key_file` of the vault in
 `controller.secrets.vaults`, with the mode 0600. The vault encrypts each value
 with this key. The command does not replace a key that exists, because each
 value under it would then not decrypt. Use `rotate` for that. It prints the ID
-of the key, not the key.
+of the key, not the key. The controller makes the key at start when the file is
+not there, so run this only to make the key before that.
 
 ```bash
 osapi controller vault key create [flags]

@@ -78,9 +78,12 @@ func (s *DocTablesPublicTestSuite) TestDocTables() {
 	s.Contains(config.DocTable([]string{"agent.hostname"}, nil), "| none ",
 		"a key with no default and no shipped value says none")
 	s.Contains(config.DocTable([]string{"behaviors.kv.dir"}, nil), "Where it writes.")
-	s.Contains(config.DocTable([]string{"controller.secrets"}, nil),
-		"| `controller.secrets.vaults[].key_file` | string | none    | none ",
+	s.Regexp("\\| `controller\\.secrets\\.vaults\\[\\]\\.key_file` \\| string \\| none +\\| none ",
+		config.DocTable([]string{"controller.secrets"}, nil),
 		"a setting of a vault has no environment variable")
+	s.Contains(config.DocTable([]string{"controller.secrets"}, nil),
+		"`[{\"key_file\":\"/etc/osapi/secrets.key\",\"name\":\"default\",\"type\":\"nats\"}]`",
+		"the default vault reads as JSON")
 
 	for _, broken := range []string{
 		"<!-- osapi:config agent.hostname",

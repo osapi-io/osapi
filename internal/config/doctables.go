@@ -20,6 +20,7 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -123,6 +124,12 @@ func defaultText(
 	k Key,
 	shipped map[string]any,
 ) string {
+	if items, ok := k.Default.([]map[string]any); ok {
+		// A list of blocks, such as the default vault, reads as JSON.
+		data, _ := json.Marshal(items)
+
+		return fmt.Sprintf("`%s`", data)
+	}
 	if k.Default != nil && fmt.Sprint(k.Default) != "" {
 		return fmt.Sprintf("`%v`", k.Default)
 	}
