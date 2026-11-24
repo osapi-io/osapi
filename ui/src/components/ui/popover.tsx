@@ -157,11 +157,14 @@ interface PopoverPanelProps {
   className?: string;
 }
 
+// A panel opens above the sticky bars of a page, such as the Run bar of
+// Plans (z-20), and under a modal or the command bar (z-50). At z-20 the
+// Run bar, which comes later on the page, hid its middle rows (#1268).
 export function PopoverPanel({ children, className }: PopoverPanelProps) {
   return (
     <div
       className={cn(
-        "absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-md border border-border bg-card shadow-lg",
+        "absolute z-30 mt-1 max-h-48 w-full overflow-auto rounded-md border border-border bg-card shadow-lg",
         className,
       )}
     >
