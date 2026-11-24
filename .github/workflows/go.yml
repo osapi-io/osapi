@@ -52,10 +52,11 @@ jobs:
         id: plan
         # Each recipe runs on a line of its own, so that its failure fails the
         # step. Inside `echo "$(...)"`, a failure leaves an empty matrix.
-        # go-vet runs in the lint job, which starts with the plan; the check
-        # jobs run the rest of the slow checks.
+        # go-vet runs in the lint job, and the generation checks in the
+        # generated job, which both start with the plan; the check jobs run
+        # the rest.
         run: |
-          checks=$(just go-ci-checks | jq -c '.check -= ["go-vet"]')
+          checks=$(just go-ci-checks | jq -c '.check -= ["go-vet","behavior-gen-check","go-generate-check","docs-gen-check","cli-docs-gen-check","sdk-gen-check"]')
           units=$(just go-unit-plan)
           echo "checks=$checks" >> "$GITHUB_OUTPUT"
           echo "units=$units" >> "$GITHUB_OUTPUT"
@@ -68,6 +69,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
+        with:
+          cache: lint
       # golangci-lint keeps the result of each package in a cache. Without it
       # each run lints and formats every package again.
       - name: Restore the lint cache
@@ -78,6 +81,44 @@ jobs:
           restore-keys: golangci-${{ hashFiles('go.sum', '.golangci.yml') }}-
       - name: go-vet
         run: just go-vet
+      - name: Save the Go build cache
+        if: github.ref == 'refs/heads/main'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: go-lint-${{ hashFiles('go.sum') }}-${{ github.sha }}
+
+  # Each generation check regenerated the whole tree and compared it, on a
+  # runner of its own. This job generates once and fails on any change.
+  generated:
+    runs-on: ubuntu-latest
+    name: generated
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+        with:
+          ui: "true"
+          cache: generated
+      - name: Generate
+        run: just generate && just cli-docs-generate
+      - name: Fail on a change
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git status --short
+            git diff --stat
+            echo "generated files are stale: run just generate and just cli-docs-generate, and commit them" >&2
+            exit 1
+          fi
+      - name: Save the Go build cache
+        if: github.ref == 'refs/heads/main'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: go-generated-${{ hashFiles('go.sum') }}-${{ github.sha }}
 
   check:
     needs: plan
@@ -92,8 +133,17 @@ jobs:
         with:
           # Only the job of the UI checks installs the UI packages.
           ui: ${{ contains(matrix.check, 'react') && 'true' || 'false' }}
+          cache: ${{ contains(matrix.check, 'react') && 'quick' || matrix.check }}
       - name: ${{ matrix.check }}
         run: for check in ${{ matrix.check }}; do just "$check"; done
+      - name: Save the Go build cache
+        if: github.ref == 'refs/heads/main'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: go-${{ contains(matrix.check, 'react') && 'quick' || matrix.check }}-${{ hashFiles('go.sum') }}-${{ github.sha }}
 
   unit:
     needs: plan
@@ -107,8 +157,17 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           js: "false"
+          cache: unit-${{ matrix.shard }}
       - name: Unit tests, shard ${{ matrix.shard }}
         run: just go-unit-shard ${{ matrix.shard }} "${{ matrix.packages }}"
+      - name: Save the Go build cache
+        if: github.ref == 'refs/heads/main'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: go-unit-${{ matrix.shard }}-${{ hashFiles('go.sum') }}-${{ github.sha }}
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cover-${{ matrix.shard }}
