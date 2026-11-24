@@ -118,6 +118,7 @@ func Problems(
 				valueProblems(err, RuleSetting, b.SettingsType(), b.SettingsKey())...)
 		}
 	}
+	problems = append(problems, vaultProblems(v, c.Controller.Secrets.Vaults)...)
 	if err := c.NATS.sharedBucket(); err != nil {
 		problems = append(problems, Problem{Rule: RuleBucket, Message: err.Error()})
 	}

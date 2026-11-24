@@ -38,6 +38,7 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/health"
 	"github.com/osapi-io/osapi/internal/job"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/secret/vault"
 	"github.com/osapi-io/osapi/internal/validation"
 )
 
@@ -47,6 +48,7 @@ type Controller struct {
 	conn          *jobclient.Connection
 	checker       *health.NATSChecker
 	subComponents map[string]job.SubComponentInfo
+	vaults        *vault.Set
 }
 
 // Option changes how New makes the controller.
@@ -157,6 +159,11 @@ func newController(
 		}
 	}
 
+	vaults, err := openVaults(ctx, log, conn, namespace, cfg)
+	if err != nil {
+		return nil, err
+	}
+
 	objBucket, fileStateBucket := openFileBuckets(ctx, log, conn.NATS, namespace, cfg.NATS)
 	checker := newHealthChecker(conn.NATS, conn.JobsBucket)
 	metricsProvider := newMetricsProvider(
@@ -200,6 +207,7 @@ func newController(
 		conn:          conn,
 		checker:       checker,
 		subComponents: subs,
+		vaults:        vaults,
 	}, nil
 }
 
@@ -227,6 +235,11 @@ func (c *Controller) CheckHealth(
 // its metrics server report.
 func (c *Controller) SubComponents() map[string]job.SubComponentInfo {
 	return c.subComponents
+}
+
+// Vaults are the vaults of controller.secrets.vaults, by name.
+func (c *Controller) Vaults() *vault.Set {
+	return c.vaults
 }
 
 // registerTargetValidator lets the validation of a target look up the

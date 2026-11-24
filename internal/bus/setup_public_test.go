@@ -70,6 +70,7 @@ func fullNATS() config.NATS {
 		State:     config.NATSState{Bucket: "agent-state"},
 		Objects:   config.NATSObjects{Bucket: "file-objects"},
 		FileState: config.NATSFileState{Bucket: "file-state"},
+		Secrets:   config.NATSSecrets{Bucket: "secrets", History: 10},
 	}
 }
 
@@ -93,7 +94,7 @@ func (s *SetupPublicTestSuite) TestSetup() {
 			wantStreams: []string{"ns-JOBS", "ns-AUDIT", "ns-JOBS-DLQ"},
 			wantKVs: []string{
 				"ns-job-queue", "ns-agent-registry",
-				"ns-agent-facts", "ns-agent-state", "ns-file-state",
+				"ns-agent-facts", "ns-agent-state", "ns-file-state", "ns-secrets",
 			},
 			wantObjects: 1,
 		},
@@ -107,6 +108,7 @@ func (s *SetupPublicTestSuite) TestSetup() {
 				c.State.Bucket = ""
 				c.Objects.Bucket = ""
 				c.FileState.Bucket = ""
+				c.Secrets.Bucket = ""
 				c.Stream.Discard = "old"
 				return c
 			},

@@ -21,6 +21,14 @@ controller:
   #   auto_admit: false
   #   rotation_grace_period: 24h
   #   delete_after: ""
+  # The vaults that a secret://<vault>/<key> reference names. Make the key
+  # of a nats vault with: osapi controller vault key create --name default
+  # secrets:
+  #   vaults:
+  #     - name: default
+  #       type: nats
+  #       key_file: /etc/osapi/secrets.key
+  #       # targets: [group:prod]
   api:
     # Host the API, and the UI on its listener, binds to. Empty binds every
     # interface.
@@ -157,6 +165,13 @@ nats:
 
   file_state:
     bucket: file-state
+    storage: file
+    replicas: 1
+
+  # The encrypted values of each nats vault, with the versions of each key.
+  secrets:
+    bucket: secrets
+    history: 10
     storage: file
     replicas: 1
 

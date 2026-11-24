@@ -21,6 +21,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -28,6 +29,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/commands/chain"
 
 	"github.com/avfs/avfs/vfs/osfs"
+	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
 	"github.com/spf13/viper"
 
@@ -55,11 +57,13 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/commands/skill"
 	"github.com/osapi-io/osapi/internal/cli/commands/startcmd"
 	"github.com/osapi-io/osapi/internal/cli/commands/token"
+	"github.com/osapi-io/osapi/internal/cli/commands/vaultkey"
 	versioncmd "github.com/osapi-io/osapi/internal/cli/commands/version"
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/guide"
 	"github.com/osapi-io/osapi/internal/job"
+	"github.com/osapi-io/osapi/internal/secret/vault/natsvault"
 	"github.com/osapi-io/osapi/internal/skills"
 )
 
@@ -96,6 +100,7 @@ func init() {
 			KeyFile: appConfig.NATS.Server.JetStream.KeyFile,
 		}
 	})
+	command.Provide(vaultkey.Group, vaultKeyDeps)
 	command.Provide(natssetup.Group, func() natssetup.Deps {
 		return natssetup.Deps{Config: appConfig, Logger: logger, Prepare: bus.Prepare}
 	})
@@ -250,5 +255,28 @@ func chainDeps() chain.Deps {
 		Problems:    behavior.ChainProblems,
 		RunProblems: behaviortest.ChainProblems,
 		Spec:        behavior.CurrentChainSpec,
+	}
+}
+
+// vaultKeyDeps is what osapi controller vault key uses: the file system, the
+// config, and a connection to NATS as the controller makes it.
+func vaultKeyDeps() vaultkey.Deps {
+	return vaultkey.Deps{
+		FS:     osfs.NewWithNoIdm(),
+		Config: appConfig,
+		Dial: func(context.Context) (natsvault.KV, func(), error) {
+			n := appConfig.Controller.NATS
+			nc, err := bus.Dial(logger, &natsclient.Options{
+				Host: n.Host,
+				Port: n.Port,
+				Auth: bus.AuthOptions(n.Auth),
+				Name: "osapi-vault-key",
+			})
+			if err != nil {
+				return nil, nil, err
+			}
+
+			return nc, func() { bus.Close(nc) }, nil
+		},
 	}
 }

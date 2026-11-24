@@ -868,3 +868,54 @@ func (suite *BusPublicTestSuite) TestBuildFileStateKVConfig() {
 		})
 	}
 }
+
+func (suite *BusPublicTestSuite) TestBuildSecretsKVConfig() {
+	tests := []struct {
+		name         string
+		namespace    string
+		secretsCfg   config.NATSSecrets
+		validateFunc func(jetstream.KeyValueConfig)
+	}{
+		{
+			name:      "when namespace is set keeps the history of each key",
+			namespace: "osapi",
+			secretsCfg: config.NATSSecrets{
+				Bucket:   "secrets",
+				History:  10,
+				Storage:  "file",
+				Replicas: 1,
+			},
+			validateFunc: func(cfg jetstream.KeyValueConfig) {
+				assert.Equal(suite.T(), "osapi-secrets", cfg.Bucket)
+				assert.Equal(suite.T(), uint8(10), cfg.History)
+				assert.Equal(suite.T(), time.Duration(0), cfg.TTL)
+				assert.Equal(suite.T(), jetstream.FileStorage, cfg.Storage)
+				assert.Equal(suite.T(), 1, cfg.Replicas)
+			},
+		},
+		{
+			name:       "when no history is set keeps one version",
+			secretsCfg: config.NATSSecrets{Bucket: "secrets", Storage: "memory"},
+			validateFunc: func(cfg jetstream.KeyValueConfig) {
+				assert.Equal(suite.T(), "secrets", cfg.Bucket)
+				assert.Equal(suite.T(), uint8(1), cfg.History)
+				assert.Equal(suite.T(), jetstream.MemoryStorage, cfg.Storage)
+			},
+		},
+		{
+			name:       "when the history is above the limit of NATS keeps the limit",
+			secretsCfg: config.NATSSecrets{Bucket: "secrets", History: 100},
+			validateFunc: func(cfg jetstream.KeyValueConfig) {
+				assert.Equal(suite.T(), uint8(jetstream.KeyValueMaxHistory), cfg.History)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			got := bus.SecretsKV(tc.namespace, tc.secretsCfg)
+
+			tc.validateFunc(got)
+		})
+	}
+}

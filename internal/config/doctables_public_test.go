@@ -78,6 +78,9 @@ func (s *DocTablesPublicTestSuite) TestDocTables() {
 	s.Contains(config.DocTable([]string{"agent.hostname"}, nil), "| none ",
 		"a key with no default and no shipped value says none")
 	s.Contains(config.DocTable([]string{"behaviors.kv.dir"}, nil), "Where it writes.")
+	s.Contains(config.DocTable([]string{"controller.secrets"}, nil),
+		"| `controller.secrets.vaults[].key_file` | string | none    | none ",
+		"a setting of a vault has no environment variable")
 
 	for _, broken := range []string{
 		"<!-- osapi:config agent.hostname",

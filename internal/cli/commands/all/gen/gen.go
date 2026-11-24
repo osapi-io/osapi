@@ -21,5 +21,6 @@ import (
 	_ "github.com/osapi-io/osapi/internal/cli/commands/skill/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/startcmd/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/token/gen"
+	_ "github.com/osapi-io/osapi/internal/cli/commands/vaultkey/gen"
 	_ "github.com/osapi-io/osapi/internal/cli/commands/version/gen"
 )

@@ -25,6 +25,12 @@ The rules:
 - `bucket`: Each NATS bucket has its own name. A shared bucket mixes the keys of
   two roles. Fix: Give one of the two keys that the message names a different
   bucket.
+- `vault`: Each vault of controller.secrets.vaults has its own name and its own
+  key_file, a type of vault that osapi knows, a config block that its type
+  takes, and what its type needs, such as the key of a nats vault. Fix: Correct
+  the vault that the message names. osapi config get --key
+  controller.secrets.vaults describes a vault, and the message names the types
+  and the settings that there are.
 
 ```bash
 osapi config validate
