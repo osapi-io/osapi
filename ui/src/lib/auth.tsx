@@ -1,4 +1,5 @@
 import { useState, useCallback, type ReactNode } from "react";
+import { OPERATION_PERMISSIONS, type OperationId } from "@/lib/operations.gen";
 import {
   ROLES,
   getRoleByName,
@@ -51,6 +52,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [role],
   );
 
+  const canCall = useCallback(
+    (operation: OperationId) =>
+      hasPermission(role, OPERATION_PERMISSIONS[operation]),
+    [role],
+  );
+
   const canAll = useCallback(
     (permissions: Permission[]) => hasAllPermissions(role, permissions),
     [role],
@@ -87,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         tokenRoles,
         tokenTargets,
         can,
+        canCall,
         canAll,
         setRoleOverride,
         setToken,

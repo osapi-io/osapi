@@ -54,6 +54,14 @@ command writes. The UI shows a method that your role cannot run as faint, with a
 lock icon, and you cannot add it to a plan. The controller makes the same check
 on each request.
 
+A page and its link in the Admin menu check the operation that the page calls,
+with `canCall` of `useAuth`, such as `canCall("getAdmissions")`. The permission
+comes from `OPERATION_PERMISSIONS` in `ui/src/lib/operations.gen.ts`, which
+`go generate ./internal/authtoken/gen/operations` writes from the endpoint
+groups and the behaviors. Thus the link and the page cannot disagree. Do not
+type a permission into a page: `lib/can-call.test.ts` fails on `can("...")`.
+Roles calls no API, so each role sees it.
+
 ## Pages
 
 The routes are in `ui/src/App.tsx`. The navbar has Dashboard, Behaviors and

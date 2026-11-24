@@ -1,5 +1,6 @@
 import { createContext } from "react";
 import type { RoleDefinition, Permission } from "@/lib/permissions";
+import type { OperationId } from "@/lib/operations.gen";
 
 export interface AuthState {
   /** Whether the user has a valid token */
@@ -16,6 +17,12 @@ export interface AuthState {
   tokenTargets: string[];
   /** Check if current role has a permission */
   can: (permission: Permission) => boolean;
+  /**
+   * Whether the current role may call an API operation: the permission that
+   * the API checks, from the generated OPERATION_PERMISSIONS. A page and its
+   * link ask this of the operation that they call, so they cannot disagree.
+   */
+  canCall: (operation: OperationId) => boolean;
   /** Check if current role has all permissions */
   canAll: (permissions: Permission[]) => boolean;
   /** Set the role override (dropdown) */

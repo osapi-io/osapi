@@ -53,7 +53,7 @@ function flatten(
 }
 
 export function Traces() {
-  const { can } = useAuth();
+  const { canCall } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams();
   const [input, setInput] = useState(id ?? "");
@@ -96,7 +96,7 @@ export function Traces() {
   const trace = current?.trace ?? null;
   const error = current?.error ?? null;
 
-  if (!can("trace:read")) {
+  if (!canCall("getTrace")) {
     return <PermissionDenied title="Traces" what="traces" />;
   }
 

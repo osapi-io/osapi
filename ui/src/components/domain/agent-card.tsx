@@ -40,7 +40,7 @@ export function AgentCard({
   controllerVersion,
   onRefresh,
 }: AgentCardProps) {
-  const { can } = useAuth();
+  const { canCall } = useAuth();
   // A drain or undrain the controller accepted, until the agent's state
   // shows it. The agent acts on it at its next heartbeat, which can be 20s
   // away, so the card shows the request at once and polls faster till then.
@@ -52,7 +52,7 @@ export function AgentCard({
 
   const isPending = agent.state === "Pending";
   const isDrained = agent.state === "Draining" || agent.state === "Cordoned";
-  const canWrite = can("agent:write");
+  const canWrite = canCall("drainAgent");
   const badgeVariant = statusVariant(agent.state);
   // The API lists only the conditions that hold.
   const activeConditions = agent.conditions ?? [];

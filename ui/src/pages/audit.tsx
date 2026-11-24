@@ -83,7 +83,7 @@ function AuditDetail({ entry }: { entry: AuditEntry }) {
 
 export function Audit() {
   useVimScroll();
-  const { can } = useAuth();
+  const { canCall } = useAuth();
 
   const [data, setData] = useState<ListAuditResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -175,7 +175,7 @@ export function Audit() {
     }
   };
 
-  if (!can("audit:read")) {
+  if (!canCall("getAuditLogs")) {
     return <PermissionDenied title="Audit Log" what="audit entries" />;
   }
 

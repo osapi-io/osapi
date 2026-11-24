@@ -114,7 +114,7 @@ function LinkedJob({ id }: { id: string }) {
 export function Jobs() {
   const { id: linkedId } = useParams();
   useVimScroll();
-  const { can } = useAuth();
+  const { canCall } = useAuth();
 
   const [data, setData] = useState<ListJobsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -221,7 +221,7 @@ export function Jobs() {
     }
   };
 
-  if (!can("job:read")) {
+  if (!canCall("getJobs")) {
     return <PermissionDenied title="Jobs" what="jobs" />;
   }
 
@@ -350,7 +350,7 @@ export function Jobs() {
                     </Text>
                   ),
                 },
-                ...(can("job:write")
+                ...(canCall("retryJobByID")
                   ? [
                       {
                         header: "Actions",
