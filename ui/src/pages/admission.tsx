@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { unwrap, usePolling } from "@/hooks/use-polling";
 import { enumLabel } from "@/lib/format";
 import { GetAdmissionsState } from "@/sdk/gen/schemas";
 import { ContentArea } from "@/components/layout/content-area";
@@ -23,40 +23,20 @@ const sections = Object.values(GetAdmissionsState).map((state) => ({
 
 export function Admission() {
   const { canCall } = useAuth();
-  const [error, setError] = useState<string | null>(null);
-  const [records, setRecords] = useState<Record[]>([]);
-  const [loading, setLoading] = useState(true);
-
   // A failed load shows as an error, as on the other pages, not as an
   // empty page that reads as no machines.
-  const fetchRecords = useCallback(async () => {
-    try {
-      const resp = await getAdmissions();
-      if (resp.status === 200) {
-        setRecords(resp.data.items ?? []);
-        setError(null);
-      } else {
-        setError(
-          (resp.data as { error?: string })?.error ??
-            "Failed to fetch admission records",
-        );
-      }
-    } catch (e) {
-      setError(
-        e instanceof Error ? e.message : "Failed to fetch admission records",
-      );
-    }
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    const initialFetch = setTimeout(fetchRecords, 0);
-    const interval = setInterval(fetchRecords, 10000);
-    return () => {
-      clearTimeout(initialFetch);
-      clearInterval(interval);
-    };
-  }, [fetchRecords]);
+  const admissions = usePolling(
+    async () =>
+      unwrap<{ items?: Record[] }>(
+        await getAdmissions(),
+        "Failed to fetch admission records",
+      ).items ?? [],
+    [],
+    { enabled: canCall("getAdmissions") },
+  );
+  const records = admissions.data ?? [];
+  const { error, loading } = admissions;
+  const fetchRecords = admissions.refresh;
 
   if (!canCall("getAdmissions")) {
     return <PermissionDenied title="Admission" what="admission records" />;

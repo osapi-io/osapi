@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import { unwrap, usePolling } from "@/hooks/use-polling";
+import { useJob } from "@/hooks/use-job";
 import { enumLabel } from "@/lib/format";
 import { GetJobsStatus } from "@/sdk/gen/schemas";
 import { Link, useParams } from "react-router-dom";
@@ -26,11 +28,10 @@ import {
 } from "lucide-react";
 import {
   getJobs,
-  getJobByID,
   deleteJobByID,
   retryJobByID,
 } from "@/sdk/gen/job-management-api-job-operations/job-management-api-job-operations";
-import type { JobDetailResponse, ListJobsResponse } from "@/sdk/gen/schemas";
+import type { ListJobsResponse } from "@/sdk/gen/schemas";
 import { statusVariant } from "@/lib/status";
 import { PermissionDenied } from "@/components/layout/permission-denied";
 import { Spinner } from "@/components/ui/spinner";
@@ -57,33 +58,7 @@ const STATUS_OPTIONS = [
 // step's result on the Plans page: its detail, above the list, whether
 // or not the job is on the page of the list that shows.
 function LinkedJob({ id }: { id: string }) {
-  const [job, setJob] = useState<JobDetailResponse | null>(null);
-  const [failed, setFailed] = useState<string | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    getJobByID(id)
-      .then((res) => {
-        if (!mounted) return;
-        if (res.status === 200) {
-          setJob(res.data as JobDetailResponse);
-          setFailed(null);
-        } else {
-          setFailed(
-            res.status === 404
-              ? `Job ${id} not found`
-              : "Failed to load the job",
-          );
-        }
-      })
-      .catch((e) => {
-        if (mounted)
-          setFailed(e instanceof Error ? e.message : "Failed to load the job");
-      });
-    return () => {
-      mounted = false;
-    };
-  }, [id]);
+  const { data: job, error: failed } = useJob(id);
 
   return (
     <div className="mb-4">
@@ -116,76 +91,35 @@ export function Jobs() {
   useVimScroll();
   const { canCall } = useAuth();
 
-  const [data, setData] = useState<ListJobsResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [offset, setOffset] = useState(0);
   const [statusFilter, setStatusFilter] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [expandedJob, setExpandedJob] = useState<JobDetailResponse | null>(
-    null,
-  );
-  const [expandLoading, setExpandLoading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  const fetchJobs = useCallback(async () => {
-    try {
-      const params: Record<string, unknown> = {
-        limit: PAGE_SIZE,
-        offset,
-      };
-      if (statusFilter) {
-        params.status = statusFilter;
-      }
-      const result = await getJobs(params as Parameters<typeof getJobs>[0]);
-      if (result.status === 200) {
-        setData(result.data as ListJobsResponse);
-        setError(null);
-      } else {
-        setError("Failed to fetch jobs");
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to fetch jobs");
-    } finally {
-      setLoading(false);
-    }
-  }, [offset, statusFilter]);
+  const jobs = usePolling(
+    async () =>
+      unwrap<ListJobsResponse>(
+        await getJobs({
+          limit: PAGE_SIZE,
+          offset,
+          ...(statusFilter ? { status: statusFilter as GetJobsStatus } : {}),
+        }),
+        "Failed to fetch jobs",
+      ),
+    [offset, statusFilter],
+    { enabled: canCall("getJobs") },
+  );
+  const { data, loading } = jobs;
+  const error = actionError ?? jobs.error;
+  const fetchJobs = jobs.refresh;
+  const expanded = useJob(expandedId);
+  const expandedJob = expanded.data;
+  const expandLoading = expanded.loading;
 
-  useEffect(() => {
-    let mounted = true;
-
-    const poll = async () => {
-      if (!mounted) return;
-      await fetchJobs();
-    };
-
-    poll();
-    const id = setInterval(poll, 10000);
-    return () => {
-      mounted = false;
-      clearInterval(id);
-    };
-  }, [fetchJobs]);
-
-  const handleExpand = async (jobId: string) => {
-    if (expandedId === jobId) {
-      setExpandedId(null);
-      setExpandedJob(null);
-      return;
-    }
-    setExpandedId(jobId);
-    setExpandLoading(true);
-    try {
-      const result = await getJobByID(jobId);
-      if (result.status === 200) {
-        setExpandedJob(result.data as JobDetailResponse);
-      }
-    } catch {
-      // Silently fail — row just won't expand with detail
-    } finally {
-      setExpandLoading(false);
-    }
+  const handleExpand = (jobId: string) => {
+    setExpandedId(expandedId === jobId ? null : jobId);
   };
 
   const handleDelete = async (jobId: string) => {
@@ -194,12 +128,13 @@ export function Jobs() {
       const result = await deleteJobByID(jobId);
       if (result.status === 204) {
         setConfirmDelete(null);
+        setActionError(null);
         await fetchJobs();
       } else {
-        setError("Failed to delete job");
+        setActionError("Failed to delete job");
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to delete job");
+      setActionError(e instanceof Error ? e.message : "Failed to delete job");
     } finally {
       setActionLoading(false);
     }
@@ -210,12 +145,13 @@ export function Jobs() {
     try {
       const result = await retryJobByID(jobId, {});
       if (result.status === 201) {
+        setActionError(null);
         await fetchJobs();
       } else {
-        setError("Failed to retry job");
+        setActionError("Failed to retry job");
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to retry job");
+      setActionError(e instanceof Error ? e.message : "Failed to retry job");
     } finally {
       setActionLoading(false);
     }

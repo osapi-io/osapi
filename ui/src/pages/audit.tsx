@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
+import { unwrap, usePolling } from "@/hooks/use-polling";
 import { useVimScroll } from "@/hooks/use-vim-scroll";
 import { useAuth } from "@/hooks/use-auth";
 import { ContentArea } from "@/components/layout/content-area";
@@ -85,9 +86,7 @@ export function Audit() {
   useVimScroll();
   const { canCall } = useAuth();
 
-  const [data, setData] = useState<ListAuditResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [exportError, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [offset, setOffset] = useState(0);
   // Reads are hidden at first: the UI's own polling reads fill the log, and
@@ -110,51 +109,33 @@ export function Audit() {
     return () => clearTimeout(t);
   }, [filters]);
 
-  const fetchLogs = useCallback(async () => {
-    try {
+  const logs = usePolling(
+    async () => {
       const status = Number(applied.status);
-      const result = await getAuditLogs({
-        limit: PAGE_SIZE,
-        offset,
-        writes: applied.reads ? undefined : true,
-        user: applied.user.trim() || undefined,
-        operation: applied.operation.trim() || undefined,
-        status: Number.isInteger(status) && status > 0 ? status : undefined,
-      });
-      if (result.status === 200) {
-        setData(result.data as ListAuditResponse);
-        setError(null);
-      } else {
-        setError("Failed to fetch audit logs");
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to fetch audit logs");
-    } finally {
-      setLoading(false);
-    }
-  }, [offset, applied]);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const poll = async () => {
-      if (!mounted) return;
-      await fetchLogs();
-    };
-
-    poll();
-    const id = setInterval(poll, 10000);
-    return () => {
-      mounted = false;
-      clearInterval(id);
-    };
-  }, [fetchLogs]);
+      return unwrap<ListAuditResponse>(
+        await getAuditLogs({
+          limit: PAGE_SIZE,
+          offset,
+          writes: applied.reads ? undefined : true,
+          user: applied.user.trim() || undefined,
+          operation: applied.operation.trim() || undefined,
+          status: Number.isInteger(status) && status > 0 ? status : undefined,
+        }),
+        "Failed to fetch audit logs",
+      );
+    },
+    [offset, applied],
+    { enabled: canCall("getAuditLogs") },
+  );
+  const { data, loading } = logs;
+  const error = exportError ?? logs.error;
 
   const handleExport = async () => {
     setExporting(true);
     try {
       const result = await getAuditExport();
       if (result.status === 200) {
+        setError(null);
         const exportData = result.data as ListAuditResponse;
         const blob = new Blob([JSON.stringify(exportData, null, 2)], {
           type: "application/json",

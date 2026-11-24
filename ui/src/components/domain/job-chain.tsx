@@ -1,6 +1,4 @@
-import { useEffect, useState } from "react";
-import { getJobByID } from "@/sdk/gen/job-management-api-job-operations/job-management-api-job-operations";
-import type { JobDetailResponse } from "@/sdk/gen/schemas";
+import { useJob } from "@/hooks/use-job";
 import { ChainSection } from "@/components/domain/step-tree";
 import { hostSteps } from "@/lib/steps";
 
@@ -11,23 +9,8 @@ import { hostSteps } from "@/lib/steps";
  * behavior.
  */
 export function JobChain({ jobId }: { jobId: string }) {
-  const [job, setJob] = useState<JobDetailResponse | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    getJobByID(jobId)
-      .then((res) => {
-        if (!cancelled && res.status === 200) {
-          setJob(res.data as JobDetailResponse);
-        }
-      })
-      .catch(() => {
-        // The result links the job; a chain that does not load is left out.
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [jobId]);
+  // The result links the job; a chain that does not load is left out.
+  const { data: job } = useJob(jobId);
 
   if (!job) return null;
   const hosts = hostSteps(job);
