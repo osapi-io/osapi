@@ -200,6 +200,19 @@ func (s *SharedTestSuite) TestRunSharedTypeDiffers() {
 	}
 }
 
+func (s *SharedTestSuite) TestPagesKnowTheSharedTypes() {
+	s.write(typesDir+"/types.go", "package types\n\ntype ContentType string\n")
+	s.write(
+		pageDir+"/"+indexPage,
+		"# Client\n\n<!-- osapi:sdk-services -->\n<!-- /osapi:sdk-services -->\n",
+	)
+
+	s.Require().NoError(generate(s.root, true))
+
+	s.True(shared["ContentType"],
+		"the pages write a value of a shared type as types.X, as the examples do")
+}
+
 func (s *SharedTestSuite) TestRunTypesDirError() {
 	s.write(typesDir+"/bad.go", "package types\n\ntype {\n")
 

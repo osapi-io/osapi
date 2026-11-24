@@ -137,7 +137,7 @@ if err != nil {
 	return err
 }
 
-resp, err := c.File.Upload(ctx, "app.conf", client.ContentType(""), bytes.NewReader(content))
+resp, err := c.File.Upload(ctx, "app.conf", types.ContentType(""), bytes.NewReader(content))
 ```
 
 Upload a file, with --name app.conf.tmpl --file /tmp/app.conf.tmpl
@@ -149,7 +149,7 @@ if err != nil {
 	return err
 }
 
-resp, err := c.File.Upload(ctx, "app.conf.tmpl", client.ContentType("template"), bytes.NewReader(content))
+resp, err := c.File.Upload(ctx, "app.conf.tmpl", types.ContentType("template"), bytes.NewReader(content))
 ```
 
 ### Update
@@ -175,7 +175,7 @@ if err != nil {
 	return err
 }
 
-resp, err := c.File.Update(ctx, "app.conf", client.ContentType(""), bytes.NewReader(content))
+resp, err := c.File.Update(ctx, "app.conf", types.ContentType(""), bytes.NewReader(content))
 ```
 
 ### GetChanged

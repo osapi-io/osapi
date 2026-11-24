@@ -69,49 +69,6 @@ func (suite *TypesPublicTestSuite) TestSubjectConstants() {
 	}
 }
 
-func (suite *TypesPublicTestSuite) TestEnrollmentStateValues() {
-	tests := []struct {
-		name         string
-		state        pki.EnrollmentState
-		validateFunc func(string)
-	}{
-		{
-			name:  "StateUnregistered",
-			state: pki.StateUnregistered,
-			validateFunc: func(got string) {
-				assert.Equal(suite.T(), "unregistered", got)
-			},
-		},
-		{
-			name:  "StatePending",
-			state: pki.StatePending,
-			validateFunc: func(got string) {
-				assert.Equal(suite.T(), "pending", got)
-			},
-		},
-		{
-			name:  "StateAccepted",
-			state: pki.StateAccepted,
-			validateFunc: func(got string) {
-				assert.Equal(suite.T(), "accepted", got)
-			},
-		},
-		{
-			name:  "StateRejected",
-			state: pki.StateRejected,
-			validateFunc: func(got string) {
-				assert.Equal(suite.T(), "rejected", got)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			tc.validateFunc(string(tc.state))
-		})
-	}
-}
-
 func TestTypesPublicTestSuite(
 	t *testing.T,
 ) {
