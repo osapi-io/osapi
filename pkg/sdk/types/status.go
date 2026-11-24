@@ -114,28 +114,29 @@ func (s AgentJobStatus) Valid() bool {
 	return slices.Contains(s.Values(), s)
 }
 
-// AgentSchedulingState represents the scheduling state of an agent.
-type AgentSchedulingState = string
+// AgentState is the scheduling state of an agent, one of AgentStates.
+type AgentState string
 
-// Agent scheduling state constants.
+// The scheduling states of an agent.
 const (
 	// AgentReady indicates the agent is accepting and processing jobs.
-	AgentReady AgentSchedulingState = "Ready"
+	AgentReady AgentState = "Ready"
 	// AgentDraining indicates the agent is finishing in-flight jobs
 	// but not accepting new ones.
-	AgentDraining AgentSchedulingState = "Draining"
+	AgentDraining AgentState = "Draining"
 	// AgentCordoned indicates the agent is blocked from receiving
 	// new jobs until manually uncordoned.
-	AgentCordoned AgentSchedulingState = "Cordoned"
+	AgentCordoned AgentState = "Cordoned"
 	// AgentPending indicates the agent is awaiting PKI enrollment
 	// acceptance and will not process jobs until accepted.
-	AgentPending AgentSchedulingState = "Pending"
+	AgentPending AgentState = "Pending"
 )
 
-// ConditionType represents a node or process condition evaluated agent-side.
-type ConditionType = string
+// ConditionType is a node or process condition that the agent evaluates,
+// one of ConditionTypes.
+type ConditionType string
 
-// Condition type constants.
+// The conditions that an agent evaluates.
 const (
 	ConditionMemoryPressure ConditionType = "MemoryPressure"
 	ConditionHighLoad       ConditionType = "HighLoad"
@@ -147,4 +148,20 @@ const (
 	// agent cannot be created or bound, so the agent does not get all of
 	// its jobs.
 	ConditionConsumersUnavailable ConditionType = "ConsumersUnavailable"
+	// ConditionProcessMemoryPressure is set while the RSS of the osapi
+	// process is over its limit.
+	ConditionProcessMemoryPressure ConditionType = "ProcessMemoryPressure"
+	// ConditionProcessHighCPU is set while the CPU use of the osapi process
+	// is over its limit.
+	ConditionProcessHighCPU ConditionType = "ProcessHighCPU"
 )
+
+// AgentStates are each scheduling state of an agent.
+var AgentStates = []AgentState{AgentReady, AgentDraining, AgentCordoned, AgentPending}
+
+// ConditionTypes are each condition that an agent evaluates.
+var ConditionTypes = []ConditionType{
+	ConditionMemoryPressure, ConditionHighLoad, ConditionDiskPressure,
+	ConditionDrainStuck, ConditionConsumersUnavailable,
+	ConditionProcessMemoryPressure, ConditionProcessHighCPU,
+}

@@ -28,6 +28,8 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel/metric"
 
@@ -178,7 +180,7 @@ func (c *Client) Query(
 	data any,
 ) (string, *job.Response, error) {
 	resolved := c.resolveTarget(ctx, target)
-	req, err := c.request(ctx, job.TypeQuery, target, resolved, category, operation, data)
+	req, err := c.request(ctx, types.JobTypeQuery, target, resolved, category, operation, data)
 	if err != nil {
 		return "", nil, err
 	}
@@ -207,7 +209,7 @@ func (c *Client) QueryBroadcast(
 	data any,
 ) (string, map[string]*job.Response, error) {
 	resolved := c.resolveTarget(ctx, target)
-	req, err := c.request(ctx, job.TypeQuery, target, resolved, category, operation, data)
+	req, err := c.request(ctx, types.JobTypeQuery, target, resolved, category, operation, data)
 	if err != nil {
 		return "", nil, err
 	}
@@ -229,7 +231,7 @@ func (c *Client) Modify(
 	data any,
 ) (string, *job.Response, error) {
 	resolved := c.resolveTarget(ctx, target)
-	req, err := c.request(ctx, job.TypeModify, target, resolved, category, operation, data)
+	req, err := c.request(ctx, types.JobTypeModify, target, resolved, category, operation, data)
 	if err != nil {
 		return "", nil, err
 	}
@@ -258,7 +260,7 @@ func (c *Client) ModifyBroadcast(
 	data any,
 ) (string, map[string]*job.Response, error) {
 	resolved := c.resolveTarget(ctx, target)
-	req, err := c.request(ctx, job.TypeModify, target, resolved, category, operation, data)
+	req, err := c.request(ctx, types.JobTypeModify, target, resolved, category, operation, data)
 	if err != nil {
 		return "", nil, err
 	}
@@ -614,7 +616,7 @@ var newSealer = seal.New
 // has, refuses a job with a secret, so no secret goes in plain text.
 func (c *Client) request(
 	ctx context.Context,
-	typ job.Type,
+	typ types.JobType,
 	target string,
 	resolved string,
 	category string,

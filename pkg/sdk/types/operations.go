@@ -20,9 +20,8 @@
 
 package types
 
-// JobType represents the type of job operation.
-// Defined as a type alias so it's interchangeable with string in assignments.
-type JobType = string
+// JobType is the type of a job operation, one of JobTypes.
+type JobType string
 
 const (
 	// JobTypeQuery represents read operations that query system state.
@@ -30,6 +29,9 @@ const (
 	// JobTypeModify represents write operations that modify system state.
 	JobTypeModify JobType = "modify"
 )
+
+// JobTypes are each type of a job operation.
+var JobTypes = []JobType{JobTypeQuery, JobTypeModify}
 
 // Target constants for job routing.
 const (

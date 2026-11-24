@@ -25,6 +25,8 @@ import (
 	"log/slog"
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -97,7 +99,7 @@ func (s *ProcessorPublicTestSuite) TestProcessJobOperation() {
 		{
 			name: "unsupported job category",
 			jobRequest: job.Request{
-				Type:      job.TypeQuery,
+				Type:      types.JobTypeQuery,
 				Category:  "unsupported",
 				Operation: "test.get",
 				Data:      json.RawMessage(`{}`),
@@ -111,7 +113,7 @@ func (s *ProcessorPublicTestSuite) TestProcessJobOperation() {
 		{
 			name: "unsupported node operation",
 			jobRequest: job.Request{
-				Type:      job.TypeQuery,
+				Type:      types.JobTypeQuery,
 				Category:  "node",
 				Operation: "unsupported.get",
 				Data:      json.RawMessage(`{}`),

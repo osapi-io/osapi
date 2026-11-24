@@ -22,6 +22,8 @@ package agent
 
 import (
 	"time"
+
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // The sample answers of the examples, which the docs page of each command
@@ -34,7 +36,7 @@ var (
 	sampleWeb01 = AgentInfo{
 		Hostname:     "web-01",
 		MachineID:    "4c4c4544-0035-4b10-8031-b4c04f4d3332",
-		State:        "Ready",
+		State:        types.AgentReady,
 		Labels:       map[string]string{"group": "web"},
 		StartedAt:    sampleStarted,
 		RegisteredAt: sampleSeen,
@@ -57,7 +59,7 @@ var (
 	}
 	sampleMac01 = AgentInfo{
 		Hostname:     "mac-01",
-		State:        "Draining",
+		State:        types.AgentDraining,
 		StartedAt:    time.Date(2026, time.January, 15, 8, 30, 0, 0, time.UTC),
 		RegisteredAt: sampleSeen,
 		LoadAverage:  &LoadAverageResponse{OneMin: 1.12, FiveMin: 0.94, FifteenMin: 0.88},

@@ -29,6 +29,8 @@ import (
 	osexec "os/exec"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/gohai/pkg/gohai/collectors/cpu"
 	"github.com/osapi-io/gohai/pkg/gohai/collectors/hostname"
 	"github.com/osapi-io/gohai/pkg/gohai/collectors/initd"
@@ -350,7 +352,7 @@ func GetAgentMachineID(
 
 // ExportFindPrevCondition exposes the private findPrevCondition function for testing.
 func ExportFindPrevCondition(
-	condType string,
+	condType types.ConditionType,
 	prev []job.Condition,
 ) *job.Condition {
 	return findPrevCondition(condType, prev)
@@ -358,7 +360,7 @@ func ExportFindPrevCondition(
 
 // ExportTransitionTime exposes the private transitionTime function for testing.
 func ExportTransitionTime(
-	condType string,
+	condType types.ConditionType,
 	newStatus bool,
 	prev []job.Condition,
 ) time.Time {
@@ -628,14 +630,14 @@ func ExportAgentFacts(
 // GetAgentState returns the agent's state field for testing.
 func GetAgentState(
 	a *Agent,
-) string {
+) types.AgentState {
 	return a.State()
 }
 
 // SetAgentState sets the agent's state field for testing.
 func SetAgentState(
 	a *Agent,
-	state string,
+	state types.AgentState,
 ) {
 	a.setState(state)
 }
@@ -934,7 +936,7 @@ func ExportIdentityAttrs(
 func ExportRecordOutcome(
 	span trace.Span,
 	response job.Response,
-	requestType job.Type,
+	requestType types.JobType,
 ) {
 	recordOutcome(span, response, requestType)
 }

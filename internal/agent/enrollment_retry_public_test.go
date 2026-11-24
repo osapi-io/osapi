@@ -25,6 +25,8 @@ import (
 	"log/slog"
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/avfs/avfs/vfs/memfs"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -32,7 +34,6 @@ import (
 	"github.com/osapi-io/osapi/internal/agent"
 	agentMocks "github.com/osapi-io/osapi/internal/agent/mocks"
 	"github.com/osapi-io/osapi/internal/config"
-	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/pki"
 )
 
@@ -44,7 +45,7 @@ type EnrollmentRetryPublicTestSuite struct {
 
 // pendingAgent builds an agent with a loaded keypair and the state the test wants.
 func (s *EnrollmentRetryPublicTestSuite) pendingAgent(
-	state string,
+	state types.AgentState,
 	publisher *agentMocks.MockNATSClient,
 ) *agent.Agent {
 	fs := memfs.New()
@@ -71,12 +72,12 @@ func (s *EnrollmentRetryPublicTestSuite) pendingAgent(
 func (s *EnrollmentRetryPublicTestSuite) TestRetryEnrollmentIfPending() {
 	tests := []struct {
 		name      string
-		state     string
+		state     types.AgentState
 		setupMock func(*agentMocks.MockNATSClient)
 	}{
 		{
 			name:  "a pending agent asks again",
-			state: job.AgentStatePending,
+			state: types.AgentPending,
 			setupMock: func(publisher *agentMocks.MockNATSClient) {
 				// The controller keys acceptance by machine ID, so asking again
 				// overwrites the pending entry rather than adding one.
@@ -88,7 +89,7 @@ func (s *EnrollmentRetryPublicTestSuite) TestRetryEnrollmentIfPending() {
 		},
 		{
 			name:  "a pending agent whose republish fails keeps trying",
-			state: job.AgentStatePending,
+			state: types.AgentPending,
 			setupMock: func(publisher *agentMocks.MockNATSClient) {
 				publisher.EXPECT().
 					PublishCore(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -98,7 +99,7 @@ func (s *EnrollmentRetryPublicTestSuite) TestRetryEnrollmentIfPending() {
 		},
 		{
 			name:  "a ready agent asks for nothing",
-			state: job.AgentStateReady,
+			state: types.AgentReady,
 			setupMock: func(publisher *agentMocks.MockNATSClient) {
 				publisher.EXPECT().
 					PublishCore(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -107,7 +108,7 @@ func (s *EnrollmentRetryPublicTestSuite) TestRetryEnrollmentIfPending() {
 		},
 		{
 			name:  "a cordoned agent asks for nothing either",
-			state: job.AgentStateCordoned,
+			state: types.AgentCordoned,
 			setupMock: func(publisher *agentMocks.MockNATSClient) {
 				publisher.EXPECT().
 					PublishCore(gomock.Any(), gomock.Any(), gomock.Any()).

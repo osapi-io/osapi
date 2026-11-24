@@ -29,6 +29,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/telemetry/opspan"
 	"go.opentelemetry.io/otel/attribute"
 
@@ -128,21 +130,21 @@ func (c *Client) agentTimeline(
 // ComputeAgentState returns the current state from timeline events.
 func ComputeAgentState(
 	events []job.TimelineEvent,
-) string {
+) types.AgentState {
 	if len(events) == 0 {
-		return job.AgentStateReady
+		return types.AgentReady
 	}
 
 	latest := events[len(events)-1]
 	switch latest.Event {
 	case "drain":
-		return job.AgentStateDraining
+		return types.AgentDraining
 	case "cordoned":
-		return job.AgentStateCordoned
+		return types.AgentCordoned
 	case "undrain", "ready":
-		return job.AgentStateReady
+		return types.AgentReady
 	default:
-		return job.AgentStateReady
+		return types.AgentReady
 	}
 }
 

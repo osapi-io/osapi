@@ -33,15 +33,6 @@ import (
 	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
-// Type is a type alias for types.JobType.
-type Type = types.JobType
-
-// Job type constants re-exported from the SDK.
-const (
-	TypeQuery  = types.JobTypeQuery
-	TypeModify = types.JobTypeModify
-)
-
 // CategoryBehavior is the job category every registered behavior runs under.
 // Its operation is "<behavior>.<method>", such as "sysctl.get".
 const CategoryBehavior = "behavior"
@@ -82,7 +73,7 @@ type Request struct {
 	// JobID is a unique identifier for this job.
 	JobID string `json:"job_id"`
 	// Type specifies whether this is a query or modify operation.
-	Type Type `json:"type"`
+	Type types.JobType `json:"type"`
 	// Category specifies the operation category (node, network, etc.).
 	Category string `json:"category"`
 	// Operation specifies the specific operation to perform.
@@ -281,31 +272,12 @@ func FactKeys() []string {
 	return keys
 }
 
-// Condition type constants re-exported from the SDK.
-const (
-	ConditionMemoryPressure = types.ConditionMemoryPressure
-	ConditionHighLoad       = types.ConditionHighLoad
-	ConditionDiskPressure   = types.ConditionDiskPressure
-	ConditionDrainStuck     = types.ConditionDrainStuck
-	// ConditionConsumersUnavailable is set while a job consumer of the
-	// agent cannot be created or bound.
-	ConditionConsumersUnavailable = types.ConditionConsumersUnavailable
-)
-
-// Agent state constants re-exported from the SDK.
-const (
-	AgentStateReady    = types.AgentReady
-	AgentStateDraining = types.AgentDraining
-	AgentStateCordoned = types.AgentCordoned
-	AgentStatePending  = types.AgentPending
-)
-
 // Condition represents a node condition evaluated agent-side.
 type Condition struct {
-	Type               string    `json:"type"`
-	Status             bool      `json:"status"`
-	Reason             string    `json:"reason,omitempty"`
-	LastTransitionTime time.Time `json:"last_transition_time"`
+	Type               types.ConditionType `json:"type"`
+	Status             bool                `json:"status"`
+	Reason             string              `json:"reason,omitempty"`
+	LastTransitionTime time.Time           `json:"last_transition_time"`
 }
 
 // ProcessMetrics holds process-level resource usage.
@@ -380,7 +352,7 @@ type AgentRegistration struct {
 	// Conditions contains the evaluated node conditions.
 	Conditions []Condition `json:"conditions,omitempty"`
 	// State is the agent's scheduling state (Ready, Draining, Cordoned, Pending).
-	State string `json:"state,omitempty"`
+	State types.AgentState `json:"state,omitempty"`
 	// Fingerprint is the SHA256 fingerprint of the agent's PKI public key.
 	// Empty until the agent loads its keys.
 	Fingerprint string `json:"fingerprint,omitempty"`
@@ -440,7 +412,7 @@ type AgentInfo struct {
 	// Conditions contains the evaluated node conditions.
 	Conditions []Condition `json:"conditions,omitempty"`
 	// State is the agent's scheduling state (Ready, Draining, Cordoned, Pending).
-	State string `json:"state,omitempty"`
+	State types.AgentState `json:"state,omitempty"`
 	// Fingerprint is the SHA256 fingerprint of the agent's PKI public key.
 	// Empty until the agent loads its keys.
 	Fingerprint string `json:"fingerprint,omitempty"`

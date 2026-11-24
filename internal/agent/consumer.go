@@ -31,6 +31,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
@@ -92,7 +94,7 @@ func (a *Agent) consumeQueryJobs(
 	}
 
 	for _, consumer := range consumers {
-		a.startConsumer(ctx, streamName, consumer, "query")
+		a.startConsumer(ctx, streamName, consumer, types.JobTypeQuery)
 	}
 
 	return nil
@@ -149,7 +151,7 @@ func (a *Agent) consumeModifyJobs(
 	}
 
 	for _, consumer := range consumers {
-		a.startConsumer(ctx, streamName, consumer, "modify")
+		a.startConsumer(ctx, streamName, consumer, types.JobTypeModify)
 	}
 
 	return nil
@@ -177,11 +179,11 @@ func (a *Agent) startConsumer(
 	ctx context.Context,
 	streamName string,
 	c consumerSpec,
-	kind string,
+	kind types.JobType,
 ) {
 	err := a.createConsumer(ctx, streamName, c.name, c.filter)
 	if err != nil {
-		a.consumerFailed(c.name, "failed to create "+kind+" consumer", err)
+		a.consumerFailed(c.name, "failed to create "+string(kind)+" consumer", err)
 	}
 
 	opts := &natsclient.ConsumeOptions{
@@ -210,7 +212,7 @@ func (a *Agent) startConsumer(
 				if err == nil || errors.Is(err, context.Canceled) {
 					return
 				}
-				a.consumerFailed(c.name, "error consuming "+kind+" messages", err)
+				a.consumerFailed(c.name, "error consuming "+string(kind)+" messages", err)
 			}
 
 			select {
@@ -221,7 +223,7 @@ func (a *Agent) startConsumer(
 
 			err = a.createConsumer(ctx, streamName, c.name, c.filter)
 			if err != nil {
-				a.consumerFailed(c.name, "failed to create "+kind+" consumer", err)
+				a.consumerFailed(c.name, "failed to create "+string(kind)+" consumer", err)
 
 				continue
 			}
@@ -283,18 +285,18 @@ func (a *Agent) consumersCondition() job.Condition {
 	a.consumerErrMu.Unlock()
 
 	return job.Condition{
-		Type:   job.ConditionConsumersUnavailable,
+		Type:   types.ConditionConsumersUnavailable,
 		Status: failed > 0,
 		Reason: reason,
 		LastTransitionTime: transitionTime(
-			job.ConditionConsumersUnavailable, failed > 0, a.prevConditions,
+			types.ConditionConsumersUnavailable, failed > 0, a.prevConditions,
 		),
 	}
 }
 
 // State returns the agent's scheduling state. Read by the heartbeat on its own
 // goroutine while a drain or an enrollment acceptance writes it.
-func (a *Agent) State() string {
+func (a *Agent) State() types.AgentState {
 	a.lifecycleMu.RLock()
 	defer a.lifecycleMu.RUnlock()
 
@@ -305,7 +307,7 @@ func (a *Agent) State() string {
 // transition that does own one takes lifecycleMu itself and sets the field
 // under it, so the two cannot be observed apart.
 func (a *Agent) setState(
-	state string,
+	state types.AgentState,
 ) {
 	a.lifecycleMu.Lock()
 	defer a.lifecycleMu.Unlock()
@@ -323,10 +325,10 @@ func (a *Agent) startConsumers() {
 	a.lifecycleMu.Lock()
 	defer a.lifecycleMu.Unlock()
 
-	if a.state != job.AgentStateReady {
+	if a.state != types.AgentReady {
 		a.logger.Info(
 			"job consumers not started",
-			slog.String("state", a.state),
+			slog.String("state", string(a.state)),
 		)
 
 		return

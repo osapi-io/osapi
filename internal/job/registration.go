@@ -65,7 +65,7 @@ func RegistrationSigningBytes(
 	b.WriteString("\nfingerprint=")
 	b.WriteString(reg.Fingerprint)
 	b.WriteString("\nstate=")
-	b.WriteString(reg.State)
+	b.WriteString(string(reg.State))
 	b.WriteString("\n")
 
 	keys := make([]string, 0, len(reg.Labels))

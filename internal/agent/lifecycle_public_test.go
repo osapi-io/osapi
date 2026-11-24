@@ -25,6 +25,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	agentMocks "github.com/osapi-io/osapi/internal/agent/mocks"
 
 	"github.com/stretchr/testify/suite"
@@ -71,7 +73,7 @@ func (s *LifecyclePublicTestSuite) SetupTest() {
 		registryBucket:  "registry",
 		natsClient:      s.mockKV,
 	})
-	agent.SetAgentState(s.testAgent, job.AgentStateReady)
+	agent.SetAgentState(s.testAgent, types.AgentReady)
 	agent.SetAgentMachineID(s.testAgent, "test-machine-id")
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -115,7 +117,7 @@ func (s *LifecyclePublicTestSuite) TestStateUnderConcurrentAccess() {
 		defer wg.Done()
 
 		for range iterations {
-			agent.SetAgentState(s.testAgent, job.AgentStateReady)
+			agent.SetAgentState(s.testAgent, types.AgentReady)
 		}
 	}()
 
@@ -129,7 +131,7 @@ func (s *LifecyclePublicTestSuite) TestStateUnderConcurrentAccess() {
 
 	wg.Wait()
 
-	s.Equal(job.AgentStateReady, agent.GetAgentState(s.testAgent))
+	s.Equal(types.AgentReady, agent.GetAgentState(s.testAgent))
 }
 
 // TestCachedFactsUnderConcurrentAccess replaces the cached facts while another

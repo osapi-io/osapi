@@ -72,7 +72,7 @@ components:
         conditions:
           description: Active conditions.
           items:
-            type: string
+            $ref: '#/components/schemas/ConditionType'
           type: array
         cpu_percent:
           description: Process CPU usage percentage.
@@ -103,6 +103,17 @@ components:
           example: v0.2.1-0.20261119003517-f6bc5af55ceb
           type: string
       type: object
+    ConditionType:
+      description: A condition that an agent or a component evaluates.
+      enum:
+        - MemoryPressure
+        - HighLoad
+        - DiskPressure
+        - DrainStuck
+        - ConsumersUnavailable
+        - ProcessMemoryPressure
+        - ProcessHighCPU
+      type: string
     ErrorResponse:
       properties:
         details:

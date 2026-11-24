@@ -30,6 +30,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/behavior"
 
 	"github.com/nats-io/nats.go/jetstream"
@@ -363,9 +365,9 @@ func (a *Agent) handleJobMessage(
 
 	// Determine Type from subject prefix
 	if strings.HasPrefix(prefix, job.JobsQueryPrefix) {
-		jobRequest.Type = job.TypeQuery
+		jobRequest.Type = types.JobTypeQuery
 	} else if strings.HasPrefix(prefix, job.JobsModifyPrefix) {
-		jobRequest.Type = job.TypeModify
+		jobRequest.Type = types.JobTypeModify
 	}
 
 	// Write acknowledged event
@@ -497,7 +499,7 @@ func (a *Agent) handleJobMessage(
 		response.Data = result
 
 		// Extract "changed" from result data for mutation operations
-		if jobRequest.Type == job.TypeModify {
+		if jobRequest.Type == types.JobTypeModify {
 			response.Changed = extractChanged(result)
 		}
 	}

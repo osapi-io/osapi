@@ -29,6 +29,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	api "github.com/osapi-io/osapi/internal/controller/endpoints/health"
 )
 
@@ -334,7 +336,7 @@ func (h *Health) populateMetrics(
 				Version:    e.Version,
 			}
 			if len(e.Conditions) > 0 {
-				entry.Conditions = append([]string(nil), e.Conditions...)
+				entry.Conditions = append([]types.ConditionType(nil), e.Conditions...)
 			}
 			// A sub-component is named for its component, such as
 			// controller.api; under its component it is api.

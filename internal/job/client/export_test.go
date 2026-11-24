@@ -26,6 +26,8 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/secret/seal"
 )
@@ -122,7 +124,7 @@ var ExportOperation = operation
 // ExportRequest calls request.
 func (c *Client) ExportRequest(
 	ctx context.Context,
-	typ job.Type,
+	typ types.JobType,
 	target string,
 	resolved string,
 	category string,

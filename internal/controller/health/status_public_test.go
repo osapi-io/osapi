@@ -29,6 +29,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
@@ -307,7 +309,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 							Type:       "agent",
 							Hostname:   "web-01",
 							Status:     "Ready",
-							Conditions: []string{"DiskPressure"},
+							Conditions: []types.ConditionType{types.ConditionDiskPressure},
 							Age:        "3h 0m",
 							CPUPercent: 1.2,
 							MemBytes:   100663296,
@@ -341,7 +343,7 @@ func (s *HealthStatusGetPublicTestSuite) TestGetHealthStatus() {
 				s.Require().NotNil(second.Type)
 				s.Equal("agent", second.Type)
 				s.Require().NotNil(second.Conditions)
-				s.Equal([]string{"DiskPressure"}, second.Conditions)
+				s.Equal([]types.ConditionType{types.ConditionDiskPressure}, second.Conditions)
 			},
 		},
 		{

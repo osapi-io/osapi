@@ -26,6 +26,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -165,7 +167,7 @@ func (s *HTTPPublicTestSuite) TestRoutes() {
 			token:  write,
 			setup: func() {
 				s.jobs.EXPECT().GetAgent(gomock.Any(), "server1").
-					Return(&job.AgentInfo{Hostname: "server1", State: job.AgentStateDraining}, nil)
+					Return(&job.AgentInfo{Hostname: "server1", State: types.AgentDraining}, nil)
 			},
 			wantCode: http.StatusConflict,
 		},
@@ -188,7 +190,7 @@ func (s *HTTPPublicTestSuite) TestRoutes() {
 			token:  write,
 			setup: func() {
 				s.jobs.EXPECT().GetAgent(gomock.Any(), "server1").
-					Return(&job.AgentInfo{Hostname: "server1", MachineID: "m-1", State: job.AgentStateDraining}, nil)
+					Return(&job.AgentInfo{Hostname: "server1", MachineID: "m-1", State: types.AgentDraining}, nil)
 				s.jobs.EXPECT().DeleteDrainFlag(gomock.Any(), "m-1").Return(nil)
 				s.jobs.EXPECT().WriteAgentTimelineEvent(gomock.Any(), "server1", "undrain",
 					"Undrain initiated via API").Return(nil)

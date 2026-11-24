@@ -26,6 +26,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	agentMocks "github.com/osapi-io/osapi/internal/agent/mocks"
 
 	"github.com/stretchr/testify/suite"
@@ -33,7 +35,6 @@ import (
 
 	"github.com/osapi-io/osapi/internal/agent"
 	"github.com/osapi-io/osapi/internal/config"
-	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/mocks"
 	diskMocks "github.com/osapi-io/osapi/internal/provider/node/disk/mocks"
 	hostMocks "github.com/osapi-io/osapi/internal/provider/node/host/mocks"
@@ -79,7 +80,7 @@ func (s *DrainPublicTestSuite) SetupTest() {
 		registryBucket:  "registry",
 		natsClient:      s.mockKV,
 	})
-	agent.SetAgentState(s.testAgent, job.AgentStateReady)
+	agent.SetAgentState(s.testAgent, types.AgentReady)
 	agent.SetAgentMachineID(s.testAgent, "test-machine-id")
 	ctx, cancel := context.WithCancel(context.Background())
 	consumerCtx, consumerCancel := context.WithCancel(ctx)
@@ -144,7 +145,7 @@ func (s *DrainPublicTestSuite) TestDrainAtStartupThenUndrainThenDrain() {
 	defer cancel()
 	// No consumers yet: startup has not started them.
 	agent.SetAgentLifecycle(ctx, nil, s.testAgent, cancel, nil)
-	agent.SetAgentState(s.testAgent, job.AgentStateReady)
+	agent.SetAgentState(s.testAgent, types.AgentReady)
 
 	var started atomic.Int32
 	s.mockJobClient.EXPECT().
@@ -168,7 +169,7 @@ func (s *DrainPublicTestSuite) TestDrainAtStartupThenUndrainThenDrain() {
 	// The heartbeat finds the drain flag first.
 	s.mockJobClient.EXPECT().CheckDrainFlag(gomock.Any(), "test-machine-id").Return(true)
 	agent.ExportHandleDrainDetection(ctx, s.testAgent, "test-machine-id", "test-agent")
-	s.Eventually(func() bool { return s.testAgent.State() == job.AgentStateCordoned },
+	s.Eventually(func() bool { return s.testAgent.State() == types.AgentCordoned },
 		time.Second, 10*time.Millisecond)
 
 	// Startup then starts no consumers, because the agent is cordoned.
@@ -179,7 +180,7 @@ func (s *DrainPublicTestSuite) TestDrainAtStartupThenUndrainThenDrain() {
 	// The undrain starts the one set.
 	s.mockJobClient.EXPECT().CheckDrainFlag(gomock.Any(), "test-machine-id").Return(false)
 	agent.ExportHandleDrainDetection(ctx, s.testAgent, "test-machine-id", "test-agent")
-	s.Equal(job.AgentStateReady, s.testAgent.State())
+	s.Equal(types.AgentReady, s.testAgent.State())
 	s.Eventually(func() bool { return started.Load() > 0 }, time.Second, 10*time.Millisecond)
 
 	// A set starts each consumer on its own goroutine: wait until all of
@@ -202,7 +203,7 @@ func (s *DrainPublicTestSuite) TestDrainAtStartupThenUndrainThenDrain() {
 	case <-time.After(3 * time.Second):
 		s.FailNow("the drain did not return: a consumer set was left running")
 	}
-	s.Eventually(func() bool { return s.testAgent.State() == job.AgentStateCordoned },
+	s.Eventually(func() bool { return s.testAgent.State() == types.AgentCordoned },
 		3*time.Second, 10*time.Millisecond, "a consumer set was left running")
 }
 
@@ -215,7 +216,7 @@ func (s *DrainPublicTestSuite) TestDrainWithAStuckConsumer() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	agent.SetAgentLifecycle(ctx, nil, s.testAgent, cancel, nil)
-	agent.SetAgentState(s.testAgent, job.AgentStateReady)
+	agent.SetAgentState(s.testAgent, types.AgentReady)
 
 	release := make(chan struct{})
 	var started atomic.Int32
@@ -252,18 +253,18 @@ func (s *DrainPublicTestSuite) TestDrainWithAStuckConsumer() {
 	case <-time.After(time.Second):
 		s.FailNow("the drain held the heartbeat while a consumer would not stop")
 	}
-	s.Equal(job.AgentStateDraining, s.testAgent.State())
+	s.Equal(types.AgentDraining, s.testAgent.State())
 	s.False(agent.ExportDrainCondition(s.testAgent).Status)
 
 	s.Eventually(func() bool { return agent.ExportDrainCondition(s.testAgent).Status },
 		2*time.Second, 20*time.Millisecond, "the agent reports DrainStuck")
 	c := agent.ExportDrainCondition(s.testAgent)
-	s.Equal(job.ConditionDrainStuck, c.Type)
+	s.Equal(types.ConditionDrainStuck, c.Type)
 	s.NotEmpty(c.Reason)
-	s.Equal(job.AgentStateDraining, s.testAgent.State())
+	s.Equal(types.AgentDraining, s.testAgent.State())
 
 	close(release)
-	s.Eventually(func() bool { return s.testAgent.State() == job.AgentStateCordoned },
+	s.Eventually(func() bool { return s.testAgent.State() == types.AgentCordoned },
 		2*time.Second, 10*time.Millisecond)
 	s.False(agent.ExportDrainCondition(s.testAgent).Status, "the condition clears")
 }
@@ -271,13 +272,13 @@ func (s *DrainPublicTestSuite) TestDrainWithAStuckConsumer() {
 func (s *DrainPublicTestSuite) TestHandleDrainDetection() {
 	tests := []struct {
 		name         string
-		initialState string
+		initialState types.AgentState
 		setupMock    func()
-		validateFunc func(string)
+		validateFunc func(types.AgentState)
 	}{
 		{
 			name:         "when drain flag set and agent is Ready moves to Draining, then Cordoned",
-			initialState: job.AgentStateReady,
+			initialState: types.AgentReady,
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					CheckDrainFlag(gomock.Any(), "test-machine-id").
@@ -302,33 +303,33 @@ func (s *DrainPublicTestSuite) TestHandleDrainDetection() {
 						return nil
 					})
 			},
-			validateFunc: func(got string) {
+			validateFunc: func(got types.AgentState) {
 				// The heartbeat does not wait for the consumers.
-				s.Equal(job.AgentStateDraining, got)
+				s.Equal(types.AgentDraining, got)
 				select {
 				case <-s.cordoned:
 				case <-time.After(3 * time.Second):
 					s.FailNow("the drain did not finish")
 				}
-				s.Equal(job.AgentStateCordoned, s.testAgent.State())
+				s.Equal(types.AgentCordoned, s.testAgent.State())
 			},
 		},
 		{
 			name:         "when drain flag removed and agent is still Draining waits for the drain",
-			initialState: job.AgentStateDraining,
+			initialState: types.AgentDraining,
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					CheckDrainFlag(gomock.Any(), "test-machine-id").
 					Return(false)
 			},
-			validateFunc: func(got string) {
+			validateFunc: func(got types.AgentState) {
 				// The undrain applies once the drain has reached Cordoned.
-				s.Equal(job.AgentStateDraining, got)
+				s.Equal(types.AgentDraining, got)
 			},
 		},
 		{
 			name:         "when drain flag removed and agent is Cordoned transitions to Ready",
-			initialState: job.AgentStateCordoned,
+			initialState: types.AgentCordoned,
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					CheckDrainFlag(gomock.Any(), "test-machine-id").
@@ -351,32 +352,32 @@ func (s *DrainPublicTestSuite) TestHandleDrainDetection() {
 					Return(context.Canceled).
 					AnyTimes()
 			},
-			validateFunc: func(got string) {
-				s.Equal(job.AgentStateReady, got)
+			validateFunc: func(got types.AgentState) {
+				s.Equal(types.AgentReady, got)
 			},
 		},
 		{
 			name:         "when drain flag still set and agent is already Draining stays Draining",
-			initialState: job.AgentStateDraining,
+			initialState: types.AgentDraining,
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					CheckDrainFlag(gomock.Any(), "test-machine-id").
 					Return(true)
 			},
-			validateFunc: func(got string) {
-				s.Equal(job.AgentStateDraining, got)
+			validateFunc: func(got types.AgentState) {
+				s.Equal(types.AgentDraining, got)
 			},
 		},
 		{
 			name:         "when no drain flag and agent is Ready stays Ready",
-			initialState: job.AgentStateReady,
+			initialState: types.AgentReady,
 			setupMock: func() {
 				s.mockJobClient.EXPECT().
 					CheckDrainFlag(gomock.Any(), "test-machine-id").
 					Return(false)
 			},
-			validateFunc: func(got string) {
-				s.Equal(job.AgentStateReady, got)
+			validateFunc: func(got types.AgentState) {
+				s.Equal(types.AgentReady, got)
 			},
 		},
 	}

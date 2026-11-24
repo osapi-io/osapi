@@ -29,10 +29,11 @@ import (
 	"log/slog"
 	"path/filepath"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/avfs/avfs"
 	"github.com/nats-io/nats.go"
 
-	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/pki"
 
 	"github.com/osapi-io/osapi/internal/atomicfile"
@@ -102,7 +103,7 @@ func (a *Agent) handlePKIEnrollment(
 	// Start background listener for acceptance response.
 	a.startEnrollmentListener(ctx)
 
-	a.setState(job.AgentStatePending)
+	a.setState(types.AgentPending)
 	a.pkiLogger.Info(
 		"agent not enrolled, entering pending state",
 		slog.String("fingerprint", m.Fingerprint()),
@@ -128,7 +129,7 @@ func (a *Agent) handlePKIEnrollment(
 // Called from the heartbeat, which runs while Pending precisely so the agent stays
 // visible.
 func (a *Agent) retryEnrollmentIfPending() {
-	if a.State() != job.AgentStatePending {
+	if a.State() != types.AgentPending {
 		return
 	}
 
@@ -286,7 +287,7 @@ func (a *Agent) handleEnrollmentResponse(
 	// Transition to Ready and start consumers, as one step for the reason given
 	// on lifecycleMu.
 	a.lifecycleMu.Lock()
-	a.state = job.AgentStateReady
+	a.state = types.AgentReady
 	a.startConsumersLocked()
 	a.lifecycleMu.Unlock()
 

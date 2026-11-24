@@ -6,7 +6,7 @@
  */
 import type { AgentInfoFacts } from './agentInfoFacts';
 import type { AgentInfoLabels } from './agentInfoLabels';
-import type { AgentInfoState } from './agentInfoState';
+import type { AgentState } from './agentState';
 import type { LoadAverageResponse } from './loadAverageResponse';
 import type { MemoryResponse } from './memoryResponse';
 import type { NetworkInterfaceResponse } from './networkInterfaceResponse';
@@ -56,8 +56,7 @@ export interface AgentInfo {
   service_mgr?: string;
   /** When the agent process started. */
   started_at?: string;
-  /** The scheduling state of the agent: Ready, Draining, Cordoned or Pending. A drain that the agent has not applied yet is Draining. */
-  state: AgentInfoState;
+  state: AgentState;
   /** Agent state transition history. */
   timeline?: TimelineEvent[];
   /** The system uptime. */

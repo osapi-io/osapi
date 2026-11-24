@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // AgentDetail is the AgentDetail of the spec.
 type AgentDetail struct {
 	// Agent hostname.
@@ -51,7 +53,7 @@ type ComponentEntry struct {
 	Components []ComponentEntry `json:"components,omitempty"`
 
 	// Active conditions.
-	Conditions []string `json:"conditions,omitempty"`
+	Conditions []types.ConditionType `json:"conditions,omitempty"`
 
 	// Process CPU usage percentage.
 	CPUPercent float64 `json:"cpu_percent,omitempty"`

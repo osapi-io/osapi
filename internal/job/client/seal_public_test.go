@@ -28,6 +28,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/nats-io/nkeys"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -289,7 +291,7 @@ func (s *SealPublicTestSuite) TestRequest() {
 			}
 			c := s.newClient(tc.store())
 
-			req, err := c.ExportRequest(s.ctx, job.TypeModify, tc.target, tc.resolved,
+			req, err := c.ExportRequest(s.ctx, types.JobTypeModify, tc.target, tc.resolved,
 				job.CategoryBehavior, "docker.create", tc.data)
 
 			if tc.wantErr != "" {
@@ -298,7 +300,7 @@ func (s *SealPublicTestSuite) TestRequest() {
 				return
 			}
 			s.Require().NoError(err)
-			s.Equal(job.TypeModify, req.Type)
+			s.Equal(types.JobTypeModify, req.Type)
 			tc.validateFunc(req)
 		})
 	}

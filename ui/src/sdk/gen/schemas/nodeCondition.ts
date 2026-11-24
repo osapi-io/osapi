@@ -4,10 +4,10 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { NodeConditionType } from './nodeConditionType';
+import type { ConditionType } from './conditionType';
 
 export interface NodeCondition {
   last_transition_time: string;
   reason?: string;
-  type: NodeConditionType;
+  type: ConditionType;
 }

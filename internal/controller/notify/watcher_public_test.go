@@ -28,6 +28,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -76,7 +78,7 @@ func (s *WatcherPublicTestSuite) TestDetectTransitions() {
 			hostname:      "web-01",
 			conditions: []job.Condition{
 				{
-					Type:               job.ConditionMemoryPressure,
+					Type:               types.ConditionMemoryPressure,
 					Status:             true,
 					Reason:             "memory above threshold",
 					LastTransitionTime: time.Now(),
@@ -88,7 +90,7 @@ func (s *WatcherPublicTestSuite) TestDetectTransitions() {
 				s.Require().Len(events, 1)
 				s.Equal("agent", events[0].ComponentType)
 				s.Equal("web-01", events[0].Hostname)
-				s.Equal(job.ConditionMemoryPressure, events[0].Condition)
+				s.Equal(types.ConditionMemoryPressure, events[0].Condition)
 				s.True(events[0].Active)
 			},
 		},
@@ -102,8 +104,8 @@ func (s *WatcherPublicTestSuite) TestDetectTransitions() {
 				notify.WatcherSetPrevEntry(
 					s.watcher,
 					"agents.web_01",
-					map[string]*notify.ExportConditionState{
-						job.ConditionMemoryPressure: notify.NewConditionState(true, time.Now()),
+					map[types.ConditionType]*notify.ExportConditionState{
+						types.ConditionMemoryPressure: notify.NewConditionState(true, time.Now()),
 					},
 				)
 			},
@@ -112,7 +114,7 @@ func (s *WatcherPublicTestSuite) TestDetectTransitions() {
 				s.Require().Len(events, 1)
 				s.Equal("agent", events[0].ComponentType)
 				s.Equal("web-01", events[0].Hostname)
-				s.Equal(job.ConditionMemoryPressure, events[0].Condition)
+				s.Equal(types.ConditionMemoryPressure, events[0].Condition)
 				s.False(events[0].Active)
 			},
 		},
@@ -123,7 +125,7 @@ func (s *WatcherPublicTestSuite) TestDetectTransitions() {
 			hostname:      "web-01",
 			conditions: []job.Condition{
 				{
-					Type:               job.ConditionMemoryPressure,
+					Type:               types.ConditionMemoryPressure,
 					Status:             true,
 					Reason:             "memory above threshold",
 					LastTransitionTime: time.Now(),
@@ -133,8 +135,8 @@ func (s *WatcherPublicTestSuite) TestDetectTransitions() {
 				notify.WatcherSetPrevEntry(
 					s.watcher,
 					"agents.web_01",
-					map[string]*notify.ExportConditionState{
-						job.ConditionMemoryPressure: notify.NewConditionState(true, time.Now()),
+					map[types.ConditionType]*notify.ExportConditionState{
+						types.ConditionMemoryPressure: notify.NewConditionState(true, time.Now()),
 					},
 				)
 			},
@@ -150,7 +152,7 @@ func (s *WatcherPublicTestSuite) TestDetectTransitions() {
 			hostname:      "web-01",
 			conditions: []job.Condition{
 				{
-					Type:               job.ConditionMemoryPressure,
+					Type:               types.ConditionMemoryPressure,
 					Status:             true,
 					LastTransitionTime: time.Now(),
 				},
@@ -160,8 +162,8 @@ func (s *WatcherPublicTestSuite) TestDetectTransitions() {
 				notify.WatcherSetPrevEntry(
 					s.watcher,
 					"agents.web_01",
-					map[string]*notify.ExportConditionState{
-						job.ConditionMemoryPressure: notify.NewConditionState(
+					map[types.ConditionType]*notify.ExportConditionState{
+						types.ConditionMemoryPressure: notify.NewConditionState(
 							true,
 							time.Now().Add(-1*time.Second),
 						),
@@ -172,7 +174,7 @@ func (s *WatcherPublicTestSuite) TestDetectTransitions() {
 			validateFunc: func(events []notify.ConditionEvent) {
 				s.Require().Len(events, 1)
 				s.True(events[0].Active)
-				s.Equal(job.ConditionMemoryPressure, events[0].Condition)
+				s.Equal(types.ConditionMemoryPressure, events[0].Condition)
 			},
 		},
 		{
@@ -182,7 +184,7 @@ func (s *WatcherPublicTestSuite) TestDetectTransitions() {
 			hostname:      "web-01",
 			conditions: []job.Condition{
 				{
-					Type:               job.ConditionMemoryPressure,
+					Type:               types.ConditionMemoryPressure,
 					Status:             true,
 					LastTransitionTime: time.Now(),
 				},
@@ -192,8 +194,8 @@ func (s *WatcherPublicTestSuite) TestDetectTransitions() {
 				notify.WatcherSetPrevEntry(
 					s.watcher,
 					"agents.web_01",
-					map[string]*notify.ExportConditionState{
-						job.ConditionMemoryPressure: notify.NewConditionState(true, time.Now()),
+					map[types.ConditionType]*notify.ExportConditionState{
+						types.ConditionMemoryPressure: notify.NewConditionState(true, time.Now()),
 					},
 				)
 			},
@@ -210,7 +212,7 @@ func (s *WatcherPublicTestSuite) TestDetectTransitions() {
 			s.capturedEvts = nil
 			notify.WatcherSetPrev(
 				s.watcher,
-				make(map[string]map[string]*notify.ExportConditionState),
+				make(map[string]map[types.ConditionType]*notify.ExportConditionState),
 			)
 
 			if tt.wantEvents > 0 {
@@ -393,7 +395,7 @@ func (s *WatcherPublicTestSuite) TestExtractConditions() {
 					Hostname: "web-01",
 					Conditions: []job.Condition{
 						{
-							Type:   job.ConditionMemoryPressure,
+							Type:   types.ConditionMemoryPressure,
 							Status: true,
 						},
 					},
@@ -404,7 +406,7 @@ func (s *WatcherPublicTestSuite) TestExtractConditions() {
 			wantOK: true,
 			validateFunc: func(conditions []job.Condition) {
 				s.Require().Len(conditions, 1)
-				s.Equal(job.ConditionMemoryPressure, conditions[0].Type)
+				s.Equal(types.ConditionMemoryPressure, conditions[0].Type)
 				s.True(conditions[0].Status)
 			},
 		},
@@ -418,7 +420,7 @@ func (s *WatcherPublicTestSuite) TestExtractConditions() {
 					Hostname: "api-server-01",
 					Conditions: []job.Condition{
 						{
-							Type:   job.ConditionHighLoad,
+							Type:   types.ConditionHighLoad,
 							Status: true,
 						},
 					},
@@ -429,7 +431,7 @@ func (s *WatcherPublicTestSuite) TestExtractConditions() {
 			wantOK: true,
 			validateFunc: func(conditions []job.Condition) {
 				s.Require().Len(conditions, 1)
-				s.Equal(job.ConditionHighLoad, conditions[0].Type)
+				s.Equal(types.ConditionHighLoad, conditions[0].Type)
 			},
 		},
 		{
@@ -535,7 +537,7 @@ func (s *WatcherPublicTestSuite) TestHandleEntry() {
 				s.Require().Len(events, 1)
 				s.Equal("agent", events[0].ComponentType)
 				s.Equal("web-01", events[0].Hostname)
-				s.Equal("ComponentUnreachable", events[0].Condition)
+				s.Equal(notify.ConditionComponentUnreachable, events[0].Condition)
 				s.True(events[0].Active)
 				s.Equal("heartbeat expired", events[0].Reason)
 			},
@@ -555,7 +557,7 @@ func (s *WatcherPublicTestSuite) TestHandleEntry() {
 				s.Require().Len(events, 1)
 				s.Equal("nats", events[0].ComponentType)
 				s.Equal("nats-01", events[0].Hostname)
-				s.Equal("ComponentUnreachable", events[0].Condition)
+				s.Equal(notify.ConditionComponentUnreachable, events[0].Condition)
 				s.True(events[0].Active)
 			},
 		},
@@ -565,7 +567,7 @@ func (s *WatcherPublicTestSuite) TestHandleEntry() {
 				reg := job.AgentRegistration{
 					Hostname: "web-01",
 					Conditions: []job.Condition{
-						{Type: job.ConditionMemoryPressure, Status: true},
+						{Type: types.ConditionMemoryPressure, Status: true},
 					},
 				}
 				b, _ := json.Marshal(reg)
@@ -583,7 +585,7 @@ func (s *WatcherPublicTestSuite) TestHandleEntry() {
 				s.Require().Len(events, 1)
 				s.Equal("agent", events[0].ComponentType)
 				s.Equal("web-01", events[0].Hostname)
-				s.Equal(job.ConditionMemoryPressure, events[0].Condition)
+				s.Equal(types.ConditionMemoryPressure, events[0].Condition)
 				s.True(events[0].Active)
 			},
 		},
@@ -612,7 +614,7 @@ func (s *WatcherPublicTestSuite) TestHandleEntry() {
 			s.capturedEvts = nil
 			notify.WatcherSetPrev(
 				s.watcher,
-				make(map[string]map[string]*notify.ExportConditionState),
+				make(map[string]map[types.ConditionType]*notify.ExportConditionState),
 			)
 
 			if tt.wantEvents > 0 {
@@ -655,7 +657,7 @@ func (s *WatcherPublicTestSuite) TestHandleDelete() {
 				s.Require().Len(events, 1)
 				s.Equal("agent", events[0].ComponentType)
 				s.Equal("web-01", events[0].Hostname)
-				s.Equal("ComponentUnreachable", events[0].Condition)
+				s.Equal(notify.ConditionComponentUnreachable, events[0].Condition)
 				s.True(events[0].Active)
 				s.Equal("heartbeat expired", events[0].Reason)
 			},
@@ -669,14 +671,14 @@ func (s *WatcherPublicTestSuite) TestHandleDelete() {
 				notify.WatcherSetPrevEntry(
 					s.watcher,
 					"agents.web-01",
-					map[string]*notify.ExportConditionState{
-						job.ConditionMemoryPressure: notify.NewConditionState(true, time.Now()),
+					map[types.ConditionType]*notify.ExportConditionState{
+						types.ConditionMemoryPressure: notify.NewConditionState(true, time.Now()),
 					},
 				)
 			},
 			validateFunc: func(events []notify.ConditionEvent) {
 				s.Require().Len(events, 1)
-				s.Equal("ComponentUnreachable", events[0].Condition)
+				s.Equal(notify.ConditionComponentUnreachable, events[0].Condition)
 				prev := notify.WatcherGetPrev(s.watcher)
 				s.Nil(prev["agents.web-01"])
 			},
@@ -688,7 +690,7 @@ func (s *WatcherPublicTestSuite) TestHandleDelete() {
 			s.capturedEvts = nil
 			notify.WatcherSetPrev(
 				s.watcher,
-				make(map[string]map[string]*notify.ExportConditionState),
+				make(map[string]map[types.ConditionType]*notify.ExportConditionState),
 			)
 
 			// HandleDelete always emits exactly one ComponentUnreachable event.
@@ -797,7 +799,7 @@ func (s *WatcherPublicTestSuite) TestStart() {
 			s.capturedEvts = nil
 			notify.WatcherSetPrev(
 				s.watcher,
-				make(map[string]map[string]*notify.ExportConditionState),
+				make(map[string]map[types.ConditionType]*notify.ExportConditionState),
 			)
 
 			ctx, cancel := context.WithCancel(context.Background())

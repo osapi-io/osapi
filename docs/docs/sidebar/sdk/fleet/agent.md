@@ -165,18 +165,25 @@ The fields of each type are the properties of its schema in the API's spec.
 | `Routes`           | `[]RouteResponse`            | Network routing table entries.                                                                                                                                                                                                |
 | `ServiceMgr`       | `string`                     | Init system.                                                                                                                                                                                                                  |
 | `StartedAt`        | `time.Time`                  | When the agent process started.                                                                                                                                                                                               |
-| `State`            | `AgentInfoState`             | The scheduling state of the agent: Ready, Draining, Cordoned or Pending. A drain that the agent has not applied yet is Draining. It is one of: Ready, Draining, Cordoned, Pending.                                            |
+| `State`            | `AgentState`                 | The scheduling state of an agent: Ready, Draining, Cordoned or Pending. A drain that the agent has not applied yet is Draining.                                                                                               |
 | `Timeline`         | `[]TimelineEvent`            | Agent state transition history.                                                                                                                                                                                               |
 | `Uptime`           | `string`                     | The system uptime.                                                                                                                                                                                                            |
 | `Verified`         | `bool`                       | Whether this agent's registration was signed by its stored key and claims the hostname it enrolled under. Only a verified registration decides where work is routed. True when the controller is not enforcing verification.  |
 | `Version`          | `string`                     | The build version of the agent binary. Absent for an agent that does not report it.                                                                                                                                           |
 
-### AgentInfoState
+### AgentState
 
-The scheduling state of the agent: Ready, Draining, Cordoned or Pending. A drain
+The scheduling state of an agent: Ready, Draining, Cordoned or Pending. A drain
 that the agent has not applied yet is Draining.
 
 A `string`, one of `Ready`, `Draining`, `Cordoned`, `Pending`.
+
+### ConditionType
+
+A condition that an agent or a component evaluates.
+
+A `string`, one of `MemoryPressure`, `HighLoad`, `DiskPressure`, `DrainStuck`,
+`ConsumersUnavailable`, `ProcessMemoryPressure`, `ProcessHighCPU`.
 
 ### FactKeyEntry
 
@@ -238,16 +245,11 @@ A `string`, one of `inet`, `inet6`, `dual`.
 
 ### NodeCondition
 
-| Field                | Type                | Description                                                                             |
-| -------------------- | ------------------- | --------------------------------------------------------------------------------------- |
-| `LastTransitionTime` | `time.Time`         |                                                                                         |
-| `Reason`             | `string`            |                                                                                         |
-| `Type`               | `NodeConditionType` | It is one of: MemoryPressure, HighLoad, DiskPressure, DrainStuck, ConsumersUnavailable. |
-
-### NodeConditionType
-
-A `string`, one of `MemoryPressure`, `HighLoad`, `DiskPressure`, `DrainStuck`,
-`ConsumersUnavailable`.
+| Field                | Type            | Description                                         |
+| -------------------- | --------------- | --------------------------------------------------- |
+| `LastTransitionTime` | `time.Time`     |                                                     |
+| `Reason`             | `string`        |                                                     |
+| `Type`               | `ConditionType` | A condition that an agent or a component evaluates. |
 
 ### OSInfoResponse
 

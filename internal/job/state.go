@@ -20,6 +20,8 @@
 
 package job
 
+import "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // EffectiveState is the scheduling state of an agent as the controller
 // reports it, from the state the agent reported and whether its drain flag
 // is set. A drain that the agent has not applied yet is Draining: the flag
@@ -27,14 +29,14 @@ package job
 // not Cordoned until the agent says so. Otherwise it is the state the
 // agent reported, and an agent that reported none is Ready.
 func EffectiveState(
-	reported string,
+	reported types.AgentState,
 	drainFlag bool,
-) string {
+) types.AgentState {
 	if reported == "" {
-		reported = AgentStateReady
+		reported = types.AgentReady
 	}
-	if drainFlag && reported == AgentStateReady {
-		return AgentStateDraining
+	if drainFlag && reported == types.AgentReady {
+		return types.AgentDraining
 	}
 
 	return reported

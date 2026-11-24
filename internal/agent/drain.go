@@ -26,6 +26,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/job"
 )
 
@@ -65,20 +67,20 @@ func (a *Agent) handleDrainDetection(
 	defer a.lifecycleMu.Unlock()
 
 	switch {
-	case drainRequested && a.state == job.AgentStateReady:
+	case drainRequested && a.state == types.AgentReady:
 		a.logger.Info("drain detected, stopping job consumption")
 		set := a.cancelConsumersLocked()
-		a.state = job.AgentStateDraining
+		a.state = types.AgentDraining
 		_ = a.jobClient.WriteAgentTimelineEvent(
 			ctx, hostname, "drain", "Drain initiated",
 		)
 		a.wg.Add(1)
 		go a.finishDrain(ctx, set, hostname)
 
-	case !drainRequested && a.state == job.AgentStateCordoned:
+	case !drainRequested && a.state == types.AgentCordoned:
 		a.logger.Info("undrain detected, resuming job consumption")
 		a.startConsumersLocked()
-		a.state = job.AgentStateReady
+		a.state = types.AgentReady
 		_ = a.jobClient.WriteAgentTimelineEvent(
 			ctx, hostname, "undrain", "Resumed accepting jobs",
 		)
@@ -119,9 +121,9 @@ func (a *Agent) finishDrain(
 
 	a.lifecycleMu.Lock()
 	a.drainStuck = false
-	cordoned := a.state == job.AgentStateDraining
+	cordoned := a.state == types.AgentDraining
 	if cordoned {
-		a.state = job.AgentStateCordoned
+		a.state = types.AgentCordoned
 	}
 	a.lifecycleMu.Unlock()
 
@@ -141,9 +143,9 @@ func (a *Agent) drainCondition() job.Condition {
 	a.lifecycleMu.RUnlock()
 
 	c := job.Condition{
-		Type:               job.ConditionDrainStuck,
+		Type:               types.ConditionDrainStuck,
 		Status:             stuck,
-		LastTransitionTime: transitionTime(job.ConditionDrainStuck, stuck, a.prevConditions),
+		LastTransitionTime: transitionTime(types.ConditionDrainStuck, stuck, a.prevConditions),
 	}
 	if stuck {
 		c.Reason = "job consumers have not stopped since the drain"

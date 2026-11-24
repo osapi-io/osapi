@@ -27,6 +27,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -287,9 +289,9 @@ func (s *MetricsPublicTestSuite) TestAgentStats() {
 
 	s.Run("when an agent is drained counts it as registered, not ready", func() {
 		s.jobs.EXPECT().ListAgents(gomock.Any()).Return([]job.AgentInfo{
-			{Hostname: "web-01", State: string(job.AgentStateReady)},
-			{Hostname: "web-02", State: string(job.AgentStateCordoned)},
-			{Hostname: "web-03", State: string(job.AgentStateDraining)},
+			{Hostname: "web-01", State: types.AgentReady},
+			{Hostname: "web-02", State: types.AgentCordoned},
+			{Hostname: "web-03", State: types.AgentDraining},
 			{Hostname: "web-04"},
 		}, nil)
 
@@ -356,7 +358,7 @@ func (s *MetricsPublicTestSuite) TestComponentRegistry() {
 			Return(s.entry(job.AgentRegistration{
 				Hostname:  "drain-01",
 				MachineID: "m-drain",
-				State:     string(job.AgentStateReady),
+				State:     types.AgentReady,
 			}), nil)
 		s.nc.EXPECT().
 			KVGet(gomock.Any(), "registry", "agents.web-01").
@@ -372,7 +374,7 @@ func (s *MetricsPublicTestSuite) TestComponentRegistry() {
 			KVGet(gomock.Any(), "registry", "agents.app-01").
 			Return(s.entry(job.AgentRegistration{
 				Hostname: "app-01",
-				State:    string(job.AgentStateCordoned),
+				State:    types.AgentCordoned,
 			}), nil)
 		s.nc.EXPECT().KVGet(gomock.Any(), "registry", "agents.bad-json").Return(s.entry("{"), nil)
 		s.nc.EXPECT().
@@ -403,7 +405,7 @@ func (s *MetricsPublicTestSuite) TestComponentRegistry() {
 		got = append(got[:1], got[2:]...)
 		s.Equal("web-01", got[1].Hostname)
 		s.Equal("Ready", got[1].Status, "an agent with no state is Ready")
-		s.Equal([]string{"HighCPU"}, got[1].Conditions)
+		s.Equal([]types.ConditionType{"HighCPU"}, got[1].Conditions)
 		s.Equal("v1.2.3-agent", got[1].Version, "an agent's entry has its binary's version")
 		s.Equal(1.5, got[1].CPUPercent)
 		s.Equal(int64(2048), got[1].MemBytes)
@@ -414,7 +416,7 @@ func (s *MetricsPublicTestSuite) TestComponentRegistry() {
 		s.Equal("controller", got[2].Type)
 		s.Equal("ctl-01", got[2].Hostname)
 		s.Equal("Ready", got[2].Status)
-		s.Equal([]string{"HighCPU"}, got[2].Conditions)
+		s.Equal([]types.ConditionType{"HighCPU"}, got[2].Conditions)
 		s.Equal("v1.2.3-ctl", got[2].Version, "a controller's entry has its binary's version")
 	})
 

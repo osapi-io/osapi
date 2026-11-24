@@ -5,13 +5,18 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type NodeConditionType = typeof NodeConditionType[keyof typeof NodeConditionType];
+/**
+ * A condition that an agent or a component evaluates.
+ */
+export type ConditionType = typeof ConditionType[keyof typeof ConditionType];
 
 
-export const NodeConditionType = {
+export const ConditionType = {
   MemoryPressure: 'MemoryPressure',
   HighLoad: 'HighLoad',
   DiskPressure: 'DiskPressure',
   DrainStuck: 'DrainStuck',
   ConsumersUnavailable: 'ConsumersUnavailable',
+  ProcessMemoryPressure: 'ProcessMemoryPressure',
+  ProcessHighCPU: 'ProcessHighCPU',
 } as const;

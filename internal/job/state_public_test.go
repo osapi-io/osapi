@@ -23,6 +23,8 @@ package job_test
 import (
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/job"
@@ -43,51 +45,51 @@ func TestStatePublicTestSuite(
 func (s *StatePublicTestSuite) TestEffectiveState() {
 	tests := []struct {
 		name     string
-		reported string
+		reported types.AgentState
 		flag     bool
-		want     string
+		want     types.AgentState
 	}{
 		{
 			name:     "when the flag is set and the agent has not applied it is Draining",
-			reported: job.AgentStateReady,
+			reported: types.AgentReady,
 			flag:     true,
-			want:     job.AgentStateDraining,
+			want:     types.AgentDraining,
 		},
 		{
 			name:     "when the flag is set and the agent reported no state is Draining",
 			reported: "",
 			flag:     true,
-			want:     job.AgentStateDraining,
+			want:     types.AgentDraining,
 		},
 		{
 			name:     "when the agent is draining it is Draining",
-			reported: job.AgentStateDraining,
+			reported: types.AgentDraining,
 			flag:     true,
-			want:     job.AgentStateDraining,
+			want:     types.AgentDraining,
 		},
 		{
 			name:     "when the agent has cordoned it is Cordoned",
-			reported: job.AgentStateCordoned,
+			reported: types.AgentCordoned,
 			flag:     true,
-			want:     job.AgentStateCordoned,
+			want:     types.AgentCordoned,
 		},
 		{
 			name:     "when the flag is removed and the agent has not undrained it stays Cordoned",
-			reported: job.AgentStateCordoned,
+			reported: types.AgentCordoned,
 			flag:     false,
-			want:     job.AgentStateCordoned,
+			want:     types.AgentCordoned,
 		},
 		{
 			name:     "when there is no flag and no state it is Ready",
 			reported: "",
 			flag:     false,
-			want:     job.AgentStateReady,
+			want:     types.AgentReady,
 		},
 		{
 			name:     "when a pending agent has a flag it stays Pending",
-			reported: job.AgentStatePending,
+			reported: types.AgentPending,
 			flag:     true,
-			want:     job.AgentStatePending,
+			want:     types.AgentPending,
 		},
 	}
 

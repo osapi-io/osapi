@@ -28,6 +28,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/nats-io/nats.go/jetstream"
 	natsclient "github.com/osapi-io/nats-client/pkg/client"
 	"github.com/stretchr/testify/suite"
@@ -36,7 +38,6 @@ import (
 	"github.com/osapi-io/osapi/internal/agent"
 	agentmocks "github.com/osapi-io/osapi/internal/agent/mocks"
 	"github.com/osapi-io/osapi/internal/config"
-	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/mocks"
 	diskMocks "github.com/osapi-io/osapi/internal/provider/node/disk/mocks"
 	hostMocks "github.com/osapi-io/osapi/internal/provider/node/host/mocks"
@@ -847,7 +848,7 @@ func (s *ConsumerPublicTestSuite) TestConsumersCondition() {
 				// reason settles once each has.
 				s.Eventually(func() bool {
 					c := agent.ExportConsumersCondition(a)
-					if !c.Status || c.Type != job.ConditionConsumersUnavailable {
+					if !c.Status || c.Type != types.ConditionConsumersUnavailable {
 						return false
 					}
 					for _, want := range tt.wantReason {
