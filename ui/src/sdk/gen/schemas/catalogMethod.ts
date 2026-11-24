@@ -8,7 +8,7 @@ import type { CatalogCall } from './catalogCall';
 import type { CatalogColumn } from './catalogColumn';
 import type { CatalogExample } from './catalogExample';
 import type { CatalogField } from './catalogField';
-import type { CatalogMethodKind } from './catalogMethodKind';
+import type { MethodKind } from './methodKind';
 import type { Permission } from './permission';
 
 export interface CatalogMethod {
@@ -30,8 +30,7 @@ export interface CatalogMethod {
   http_method?: string;
   /** The input type and its fields, a required one marked *. */
   input: string;
-  /** What the method does to a host, by the verb of its permission: read, write or action. */
-  kind: CatalogMethodKind;
+  kind: MethodKind;
   /** The rest of what the method does. */
   long?: string;
   /** The name of the method. */

@@ -6,7 +6,7 @@ import { secretScheme } from "@/lib/secret-ref";
 // ---------------------------------------------------------------------------
 
 import type { AgentInfo, Permission } from "@/sdk/gen/schemas";
-import { methodInput, methodReady } from "@/lib/catalog";
+import { MethodKind, methodInput, methodReady } from "@/lib/catalog";
 import type { StepDef } from "@/lib/catalog-index";
 
 /** What the last run of a step did. */
@@ -37,7 +37,7 @@ export interface PlanStep {
  * call of the controller takes no target.
  */
 export function defaultTarget(def: StepDef): string {
-  return !def.controller && def.kind === "read" ? "_all" : "";
+  return !def.controller && def.kind === MethodKind.read ? "_all" : "";
 }
 
 /** Whether the step has the input that it needs. */

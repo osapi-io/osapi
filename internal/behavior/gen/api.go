@@ -31,6 +31,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/dave/jennifer/jen"
 
 	"github.com/osapi-io/osapi/internal/behavior"
@@ -333,7 +335,7 @@ func validationCases(
 	for _, fl := range command.Flags(m.In) {
 		hasBody = hasBody || !m.InPath(fl.JSON)
 	}
-	if m.Verb == behavior.VerbWrite && hasBody {
+	if m.Verb == types.VerbWrite && hasBody {
 		c := base
 		c.body = "{"
 		add(c, "when the body is not JSON, it is a 400")
@@ -406,7 +408,7 @@ func rbacCases(
 		", it is a 403", "Lacking", http.StatusForbidden
 	cases := []httpCase{none, lacking}
 
-	if m.Verb == behavior.VerbWrite {
+	if m.Verb == types.VerbWrite {
 		read := base
 		read.name, read.token, read.code = "when the token has only the read role, it is a 403",
 			"Read", http.StatusForbidden
@@ -443,7 +445,7 @@ func request(
 	case m.AdminRole():
 		// Only the admin role grants an admin-only method's permission.
 		c.token = "Admin"
-	case m.Verb == behavior.VerbWrite:
+	case m.Verb == types.VerbWrite:
 		c.token = "Write"
 	}
 
@@ -455,7 +457,7 @@ func request(
 			url.PathEscape(fmt.Sprint(v.FieldByIndex(field.Index).Interface())), 1)
 	}
 
-	if m.Verb == behavior.VerbWrite {
+	if m.Verb == types.VerbWrite {
 		data, err := json.Marshal(secret.Plain(input))
 		if err != nil {
 			return c, err
@@ -533,7 +535,7 @@ func jobCall(
 	replies ...jen.Code,
 ) *jen.Statement {
 	fn := "Query"
-	if m.Verb == behavior.VerbWrite {
+	if m.Verb == types.VerbWrite {
 		fn = "Modify"
 	}
 	in, err := literal(reflect.ValueOf(input))

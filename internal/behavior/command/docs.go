@@ -27,6 +27,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/cli/reference"
@@ -219,7 +221,7 @@ func exampleResult(
 	for _, r := range rows {
 		r["hostname"] = exampleHost
 		r["status"] = "ok"
-		if _, ok := r["changed"]; !ok && m.Verb == behavior.VerbWrite {
+		if _, ok := r["changed"]; !ok && m.Verb == types.VerbWrite {
 			r["changed"] = true
 		}
 	}

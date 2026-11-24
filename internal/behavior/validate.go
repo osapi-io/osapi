@@ -27,6 +27,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
@@ -473,9 +475,9 @@ func ValidateBehavior(
 		} else if m.Action && (!command.Actions[verb] || command.Verbs[verb] || readVerbs[verb]) {
 			add(m.Name, RuleVerb, "an action is named for what it does, with one of the CLI's "+
 				"actions (osapi dsl command spec get), not %q", m.Name)
-		} else if m.Verb == VerbRead && !readVerbs[verb] {
+		} else if m.Verb == types.VerbRead && !readVerbs[verb] {
 			add(m.Name, RuleVerb, "a read is named list, get or status, not %q", m.Name)
-		} else if m.Verb == VerbWrite && !m.Action && !writeVerbs[verb] {
+		} else if m.Verb == types.VerbWrite && !m.Action && !writeVerbs[verb] {
 			add(m.Name, RuleVerb, "a write is named create, update or delete, not %q; "+
 				"declare a write named for what it does, such as restart, with behavior.Action", m.Name)
 		}
@@ -497,7 +499,7 @@ func ValidateBehavior(
 		}
 		if m.PermitVerb != "" && !slices.Contains(adminVerbs, m.PermitVerb) {
 			add(m.Name, RuleVerb, ".PermitAs takes a verb that only the admin role gets, "+
-				"behavior.VerbShell or behavior.VerbExec, not %q", m.PermitVerb)
+				"types.VerbShell or types.VerbExec, not %q", m.PermitVerb)
 		}
 		// The examples are the command lines on the CLI page of the method,
 		// and the generated tests send each one. The tests also check each
@@ -534,7 +536,7 @@ func ValidateBehavior(
 			for _, n := range unrefused(m) {
 				add(m.Name, RuleFails, "no .Fails input breaks %s on %s", n.Rule, n.Field)
 			}
-			if b.API && m.Verb == VerbWrite {
+			if b.API && m.Verb == types.VerbWrite {
 				for _, f := range sentEmpty(m) {
 					add(m.Name, RuleOptional,
 						"optional field %s is sent as its zero value when it is empty", f)
@@ -566,7 +568,7 @@ func ValidateBehavior(
 						"input field %s is secret and the key of the method; the key goes in the URL, which logs keep",
 						JSONName(f),
 					)
-				case m.Verb == VerbRead:
+				case m.Verb == types.VerbRead:
 					add(
 						m.Name,
 						RuleSecret,
@@ -608,7 +610,7 @@ func ValidateBehavior(
 					)
 				}
 			}
-			if m.Verb == VerbWrite && recordable && len(m.SpanInputs()) == 0 {
+			if m.Verb == types.VerbWrite && recordable && len(m.SpanInputs()) == 0 {
 				add(
 					m.Name,
 					RuleSpan,
@@ -714,7 +716,7 @@ func ValidateBehavior(
 		}
 
 		changed, ok := out.Properties["changed"]
-		if m.Verb == VerbWrite && (!ok || changed.Type != "boolean") {
+		if m.Verb == types.VerbWrite && (!ok || changed.Type != "boolean") {
 			add(m.Name, RuleChanged, `a write's output needs Changed bool `+"`json:\"changed\"`")
 		}
 	}

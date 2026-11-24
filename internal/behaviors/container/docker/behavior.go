@@ -26,6 +26,8 @@ package docker
 import (
 	"strings"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 )
@@ -208,7 +210,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Fails("A timeout longer than 300 seconds", StopInput{Name: name, Timeout: 301}, "max").
 		Fails("A negative timeout", StopInput{Name: name, Timeout: -1}, "min"),
 	behavior.Action("exec", Exec).Key("name").
-		PermitAs(behavior.VerbExec).
+		PermitAs(types.VerbExec).
 		Always().
 		Describe("Run a command in a container").
 		Explain("Runs docker exec, and answers what the command wrote to standard output and "+

@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"github.com/osapi-io/osapi/internal/validation/rule"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/behaviortest"
@@ -149,14 +150,14 @@ func method(
 // an action makes something happen, such as a restart or a reboot.
 func kindOf(
 	m *behavior.Method,
-) string {
+) types.MethodKind {
 	switch m.PermissionVerb() {
-	case behavior.VerbRead:
-		return "read"
-	case behavior.VerbWrite:
-		return "write"
+	case types.VerbRead:
+		return types.KindRead
+	case types.VerbWrite:
+		return types.KindWrite
 	default:
-		return "action"
+		return types.KindAction
 	}
 }
 
@@ -221,7 +222,7 @@ func fields(
 		switch {
 		case m.InPath(name):
 			in = "path"
-		case m.Verb == behavior.VerbRead:
+		case m.Verb == types.VerbRead:
 			in = "query"
 		}
 		rules := f.Tag.Get("validate")

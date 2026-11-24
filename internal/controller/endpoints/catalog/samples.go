@@ -38,7 +38,7 @@ var sampleCatalog = CatalogResponse{
 		UsedBy:    []string{},
 		Methods: []CatalogMethod{{
 			Name:       "get",
-			Kind:       "read",
+			Kind:       types.KindRead,
 			Doc:        "Get the hostname.",
 			HTTPMethod: "GET",
 			Path:       "/api/node/{hostname}/hostname",

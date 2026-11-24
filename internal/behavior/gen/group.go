@@ -30,6 +30,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/command"
 	"github.com/osapi-io/osapi/internal/cli/reference"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 const (
@@ -102,7 +103,7 @@ func groupFile(
 		}
 
 		ok := "Each target host's result."
-		if m.Verb != behavior.VerbRead {
+		if m.Verb != types.VerbRead {
 			ok = "Each target host's result, with whether it changed."
 		}
 		verb := map[string]string{"GET": "Get", "POST": "Post", "PUT": "Put", "DELETE": "Delete"}[m.HTTPMethod()]
@@ -257,7 +258,7 @@ func requestFields(
 			tags["in"] = "path"
 			tags["param"] = b.TypeName() + title(name)
 			out = append(out, field().Tag(tags))
-		case m.Verb == behavior.VerbRead:
+		case m.Verb == types.VerbRead:
 			tags["in"] = "query"
 			out = append(out, field().Tag(tags))
 		default:
@@ -357,7 +358,7 @@ func input(
 			continue
 		}
 		from := jen.Id("in").Dot(fld.Name)
-		if !m.InPath(name) && m.Verb != behavior.VerbRead {
+		if !m.InPath(name) && m.Verb != types.VerbRead {
 			from = jen.Id("in").Dot("Body").Dot(fld.Name)
 		}
 		values = append(values, jen.Id(fld.Name).Op(":").Add(from))

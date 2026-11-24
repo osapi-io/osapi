@@ -31,6 +31,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/behavior"
@@ -152,7 +154,7 @@ func (s *BehaviorSmokeSuite) TestReads() {
 		for _, m := range b.Methods {
 			// A read that names an item, or the item of a parent such as an
 			// interface's routes, has no input that every host has.
-			if m.Verb != behavior.VerbRead || len(m.PathKeys()) > 0 || needsInput(m) {
+			if m.Verb != types.VerbRead || len(m.PathKeys()) > 0 || needsInput(m) {
 				continue
 			}
 			s.Run(b.Name+" "+m.Name, func() {
@@ -199,7 +201,7 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 		for _, m := range b.Methods {
 			// A method that takes the host down, such as a reboot, never runs
 			// on the host the test runs on.
-			if m.Verb != behavior.VerbWrite || m.Disruptive {
+			if m.Verb != types.VerbWrite || m.Disruptive {
 				continue
 			}
 			for _, ex := range m.Examples {

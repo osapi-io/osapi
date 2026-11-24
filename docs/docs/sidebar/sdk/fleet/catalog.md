@@ -126,32 +126,25 @@ A `string`, one of `string`, `number`, `bool`, `list`, `object`.
 
 ### CatalogMethod
 
-| Field        | Type                | Description                                                                                                                      |
-| ------------ | ------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `Calls`      | `[]CatalogCall`     | The calls that the examples of the method make to other behaviors.                                                               |
-| `Columns`    | `[]CatalogColumn`   | The fields of the rows that the method answers, as the CLI's output reads them.                                                  |
-| `Disruption` | `string`            | What the method interrupts.                                                                                                      |
-| `Disruptive` | `bool`              | The method can interrupt a host, such as a reboot.                                                                               |
-| `Doc`        | `string`            | What the method does.                                                                                                            |
-| `Examples`   | `[]CatalogExample`  | The examples of the method.                                                                                                      |
-| `Fields`     | `[]CatalogField`    | The fields of the input.                                                                                                         |
-| `HttpMethod` | `string`            | The HTTP method of the route. An internal behavior has no route.                                                                 |
-| `Input`      | `string`            | The input type and its fields, a required one marked *.                                                                          |
-| `Kind`       | `CatalogMethodKind` | What the method does to a host, by the verb of its permission: read, write or action. It is one of: read, write, action.         |
-| `Long`       | `string`            | The rest of what the method does.                                                                                                |
-| `Name`       | `string`            | The name of the method.                                                                                                          |
-| `Output`     | `string`            | The output type and its fields.                                                                                                  |
-| `Path`       | `string`            | The path of the route.                                                                                                           |
-| `Permission` | `Permission`        | A permission that osapi knows, as resource:verb.                                                                                 |
-| `Platforms`  | `[]string`          | The platforms that the method runs on: those that its On limits it to, else each platform of the behavior.                       |
-| `RunsOn`     | `[]string`          | The host platforms that the method runs on, as the agent decides, and * for a Linux host whose platform gohai has no family for. |
-
-### CatalogMethodKind
-
-What the method does to a host, by the verb of its permission: read, write or
-action.
-
-A `string`, one of `read`, `write`, `action`.
+| Field        | Type               | Description                                                                                                                      |
+| ------------ | ------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `Calls`      | `[]CatalogCall`    | The calls that the examples of the method make to other behaviors.                                                               |
+| `Columns`    | `[]CatalogColumn`  | The fields of the rows that the method answers, as the CLI's output reads them.                                                  |
+| `Disruption` | `string`           | What the method interrupts.                                                                                                      |
+| `Disruptive` | `bool`             | The method can interrupt a host, such as a reboot.                                                                               |
+| `Doc`        | `string`           | What the method does.                                                                                                            |
+| `Examples`   | `[]CatalogExample` | The examples of the method.                                                                                                      |
+| `Fields`     | `[]CatalogField`   | The fields of the input.                                                                                                         |
+| `HttpMethod` | `string`           | The HTTP method of the route. An internal behavior has no route.                                                                 |
+| `Input`      | `string`           | The input type and its fields, a required one marked *.                                                                          |
+| `Kind`       | `MethodKind`       | What a method does to a host, by the verb of its permission: read, write or action.                                              |
+| `Long`       | `string`           | The rest of what the method does.                                                                                                |
+| `Name`       | `string`           | The name of the method.                                                                                                          |
+| `Output`     | `string`           | The output type and its fields.                                                                                                  |
+| `Path`       | `string`           | The path of the route.                                                                                                           |
+| `Permission` | `Permission`       | A permission that osapi knows, as resource:verb.                                                                                 |
+| `Platforms`  | `[]string`         | The platforms that the method runs on: those that its On limits it to, else each platform of the behavior.                       |
+| `RunsOn`     | `[]string`         | The host platforms that the method runs on, as the agent decides, and * for a Linux host whose platform gohai has no family for. |
 
 ### CatalogOperation
 
@@ -180,6 +173,13 @@ A `string`, one of `read`, `write`, `action`.
 | `Description` | `string`       | Who the role is for.                       |
 | `Name`        | `string`       | The name of the role, as a token names it. |
 | `Permissions` | `[]Permission` | The permissions of the role.               |
+
+### MethodKind
+
+What a method does to a host, by the verb of its permission: read, write or
+action.
+
+A `string`, one of `read`, `write`, `action`.
 
 ### OperationID
 

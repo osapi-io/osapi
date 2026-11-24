@@ -32,6 +32,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
@@ -136,7 +138,7 @@ func Run[Out any](
 
 	// The agent reads the category from the operation's first segment.
 	op := job.OperationType(job.CategoryBehavior + "." + b.Operation(m))
-	write := m.Verb == behavior.VerbWrite
+	write := m.Verb == types.VerbWrite
 
 	var answer response
 	if job.IsBroadcastTarget(target) {
@@ -226,7 +228,7 @@ func rows(
 	for _, row := range outputs {
 		row["hostname"] = host
 		row["status"] = types.RowStatusOK
-		if m.Verb == behavior.VerbWrite {
+		if m.Verb == types.VerbWrite {
 			if _, ok := row["changed"]; !ok && resp.Changed != nil {
 				row["changed"] = *resp.Changed
 			}

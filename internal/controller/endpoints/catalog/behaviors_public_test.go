@@ -119,7 +119,7 @@ func (s *BehaviorsPublicTestSuite) TestBehaviors() {
 		behavior.Write("update", write).Key("name").On(behavior.PlatformDebian),
 		behavior.Read("get", none),
 		behavior.Action("restart", write).Disrupts("It stops the item"),
-		behavior.Write("signal", write).PermitAs(behavior.VerbExecute),
+		behavior.Write("signal", write).PermitAs(types.VerbExecute),
 	)
 	child := behavior.Define("part", "Parts", behavior.Node, behavior.API, behavior.Of(b),
 		behavior.Read("list", read),
@@ -161,7 +161,7 @@ func (s *BehaviorsPublicTestSuite) TestBehaviors() {
 
 	list := item.Methods[0]
 	s.Equal("list", list.Name)
-	s.Equal("read", list.Kind)
+	s.Equal(types.KindRead, list.Kind)
 	s.Equal("GET", list.HTTPMethod)
 	s.Equal("/api/node/{hostname}/item", list.Path)
 	s.Equal(types.Permission("item:read"), list.Permission)
@@ -202,7 +202,7 @@ func (s *BehaviorsPublicTestSuite) TestBehaviors() {
 	}, list.Columns, "the CLI's columns: labels, render tags, nested objects and lists; render:\"-\" is left out")
 
 	update := item.Methods[1]
-	s.Equal("write", update.Kind)
+	s.Equal(types.KindWrite, update.Kind)
 	s.Equal("PUT", update.HTTPMethod)
 	s.Equal([]string{"debian"}, update.Platforms, "On limits the platforms")
 	s.Equal("path", update.Fields[0].In, "the key goes in the path")
@@ -220,12 +220,12 @@ func (s *BehaviorsPublicTestSuite) TestBehaviors() {
 	s.Empty(get.Columns, "an output that is not a struct has no columns")
 
 	restart := item.Methods[3]
-	s.Equal("action", restart.Kind)
+	s.Equal(types.KindAction, restart.Kind)
 	s.True(restart.Disruptive)
 	s.Equal("It stops the item", restart.Disruption)
 	s.Equal(types.Permission("item:execute"), restart.Permission)
 
-	s.Equal("action", item.Methods[4].Kind, "the verb of the permission decides the kind")
+	s.Equal(types.KindAction, item.Methods[4].Kind, "the verb of the permission decides the kind")
 
 	in := got[1]
 	s.True(in.Internal)

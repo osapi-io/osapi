@@ -232,15 +232,7 @@ components:
           description: The input type and its fields, a required one marked *.
           type: string
         kind:
-          description: 'What the method does to a host, by the verb of its permission: read, write or action.'
-          enum:
-            - read
-            - write
-            - action
-          example: write
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=read write action
+          $ref: '#/components/schemas/MethodKind'
         long:
           description: The rest of what the method does.
           type: string
@@ -385,6 +377,13 @@ components:
           example: not_found
           type: string
       type: object
+    MethodKind:
+      description: 'What a method does to a host, by the verb of its permission: read, write or action.'
+      enum:
+        - read
+        - write
+        - action
+      type: string
     OperationID:
       description: An operationId of an operation that needs a permission.
       enum:

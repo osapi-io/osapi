@@ -89,7 +89,8 @@ func (s *MethodsPublicTestSuite) TestGet() {
 }
 
 // TestSpecEnums: the spec's Permission is each permission, and its
-// OperationID each operation that needs one, so a client checks a value
+// OperationID each operation that needs one, and its MethodKind each kind
+// of a method, so a client checks a value
 // when it compiles.
 func (s *MethodsPublicTestSuite) TestSpecEnums() {
 	doc, err := endpoint.OpenAPI(catalog.Group)
@@ -111,6 +112,9 @@ func (s *MethodsPublicTestSuite) TestSpecEnums() {
 	s.True(slices.IsSorted(ids))
 	s.True(catalog.OperationID("GetCatalog").Valid())
 	s.False(catalog.OperationID("GetCatalogs").Valid())
+	kinds := enum("MethodKind")
+	s.Len(kinds, len(types.MethodKind("").Values()))
+	s.Contains(kinds, string(types.KindAction))
 }
 
 func TestMethodsPublicTestSuite(

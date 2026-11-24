@@ -36,7 +36,8 @@ import (
 // commands and their pages come from it. osapi dsl endpoint spec get
 // lists every option.
 var Group = endpoint.Register(endpoint.Define(
-	"catalog", "The catalog of what the controller serves",
+	"catalog",
+	"The catalog of what the controller serves",
 	endpoint.Area(area.Fleet),
 	endpoint.Title("Catalog API"),
 	endpoint.Tag("catalog", "Catalog",
@@ -44,6 +45,9 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Uses[Deps](),
 	endpoint.Doc[types.Permission]("A permission that osapi knows, as resource:verb."),
 	endpoint.Doc[OperationID]("An operationId of an operation that needs a permission."),
+	endpoint.Doc[types.MethodKind](
+		"What a method does to a host, by the verb of its permission: read, write or action.",
+	),
 	endpoint.Get[GetInput, CatalogResponse]("get").
 		Handle(Get).
 		ID("GetCatalog").

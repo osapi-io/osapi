@@ -24,6 +24,7 @@ import (
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/guide"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // ListInput is the input of list, which has none.
@@ -80,13 +81,13 @@ type GetOutput struct {
 
 // Method is one method of a behavior: where it is served and run.
 type Method struct {
-	Name       string        `json:"name"`
-	Verb       behavior.Verb `json:"verb"`
-	HTTPMethod string        `json:"http_method,omitempty" label:"HTTP"`
-	Route      string        `json:"route,omitempty"                           none:"-"`
-	Permission string        `json:"permission,omitempty"                      none:"-"`
-	Command    string        `json:"command,omitempty"                                  table:"-"`
-	Doc        string        `json:"doc"                   label:"Description"`
+	Name       string     `json:"name"`
+	Verb       types.Verb `json:"verb"`
+	HTTPMethod string     `json:"http_method,omitempty" label:"HTTP"`
+	Route      string     `json:"route,omitempty"                           none:"-"`
+	Permission string     `json:"permission,omitempty"                      none:"-"`
+	Command    string     `json:"command,omitempty"                                  table:"-"`
+	Doc        string     `json:"doc"                   label:"Description"`
 }
 
 // Type is the input and the output type of one method, with their fields:
@@ -137,7 +138,7 @@ type MethodInput struct {
 type MethodOutput struct {
 	_          struct{}           `title:"Method"`
 	Name       string             `               json:"name"`
-	Verb       behavior.Verb      `               json:"verb"`
+	Verb       types.Verb         `               json:"verb"`
 	Doc        string             `               json:"doc"                   label:"Description"`
 	Long       string             `               json:"long,omitempty"        label:"Detail"`
 	HTTPMethod string             `               json:"http_method,omitempty" label:"HTTP"`

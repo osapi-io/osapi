@@ -24,6 +24,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/validation/rule"
 
 	"github.com/stretchr/testify/assert"
@@ -525,14 +527,14 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 			name: "when an action takes a permission verb that only the admin role gets",
 			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
 				behavior.Action("exec", set).Key("key").Describe("Exec").
-					PermitAs(behavior.VerbExec),
+					PermitAs(types.VerbExec),
 			),
 		},
 		{
 			name: "when an action takes a permission verb that other roles get",
 			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
 				behavior.Action("exec", set).Key("key").Describe("Exec").
-					PermitAs(behavior.VerbWrite),
+					PermitAs(types.VerbWrite),
 			),
 			wantRules: []string{behavior.RuleVerb},
 		},

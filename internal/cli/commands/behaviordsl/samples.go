@@ -23,6 +23,7 @@ package behaviordsl
 import (
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/guide"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // The sample outputs of the examples, which the docs page of each command
@@ -88,7 +89,7 @@ var (
 		Methods: []Method{
 			{
 				Name:       "get",
-				Verb:       behavior.VerbRead,
+				Verb:       types.VerbRead,
 				HTTPMethod: "GET",
 				Route:      "/api/node/{hostname}/sysctl/{key}",
 				Permission: "sysctl:read",
@@ -97,7 +98,7 @@ var (
 			},
 			{
 				Name:       "update",
-				Verb:       behavior.VerbWrite,
+				Verb:       types.VerbWrite,
 				HTTPMethod: "PUT",
 				Route:      "/api/node/{hostname}/sysctl/{key}",
 				Permission: "sysctl:write",
@@ -133,7 +134,7 @@ var (
 
 	sampleMethod = MethodOutput{
 		Name:       "update",
-		Verb:       behavior.VerbWrite,
+		Verb:       types.VerbWrite,
 		Doc:        "Set a kernel parameter, manage it, and apply it",
 		HTTPMethod: "PUT",
 		Route:      "/api/node/{hostname}/sysctl/{key}",
