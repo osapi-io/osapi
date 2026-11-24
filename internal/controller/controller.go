@@ -159,9 +159,14 @@ func newController(
 		}
 	}
 
-	vaults, err := openVaults(ctx, log, conn, namespace, cfg)
+	vaults, err := openVaults(ctx, log, conn, cfg)
 	if err != nil {
 		return nil, err
+	}
+	// A secret of the API, such as a signing key, can be a reference,
+	// secret://<vault>/<key>, which a vault of the config resolves now.
+	if err := config.ResolveReferences(ctx, &cfg, "controller.api", vaults.Resolve); err != nil {
+		return nil, fmt.Errorf("resolve the references of the config: %w", err)
 	}
 
 	objBucket, fileStateBucket := openFileBuckets(ctx, log, conn.NATS, namespace, cfg.NATS)

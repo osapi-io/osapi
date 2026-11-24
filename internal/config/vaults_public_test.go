@@ -130,6 +130,19 @@ func (s *VaultsPublicTestSuite) TestVaultProblems() {
 			},
 		},
 		{
+			name: "when the key file is a reference refuses it",
+			specs: []vault.Spec{
+				{Name: "default", Type: "nats", KeyFile: "secret://other/vault-key"},
+			},
+			want: []config.Problem{
+				{
+					Rule:    config.RuleVault,
+					Key:     "controller.secrets.vaults[0].key_file",
+					Message: "is a reference: the vault key cannot come from a vault, because the controller needs the key to read the vault: give the path of the key file",
+				},
+			},
+		},
+		{
 			name:  "when a type is not registered names the types",
 			specs: []vault.Spec{{Name: "default", Type: "nope"}},
 			want: []config.Problem{

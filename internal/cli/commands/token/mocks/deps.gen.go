@@ -10,6 +10,7 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
 
 	authtoken "github.com/osapi-io/osapi/internal/authtoken"
@@ -110,15 +111,16 @@ func (mr *MockConfigMockRecorder) CustomRoles() *gomock.Call {
 }
 
 // SigningKeys mocks base method.
-func (m *MockConfig) SigningKeys() authtoken.Keys {
+func (m *MockConfig) SigningKeys(ctx context.Context) (authtoken.Keys, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SigningKeys")
+	ret := m.ctrl.Call(m, "SigningKeys", ctx)
 	ret0, _ := ret[0].(authtoken.Keys)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // SigningKeys indicates an expected call of SigningKeys.
-func (mr *MockConfigMockRecorder) SigningKeys() *gomock.Call {
+func (mr *MockConfigMockRecorder) SigningKeys(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SigningKeys", reflect.TypeOf((*MockConfig)(nil).SigningKeys))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SigningKeys", reflect.TypeOf((*MockConfig)(nil).SigningKeys), ctx)
 }

@@ -107,6 +107,28 @@ func withVault(
 	return cfg
 }
 
+// withSecret puts value at key in the vault default of cfg, as the
+// controller reads it.
+func withSecret(
+	t *testing.T,
+	cfg config.Config,
+	key string,
+	value string,
+) config.Config {
+	nc := natsclient.New(slog.Default(), natsOptions(cfg))
+	require.NoError(t, nc.Connect())
+	defer nc.Close()
+	spec := cfg.Controller.Secrets.Vaults[0]
+	v, err := natsvault.Open(context.Background(), nc,
+		job.ApplyNamespaceToInfraName(cfg.Controller.NATS.Namespace, cfg.NATS.Secrets.Bucket),
+		spec.Name, natsvault.Keys{FS: osfs.NewWithNoIdm(), File: spec.KeyFile})
+	require.NoError(t, err)
+	_, err = v.Put(context.Background(), key, []byte(value))
+	require.NoError(t, err)
+
+	return cfg
+}
+
 // startServer runs an embedded server and returns a controller config that
 // connects to it.
 func startServer(
@@ -192,6 +214,34 @@ func (s *ControllerPublicTestSuite) TestNew() {
 			name:       "when a vault is configured opens it",
 			cfg:        func() config.Config { return withVault(s.T(), startServer(s.T())) },
 			wantVaults: []string{"default"},
+		},
+		{
+			name: "when a signing key is a reference resolves it from the vault",
+			cfg: func() config.Config {
+				cfg := withSecret(s.T(), withVault(s.T(), startServer(s.T())), "jwt",
+					"0123456789abcdef0123456789abcdef")
+				cfg.Controller.API.Security.SigningKeys[0].Key = "secret://default/jwt"
+				return cfg
+			},
+			wantVaults: []string{"default"},
+		},
+		{
+			name: "when a signing key is a reference of a key that is not there returns the error",
+			cfg: func() config.Config {
+				cfg := withVault(s.T(), startServer(s.T()))
+				cfg.Controller.API.Security.SigningKeys[0].Key = "secret://default/none"
+				return cfg
+			},
+			wantErr: `resolve the references of the config: controller.api.security.signing_keys[0].key: secret://default/none: the vault "default" has no key "none"`,
+		},
+		{
+			name: "when the value of a signing key breaks its rule returns the error",
+			cfg: func() config.Config {
+				cfg := withSecret(s.T(), withVault(s.T(), startServer(s.T())), "jwt", "short")
+				cfg.Controller.API.Security.SigningKeys[0].Key = "secret://default/jwt"
+				return cfg
+			},
+			wantErr: `the value of secret://default/jwt breaks its rule "signing_key"`,
 		},
 		{
 			name: "when the key of a vault is not there returns the error",

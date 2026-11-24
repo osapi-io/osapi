@@ -31,6 +31,13 @@ The rules:
   the vault that the message names. osapi config get --key
   controller.secrets.vaults describes a vault, and the message names the types
   and the settings that there are.
+- `reference`: Each reference, secret://&lt;vault&gt;/&lt;key&gt;, is in a
+  secret field that can take one, and names a vault of controller.secrets.vaults
+  and a key of 1 to 128 letters, digits, - or _. A NATS password cannot be a
+  reference, because osapi needs it to connect to NATS before it can read a
+  vault. Fix: Add the vault that the reference names to
+  controller.secrets.vaults, or correct the reference. For a NATS password, put
+  the value in the file or in its environment variable.
 
 ```bash
 osapi config validate

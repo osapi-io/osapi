@@ -61,6 +61,10 @@ func vaultProblems(
 			)
 		}
 		names[spec.Name] = i
+		if vault.IsReference(spec.KeyFile) {
+			add(i, ".key_file", "is a reference: the vault key cannot come from a vault, "+
+				"because the controller needs the key to read the vault: give the path of the key file")
+		}
 		if spec.KeyFile != "" {
 			if j, ok := files[spec.KeyFile]; ok {
 				add(i, ".key_file", fmt.Sprintf(

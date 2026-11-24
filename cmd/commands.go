@@ -152,8 +152,14 @@ type tokenConfig struct{}
 
 // SigningKeys are controller.api.security.signing_keys of the config that
 // osapi read at startup.
-func (tokenConfig) SigningKeys() authtoken.Keys {
-	return appConfig.Controller.API.Security.Keys()
+func (tokenConfig) SigningKeys(
+	ctx context.Context,
+) (authtoken.Keys, error) {
+	if err := resolveReferences(ctx, "controller.api.security.signing_keys"); err != nil {
+		return nil, err
+	}
+
+	return appConfig.Controller.API.Security.Keys(), nil
 }
 
 // CustomRoles are the roles of the config file, read here: role list

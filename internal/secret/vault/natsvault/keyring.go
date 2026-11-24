@@ -29,6 +29,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/osapi-io/osapi/internal/secret/vault"
 )
 
 // keySize is the size of a vault key: AES-256.
@@ -45,6 +47,13 @@ func ParseKeyring(
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
+		}
+		if vault.IsReference(line) {
+			return Keyring{}, fmt.Errorf(
+				"line %d is a reference: the vault key cannot come from a vault, "+
+					"because the controller needs the key to read the vault: "+
+					"put the key itself here", i+1,
+			)
 		}
 		key, err := hex.DecodeString(line)
 		if err != nil || len(key) != keySize {
