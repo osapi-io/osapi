@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Interface | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/reference/chains/networking/interface"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Interface | OSAPI"><meta data-rh="true" name="description" content="The behaviors that interface calls, and each call that its examples make."><meta data-rh="true" property="og:description" content="The behaviors that interface calls, and each call that its examples make."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/reference/chains/networking/interface"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/reference/chains/networking/interface" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/reference/chains/networking/interface" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Reference","item":"https://osapi-io.github.io/osapi/sidebar/reference/"},{"@type":"ListItem","position":2,"name":"Chains","item":"https://osapi-io.github.io/osapi/sidebar/reference/chains/"},{"@type":"ListItem","position":3,"name":"Interface","item":"https://osapi-io.github.io/osapi/sidebar/reference/chains/networking/interface"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.8da20c71.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.dcbc6c11.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.37cd2521.js" defer="defer"></script>
 </head>
 <body>
@@ -41,7 +41,7 @@
 
 
 <table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td>Behavior</td><td><a class="" href="/osapi/sidebar/reference/behaviors/networking/interface">interface</a></td></tr><tr><td>Chain</td><td>interface → netplan → managedfile</td></tr><tr><td>Calls</td><td><a class="" href="/osapi/sidebar/reference/behaviors/internal/netplan">netplan</a></td></tr><tr><td>Used by</td><td>none</td></tr></tbody></table>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-static-address-create">A static address (create)<a href="#a-static-address-create" class="hash-link" aria-label="Direct link to A static address (create)" title="Direct link to A static address (create)" translate="no">​</a></h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-dummy-interface-with-a-static-address-create">A dummy interface with a static address (create)<a href="#a-dummy-interface-with-a-static-address-create" class="hash-link" aria-label="Direct link to A dummy interface with a static address (create)" title="Direct link to A dummy interface with a static address (create)" translate="no">​</a></h2>
 
 
 
@@ -72,7 +72,7 @@
 
 
 
-<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>interface create</td><td>addresses=[10.0.1.5/24] name=osapi0</td><td>changed=true name=osapi0</td></tr><tr><td>└─ netplan get</td><td>name=osapi0</td><td>id=osapi0 matches=[osapi0] name=osapi0 section=ethernets</td></tr><tr><td>└─ netplan update</td><td>content=&lt;8 lines&gt; metadata={&quot;domain&quot;:&quot;interface&quot;,&quot;interface&quot;:&quot;osapi0&quot;…</td><td>changed=true path=/etc/netplan/osapi-osapi0.yaml</td></tr><tr><td>· └─ managedfile update</td><td>content=&lt;8 lines&gt; metadata={&quot;domain&quot;:&quot;interface&quot;,&quot;interface&quot;:&quot;osapi0&quot;…</td><td>changed=true path=/etc/netplan/osapi-osapi0.yaml</td></tr></tbody></table>
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>interface create</td><td>addresses=[10.0.1.5/24] name=osapi0 type=dummy</td><td>changed=true name=osapi0</td></tr><tr><td>└─ netplan get</td><td>name=osapi0</td><td>id=osapi0 matches=[osapi0] name=osapi0 section=ethernets</td></tr><tr><td>└─ netplan update</td><td>content=&lt;8 lines&gt; metadata={&quot;domain&quot;:&quot;interface&quot;,&quot;interface&quot;:&quot;osapi0&quot;…</td><td>changed=true path=/etc/netplan/osapi-osapi0.yaml</td></tr><tr><td>· └─ managedfile update</td><td>content=&lt;8 lines&gt; metadata={&quot;domain&quot;:&quot;interface&quot;,&quot;interface&quot;:&quot;osapi0&quot;…</td><td>changed=true path=/etc/netplan/osapi-osapi0.yaml</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="each-setting-create">Each setting (create)<a href="#each-setting-create" class="hash-link" aria-label="Direct link to Each setting (create)" title="Direct link to Each setting (create)" translate="no">​</a></h2>
 
 
@@ -104,7 +104,39 @@
 
 
 
-<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>interface create</td><td>addresses=[2001:db8::5/64] dhcp6=true mac_address=52:54:00:aa:bb:cc m…</td><td>changed=true name=osapi0</td></tr><tr><td>└─ netplan get</td><td>name=osapi0</td><td>id=osapi0 matches=[osapi0] name=osapi0 section=ethernets</td></tr><tr><td>└─ netplan update</td><td>content=&lt;11 lines&gt; metadata={&quot;domain&quot;:&quot;interface&quot;,&quot;interface&quot;:&quot;osapi0…</td><td>changed=true path=/etc/netplan/osapi-osapi0.yaml</td></tr><tr><td>· └─ managedfile update</td><td>content=&lt;11 lines&gt; metadata={&quot;domain&quot;:&quot;interface&quot;,&quot;interface&quot;:&quot;osapi0…</td><td>changed=true path=/etc/netplan/osapi-osapi0.yaml</td></tr></tbody></table>
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>interface create</td><td>addresses=[2001:db8::5/64] dhcp6=true mac_address=52:54:00:aa:bb:cc m…</td><td>changed=true name=osapi0</td></tr><tr><td>└─ netplan get</td><td>name=osapi0</td><td>id=osapi0 matches=[osapi0] name=osapi0 section=ethernets</td></tr><tr><td>└─ netplan update</td><td>content=&lt;10 lines&gt; metadata={&quot;domain&quot;:&quot;interface&quot;,&quot;interface&quot;:&quot;osapi0…</td><td>changed=true path=/etc/netplan/osapi-osapi0.yaml</td></tr><tr><td>· └─ managedfile update</td><td>content=&lt;10 lines&gt; metadata={&quot;domain&quot;:&quot;interface&quot;,&quot;interface&quot;:&quot;osapi0…</td><td>changed=true path=/etc/netplan/osapi-osapi0.yaml</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="an-interface-the-host-has-create">An interface the host has (create)<a href="#an-interface-the-host-has-create" class="hash-link" aria-label="Direct link to An interface the host has (create)" title="Direct link to An interface the host has (create)" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>interface create</td><td>dhcp4=true name=eth1 wakeonlan=true</td><td>changed=true name=eth1</td></tr><tr><td>└─ netplan get</td><td>name=eth1</td><td>id=eth1 matches=[eth1] name=eth1 section=ethernets</td></tr><tr><td>└─ netplan update</td><td>content=&lt;7 lines&gt; metadata={&quot;domain&quot;:&quot;interface&quot;,&quot;interface&quot;:&quot;eth1&quot;} …</td><td>changed=true path=/etc/netplan/osapi-eth1.yaml</td></tr><tr><td>· └─ managedfile update</td><td>content=&lt;7 lines&gt; metadata={&quot;domain&quot;:&quot;interface&quot;,&quot;interface&quot;:&quot;eth1&quot;} …</td><td>changed=true path=/etc/netplan/osapi-eth1.yaml</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="move-an-interface-to-dhcp-update">Move an interface to DHCP (update)<a href="#move-an-interface-to-dhcp-update" class="hash-link" aria-label="Direct link to Move an interface to DHCP (update)" title="Direct link to Move an interface to DHCP (update)" translate="no">​</a></h2>
 
 
@@ -136,8 +168,8 @@
 
 
 
-<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>interface update</td><td>dhcp4=true name=osapi0</td><td>changed=true name=osapi0</td></tr><tr><td>└─ netplan get</td><td>name=osapi0</td><td>id=osapi0 matches=[osapi0] name=osapi0 section=ethernets</td></tr><tr><td>└─ netplan update</td><td>content=&lt;6 lines&gt; metadata={&quot;domain&quot;:&quot;interface&quot;,&quot;interface&quot;:&quot;osapi0&quot;…</td><td>changed=true path=/etc/netplan/osapi-osapi0.yaml</td></tr><tr><td>· └─ managedfile update</td><td>content=&lt;6 lines&gt; metadata={&quot;domain&quot;:&quot;interface&quot;,&quot;interface&quot;:&quot;osapi0&quot;…</td><td>changed=true path=/etc/netplan/osapi-osapi0.yaml</td></tr></tbody></table>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="an-interface-osapi-configures-delete">An interface osapi configures (delete)<a href="#an-interface-osapi-configures-delete" class="hash-link" aria-label="Direct link to An interface osapi configures (delete)" title="Direct link to An interface osapi configures (delete)" translate="no">​</a></h2>
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>interface update</td><td>dhcp4=true name=osapi0 type=dummy</td><td>changed=true name=osapi0</td></tr><tr><td>└─ netplan get</td><td>name=osapi0</td><td>id=osapi0 matches=[osapi0] name=osapi0 section=ethernets</td></tr><tr><td>└─ netplan update</td><td>content=&lt;6 lines&gt; metadata={&quot;domain&quot;:&quot;interface&quot;,&quot;interface&quot;:&quot;osapi0&quot;…</td><td>changed=true path=/etc/netplan/osapi-osapi0.yaml</td></tr><tr><td>· └─ managedfile update</td><td>content=&lt;6 lines&gt; metadata={&quot;domain&quot;:&quot;interface&quot;,&quot;interface&quot;:&quot;osapi0&quot;…</td><td>changed=true path=/etc/netplan/osapi-osapi0.yaml</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="a-dummy-interface-osapi-configures-delete">A dummy interface osapi configures (delete)<a href="#a-dummy-interface-osapi-configures-delete" class="hash-link" aria-label="Direct link to A dummy interface osapi configures (delete)" title="Direct link to A dummy interface osapi configures (delete)" translate="no">​</a></h2>
 
 
 
@@ -190,6 +222,6 @@
 
 
 
-<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>interface delete</td><td>name=osapi0</td><td>changed=false name=osapi0</td></tr><tr><td>└─ netplan delete</td><td>path=/etc/netplan/osapi-osapi0.yaml</td><td>changed=false path=/etc/netplan/osapi-osapi0.yaml</td></tr><tr><td>· └─ managedfile delete</td><td>path=/etc/netplan/osapi-osapi0.yaml</td><td>changed=false path=/etc/netplan/osapi-osapi0.yaml</td></tr></tbody></table></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/reference/chains/networking/dns"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">DNS</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/reference/chains/networking/route"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Interface route</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#chain" class="table-of-contents__link toc-highlight">Chain</a></li><li><a href="#a-static-address-create" class="table-of-contents__link toc-highlight">A static address (create)</a></li><li><a href="#each-setting-create" class="table-of-contents__link toc-highlight">Each setting (create)</a></li><li><a href="#move-an-interface-to-dhcp-update" class="table-of-contents__link toc-highlight">Move an interface to DHCP (update)</a></li><li><a href="#an-interface-osapi-configures-delete" class="table-of-contents__link toc-highlight">An interface osapi configures (delete)</a></li><li><a href="#an-interface-osapi-does-not-configure-delete" class="table-of-contents__link toc-highlight">An interface osapi does not configure (delete)</a></li></ul></div></div></div></div></main></div></div></div></div>
+<table><thead><tr><th>CALL</th><th>SENDS</th><th>GETS</th></tr></thead><tbody><tr><td>interface delete</td><td>name=osapi0</td><td>changed=false name=osapi0</td></tr><tr><td>└─ netplan delete</td><td>path=/etc/netplan/osapi-osapi0.yaml</td><td>changed=false path=/etc/netplan/osapi-osapi0.yaml</td></tr><tr><td>· └─ managedfile delete</td><td>path=/etc/netplan/osapi-osapi0.yaml</td><td>changed=false path=/etc/netplan/osapi-osapi0.yaml</td></tr></tbody></table></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/reference/chains/networking/dns"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">DNS</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/reference/chains/networking/route"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Interface route</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#chain" class="table-of-contents__link toc-highlight">Chain</a></li><li><a href="#a-dummy-interface-with-a-static-address-create" class="table-of-contents__link toc-highlight">A dummy interface with a static address (create)</a></li><li><a href="#each-setting-create" class="table-of-contents__link toc-highlight">Each setting (create)</a></li><li><a href="#an-interface-the-host-has-create" class="table-of-contents__link toc-highlight">An interface the host has (create)</a></li><li><a href="#move-an-interface-to-dhcp-update" class="table-of-contents__link toc-highlight">Move an interface to DHCP (update)</a></li><li><a href="#a-dummy-interface-osapi-configures-delete" class="table-of-contents__link toc-highlight">A dummy interface osapi configures (delete)</a></li><li><a href="#an-interface-osapi-does-not-configure-delete" class="table-of-contents__link toc-highlight">An interface osapi does not configure (delete)</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
