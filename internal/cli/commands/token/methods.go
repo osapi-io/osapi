@@ -33,7 +33,7 @@ import (
 // Generate signs a new token with the first signing key of the config, and
 // sets its kid.
 func Generate(
-	_ context.Context,
+	ctx context.Context,
 	d Deps,
 	in GenerateInput,
 ) (GenerateOutput, error) {
@@ -49,7 +49,11 @@ func Generate(
 		}
 	}
 
-	key, ok := d.Config.SigningKeys().Signer()
+	keys, err := d.Config.SigningKeys(ctx)
+	if err != nil {
+		return GenerateOutput{}, err
+	}
+	key, ok := keys.Signer()
 	if !ok {
 		return GenerateOutput{}, ErrNoSigningKey
 	}
@@ -84,11 +88,15 @@ var ErrNoSigningKey = errors.New("no signing key in controller.api.security.sign
 // Validate checks a token against the key of the config that its kid
 // names, and is its claims and its kid.
 func Validate(
-	_ context.Context,
+	ctx context.Context,
 	d Deps,
 	in ValidateInput,
 ) (Claims, error) {
-	claims, err := d.Tokens.Validate(in.Token.Reveal(), d.Config.SigningKeys())
+	keys, err := d.Config.SigningKeys(ctx)
+	if err != nil {
+		return Claims{}, err
+	}
+	claims, err := d.Tokens.Validate(in.Token.Reveal(), keys)
 	if err != nil {
 		return Claims{}, fmt.Errorf("failed to validate token: %w", err)
 	}

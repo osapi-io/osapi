@@ -87,6 +87,12 @@ var clientCmd = &cobra.Command{
 			slog.String("controller.client.url", appConfig.Controller.Client.URL),
 		)
 
+		// The bearer token can be a reference, which the command resolves
+		// from the vaults of its config.
+		if err := resolveReferences(cmd.Context(), "controller.client"); err != nil {
+			cli.LogFatal(logger, "failed to resolve the bearer token", err)
+		}
+
 		sdkClient = client.New(
 			appConfig.Controller.Client.URL,
 			appConfig.Controller.Client.Security.BearerToken,

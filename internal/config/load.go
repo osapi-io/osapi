@@ -107,7 +107,13 @@ func Problems(
 	if err := registerValidatorsFn(v); err != nil {
 		problems = append(problems, Problem{Rule: RuleValue, Message: err.Error()})
 	} else if err := v.Struct(*c); err != nil {
-		problems = append(problems, valueProblems(err, RuleValue, reflect.TypeOf(*c), "")...)
+		// A reference passes the rule of its key when it is resolved.
+		refs := referenceKeys(c)
+		for _, p := range valueProblems(err, RuleValue, reflect.TypeOf(*c), "") {
+			if !refs[p.Key] {
+				problems = append(problems, p)
+			}
+		}
 	}
 	for _, b := range behavior.All() {
 		if b.SettingsType() == nil {
@@ -119,6 +125,7 @@ func Problems(
 		}
 	}
 	problems = append(problems, vaultProblems(v, c.Controller.Secrets.Vaults)...)
+	problems = append(problems, referenceProblems(c)...)
 	if err := c.NATS.sharedBucket(); err != nil {
 		problems = append(problems, Problem{Rule: RuleBucket, Message: err.Error()})
 	}

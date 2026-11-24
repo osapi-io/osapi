@@ -26,6 +26,7 @@ import (
 	"os"
 
 	"github.com/avfs/avfs/vfs/osfs"
+	natsclient "github.com/osapi-io/nats-client/pkg/client"
 
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/job"
@@ -44,19 +45,9 @@ func openVaults(
 	ctx context.Context,
 	log *slog.Logger,
 	conn *jobclient.Connection,
-	namespace string,
 	cfg config.Config,
 ) (*vault.Set, error) {
-	var bucket string
-	if cfg.NATS.Secrets.Bucket != "" {
-		bucket = job.ApplyNamespaceToInfraName(namespace, cfg.NATS.Secrets.Bucket)
-	}
-	set, err := vault.Open(ctx, vault.Env{
-		NATS:      conn.NATS,
-		Bucket:    bucket,
-		FS:        osfs.NewWithNoIdm(),
-		LookupEnv: os.LookupEnv,
-	}, cfg.Controller.Secrets.Vaults)
+	set, err := OpenVaults(ctx, conn.NATS, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -69,4 +60,29 @@ func openVaults(
 	}
 
 	return set, nil
+}
+
+// OpenVaults makes each vault of controller.secrets.vaults, with nc as
+// the NATS connection of a type that needs one. A command that resolves a
+// reference of the config, such as osapi controller token generate, opens
+// the vaults with it, as the controller does.
+func OpenVaults(
+	ctx context.Context,
+	nc *natsclient.Client,
+	cfg config.Config,
+) (*vault.Set, error) {
+	var bucket string
+	if cfg.NATS.Secrets.Bucket != "" {
+		bucket = job.ApplyNamespaceToInfraName(
+			cfg.Controller.NATS.Namespace,
+			cfg.NATS.Secrets.Bucket,
+		)
+	}
+
+	return vault.Open(ctx, vault.Env{
+		NATS:      nc,
+		Bucket:    bucket,
+		FS:        osfs.NewWithNoIdm(),
+		LookupEnv: os.LookupEnv,
+	}, cfg.Controller.Secrets.Vaults)
 }

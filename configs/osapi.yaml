@@ -47,6 +47,8 @@ controller:
       # tokens, with its id as their kid; each key verifies the tokens with its
       # id. To change the key, add the new one first, and remove the old one
       # when its tokens expire.
+      # A key can be a reference to a vault of controller.secrets.vaults,
+      # such as secret://default/jwt-signing-key.
       signing_keys:
         - id: main
           key: CHANGE_ME_BEFORE_DEPLOYING

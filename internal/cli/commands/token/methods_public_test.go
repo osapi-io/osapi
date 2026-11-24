@@ -75,7 +75,7 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 			},
 			setup: func() {
 				s.config.EXPECT().CustomRoles().Return(nil, nil)
-				s.config.EXPECT().SigningKeys().Return(keys)
+				s.config.EXPECT().SigningKeys(gomock.Any()).Return(keys, nil)
 				s.tokens.EXPECT().
 					Generate(key, []string{"read"}, "ops", []string{"trace:read"}, []string{"group:web"}).
 					Return("signed", nil)
@@ -94,7 +94,7 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 			in:   token.GenerateInput{Roles: []string{"read"}, Subject: "ops"},
 			setup: func() {
 				s.config.EXPECT().CustomRoles().Return(nil, nil)
-				s.config.EXPECT().SigningKeys().Return(keys)
+				s.config.EXPECT().SigningKeys(gomock.Any()).Return(keys, nil)
 				s.tokens.EXPECT().Generate(key, []string{"read"}, "ops", nil, nil).
 					Return("", errors.New("no key"))
 			},
@@ -107,10 +107,22 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 			in:   token.GenerateInput{Roles: []string{"read"}, Subject: "ops"},
 			setup: func() {
 				s.config.EXPECT().CustomRoles().Return(nil, nil)
-				s.config.EXPECT().SigningKeys().Return(nil)
+				s.config.EXPECT().SigningKeys(gomock.Any()).Return(nil, nil)
 			},
 			validateFunc: func(_ token.GenerateOutput, err error) {
 				s.ErrorIs(err, token.ErrNoSigningKey)
+			},
+		},
+		{
+			name: "when a signing key does not resolve, it is the error",
+			in:   token.GenerateInput{Roles: []string{"read"}, Subject: "ops"},
+			setup: func() {
+				s.config.EXPECT().CustomRoles().Return(nil, nil)
+				s.config.EXPECT().SigningKeys(gomock.Any()).
+					Return(nil, errors.New("secret://default/jwt: no such key"))
+			},
+			validateFunc: func(_ token.GenerateOutput, err error) {
+				s.EqualError(err, "secret://default/jwt: no such key")
 			},
 		},
 		{
@@ -119,7 +131,7 @@ func (s *MethodsPublicTestSuite) TestGenerate() {
 			setup: func() {
 				s.config.EXPECT().CustomRoles().
 					Return(authtoken.CustomRoles{"security": {"audit:read"}}, nil)
-				s.config.EXPECT().SigningKeys().Return(keys)
+				s.config.EXPECT().SigningKeys(gomock.Any()).Return(keys, nil)
 				s.tokens.EXPECT().Generate(key, []string{"security"}, "ops", nil, nil).
 					Return("signed", nil)
 			},
@@ -174,7 +186,7 @@ func (s *MethodsPublicTestSuite) TestValidate() {
 		{
 			name: "when the token is valid, it is its claims with what they grant",
 			setup: func() {
-				s.config.EXPECT().SigningKeys().Return(keys)
+				s.config.EXPECT().SigningKeys(gomock.Any()).Return(keys, nil)
 				s.tokens.EXPECT().Validate("jwt", keys).Return(&authtoken.CustomClaims{
 					Roles:       []string{"read"},
 					Permissions: []string{"trace:read", "audit:read"},
@@ -206,7 +218,7 @@ func (s *MethodsPublicTestSuite) TestValidate() {
 		{
 			name: "when the token has no times, they are zero",
 			setup: func() {
-				s.config.EXPECT().SigningKeys().Return(keys)
+				s.config.EXPECT().SigningKeys(gomock.Any()).Return(keys, nil)
 				s.tokens.EXPECT().Validate("jwt", keys).Return(&authtoken.CustomClaims{
 					Roles: []string{"read"},
 				}, nil)
@@ -219,9 +231,19 @@ func (s *MethodsPublicTestSuite) TestValidate() {
 			},
 		},
 		{
+			name: "when a signing key does not resolve, it is the error",
+			setup: func() {
+				s.config.EXPECT().SigningKeys(gomock.Any()).
+					Return(nil, errors.New("secret://default/jwt: no such key"))
+			},
+			validateFunc: func(_ token.Claims, err error) {
+				s.EqualError(err, "secret://default/jwt: no such key")
+			},
+		},
+		{
 			name: "when the token is not valid, it is the error",
 			setup: func() {
-				s.config.EXPECT().SigningKeys().Return(keys)
+				s.config.EXPECT().SigningKeys(gomock.Any()).Return(keys, nil)
 				s.tokens.EXPECT().Validate("jwt", keys).Return(nil, errors.New("expired"))
 			},
 			validateFunc: func(_ token.Claims, err error) {

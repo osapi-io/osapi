@@ -107,8 +107,29 @@ and removes the old key. A rotation does not encrypt the earlier versions in the
 history again, so they do not decrypt after it.
 [Configuration](../usage/configuration.md#vaults) has the settings.
 
+## References in the config
+
+A secret field of the config, with the tag `mask:"password"`, takes a reference,
+`secret://<vault>/<key>`. `internal/config/references.go` walks the config for
+them:
+
+- `osapi config validate` refuses a reference that does not parse, one that
+  names a vault that `controller.secrets.vaults` does not have, and one in a
+  field with the tag `noref`. A NATS password has `noref`, because osapi needs
+  it to connect to NATS before it can read a vault. The rule of the key, such as
+  `signing_key`, applies to the value, not to the reference.
+- `config.ResolveReferences` puts the value of each reference under a key prefix
+  in its place, and checks it against the rule of its key. The controller
+  resolves `controller.api` after it opens its vaults. A command resolves the
+  values that it reads, with `controller.OpenVaults` on a NATS connection of
+  `controller.nats`: the signing keys for `osapi controller token`, and the
+  bearer token for `osapi client`.
+- The vault key cannot be a reference. The config refuses a reference in
+  `key_file`, and the `nats` type refuses a key line that is a reference.
+
 ## What comes next
 
-Vaults, secret references and values sealed to the agent that uses them are in
-progress, in [osapi #1065](https://github.com/osapi-io/osapi/issues/1065). This
-page tells each part when it is built.
+The `secret` commands, references in a behavior input and values sealed to the
+agent that uses them are in progress, in
+[osapi #1065](https://github.com/osapi-io/osapi/issues/1065). This page tells
+each part when it is built.

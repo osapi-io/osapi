@@ -58,6 +58,11 @@ func (s *KeyringPublicTestSuite) TestParseKeyring() {
 			wantErr: "line 2: a vault key is 64 hex digits",
 		},
 		{
+			name:    "when a line is a reference refuses it",
+			data:    "secret://default/vault-key\n",
+			wantErr: "line 1 is a reference: the vault key cannot come from a vault, because the controller needs the key to read the vault: put the key itself here",
+		},
+		{
 			name:    "when a key is short refuses it",
 			data:    "abcd",
 			wantErr: "line 1: a vault key is 64 hex digits",

@@ -20,7 +20,11 @@
 
 package token
 
-import "github.com/osapi-io/osapi/internal/authtoken"
+import (
+	"context"
+
+	"github.com/osapi-io/osapi/internal/authtoken"
+)
 
 // Deps is what the token group's methods use. The CLI gives it with
 // command.Provide in cmd/commands.go; a test gives fakes.
@@ -49,8 +53,9 @@ type Tokens interface {
 // Config is what the methods read from the osapi config.
 type Config interface {
 	// SigningKeys are controller.api.security.signing_keys. The first
-	// signs.
-	SigningKeys() authtoken.Keys
+	// signs. A key that is a reference, secret://<vault>/<key>, is
+	// resolved from the vaults of the config.
+	SigningKeys(ctx context.Context) (authtoken.Keys, error)
 	// CustomRoles are the roles of controller.api.security.roles, each with
 	// its permissions. Without a config file there are none.
 	CustomRoles() (authtoken.CustomRoles, error)

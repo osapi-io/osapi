@@ -45,10 +45,15 @@ steps.
 
 The controller can have vaults, which keep secrets encrypted in NATS.
 [Configuration](../../usage/configuration.md#vaults) tells how to add a vault
-and make its key with `osapi controller vault key create`.
+and make its key with `osapi controller vault key create`. A signing key and the
+bearer token can be a reference to a key in a vault, such as
+`secret://default/jwt-signing-key`.
+[References in the config](../../usage/configuration.md#references-in-the-config)
+tells which settings take one.
 
 ## What comes next
 
-Vaults, `secret://` references and values sealed to the agent that uses them are
-in progress, in [osapi #1065](https://github.com/osapi-io/osapi/issues/1065).
-This page tells how to use each part when it is built.
+The `secret` commands, `secret://` references in a behavior input and values
+sealed to the agent that uses them are in progress, in
+[osapi #1065](https://github.com/osapi-io/osapi/issues/1065). This page tells
+how to use each part when it is built.

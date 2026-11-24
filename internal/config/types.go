@@ -89,7 +89,7 @@ type NATSAuth struct {
 	// Username for user_pass auth.
 	Username string `mapstructure:"username" doc:"Username for user_pass auth."`
 	// Password for user_pass auth.
-	Password string `mapstructure:"password" doc:"Password for user_pass auth." mask:"password"`
+	Password string `mapstructure:"password" doc:"Password for user_pass auth." mask:"password" noref:"a NATS password cannot come from a vault, because osapi needs it to connect to NATS before it can read a vault"`
 	// NKeyFile path to the NKey seed file for nkey auth.
 	NKeyFile string `mapstructure:"nkey_file" doc:"Path to the NKey seed file for nkey auth."`
 	// CredsFile path to a NATS credentials file, a user JWT and its seed, for
@@ -122,7 +122,7 @@ type NATSServerUser struct {
 	// Username for the user.
 	Username string `mapstructure:"username"`
 	// Password for the user.
-	Password string `mapstructure:"password" mask:"password"`
+	Password string `mapstructure:"password" mask:"password" noref:"a NATS password cannot come from a vault, because osapi needs it to connect to NATS before it can read a vault"`
 }
 
 // NATS configuration settings.
@@ -383,7 +383,7 @@ type ServerSecurity struct {
 	CORS CORS `mapstructure:"cors"`
 	// SigningKeys are the keys that sign and verify tokens. The first key
 	// signs a new token. Each key verifies a token whose kid is its ID.
-	SigningKeys []SigningKey `mapstructure:"signing_keys" validate:"required,min=1,unique=ID,dive" mask:"password" doc:"HS256 keys for JWTs, each an id and a key (required). The first key signs; each key verifies the tokens with its id as kid. The environment variable takes id=key pairs with commas between them. Generate a key with openssl rand -hex 32."`
+	SigningKeys []SigningKey `mapstructure:"signing_keys" validate:"required,min=1,unique=ID,dive" mask:"password" doc:"HS256 keys for JWTs, each an id and a key (required). The first key signs; each key verifies the tokens with its id as kid. The environment variable takes id=key pairs with commas between them. Generate a key with openssl rand -hex 32. A key can be a reference, secret://<vault>/<key>, which the controller resolves at startup."`
 	// Roles defines custom roles with fine-grained permissions.
 	Roles map[client.Role]CustomRole `mapstructure:"roles" validate:"dive" doc:"Custom roles with fine-grained permissions."`
 }
@@ -411,7 +411,7 @@ func (s ServerSecurity) Keys() authtoken.Keys {
 // ClientSecurity represents security-related settings for the client.
 type ClientSecurity struct {
 	// BearerToken is the JWT used for role-based access control.
-	BearerToken string `mapstructure:"bearer_token" validate:"required" mask:"password" doc:"JWT bearer token for client requests (required). Generate with osapi controller token generate."`
+	BearerToken string `mapstructure:"bearer_token" validate:"required" mask:"password" doc:"JWT bearer token for client requests (required). Generate with osapi controller token generate. It can be a reference, secret://<vault>/<key>, which the command resolves from the vaults of its config."`
 }
 
 // CORS represents the CORS (Cross-Origin Resource Sharing) settings.

@@ -241,6 +241,51 @@ osapi controller vault key rotate --name default
 
 <!-- /osapi:config -->
 
+### References in the config
+
+A secret setting can be a reference to a key in a vault, in place of the value:
+
+```yaml
+controller:
+  api:
+    security:
+      signing_keys:
+        - id: '2026-11'
+          key: secret://default/jwt-signing-key
+  client:
+    security:
+      bearer_token: secret://default/cli-token
+```
+
+A reference is `secret://<vault>/<key>`. The vault must be in
+`controller.secrets.vaults`. An environment variable takes a reference too, such
+as `OSAPI_CONTROLLER_API_SECURITY_SIGNING_KEYS=2026-11=secret://default/jwt`.
+
+The controller resolves the signing keys at startup. A command resolves the
+values that it reads itself, from the vaults of its config:
+`osapi controller token generate` and `validate` resolve the signing keys, and
+each `osapi client` command resolves the bearer token. Thus the command must
+connect to NATS as `controller.nats` tells, and read the key of the vault. A
+host that cannot do this needs the value in its config.
+
+osapi stops with the key and the reference when a reference does not resolve,
+and when its value breaks the rule of its key, such as a signing key with fewer
+than 32 characters. The message does not show the value.
+
+Two values cannot be a reference, because osapi needs them before it can read a
+vault:
+
+- A NATS password: `nats.server.auth.users[].password`,
+  `controller.nats.auth.password` and `agent.nats.auth.password`. The agent
+  never reads a vault.
+- The vault key, in `key_file` or in the variable that `key_env` names.
+
+`osapi config validate` refuses a reference in a NATS password with the rule
+`reference`, and in `key_file` with the rule `vault`. A vault key that is a
+reference stops the controller. No command puts a value in a vault yet. The
+`secret` commands come in
+[osapi #1243](https://github.com/osapi-io/osapi/issues/1243).
+
 ## Namespace
 
 The `namespace` field on NATS connections prefixes all subject names and

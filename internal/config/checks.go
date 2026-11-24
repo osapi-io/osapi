@@ -41,6 +41,9 @@ const (
 	RuleSetting = "setting"
 	RuleBucket  = "bucket"
 	RuleVault   = "vault"
+	// RuleReference is the rule of a reference, secret://<vault>/<key>, in
+	// a secret field of the config.
+	RuleReference = "reference"
 )
 
 // Checks are the rules that Load applies to a config file, in the order that
@@ -77,6 +80,11 @@ var Checks = guide.Checks{
 		Rule:     RuleVault,
 		Requires: "Each vault of controller.secrets.vaults has its own name and its own key_file, a type of vault that osapi knows, a config block that its type takes, and what its type needs, such as the key of a nats vault.",
 		Fix:      "Correct the vault that the message names. osapi config get --key controller.secrets.vaults describes a vault, and the message names the types and the settings that there are.",
+	},
+	{
+		Rule:     RuleReference,
+		Requires: "Each reference, secret://<vault>/<key>, is in a secret field that can take one, and names a vault of controller.secrets.vaults and a key of 1 to 128 letters, digits, - or _. A NATS password cannot be a reference, because osapi needs it to connect to NATS before it can read a vault.",
+		Fix:      "Add the vault that the reference names to controller.secrets.vaults, or correct the reference. For a NATS password, put the value in the file or in its environment variable.",
 	},
 }
 
