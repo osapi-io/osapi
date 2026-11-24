@@ -79,6 +79,10 @@ nats:
     host: localhost
     port: 4222
     store_dir: .nats/jetstream/
+    # jetstream:
+    #   # Encrypts each stream and bucket in store_dir. osapi nats key create
+    #   # makes the key.
+    #   key_file: /etc/osapi/nats/jetstream.key
     namespace: osapi
     auth:
       type: none

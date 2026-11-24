@@ -212,11 +212,20 @@ type NATSServer struct {
 	URL string `mapstructure:"url" doc:"Where a person reaches the NATS server, as nats:// or tls://, shown by health beside the bind address." validate:"omitempty,url,startswith=nats://|startswith=tls://"`
 	// StoreDir the directory for JetStream file storage.
 	StoreDir string `mapstructure:"store_dir" doc:"Directory for JetStream file storage."`
+	// JetStream holds the encryption of the JetStream store.
+	JetStream NATSServerJetStream `mapstructure:"jetstream"`
 	// Namespace is a prefix for all NATS subjects and infrastructure names.
 	Namespace string `mapstructure:"namespace" doc:"Prefix for all NATS subjects and infrastructure names." validate:"omitempty,nats_name"`
 	// Auth holds server-side authentication configuration.
 	Auth    NATSServerAuth `mapstructure:"auth,omitempty"`
 	Metrics MetricsServer  `mapstructure:"metrics"`
+}
+
+// NATSServerJetStream is the encryption of the JetStream store of the
+// embedded server. With no KeyFile, the store is not encrypted.
+type NATSServerJetStream struct {
+	// KeyFile is the file of the key that encrypts the store.
+	KeyFile string `mapstructure:"key_file" doc:"File of the key that encrypts each stream and bucket in store_dir. Unset, the store is not encrypted. osapi nats key create makes it."`
 }
 
 // NATSStream configuration for JetStream stream settings.

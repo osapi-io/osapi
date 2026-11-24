@@ -18,7 +18,9 @@ and the audit log. [State and storage](state.md) lists each one.
 
 osapi has an embedded NATS server with JetStream, so you do not need to install
 NATS. The server listens on port 4222 by default (`nats.server.port`). It keeps
-the JetStream files in `nats.server.store_dir`.
+the JetStream files in `nats.server.store_dir`. With
+`nats.server.jetstream.key_file`, it encrypts them.
+[Encryption at rest](../usage/configuration.md#encryption-at-rest) tells how.
 
 Use an external NATS cluster if the hosts are in more than one site, or if NATS
 must continue to operate when a host stops. Set `controller.nats` and

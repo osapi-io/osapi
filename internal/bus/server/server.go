@@ -67,6 +67,10 @@ func New(
 	if err != nil {
 		return nil, fmt.Errorf("NATS server auth: %w", err)
 	}
+	opts.JetStreamKey, err = bus.JetStreamKey(sc.JetStream)
+	if err != nil {
+		return nil, err
+	}
 
 	s := natsembedded.New(log, &natsembedded.Options{
 		Options:      opts,

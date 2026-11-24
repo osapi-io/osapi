@@ -26,6 +26,9 @@ import (
 	"errors"
 	"log/slog"
 	"net"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
@@ -132,6 +135,15 @@ func (s *ServerPublicTestSuite) TestNew() {
 			wantErr: "connect to NATS: refused",
 		},
 		{
+			name: "when the key file cannot be read returns the error",
+			cfg: func() config.NATS {
+				c := serverNATS(s.T())
+				c.Server.JetStream.KeyFile = filepath.Join(s.T().TempDir(), "missing.key")
+				return c
+			},
+			wantErr: "read the JetStream key",
+		},
+		{
 			name: "when the setup fails stops the server and returns the error",
 			cfg: func() config.NATS {
 				c := serverNATS(s.T())
@@ -222,4 +234,130 @@ func registryVersion(
 	require.NoError(t, json.Unmarshal(entry.Value(), &reg))
 
 	return reg.Version
+}
+
+// fileNATS is serverNATS with each stream and bucket in file storage, in
+// storeDir, so that the key applies to them.
+func fileNATS(
+	t *testing.T,
+	storeDir string,
+) config.NATS {
+	c := serverNATS(t)
+	c.Server.StoreDir = storeDir
+	c.Stream.Storage = "file"
+	c.DLQ.Storage = "file"
+
+	return c
+}
+
+// putAndGet writes value to key in the registry bucket of a server with cfg,
+// when value is not "", then reads key back. The server stops at the end.
+func putAndGet(
+	t *testing.T,
+	cfg config.NATS,
+	key string,
+	value string,
+) (string, error) {
+	srv, err := server.New(context.Background(), slog.Default(), cfg, nil)
+	if err != nil {
+		return "", err
+	}
+	defer srv.Stop(context.Background())
+
+	nc, err := bus.Dial(slog.Default(), &natsclient.Options{
+		Host: cfg.Server.Host,
+		Port: cfg.Server.Port,
+		Auth: natsclient.AuthOptions{AuthType: natsclient.NoAuth},
+		Name: "test",
+	})
+	require.NoError(t, err)
+	defer nc.Close()
+	bucket := bus.RegistryKV(cfg.Server.Namespace, cfg.Registry).Bucket
+	if value != "" {
+		_, err = nc.KVPut(context.Background(), bucket, key, []byte(value))
+		require.NoError(t, err)
+	}
+	entry, err := nc.KVGet(context.Background(), bucket, key)
+	require.NoError(t, err)
+
+	return string(entry.Value()), nil
+}
+
+// storeHas reports whether a file under dir has text in it.
+func storeHas(
+	t *testing.T,
+	dir string,
+	text string,
+) bool {
+	found := false
+	err := filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return err
+		}
+		b, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		if strings.Contains(string(b), text) {
+			found = true
+		}
+
+		return nil
+	})
+	require.NoError(t, err)
+
+	return found
+}
+
+func (s *ServerPublicTestSuite) TestJetStreamEncryption() {
+	keyDir := s.T().TempDir()
+	keyFile := func(name, key string) string {
+		path := filepath.Join(keyDir, name)
+		s.Require().NoError(os.WriteFile(path, []byte(key+"\n"), 0o600))
+
+		return path
+	}
+	key := keyFile("js.key", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+	wrong := keyFile("wrong.key", "cccccccccccccccccccccccccccccccc")
+	store := s.T().TempDir()
+	cfg := func(keyFile string) config.NATS {
+		c := fileNATS(s.T(), store)
+		c.Server.JetStream = config.NATSServerJetStream{KeyFile: keyFile}
+		return c
+	}
+
+	s.Run("with no key, the store has the plain value", func() {
+		got, err := putAndGet(s.T(), cfg(""), "plain", "PLAIN-MARK-1")
+		s.Require().NoError(err)
+		s.Equal("PLAIN-MARK-1", got)
+		s.True(storeHas(s.T(), store, "PLAIN-MARK-1"))
+	})
+
+	s.Run("with a key, the plain store becomes encrypted and stays readable", func() {
+		got, err := putAndGet(s.T(), cfg(key), "plain", "")
+		s.Require().NoError(err)
+		s.Equal("PLAIN-MARK-1", got)
+
+		got, err = putAndGet(s.T(), cfg(key), "secret", "SECRET-MARK-2")
+		s.Require().NoError(err)
+		s.Equal("SECRET-MARK-2", got)
+		s.False(storeHas(s.T(), store, "PLAIN-MARK-1"))
+		s.False(storeHas(s.T(), store, "SECRET-MARK-2"))
+	})
+
+	s.Run("with a wrong key, the server does not start", func() {
+		_, err := putAndGet(s.T(), cfg(wrong), "secret", "")
+		s.ErrorContains(err, "set up JetStream: ")
+	})
+
+	s.Run("with no key, the server does not start", func() {
+		_, err := putAndGet(s.T(), cfg(""), "secret", "")
+		s.ErrorContains(err, "set up JetStream: ")
+	})
+
+	s.Run("with the key again, the store is readable", func() {
+		got, err := putAndGet(s.T(), cfg(key), "secret", "")
+		s.Require().NoError(err)
+		s.Equal("SECRET-MARK-2", got)
+	})
 }

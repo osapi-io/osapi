@@ -48,6 +48,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/commands/controllercmd"
 	"github.com/osapi-io/osapi/internal/cli/commands/controllerkey"
 	"github.com/osapi-io/osapi/internal/cli/commands/endpointdsl"
+	"github.com/osapi-io/osapi/internal/cli/commands/natskey"
 	"github.com/osapi-io/osapi/internal/cli/commands/natsserver"
 	"github.com/osapi-io/osapi/internal/cli/commands/natssetup"
 	"github.com/osapi-io/osapi/internal/cli/commands/role"
@@ -88,6 +89,12 @@ func init() {
 	command.Provide(controllercmd.Group, controllerDeps)
 	command.Provide(controllerkey.Group, func() controllerkey.Deps {
 		return controllerkey.Deps{FS: osfs.NewWithNoIdm(), KeyDir: appConfig.Controller.PKI.KeyDir}
+	})
+	command.Provide(natskey.Group, func() natskey.Deps {
+		return natskey.Deps{
+			FS:      osfs.NewWithNoIdm(),
+			KeyFile: appConfig.NATS.Server.JetStream.KeyFile,
+		}
 	})
 	command.Provide(natssetup.Group, func() natssetup.Deps {
 		return natssetup.Deps{Config: appConfig, Logger: logger, Prepare: bus.Prepare}

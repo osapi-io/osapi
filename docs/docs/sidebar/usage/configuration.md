@@ -152,6 +152,43 @@ Against a NATS server osapi does not run,
 [`osapi nats setup`](cli/nats/setup.md) creates osapi's streams and buckets with
 the controller's connection.
 
+## Encryption at rest
+
+The embedded NATS server can encrypt each stream and bucket that it keeps in
+`nats.server.store_dir`. Make a key on the NATS host, then name its file in the
+config:
+
+```yaml
+nats:
+  server:
+    store_dir: /var/lib/osapi/jetstream
+    jetstream:
+      key_file: /etc/osapi/nats/jetstream.key
+```
+
+```bash
+osapi nats key create -f /etc/osapi/osapi.yaml
+```
+
+[`osapi nats key create`](cli/nats/key/create.md) writes 32 random bytes as hex
+to `key_file`, with mode `0600`. It does not write over a file that exists. The
+server reads the key when it starts. When the store has files without
+encryption, the server encrypts them as it loads them. Thus you can turn the
+encryption on for a server that has data.
+
+- **Keep a copy of the key.** Without the key, or with a different key, the
+  server cannot read the store and does not start. Keep the copy apart from the
+  backup of `store_dir`.
+- **Only file storage is encrypted.** A stream or a bucket with
+  `storage: memory` is not on the disk.
+- **The key protects the disk, not the bus.** The server decrypts each message
+  for each NATS user that can read the stream.
+- **osapi does not rotate the key.** NATS v2.15 cannot open the store of a
+  durable consumer with an earlier key, and the job stream has durable
+  consumers.
+
+A NATS server that osapi does not run has its own `jetstream { key }` setting.
+
 ## Namespace
 
 The `namespace` field on NATS connections prefixes all subject names and
