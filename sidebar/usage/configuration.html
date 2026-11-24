@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Configuration | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/usage/configuration"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Configuration | OSAPI"><meta data-rh="true" name="description" content="A YAML file configures osapi. As an option, environment variables can replace"><meta data-rh="true" property="og:description" content="A YAML file configures osapi. As an option, environment variables can replace"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/usage/configuration"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/configuration" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/configuration" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Usage","item":"https://osapi-io.github.io/osapi/sidebar/usage/"},{"@type":"ListItem","position":2,"name":"Configuration","item":"https://osapi-io.github.io/osapi/sidebar/usage/configuration"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.5f87666a.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.13c5b7d6.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.d8335f24.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.42e91377.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -163,6 +163,107 @@ durable consumer with an earlier key, and the job stream has durable
 consumers.</li>
 </ul>
 <p>A NATS server that osapi does not run has its own <code>jetstream { key }</code> setting.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="vaults">Vaults<a href="#vaults" class="hash-link" aria-label="Direct link to Vaults" title="Direct link to Vaults" translate="no">​</a></h2>
+<p>A vault keeps secrets for the controller. <code>controller.secrets.vaults</code> names each
+vault, with its type. osapi has one type, <code>nats</code>. It encrypts each value with
+AES-256-GCM under the vault key, and keeps it in the KV bucket of
+<code>nats.secrets</code>. <code>osapi nats setup</code> and <code>osapi nats start</code> make the bucket.</p>
+<div class="language-yaml codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-yaml codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token key atrule" style="color:#ff00ff">controller</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  </span><span class="token key atrule" style="color:#ff00ff">secrets</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">    </span><span class="token key atrule" style="color:#ff00ff">vaults</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"></span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">      </span><span class="token punctuation" style="color:#8a8a8a">-</span><span class="token plain"> </span><span class="token key atrule" style="color:#ff00ff">name</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> default</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">        </span><span class="token key atrule" style="color:#ff00ff">type</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> nats</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">        </span><span class="token key atrule" style="color:#ff00ff">key_file</span><span class="token punctuation" style="color:#8a8a8a">:</span><span class="token plain"> /etc/osapi/secrets.key</span><br></div></code></pre></div></div>
+<p>Make the key on the controller host before you start the controller. The
+controller does not start when the key of a vault is not there:</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi controller vault key create </span><span class="token parameter variable" style="color:#6b5cff">--name</span><span class="token plain"> default</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi controller vault key rotate </span><span class="token parameter variable" style="color:#6b5cff">--name</span><span class="token plain"> default</span><br></div></code></pre></div></div>
+<p><code>key_env</code> names an environment variable that holds the key, in place of
+<code>key_file</code>. <code>rotate</code> writes a file, so it does not rotate a key from a variable.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Key</th><th>Type</th><th>Default</th><th>Environment</th><th>Description</th></tr></thead><tbody><tr><td><code>controller.secrets.vaults</code></td><td>list</td><td>none</td><td><code>OSAPI_CONTROLLER_SECRETS_VAULTS</code></td><td>The vaults that a reference such as secret://default/registry-token names, each with name, type, targets, key_file or key_env, and config.</td></tr><tr><td><code>nats.secrets.bucket</code></td><td>string</td><td><code>secrets</code></td><td><code>OSAPI_NATS_SECRETS_BUCKET</code></td><td>KV bucket for the encrypted values of each nats vault.</td></tr><tr><td><code>nats.secrets.history</code></td><td>int</td><td><code>10</code></td><td><code>OSAPI_NATS_SECRETS_HISTORY</code></td><td>How many versions of each secret the bucket keeps, from 1 to 64.</td></tr><tr><td><code>nats.secrets.storage</code></td><td>string</td><td><code>file</code></td><td><code>OSAPI_NATS_SECRETS_STORAGE</code></td><td>Storage backend: &#x27;file&#x27; or &#x27;memory&#x27;.</td></tr><tr><td><code>nats.secrets.replicas</code></td><td>int</td><td><code>1</code></td><td><code>OSAPI_NATS_SECRETS_REPLICAS</code></td><td>Number of KV replicas.</td></tr><tr><td><code>controller.secrets.vaults[].name</code></td><td>string</td><td>none</td><td>none</td><td>The name that a reference gives, such as default in secret://default/registry-token.</td></tr><tr><td><code>controller.secrets.vaults[].type</code></td><td>string</td><td>none</td><td>none</td><td>The type of the vault, such as nats.</td></tr><tr><td><code>controller.secrets.vaults[].targets</code></td><td>list</td><td>none</td><td>none</td><td>The targets that the secrets of the vault can go to, such as group:prod. Empty is each host.</td></tr><tr><td><code>controller.secrets.vaults[].key_file</code></td><td>string</td><td>none</td><td>none</td><td>For a type that encrypts, such as nats: the file of the vault key. osapi controller vault key create writes it.</td></tr><tr><td><code>controller.secrets.vaults[].key_env</code></td><td>string</td><td>none</td><td>none</td><td>For a type that encrypts, such as nats: the environment variable of the vault key, in place of key_file.</td></tr><tr><td><code>controller.secrets.vaults[].config</code></td><td>map</td><td>none</td><td>none</td><td>The settings of the type. The struct of the type gives its keys.</td></tr></tbody></table>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="namespace">Namespace<a href="#namespace" class="hash-link" aria-label="Direct link to Namespace" title="Direct link to Namespace" translate="no">​</a></h2>
 <p>The <code>namespace</code> field on NATS connections prefixes all subject names and
 infrastructure names. This allows multiple OSAPI deployments to share a single
@@ -191,6 +292,6 @@ NATS cluster without collisions.</p>
 <table><thead><tr><th>Without namespace</th><th>With <code>namespace: osapi</code></th></tr></thead><tbody><tr><td><code>jobs.query._any</code></td><td><code>osapi.jobs.query._any</code></td></tr><tr><td><code>JOBS</code> (stream)</td><td><code>osapi-JOBS</code></td></tr><tr><td><code>job-queue</code> (KV bucket)</td><td><code>osapi-job-queue</code></td></tr></tbody></table>
 <p>Set the same namespace in <code>nats.server.namespace</code>, <code>controller.nats.namespace</code>
 and <code>agent.nats.namespace</code>, so that all components use the same names. An empty
-string disables the prefix.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/usage"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Usage</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/usage/agents"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Working with an agent</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#config-file" class="table-of-contents__link toc-highlight">Config File</a></li><li><a href="#every-setting" class="table-of-contents__link toc-highlight">Every setting</a></li><li><a href="#environment-variables" class="table-of-contents__link toc-highlight">Environment variables</a></li><li><a href="#validation" class="table-of-contents__link toc-highlight">Validation</a></li><li><a href="#authentication" class="table-of-contents__link toc-highlight">Authentication</a><ul><li><a href="#server-side-auth" class="table-of-contents__link toc-highlight">Server-Side Auth</a></li><li><a href="#client-side-auth" class="table-of-contents__link toc-highlight">Client-Side Auth</a></li></ul></li><li><a href="#encryption-at-rest" class="table-of-contents__link toc-highlight">Encryption at rest</a></li><li><a href="#namespace" class="table-of-contents__link toc-highlight">Namespace</a></li></ul></div></div></div></div></main></div></div></div></div>
+string disables the prefix.</p></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/usage"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Usage</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/usage/agents"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Working with an agent</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#config-file" class="table-of-contents__link toc-highlight">Config File</a></li><li><a href="#every-setting" class="table-of-contents__link toc-highlight">Every setting</a></li><li><a href="#environment-variables" class="table-of-contents__link toc-highlight">Environment variables</a></li><li><a href="#validation" class="table-of-contents__link toc-highlight">Validation</a></li><li><a href="#authentication" class="table-of-contents__link toc-highlight">Authentication</a><ul><li><a href="#server-side-auth" class="table-of-contents__link toc-highlight">Server-Side Auth</a></li><li><a href="#client-side-auth" class="table-of-contents__link toc-highlight">Client-Side Auth</a></li></ul></li><li><a href="#encryption-at-rest" class="table-of-contents__link toc-highlight">Encryption at rest</a></li><li><a href="#vaults" class="table-of-contents__link toc-highlight">Vaults</a></li><li><a href="#namespace" class="table-of-contents__link toc-highlight">Namespace</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>

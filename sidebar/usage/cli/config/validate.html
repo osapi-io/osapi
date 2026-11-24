@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Validate | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/usage/cli/config/validate"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Validate | OSAPI"><meta data-rh="true" name="description" content="Check a config file before osapi starts with it."><meta data-rh="true" property="og:description" content="Check a config file before osapi starts with it."><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/config/validate"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/config/validate" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/usage/cli/config/validate" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Usage","item":"https://osapi-io.github.io/osapi/sidebar/usage/"},{"@type":"ListItem","position":2,"name":"CLI","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/"},{"@type":"ListItem","position":3,"name":"Config","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/config/"},{"@type":"ListItem","position":4,"name":"Validate","item":"https://osapi-io.github.io/osapi/sidebar/usage/cli/config/validate"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.5f87666a.js" defer="defer"></script>
-<script src="/osapi/assets/js/main.13c5b7d6.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.d8335f24.js" defer="defer"></script>
+<script src="/osapi/assets/js/main.42e91377.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -35,6 +35,12 @@ behavior get --name &lt;name&gt; lists the settings of the behavior.</li>
 <li class=""><code>bucket</code>: Each NATS bucket has its own name. A shared bucket mixes the keys of
 two roles. Fix: Give one of the two keys that the message names a different
 bucket.</li>
+<li class=""><code>vault</code>: Each vault of controller.secrets.vaults has its own name and its own
+key_file, a type of vault that osapi knows, a config block that its type
+takes, and what its type needs, such as the key of a nats vault. Fix: Correct
+the vault that the message names. osapi config get --key
+controller.secrets.vaults describes a vault, and the message names the types
+and the settings that there are.</li>
 </ul>
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">osapi config validate</span><br></div></code></pre></div></div>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="examples">Examples<a href="#examples" class="hash-link" aria-label="Direct link to Examples" title="Direct link to Examples" translate="no">​</a></h2>
