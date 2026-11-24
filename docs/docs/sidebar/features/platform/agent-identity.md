@@ -57,21 +57,34 @@ the jobs.
 
 Enrollment uses an accept and reject model, like Salt:
 
-1. **The agent makes a key pair.** When the agent starts for the first time, it
-   makes an Ed25519 key pair. It saves the key pair in `agent.pki.key_dir`
-   (`/etc/osapi/pki` by default). The files are `agent.key` (mode 0600) and
-   `agent.pub` (mode 0644).
+1. **The agent makes its keys.** When the agent starts for the first time, it
+   makes two keys in `agent.pki.key_dir` (`/etc/osapi/pki` by default):
+
+   | File         | Mode | Key                                            |
+   | ------------ | ---- | ---------------------------------------------- |
+   | `agent.key`  | 0600 | Ed25519 signing key. It signs results.         |
+   | `agent.pub`  | 0644 | The public half of the signing key.            |
+   | `agent.xkey` | 0600 | X25519 encryption key, as an nkeys curve seed. |
+
+   One key does not do both jobs. The signing key signs. The encryption key is
+   for the secrets that the controller will seal for this agent. The controller
+   does not seal a value yet. The agent makes each key only when its file does
+   not exist.
 
    The user that runs the agent must own the directory. The agent does not
-   replace a key that it cannot read, or half of a key pair. It writes the error
-   to the log and stops. A new key is not the key that the controller accepted.
-   Thus a host with a replaced key gets no work until you enroll it again. If
-   you change the user of the agent, also change the owner of the directory
-   (`chown -R osapi /etc/osapi/pki`).
+   replace a key that it cannot read, or half of a key pair, or an `agent.xkey`
+   that is not a curve seed. It writes the error to the log and stops. A new key
+   is not the key that the controller accepted. Thus a host with a replaced key
+   gets no work until you enroll it again. If you change the user of the agent,
+   also change the owner of the directory (`chown -R osapi /etc/osapi/pki`).
 
 1. **The agent sends an enrollment request.** It publishes a request to the
-   controller through NATS. The request has its machine ID, hostname, public key
-   and SHA256 fingerprint.
+   controller through NATS. The request has its machine ID, hostname, the two
+   public keys and the fingerprint. The fingerprint is the SHA-256 of the
+   Ed25519 public key, then the X25519 public key. Thus the administrator who
+   admits the fingerprint admits the two keys. The controller does not keep a
+   request without an encryption key. An agent older than the controller sends
+   that request. Upgrade the agent.
 
 1. **The agent waits.** The controller stores the request in a JetStream KV
    bucket. The agent goes into the pending state and waits. **It publishes its
@@ -93,6 +106,18 @@ Enrollment uses an accept and reject model, like Salt:
    `controller.pub`, and starts to verify job signatures. At the next restarts,
    the agent loads the controller key from disk and does not enroll again.
 
+### An agent admitted before the encryption key
+
+An agent that was admitted before agents had an encryption key makes
+`agent.xkey` when you upgrade it. Its fingerprint changes, and its admitted
+record has no encryption key. Enroll it again:
+
+1. On the machine, delete `controller.pub` in `agent.pki.key_dir`, and restart
+   the agent. It sends a new request with the two keys.
+1. On the machine, run `osapi agent key fingerprint`.
+1. Admit the machine with that fingerprint. The pending record shows the old
+   fingerprint as `previous_fingerprint`.
+
 ### Auto-admit mode
 
 For development and tests, set `controller.pki.auto_admit: true`. Then the
@@ -102,7 +127,7 @@ not use this in production.
 ### CLI commands
 
 ```bash
-# On the machine: show its machine ID and key fingerprint
+# On the machine: show its machine ID, encryption key and key fingerprint
 osapi agent key fingerprint
 
 # List the machines that wait for a decision

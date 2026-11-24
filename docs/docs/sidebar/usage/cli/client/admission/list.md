@@ -44,6 +44,7 @@ With `--json`, the API's response:
       "online": true,
       "last_seen": "2026-01-15T09:59:52Z",
       "fingerprint": "SHA256:1f53dea6b0c3e2f9a8d4c71e5b6a0f2d9c8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a",
+      "encryption_key": "XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM",
       "requested_at": "2026-01-15T09:40:00Z"
     },
     {
@@ -53,6 +54,7 @@ With `--json`, the API's response:
       "online": true,
       "last_seen": "2026-01-15T09:59:52Z",
       "fingerprint": "SHA256:9a7c3e1b5d2f4a6c8e0b1d3f5a7c9e2b4d6f8a0c2e4b6d8f0a1c3e5b7d9f1a3c",
+      "encryption_key": "XBYF3LNXM7EBLLEZY3ANJUQIF5G2WZ6ICP3UDHLG42RMQHM6Y4QQBN75",
       "admitted_at": "2026-01-15T09:40:00Z"
     }
   ]

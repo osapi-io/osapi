@@ -26,6 +26,7 @@ import (
 	"crypto/ed25519"
 
 	"github.com/avfs/avfs"
+	"github.com/nats-io/nkeys"
 )
 
 // Manager handles Ed25519 keypair lifecycle.
@@ -37,6 +38,24 @@ type Manager struct {
 	privateKey               ed25519.PrivateKey
 	controllerPubKey         ed25519.PublicKey
 	previousControllerPubKey ed25519.PublicKey
+
+	// withEncryption makes LoadOrGenerate also load or generate the X25519
+	// key that opens values the controller seals for this agent.
+	withEncryption      bool
+	encryptionKey       nkeys.KeyPair
+	encryptionPublicKey string
+}
+
+// Option configures a Manager.
+type Option func(*Manager)
+
+// WithEncryptionKey gives the manager an X25519 encryption key next to its
+// Ed25519 signing key, in {prefix}.xkey. The agent has one; the controller
+// does not.
+func WithEncryptionKey() Option {
+	return func(m *Manager) {
+		m.withEncryption = true
+	}
 }
 
 const (
@@ -68,12 +87,15 @@ const (
 	StateRejected EnrollmentState = "rejected"
 )
 
-// EnrollmentRequest is sent by the agent to the controller.
+// EnrollmentRequest is sent by the agent to the controller. It carries both
+// public keys: the Ed25519 signing key and the X25519 encryption key, in the
+// nkeys form that starts with "X".
 type EnrollmentRequest struct {
-	MachineID   string `json:"machine_id"`
-	Hostname    string `json:"hostname"`
-	PublicKey   []byte `json:"public_key"`
-	Fingerprint string `json:"fingerprint"`
+	MachineID     string `json:"machine_id"`
+	Hostname      string `json:"hostname"`
+	PublicKey     []byte `json:"public_key"`
+	EncryptionKey string `json:"encryption_key"`
+	Fingerprint   string `json:"fingerprint"`
 }
 
 // EnrollmentResponse is sent by the controller to the agent.

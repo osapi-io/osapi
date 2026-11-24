@@ -67,7 +67,7 @@ func acceptedKey(
 	return acceptedKVPrefix + machineID
 }
 
-// recordAgentKey stores an accepted agent's public key, keyed by machine ID,
+// recordAgentKey stores an accepted agent's public keys, keyed by machine ID,
 // so it outlives the pending record deleted on acceptance. The fingerprint is
 // recomputed from the key rather than copied from the request, because the
 // request's fingerprint is self-reported.
@@ -78,11 +78,12 @@ func (w *Watcher) recordAgentKey(
 	pending PendingAgent,
 ) error {
 	record := AcceptedAgent{
-		MachineID:   pending.MachineID,
-		Hostname:    pending.Hostname,
-		PublicKey:   pending.PublicKey,
-		Fingerprint: pki.FingerprintOf(pending.PublicKey),
-		AcceptedAt:  nowFn(),
+		MachineID:     pending.MachineID,
+		Hostname:      pending.Hostname,
+		PublicKey:     pending.PublicKey,
+		EncryptionKey: pending.EncryptionKey,
+		Fingerprint:   pki.FingerprintOfKeys(pending.PublicKey, pending.EncryptionKey),
+		AcceptedAt:    nowFn(),
 	}
 
 	// A re-acceptance with a different key is a rotation. The outgoing key

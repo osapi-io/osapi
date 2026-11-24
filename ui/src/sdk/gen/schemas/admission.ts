@@ -10,7 +10,9 @@ export interface Admission {
   admitted_at?: string;
   /** When the node was rejected or revoked. */
   decided_at?: string;
-  /** The fingerprint of the node's key. */
+  /** The node's public X25519 encryption key, which the fingerprint covers. */
+  encryption_key?: string;
+  /** The fingerprint of the node's two public keys: signing and encryption. */
   fingerprint: string;
   /** The hostname the node gave. */
   hostname: string;

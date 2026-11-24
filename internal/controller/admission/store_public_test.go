@@ -122,7 +122,7 @@ func (s *StorePublicTestSuite) SetupSubTest() {
 		"osapi",
 	)
 	s.key, _, _ = ed25519.GenerateKey(nil)
-	s.fp = pki.FingerprintOf(s.key)
+	s.fp = pki.FingerprintOfKeys(s.key, "XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM")
 	s.at = time.Date(2026, 11, 19, 1, 0, 0, 0, time.UTC)
 	admission.SetNowFn(func() time.Time { return s.at })
 }
@@ -147,11 +147,12 @@ func (s *StorePublicTestSuite) pending(
 	machineID, hostname string,
 ) {
 	s.put(admission.KVPrefix()+machineID, admission.PendingAgent{
-		MachineID:   machineID,
-		Hostname:    hostname,
-		PublicKey:   s.key,
-		Fingerprint: "SHA256:self-reported",
-		RequestedAt: s.at,
+		MachineID:     machineID,
+		Hostname:      hostname,
+		PublicKey:     s.key,
+		EncryptionKey: "XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM",
+		Fingerprint:   "SHA256:self-reported",
+		RequestedAt:   s.at,
 	})
 }
 
@@ -162,6 +163,7 @@ func (s *StorePublicTestSuite) TestList() {
 			s.pending("m-new", "web-03")
 			s.put(admission.AcceptedKVPrefix()+"m-ok", admission.AcceptedAgent{
 				MachineID: "m-ok", Hostname: "web-01", Fingerprint: "SHA256:ok", AcceptedAt: s.at,
+				EncryptionKey: "XADMITTED",
 			})
 			s.put(
 				"rejected.m-no",
@@ -191,10 +193,15 @@ func (s *StorePublicTestSuite) TestList() {
 				[]string{got[0].Hostname, got[1].Hostname, got[2].Hostname, got[3].Hostname})
 			s.Equal(admission.StateAdmitted, got[0].State)
 			s.Equal(s.at, got[0].AdmittedAt)
+			s.Equal("XADMITTED", got[0].EncryptionKey)
 			s.Equal(admission.StateRejected, got[1].State)
 			s.Equal("unknown host", got[1].Reason)
 			s.Equal(admission.StatePending, got[2].State)
-			s.Equal(s.fp, got[2].Fingerprint, "the fingerprint of the key the request carries")
+			s.Equal(s.fp, got[2].Fingerprint, "the fingerprint of the keys the request carries")
+			s.Equal(
+				"XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM",
+				got[2].EncryptionKey,
+			)
 			s.Empty(got[2].Previous)
 			s.Equal(admission.StatePending, got[3].State)
 			s.Equal(admission.StateRevoked, got[3].Previous)
@@ -239,6 +246,23 @@ func (s *StorePublicTestSuite) TestGet() {
 		_, err := s.watcher.Get(context.Background(), "m-none")
 
 		s.ErrorIs(err, admission.ErrNotFound)
+	})
+}
+
+func (s *StorePublicTestSuite) TestAdmitWithoutEncryptionKey() {
+	s.Run("when the request has no encryption key it has no fingerprint to admit", func() {
+		s.put(admission.KVPrefix()+"m-old", admission.PendingAgent{
+			MachineID: "m-old",
+			Hostname:  "web-09",
+			PublicKey: s.key,
+		})
+
+		got, err := s.watcher.Get(context.Background(), "m-old")
+		s.Require().NoError(err)
+		s.Empty(got.Fingerprint)
+
+		err = s.watcher.Admit(context.Background(), "m-old", pki.FingerprintOf(s.key))
+		s.ErrorIs(err, admission.ErrFingerprintMismatch)
 	})
 }
 

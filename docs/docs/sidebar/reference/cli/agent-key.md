@@ -6,19 +6,19 @@ title: osapi agent key
 
 # osapi agent key
 
-Read the key pair of the agent on this host.
+Read the keys of the agent on this host.
 `osapi dsl command get --name agent key` shows the same.
 
 ## Group
 
-|             |                                             |
-| ----------- | ------------------------------------------- |
-| Name        | agent key                                   |
-| Description | Read the key pair of the agent on this host |
+|             |                                         |
+| ----------- | --------------------------------------- |
+| Name        | agent key                               |
+| Description | Read the keys of the agent on this host |
 
 ## [osapi agent key fingerprint](../../usage/cli/agent/key/fingerprint.md)
 
-|             |                                                                       |
-| ----------- | --------------------------------------------------------------------- |
-| Method      | fingerprint                                                           |
-| Description | Show the fingerprint of the agent's key, and what admits this machine |
+|             |                                                                        |
+| ----------- | ---------------------------------------------------------------------- |
+| Method      | fingerprint                                                            |
+| Description | Show the fingerprint of the agent's keys, and what admits this machine |

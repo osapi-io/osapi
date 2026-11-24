@@ -35,11 +35,13 @@ import (
 
 // PendingAgent represents an agent awaiting enrollment acceptance.
 type PendingAgent struct {
-	MachineID   string    `json:"machine_id"`
-	Hostname    string    `json:"hostname"`
-	PublicKey   []byte    `json:"public_key"`
-	Fingerprint string    `json:"fingerprint"`
-	RequestedAt time.Time `json:"requested_at"`
+	MachineID string `json:"machine_id"`
+	Hostname  string `json:"hostname"`
+	PublicKey []byte `json:"public_key"`
+	// EncryptionKey is the agent's public X25519 key, in the nkeys form.
+	EncryptionKey string    `json:"encryption_key"`
+	Fingerprint   string    `json:"fingerprint"`
+	RequestedAt   time.Time `json:"requested_at"`
 }
 
 // AcceptedAgent is the stored record of an accepted agent's public key. It
@@ -50,11 +52,15 @@ type PendingAgent struct {
 // Only enrollment acceptance creates or replaces a record: nothing an agent
 // sends may introduce or change one.
 type AcceptedAgent struct {
-	MachineID   string            `json:"machine_id"`
-	Hostname    string            `json:"hostname"`
-	PublicKey   ed25519.PublicKey `json:"public_key"`
-	Fingerprint string            `json:"fingerprint"`
-	AcceptedAt  time.Time         `json:"accepted_at"`
+	MachineID string            `json:"machine_id"`
+	Hostname  string            `json:"hostname"`
+	PublicKey ed25519.PublicKey `json:"public_key"`
+	// EncryptionKey is the agent's public X25519 key, in the nkeys form. The
+	// fingerprint covers it and PublicKey. A record admitted before agents
+	// had one has none: that agent enrolls again.
+	EncryptionKey string    `json:"encryption_key,omitempty"`
+	Fingerprint   string    `json:"fingerprint"`
+	AcceptedAt    time.Time `json:"accepted_at"`
 
 	// SupersededKey is the key replaced by the most recent rotation. It is
 	// absent unless a rotation is inside its grace period.

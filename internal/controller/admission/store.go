@@ -77,12 +77,15 @@ var statePrecedence = map[string]int{
 // machine's earlier record, when it had one, so a returning machine, or one
 // whose key changed, is a decision, not a surprise.
 type Record struct {
-	MachineID   string    `json:"machine_id"`
-	Hostname    string    `json:"hostname"`
-	Fingerprint string    `json:"fingerprint"`
-	State       string    `json:"state"`
-	RequestedAt time.Time `json:"requested_at,omitempty"`
-	AdmittedAt  time.Time `json:"admitted_at,omitempty"`
+	MachineID   string `json:"machine_id"`
+	Hostname    string `json:"hostname"`
+	Fingerprint string `json:"fingerprint"`
+	// EncryptionKey is the machine's public X25519 key, which the
+	// fingerprint covers.
+	EncryptionKey string    `json:"encryption_key,omitempty"`
+	State         string    `json:"state"`
+	RequestedAt   time.Time `json:"requested_at,omitempty"`
+	AdmittedAt    time.Time `json:"admitted_at,omitempty"`
 	// DecidedAt is when a machine was rejected or revoked.
 	DecidedAt time.Time `json:"decided_at,omitempty"`
 	// Reason is why a machine was rejected.
@@ -267,15 +270,16 @@ func (w *Watcher) read(
 			return Record{}, false
 		}
 
-		// The fingerprint of the key the request carries, which is the key
-		// that admitting stores; the request's own fingerprint is what the
-		// machine says of itself.
+		// The fingerprint of the keys the request carries, which are the
+		// keys that admitting stores; the request's own fingerprint is what
+		// the machine says of itself.
 		return Record{
-			MachineID:   p.MachineID,
-			Hostname:    p.Hostname,
-			Fingerprint: pki.FingerprintOf(p.PublicKey),
-			State:       StatePending,
-			RequestedAt: p.RequestedAt,
+			MachineID:     p.MachineID,
+			Hostname:      p.Hostname,
+			Fingerprint:   pki.FingerprintOfKeys(p.PublicKey, p.EncryptionKey),
+			EncryptionKey: p.EncryptionKey,
+			State:         StatePending,
+			RequestedAt:   p.RequestedAt,
 		}, true
 	case StateAdmitted:
 		var a AcceptedAgent
@@ -284,11 +288,12 @@ func (w *Watcher) read(
 		}
 
 		return Record{
-			MachineID:   a.MachineID,
-			Hostname:    a.Hostname,
-			Fingerprint: a.Fingerprint,
-			State:       StateAdmitted,
-			AdmittedAt:  a.AcceptedAt,
+			MachineID:     a.MachineID,
+			Hostname:      a.Hostname,
+			Fingerprint:   a.Fingerprint,
+			EncryptionKey: a.EncryptionKey,
+			State:         StateAdmitted,
+			AdmittedAt:    a.AcceptedAt,
 		}, true
 	default:
 		var r Record
@@ -340,12 +345,13 @@ func (w *Watcher) reject(
 	}
 
 	return w.keep(ctx, rejectedKVPrefix, Record{
-		MachineID:   machineID,
-		Hostname:    r.Hostname,
-		Fingerprint: r.Fingerprint,
-		RequestedAt: r.RequestedAt,
-		DecidedAt:   nowFn(),
-		Reason:      reason,
+		MachineID:     machineID,
+		Hostname:      r.Hostname,
+		Fingerprint:   r.Fingerprint,
+		EncryptionKey: r.EncryptionKey,
+		RequestedAt:   r.RequestedAt,
+		DecidedAt:     nowFn(),
+		Reason:        reason,
 	})
 }
 
@@ -363,11 +369,12 @@ func (w *Watcher) revoke(
 	}
 
 	return w.keep(ctx, revokedKVPrefix, Record{
-		MachineID:   machineID,
-		Hostname:    r.Hostname,
-		Fingerprint: r.Fingerprint,
-		AdmittedAt:  r.AdmittedAt,
-		DecidedAt:   nowFn(),
+		MachineID:     machineID,
+		Hostname:      r.Hostname,
+		Fingerprint:   r.Fingerprint,
+		EncryptionKey: r.EncryptionKey,
+		AdmittedAt:    r.AdmittedAt,
+		DecidedAt:     nowFn(),
 	})
 }
 

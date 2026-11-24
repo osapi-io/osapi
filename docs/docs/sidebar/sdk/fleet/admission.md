@@ -192,7 +192,8 @@ The fields of each type are the properties of its schema in the API's spec.
 | --------------------- | ----------- | ----------------------------------------------------------------------------------------- |
 | `AdmittedAt`          | `time.Time` | When the node was admitted.                                                               |
 | `DecidedAt`           | `time.Time` | When the node was rejected or revoked.                                                    |
-| `Fingerprint`         | `string`    | The fingerprint of the node's key.                                                        |
+| `EncryptionKey`       | `string`    | The node's public X25519 encryption key, which the fingerprint covers.                    |
+| `Fingerprint`         | `string`    | The fingerprint of the node's two public keys: signing and encryption.                    |
 | `Hostname`            | `string`    | The hostname the node gave.                                                               |
 | `LastSeen`            | `time.Time` | When the node last reported.                                                              |
 | `MachineID`           | `string`    | The machine ID of the node.                                                               |

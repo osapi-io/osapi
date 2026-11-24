@@ -26,16 +26,18 @@ import "github.com/osapi-io/osapi/internal/cli/command"
 
 // Group is the agent key group's definition.
 var Group = command.Register(command.Define(
-	"key", "Read the key pair of the agent on this host",
+	"key", "Read the keys of the agent on this host",
 	command.Under(command.ParentAgent),
 	command.Uses[Deps](),
 	command.Method[FingerprintInput, FingerprintOutput]("fingerprint").
-		Short("Show the fingerprint of the agent's key, and what admits this machine").
-		Long("Run this on the machine. It prints the machine ID, the hostname and the\n"+
-			"fingerprint of the agent key, in `agent.pki.key_dir` (`/etc/osapi/pki` by\n"+
-			"default), and the command that admits the machine. The controller admits\n"+
-			"the machine only when the fingerprint is the one of the key in its\n"+
-			"request. If no key exists, the command makes a new key pair.").
+		Short("Show the fingerprint of the agent's keys, and what admits this machine").
+		Long("Run this on the machine. It reads the two agent keys in `agent.pki.key_dir`\n"+
+			"(`/etc/osapi/pki` by default): the Ed25519 signing key and the X25519\n"+
+			"encryption key. It prints the machine ID, the hostname, the public\n"+
+			"encryption key, the fingerprint that covers the two keys, and the command\n"+
+			"that admits the machine. The controller admits the machine only when the\n"+
+			"fingerprint is the one of the keys in its request. The command makes each\n"+
+			"key that does not exist.").
 		Example("").
 		Prints(sampleFingerprint).
 		Handle(Fingerprint),

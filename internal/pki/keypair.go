@@ -57,17 +57,24 @@ func defaultGenerateKeyPair() (ed25519.PublicKey, ed25519.PrivateKey, error) {
 
 // New creates a PKI Manager with the given filesystem, key directory path,
 // and key prefix (e.g., "agent" or "controller"). The prefix determines
-// the key filenames: {prefix}.key and {prefix}.pub.
+// the key filenames: {prefix}.key and {prefix}.pub, and {prefix}.xkey when
+// the manager has an encryption key (WithEncryptionKey).
 func New(
 	fs avfs.VFS,
 	keyDir string,
 	keyPrefix string,
+	opts ...Option,
 ) *Manager {
-	return &Manager{
+	m := &Manager{
 		fs:        fs,
 		keyDir:    keyDir,
 		keyPrefix: keyPrefix,
 	}
+	for _, opt := range opts {
+		opt(m)
+	}
+
+	return m
 }
 
 // LoadOrGenerate loads existing PEM-encoded Ed25519 keys from disk, or
@@ -75,7 +82,23 @@ func New(
 // cannot read, or one half of a pair, is an error rather than a reason to
 // generate: a new key is not the one the controller accepted, so replacing it
 // drops the host out of targeting until an operator enrolls it again.
+//
+// A manager made WithEncryptionKey then loads or generates its X25519 key by
+// the same rules.
 func (m *Manager) LoadOrGenerate() error {
+	if err := m.loadOrGenerateSigningKey(); err != nil {
+		return err
+	}
+
+	if !m.withEncryption {
+		return nil
+	}
+
+	return m.loadOrGenerateEncryptionKey()
+}
+
+// loadOrGenerateSigningKey loads or generates the Ed25519 keypair.
+func (m *Manager) loadOrGenerateSigningKey() error {
 	privPath := filepath.Join(m.keyDir, m.keyPrefix+".key")
 	pubPath := filepath.Join(m.keyDir, m.keyPrefix+".pub")
 
@@ -126,9 +149,15 @@ func (m *Manager) PrivateKey() ed25519.PrivateKey {
 	return m.privateKey
 }
 
-// Fingerprint returns the SHA256 fingerprint of the public key in the
-// format "SHA256:<hex>". Returns an empty string if no public key is set.
+// Fingerprint returns the SHA256 fingerprint of the manager's public keys
+// in the format "SHA256:<hex>". A manager with an encryption key covers both
+// keys (FingerprintOfKeys); one without covers the signing key alone.
+// Returns an empty string if no public key is set.
 func (m *Manager) Fingerprint() string {
+	if m.encryptionPublicKey != "" {
+		return FingerprintOfKeys(m.publicKey, m.encryptionPublicKey)
+	}
+
 	return FingerprintOf(m.publicKey)
 }
 

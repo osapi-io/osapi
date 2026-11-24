@@ -154,6 +154,18 @@ func (w *Watcher) handleEnrollmentRequest(
 		return
 	}
 
+	// The fingerprint that admits the agent covers its encryption key. An
+	// agent older than the controller sends none, and there is no
+	// compatibility: it is upgraded and enrolls again.
+	if !pki.ValidEncryptionKey(req.EncryptionKey) {
+		w.logger.Warn(
+			"enrollment request has no valid encryption key; upgrade the agent",
+			slog.String("machine_id", req.MachineID),
+			slog.String("hostname", req.Hostname),
+		)
+		return
+	}
+
 	w.logger.Info(
 		"received enrollment request",
 		slog.String("machine_id", req.MachineID),
@@ -162,11 +174,12 @@ func (w *Watcher) handleEnrollmentRequest(
 	)
 
 	pending := PendingAgent{
-		MachineID:   req.MachineID,
-		Hostname:    req.Hostname,
-		PublicKey:   req.PublicKey,
-		Fingerprint: req.Fingerprint,
-		RequestedAt: nowFn(),
+		MachineID:     req.MachineID,
+		Hostname:      req.Hostname,
+		PublicKey:     req.PublicKey,
+		EncryptionKey: req.EncryptionKey,
+		Fingerprint:   req.Fingerprint,
+		RequestedAt:   nowFn(),
 	}
 
 	data, err := marshalFn(pending)

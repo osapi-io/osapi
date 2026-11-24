@@ -23,9 +23,10 @@ package agentkey
 // The sample output of the example, which the docs page of the command
 // shows as the CLI prints it.
 var sampleFingerprint = FingerprintOutput{
-	MachineID:   "d530664edc1c431eb5ef1e9dfd6617a5",
-	Hostname:    "web-03",
-	Fingerprint: "SHA256:1f53dea6b0c3e2f9a8d4c71e5b6a0f2d9c8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a",
+	MachineID:     "d530664edc1c431eb5ef1e9dfd6617a5",
+	Hostname:      "web-03",
+	EncryptionKey: "XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM",
+	Fingerprint:   "SHA256:1f53dea6b0c3e2f9a8d4c71e5b6a0f2d9c8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a",
 	Admit: "osapi client admission admit --machine-id d530664edc1c431eb5ef1e9dfd6617a5 " +
 		"--fingerprint SHA256:1f53dea6b0c3e2f9a8d4c71e5b6a0f2d9c8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a",
 }

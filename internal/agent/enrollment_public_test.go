@@ -72,7 +72,13 @@ func (suite *EnrollmentPublicTestSuite) TestHandlePKIEnrollment() {
 				require.NotNil(suite.T(), m)
 				assert.Len(suite.T(), m.PublicKey(), ed25519.PublicKeySize)
 				assert.Len(suite.T(), m.PrivateKey(), ed25519.PrivateKeySize)
-				assert.NotEmpty(suite.T(), m.Fingerprint())
+				assert.True(suite.T(), pki.ValidEncryptionKey(m.EncryptionPublicKey()))
+				assert.Equal(
+					suite.T(),
+					pki.FingerprintOfKeys(m.PublicKey(), m.EncryptionPublicKey()),
+					m.Fingerprint(),
+					"the fingerprint covers the signing and the encryption key",
+				)
 				// No controller key — not enrolled.
 				assert.Nil(suite.T(), m.ControllerPublicKey())
 			},
@@ -283,9 +289,24 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 			setupAgent: func() *agent.Agent {
 				ctrl := gomock.NewController(suite.T())
 				mockNATS := agentMocks.NewMockNATSClient(ctrl)
+				var published []byte
 				mockNATS.EXPECT().
 					PublishCore(gomock.Any(), "enroll.request", gomock.Any()).
-					Return(nil)
+					DoAndReturn(func(_ context.Context, _ string, data []byte) error {
+						published = data
+						return nil
+					})
+				suite.T().Cleanup(func() {
+					var req pki.EnrollmentRequest
+					require.NoError(suite.T(), json.Unmarshal(published, &req))
+					assert.True(suite.T(), pki.ValidEncryptionKey(req.EncryptionKey))
+					assert.Equal(
+						suite.T(),
+						pki.FingerprintOfKeys(req.PublicKey, req.EncryptionKey),
+						req.Fingerprint,
+						"the request sends both public keys and the fingerprint over both",
+					)
+				})
 
 				fs := memfs.New()
 				logger := slog.Default()
@@ -303,7 +324,7 @@ func (suite *EnrollmentPublicTestSuite) TestPublishEnrollmentRequest() {
 					nil, "", nil, nil, nil, nil, nil, nil, "", "", nil, mockNATS,
 				)
 
-				m := pki.New(fs, "/keys", "agent")
+				m := pki.New(fs, "/keys", "agent", pki.WithEncryptionKey())
 				require.NoError(suite.T(), m.LoadOrGenerate())
 				agent.SetAgentPKIManager(a, m)
 

@@ -239,10 +239,10 @@ For trust between the agents and the controller, osapi has an optional PKI
 enrollment system. It makes sure that only approved agents process jobs, and
 that the jobs come from a trusted controller.
 
-When PKI is enabled, each agent makes an Ed25519 key pair and sends an
-enrollment request. An administrator accepts or rejects the request. That gives
-cryptographic trust. The controller signs jobs with its private key. Agents
-verify the signature before they process a job.
+When PKI is enabled, each agent makes an Ed25519 signing key pair and an X25519
+encryption key, and sends an enrollment request. An administrator accepts or
+rejects the request. That gives cryptographic trust. The controller signs jobs
+with its private key. Agents verify the signature before they process a job.
 
 PKI is complementary to JWT auth: JWTs authenticate API callers, while PKI
 authenticates the agent-controller relationship over NATS. Refer to

@@ -32,6 +32,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/agent/identity"
 	"github.com/osapi-io/osapi/internal/cli/commands/agentkey"
+	"github.com/osapi-io/osapi/internal/pki"
 )
 
 type MethodsPublicTestSuite struct {
@@ -49,6 +50,8 @@ func (s *MethodsPublicTestSuite) TestFingerprint() {
 		return fs
 	}
 
+	admitted := writable()
+
 	tests := []struct {
 		name         string
 		fs           avfs.VFS
@@ -57,13 +60,24 @@ func (s *MethodsPublicTestSuite) TestFingerprint() {
 	}{
 		{
 			name:     "when the key and the identity are read, it is what admits the machine",
-			fs:       writable(),
+			fs:       admitted,
 			identity: web,
 			validateFunc: func(got agentkey.FingerprintOutput, err error) {
 				s.Require().NoError(err)
 				s.Equal("m-1", got.MachineID)
 				s.Equal("web-01", got.Hostname)
-				s.NotEmpty(got.Fingerprint)
+				s.True(pki.ValidEncryptionKey(got.EncryptionKey))
+				mgr := pki.New(admitted, "/pki", "agent", pki.WithEncryptionKey())
+				s.Require().NoError(mgr.LoadOrGenerate())
+				s.Equal(
+					got.EncryptionKey,
+					mgr.EncryptionPublicKey(),
+					"the key is kept, not made again",
+				)
+				s.Equal(
+					pki.FingerprintOfKeys(mgr.PublicKey(), got.EncryptionKey),
+					got.Fingerprint,
+				)
 				s.Equal(
 					"osapi client admission admit --machine-id m-1 --fingerprint "+got.Fingerprint,
 					got.Admit,

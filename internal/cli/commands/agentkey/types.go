@@ -25,9 +25,10 @@ type FingerprintInput struct{}
 
 // FingerprintOutput is what admits this machine, and the command that does it.
 type FingerprintOutput struct {
-	_           struct{} `title:"Admission"`
-	MachineID   string   `                  json:"machine_id"`
-	Hostname    string   `                  json:"hostname"`
-	Fingerprint string   `                  json:"fingerprint"`
-	Admit       string   `                  json:"admit"       label:"To admit"`
+	_             struct{} `title:"Admission"`
+	MachineID     string   `                  json:"machine_id"`
+	Hostname      string   `                  json:"hostname"`
+	EncryptionKey string   `                  json:"encryption_key"`
+	Fingerprint   string   `                  json:"fingerprint"`
+	Admit         string   `                  json:"admit"          label:"To admit"`
 }

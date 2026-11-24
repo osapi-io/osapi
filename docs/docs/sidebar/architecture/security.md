@@ -53,14 +53,14 @@ to a different host.
 With PKI on (`controller.pki.enabled` and `agent.pki.enabled`), an agent gets no
 work until an administrator accepts it:
 
-1. When the agent starts for the first time, it makes an Ed25519 key pair in
-   `agent.pki.key_dir`.
+1. When the agent starts for the first time, it makes an Ed25519 signing key
+   pair and an X25519 encryption key in `agent.pki.key_dir`.
 1. It sends an enrollment request and waits. `osapi client admission list` shows
    it as pending.
 1. An administrator runs `osapi agent key fingerprint` on the machine, and
    admits it with the fingerprint that the command prints. The controller admits
-   it only when the fingerprint is the one of the key in the request. Or the
-   controller admits each agent itself, with `controller.pki.auto_admit`.
+   it only when the fingerprint is the one of the two keys in the request. Or
+   the controller admits each agent itself, with `controller.pki.auto_admit`.
 1. After that, the controller signs each job. The agent refuses a job that the
    controller did not sign. The agent signs its results and its heartbeats.
 

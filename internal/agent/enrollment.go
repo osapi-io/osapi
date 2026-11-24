@@ -42,7 +42,7 @@ import (
 var marshalJSONEnrollment = json.Marshal
 
 // handlePKIEnrollment manages the PKI enrollment lifecycle.
-// It loads or generates a keypair, checks for existing controller key,
+// It loads or generates the signing and encryption keys, checks for existing controller key,
 // and if not enrolled, publishes an enrollment request, starts a
 // background listener for acceptance, and sets state to Pending.
 func (a *Agent) handlePKIEnrollment(
@@ -50,7 +50,7 @@ func (a *Agent) handlePKIEnrollment(
 ) error {
 	keyDir := a.appConfig.Agent.PKI.KeyDir
 
-	m := pki.New(a.appFs, keyDir, "agent")
+	m := pki.New(a.appFs, keyDir, "agent", pki.WithEncryptionKey())
 
 	if err := m.LoadOrGenerate(); err != nil {
 		return err
@@ -155,10 +155,11 @@ func (a *Agent) publishEnrollmentRequest() error {
 	}
 
 	req := pki.EnrollmentRequest{
-		MachineID:   a.machineID,
-		Hostname:    a.hostname,
-		PublicKey:   a.pkiManager.PublicKey(),
-		Fingerprint: a.pkiManager.Fingerprint(),
+		MachineID:     a.machineID,
+		Hostname:      a.hostname,
+		PublicKey:     a.pkiManager.PublicKey(),
+		EncryptionKey: a.pkiManager.EncryptionPublicKey(),
+		Fingerprint:   a.pkiManager.Fingerprint(),
 	}
 
 	data, err := marshalJSONEnrollment(req)
