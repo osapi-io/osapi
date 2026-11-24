@@ -19,6 +19,11 @@ inputs:
       UI in goreleaser's before hook.
     default: "false"
 
+outputs:
+  go-cache-key:
+    description: The key of the shared Go cache, for the cache job that saves it.
+    value: ${{ steps.go-cache.outputs.key }}
+
 runs:
   using: composite
   steps:
@@ -26,6 +31,27 @@ runs:
       uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
       with:
         go-version-file: go.mod
+        # setup-go keys its cache on go.sum alone and saves it only on a miss,
+        # so it was saved once and stayed cold. The shared cache below
+        # replaces it.
+        cache: false
+    # One Go cache for every job: the modules and the compiled packages,
+    # keyed on go.sum and the week. The cache job of go.yml saves it on main
+    # when the key is new; every job restores the newest one.
+    - name: The key of the Go cache
+      id: go-cache
+      shell: bash
+      run: echo "key=go-${{ runner.os }}-${{ hashFiles('go.sum') }}-$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
+    - name: Restore the Go cache
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ steps.go-cache.outputs.key }}
+        restore-keys: |
+          go-${{ runner.os }}-${{ hashFiles('go.sum') }}-
+          go-${{ runner.os }}-
     - name: Set up Node.js
       if: inputs.js == 'true'
       uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0

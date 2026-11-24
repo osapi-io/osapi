@@ -33,6 +33,41 @@ permissions:
 # each of them. The unit shards each run go-unit-plan and take their own
 # packages. .github/actions/setup has the setup of this repository.
 jobs:
+  # On main, fill the shared Go cache once a week, or when go.sum changes:
+  # compile each package, and each test with the race detector, as the
+  # shards do, then save it. Pull requests only restore it.
+  cache:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          js: "false"
+      - name: Is the cache of this key saved
+        id: saved
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ steps.setup.outputs.go-cache-key }}
+          lookup-only: true
+      - name: Compile each package and each test
+        if: steps.saved.outputs.cache-hit != 'true'
+        run: |
+          go build ./...
+          go test -race -run '^$' ./... > /dev/null
+      - name: Save the Go cache
+        if: steps.saved.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ steps.setup.outputs.go-cache-key }}
+
   # golangci-lint runs the prebuilt release of the version that go.mod
   # pins: through go tool, a cold runner compiled golangci-lint itself first,
   # which took most of the job.
@@ -41,15 +76,12 @@ jobs:
     name: go-vet
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Set up Go
-        uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+      - uses: ./.github/actions/setup
         with:
-          go-version-file: go.mod
+          js: "false"
       - name: The version of golangci-lint in go.mod
         id: lint
         run: echo "version=$(go list -m -f '{{.Version}}' github.com/golangci/golangci-lint/v2)" >> "$GITHUB_OUTPUT"
-      # The embed needs a file in ui/dist.
-      - run: mkdir -p ui/dist && touch ui/dist/.keep
       - name: go-vet
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
