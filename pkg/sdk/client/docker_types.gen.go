@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // DockerEntry is the DockerEntry of the spec.
 type DockerEntry struct {
 	// When it was created, RFC 3339.
@@ -41,24 +43,14 @@ type DockerEntry struct {
 	// running, exited, created, paused or restarting.
 	State string `json:"state,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status DockerEntryStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 
 	// What docker says of its state, such as Up 2 minutes.
 	Summary string `json:"summary,omitempty"`
 }
-
-// DockerEntryStatus: The status of the operation for this host.
-type DockerEntryStatus string
-
-// The values of DockerEntryStatus.
-const (
-	DockerEntryStatusOk      DockerEntryStatus = "ok"
-	DockerEntryStatusFailed  DockerEntryStatus = "failed"
-	DockerEntryStatusSkipped DockerEntryStatus = "skipped"
-	DockerEntryStatusTimeout DockerEntryStatus = "timeout"
-)
 
 // DockerExecResult is the DockerExecResult of the spec.
 type DockerExecResult struct {
@@ -74,9 +66,10 @@ type DockerExecResult struct {
 	// Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status DockerExecResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 
 	// What the command wrote to standard error.
 	Stderr string `json:"stderr,omitempty"`
@@ -84,17 +77,6 @@ type DockerExecResult struct {
 	// What the command wrote to standard output.
 	Stdout string `json:"stdout,omitempty"`
 }
-
-// DockerExecResultStatus: The status of the operation for this host.
-type DockerExecResultStatus string
-
-// The values of DockerExecResultStatus.
-const (
-	DockerExecResultStatusOk      DockerExecResultStatus = "ok"
-	DockerExecResultStatusFailed  DockerExecResultStatus = "failed"
-	DockerExecResultStatusSkipped DockerExecResultStatus = "skipped"
-	DockerExecResultStatusTimeout DockerExecResultStatus = "timeout"
-)
 
 // DockerResult is the DockerResult of the spec.
 type DockerResult struct {
@@ -113,21 +95,11 @@ type DockerResult struct {
 	// The container.
 	Name string `json:"name,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status DockerResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// DockerResultStatus: The status of the operation for this host.
-type DockerResultStatus string
-
-// The values of DockerResultStatus.
-const (
-	DockerResultStatusOk      DockerResultStatus = "ok"
-	DockerResultStatusFailed  DockerResultStatus = "failed"
-	DockerResultStatusSkipped DockerResultStatus = "skipped"
-	DockerResultStatusTimeout DockerResultStatus = "timeout"
-)
 
 // GetNodeDockerState: Only the containers in this state: running, stopped or
 // all, the default.

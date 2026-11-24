@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // CommandResult is the CommandResult of the spec.
 type CommandResult struct {
 	// Whether the host changed: true, since a command can change anything.
@@ -19,9 +21,10 @@ type CommandResult struct {
 	// Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status CommandResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 
 	// What it wrote to standard error.
 	Stderr string `json:"stderr,omitempty"`
@@ -29,14 +32,3 @@ type CommandResult struct {
 	// What it wrote to standard output.
 	Stdout string `json:"stdout,omitempty"`
 }
-
-// CommandResultStatus: The status of the operation for this host.
-type CommandResultStatus string
-
-// The values of CommandResultStatus.
-const (
-	CommandResultStatusOk      CommandResultStatus = "ok"
-	CommandResultStatusFailed  CommandResultStatus = "failed"
-	CommandResultStatusSkipped CommandResultStatus = "skipped"
-	CommandResultStatusTimeout CommandResultStatus = "timeout"
-)

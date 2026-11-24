@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // GroupAccount is the GroupAccount of the spec.
 type GroupAccount struct {
 	// Error message if the agent failed.
@@ -19,21 +21,11 @@ type GroupAccount struct {
 	// The group.
 	Name string `json:"name,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status GroupAccountStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// GroupAccountStatus: The status of the operation for this host.
-type GroupAccountStatus string
-
-// The values of GroupAccountStatus.
-const (
-	GroupAccountStatusOk      GroupAccountStatus = "ok"
-	GroupAccountStatusFailed  GroupAccountStatus = "failed"
-	GroupAccountStatusSkipped GroupAccountStatus = "skipped"
-	GroupAccountStatusTimeout GroupAccountStatus = "timeout"
-)
 
 // GroupResult is the GroupResult of the spec.
 type GroupResult struct {
@@ -49,18 +41,8 @@ type GroupResult struct {
 	// The group.
 	Name string `json:"name,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status GroupResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// GroupResultStatus: The status of the operation for this host.
-type GroupResultStatus string
-
-// The values of GroupResultStatus.
-const (
-	GroupResultStatusOk      GroupResultStatus = "ok"
-	GroupResultStatusFailed  GroupResultStatus = "failed"
-	GroupResultStatusSkipped GroupResultStatus = "skipped"
-	GroupResultStatusTimeout GroupResultStatus = "timeout"
-)

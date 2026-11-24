@@ -814,7 +814,7 @@ func (suite *UIPublicTestSuite) TestBuildBroadcastTableResult() {
 			},
 			validateFunc: func(got []cli.ErrorEntry) {
 				assert.Equal(suite.T(), []cli.ErrorEntry{
-					{Hostname: "web-02", Message: "unsupported", Status: "skip"},
+					{Hostname: "web-02", Message: "unsupported", Status: "skipped"},
 				}, got)
 			},
 		},
@@ -1614,8 +1614,8 @@ func (suite *UIPublicTestSuite) TestStatusWeight() {
 			},
 		},
 		{
-			name:   "when skip returns 2",
-			status: "skip",
+			name:   "when skipped returns 2",
+			status: "skipped",
 			validateFunc: func(got int) {
 				assert.Equal(suite.T(), 2, got)
 			},
@@ -1688,17 +1688,10 @@ func (suite *UIPublicTestSuite) TestResolveStatus() {
 			},
 		},
 		{
-			name: "when status skipped returns skip even with error",
+			name: "when status skipped returns skipped even with error",
 			row:  cli.ResultRow{Hostname: "h1", Status: "skipped", Error: &errMsg},
 			validateFunc: func(got string) {
-				assert.Equal(suite.T(), "skip", got)
-			},
-		},
-		{
-			name: "when status skip returns skip",
-			row:  cli.ResultRow{Hostname: "h1", Status: "skip"},
-			validateFunc: func(got string) {
-				assert.Equal(suite.T(), "skip", got)
+				assert.Equal(suite.T(), "skipped", got)
 			},
 		},
 	}
@@ -1722,7 +1715,7 @@ func (suite *UIPublicTestSuite) TestPrintSummary() {
 			section: cli.Section{
 				Rows: [][]string{
 					{"web-01", "ok", "val"},
-					{"web-02", "skip"},
+					{"web-02", "skipped"},
 					{"web-03", "err"},
 				},
 			},
@@ -1861,7 +1854,7 @@ func (suite *UIPublicTestSuite) TestPrintErrors() {
 		{
 			name: "when skip shows details",
 			errors: []cli.ErrorEntry{
-				{Hostname: "mac-01", Message: "unsupported OS", Status: "skip"},
+				{Hostname: "mac-01", Message: "unsupported OS", Status: "skipped"},
 			},
 			validateFunc: func(output string) {
 				assert.Contains(suite.T(), output, "Details:")
@@ -1873,7 +1866,7 @@ func (suite *UIPublicTestSuite) TestPrintErrors() {
 			name: "when multiple entries shows all",
 			errors: []cli.ErrorEntry{
 				{Hostname: "web-01", Message: "timeout", Status: "err"},
-				{Hostname: "mac-01", Message: "unsupported", Status: "skip"},
+				{Hostname: "mac-01", Message: "unsupported", Status: "skipped"},
 			},
 			validateFunc: func(output string) {
 				assert.Contains(suite.T(), output, "web-01")

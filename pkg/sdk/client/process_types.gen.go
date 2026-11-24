@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // ProcessEntry is the ProcessEntry of the spec.
 type ProcessEntry struct {
 	// Its full command line.
@@ -34,24 +36,14 @@ type ProcessEntry struct {
 	// Its state, such as running or sleep.
 	State string `json:"state,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status ProcessEntryStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 
 	// The user that runs it.
 	User string `json:"user,omitempty"`
 }
-
-// ProcessEntryStatus: The status of the operation for this host.
-type ProcessEntryStatus string
-
-// The values of ProcessEntryStatus.
-const (
-	ProcessEntryStatusOk      ProcessEntryStatus = "ok"
-	ProcessEntryStatusFailed  ProcessEntryStatus = "failed"
-	ProcessEntryStatusSkipped ProcessEntryStatus = "skipped"
-	ProcessEntryStatusTimeout ProcessEntryStatus = "timeout"
-)
 
 // ProcessResult is the ProcessResult of the spec.
 type ProcessResult struct {
@@ -70,21 +62,11 @@ type ProcessResult struct {
 	// The signal that was sent.
 	Signal string `json:"signal,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status ProcessResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// ProcessResultStatus: The status of the operation for this host.
-type ProcessResultStatus string
-
-// The values of ProcessResultStatus.
-const (
-	ProcessResultStatusOk      ProcessResultStatus = "ok"
-	ProcessResultStatusFailed  ProcessResultStatus = "failed"
-	ProcessResultStatusSkipped ProcessResultStatus = "skipped"
-	ProcessResultStatusTimeout ProcessResultStatus = "timeout"
-)
 
 // ProcessSignalRequestSignal: The signal: TERM, KILL, HUP, INT, USR1 or USR2.
 type ProcessSignalRequestSignal string

@@ -20,18 +20,18 @@ type ListRequest struct {
 
 // CertificateEntry is the result of certificate on one host.
 type CertificateEntry struct {
-	Hostname    string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status      string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Name        *string `doc:"The CA: the name it was deployed with for a CA that osapi deployed, else its file's name" json:"name,omitempty"`
-	Path        *string `doc:"The file, or on macOS the keychain, that has it" json:"path,omitempty"`
-	Source      *string `doc:"system for a CA of the distribution, local for one an administrator added" json:"source,omitempty"`
-	Enabled     *bool   `doc:"Whether the host trusts it: false for a system CA that the trust store turns off" json:"enabled,omitempty"`
-	Subject     *string `doc:"Its subject, such as CN=ISRG Root X1,O=Internet Security Research Group,C=US" json:"subject,omitempty"`
-	Fingerprint *string `doc:"The SHA-256 of the certificate, in hex" json:"fingerprint,omitempty"`
-	NotAfter    *string `doc:"When it expires" json:"not_after,omitempty"`
-	Managed     *bool   `doc:"Whether osapi deployed it, and its writes change it" json:"managed,omitempty"`
-	Object      *string `doc:"The object that osapi deployed it from" json:"object,omitempty"`
-	Error       *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname    string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status      types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Name        *string         `doc:"The CA: the name it was deployed with for a CA that osapi deployed, else its file's name" json:"name,omitempty"`
+	Path        *string         `doc:"The file, or on macOS the keychain, that has it" json:"path,omitempty"`
+	Source      *string         `doc:"system for a CA of the distribution, local for one an administrator added" json:"source,omitempty"`
+	Enabled     *bool           `doc:"Whether the host trusts it: false for a system CA that the trust store turns off" json:"enabled,omitempty"`
+	Subject     *string         `doc:"Its subject, such as CN=ISRG Root X1,O=Internet Security Research Group,C=US" json:"subject,omitempty"`
+	Fingerprint *string         `doc:"The SHA-256 of the certificate, in hex" json:"fingerprint,omitempty"`
+	NotAfter    *string         `doc:"When it expires" json:"not_after,omitempty"`
+	Managed     *bool           `doc:"Whether osapi deployed it, and its writes change it" json:"managed,omitempty"`
+	Object      *string         `doc:"The object that osapi deployed it from" json:"object,omitempty"`
+	Error       *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // CertificateCollectionResponse is each target host's result.
@@ -84,11 +84,11 @@ type CertificateCreateRequest struct {
 
 // CertificateResult is the result of certificate on one host.
 type CertificateResult struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Name     *string `doc:"The CA" json:"name,omitempty"`
-	Changed  *bool   `doc:"Whether the host changed" json:"changed,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Name     *string         `doc:"The CA" json:"name,omitempty"`
+	Changed  *bool           `doc:"Whether the host changed" json:"changed,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // CertificateCreateResponse is each target host's result.
@@ -163,6 +163,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("certificate_operations", "Certificate", "The certificate authorities that the host trusts"),
 	endpoint.CommandNotes("The [certificate behavior](../../../../../reference/behaviors/security/certificate/certificate.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, CertificateCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeCertificate").

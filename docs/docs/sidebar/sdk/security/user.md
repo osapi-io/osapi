@@ -205,26 +205,28 @@ resp, err := c.User.Delete(ctx, target, "osapitest")
 
 The fields of each type are the properties of its schema in the API's spec.
 
-### UserAccount
+### RowStatus
 
-| Field      | Type                | Description                                                                            |
-| ---------- | ------------------- | -------------------------------------------------------------------------------------- |
-| `Error`    | `string`            | Error message if the agent failed.                                                     |
-| `GID`      | `int`               | Its primary group ID.                                                                  |
-| `Groups`   | `[]string`          | The groups it is a member of, besides its primary group.                               |
-| `Home`     | `string`            | Its home directory.                                                                    |
-| `Hostname` | `string`            | Hostname of the agent that produced this result.                                       |
-| `Locked`   | `bool`              | Whether a login with its password is refused.                                          |
-| `Name`     | `string`            | The user.                                                                              |
-| `Shell`    | `string`            | Its login shell.                                                                       |
-| `Status`   | `UserAccountStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-| `UID`      | `int`               | Its numeric user ID.                                                                   |
-
-### UserAccountStatus
-
-The status of the operation for this host.
+What happened on the host: ok, the operation ran and succeeded; failed, it ran
+and did not succeed; skipped, the host's OS family does not support it; timeout,
+the host did not answer, so nobody knows whether it ran.
 
 A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+
+### UserAccount
+
+| Field      | Type        | Description                                                                                                                                                                                                              |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Error`    | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `GID`      | `int`       | Its primary group ID.                                                                                                                                                                                                    |
+| `Groups`   | `[]string`  | The groups it is a member of, besides its primary group.                                                                                                                                                                 |
+| `Home`     | `string`    | Its home directory.                                                                                                                                                                                                      |
+| `Hostname` | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `Locked`   | `bool`      | Whether a login with its password is refused.                                                                                                                                                                            |
+| `Name`     | `string`    | The user.                                                                                                                                                                                                                |
+| `Shell`    | `string`    | Its login shell.                                                                                                                                                                                                         |
+| `Status`   | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
+| `UID`      | `int`       | Its numeric user ID.                                                                                                                                                                                                     |
 
 ### UserCreateInput
 
@@ -241,19 +243,13 @@ A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 
 ### UserResult
 
-| Field      | Type               | Description                                                                            |
-| ---------- | ------------------ | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`             | Whether the host changed.                                                              |
-| `Error`    | `string`           | Error message if the agent failed.                                                     |
-| `Hostname` | `string`           | Hostname of the agent that produced this result.                                       |
-| `Name`     | `string`           | The user.                                                                              |
-| `Status`   | `UserResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-
-### UserResultStatus
-
-The status of the operation for this host.
-
-A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+| Field      | Type        | Description                                                                                                                                                                                                              |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Changed`  | `bool`      | Whether the host changed.                                                                                                                                                                                                |
+| `Error`    | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Hostname` | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `Name`     | `string`    | The user.                                                                                                                                                                                                                |
+| `Status`   | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
 
 ### UserUpdateInput
 

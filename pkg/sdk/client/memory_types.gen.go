@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // MemoryEntry is the MemoryEntry of the spec.
 type MemoryEntry struct {
 	// Error message if the agent failed.
@@ -13,18 +15,8 @@ type MemoryEntry struct {
 	// Memory is the property memory.
 	Memory Usage `json:"memory,omitzero"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status MemoryEntryStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// MemoryEntryStatus: The status of the operation for this host.
-type MemoryEntryStatus string
-
-// The values of MemoryEntryStatus.
-const (
-	MemoryEntryStatusOk      MemoryEntryStatus = "ok"
-	MemoryEntryStatusFailed  MemoryEntryStatus = "failed"
-	MemoryEntryStatusSkipped MemoryEntryStatus = "skipped"
-	MemoryEntryStatusTimeout MemoryEntryStatus = "timeout"
-)

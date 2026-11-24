@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // NtpResult is the NtpResult of the spec.
 type NtpResult struct {
 	// Whether the host changed.
@@ -13,21 +15,11 @@ type NtpResult struct {
 	// Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status NtpResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// NtpResultStatus: The status of the operation for this host.
-type NtpResultStatus string
-
-// The values of NtpResultStatus.
-const (
-	NtpResultStatusOk      NtpResultStatus = "ok"
-	NtpResultStatusFailed  NtpResultStatus = "failed"
-	NtpResultStatusSkipped NtpResultStatus = "skipped"
-	NtpResultStatusTimeout NtpResultStatus = "timeout"
-)
 
 // NtpStatus is the NtpStatus of the spec.
 type NtpStatus struct {
@@ -46,9 +38,10 @@ type NtpStatus struct {
 	// The sources that chrony has.
 	Servers []string `json:"servers,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status NtpStatusStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 
 	// The NTP stratum of the host.
 	Stratum int `json:"stratum,omitempty"`
@@ -56,14 +49,3 @@ type NtpStatus struct {
 	// Whether chrony is synchronized to a source.
 	Synchronized bool `json:"synchronized,omitempty"`
 }
-
-// NtpStatusStatus: The status of the operation for this host.
-type NtpStatusStatus string
-
-// The values of NtpStatusStatus.
-const (
-	NtpStatusStatusOk      NtpStatusStatus = "ok"
-	NtpStatusStatusFailed  NtpStatusStatus = "failed"
-	NtpStatusStatusSkipped NtpStatusStatus = "skipped"
-	NtpStatusStatusTimeout NtpStatusStatus = "timeout"
-)

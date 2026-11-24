@@ -20,11 +20,11 @@ type GetRequest struct {
 
 // TimezoneEntry is the result of timezone on one host.
 type TimezoneEntry struct {
-	Hostname  string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status    string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Timezone  *string `doc:"The IANA name of the timezone, such as America/New_York" json:"timezone,omitempty"`
-	UTCOffset *string `doc:"The offset from UTC now, such as -05:00" json:"utc_offset,omitempty"`
-	Error     *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname  string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status    types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Timezone  *string         `doc:"The IANA name of the timezone, such as America/New_York" json:"timezone,omitempty"`
+	UTCOffset *string         `doc:"The offset from UTC now, such as -05:00" json:"utc_offset,omitempty"`
+	Error     *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // TimezoneGetResponse is each target host's result.
@@ -55,11 +55,11 @@ type TimezoneUpdateRequest struct {
 
 // TimezoneResult is the result of timezone on one host.
 type TimezoneResult struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Timezone *string `doc:"The timezone of the host" json:"timezone,omitempty"`
-	Changed  *bool   `doc:"Whether the host changed" json:"changed,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Timezone *string         `doc:"The timezone of the host" json:"timezone,omitempty"`
+	Changed  *bool           `doc:"Whether the host changed" json:"changed,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // TimezoneUpdateResponse is each target host's result.
@@ -86,6 +86,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("timezone_operations", "Timezone", "The timezone of the host"),
 	endpoint.CommandNotes("The [timezone behavior](../../../../../reference/behaviors/config/timezone/timezone.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[GetRequest, TimezoneGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodeTimezone").

@@ -50,21 +50,23 @@ resp, err := c.UserPassword.Update(ctx, target, client.UserPasswordUpdateInput{
 
 The fields of each type are the properties of its schema in the API's spec.
 
-### UserPasswordResult
+### RowStatus
 
-| Field      | Type                       | Description                                                                            |
-| ---------- | -------------------------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`                     | Whether the host changed.                                                              |
-| `Error`    | `string`                   | Error message if the agent failed.                                                     |
-| `Hostname` | `string`                   | Hostname of the agent that produced this result.                                       |
-| `Name`     | `string`                   | The user.                                                                              |
-| `Status`   | `UserPasswordResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-
-### UserPasswordResultStatus
-
-The status of the operation for this host.
+What happened on the host: ok, the operation ran and succeeded; failed, it ran
+and did not succeed; skipped, the host's OS family does not support it; timeout,
+the host did not answer, so nobody knows whether it ran.
 
 A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+
+### UserPasswordResult
+
+| Field      | Type        | Description                                                                                                                                                                                                              |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Changed`  | `bool`      | Whether the host changed.                                                                                                                                                                                                |
+| `Error`    | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Hostname` | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `Name`     | `string`    | The user.                                                                                                                                                                                                                |
+| `Status`   | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
 
 ### UserPasswordUpdateInput
 

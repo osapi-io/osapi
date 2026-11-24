@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // UserSshkeyKey is the UserSshkeyKey of the spec.
 type UserSshkeyKey struct {
 	// The comment after the key, such as alice@laptop.
@@ -19,24 +21,14 @@ type UserSshkeyKey struct {
 	// The options before the key, such as from="10.0.0.0/8".
 	Options string `json:"options,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status UserSshkeyKeyStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 
 	// The key type, such as ssh-ed25519.
 	Type string `json:"type,omitempty"`
 }
-
-// UserSshkeyKeyStatus: The status of the operation for this host.
-type UserSshkeyKeyStatus string
-
-// The values of UserSshkeyKeyStatus.
-const (
-	UserSshkeyKeyStatusOk      UserSshkeyKeyStatus = "ok"
-	UserSshkeyKeyStatusFailed  UserSshkeyKeyStatus = "failed"
-	UserSshkeyKeyStatusSkipped UserSshkeyKeyStatus = "skipped"
-	UserSshkeyKeyStatusTimeout UserSshkeyKeyStatus = "timeout"
-)
 
 // UserSshkeyResult is the UserSshkeyResult of the spec.
 type UserSshkeyResult struct {
@@ -52,18 +44,8 @@ type UserSshkeyResult struct {
 	// Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status UserSshkeyResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// UserSshkeyResultStatus: The status of the operation for this host.
-type UserSshkeyResultStatus string
-
-// The values of UserSshkeyResultStatus.
-const (
-	UserSshkeyResultStatusOk      UserSshkeyResultStatus = "ok"
-	UserSshkeyResultStatusFailed  UserSshkeyResultStatus = "failed"
-	UserSshkeyResultStatusSkipped UserSshkeyResultStatus = "skipped"
-	UserSshkeyResultStatusTimeout UserSshkeyResultStatus = "timeout"
-)

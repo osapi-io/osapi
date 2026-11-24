@@ -20,10 +20,10 @@ type GetRequest struct {
 
 // OsEntry is the result of os on one host.
 type OsEntry struct {
-	Hostname string      `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string      `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	OSInfo   *os.Release `doc:"The operating system" json:"os_info,omitempty"`
-	Error    *string     `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	OSInfo   *os.Release     `doc:"The operating system" json:"os_info,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // OsGetResponse is each target host's result.
@@ -50,6 +50,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("os_operations", "OS", "Get the operating system of target hosts"),
 	endpoint.CommandNotes("The [os behavior](../../../../../reference/behaviors/node/os/os.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[GetRequest, OsGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodeOs").

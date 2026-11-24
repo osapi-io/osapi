@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // UserPasswordResult is the UserPasswordResult of the spec.
 type UserPasswordResult struct {
 	// Whether the host changed.
@@ -16,18 +18,8 @@ type UserPasswordResult struct {
 	// The user.
 	Name string `json:"name,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status UserPasswordResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// UserPasswordResultStatus: The status of the operation for this host.
-type UserPasswordResultStatus string
-
-// The values of UserPasswordResultStatus.
-const (
-	UserPasswordResultStatusOk      UserPasswordResultStatus = "ok"
-	UserPasswordResultStatusFailed  UserPasswordResultStatus = "failed"
-	UserPasswordResultStatusSkipped UserPasswordResultStatus = "skipped"
-	UserPasswordResultStatusTimeout UserPasswordResultStatus = "timeout"
-)

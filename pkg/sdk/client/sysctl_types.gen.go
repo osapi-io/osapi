@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // SysctlEntry is the SysctlEntry of the spec.
 type SysctlEntry struct {
 	// Error message if the agent failed.
@@ -16,24 +18,14 @@ type SysctlEntry struct {
 	// Whether osapi manages it: a file of its own sets it at boot.
 	Managed bool `json:"managed,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status SysctlEntryStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 
 	// Current runtime value.
 	Value string `json:"value,omitempty"`
 }
-
-// SysctlEntryStatus: The status of the operation for this host.
-type SysctlEntryStatus string
-
-// The values of SysctlEntryStatus.
-const (
-	SysctlEntryStatusOk      SysctlEntryStatus = "ok"
-	SysctlEntryStatusFailed  SysctlEntryStatus = "failed"
-	SysctlEntryStatusSkipped SysctlEntryStatus = "skipped"
-	SysctlEntryStatusTimeout SysctlEntryStatus = "timeout"
-)
 
 // SysctlMutationResult is the SysctlMutationResult of the spec.
 type SysctlMutationResult struct {
@@ -49,18 +41,8 @@ type SysctlMutationResult struct {
 	// Parameter name.
 	Key string `json:"key,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status SysctlMutationResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// SysctlMutationResultStatus: The status of the operation for this host.
-type SysctlMutationResultStatus string
-
-// The values of SysctlMutationResultStatus.
-const (
-	SysctlMutationResultStatusOk      SysctlMutationResultStatus = "ok"
-	SysctlMutationResultStatusFailed  SysctlMutationResultStatus = "failed"
-	SysctlMutationResultStatusSkipped SysctlMutationResultStatus = "skipped"
-	SysctlMutationResultStatusTimeout SysctlMutationResultStatus = "timeout"
-)

@@ -20,13 +20,13 @@ type ListRequest struct {
 
 // ImageEntry is the result of image on one host.
 type ImageEntry struct {
-	Hostname   string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status     string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	ID         *string `doc:"The image's ID" json:"id,omitempty"`
-	Repository *string `doc:"Its repository, such as alpine" json:"repository,omitempty"`
-	Tag        *string `doc:"Its tag, such as 3.20" json:"tag,omitempty"`
-	Size       *string `doc:"Its size, as docker prints it, such as 7.8MB" json:"size,omitempty"`
-	Error      *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname   string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status     types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	ID         *string         `doc:"The image's ID" json:"id,omitempty"`
+	Repository *string         `doc:"Its repository, such as alpine" json:"repository,omitempty"`
+	Tag        *string         `doc:"Its tag, such as 3.20" json:"tag,omitempty"`
+	Size       *string         `doc:"Its size, as docker prints it, such as 7.8MB" json:"size,omitempty"`
+	Error      *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // ImageCollectionResponse is each target host's result.
@@ -57,13 +57,13 @@ type ImagePullRequest struct {
 
 // ImagePullResult is the result of image on one host.
 type ImagePullResult struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Image    *string `doc:"The image" json:"image,omitempty"`
-	ImageID  *string `doc:"The ID of the image that the host has now" json:"image_id,omitempty"`
-	Size     *int64  `doc:"Its size in bytes" json:"size,omitempty"`
-	Changed  *bool   `doc:"Whether the pull got a new image: false when the host had it already" json:"changed,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Image    *string         `doc:"The image" json:"image,omitempty"`
+	ImageID  *string         `doc:"The ID of the image that the host has now" json:"image_id,omitempty"`
+	Size     *int64          `doc:"Its size in bytes" json:"size,omitempty"`
+	Changed  *bool           `doc:"Whether the pull got a new image: false when the host had it already" json:"changed,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // ImagePullResponse is each target host's result.
@@ -95,11 +95,11 @@ type ImageDeleteRequest struct {
 
 // ImageResult is the result of image on one host.
 type ImageResult struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Image    *string `doc:"The image" json:"image,omitempty"`
-	Changed  *bool   `doc:"Whether the host changed" json:"changed,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Image    *string         `doc:"The image" json:"image,omitempty"`
+	Changed  *bool           `doc:"Whether the host changed" json:"changed,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // ImageDeleteResponse is each target host's result.
@@ -126,6 +126,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("image_operations", "Container image", "The Docker images of the host"),
 	endpoint.CommandNotes("The [image behavior](../../../../../reference/behaviors/containers/image/image.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, ImageCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeImage").

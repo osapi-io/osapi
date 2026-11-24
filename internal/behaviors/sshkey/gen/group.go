@@ -21,13 +21,13 @@ type ListRequest struct {
 
 // UserSshkeyKey is the result of sshkey on one host.
 type UserSshkeyKey struct {
-	Hostname    string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status      string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Type        *string `doc:"The key type, such as ssh-ed25519" json:"type,omitempty"`
-	Fingerprint *string `doc:"The SHA256 fingerprint of the key" json:"fingerprint,omitempty"`
-	Comment     *string `doc:"The comment after the key, such as alice@laptop" json:"comment,omitempty"`
-	Options     *string `doc:"The options before the key, such as from=\"10.0.0.0/8\"" json:"options,omitempty"`
-	Error       *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname    string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status      types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Type        *string         `doc:"The key type, such as ssh-ed25519" json:"type,omitempty"`
+	Fingerprint *string         `doc:"The SHA256 fingerprint of the key" json:"fingerprint,omitempty"`
+	Comment     *string         `doc:"The comment after the key, such as alice@laptop" json:"comment,omitempty"`
+	Options     *string         `doc:"The options before the key, such as from=\"10.0.0.0/8\"" json:"options,omitempty"`
+	Error       *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // UserSshkeyCollectionResponse is each target host's result.
@@ -59,11 +59,11 @@ type UserSshkeyCreateRequest struct {
 
 // UserSshkeyResult is the result of sshkey on one host.
 type UserSshkeyResult struct {
-	Hostname    string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status      string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Fingerprint *string `doc:"The SHA256 fingerprint of the key" json:"fingerprint,omitempty"`
-	Changed     *bool   `doc:"Whether the host changed" json:"changed,omitempty"`
-	Error       *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname    string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status      types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Fingerprint *string         `doc:"The SHA256 fingerprint of the key" json:"fingerprint,omitempty"`
+	Changed     *bool           `doc:"Whether the host changed" json:"changed,omitempty"`
+	Error       *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // UserSshkeyCreateResponse is each target host's result.
@@ -117,6 +117,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("sshkey_operations", "User SSH key", "The authorized SSH keys of a user"),
 	endpoint.CommandNotes("The [sshkey behavior](../../../../../../reference/behaviors/security/user/sshkey/sshkey.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, UserSshkeyCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeUserSshkey").

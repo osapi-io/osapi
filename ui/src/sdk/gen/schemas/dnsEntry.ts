@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { DnsEntryStatus } from './dnsEntryStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface DnsEntry {
   /** Error message if the agent failed. */
@@ -15,6 +15,5 @@ export interface DnsEntry {
   search_domains?: string[];
   /** The DNS servers */
   servers?: string[];
-  /** The status of the operation for this host. */
-  status: DnsEntryStatus;
+  status: RowStatus;
 }

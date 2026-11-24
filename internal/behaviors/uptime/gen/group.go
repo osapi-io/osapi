@@ -20,11 +20,11 @@ type GetRequest struct {
 
 // UptimeEntry is the result of uptime on one host.
 type UptimeEntry struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Uptime   *string `doc:"How long the host has run, in days, hours and minutes" json:"uptime,omitempty"`
-	Seconds  *int    `doc:"How long the host has run, in seconds" json:"seconds,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Uptime   *string         `doc:"How long the host has run, in days, hours and minutes" json:"uptime,omitempty"`
+	Seconds  *int            `doc:"How long the host has run, in seconds" json:"seconds,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // UptimeGetResponse is each target host's result.
@@ -51,6 +51,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("uptime_operations", "Uptime", "Get the uptime of target hosts"),
 	endpoint.CommandNotes("The [uptime behavior](../../../../../reference/behaviors/node/uptime/uptime.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[GetRequest, UptimeGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodeUptime").

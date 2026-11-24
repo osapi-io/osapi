@@ -21,12 +21,12 @@ type ListRequest struct {
 
 // SysctlEntry is the result of sysctl on one host.
 type SysctlEntry struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Key      *string `doc:"Parameter name" json:"key,omitempty"`
-	Value    *string `doc:"Current runtime value" json:"value,omitempty"`
-	Managed  *bool   `doc:"Whether osapi manages it: a file of its own sets it at boot" json:"managed,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Key      *string         `doc:"Parameter name" json:"key,omitempty"`
+	Value    *string         `doc:"Current runtime value" json:"value,omitempty"`
+	Managed  *bool           `doc:"Whether osapi manages it: a file of its own sets it at boot" json:"managed,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // SysctlCollectionResponse is each target host's result.
@@ -79,11 +79,11 @@ type SysctlCreateRequest struct {
 
 // SysctlMutationResult is the result of sysctl on one host.
 type SysctlMutationResult struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Key      *string `doc:"Parameter name" json:"key,omitempty"`
-	Changed  *bool   `doc:"Whether the host changed" json:"changed,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Key      *string         `doc:"Parameter name" json:"key,omitempty"`
+	Changed  *bool           `doc:"Whether the host changed" json:"changed,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // SysctlCreateResponse is each target host's result.
@@ -158,6 +158,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("sysctl_operations", "Sysctl", "Kernel parameters, written to sysctl.d files and applied"),
 	endpoint.CommandNotes("The [sysctl behavior](../../../../../reference/behaviors/config/sysctl/sysctl.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, SysctlCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeSysctl").

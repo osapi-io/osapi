@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { FileDeleteResultStatus } from './fileDeleteResultStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface FileDeleteResult {
   /** Whether the host changed */
@@ -15,6 +15,5 @@ export interface FileDeleteResult {
   hostname: string;
   /** Absolute path of the file */
   path?: string;
-  /** The status of the operation for this host. */
-  status: FileDeleteResultStatus;
+  status: RowStatus;
 }

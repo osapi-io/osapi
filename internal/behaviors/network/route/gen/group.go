@@ -21,16 +21,16 @@ type ListRequest struct {
 
 // InterfaceRouteEntry is the result of route on one host.
 type InterfaceRouteEntry struct {
-	Hostname    string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status      string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Destination *string `doc:"The destination in CIDR notation, or default" json:"destination,omitempty"`
-	Gateway     *string `doc:"The gateway; empty for a route on the link" json:"gateway,omitempty"`
-	Interface   *string `doc:"The interface the route goes out of" json:"interface,omitempty"`
-	Family      *string `doc:"inet or inet6" json:"family,omitempty"`
-	Metric      *int    `doc:"The metric; 0 when the kernel gives none" json:"metric,omitempty"`
-	Proto       *string `doc:"Where the route came from, such as kernel, dhcp or static; empty on macOS" json:"proto,omitempty"`
-	Scope       *string `doc:"The scope, such as link; empty for a global route" json:"scope,omitempty"`
-	Error       *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname    string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status      types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Destination *string         `doc:"The destination in CIDR notation, or default" json:"destination,omitempty"`
+	Gateway     *string         `doc:"The gateway; empty for a route on the link" json:"gateway,omitempty"`
+	Interface   *string         `doc:"The interface the route goes out of" json:"interface,omitempty"`
+	Family      *string         `doc:"inet or inet6" json:"family,omitempty"`
+	Metric      *int            `doc:"The metric; 0 when the kernel gives none" json:"metric,omitempty"`
+	Proto       *string         `doc:"Where the route came from, such as kernel, dhcp or static; empty on macOS" json:"proto,omitempty"`
+	Scope       *string         `doc:"The scope, such as link; empty for a global route" json:"scope,omitempty"`
+	Error       *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // InterfaceRouteCollectionResponse is each target host's result.
@@ -64,11 +64,11 @@ type InterfaceRouteCreateRequest struct {
 
 // InterfaceRouteResult is the result of route on one host.
 type InterfaceRouteResult struct {
-	Hostname    string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status      string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Destination *string `doc:"The destination of the route" json:"destination,omitempty"`
-	Changed     *bool   `doc:"Whether the host changed" json:"changed,omitempty"`
-	Error       *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname    string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status      types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Destination *string         `doc:"The destination of the route" json:"destination,omitempty"`
+	Changed     *bool           `doc:"Whether the host changed" json:"changed,omitempty"`
+	Error       *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // InterfaceRouteCreateResponse is each target host's result.
@@ -151,6 +151,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("route_operations", "Interface route", "The routes of an interface"),
 	endpoint.CommandNotes("The [route behavior](../../../../../../reference/behaviors/networking/interface/route/route.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, InterfaceRouteCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeInterfaceRoute").

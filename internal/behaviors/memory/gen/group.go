@@ -20,10 +20,10 @@ type GetRequest struct {
 
 // MemoryEntry is the result of memory on one host.
 type MemoryEntry struct {
-	Hostname string        `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string        `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Memory   *memory.Usage `doc:"The memory of the host" json:"memory,omitempty"`
-	Error    *string       `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Memory   *memory.Usage   `doc:"The memory of the host" json:"memory,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // MemoryGetResponse is each target host's result.
@@ -50,6 +50,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("memory_operations", "Memory", "Get the memory usage of target hosts"),
 	endpoint.CommandNotes("The [memory behavior](../../../../../reference/behaviors/hardware/memory/memory.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[GetRequest, MemoryGetResponse]("get").
 		Handle(HandleGet).
 		ID("GetNodeMemory").

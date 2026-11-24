@@ -21,16 +21,16 @@ type ListRequest struct {
 
 // UserAccount is the result of user on one host.
 type UserAccount struct {
-	Hostname string    `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string    `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Name     *string   `doc:"The user" json:"name,omitempty"`
-	UID      *int      `doc:"Its numeric user ID" json:"uid,omitempty"`
-	GID      *int      `doc:"Its primary group ID" json:"gid,omitempty"`
-	Home     *string   `doc:"Its home directory" json:"home,omitempty"`
-	Shell    *string   `doc:"Its login shell" json:"shell,omitempty"`
-	Groups   *[]string `doc:"The groups it is a member of, besides its primary group" json:"groups,omitempty"`
-	Locked   *bool     `doc:"Whether a login with its password is refused" json:"locked,omitempty"`
-	Error    *string   `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Name     *string         `doc:"The user" json:"name,omitempty"`
+	UID      *int            `doc:"Its numeric user ID" json:"uid,omitempty"`
+	GID      *int            `doc:"Its primary group ID" json:"gid,omitempty"`
+	Home     *string         `doc:"Its home directory" json:"home,omitempty"`
+	Shell    *string         `doc:"Its login shell" json:"shell,omitempty"`
+	Groups   *[]string       `doc:"The groups it is a member of, besides its primary group" json:"groups,omitempty"`
+	Locked   *bool           `doc:"Whether a login with its password is refused" json:"locked,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // UserCollectionResponse is each target host's result.
@@ -89,11 +89,11 @@ type UserCreateRequest struct {
 
 // UserResult is the result of user on one host.
 type UserResult struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Name     *string `doc:"The user" json:"name,omitempty"`
-	Changed  *bool   `doc:"Whether the host changed" json:"changed,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Name     *string         `doc:"The user" json:"name,omitempty"`
+	Changed  *bool           `doc:"Whether the host changed" json:"changed,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // UserCreateResponse is each target host's result.
@@ -171,6 +171,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("user_operations", "User", "The users of the host"),
 	endpoint.CommandNotes("The [user behavior](../../../../../reference/behaviors/security/user/user.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, UserCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeUser").

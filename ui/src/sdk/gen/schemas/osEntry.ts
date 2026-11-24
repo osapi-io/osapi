@@ -4,8 +4,8 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { OsEntryStatus } from './osEntryStatus';
 import type { Release } from './release';
+import type { RowStatus } from './rowStatus';
 
 export interface OsEntry {
   /** Error message if the agent failed. */
@@ -13,6 +13,5 @@ export interface OsEntry {
   /** Hostname of the agent that produced this result. */
   hostname: string;
   os_info?: Release;
-  /** The status of the operation for this host. */
-  status: OsEntryStatus;
+  status: RowStatus;
 }

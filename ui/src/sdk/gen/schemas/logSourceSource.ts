@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { LogSourceSourceStatus } from './logSourceSourceStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface LogSourceSource {
   /** Error message if the agent failed. */
@@ -13,6 +13,5 @@ export interface LogSourceSource {
   hostname: string;
   /** The syslog identifier, such as sshd */
   name?: string;
-  /** The status of the operation for this host. */
-  status: LogSourceSourceStatus;
+  status: RowStatus;
 }

@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // ImageEntry is the ImageEntry of the spec.
 type ImageEntry struct {
 	// Error message if the agent failed.
@@ -19,24 +21,14 @@ type ImageEntry struct {
 	// Its size, as docker prints it, such as 7.8MB.
 	Size string `json:"size,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status ImageEntryStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 
 	// Its tag, such as 3.20.
 	Tag string `json:"tag,omitempty"`
 }
-
-// ImageEntryStatus: The status of the operation for this host.
-type ImageEntryStatus string
-
-// The values of ImageEntryStatus.
-const (
-	ImageEntryStatusOk      ImageEntryStatus = "ok"
-	ImageEntryStatusFailed  ImageEntryStatus = "failed"
-	ImageEntryStatusSkipped ImageEntryStatus = "skipped"
-	ImageEntryStatusTimeout ImageEntryStatus = "timeout"
-)
 
 // ImagePullResult is the ImagePullResult of the spec.
 type ImagePullResult struct {
@@ -58,21 +50,11 @@ type ImagePullResult struct {
 	// Its size in bytes.
 	Size int64 `json:"size,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status ImagePullResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// ImagePullResultStatus: The status of the operation for this host.
-type ImagePullResultStatus string
-
-// The values of ImagePullResultStatus.
-const (
-	ImagePullResultStatusOk      ImagePullResultStatus = "ok"
-	ImagePullResultStatusFailed  ImagePullResultStatus = "failed"
-	ImagePullResultStatusSkipped ImagePullResultStatus = "skipped"
-	ImagePullResultStatusTimeout ImagePullResultStatus = "timeout"
-)
 
 // ImageResult is the ImageResult of the spec.
 type ImageResult struct {
@@ -88,18 +70,8 @@ type ImageResult struct {
 	// The image.
 	Image string `json:"image,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status ImageResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// ImageResultStatus: The status of the operation for this host.
-type ImageResultStatus string
-
-// The values of ImageResultStatus.
-const (
-	ImageResultStatusOk      ImageResultStatus = "ok"
-	ImageResultStatusFailed  ImageResultStatus = "failed"
-	ImageResultStatusSkipped ImageResultStatus = "skipped"
-	ImageResultStatusTimeout ImageResultStatus = "timeout"
-)

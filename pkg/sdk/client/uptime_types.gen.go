@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // UptimeEntry is the UptimeEntry of the spec.
 type UptimeEntry struct {
 	// Error message if the agent failed.
@@ -13,21 +15,11 @@ type UptimeEntry struct {
 	// How long the host has run, in seconds.
 	Seconds int `json:"seconds,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status UptimeEntryStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 
 	// How long the host has run, in days, hours and minutes.
 	Uptime string `json:"uptime,omitempty"`
 }
-
-// UptimeEntryStatus: The status of the operation for this host.
-type UptimeEntryStatus string
-
-// The values of UptimeEntryStatus.
-const (
-	UptimeEntryStatusOk      UptimeEntryStatus = "ok"
-	UptimeEntryStatusFailed  UptimeEntryStatus = "failed"
-	UptimeEntryStatusSkipped UptimeEntryStatus = "skipped"
-	UptimeEntryStatusTimeout UptimeEntryStatus = "timeout"
-)

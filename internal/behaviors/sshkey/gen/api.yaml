@@ -48,6 +48,14 @@ components:
           example: not_found
           type: string
       type: object
+    RowStatus:
+      description: 'What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host''s OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran.'
+      enum:
+        - ok
+        - failed
+        - skipped
+        - timeout
+      type: string
     UserSshkeyCollectionResponse:
       properties:
         job_id:
@@ -136,15 +144,7 @@ components:
           description: The options before the key, such as from="10.0.0.0/8"
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
         type:
           description: The key type, such as ssh-ed25519
           type: string
@@ -167,15 +167,7 @@ components:
           description: Hostname of the agent that produced this result.
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status

@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { ScheduleResultStatus } from './scheduleResultStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface ScheduleResult {
   /** Whether the host changed */
@@ -15,6 +15,5 @@ export interface ScheduleResult {
   hostname: string;
   /** The entry */
   name?: string;
-  /** The status of the operation for this host. */
-  status: ScheduleResultStatus;
+  status: RowStatus;
 }

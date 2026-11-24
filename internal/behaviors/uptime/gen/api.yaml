@@ -37,6 +37,14 @@ components:
           example: not_found
           type: string
       type: object
+    RowStatus:
+      description: 'What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host''s OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran.'
+      enum:
+        - ok
+        - failed
+        - skipped
+        - timeout
+      type: string
     UptimeEntry:
       properties:
         error:
@@ -49,15 +57,7 @@ components:
           description: How long the host has run, in seconds
           type: integer
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
         uptime:
           description: How long the host has run, in days, hours and minutes
           type: string

@@ -1,20 +1,35 @@
-/** What one host's result counts as in a summary line, as the CLI counts it. */
-export type HostOutcome = "ok" | "changed" | "skipped" | "failed";
+import { RowStatus } from "@/sdk/gen/schemas";
 
-/** hostOutcome is the outcome of one host's result. */
+/**
+ * What one host's result counts as in a summary line: its status, or
+ * changed for a host whose write changed it.
+ */
+export type HostOutcome = RowStatus | "changed";
+
+/**
+ * hostOutcome is the outcome of one host's result. A skipped or timed-out
+ * host carries an error, so its status is read first: neither is a failure.
+ */
 export function hostOutcome(r: {
-  status?: string;
+  status?: RowStatus;
   error?: string;
   changed?: boolean;
   exit_code?: number;
 }): HostOutcome {
-  if (r.status === "skipped" || r.status === "skip") return "skipped";
-  if (r.status === "failed" || r.error) return "failed";
-  if (r.exit_code !== undefined && r.exit_code !== 0) return "failed";
-  return r.changed ? "changed" : "ok";
+  if (r.status === RowStatus.skipped) return RowStatus.skipped;
+  if (r.status === RowStatus.timeout) return RowStatus.timeout;
+  if (r.status === RowStatus.failed || r.error) return RowStatus.failed;
+  if (r.exit_code !== undefined && r.exit_code !== 0) return RowStatus.failed;
+  return r.changed ? "changed" : RowStatus.ok;
 }
 
-const worst: HostOutcome[] = ["failed", "skipped", "changed", "ok"];
+const worst: HostOutcome[] = [
+  RowStatus.failed,
+  RowStatus.timeout,
+  RowStatus.skipped,
+  "changed",
+  RowStatus.ok,
+];
 
 /**
  * hostOutcomes is one outcome for each host of a result's entries, the
@@ -24,7 +39,7 @@ const worst: HostOutcome[] = ["failed", "skipped", "changed", "ok"];
 export function hostOutcomes(
   results: {
     hostname?: string;
-    status?: string;
+    status?: RowStatus;
     error?: string;
     changed?: boolean;
     exit_code?: number;

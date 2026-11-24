@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // OsEntry is the OsEntry of the spec.
 type OsEntry struct {
 	// Error message if the agent failed.
@@ -13,18 +15,8 @@ type OsEntry struct {
 	// OSInfo is the property os_info.
 	OSInfo Release `json:"os_info,omitzero"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status OsEntryStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// OsEntryStatus: The status of the operation for this host.
-type OsEntryStatus string
-
-// The values of OsEntryStatus.
-const (
-	OsEntryStatusOk      OsEntryStatus = "ok"
-	OsEntryStatusFailed  OsEntryStatus = "failed"
-	OsEntryStatusSkipped OsEntryStatus = "skipped"
-	OsEntryStatusTimeout OsEntryStatus = "timeout"
-)

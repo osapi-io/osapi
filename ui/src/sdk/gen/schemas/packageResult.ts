@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { PackageResultStatus } from './packageResultStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface PackageResult {
   /** Whether the host changed */
@@ -15,6 +15,5 @@ export interface PackageResult {
   hostname: string;
   /** The package */
   name?: string;
-  /** The status of the operation for this host. */
-  status: PackageResultStatus;
+  status: RowStatus;
 }

@@ -22,20 +22,20 @@ type ListRequest struct {
 
 // DockerEntry is the result of docker on one host.
 type DockerEntry struct {
-	Hostname string    `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string    `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	ID       *string   `doc:"The container's full ID" json:"id,omitempty"`
-	Name     *string   `doc:"The container's name" json:"name,omitempty"`
-	Image    *string   `doc:"The image it runs" json:"image,omitempty"`
-	State    *string   `doc:"running, exited, created, paused or restarting" json:"state,omitempty"`
-	Summary  *string   `doc:"What docker says of its state, such as Up 2 minutes" json:"summary,omitempty"`
-	Created  *string   `doc:"When it was created, RFC 3339" json:"created,omitempty"`
-	Health   *string   `doc:"The state of its health check: healthy, unhealthy or starting; empty without one" json:"health,omitempty"`
-	Ports    *[]string `doc:"The published ports, host:port->container port" json:"ports,omitempty"`
-	Mounts   *[]string `doc:"The mounts, source:destination, with :ro when read only" json:"mounts,omitempty"`
-	Networks *[]string `doc:"The networks, with the container's address and gateway on each" json:"networks,omitempty"`
-	EnvNames *[]string `doc:"The names of its environment variables; osapi never reads their values" json:"env_names,omitempty"`
-	Error    *string   `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	ID       *string         `doc:"The container's full ID" json:"id,omitempty"`
+	Name     *string         `doc:"The container's name" json:"name,omitempty"`
+	Image    *string         `doc:"The image it runs" json:"image,omitempty"`
+	State    *string         `doc:"running, exited, created, paused or restarting" json:"state,omitempty"`
+	Summary  *string         `doc:"What docker says of its state, such as Up 2 minutes" json:"summary,omitempty"`
+	Created  *string         `doc:"When it was created, RFC 3339" json:"created,omitempty"`
+	Health   *string         `doc:"The state of its health check: healthy, unhealthy or starting; empty without one" json:"health,omitempty"`
+	Ports    *[]string       `doc:"The published ports, host:port->container port" json:"ports,omitempty"`
+	Mounts   *[]string       `doc:"The mounts, source:destination, with :ro when read only" json:"mounts,omitempty"`
+	Networks *[]string       `doc:"The networks, with the container's address and gateway on each" json:"networks,omitempty"`
+	EnvNames *[]string       `doc:"The names of its environment variables; osapi never reads their values" json:"env_names,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // DockerCollectionResponse is each target host's result.
@@ -95,12 +95,12 @@ type DockerCreateRequest struct {
 
 // DockerResult is the result of docker on one host.
 type DockerResult struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Name     *string `doc:"The container" json:"name,omitempty"`
-	ID       *string `doc:"The container's full ID, for create" json:"id,omitempty"`
-	Changed  *bool   `doc:"Whether the host changed" json:"changed,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Name     *string         `doc:"The container" json:"name,omitempty"`
+	ID       *string         `doc:"The container's full ID, for create" json:"id,omitempty"`
+	Changed  *bool           `doc:"Whether the host changed" json:"changed,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // DockerCreateResponse is each target host's result.
@@ -203,13 +203,13 @@ type DockerExecRequest struct {
 
 // DockerExecResult is the result of docker on one host.
 type DockerExecResult struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Stdout   *string `doc:"What the command wrote to standard output" json:"stdout,omitempty"`
-	Stderr   *string `doc:"What the command wrote to standard error" json:"stderr,omitempty"`
-	ExitCode *int    `doc:"The command's exit code" json:"exit_code,omitempty"`
-	Changed  *bool   `doc:"Always true: osapi cannot tell what the command changed" json:"changed,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Stdout   *string         `doc:"What the command wrote to standard output" json:"stdout,omitempty"`
+	Stderr   *string         `doc:"What the command wrote to standard error" json:"stderr,omitempty"`
+	ExitCode *int            `doc:"The command's exit code" json:"exit_code,omitempty"`
+	Changed  *bool           `doc:"Always true: osapi cannot tell what the command changed" json:"changed,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // DockerExecResponse is each target host's result.
@@ -236,6 +236,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("docker_operations", "Container", "The Docker containers of the host"),
 	endpoint.CommandNotes("The [docker behavior](../../../../../reference/behaviors/containers/docker/docker.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, DockerCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeDocker").

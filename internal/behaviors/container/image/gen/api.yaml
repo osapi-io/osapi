@@ -105,15 +105,7 @@ components:
           description: Its size, as docker prints it, such as 7.8MB
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
         tag:
           description: Its tag, such as 3.20
           type: string
@@ -170,15 +162,7 @@ components:
           format: int64
           type: integer
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
@@ -198,19 +182,19 @@ components:
           description: The image
           type: string
         status:
-          description: The status of the operation for this host.
-          enum:
-            - ok
-            - failed
-            - skipped
-            - timeout
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: oneof=ok failed skipped timeout
+          $ref: '#/components/schemas/RowStatus'
       required:
         - hostname
         - status
       type: object
+    RowStatus:
+      description: 'What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host''s OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran.'
+      enum:
+        - ok
+        - failed
+        - skipped
+        - timeout
+      type: string
   securitySchemes:
     BearerAuth:
       bearerFormat: JWT

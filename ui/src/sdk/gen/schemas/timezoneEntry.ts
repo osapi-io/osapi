@@ -4,15 +4,14 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { TimezoneEntryStatus } from './timezoneEntryStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface TimezoneEntry {
   /** Error message if the agent failed. */
   error?: string;
   /** Hostname of the agent that produced this result. */
   hostname: string;
-  /** The status of the operation for this host. */
-  status: TimezoneEntryStatus;
+  status: RowStatus;
   /** The IANA name of the timezone, such as America/New_York */
   timezone?: string;
   /** The offset from UTC now, such as -05:00 */

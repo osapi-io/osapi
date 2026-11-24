@@ -20,18 +20,18 @@ type ListRequest struct {
 
 // InterfaceEntry is the result of interface on one host.
 type InterfaceEntry struct {
-	Hostname  string    `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status    string    `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Name      *string   `doc:"The interface" json:"name,omitempty"`
-	State     *string   `doc:"up or down" json:"state,omitempty"`
-	MAC       *string   `doc:"Its MAC address; empty for one without, such as lo" json:"mac,omitempty"`
-	MTU       *int      `doc:"Its MTU" json:"mtu,omitempty"`
-	IPv4      *string   `doc:"Its first IPv4 address that is not link-local" json:"ipv4,omitempty"`
-	IPv6      *string   `doc:"Its first IPv6 address that is not link-local" json:"ipv6,omitempty"`
-	Addresses *[]string `doc:"Each of its addresses, in CIDR notation" json:"addresses,omitempty"`
-	DHCP4     *bool     `doc:"Whether DHCP gave it an IPv4 address: a route of it has proto dhcp" json:"dhcp4,omitempty"`
-	Primary   *bool     `doc:"Whether it has the default route" json:"primary,omitempty"`
-	Error     *string   `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname  string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status    types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Name      *string         `doc:"The interface" json:"name,omitempty"`
+	State     *string         `doc:"up or down" json:"state,omitempty"`
+	MAC       *string         `doc:"Its MAC address; empty for one without, such as lo" json:"mac,omitempty"`
+	MTU       *int            `doc:"Its MTU" json:"mtu,omitempty"`
+	IPv4      *string         `doc:"Its first IPv4 address that is not link-local" json:"ipv4,omitempty"`
+	IPv6      *string         `doc:"Its first IPv6 address that is not link-local" json:"ipv6,omitempty"`
+	Addresses *[]string       `doc:"Each of its addresses, in CIDR notation" json:"addresses,omitempty"`
+	DHCP4     *bool           `doc:"Whether DHCP gave it an IPv4 address: a route of it has proto dhcp" json:"dhcp4,omitempty"`
+	Primary   *bool           `doc:"Whether it has the default route" json:"primary,omitempty"`
+	Error     *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // InterfaceCollectionResponse is each target host's result.
@@ -92,11 +92,11 @@ type InterfaceCreateRequest struct {
 
 // InterfaceResult is the result of interface on one host.
 type InterfaceResult struct {
-	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Name     *string `doc:"The interface" json:"name,omitempty"`
-	Changed  *bool   `doc:"Whether the host changed" json:"changed,omitempty"`
-	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status   types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Name     *string         `doc:"The interface" json:"name,omitempty"`
+	Changed  *bool           `doc:"Whether the host changed" json:"changed,omitempty"`
+	Error    *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // InterfaceCreateResponse is each target host's result.
@@ -179,6 +179,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("interface_operations", "Interface", "The network interfaces of the host"),
 	endpoint.CommandNotes("The [interface behavior](../../../../../reference/behaviors/networking/interface/interface.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, InterfaceCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeInterface").

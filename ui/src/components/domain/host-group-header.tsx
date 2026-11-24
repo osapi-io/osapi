@@ -1,9 +1,10 @@
 import { StatusIcon } from "@/components/ui/status-icon";
 import { Text } from "@/components/ui/text";
+import type { RowStatus } from "@/sdk/gen/schemas";
 
 interface HostGroupHeaderProps {
   hostname: string;
-  status: "ok" | "failed" | "skipped";
+  status: RowStatus;
   detail?: string;
 }
 

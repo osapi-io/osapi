@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { SysctlMutationResultStatus } from './sysctlMutationResultStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface SysctlMutationResult {
   /** Whether the host changed */
@@ -15,6 +15,5 @@ export interface SysctlMutationResult {
   hostname: string;
   /** Parameter name */
   key?: string;
-  /** The status of the operation for this host. */
-  status: SysctlMutationResultStatus;
+  status: RowStatus;
 }

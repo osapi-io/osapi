@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { CertificateEntryStatus } from './certificateEntryStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface CertificateEntry {
   /** Whether the host trusts it: false for a system CA that the trust store turns off */
@@ -27,8 +27,7 @@ export interface CertificateEntry {
   path?: string;
   /** system for a CA of the distribution, local for one an administrator added */
   source?: string;
-  /** The status of the operation for this host. */
-  status: CertificateEntryStatus;
+  status: RowStatus;
   /** Its subject, such as CN=ISRG Root X1,O=Internet Security Research Group,C=US */
   subject?: string;
 }

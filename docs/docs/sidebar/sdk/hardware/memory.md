@@ -45,16 +45,18 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### MemoryEntry
 
-| Field      | Type                | Description                                                                            |
-| ---------- | ------------------- | -------------------------------------------------------------------------------------- |
-| `Error`    | `string`            | Error message if the agent failed.                                                     |
-| `Hostname` | `string`            | Hostname of the agent that produced this result.                                       |
-| `Memory`   | `Usage`             |                                                                                        |
-| `Status`   | `MemoryEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field      | Type        | Description                                                                                                                                                                                                              |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Error`    | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Hostname` | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `Memory`   | `Usage`     |                                                                                                                                                                                                                          |
+| `Status`   | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
 
-### MemoryEntryStatus
+### RowStatus
 
-The status of the operation for this host.
+What happened on the host: ok, the operation ran and succeeded; failed, it ran
+and did not succeed; skipped, the host's OS family does not support it; timeout,
+the host did not answer, so nobody knows whether it ran.
 
 A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 

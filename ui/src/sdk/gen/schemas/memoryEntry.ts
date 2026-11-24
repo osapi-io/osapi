@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { MemoryEntryStatus } from './memoryEntryStatus';
+import type { RowStatus } from './rowStatus';
 import type { Usage } from './usage';
 
 export interface MemoryEntry {
@@ -13,6 +13,5 @@ export interface MemoryEntry {
   /** Hostname of the agent that produced this result. */
   hostname: string;
   memory?: Usage;
-  /** The status of the operation for this host. */
-  status: MemoryEntryStatus;
+  status: RowStatus;
 }

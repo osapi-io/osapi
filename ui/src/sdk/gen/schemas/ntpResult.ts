@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { NtpResultStatus } from './ntpResultStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface NtpResult {
   /** Whether the host changed */
@@ -13,6 +13,5 @@ export interface NtpResult {
   error?: string;
   /** Hostname of the agent that produced this result. */
   hostname: string;
-  /** The status of the operation for this host. */
-  status: NtpResultStatus;
+  status: RowStatus;
 }

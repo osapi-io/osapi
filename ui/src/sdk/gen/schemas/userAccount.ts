@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { UserAccountStatus } from './userAccountStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface UserAccount {
   /** Error message if the agent failed. */
@@ -23,8 +23,7 @@ export interface UserAccount {
   name?: string;
   /** Its login shell */
   shell?: string;
-  /** The status of the operation for this host. */
-  status: UserAccountStatus;
+  status: RowStatus;
   /** Its numeric user ID */
   uid?: number;
 }

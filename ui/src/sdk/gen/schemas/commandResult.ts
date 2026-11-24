@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { CommandResultStatus } from './commandResultStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface CommandResult {
   /** Whether the host changed: true, since a command can change anything */
@@ -17,8 +17,7 @@ export interface CommandResult {
   exit_code?: number;
   /** Hostname of the agent that produced this result. */
   hostname: string;
-  /** The status of the operation for this host. */
-  status: CommandResultStatus;
+  status: RowStatus;
   /** What it wrote to standard error */
   stderr?: string;
   /** What it wrote to standard output */

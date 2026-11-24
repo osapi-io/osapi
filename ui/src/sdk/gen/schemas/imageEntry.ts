@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { ImageEntryStatus } from './imageEntryStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface ImageEntry {
   /** Error message if the agent failed. */
@@ -17,8 +17,7 @@ export interface ImageEntry {
   repository?: string;
   /** Its size, as docker prints it, such as 7.8MB */
   size?: string;
-  /** The status of the operation for this host. */
-  status: ImageEntryStatus;
+  status: RowStatus;
   /** Its tag, such as 3.20 */
   tag?: string;
 }

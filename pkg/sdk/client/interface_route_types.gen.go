@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // InterfaceRouteEntry is the InterfaceRouteEntry of the spec.
 type InterfaceRouteEntry struct {
 	// The destination in CIDR notation, or default.
@@ -31,21 +33,11 @@ type InterfaceRouteEntry struct {
 	// The scope, such as link; empty for a global route.
 	Scope string `json:"scope,omitempty"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status InterfaceRouteEntryStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// InterfaceRouteEntryStatus: The status of the operation for this host.
-type InterfaceRouteEntryStatus string
-
-// The values of InterfaceRouteEntryStatus.
-const (
-	InterfaceRouteEntryStatusOk      InterfaceRouteEntryStatus = "ok"
-	InterfaceRouteEntryStatusFailed  InterfaceRouteEntryStatus = "failed"
-	InterfaceRouteEntryStatusSkipped InterfaceRouteEntryStatus = "skipped"
-	InterfaceRouteEntryStatusTimeout InterfaceRouteEntryStatus = "timeout"
-)
 
 // InterfaceRouteResult is the InterfaceRouteResult of the spec.
 type InterfaceRouteResult struct {
@@ -61,18 +53,8 @@ type InterfaceRouteResult struct {
 	// Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status InterfaceRouteResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 }
-
-// InterfaceRouteResultStatus: The status of the operation for this host.
-type InterfaceRouteResultStatus string
-
-// The values of InterfaceRouteResultStatus.
-const (
-	InterfaceRouteResultStatusOk      InterfaceRouteResultStatus = "ok"
-	InterfaceRouteResultStatusFailed  InterfaceRouteResultStatus = "failed"
-	InterfaceRouteResultStatusSkipped InterfaceRouteResultStatus = "skipped"
-	InterfaceRouteResultStatusTimeout InterfaceRouteResultStatus = "timeout"
-)

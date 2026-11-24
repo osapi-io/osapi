@@ -2,6 +2,8 @@
 
 package client
 
+import types "github.com/osapi-io/osapi/pkg/sdk/types"
+
 // TimezoneEntry is the TimezoneEntry of the spec.
 type TimezoneEntry struct {
 	// Error message if the agent failed.
@@ -10,9 +12,10 @@ type TimezoneEntry struct {
 	// Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status TimezoneEntryStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 
 	// The IANA name of the timezone, such as America/New_York.
 	Timezone string `json:"timezone,omitempty"`
@@ -20,17 +23,6 @@ type TimezoneEntry struct {
 	// The offset from UTC now, such as -05:00.
 	UTCOffset string `json:"utc_offset,omitempty"`
 }
-
-// TimezoneEntryStatus: The status of the operation for this host.
-type TimezoneEntryStatus string
-
-// The values of TimezoneEntryStatus.
-const (
-	TimezoneEntryStatusOk      TimezoneEntryStatus = "ok"
-	TimezoneEntryStatusFailed  TimezoneEntryStatus = "failed"
-	TimezoneEntryStatusSkipped TimezoneEntryStatus = "skipped"
-	TimezoneEntryStatusTimeout TimezoneEntryStatus = "timeout"
-)
 
 // TimezoneResult is the TimezoneResult of the spec.
 type TimezoneResult struct {
@@ -43,21 +35,11 @@ type TimezoneResult struct {
 	// Hostname of the agent that produced this result.
 	Hostname string `json:"hostname"`
 
-	// The status of the operation for this host. It is one of: ok, failed,
-	// skipped, timeout.
-	Status TimezoneResultStatus `json:"status"`
+	// What happened on the host: ok, the operation ran and succeeded; failed, it
+	// ran and did not succeed; skipped, the host's OS family does not support it;
+	// timeout, the host did not answer, so nobody knows whether it ran.
+	Status types.RowStatus `json:"status"`
 
 	// The timezone of the host.
 	Timezone string `json:"timezone,omitempty"`
 }
-
-// TimezoneResultStatus: The status of the operation for this host.
-type TimezoneResultStatus string
-
-// The values of TimezoneResultStatus.
-const (
-	TimezoneResultStatusOk      TimezoneResultStatus = "ok"
-	TimezoneResultStatusFailed  TimezoneResultStatus = "failed"
-	TimezoneResultStatusSkipped TimezoneResultStatus = "skipped"
-	TimezoneResultStatusTimeout TimezoneResultStatus = "timeout"
-)

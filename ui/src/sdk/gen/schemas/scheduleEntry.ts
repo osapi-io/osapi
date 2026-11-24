@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { ScheduleEntryStatus } from './scheduleEntryStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface ScheduleEntry {
   /** Error message if the agent failed. */
@@ -21,8 +21,7 @@ export interface ScheduleEntry {
   schedule?: string;
   /** Where its file is: cron.d, or the interval */
   source?: string;
-  /** The status of the operation for this host. */
-  status: ScheduleEntryStatus;
+  status: RowStatus;
   /** The user it runs as */
   user?: string;
 }

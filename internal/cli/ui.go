@@ -34,6 +34,7 @@ import (
 	"github.com/charmbracelet/x/ansi"
 	"github.com/google/uuid"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // Section represents a header with its corresponding rows.
@@ -56,7 +57,7 @@ type Section struct {
 // BuildMutationTable.
 type ResultRow struct {
 	Hostname string
-	Status   string
+	Status   types.RowStatus
 	Changed  *bool
 	Error    *string
 	Fields   []string
@@ -66,7 +67,7 @@ type ResultRow struct {
 type ErrorEntry struct {
 	Hostname string
 	Message  string
-	Status   string // "err" or "skip"
+	Status   string // "err" or "skipped"
 }
 
 // TableResult holds the output of BuildBroadcastTable / BuildMutationTable.
@@ -77,14 +78,14 @@ type TableResult struct {
 }
 
 // resolveStatus computes the compact STATUS value from a ResultRow.
-// Values: ok, changed, skip, err.
+// Values: ok, changed, skipped, err.
 func resolveStatus(
 	r ResultRow,
 ) string {
 	// Check skipped before error — skipped operations set an error
 	// message ("unsupported on this OS family") but are not failures.
-	if r.Status == "skipped" || r.Status == "skip" {
-		return "skip"
+	if r.Status == types.RowStatusSkipped {
+		return string(types.RowStatusSkipped)
 	}
 
 	if r.Error != nil {
@@ -109,7 +110,7 @@ func BuildBroadcastTable(
 }
 
 // BuildMutationTable builds a TableResult for a mutation response.
-// Uses the same unified STATUS column (ok/changed/skip/err).
+// Uses the same unified STATUS column (ok/changed/skipped/err).
 func BuildMutationTable(
 	results []ResultRow,
 	fieldHeaders []string,
@@ -139,7 +140,7 @@ func buildTable(
 		// A host that was skipped or failed has no data to show, so it is
 		// listed once under Details with its reason rather than as a row of
 		// empty columns.
-		if r.Error != nil || status == "skip" || status == "err" {
+		if r.Error != nil || status == string(types.RowStatusSkipped) || status == "err" {
 			msg := ""
 			if r.Error != nil {
 				msg = *r.Error
@@ -364,7 +365,7 @@ func printSummary(
 	for _, e := range section.Errors {
 		if _, ok := hostStatuses[e.Hostname]; !ok {
 			status := e.Status
-			if status != "skip" {
+			if status != string(types.RowStatusSkipped) {
 				status = "err"
 			}
 			hostStatuses[e.Hostname] = status
@@ -388,7 +389,7 @@ func printSummary(
 	if n := counts["changed"]; n > 0 {
 		parts = append(parts, OKStyle.Render(fmt.Sprintf("%d changed", n)))
 	}
-	if n := counts["skip"]; n > 0 {
+	if n := counts[string(types.RowStatusSkipped)]; n > 0 {
 		parts = append(parts, WarnStyle.Render(fmt.Sprintf("%d skipped", n)))
 	}
 	if n := counts["err"]; n > 0 {
@@ -496,7 +497,7 @@ func statusWeight(
 		return 0
 	case "changed":
 		return 1
-	case "skip":
+	case string(types.RowStatusSkipped):
 		return 2
 	case "err":
 		return 3
@@ -529,7 +530,7 @@ func PrintErrors(
 	printHeading(titleStyleAbove("warn", "ok"), "Details")
 	for _, e := range errors {
 		outcome, style := "failed", ErrStyle
-		if e.Status == "skip" {
+		if e.Status == string(types.RowStatusSkipped) {
 			outcome, style = "skipped", WarnStyle
 		}
 		fmt.Printf(

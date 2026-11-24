@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { FileStatusStatus } from './fileStatusStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface FileStatus {
   /** Error message if the agent failed. */
@@ -17,6 +17,5 @@ export interface FileStatus {
   sha256?: string;
   /** in-sync, drifted, missing or unmanaged */
   state?: string;
-  /** The status of the operation for this host. */
-  status: FileStatusStatus;
+  status: RowStatus;
 }

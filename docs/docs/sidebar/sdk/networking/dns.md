@@ -135,33 +135,29 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### DnsEntry
 
-| Field           | Type             | Description                                                                            |
-| --------------- | ---------------- | -------------------------------------------------------------------------------------- |
-| `Error`         | `string`         | Error message if the agent failed.                                                     |
-| `Hostname`      | `string`         | Hostname of the agent that produced this result.                                       |
-| `SearchDomains` | `[]string`       | The search domains.                                                                    |
-| `Servers`       | `[]string`       | The DNS servers.                                                                       |
-| `Status`        | `DnsEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-
-### DnsEntryStatus
-
-The status of the operation for this host.
-
-A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+| Field           | Type        | Description                                                                                                                                                                                                              |
+| --------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Error`         | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Hostname`      | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `SearchDomains` | `[]string`  | The search domains.                                                                                                                                                                                                      |
+| `Servers`       | `[]string`  | The DNS servers.                                                                                                                                                                                                         |
+| `Status`        | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
 
 ### DnsResult
 
-| Field           | Type              | Description                                                                            |
-| --------------- | ----------------- | -------------------------------------------------------------------------------------- |
-| `Changed`       | `bool`            | Whether the host changed.                                                              |
-| `Error`         | `string`          | Error message if the agent failed.                                                     |
-| `Hostname`      | `string`          | Hostname of the agent that produced this result.                                       |
-| `InterfaceName` | `string`          | The interface.                                                                         |
-| `Status`        | `DnsResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
+| Field           | Type        | Description                                                                                                                                                                                                              |
+| --------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Changed`       | `bool`      | Whether the host changed.                                                                                                                                                                                                |
+| `Error`         | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Hostname`      | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `InterfaceName` | `string`    | The interface.                                                                                                                                                                                                           |
+| `Status`        | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
 
-### DnsResultStatus
+### RowStatus
 
-The status of the operation for this host.
+What happened on the host: ok, the operation ran and succeeded; failed, it ran
+and did not succeed; skipped, the host's OS family does not support it; timeout,
+the host did not answer, so nobody knows whether it ran.
 
 A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 

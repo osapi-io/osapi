@@ -61,22 +61,24 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### ConnectivityPingResult
 
-| Field             | Type                           | Description                                                                                 |
-| ----------------- | ------------------------------ | ------------------------------------------------------------------------------------------- |
-| `AvgRTT`          | `string`                       | Average round-trip time in milliseconds, with two decimals. Absent when no reply came back. |
-| `Changed`         | `bool`                         | Always false: a ping changes nothing on the host.                                           |
-| `Error`           | `string`                       | Error message if the agent failed.                                                          |
-| `Hostname`        | `string`                       | Hostname of the agent that produced this result.                                            |
-| `MaxRTT`          | `string`                       | Maximum round-trip time in milliseconds, with two decimals. Absent when no reply came back. |
-| `MinRTT`          | `string`                       | Minimum round-trip time in milliseconds, with two decimals. Absent when no reply came back. |
-| `PacketLoss`      | `float64`                      | Percentage of packet loss.                                                                  |
-| `PacketsReceived` | `int`                          | Number of packets received.                                                                 |
-| `PacketsSent`     | `int`                          | Number of packets sent.                                                                     |
-| `Status`          | `ConnectivityPingResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout.      |
+| Field             | Type        | Description                                                                                                                                                                                                              |
+| ----------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `AvgRTT`          | `string`    | Average round-trip time in milliseconds, with two decimals. Absent when no reply came back.                                                                                                                              |
+| `Changed`         | `bool`      | Always false: a ping changes nothing on the host.                                                                                                                                                                        |
+| `Error`           | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Hostname`        | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `MaxRTT`          | `string`    | Maximum round-trip time in milliseconds, with two decimals. Absent when no reply came back.                                                                                                                              |
+| `MinRTT`          | `string`    | Minimum round-trip time in milliseconds, with two decimals. Absent when no reply came back.                                                                                                                              |
+| `PacketLoss`      | `float64`   | Percentage of packet loss.                                                                                                                                                                                               |
+| `PacketsReceived` | `int`       | Number of packets received.                                                                                                                                                                                              |
+| `PacketsSent`     | `int`       | Number of packets sent.                                                                                                                                                                                                  |
+| `Status`          | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
 
-### ConnectivityPingResultStatus
+### RowStatus
 
-The status of the operation for this host.
+What happened on the host: ok, the operation ran and succeeded; failed, it ran
+and did not succeed; skipped, the host's OS family does not support it; timeout,
+the host did not answer, so nobody knows whether it ran.
 
 A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
 

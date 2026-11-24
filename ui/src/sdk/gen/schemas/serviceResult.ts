@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { ServiceResultStatus } from './serviceResultStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface ServiceResult {
   /** Whether the host changed */
@@ -15,6 +15,5 @@ export interface ServiceResult {
   hostname: string;
   /** The service */
   name?: string;
-  /** The status of the operation for this host. */
-  status: ServiceResultStatus;
+  status: RowStatus;
 }

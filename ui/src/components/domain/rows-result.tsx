@@ -10,6 +10,7 @@ import { ListSearchBar } from "@/components/domain/list-search";
 import { useListSearch } from "@/hooks/use-list-search";
 import { matches } from "@/lib/result-format";
 import { formatCell, countOf, rowText } from "@/lib/result-format";
+import { RowStatus } from "@/sdk/gen/schemas";
 
 /** The fields of an object or a list item, as label and value pairs. */
 export function Pairs({
@@ -55,13 +56,13 @@ export function GenericRowsResult({
   const { search, setSearch } = useListSearch();
   type Row = Record<string, unknown> & {
     hostname: string;
-    status?: string;
+    status?: RowStatus;
     error?: string;
   };
   const rows = (Array.isArray(data.results) ? data.results : []) as Row[];
   const hosts: {
     hostname: string;
-    status?: string;
+    status?: RowStatus;
     error?: string;
     rows: Row[];
   }[] = [];
@@ -98,8 +99,13 @@ export function GenericRowsResult({
           matches(search, ...rowText(shown, r)),
         );
         if (search && visible.length === 0 && !host.error) return null;
-        const failed =
-          host.status === "failed" || (host.error && host.status !== "skipped");
+        // A skipped or timed-out host carries an error, but it did not fail.
+        const status: RowStatus =
+          host.status === RowStatus.skipped || host.status === RowStatus.timeout
+            ? host.status
+            : host.status === RowStatus.failed || host.error
+              ? RowStatus.failed
+              : RowStatus.ok;
         const changed = host.rows.some((r) => r.changed === true);
         return (
           <div
@@ -108,22 +114,18 @@ export function GenericRowsResult({
           >
             <HostGroupHeader
               hostname={host.hostname}
-              status={
-                host.status === "skipped" ? "skipped" : failed ? "failed" : "ok"
-              }
+              status={status}
               detail={
-                host.status === "skipped"
-                  ? "skipped"
-                  : failed
-                    ? "failed"
-                    : def.http_method !== "GET"
-                      ? changed
-                        ? "changed"
-                        : "unchanged"
-                      : countOf(def, host.rows)
+                status !== RowStatus.ok
+                  ? status
+                  : def.http_method !== "GET"
+                    ? changed
+                      ? "changed"
+                      : "unchanged"
+                    : countOf(def, host.rows)
               }
             />
-            {host.error && host.status !== "skipped" && (
+            {host.error && status !== RowStatus.skipped && (
               <HostError>{host.error}</HostError>
             )}
             {!(def.http_method !== "GET") &&

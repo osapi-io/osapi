@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { PowerResultStatus } from './powerResultStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface PowerResult {
   /** reboot or shutdown */
@@ -17,6 +17,5 @@ export interface PowerResult {
   error?: string;
   /** Hostname of the agent that produced this result. */
   hostname: string;
-  /** The status of the operation for this host. */
-  status: PowerResultStatus;
+  status: RowStatus;
 }

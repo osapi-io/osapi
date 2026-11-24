@@ -5,7 +5,7 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { Disk } from './disk';
-import type { DiskEntryStatus } from './diskEntryStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface DiskEntry {
   /** Each local filesystem */
@@ -14,6 +14,5 @@ export interface DiskEntry {
   error?: string;
   /** Hostname of the agent that produced this result. */
   hostname: string;
-  /** The status of the operation for this host. */
-  status: DiskEntryStatus;
+  status: RowStatus;
 }

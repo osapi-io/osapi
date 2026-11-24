@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { GroupResultStatus } from './groupResultStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface GroupResult {
   /** Whether the host changed */
@@ -15,6 +15,5 @@ export interface GroupResult {
   hostname: string;
   /** The group */
   name?: string;
-  /** The status of the operation for this host. */
-  status: GroupResultStatus;
+  status: RowStatus;
 }

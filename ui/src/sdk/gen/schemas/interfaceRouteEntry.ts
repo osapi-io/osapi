@@ -4,7 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { InterfaceRouteEntryStatus } from './interfaceRouteEntryStatus';
+import type { RowStatus } from './rowStatus';
 
 export interface InterfaceRouteEntry {
   /** The destination in CIDR notation, or default */
@@ -25,6 +25,5 @@ export interface InterfaceRouteEntry {
   proto?: string;
   /** The scope, such as link; empty for a global route */
   scope?: string;
-  /** The status of the operation for this host. */
-  status: InterfaceRouteEntryStatus;
+  status: RowStatus;
 }

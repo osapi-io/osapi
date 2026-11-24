@@ -8,7 +8,7 @@ import type { Averages } from './averages';
 import type { Disk } from './disk';
 import type { Entry } from './entry';
 import type { Release } from './release';
-import type { StatusEntryStatus } from './statusEntryStatus';
+import type { RowStatus } from './rowStatus';
 import type { Usage } from './usage';
 
 export interface StatusEntry {
@@ -25,7 +25,6 @@ export interface StatusEntry {
   /** The hostname of the host, as the hostname command prints it */
   name?: string;
   os_info?: Release;
-  /** The status of the operation for this host. */
-  status: StatusEntryStatus;
+  status: RowStatus;
   uptime?: Entry;
 }

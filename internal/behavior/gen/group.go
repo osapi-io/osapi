@@ -38,6 +38,7 @@ const (
 	endpointPath   = module + "/internal/controller/endpoint"
 	behaviorPkg    = module + "/internal/behavior"
 	dispatchPath   = module + "/internal/behavior/dispatch"
+	typesPath      = module + "/pkg/sdk/types"
 )
 
 // hostnameDoc is the description of the target of each behavior method.
@@ -166,11 +167,11 @@ func groupFile(
 			jen.Qual(endpointPath, "Conflict").
 				Call(jen.Qual(behaviorPkg, "ErrNotManaged"), jen.Lit(conflict)).
 				Dot("Because").
-				Call(jen.Qual("github.com/osapi-io/osapi/pkg/sdk/types", "ReasonNotManaged")),
+				Call(jen.Qual(typesPath, "ReasonNotManaged")),
 			jen.Qual(endpointPath, "Conflict").
 				Call(jen.Qual(behaviorPkg, "ErrNotInstalled"), jen.Lit(conflict)).
 				Dot("Because").
-				Call(jen.Qual("github.com/osapi-io/osapi/pkg/sdk/types", "ReasonNotInstalled")),
+				Call(jen.Qual(typesPath, "ReasonNotInstalled")),
 			jen.Qual(endpointPath, "Invalid").
 				Call(jen.Qual(dispatchPath, "ErrInvalid"), jen.Lit(invalid)),
 		)
@@ -189,6 +190,12 @@ func groupFile(
 			jen.Lit(b.Title), jen.Lit(b.Doc)),
 		jen.Qual(endpointPath, "CommandNotes").Call(
 			jen.Lit(command.GroupAnnotations(b)[reference.Notes])),
+		// The status of a host's row is one schema of the components, so a
+		// client has one type for it.
+		jen.Qual(endpointPath, "Doc").Index(jen.Qual(typesPath, "RowStatus")).Call(
+			jen.Qual(dispatchPath, "RowStatusDoc")),
+		jen.Qual(endpointPath, "Enum").Index(jen.Qual(typesPath, "RowStatus")).Call(
+			jen.Qual(dispatchPath, "RowStatuses")),
 	}, methods...)
 
 	f.Comment("Group is " + b.Name + " as an endpoint group, which its spec comes from.")
@@ -287,9 +294,8 @@ func rowType(
 		jen.Id("Hostname").String().Tag(map[string]string{
 			"json": "hostname", "doc": "Hostname of the agent that produced this result.",
 		}),
-		jen.Id("Status").String().Tag(map[string]string{
-			"json": "status", "validate": "oneof=ok failed skipped timeout",
-			"doc": "The status of the operation for this host.",
+		jen.Id("Status").Qual(typesPath, "RowStatus").Tag(map[string]string{
+			"json": "status", "doc": "The status of the operation for this host.",
 		}),
 	}
 	for i := range elem.NumField() {

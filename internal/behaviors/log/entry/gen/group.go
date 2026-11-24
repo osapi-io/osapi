@@ -24,14 +24,14 @@ type ListRequest struct {
 
 // LogEntry is the result of log on one host.
 type LogEntry struct {
-	Hostname  string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
-	Status    string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
-	Timestamp *string `doc:"When journald recorded it, in RFC 3339" json:"timestamp,omitempty"`
-	Unit      *string `doc:"The syslog identifier that wrote it" json:"unit,omitempty"`
-	Priority  *string `doc:"Its priority, by name" json:"priority,omitempty"`
-	Message   *string `doc:"The message" json:"message,omitempty"`
-	PID       *int    `doc:"The process that wrote it" json:"pid,omitempty"`
-	Error     *string `doc:"Error message if the agent failed." json:"error,omitempty"`
+	Hostname  string          `doc:"Hostname of the agent that produced this result." json:"hostname"`
+	Status    types.RowStatus `doc:"The status of the operation for this host." json:"status"`
+	Timestamp *string         `doc:"When journald recorded it, in RFC 3339" json:"timestamp,omitempty"`
+	Unit      *string         `doc:"The syslog identifier that wrote it" json:"unit,omitempty"`
+	Priority  *string         `doc:"Its priority, by name" json:"priority,omitempty"`
+	Message   *string         `doc:"The message" json:"message,omitempty"`
+	PID       *int            `doc:"The process that wrote it" json:"pid,omitempty"`
+	Error     *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
 // LogCollectionResponse is each target host's result.
@@ -58,6 +58,8 @@ var Group = endpoint.Define(
 	endpoint.Uses[dispatch.Deps](),
 	endpoint.Tag("log_operations", "Log", "The entries of the systemd journal"),
 	endpoint.CommandNotes("The [log behavior](../../../../../reference/behaviors/logs/log/log.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Doc[types.RowStatus](dispatch.RowStatusDoc),
+	endpoint.Enum[types.RowStatus](dispatch.RowStatuses),
 	endpoint.Get[ListRequest, LogCollectionResponse]("list").
 		Handle(HandleList).
 		ID("GetNodeLog").

@@ -220,6 +220,14 @@ resp, err := c.Schedule.Delete(ctx, target, "osapitest")
 
 The fields of each type are the properties of its schema in the API's spec.
 
+### RowStatus
+
+What happened on the host: ok, the operation ran and succeeded; failed, it ran
+and did not succeed; skipped, the host's OS family does not support it; timeout,
+the host did not answer, so nobody knows whether it ran.
+
+A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+
 ### ScheduleCreateInput
 
 | Field         | Type                               | Description                                                                                                                                        |
@@ -247,39 +255,27 @@ A `string`, one of `hourly`, `daily`, `weekly`, `monthly`.
 
 ### ScheduleEntry
 
-| Field      | Type                  | Description                                                                            |
-| ---------- | --------------------- | -------------------------------------------------------------------------------------- |
-| `Error`    | `string`              | Error message if the agent failed.                                                     |
-| `Hostname` | `string`              | Hostname of the agent that produced this result.                                       |
-| `Interval` | `string`              | Its interval, for a script in /etc/cron.daily and the like.                            |
-| `Name`     | `string`              | The entry.                                                                             |
-| `Object`   | `string`              | The object it was deployed from.                                                       |
-| `Schedule` | `string`              | Its cron expression, for an entry in /etc/cron.d.                                      |
-| `Source`   | `string`              | Where its file is: cron.d, or the interval.                                            |
-| `Status`   | `ScheduleEntryStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-| `User`     | `string`              | The user it runs as.                                                                   |
-
-### ScheduleEntryStatus
-
-The status of the operation for this host.
-
-A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+| Field      | Type        | Description                                                                                                                                                                                                              |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Error`    | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Hostname` | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `Interval` | `string`    | Its interval, for a script in /etc/cron.daily and the like.                                                                                                                                                              |
+| `Name`     | `string`    | The entry.                                                                                                                                                                                                               |
+| `Object`   | `string`    | The object it was deployed from.                                                                                                                                                                                         |
+| `Schedule` | `string`    | Its cron expression, for an entry in /etc/cron.d.                                                                                                                                                                        |
+| `Source`   | `string`    | Where its file is: cron.d, or the interval.                                                                                                                                                                              |
+| `Status`   | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
+| `User`     | `string`    | The user it runs as.                                                                                                                                                                                                     |
 
 ### ScheduleResult
 
-| Field      | Type                   | Description                                                                            |
-| ---------- | ---------------------- | -------------------------------------------------------------------------------------- |
-| `Changed`  | `bool`                 | Whether the host changed.                                                              |
-| `Error`    | `string`               | Error message if the agent failed.                                                     |
-| `Hostname` | `string`               | Hostname of the agent that produced this result.                                       |
-| `Name`     | `string`               | The entry.                                                                             |
-| `Status`   | `ScheduleResultStatus` | The status of the operation for this host. It is one of: ok, failed, skipped, timeout. |
-
-### ScheduleResultStatus
-
-The status of the operation for this host.
-
-A `string`, one of `ok`, `failed`, `skipped`, `timeout`.
+| Field      | Type        | Description                                                                                                                                                                                                              |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Changed`  | `bool`      | Whether the host changed.                                                                                                                                                                                                |
+| `Error`    | `string`    | Error message if the agent failed.                                                                                                                                                                                       |
+| `Hostname` | `string`    | Hostname of the agent that produced this result.                                                                                                                                                                         |
+| `Name`     | `string`    | The entry.                                                                                                                                                                                                               |
+| `Status`   | `RowStatus` | What happened on the host: ok, the operation ran and succeeded; failed, it ran and did not succeed; skipped, the host's OS family does not support it; timeout, the host did not answer, so nobody knows whether it ran. |
 
 ### ScheduleUpdateInput
 
