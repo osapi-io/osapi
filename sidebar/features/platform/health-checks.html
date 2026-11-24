@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Health checks | OSAPI</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://osapi-io.github.io/osapi/sidebar/features/platform/health-checks"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Health checks | OSAPI"><meta data-rh="true" name="description" content="osapi has health endpoints for load balancers, monitoring systems and operations"><meta data-rh="true" property="og:description" content="osapi has health endpoints for load balancers, monitoring systems and operations"><link data-rh="true" rel="icon" href="/osapi/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://osapi-io.github.io/osapi/sidebar/features/platform/health-checks"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/platform/health-checks" hreflang="en"><link data-rh="true" rel="alternate" href="https://osapi-io.github.io/osapi/sidebar/features/platform/health-checks" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Features","item":"https://osapi-io.github.io/osapi/sidebar/features/"},{"@type":"ListItem","position":2,"name":"Health checks","item":"https://osapi-io.github.io/osapi/sidebar/features/platform/health-checks"}]}</script><link rel="stylesheet" href="/osapi/assets/css/styles.b9e29260.css">
-<script src="/osapi/assets/js/runtime~main.2b880967.js" defer="defer"></script>
+<script src="/osapi/assets/js/runtime~main.eb689f9e.js" defer="defer"></script>
 <script src="/osapi/assets/js/main.134ff6db.js" defer="defer"></script>
 </head>
 <body>
@@ -43,22 +43,22 @@ health of all of the deployment from one endpoint.</p>
 
 
 
-<table><thead><tr><th>Endpoint</th><th>Auth Required</th><th>Description</th></tr></thead><tbody><tr><td><code>/health</code></td><td>No</td><td>Liveness probe: does the process run?</td></tr><tr><td><code>/health/ready</code></td><td>No</td><td>Readiness probe: is it ready for traffic?</td></tr><tr><td><code>/health/status</code></td><td>Yes</td><td>Detailed status with component health metrics</td></tr></tbody></table>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="liveness-health">Liveness (<code>/health</code>)<a href="#liveness-health" class="hash-link" aria-label="Direct link to liveness-health" title="Direct link to liveness-health" translate="no">​</a></h3>
+<table><thead><tr><th>Endpoint</th><th>Auth Required</th><th>Description</th></tr></thead><tbody><tr><td><code>/api/health</code></td><td>No</td><td>Liveness probe: does the process run?</td></tr><tr><td><code>/api/health/ready</code></td><td>No</td><td>Readiness probe: is it ready for traffic?</td></tr><tr><td><code>/api/health/status</code></td><td>Yes</td><td>Detailed status with component health metrics</td></tr></tbody></table>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="liveness-apihealth">Liveness (<code>/api/health</code>)<a href="#liveness-apihealth" class="hash-link" aria-label="Direct link to liveness-apihealth" title="Direct link to liveness-apihealth" translate="no">​</a></h3>
 <p>Always returns <code>200 OK</code> if the process runs. Use it in container orchestrators,
 for example in a Kubernetes liveness probe, to find processes that do not
 respond.</p>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="readiness-healthready">Readiness (<code>/health/ready</code>)<a href="#readiness-healthready" class="hash-link" aria-label="Direct link to readiness-healthready" title="Direct link to readiness-healthready" translate="no">​</a></h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="readiness-apihealthready">Readiness (<code>/api/health/ready</code>)<a href="#readiness-apihealthready" class="hash-link" aria-label="Direct link to readiness-apihealthready" title="Direct link to readiness-apihealthready" translate="no">​</a></h3>
 <p>Checks connectivity to NATS and KV stores. Returns <code>200 OK</code> when the controller
 can process requests, or <code>503 Service Unavailable</code> when dependencies are down.
 Use this for load balancer health checks to avoid routing traffic to an unready
 instance.</p>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="status-healthstatus">Status (<code>/health/status</code>)<a href="#status-healthstatus" class="hash-link" aria-label="Direct link to status-healthstatus" title="Direct link to status-healthstatus" translate="no">​</a></h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="status-apihealthstatus">Status (<code>/api/health/status</code>)<a href="#status-apihealthstatus" class="hash-link" aria-label="Direct link to status-apihealthstatus" title="Direct link to status-apihealthstatus" translate="no">​</a></h3>
 <p>Returns the health of each component, with system metrics (uptime, goroutine
 count, memory use). It needs authentication with the <code>health:read</code> permission.
 Use it for dashboards and monitoring. It answers 200 when a component is not
 healthy, with the overall status <code>degraded</code>: the request worked. Use
-<code>/health/ready</code> to route traffic.</p>
+<code>/api/health/ready</code> to route traffic.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="component-registry">Component registry<a href="#component-registry" class="hash-link" aria-label="Direct link to Component registry" title="Direct link to Component registry" translate="no">​</a></h2>
 <p>The three components write a heartbeat to a shared registry KV bucket at a
 regular interval. Each heartbeat writes a JSON record. The key is the component
@@ -87,17 +87,17 @@ heartbeat:</p>
 
 
 <table><thead><tr><th>Metric</th><th>Description</th></tr></thead><tbody><tr><td>CPU percent</td><td>Process CPU utilisation at sample time</td></tr><tr><td>RSS bytes</td><td>Resident set size (physical memory used)</td></tr><tr><td>Goroutines</td><td>Number of active goroutines</td></tr></tbody></table>
-<p>The <code>/health/status</code> response has a <code>components</code> table that puts these heartbeat
-records together. If the registry key of a component expired (the TTL ended
-without a new heartbeat), osapi reports the component as unreachable.</p>
+<p>The <code>/api/health/status</code> response has a <code>components</code> table that puts these
+heartbeat records together. If the registry key of a component expired (the TTL
+ended without a new heartbeat), osapi reports the component as unreachable.</p>
 <p>Each row has the build version of the component&#x27;s binary, so a mixed fleet shows
 which hosts run an older build. Example registry output:</p>
 <div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#e2e8f0;--prism-background-color:#000000"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#e2e8f0;background-color:#000000"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#e2e8f0"><span class="token plain">Components (3):</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  TYPE          HOSTNAME     STATUS  CONDITIONS  AGE    CPU %  MEM       VERSION  ADDRESS</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  controller    api-server   Ready   -           7h 6m  2.10   128.0 MB  v0.2.1</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  ├─ api                     ok      -                                          http://0.0.0.0:8080</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  └─ heartbeat               ok      -</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  nats          nats-server  Ready   -           7h 6m  0.30   64.0 MB   v0.2.1</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  └─ server                  ok      -                                          nats://localhost:4222</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  agent         web-01       Ready   -           7h 6m  1.20   96.0 MB   v0.2.1</span><br></div><div class="token-line" style="color:#e2e8f0"><span class="token plain">  └─ heartbeat               ok      -</span><br></div></code></pre></div></div>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="sub-component-health">Sub-Component health<a href="#sub-component-health" class="hash-link" aria-label="Direct link to Sub-Component health" title="Direct link to Sub-Component health" translate="no">​</a></h2>
 <p>Each component publishes the status of its internal services with its heartbeat.
-The <code>/health/status</code> endpoint puts these parts together from the registry. Thus
-an operator can see the health of each internal service on all hosts, also in a
-deployment with many nodes.</p>
+The <code>/api/health/status</code> endpoint puts these parts together from the registry.
+Thus an operator can see the health of each internal service on all hosts, also
+in a deployment with many nodes.</p>
 <p>Each component reports only its own sub-components. The answer lists them under
 the component&#x27;s registry entry, as <code>components</code>, sorted by name. The tables name
 each one with its type, as the heartbeat does:</p>
@@ -162,9 +162,10 @@ metrics server of the agent or of NATS directly.</p>
 <a class="" href="/osapi/sidebar/features/platform/notifications">Notifications</a> for the notification backends, configuration,
 and re-notification settings.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="configuration">Configuration<a href="#configuration" class="hash-link" aria-label="Direct link to Configuration" title="Direct link to Configuration" translate="no">​</a></h2>
-<p>The health check endpoints (<code>/health</code> and <code>/health/ready</code>) need no
-authentication. They must work before clients have tokens. The <code>/health/status</code>
-endpoint needs a valid JWT with the <code>health:read</code> permission.</p>
+<p>The health check endpoints (<code>/api/health</code> and <code>/api/health/ready</code>) need no
+authentication. They must work before clients have tokens. The
+<code>/api/health/status</code> endpoint needs a valid JWT with the <code>health:read</code>
+permission.</p>
 <p>Health checks need only the standard server and authentication settings. Refer
 to <a class="" href="/osapi/sidebar/usage/configuration">Configuration</a> for the full reference,
 <a class="" href="/osapi/sidebar/usage/cli/client/health">CLI Reference</a> for usage and
@@ -178,6 +179,6 @@ permission of each method.</p>
 <li class=""><a class="" href="/osapi/sidebar/usage/cli/client/health">CLI Reference</a>: health commands</li>
 <li class=""><a class="" href="/osapi/gen/api/health-check-api-health">API Reference</a>: REST API documentation</li>
 <li class=""><a class="" href="/osapi/sidebar/architecture">Architecture</a>: system design overview</li>
-</ul></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/platform/distributed-tracing"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Distributed tracing</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/platform/job-system"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Job system</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#endpoints" class="table-of-contents__link toc-highlight">Endpoints</a><ul><li><a href="#liveness-health" class="table-of-contents__link toc-highlight">Liveness (<code>/health</code>)</a></li><li><a href="#readiness-healthready" class="table-of-contents__link toc-highlight">Readiness (<code>/health/ready</code>)</a></li><li><a href="#status-healthstatus" class="table-of-contents__link toc-highlight">Status (<code>/health/status</code>)</a></li></ul></li><li><a href="#component-registry" class="table-of-contents__link toc-highlight">Component registry</a></li><li><a href="#sub-component-health" class="table-of-contents__link toc-highlight">Sub-Component health</a></li><li><a href="#metrics-server-health-probes" class="table-of-contents__link toc-highlight">Metrics server health probes</a></li><li><a href="#condition-notifications" class="table-of-contents__link toc-highlight">Condition notifications</a></li><li><a href="#configuration" class="table-of-contents__link toc-highlight">Configuration</a></li><li><a href="#permissions" class="table-of-contents__link toc-highlight">Permissions</a></li><li><a href="#related" class="table-of-contents__link toc-highlight">Related</a></li></ul></div></div></div></div></main></div></div></div></div>
+</ul></div></div></div><div class="row"><div class="col col--12"></div></div></article><div class="row"><div class="col col--12"><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/osapi/sidebar/features/platform/distributed-tracing"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Distributed tracing</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/osapi/sidebar/features/platform/job-system"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Job system</div></a></nav></div></div></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#endpoints" class="table-of-contents__link toc-highlight">Endpoints</a><ul><li><a href="#liveness-apihealth" class="table-of-contents__link toc-highlight">Liveness (<code>/api/health</code>)</a></li><li><a href="#readiness-apihealthready" class="table-of-contents__link toc-highlight">Readiness (<code>/api/health/ready</code>)</a></li><li><a href="#status-apihealthstatus" class="table-of-contents__link toc-highlight">Status (<code>/api/health/status</code>)</a></li></ul></li><li><a href="#component-registry" class="table-of-contents__link toc-highlight">Component registry</a></li><li><a href="#sub-component-health" class="table-of-contents__link toc-highlight">Sub-Component health</a></li><li><a href="#metrics-server-health-probes" class="table-of-contents__link toc-highlight">Metrics server health probes</a></li><li><a href="#condition-notifications" class="table-of-contents__link toc-highlight">Condition notifications</a></li><li><a href="#configuration" class="table-of-contents__link toc-highlight">Configuration</a></li><li><a href="#permissions" class="table-of-contents__link toc-highlight">Permissions</a></li><li><a href="#related" class="table-of-contents__link toc-highlight">Related</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
