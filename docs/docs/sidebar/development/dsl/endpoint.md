@@ -497,8 +497,9 @@ format password, writeOnly and x-osapi-secret, and its description says what it
 takes. The audit redacts it by name, but keeps a reference. The CLI flag takes a
 reference, or - to read the value from standard input, and refuses a value. Its
 String, Format, MarshalJSON and LogValue give the reference or \[redacted];
-Reveal gives the value. The route refuses a reference until a vault exists. The
-secret rule refuses one in:"path" or in:"query", or with telemetry:"attr".
+Reveal gives the value. The route resolves a reference from its vault, after the
+limits of use: secret:use, and the targets of the vault. The secret rule refuses
+one in:"path" or in:"query", or with telemetry:"attr".
 
 Use: On each input that holds a password, a key or a token. Not a string: a
 string whose name is on the audit denylist fails TestSecretsAreTyped.

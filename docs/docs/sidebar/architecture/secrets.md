@@ -41,15 +41,46 @@ things with the type:
 - `TestSecretsAreTyped` fails a `string` input field whose name is on the audit
   denylist.
 
-No vault exists yet, so the route of each method refuses a reference with 400.
 The CLI sends the request, and the controller queues the job, with
 `secret.Plain`, which gives each value.
 
-A behavior input that is a secret is not kept out of NATS. The input of a
-behavior is the data of its job, and JetStream keeps that data. Thus a token in
-the environment of a container is plain text to each NATS user that can read the
-stream. A password is the exception: the controller hashes it before it queues
-the job, so the job has only the hash.
+## A reference on the controller
+
+`Serve` in `internal/controller/endpoint/server` resolves each reference of the
+input before it calls the handler. Thus each method of the behavior DSL and the
+endpoint DSL does it, with no code in the method. `secrets.go` does these steps,
+in this order:
+
+1. Each reference has the form `secret://<vault>/<key>`, a key that a vault
+   takes, and a vault of `controller.secrets.vaults`. If not, the request
+   gets 400.
+2. The limits of use. The token has `secret:use`, and the host of the route is
+   in the `targets` of each vault that has targets. If not, the request
+   gets 403. A route with no host, such as a method that runs on the controller,
+   gets no secret from a vault with targets. The middleware already refused a
+   host outside the target scope of the token.
+3. `secret.Resolve` reads each value from its vault, and puts it in place of the
+   reference. A key that the vault does not have gives 400. A vault that does
+   not answer gives 500, and the controller logs the cause.
+4. `Valid` checks the input again, so a value obeys the `validate` tags of its
+   field, such as `no_linebreak`.
+
+The limits come before the read. Thus a caller without `secret:use` does not
+learn if a key exists, and the controller reads no value that it does not use.
+Each refusal gives the reference, never the value. The middleware puts the
+resolved permissions of the token in the context with
+`authtoken.WithPermissions`, and `authtoken.Granted` reads them.
+
+The handler then gets the value. A `.Before` step runs on it, and the job keeps
+what the step leaves. The audit entry keeps the reference, because it records
+the body of the request. A chain record of the agent has `[redacted]`, because
+the job has the value.
+
+A behavior input that is a secret is not kept out of NATS, also when it is a
+reference. The input of a behavior is the data of its job, and JetStream keeps
+that data. Thus a token in the environment of a container is plain text to each
+NATS user that can read the stream. A password is the exception: the controller
+hashes it before it queues the job, so the job has only the hash.
 
 ## The store on the disk
 
@@ -129,7 +160,6 @@ them:
 
 ## What comes next
 
-The `secret` commands, references in a behavior input and values sealed to the
-agent that uses them are in progress, in
-[osapi #1065](https://github.com/osapi-io/osapi/issues/1065). This page tells
-each part when it is built.
+The `secret` commands and values sealed to the agent that uses them are in
+progress, in [osapi #1065](https://github.com/osapi-io/osapi/issues/1065). This
+page tells each part when it is built.

@@ -459,6 +459,8 @@ func (s *MiddlewarePublicTestSuite) TestScopeMiddlewareTargetScope() {
 				func(ctx *echo.Context, _ interface{}) (interface{}, error) {
 					handlerCalled = true
 					scope = authtoken.TargetsFrom(ctx.Request().Context())
+					s.True(authtoken.Granted(ctx.Request().Context(), "trace:read"),
+						"the handler has the permissions of the token")
 					return "ok", nil
 				},
 			)

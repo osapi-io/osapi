@@ -21,6 +21,7 @@
 package controller_test
 
 import (
+	"context"
 	"log/slog"
 	"testing"
 
@@ -33,6 +34,7 @@ import (
 	"github.com/osapi-io/osapi/internal/config"
 	"github.com/osapi-io/osapi/internal/controller"
 	"github.com/osapi-io/osapi/internal/controller/mocks"
+	"github.com/osapi-io/osapi/internal/secret/vault"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -44,6 +46,14 @@ func TestHandlersPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(HandlersPublicTestSuite))
+}
+
+func (s *HandlersPublicTestSuite) TestSecretsDeps() {
+	s.Nil(controller.ExportSecretsDeps(nil).Vaults, "no vault set is no vaults")
+
+	set, err := vault.Open(context.Background(), vault.Env{}, nil)
+	s.Require().NoError(err)
+	s.Equal(set, controller.ExportSecretsDeps(set).Vaults)
 }
 
 func (s *HandlersPublicTestSuite) TestTraceReader() {

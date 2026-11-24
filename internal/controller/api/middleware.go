@@ -102,20 +102,24 @@ func ScopeMiddleware(
 			ctx.Set(ContextKeySubject, claims.Subject)
 			ctx.Set(ContextKeyRoles, claims.Roles)
 			ctx.Set(ContextKeyTargets, claims.Targets)
+			// The permissions go in the context too, for a check in the
+			// handler, such as secret:use for a reference to a secret.
+			resolved := authtoken.ResolvePermissions(
+				authtoken.RolesOf(claims.Roles),
+				authtoken.PermissionsOf(claims.Permissions),
+				customRoles,
+			)
 			ctx.SetRequest(ctx.Request().WithContext(
-				authtoken.WithTargets(ctx.Request().Context(), claims.Targets),
+				authtoken.WithPermissions(
+					authtoken.WithTargets(ctx.Request().Context(), claims.Targets),
+					resolved,
+				),
 			))
 
 			requiredScopes, ok := ctx.Get(contextKey).([]string)
 			if !ok || len(requiredScopes) == 0 {
 				return handle()
 			}
-
-			resolved := authtoken.ResolvePermissions(
-				authtoken.RolesOf(claims.Roles),
-				authtoken.PermissionsOf(claims.Permissions),
-				customRoles,
-			)
 
 			for _, required := range requiredScopes {
 				if authtoken.HasPermission(resolved, authtoken.Permission(required)) {

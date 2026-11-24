@@ -33,10 +33,12 @@ import (
 
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/config"
+	endpointserver "github.com/osapi-io/osapi/internal/controller/endpoint/server"
 	"github.com/osapi-io/osapi/internal/controller/health"
 	"github.com/osapi-io/osapi/internal/controller/notify"
 	"github.com/osapi-io/osapi/internal/job"
 	jobclient "github.com/osapi-io/osapi/internal/job/client"
+	"github.com/osapi-io/osapi/internal/secret/vault"
 )
 
 // ExportNewMetricsProvider calls newMetricsProvider.
@@ -121,6 +123,13 @@ func ExportHandlers(
 		nats:       nats,
 		objBucket:  objBucket,
 	})
+}
+
+// ExportSecretsDeps calls secretsDeps with vaults.
+func ExportSecretsDeps(
+	vaults *vault.Set,
+) endpointserver.Secrets {
+	return secretsDeps(handlerDeps{vaults: vaults})
 }
 
 // ExportConvertSubComponents calls convertSubComponents.
