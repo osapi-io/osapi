@@ -36,24 +36,16 @@ jobs:
         uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
         with:
           go-version-file: go.mod
-      - name: Set up Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: 24
-      - name: Install Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
       - name: Install just
         uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
       - name: Fetch justfiles
         run: just fetch
+      # The integration tests do not read the UI, and the Go workflow builds
+      # and lints it. The embed needs only a file in ui/dist.
       - name: Deps
         run: |
           just go-deps
-          just react-deps
-      - name: Lint UI
-        run: just react-lint
-      - name: Build UI
-        run: just react-build
+          mkdir -p ui/dist && touch ui/dist/.keep
       # As root, with the behavior write examples on: the runner is thrown
       # away after the job, so they may change its kernel parameters and /etc.
       # The suite prepares the runner through osapi, as it prepares a lab VM

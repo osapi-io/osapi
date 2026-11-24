@@ -6,11 +6,18 @@ description: >-
   need. Each job of the Go workflow that compiles Go starts with it.
 
 inputs:
+  js:
+    description: >-
+      Install Node.js and Bun. A check that formats or generates pages runs
+      Prettier through Bun. The unit shards set it to false.
+    default: "true"
   ui:
     description: >-
-      Build the UI. A job that only compiles and tests Go sets it to false: the
-      embed needs a file in ui/dist, not the built UI, and no Go test reads it.
-    default: "true"
+      Install and build the UI. Only the job of the UI checks sets it to true.
+      Each other job compiles and tests Go: the embed needs a file in ui/dist,
+      not the built UI, and no Go test reads it. A release builds the UI in
+      goreleaser's before hook.
+    default: "false"
 
 runs:
   using: composite
@@ -20,12 +27,12 @@ runs:
       with:
         go-version-file: go.mod
     - name: Set up Node.js
-      if: inputs.ui == 'true'
+      if: inputs.js == 'true'
       uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
         node-version: 24
     - name: Install Bun
-      if: inputs.ui == 'true'
+      if: inputs.js == 'true'
       uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
     - name: Install just
       uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
