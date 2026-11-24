@@ -118,9 +118,9 @@ type Flag struct {
 
 // CreateInput is the name and the doc of the group to create.
 type CreateInput struct {
-	Name        string `json:"name"        validate:"required"                                 doc:"The group's name: its command under osapi"`
-	Description string `json:"description" validate:"required"                                 doc:"What the group is, in one line"`
-	Under       string `json:"under"       validate:"required,oneof=agent controller dsl nats" doc:"The word of the root that the group goes under, where it runs: agent, controller, dsl or nats"`
+	Name        string         `json:"name"        validate:"required"                                 doc:"The group's name: its command under osapi"`
+	Description string         `json:"description" validate:"required"                                 doc:"What the group is, in one line"`
+	Under       command.Parent `json:"under"       validate:"required,oneof=agent controller dsl nats" doc:"The word of the root that the group goes under, where it runs: agent, controller, dsl or nats"`
 }
 
 // CreateOutput is the files that create wrote, and the steps after it.

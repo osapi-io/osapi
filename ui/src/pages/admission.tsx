@@ -1,6 +1,6 @@
 import { unwrap, usePolling } from "@/hooks/use-polling";
 import { enumLabel } from "@/lib/format";
-import { GetAdmissionsState } from "@/sdk/gen/schemas";
+import { AdmissionState } from "@/sdk/gen/schemas";
 import { ContentArea } from "@/components/layout/content-area";
 import { AdmissionCard } from "@/components/domain/admission-card";
 import { PageHeader } from "@/components/ui/page-header";
@@ -16,7 +16,7 @@ import { getAdmissions } from "@/sdk/gen/admission-api-admission/admission-api-a
 
 // The sections, in the order a reader acts on them: what waits for a
 // decision first, then what is in, then what was kept out.
-const sections = Object.values(GetAdmissionsState).map((state) => ({
+const sections = Object.values(AdmissionState).map((state) => ({
   state,
   title: enumLabel(state),
 }));

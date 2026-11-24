@@ -4,6 +4,7 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
+import type { AdmissionState } from './admissionState';
 
 export interface Admission {
   /** When the node was admitted. */
@@ -22,14 +23,12 @@ export interface Admission {
   machine_id: string;
   /** Whether the node is running now: it is in the registry. */
   online: boolean;
-  /** On a pending record, the state of the node's earlier record: a returning node. */
-  previous?: string;
+  previous?: AdmissionState;
   /** On a pending record, the fingerprint of the earlier record; a different one is a new key. */
   previous_fingerprint?: string;
   /** Why the node was rejected. */
   reason?: string;
   /** When the node asked to join. */
   requested_at?: string;
-  /** pending, admitted, rejected or revoked. */
-  state: string;
+  state: AdmissionState;
 }

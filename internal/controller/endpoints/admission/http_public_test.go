@@ -27,6 +27,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -116,7 +118,7 @@ func (s *HTTPPublicTestSuite) TestRoutes() {
 			want:   `"machine_id":"m-1"`,
 			setup: func() {
 				s.store.EXPECT().List(gomock.Any()).
-					Return([]store.Record{{MachineID: "m-1", State: store.StatePending}}, nil)
+					Return([]store.Record{{MachineID: "m-1", State: types.AdmissionPending}}, nil)
 			},
 		},
 		{

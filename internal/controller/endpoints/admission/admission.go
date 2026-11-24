@@ -32,6 +32,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 var (
@@ -51,6 +52,9 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Tag("admission", "Admission",
 		"Admit, reject and revoke the nodes that ask to join."),
 	endpoint.Uses[Deps](),
+	endpoint.Doc[types.AdmissionState](
+		"The state of a node's admission record: pending, admitted, rejected or revoked.",
+	),
 	endpoint.Get[ListInput, ListAdmissionResponse]("list").
 		Fails("a state that is not one of the four", ListInput{State: "accepted"}).
 		Handle(List).

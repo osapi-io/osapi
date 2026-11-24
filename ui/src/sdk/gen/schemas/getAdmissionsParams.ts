@@ -4,9 +4,9 @@
  * osapi
  * OpenAPI spec version: 1.0.0
  */
-import type { GetAdmissionsState } from './getAdmissionsState';
+import type { AdmissionState } from './admissionState';
 
 export type GetAdmissionsParams = {
   /** Only the records in this state: pending, admitted, rejected or revoked. */
-  state?: GetAdmissionsState;
+  state?: AdmissionState;
 };

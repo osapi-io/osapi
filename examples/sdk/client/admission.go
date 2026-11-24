@@ -20,6 +20,7 @@ import (
 	"os"
 
 	"github.com/osapi-io/osapi/pkg/sdk/client"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // examples are the examples of the service, by the name that runs each one.
@@ -55,7 +56,7 @@ func runList2(
 	ctx context.Context,
 	c *client.Client,
 ) error {
-	resp, err := c.Admission.List(ctx, client.AdmissionListParams{State: client.GetAdmissionsState("pending")})
+	resp, err := c.Admission.List(ctx, client.AdmissionListParams{State: types.AdmissionState("pending")})
 	if err != nil {
 		return err
 	}

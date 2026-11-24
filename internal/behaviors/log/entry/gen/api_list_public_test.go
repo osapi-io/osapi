@@ -73,7 +73,7 @@ func (s *APIListPublicTestSuite) TestList() {
 				"log.list",
 				entry.ListInput{
 					Lines:    1,
-					Priority: "info",
+					Priority: entry.Priority("info"),
 					Since:    "1 hour ago",
 					Unit:     "nginx.service",
 				},
@@ -94,7 +94,7 @@ func (s *APIListPublicTestSuite) TestList() {
 				"log.list",
 				entry.ListInput{
 					Lines:    1,
-					Priority: "info",
+					Priority: entry.Priority("info"),
 					Since:    "1 hour ago",
 					Unit:     "nginx.service",
 				},

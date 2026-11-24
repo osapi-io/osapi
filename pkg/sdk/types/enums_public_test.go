@@ -47,6 +47,15 @@ func (s *EnumsPublicTestSuite) TestValid() {
 		{name: "when a permission is not listed", valid: types.Permission("helth:read").Valid},
 		{name: "when a job status is listed", valid: types.JobStatusSkipped.Valid, want: true},
 		{name: "when a job status is not listed", valid: types.JobStatus("done").Valid},
+		{
+			name:  "when an admission state is listed",
+			valid: types.AdmissionRevoked.Valid,
+			want:  true,
+		},
+		{
+			name:  "when an admission state is not listed",
+			valid: types.AdmissionState("accepted").Valid,
+		},
 	}
 	for _, tc := range tests {
 		s.Run(tc.name, func() {

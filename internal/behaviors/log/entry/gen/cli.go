@@ -5,6 +5,7 @@ package gen
 import (
 	"github.com/spf13/cobra"
 
+	entry "github.com/osapi-io/osapi/internal/behaviors/log/entry"
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/reference"
 	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
@@ -25,7 +26,7 @@ var logListCmd = &cobra.Command{
 		since, _ := cmd.Flags().GetString("since")
 		priority, _ := cmd.Flags().GetString("priority")
 
-		endpointcommand.Run(cmd, Group, "list", ListRequest{Hostname: hostname, Unit: unit, Lines: lines, Since: since, Priority: priority})
+		endpointcommand.Run(cmd, Group, "list", ListRequest{Hostname: hostname, Unit: unit, Lines: lines, Since: since, Priority: entry.Priority(priority)})
 	},
 	Short: "List the entries of the journal",
 	Use:   "list",

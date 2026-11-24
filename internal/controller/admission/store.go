@@ -32,15 +32,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/telemetry/opspan"
-)
-
-// The states of an admission record. A machine has one at a time: the
-// state of its latest record, by statePrecedence.
-const (
-	StatePending  = "pending"
-	StateAdmitted = "admitted"
-	StateRejected = "rejected"
-	StateRevoked  = "revoked"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // rejectedKVPrefix and revokedKVPrefix are the key prefixes of the records
@@ -65,11 +57,11 @@ var (
 // statePrecedence orders the records of one machine: a request waiting for
 // a decision comes first, then the key in force, then the decisions
 // against it.
-var statePrecedence = map[string]int{
-	StatePending:  0,
-	StateAdmitted: 1,
-	StateRejected: 2,
-	StateRevoked:  3,
+var statePrecedence = map[types.AdmissionState]int{
+	types.AdmissionPending:  0,
+	types.AdmissionAdmitted: 1,
+	types.AdmissionRejected: 2,
+	types.AdmissionRevoked:  3,
 }
 
 // Record is one machine's admission: its identity, its state, and when it
@@ -82,18 +74,18 @@ type Record struct {
 	Fingerprint string `json:"fingerprint"`
 	// EncryptionKey is the machine's public X25519 key, which the
 	// fingerprint covers.
-	EncryptionKey string    `json:"encryption_key,omitempty"`
-	State         string    `json:"state"`
-	RequestedAt   time.Time `json:"requested_at,omitempty"`
-	AdmittedAt    time.Time `json:"admitted_at,omitempty"`
+	EncryptionKey string               `json:"encryption_key,omitempty"`
+	State         types.AdmissionState `json:"state"`
+	RequestedAt   time.Time            `json:"requested_at,omitempty"`
+	AdmittedAt    time.Time            `json:"admitted_at,omitempty"`
 	// DecidedAt is when a machine was rejected or revoked.
 	DecidedAt time.Time `json:"decided_at,omitempty"`
 	// Reason is why a machine was rejected.
 	Reason string `json:"reason,omitempty"`
 	// Previous is the state of the machine's earlier record, on a pending
 	// record; PreviousFingerprint is that record's fingerprint.
-	Previous            string `json:"previous,omitempty"`
-	PreviousFingerprint string `json:"previous_fingerprint,omitempty"`
+	Previous            types.AdmissionState `json:"previous,omitempty"`
+	PreviousFingerprint string               `json:"previous_fingerprint,omitempty"`
 }
 
 // List returns each machine's admission record, one per machine, in
@@ -230,7 +222,7 @@ func merge(
 		return statePrecedence[rs[a].State] < statePrecedence[rs[b].State]
 	})
 	r := rs[0]
-	if r.State == StatePending && len(rs) > 1 {
+	if r.State == types.AdmissionPending && len(rs) > 1 {
 		r.Previous = rs[1].State
 		r.PreviousFingerprint = rs[1].Fingerprint
 	}
@@ -244,16 +236,16 @@ func (w *Watcher) read(
 	ctx context.Context,
 	key string,
 ) (Record, bool) {
-	var state string
+	var state types.AdmissionState
 	switch {
 	case strings.HasPrefix(key, kvPrefix):
-		state = StatePending
+		state = types.AdmissionPending
 	case strings.HasPrefix(key, acceptedKVPrefix):
-		state = StateAdmitted
+		state = types.AdmissionAdmitted
 	case strings.HasPrefix(key, rejectedKVPrefix):
-		state = StateRejected
+		state = types.AdmissionRejected
 	case strings.HasPrefix(key, revokedKVPrefix):
-		state = StateRevoked
+		state = types.AdmissionRevoked
 	default:
 		return Record{}, false
 	}
@@ -264,7 +256,7 @@ func (w *Watcher) read(
 	}
 
 	switch state {
-	case StatePending:
+	case types.AdmissionPending:
 		var p PendingAgent
 		if unmarshalFn(entry.Value(), &p) != nil {
 			return Record{}, false
@@ -278,10 +270,10 @@ func (w *Watcher) read(
 			Hostname:      p.Hostname,
 			Fingerprint:   pki.FingerprintOfKeys(p.PublicKey, p.EncryptionKey),
 			EncryptionKey: p.EncryptionKey,
-			State:         StatePending,
+			State:         types.AdmissionPending,
 			RequestedAt:   p.RequestedAt,
 		}, true
-	case StateAdmitted:
+	case types.AdmissionAdmitted:
 		var a AcceptedAgent
 		if unmarshalFn(entry.Value(), &a) != nil {
 			return Record{}, false
@@ -292,7 +284,7 @@ func (w *Watcher) read(
 			Hostname:      a.Hostname,
 			Fingerprint:   a.Fingerprint,
 			EncryptionKey: a.EncryptionKey,
-			State:         StateAdmitted,
+			State:         types.AdmissionAdmitted,
 			AdmittedAt:    a.AcceptedAt,
 		}, true
 	default:

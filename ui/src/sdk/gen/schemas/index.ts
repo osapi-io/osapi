@@ -6,6 +6,7 @@
  */
 
 export * from './admission';
+export * from './admissionState';
 export * from './admitRequest';
 export * from './agentDetail';
 export * from './agentInfo';
@@ -99,7 +100,6 @@ export * from './fileUpdateResponse';
 export * from './fileUpdateResult';
 export * from './fileUploadResponse';
 export * from './getAdmissionsParams';
-export * from './getAdmissionsState';
 export * from './getAuditLogsParams';
 export * from './getHealthStatusComponent';
 export * from './getHealthStatusParams';

@@ -26,6 +26,8 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/osapi-io/osapi/internal/job"
@@ -106,7 +108,7 @@ func (w *Watcher) DeleteStale(
 	now := nowFn()
 	var deleted []string
 	for _, r := range records {
-		if r.State != StateAdmitted || online[r.MachineID] {
+		if r.State != types.AdmissionAdmitted || online[r.MachineID] {
 			continue
 		}
 		at := last[r.MachineID]

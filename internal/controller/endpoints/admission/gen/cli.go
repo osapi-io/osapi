@@ -9,6 +9,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli/reference"
 	endpointcommand "github.com/osapi-io/osapi/internal/controller/endpoint/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoints/admission"
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 var admissionListCmd = &cobra.Command{
@@ -22,7 +23,7 @@ var admissionListCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		state, _ := cmd.Flags().GetString("state")
 
-		endpointcommand.Run(cmd, admission.Group, "list", admission.ListInput{State: state})
+		endpointcommand.Run(cmd, admission.Group, "list", admission.ListInput{State: types.AdmissionState(state)})
 	},
 	Short: "List admission records",
 	Use:   "list",

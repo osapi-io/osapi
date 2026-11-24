@@ -152,10 +152,10 @@ func Commands(
 					Call(jen.Lit(flag)))
 			}
 
-			// A named string type, such as types.ContentType, takes the flag's
-			// string through a conversion.
-			if fld.Type.Kind() == reflect.String && fld.Type.Name() != "string" &&
-				fld.Type.PkgPath() != "" && fld.Type != reflect.TypeFor[secret.Value]() {
+			// A named string type, such as types.ContentType or
+			// command.Parent, takes the flag's string through a conversion;
+			// the validate tag checks the value.
+			if command.NamedString(fld.Type) {
 				return jen.Id(fld.Name).Op(":").
 					Qual(fld.Type.PkgPath(), fld.Type.Name()).Call(jen.Id(local))
 			}

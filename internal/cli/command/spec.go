@@ -373,8 +373,14 @@ var Spec = guide.Spec{
 		{
 			Kind: KindCheck,
 			Name: "Flaggable(type)",
-			Does: "Whether a flag holds a value of the type: string, bool, int, []string, map[string]string, []byte, a file, secret.Value or map[string]secret.Value. The command generator builds a flag of each, and dsl behavior validate asks it of each CLI behavior's input, so the two agree.",
+			Does: "Whether a flag holds a value of the type: string, bool, int, []string, map[string]string, []byte, a file, secret.Value, map[string]secret.Value, or a named string type of a closed set, such as Parent, which the command converts from its string flag. The command generator builds a flag of each, and dsl behavior validate asks it of each CLI behavior's input, so the two agree.",
 			When: "Give an input field one of those types.",
+		},
+		{
+			Kind: KindCheck,
+			Name: "NamedString(type)",
+			Does: "Whether the type is a named type of a closed set: a type of its own whose kind is string, such as Parent, and not secret.Value. A flag of it is a string flag, and the command generator converts the flag's value to the type.",
+			When: "Give an input field the named type of a closed set, and keep its oneof rule, which checks the value.",
 		},
 		{
 			Kind: KindCheck,

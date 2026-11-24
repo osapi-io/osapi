@@ -35,9 +35,7 @@ components:
           description: 'Whether the node is running now: it is in the registry.'
           type: boolean
         previous:
-          description: 'On a pending record, the state of the node''s earlier record: a returning node.'
-          example: revoked
-          type: string
+          $ref: '#/components/schemas/AdmissionState'
         previous_fingerprint:
           description: On a pending record, the fingerprint of the earlier record; a different one is a new key.
           type: string
@@ -49,9 +47,7 @@ components:
           format: date-time
           type: string
         state:
-          description: pending, admitted, rejected or revoked.
-          example: admitted
-          type: string
+          $ref: '#/components/schemas/AdmissionState'
       required:
         - machine_id
         - hostname
@@ -59,6 +55,14 @@ components:
         - online
         - fingerprint
       type: object
+    AdmissionState:
+      description: 'The state of a node''s admission record: pending, admitted, rejected or revoked.'
+      enum:
+        - pending
+        - admitted
+        - rejected
+        - revoked
+      type: string
     AdmitRequest:
       properties:
         fingerprint:
@@ -141,14 +145,9 @@ paths:
           in: query
           name: state
           schema:
-            enum:
-              - pending
-              - admitted
-              - rejected
-              - revoked
-            type: string
+            $ref: '#/components/schemas/AdmissionState'
           x-oapi-codegen-extra-tags:
-            validate: omitempty,oneof=pending admitted rejected revoked
+            validate: omitempty,enum
       responses:
         "200":
           content:

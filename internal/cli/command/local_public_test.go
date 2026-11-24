@@ -141,7 +141,11 @@ func (s *LocalPublicTestSuite) TestDefine() {
 	s.Equal("More.", documented.GroupLong())
 	s.Equal("Read the keys", documented.SubDoc("keys"))
 	s.Equal([]string{"zzparent", "zzchild", "zzdefine"}, g.CommandPath())
-	s.Equal([]string{"zzparent", "zzchild"}, g.Parents, "CommandPath does not change Parents")
+	s.Equal(
+		[]command.Parent{"zzparent", "zzchild"},
+		g.Parents,
+		"CommandPath does not change Parents",
+	)
 	s.Equal(reflect.TypeFor[localDeps](), g.Deps)
 	s.Equal([]command.Command{m}, g.Commands())
 	s.Empty(g.CommandPermission(m))

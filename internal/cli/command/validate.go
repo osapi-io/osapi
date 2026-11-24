@@ -190,7 +190,7 @@ var Checks = guide.Checks{
 	},
 	{
 		Rule:     RuleFlag,
-		Requires: "Each value is a flag: the input is a struct, each field has a json name that is its flag with _ as -, no flag or in tag, and a type a flag holds (string, bool, int, []string, map[string]string, []byte, secret.Value or map[string]secret.Value). A command takes no positional argument.",
+		Requires: "Each value is a flag: the input is a struct, each field has a json name that is its flag with _ as -, no flag or in tag, and a type a flag holds (string, bool, int, []string, map[string]string, []byte, secret.Value, map[string]secret.Value, or a named string type of a closed set, such as command.Parent). A command takes no positional argument.",
 		Fix:      "Make the input a struct, tag each field json:\"name\", drop the flag and in tags, and use one of the flag types.",
 	},
 	{
@@ -273,12 +273,23 @@ var flagTypes = map[reflect.Type]bool{
 }
 
 // Flaggable reports whether a flag can hold a value of type t: the types
-// that the command generator builds a flag for. The behavior DSL asks it,
-// so the two cannot disagree.
+// that the command generator builds a flag for, and a named type of a
+// closed set, such as Parent, which is a string flag that the command
+// converts. The behavior DSL asks it, so the two cannot disagree.
 func Flaggable(
 	t reflect.Type,
 ) bool {
-	return flagTypes[t]
+	return flagTypes[t] || NamedString(t)
+}
+
+// NamedString reports whether t is a named type of a closed set: a type
+// of its own whose kind is string, such as Parent. A secret is not one: a
+// flag reads it as a reference.
+func NamedString(
+	t reflect.Type,
+) bool {
+	return t.Kind() == reflect.String && t.PkgPath() != "" &&
+		t != reflect.TypeFor[secret.Value]()
 }
 
 // Validate is each rule g breaks. A group with no problems makes commands
@@ -294,13 +305,13 @@ func Validate(
 		})
 	}
 
-	for _, w := range append(append([]string(nil), g.Parents...), g.Name) {
+	for _, w := range append(g.parentWords(), g.Name) {
 		if !name.MatchString(w) {
 			add("", RuleName, fmt.Sprintf("the word %q is not lowercase letters and digits.", w))
 		}
 	}
 	for _, w := range g.Parents {
-		if name.MatchString(w) && !slices.Contains(KnownParents(), Parent(w)) {
+		if name.MatchString(string(w)) && !slices.Contains(KnownParents(), w) {
 			add("", RuleName, fmt.Sprintf(
 				"the group is Under %q, which is not one of KnownParents; use a command.Parent constant.",
 				w,
@@ -484,7 +495,7 @@ func flagProblems(
 			"input field "+f.Name+" has the in tag "+in+": a local command has no route.",
 		)
 	}
-	if !flagTypes[f.Type] {
+	if !Flaggable(f.Type) {
 		out = append(out, fmt.Sprintf("input field %s is %v, which no flag holds.", f.Name, f.Type))
 	}
 

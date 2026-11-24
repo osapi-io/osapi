@@ -17,7 +17,7 @@ op DELETE /api/node/{hostname}/sysctl/{key} id=DeleteNodeSysctl tags=[Sysctl_API
 op DELETE /api/node/{hostname}/user/{name} id=DeleteNodeUser tags=[User_API_user_operations] auth=BearerAuth:user:write params=[path:hostname!:string path:name!:string] body= responses=[200=application/json:UserDeleteResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op DELETE /api/node/{hostname}/user/{name}/sshkey id=DeleteNodeUserSshkey tags=[Sshkey_API_sshkey_operations] auth=BearerAuth:user:write params=[path:hostname!:string path:name!:string] body=application/json:UserSshkeyDeleteRequest! responses=[200=application/json:UserSshkeyDeleteResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 409=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op DELETE /api/secret/{vault}/{key} id=DeleteSecret tags=[Secret_Management_API_secret_operations] auth=BearerAuth:secret:write params=[path:key!:string path:vault!:string] body= responses=[204=- 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
-op GET /api/admission id=GetAdmissions tags=[Admission_API_admission] auth=BearerAuth:admission:read params=[query:state:string(pending|admitted|rejected|revoked)] body= responses=[200=application/json:ListAdmissionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
+op GET /api/admission id=GetAdmissions tags=[Admission_API_admission] auth=BearerAuth:admission:read params=[query:state:AdmissionState] body= responses=[200=application/json:ListAdmissionResponse 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/admission/{machine_id} id=GetAdmission tags=[Admission_API_admission] auth=BearerAuth:admission:read params=[path:machine_id!:string] body= responses=[200=application/json:Admission 400=application/json:ErrorResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 404=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/agent id=GetAgents tags=[Agent_Management_API_agent_operations] auth=BearerAuth:agent:read params=[] body= responses=[200=application/json:ListAgentsResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
 op GET /api/agent/facts id=GetAgentFacts tags=[Agent_Management_API_agent_operations] auth=BearerAuth:agent:read params=[] body= responses=[200=application/json:FactKeysResponse 401=application/json:ErrorResponse 403=application/json:ErrorResponse 500=application/json:ErrorResponse]
@@ -135,11 +135,12 @@ schema Admission.hostname! = string
 schema Admission.last_seen = string/date-time
 schema Admission.machine_id! = string
 schema Admission.online! = boolean
-schema Admission.previous = string
+schema Admission.previous = AdmissionState
 schema Admission.previous_fingerprint = string
 schema Admission.reason = string
 schema Admission.requested_at = string/date-time
-schema Admission.state! = string
+schema Admission.state! = AdmissionState
+schema AdmissionState = string(pending|admitted|rejected|revoked)
 schema AdmitRequest.fingerprint! = string
 schema AgentDetail.hostname! = string
 schema AgentDetail.labels = string
