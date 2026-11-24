@@ -664,7 +664,10 @@ that has no sensible default.
 
 - **Required fields** use `validate:"required,..."`.
 - **Optional fields** use `validate:"omitempty,..."`.
-- **Enum constraints** use `validate:"oneof=a b c"`.
+- **Enum constraints** use `validate:"enum"` on a field whose type is a closed
+  set, with `Values()` and `Valid()`, such as `types.ContentType`. The spec gets
+  the values from the type. Use `validate:"oneof=a b c"` only on a field with no
+  such type.
 - **Cross-field validation** uses `required_without` or `excluded_with` for
   fields that exclude each other, such as the cron `schedule` and `interval`.
 

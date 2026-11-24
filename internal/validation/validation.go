@@ -322,6 +322,15 @@ func init() {
 		return len(v) <= accountNameMaxLength && accountNamePattern.MatchString(v)
 	})
 
+	// enum accepts a value of a closed set that its type knows: Valid of the
+	// type, such as types.ContentType, says. rule.Apply puts the type's
+	// Values in the spec.
+	_ = instance.RegisterValidation(rule.Enum, func(fl validator.FieldLevel) bool {
+		v, ok := fl.Field().Interface().(interface{ Valid() bool })
+
+		return ok && v.Valid()
+	})
+
 	// signing_key rejects a JWT signing key shorter than MinSigningKeyLen,
 	// so a weak or placeholder value is caught at startup instead of
 	// silently signing tokens with a brute-forceable secret.
@@ -335,6 +344,11 @@ func init() {
 var hintsMu sync.RWMutex
 
 var customHints = map[string]func(ctx context.Context, fe validator.FieldError) string{
+	rule.Enum: func(_ context.Context, fe validator.FieldError) string {
+		values, _ := rule.Values(fe.Type())
+
+		return fmt.Sprintf("%q is not one of %s", fe.Value(), strings.Join(values, ", "))
+	},
 	"valid_target": func(ctx context.Context, fe validator.FieldError) string {
 		target, _ := fe.Value().(string)
 		if t, ok := PendingTarget(ctx, target); ok {

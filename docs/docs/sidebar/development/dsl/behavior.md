@@ -664,14 +664,16 @@ Use: On each field.
 ### `validate:"..."`
 
 The rules the server checks before the method runs: a value that breaks one is a
-400 with &#123;"error": "..."&#125;. required makes the field required, oneof
-gives an enum, min, max and len the length of a string, the items of an array or
-the bounds of a number, startswith a pattern, and uuid, email, hostname, ip,
-ipv4, ipv6, cidr, url and uri a format. The spec carries these, and the whole
-tag in x-oapi-codegen-extra-tags. A custom rule, such as resource_name, needs
-its schema from rule.Register; a rule with none fails the spec. In a behavior,
-the agent and behavior.Call check the same rules before each method runs, so an
-internal behavior's rules hold too; the author writes no check.
+400 with &#123;"error": "..."&#125;. required makes the field required, enum
+gives the enum of a type with Values and Valid, such as types.ContentType, oneof
+an enum on a field with no such type, min, max and len the length of a string,
+the items of an array or the bounds of a number, startswith a pattern, and uuid,
+email, hostname, ip, ipv4, ipv6, cidr, url and uri a format. The spec carries
+these, and the whole tag in x-oapi-codegen-extra-tags. A custom rule, such as
+resource_name, needs its schema from rule.Register; a rule with none fails the
+spec. In a behavior, the agent and behavior.Call check the same rules before
+each method runs, so an internal behavior's rules hold too; the author writes no
+check.
 
 Use: On each input field. A field with no limit is validate:"omitempty";
 validate refuses an input field with no tag.

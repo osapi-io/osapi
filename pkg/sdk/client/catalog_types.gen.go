@@ -122,7 +122,8 @@ type CatalogField struct {
 	// The json name of the field.
 	Name string `json:"name"`
 
-	// The values of a oneof rule.
+	// The values that the field takes: those of its type with enum, or of its
+	// oneof rule.
 	Options []string `json:"options,omitempty"`
 
 	// The request needs the field.

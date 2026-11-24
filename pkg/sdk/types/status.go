@@ -20,6 +20,8 @@
 
 package types
 
+import "slices"
+
 // JobStatus represents the status of a job in the OSAPI system.
 // These values match the status strings returned by the REST API.
 type JobStatus string
@@ -53,6 +55,20 @@ const (
 	// JobStatusPending indicates the job is queued but not yet processed.
 	JobStatusPending JobStatus = "pending"
 )
+
+// Values are each status of a job.
+func (JobStatus) Values() []JobStatus {
+	return []JobStatus{
+		JobStatusSubmitted, JobStatusAcknowledged, JobStatusStarted,
+		JobStatusProcessing, JobStatusCompleted, JobStatusFailed, JobStatusSkipped,
+		JobStatusTimeout, JobStatusPartialFailure, JobStatusRetried, JobStatusPending,
+	}
+}
+
+// Valid reports whether s is one of the statuses of a job.
+func (s JobStatus) Valid() bool {
+	return slices.Contains(s.Values(), s)
+}
 
 // AgentSchedulingState represents the scheduling state of an agent.
 type AgentSchedulingState = string

@@ -40,16 +40,16 @@ type DeleteInput struct {
 // UploadInput is a new file: its name, how a deploy treats it, and its
 // content, as a multipart form.
 type UploadInput struct {
-	Name        string            `json:"name"         in:"form" validate:"required,min=1,max=255"       doc:"The name of the file in the Object Store."                                                                                     example:"nginx.conf"`
-	ContentType types.ContentType `json:"content_type" in:"form" validate:"omitempty,oneof=raw template" doc:"How the file should be treated during deploy. raw writes bytes as-is; template renders with Go text/template and agent facts."                      default:"raw"`
-	File        []byte            `json:"file"         in:"form" validate:"required,min=1"               doc:"The file content."`
+	Name        string            `json:"name"         in:"form" validate:"required,min=1,max=255" doc:"The name of the file in the Object Store."                                                                                     example:"nginx.conf"`
+	ContentType types.ContentType `json:"content_type" in:"form" validate:"omitempty,enum"         doc:"How the file should be treated during deploy. raw writes bytes as-is; template renders with Go text/template and agent facts."                      default:"raw"`
+	File        []byte            `json:"file"         in:"form" validate:"required,min=1"         doc:"The file content."`
 }
 
 // UpdateInput is the new content of a file that the path names.
 type UpdateInput struct {
-	Name        string            `json:"name"         in:"path" validate:"required,min=1,max=255"       doc:"The name of the file in the Object Store."`
-	ContentType types.ContentType `json:"content_type" in:"form" validate:"omitempty,oneof=raw template" doc:"How the file should be treated during deploy. raw writes bytes as-is; template renders with Go text/template and agent facts." default:"raw"`
-	File        []byte            `json:"file"         in:"form" validate:"required,min=1"               doc:"The file content."`
+	Name        string            `json:"name"         in:"path" validate:"required,min=1,max=255" doc:"The name of the file in the Object Store."`
+	ContentType types.ContentType `json:"content_type" in:"form" validate:"omitempty,enum"         doc:"How the file should be treated during deploy. raw writes bytes as-is; template renders with Go text/template and agent facts." default:"raw"`
+	File        []byte            `json:"file"         in:"form" validate:"required,min=1"         doc:"The file content."`
 }
 
 // FileInfo is a stored file.

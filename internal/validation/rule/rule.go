@@ -115,11 +115,45 @@ var formats = map[string]string{
 	"cidr":     "cidr",
 }
 
-// Apply sets the constraints of a validate tag on t, and reports whether the
-// field is required. A rule with no schema is an error, so the spec never
-// checks less than the server does.
+// Enum is the validate rule of a field whose type is a closed set: a
+// defined string type with Values and Valid, such as types.ContentType. The
+// server calls Valid, and the spec has the values of Values as the enum.
+const Enum = "enum"
+
+// Values are the values of typ, a closed set, as strings: a defined string
+// type with a method Values that gives each value of the type and a method
+// Valid. ok is false for each other type.
+func Values(
+	typ reflect.Type,
+) ([]string, bool) {
+	for typ.Kind() == reflect.Pointer {
+		typ = typ.Elem()
+	}
+	values, ok := typ.MethodByName("Values")
+	_, valid := typ.MethodByName("Valid")
+	if !ok || !valid || typ.Kind() != reflect.String ||
+		values.Type.NumIn() != 1 || values.Type.NumOut() != 1 ||
+		values.Type.Out(0) != reflect.SliceOf(typ) {
+		return nil, false
+	}
+
+	all := values.Func.Call([]reflect.Value{reflect.Zero(typ)})[0]
+	out := make([]string, 0, all.Len())
+	for i := range all.Len() {
+		out = append(out, all.Index(i).String())
+	}
+
+	return out, true
+}
+
+// Apply sets the constraints of a validate tag on t, the schema of a field
+// of type typ, and reports whether the field is required. A rule with no
+// schema is an error, so the spec never checks less than the server does.
+// enum is the rule of a type with Values, and oneof of a field with no such
+// type, so a closed set has one list: the type's.
 func Apply(
 	tag string,
+	typ reflect.Type,
 	t Target,
 ) (bool, error) {
 	if tag == "" {
@@ -128,10 +162,25 @@ func Apply(
 
 	for _, r := range strings.Split(tag, ",") {
 		name, param, _ := strings.Cut(r, "=")
+		values, closed := Values(typ)
 		switch {
 		case name == "dive":
 			// The rules after dive are each item's, not the array's.
 			t = t.Items()
+			for typ.Kind() == reflect.Pointer {
+				typ = typ.Elem()
+			}
+			if k := typ.Kind(); k == reflect.Slice || k == reflect.Array || k == reflect.Map {
+				typ = typ.Elem()
+			}
+		case name == Enum && !closed:
+			return false, fmt.Errorf(
+				"validate enum on %s: the type has no Values and Valid", typ)
+		case name == Enum:
+			t.Enum(values)
+		case name == "oneof" && closed:
+			return false, fmt.Errorf(
+				"validate oneof on %s: the type has Values; use validate enum", typ)
 		case flags[name]:
 		case name == "min" || name == "max" || name == "len":
 			n, err := strconv.ParseFloat(param, 64)
@@ -169,6 +218,36 @@ func Apply(
 
 	return Has(tag, "required"), nil
 }
+
+// Options are the values that a field of type typ with the validate tag
+// may have, as the spec's enum has them: the Values of a closed set with
+// enum, or the values of oneof. They are nil for a field with neither, or
+// with a tag that Apply refuses. The rules after dive are the items', so a
+// list's options are those of each item.
+func Options(
+	tag string,
+	typ reflect.Type,
+) []string {
+	o := &options{}
+	if _, err := Apply(tag, typ, o); err != nil {
+		return nil
+	}
+
+	return o.values
+}
+
+// options is a Target that keeps only the enum.
+type options struct{ values []string }
+
+func (o *options) Enum(values []string) { o.values = values }
+
+func (*options) Pattern(string) {}
+
+func (*options) Format(string) {}
+
+func (*options) Bound(string, float64) {}
+
+func (o *options) Items() Target { return o }
 
 // Has reports whether the validate tag has the rule.
 func Has(
@@ -229,7 +308,9 @@ func Untagged(
 const (
 	TagName = `validate:"..."`
 	TagDoes = "The rules the server checks before the method runs: a value that breaks one is a 400 " +
-		`with {"error": "..."}. required makes the field required, oneof gives an enum, min, max and ` +
+		`with {"error": "..."}. required makes the field required, enum gives the enum of a type ` +
+		"with Values and Valid, such as types.ContentType, oneof an enum on a field with no such " +
+		"type, min, max and " +
 		"len the length of a string, the items of an array or the bounds of a number, startswith a " +
 		"pattern, and uuid, email, hostname, ip, ipv4, ipv6, cidr, url and uri a format. The spec " +
 		"carries these, and the whole tag in x-oapi-codegen-extra-tags. A custom rule, such as " +

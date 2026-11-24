@@ -9604,7 +9604,7 @@ components:
           example: servers
           type: string
         options:
-          description: The values of a oneof rule.
+          description: 'The values that the field takes: those of its type with enum, or of its oneof rule.'
           items:
             type: string
           type: array

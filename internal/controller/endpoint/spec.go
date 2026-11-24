@@ -88,12 +88,6 @@ var Spec = guide.Spec{
 		},
 		{
 			Kind: KindOption,
-			Name: `Enum[T](values)`,
-			Does: "Makes T, a named string type, a schema of the components, with the values that values returns as its enum. values runs when the spec is built, after each group and behavior registered. orval makes a union type of the values, and the SDK a string type.",
-			When: "For a field whose values are a set that osapi knows, such as a permission or an operation ID, so a client checks a value when it compiles.",
-		},
-		{
-			Kind: KindOption,
 			Name: `Example[T]("field", "example")`,
 			Does: "Gives the field of T with that json name its example in the schema.",
 			When: "For an example with a double quote, such as a JSON document. A struct tag cannot keep the backslash of a quote, because the formatters drop it.",
@@ -323,7 +317,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindError,
 			Name: `.Because(reason)`,
-			Does: "Gives a mapped error a reason other than the reason of its status, such as Conflict(behavior.ErrNotManaged, doc).Because(types.ReasonNotManaged). Each error answer is {error, reason}: the status is the class of the problem, the reason is the cause that a program branches on, one of types.Reasons, and the message is for a person. Each helper sets the reason of its status: NotFound not_found, Conflict conflict, Invalid invalid_request, Forbidden forbidden, Unavailable unavailable.",
+			Does: "Gives a mapped error a reason other than the reason of its status, such as Conflict(behavior.ErrNotManaged, doc).Because(types.ReasonNotManaged). Each error answer is {error, reason}: the status is the class of the problem, the reason is the cause that a program branches on, one of the values of types.Reason, and the message is for a person. Each helper sets the reason of its status: NotFound not_found, Conflict conflict, Invalid invalid_request, Forbidden forbidden, Unavailable unavailable.",
 			When: "When two errors of one status are different causes, such as not_managed and not_installed beside conflict.",
 		},
 		{

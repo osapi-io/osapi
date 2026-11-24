@@ -73,15 +73,3 @@ func Get(
 
 	return out, nil
 }
-
-// permissionNames are the values of the Permission schema: each permission
-// that osapi knows.
-func permissionNames() []string {
-	return authtoken.Strings(authtoken.AllPermissions())
-}
-
-// operationIDs are the values of the OperationID schema: each operation
-// that needs a permission, in order.
-func operationIDs() []string {
-	return slices.Sorted(maps.Keys(authtoken.Operations()))
-}

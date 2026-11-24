@@ -16,7 +16,7 @@ export interface CatalogField {
   kind: CatalogFieldKind;
   /** The json name of the field. */
   name: string;
-  /** The values of a oneof rule. */
+  /** The values that the field takes: those of its type with enum, or of its oneof rule. */
   options?: string[];
   /** The request needs the field. */
   required: boolean;

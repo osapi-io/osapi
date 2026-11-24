@@ -23,8 +23,9 @@ The rules:
 - `in`: Each in tag of an input field is path, query, form or body. Fix: Correct
   the value. A field with another value is read from the request body, not from
   where the tag says.
-- `reason`: Each error that a method maps has a reason of endpoint.Reasons. Fix:
-  Use a types.Reason constant, such as endpoint.ReasonNotManaged, in Because.
+- `reason`: Each error that a method maps has a reason that types.Reason lists.
+  Fix: Use a types.Reason constant, such as endpoint.ReasonNotManaged, in
+  Because.
 - `field`: The field that Location names is a json field of the method's output,
   and the field that Example\[T] names is a json field of T. Fix: Correct the
   name to the json name of the field, such as job_id.

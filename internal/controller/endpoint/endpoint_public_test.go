@@ -591,8 +591,12 @@ func (s *EndpointPublicTestSuite) TestExamplesAndDocs() {
 	s.InDelta(0.0, *sample.Properties["ratio"].Value.Min, 0)
 }
 
-// shade is a named string type with an enum.
+// shade is a closed set: a named string type with Values and Valid.
 type shade string
+
+func (shade) Values() []shade { return []shade{"red", "blue"} }
+
+func (c shade) Valid() bool { return c == "red" || c == "blue" }
 
 // palette holds shades: in a field, in a list and in a map.
 type palette struct {
@@ -601,24 +605,27 @@ type palette struct {
 	ByName map[string]shade `json:"by_name" doc:"The shades by name."`
 }
 
-// TestEnum makes a named string type a schema of the components, once, with
-// the values its func gives when the spec is built.
+// paint is an input with a shade, which the enum rule checks.
+type paint struct {
+	Shade shade `json:"shade" validate:"required,enum"`
+}
+
+// badPaint lists the values of a shade again, with oneof.
+type badPaint struct {
+	Shade shade `json:"shade" validate:"required,oneof=red blue"`
+}
+
+// TestEnum makes a closed set a schema of the components, once, with the
+// values of its Values; the enum rule is its rule, and oneof is refused.
 func (s *EndpointPublicTestSuite) TestEnum() {
-	calls := 0
 	g := endpoint.Define("paint", "The paints",
 		endpoint.Doc[shade]("A shade."),
-		endpoint.Enum[shade](func() []string {
-			calls++
-
-			return []string{"red", "blue"}
-		}),
 		endpoint.Get[noInput, palette]("get"),
+		endpoint.Post[paint, palette]("create"),
 	)
-	s.Zero(calls, "the values wait for the spec")
 	doc, err := endpoint.OpenAPI(g)
 	s.Require().NoError(err)
 
-	s.Equal(1, calls, "the schema is added once")
 	sh := doc.Components.Schemas["shade"].Value
 	s.Equal("A shade.", sh.Description)
 	s.Equal([]any{"red", "blue"}, sh.Enum)
@@ -628,6 +635,10 @@ func (s *EndpointPublicTestSuite) TestEnum() {
 	s.Equal("#/components/schemas/shade", p.Properties["others"].Value.Items.Ref)
 	s.Equal("#/components/schemas/shade",
 		p.Properties["by_name"].Value.AdditionalProperties.Schema.Ref)
+
+	_, err = endpoint.OpenAPI(endpoint.Define("paint", "The paints",
+		endpoint.Post[badPaint, palette]("create")))
+	s.ErrorContains(err, "the type has Values; use validate enum")
 }
 
 // TestBodyValidateTags holds a body field to its whole validate tag: the
@@ -964,14 +975,14 @@ func (s *EndpointPublicTestSuite) TestValidate() {
 			},
 		},
 		{
-			name: "when an error has a reason that is not one of Reasons",
+			name: "when an error has a reason that types.Reason does not list",
 			group: endpoint.Define("node", "The nodes",
 				endpoint.Get[noInput, Node]("list").Errors(
 					endpoint.Conflict(errors.New("x"), "A conflict").Because("not_manged"),
 				),
 			),
 			want: []string{
-				`an error of 409 has the reason "not_manged", which is not one of types.Reasons.`,
+				`an error of 409 has the reason "not_manged", which is not one of the values of types.Reason.`,
 			},
 		},
 		{

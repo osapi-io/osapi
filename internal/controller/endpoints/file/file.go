@@ -49,11 +49,6 @@ var (
 // the upload and the update.
 const notAContentType = "zip"
 
-// contentTypes are the values of types.ContentType.
-func contentTypes() []string {
-	return []string{string(types.ContentRaw), string(types.ContentTemplate)}
-}
-
 // noStore503 is the 503 of each method, when the controller has no Object
 // Store.
 var noStore503 = endpoint.Unavailable(ErrNoStore,
@@ -71,7 +66,6 @@ var Group = endpoint.Register(endpoint.Define(
 	endpoint.Doc[types.ContentType](
 		"How a deploy treats a file: raw writes its bytes as they are; template renders it with Go text/template and the agent's facts.",
 	),
-	endpoint.Enum[types.ContentType](contentTypes),
 	endpoint.Get[ListInput, FileListResponse]("list").
 		Handle(List).
 		ID("GetFiles").

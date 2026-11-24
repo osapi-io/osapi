@@ -150,7 +150,7 @@ func structSchema(
 		}
 
 		fs.Validate = f.Tag.Get("validate")
-		required, err := rule.Apply(fs.Validate, target{fs})
+		required, err := rule.Apply(fs.Validate, f.Type, target{fs})
 		if err != nil {
 			return nil, fmt.Errorf("%s.%s: %w", t.Name(), f.Name, err)
 		}

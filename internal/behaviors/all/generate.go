@@ -20,7 +20,10 @@
 
 package all
 
+// authtoken/gen runs first: it writes the Values of types.Permission, which
+// the spec that behavior/gen writes has as the enum of Permission.
+//
+//go:generate go run ../../authtoken/gen --root ../../..
 //go:generate go run ../../behavior/gen --root ../../..
 //go:generate go run ../../behavior/gen/group --root ../../..
-//go:generate go run ../../authtoken/gen --root ../../..
 //go:generate go run ../../cli/gen --root ../../..
