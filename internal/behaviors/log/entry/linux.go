@@ -83,7 +83,7 @@ func args(
 		out = append(out, "--since="+opts.Since)
 	}
 	if opts.Priority != "" {
-		out = append(out, "--priority="+opts.Priority)
+		out = append(out, "--priority="+string(opts.Priority))
 	}
 
 	return append(out, "-n", strconv.Itoa(lines))
@@ -98,12 +98,6 @@ type journalEntry struct {
 	PID       string `json:"_PID"`
 }
 
-// priorities are journald's priority numbers by name.
-var priorities = map[string]string{
-	"0": "emerg", "1": "alert", "2": "crit", "3": "err",
-	"4": "warning", "5": "notice", "6": "info", "7": "debug",
-}
-
 // parse reads journalctl --output=json, one entry a line. A line that is
 // not an entry is left out.
 func parse(
@@ -115,9 +109,9 @@ func parse(
 		if json.Unmarshal([]byte(strings.TrimSpace(line)), &je) != nil {
 			continue
 		}
-		priority := je.Priority
-		if name, ok := priorities[je.Priority]; ok {
-			priority = name
+		priority := Priority(je.Priority)
+		if n, err := strconv.Atoi(je.Priority); err == nil && n >= 0 && n < len(Priorities()) {
+			priority = Priorities()[n]
 		}
 		pid, _ := strconv.Atoi(je.PID)
 		entries = append(entries, Entry{

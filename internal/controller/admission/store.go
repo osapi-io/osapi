@@ -34,13 +34,16 @@ import (
 	"github.com/osapi-io/osapi/internal/telemetry/opspan"
 )
 
-// The states of an admission record. A machine has one at a time: the
-// state of its latest record, by statePrecedence.
+// State is the state of an admission record. A machine has one at a time:
+// the state of its latest record, by statePrecedence.
+type State string
+
+// The states of an admission record.
 const (
-	StatePending  = "pending"
-	StateAdmitted = "admitted"
-	StateRejected = "rejected"
-	StateRevoked  = "revoked"
+	StatePending  State = "pending"
+	StateAdmitted State = "admitted"
+	StateRejected State = "rejected"
+	StateRevoked  State = "revoked"
 )
 
 // rejectedKVPrefix and revokedKVPrefix are the key prefixes of the records
@@ -65,7 +68,7 @@ var (
 // statePrecedence orders the records of one machine: a request waiting for
 // a decision comes first, then the key in force, then the decisions
 // against it.
-var statePrecedence = map[string]int{
+var statePrecedence = map[State]int{
 	StatePending:  0,
 	StateAdmitted: 1,
 	StateRejected: 2,
@@ -83,7 +86,7 @@ type Record struct {
 	// EncryptionKey is the machine's public X25519 key, which the
 	// fingerprint covers.
 	EncryptionKey string    `json:"encryption_key,omitempty"`
-	State         string    `json:"state"`
+	State         State     `json:"state"`
 	RequestedAt   time.Time `json:"requested_at,omitempty"`
 	AdmittedAt    time.Time `json:"admitted_at,omitempty"`
 	// DecidedAt is when a machine was rejected or revoked.
@@ -92,7 +95,7 @@ type Record struct {
 	Reason string `json:"reason,omitempty"`
 	// Previous is the state of the machine's earlier record, on a pending
 	// record; PreviousFingerprint is that record's fingerprint.
-	Previous            string `json:"previous,omitempty"`
+	Previous            State  `json:"previous,omitempty"`
 	PreviousFingerprint string `json:"previous_fingerprint,omitempty"`
 }
 
@@ -244,7 +247,7 @@ func (w *Watcher) read(
 	ctx context.Context,
 	key string,
 ) (Record, bool) {
-	var state string
+	var state State
 	switch {
 	case strings.HasPrefix(key, kvPrefix):
 		state = StatePending

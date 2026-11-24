@@ -152,6 +152,15 @@ func (s *MethodsPublicTestSuite) TestMethodGet() {
 			},
 		},
 		{
+			name: "when a flag is a named type of a closed set, its type is string",
+			in:   commanddsl.MethodInput{Name: "dsl command", Method: "create"},
+			validateFunc: func(got commanddsl.MethodOutput, err error) {
+				s.Require().NoError(err)
+				s.Equal("--under", got.Flags[2].Flag)
+				s.Equal("string", got.Flags[2].Type)
+			},
+		},
+		{
 			name: "when the method is a process, it has its config keys and no output",
 			in:   commanddsl.MethodInput{Name: "dsl zzmore", Method: "start"},
 			validateFunc: func(got commanddsl.MethodOutput, err error) {

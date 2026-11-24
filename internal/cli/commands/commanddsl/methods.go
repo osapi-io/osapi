@@ -168,9 +168,14 @@ func describe(
 		if !f.IsExported() {
 			continue
 		}
+		// A named type of a closed set is a string flag.
+		typ := f.Type.String()
+		if command.NamedString(f.Type) {
+			typ = "string"
+		}
 		out.Flags = append(out.Flags, Flag{
 			Flag: "--" + command.FlagName(f), Short: f.Tag.Get("short"),
-			Type: f.Type.String(), Validate: f.Tag.Get("validate"), Doc: f.Tag.Get("doc"),
+			Type: typ, Validate: f.Tag.Get("validate"), Doc: f.Tag.Get("doc"),
 		})
 	}
 	for _, r := range m.Refusals() {
@@ -250,7 +255,7 @@ func Create(
 	d Deps,
 	in CreateInput,
 ) (CreateOutput, error) {
-	files, err := command.Scaffold(d.Dir, in.Name, in.Description, command.Parent(in.Under))
+	files, err := command.Scaffold(d.Dir, in.Name, in.Description, in.Under)
 	if err != nil {
 		return CreateOutput{}, err
 	}

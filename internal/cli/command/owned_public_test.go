@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/cli/command"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 // OwnedPublicTestSuite covers the checks the CLI owns and the behavior DSL
@@ -44,11 +45,23 @@ func (s *OwnedPublicTestSuite) TestFlaggable() {
 		reflect.TypeFor[[]string]():          true,
 		reflect.TypeFor[map[string]string](): true,
 		reflect.TypeFor[[]byte]():            true,
+		reflect.TypeFor[command.Parent]():    true,
 		reflect.TypeFor[int64]():             false,
 		reflect.TypeFor[float64]():           false,
 		reflect.TypeFor[[]int]():             false,
 	} {
 		s.Equal(want, command.Flaggable(t), t.String())
+	}
+}
+
+func (s *OwnedPublicTestSuite) TestNamedString() {
+	for t, want := range map[reflect.Type]bool{
+		reflect.TypeFor[command.Parent](): true,
+		reflect.TypeFor[string]():         false,
+		reflect.TypeFor[secret.Value]():   false,
+		reflect.TypeFor[int]():            false,
+	} {
+		s.Equal(want, command.NamedString(t), t.String())
 	}
 }
 

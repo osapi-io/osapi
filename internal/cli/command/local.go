@@ -40,7 +40,7 @@ type LocalGroup struct {
 	Doc string
 	// Parents are the words of the command the group goes under, which
 	// Under sets, such as controller. The root has none.
-	Parents []string
+	Parents []Parent
 	// Deps is the type Uses names: what the methods get from the CLI.
 	Deps reflect.Type
 	// Methods are the group's commands, in the order they were declared.
@@ -150,10 +150,7 @@ func Under(
 	words ...Parent,
 ) Option {
 	return optionFunc(func(g *LocalGroup) {
-		g.Parents = make([]string, 0, len(words))
-		for _, w := range words {
-			g.Parents = append(g.Parents, string(w))
-		}
+		g.Parents = append([]Parent(nil), words...)
 	})
 }
 
@@ -277,17 +274,27 @@ func (g *LocalGroup) SubDoc(
 // Under set, then its name.
 func (g *LocalGroup) CommandPath() []string {
 	if g.Flat {
-		return append([]string(nil), g.Parents...)
+		return g.parentWords()
 	}
 
-	return append(append([]string(nil), g.Parents...), g.Name)
+	return append(g.parentWords(), g.Name)
+}
+
+// parentWords is Parents as the words of a command.
+func (g *LocalGroup) parentWords() []string {
+	words := make([]string, 0, len(g.Parents)+1)
+	for _, p := range g.Parents {
+		words = append(words, string(p))
+	}
+
+	return words
 }
 
 // Path is the group's words and its name, such as dsl endpoint, or
 // version for a flat group at the root: the key that Register and Lookup
 // use, and the name that a problem and dsl command get give it.
 func (g *LocalGroup) Path() string {
-	return strings.Join(append(append([]string(nil), g.Parents...), g.Name), " ")
+	return strings.Join(append(g.parentWords(), g.Name), " ")
 }
 
 // Commands are the group's methods.

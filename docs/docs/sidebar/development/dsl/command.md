@@ -503,11 +503,21 @@ decision of the owner.
 ### `Flaggable(type)`
 
 Whether a flag holds a value of the type: string, bool, int, \[]string,
-map\[string]string, \[]byte, a file, secret.Value or map\[string]secret.Value.
-The command generator builds a flag of each, and dsl behavior validate asks it
-of each CLI behavior's input, so the two agree.
+map\[string]string, \[]byte, a file, secret.Value, map\[string]secret.Value, or
+a named string type of a closed set, such as Parent, which the command converts
+from its string flag. The command generator builds a flag of each, and dsl
+behavior validate asks it of each CLI behavior's input, so the two agree.
 
 Use: Give an input field one of those types.
+
+### `NamedString(type)`
+
+Whether the type is a named type of a closed set: a type of its own whose kind
+is string, such as Parent, and not secret.Value. A flag of it is a string flag,
+and the command generator converts the flag's value to the type.
+
+Use: Give an input field the named type of a closed set, and keep its oneof
+rule, which checks the value.
 
 ### `TagProblems(type)`
 

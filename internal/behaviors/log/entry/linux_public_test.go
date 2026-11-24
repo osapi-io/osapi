@@ -60,6 +60,11 @@ func (s *LinuxPublicTestSuite) TestEntries() {
 			want: []entry.Entry{{Timestamp: "yesterday", Priority: "weird", Message: "m"}},
 		},
 		{
+			name: "when the priority is a number that journald does not have it stays as given",
+			out:  `{"PRIORITY":"8","MESSAGE":"m"}` + "\n" + `{"PRIORITY":"-1","MESSAGE":"n"}`,
+			want: []entry.Entry{{Priority: "8", Message: "m"}, {Priority: "-1", Message: "n"}},
+		},
+		{
 			name: "when the journal has no entries",
 			want: []entry.Entry{},
 		},
