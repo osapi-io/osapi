@@ -48,6 +48,10 @@ import (
 // and run again must report changed: false.
 type BehaviorSmokeSuite struct {
 	suite.Suite
+
+	// madeDummy is true once the suite made dummy on the target, so it
+	// deletes it at the end.
+	madeDummy bool
 }
 
 // call is a command line and what it reads from standard input.
@@ -55,6 +59,11 @@ type call struct {
 	args  []string
 	stdin string
 }
+
+// dummy is the dummy interface that the dns, interface and route write
+// examples run on. The suite makes it through osapi, so the CI runner and a
+// lab VM need no setup of their own.
+const dummy = "osapi0"
 
 // commandLine is the generated command line for one method, with input's flags:
 // the docs pages' command without the binary's name. A secret of input with a
@@ -160,8 +169,12 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 	}
 
 	s.refreshIndex()
+	s.prepare()
 	var examples []made
 	defer func() { s.leftNothing(examples) }()
+	// Before leftNothing, which requires that the interface examples left
+	// no config of dummy.
+	defer s.dropDummy()
 
 	for _, b := range behavior.All() {
 		if !b.CLI {
@@ -177,6 +190,12 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 				s.Run(b.Name+" "+m.Name+" "+ex.Doc, func() {
 					if ex.NotLive != "" {
 						s.T().Skip("runs on the fake host only: " + ex.NotLive)
+					}
+					// An interface example deletes dummy, which the
+					// examples after it need. This runs last, after the
+					// example's own remove.
+					if b.Name == "interface" {
+						defer s.makeDummy()
 					}
 					defer s.restore(b)()
 					s.reset(b, ex.Input)
@@ -226,6 +245,40 @@ func (s *BehaviorSmokeSuite) refreshIndex() {
 	}
 	m := b.Method("update")
 	s.results(commandLine(b, m, reflect.New(m.In).Elem().Interface()))
+}
+
+// prepare makes on the target what the write examples need, through osapi:
+// the dummy interface, and chrony, which the ntp examples run. Each call
+// changes nothing when the target has it.
+func (s *BehaviorSmokeSuite) prepare() {
+	s.makeDummy()
+	s.results(call{args: []string{
+		"client", "node", "package", "create", "--name", "chrony",
+		"--target", target, "--json",
+	}})
+}
+
+// makeDummy makes dummy on the target, and notes that the suite made it.
+func (s *BehaviorSmokeSuite) makeDummy() {
+	for _, r := range s.results(call{args: []string{
+		"client", "node", "interface", "create", "--name", dummy, "--type", "dummy",
+		"--target", target, "--json",
+	}}) {
+		if r["changed"] == true {
+			s.madeDummy = true
+		}
+	}
+}
+
+// dropDummy deletes dummy at the end, only when the suite made it.
+func (s *BehaviorSmokeSuite) dropDummy() {
+	if !s.madeDummy {
+		return
+	}
+	s.results(call{args: []string{
+		"client", "node", "interface", "delete", "--name", dummy,
+		"--target", target, "--json",
+	}})
 }
 
 // methodFor is the method whose input type is input's, and its behavior:

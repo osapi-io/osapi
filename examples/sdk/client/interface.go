@@ -32,10 +32,11 @@ var examples = []struct {
 	{"list", "A Linux host", runList},
 	{"get", "An interface with a DHCP address", runGet},
 	{"get-2", "A Mac", runGet2},
-	{"create", "A static address", runCreate},
+	{"create", "A dummy interface with a static address", runCreate},
 	{"create-2", "Each setting", runCreate2},
+	{"create-3", "An interface the host has", runCreate3},
 	{"update", "Move an interface to DHCP", runUpdate},
-	{"delete", "An interface osapi configures", runDelete},
+	{"delete", "A dummy interface osapi configures", runDelete},
 }
 
 // runList runs the example list: a Linux host.
@@ -80,7 +81,7 @@ func runGet2(
 	return show(resp.Data)
 }
 
-// runCreate runs the example create: a static address.
+// runCreate runs the example create: a dummy interface with a static address.
 func runCreate(
 	ctx context.Context,
 	c *client.Client,
@@ -89,6 +90,7 @@ func runCreate(
 	resp, err := c.Interface.Create(ctx, target, client.InterfaceCreateInput{
 		Addresses: []string{"10.0.1.5/24"},
 		Name:      "osapi0",
+		Type:      "dummy",
 	})
 	if err != nil {
 		return err
@@ -109,7 +111,25 @@ func runCreate2(
 		MACAddress: "52:54:00:aa:bb:cc",
 		MTU:        9000,
 		Name:       "osapi0",
-		Wakeonlan:  true,
+		Type:       "dummy",
+	})
+	if err != nil {
+		return err
+	}
+
+	return show(resp.Data)
+}
+
+// runCreate3 runs the example create-3: an interface the host has.
+func runCreate3(
+	ctx context.Context,
+	c *client.Client,
+	target string,
+) error {
+	resp, err := c.Interface.Create(ctx, target, client.InterfaceCreateInput{
+		DHCP4:     true,
+		Name:      "eth1",
+		Wakeonlan: true,
 	})
 	if err != nil {
 		return err
@@ -127,6 +147,7 @@ func runUpdate(
 	resp, err := c.Interface.Update(ctx, target, client.InterfaceUpdateInput{
 		DHCP4: true,
 		Name:  "osapi0",
+		Type:  "dummy",
 	})
 	if err != nil {
 		return err
@@ -135,7 +156,7 @@ func runUpdate(
 	return show(resp.Data)
 }
 
-// runDelete runs the example delete: an interface osapi configures.
+// runDelete runs the example delete: a dummy interface osapi configures.
 func runDelete(
 	ctx context.Context,
 	c *client.Client,

@@ -32,7 +32,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Request: servertest.Request{
 				Method: http.MethodPut,
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   `{"name":"osapi0","dhcp4":true}`,
+				Body:   `{"name":"osapi0","type":"dummy","dhcp4":true}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -41,6 +41,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				iface.UpdateInput{
 					DHCP4: true,
 					Name:  "osapi0",
+					Type:  "dummy",
 				},
 				servertest.Completed("server1", `{"name":"osapi0","changed":true}`),
 			),
@@ -52,7 +53,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Request: servertest.Request{
 				Method: http.MethodPut,
 				Path:   "/api/node/_all/interface/osapi0",
-				Body:   `{"name":"osapi0","dhcp4":true}`,
+				Body:   `{"name":"osapi0","type":"dummy","dhcp4":true}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -61,6 +62,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				iface.UpdateInput{
 					DHCP4: true,
 					Name:  "osapi0",
+					Type:  "dummy",
 				},
 				servertest.Completed("server1", `{"name":"osapi0","changed":true}`),
 				servertest.Skipped("server2"),
@@ -74,7 +76,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Request: servertest.Request{
 				Method: http.MethodPut,
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   `{"name":"osapi0","dhcp4":true}`,
+				Body:   `{"name":"osapi0","type":"dummy","dhcp4":true}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -83,6 +85,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				iface.UpdateInput{
 					DHCP4: true,
 					Name:  "osapi0",
+					Type:  "dummy",
 				},
 				servertest.Skipped("server1"),
 			),
@@ -94,7 +97,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Request: servertest.Request{
 				Method: http.MethodPut,
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   `{"name":"osapi0","dhcp4":true}`,
+				Body:   `{"name":"osapi0","type":"dummy","dhcp4":true}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -103,6 +106,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				iface.UpdateInput{
 					DHCP4: true,
 					Name:  "osapi0",
+					Type:  "dummy",
 				},
 				servertest.Failed("server1", "boom"),
 			),
@@ -114,7 +118,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Request: servertest.Request{
 				Method: http.MethodPut,
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   `{"name":"osapi0","dhcp4":true}`,
+				Body:   `{"name":"osapi0","type":"dummy","dhcp4":true}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -123,6 +127,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				iface.UpdateInput{
 					DHCP4: true,
 					Name:  "osapi0",
+					Type:  "dummy",
 				},
 				servertest.TimedOut("server1"),
 			),
@@ -134,7 +139,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Request: servertest.Request{
 				Method: http.MethodPut,
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   `{"name":"osapi0","dhcp4":true}`,
+				Body:   `{"name":"osapi0","type":"dummy","dhcp4":true}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -143,6 +148,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				iface.UpdateInput{
 					DHCP4: true,
 					Name:  "osapi0",
+					Type:  "dummy",
 				},
 			).Fails(servertest.ErrUnreachable),
 			WantCode: http.StatusInternalServerError,
@@ -152,7 +158,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Request: servertest.Request{
 				Method: http.MethodPut,
 				Path:   "/api/node/_all/interface/osapi0",
-				Body:   `{"name":"osapi0","dhcp4":true}`,
+				Body:   `{"name":"osapi0","type":"dummy","dhcp4":true}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -161,6 +167,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				iface.UpdateInput{
 					DHCP4: true,
 					Name:  "osapi0",
+					Type:  "dummy",
 				},
 			).Fails(servertest.ErrUnreachable),
 			WantCode: http.StatusInternalServerError,
@@ -170,7 +177,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Request: servertest.Request{
 				Method: http.MethodPut,
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   `{"name":"osapi0","dhcp4":true}`,
+				Body:   `{"name":"osapi0","type":"dummy","dhcp4":true}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -179,6 +186,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 				iface.UpdateInput{
 					DHCP4: true,
 					Name:  "osapi0",
+					Type:  "dummy",
 				},
 			).Fails(servertest.NotFound("server1")),
 			WantCode: http.StatusNotFound,
@@ -195,7 +203,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Request: servertest.Request{
 				Method: http.MethodPut,
 				Path:   "/api/node/nowhere/interface/osapi0",
-				Body:   `{"name":"osapi0","dhcp4":true}`,
+				Body:   `{"name":"osapi0","type":"dummy","dhcp4":true}`,
 			},
 			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
@@ -205,7 +213,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Request: servertest.Request{
 				Method: http.MethodPut,
 				Path:   "/api/node//interface/osapi0",
-				Body:   `{"name":"osapi0","dhcp4":true}`,
+				Body:   `{"name":"osapi0","type":"dummy","dhcp4":true}`,
 			},
 			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
@@ -221,11 +229,11 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			WantCode: http.StatusBadRequest,
 		},
 		{
-			Name: "when dhcp4 has the wrong type, it is a 400",
+			Name: "when type has the wrong type, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPut,
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   `{"dhcp4":[]}`,
+				Body:   `{"type":[]}`,
 			},
 			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
@@ -310,6 +318,16 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
 		},
+		{
+			Name: "when sent a type osapi does not know, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPut,
+				Path:   "/api/node/server1/interface/osapi0",
+				Body:   `{"name":"osapi0","type":"vlan"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
 	})
 }
 
@@ -321,7 +339,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateRBACHTTP() {
 			Request: servertest.Request{
 				Method: http.MethodPut,
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   `{"name":"osapi0","dhcp4":true}`,
+				Body:   `{"name":"osapi0","type":"dummy","dhcp4":true}`,
 			},
 			Token:    servertest.NoToken,
 			WantCode: http.StatusUnauthorized,
@@ -331,7 +349,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateRBACHTTP() {
 			Request: servertest.Request{
 				Method: http.MethodPut,
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   `{"name":"osapi0","dhcp4":true}`,
+				Body:   `{"name":"osapi0","type":"dummy","dhcp4":true}`,
 			},
 			Token:    servertest.Lacking,
 			WantCode: http.StatusForbidden,
@@ -341,7 +359,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateRBACHTTP() {
 			Request: servertest.Request{
 				Method: http.MethodPut,
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   `{"name":"osapi0","dhcp4":true}`,
+				Body:   `{"name":"osapi0","type":"dummy","dhcp4":true}`,
 			},
 			Token:    servertest.Read,
 			WantCode: http.StatusForbidden,
@@ -351,7 +369,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateRBACHTTP() {
 			Request: servertest.Request{
 				Method: http.MethodPut,
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   `{"name":"osapi0","dhcp4":true}`,
+				Body:   `{"name":"osapi0","type":"dummy","dhcp4":true}`,
 			},
 			Token: servertest.Admin,
 			Job: servertest.Modify(
@@ -360,6 +378,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateRBACHTTP() {
 				iface.UpdateInput{
 					DHCP4: true,
 					Name:  "osapi0",
+					Type:  "dummy",
 				},
 				servertest.Skipped("server1"),
 			),

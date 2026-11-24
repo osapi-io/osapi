@@ -159,7 +159,7 @@ export const getDeleteNodeInterfaceUrl = (hostname: string,
 }
 
 /**
- * Removes the interface's netplan file and applies what is left. An interface osapi does not configure does not change.
+ * Removes the interface's netplan file and applies what is left. netplan apply leaves the link of a dummy, so delete then deletes the link with ip link delete. An interface osapi does not configure does not change.
  * @summary Drop the config osapi has of a network interface
  */
 export const deleteNodeInterface = async (hostname: string,
@@ -299,7 +299,7 @@ export const getPostNodeInterfaceUrl = (hostname: string,
 }
 
 /**
- * Writes a netplan file of the interface's own, such as /etc/netplan/osapi-osapi0.yaml for osapi0, under a netplan definition that is the interface's own, and applies it. An interface the host does not have is not found. dhcp4 and dhcp6 are false unless given, so the interface has only the addresses given. An interface that a match defines, such as cloud-init's all for en*, is refused, because the config would change each interface the match takes, now and later. An interface osapi already configures does not change: update replaces its config. It runs on the Debian family, and elsewhere, and in a container, reports skipped.
+ * Writes a netplan file of the interface's own, such as /etc/netplan/osapi-osapi0.yaml for osapi0, under a netplan definition that is the interface's own, and applies it. type is ethernet, the default, or dummy. An ethernet is an interface the host has, in the netplan section that netplan status gives for it: one the host does not have is not found. A dummy goes under dummy-devices, and netplan apply makes it, so the host need not have it. dummy-devices needs netplan 0.107 or later. dhcp4 and dhcp6 are false unless given, so the interface has only the addresses given. An interface that a match defines, such as cloud-init's all for en*, is refused, because the config would change each interface the match takes, now and later. An interface osapi already configures does not change: update replaces its config. It runs on the Debian family, and elsewhere, and in a container, reports skipped.
  * @summary Configure a network interface
  */
 export const postNodeInterface = async (hostname: string,
@@ -370,7 +370,7 @@ export const getPutNodeInterfaceUrl = (hostname: string,
 }
 
 /**
- * Writes the interface's netplan file over the one osapi has, as create writes it, and applies it. An interface osapi does not configure is not found: create configures it.
+ * Writes the interface's netplan file over the one osapi has, as create writes it, and applies it. Without type dummy, the config goes in the section that netplan status gives, which is dummy-devices for a dummy, so a dummy stays a dummy. An interface osapi does not configure is not found: create configures it.
  * @summary Change the config osapi has of a network interface
  */
 export const putNodeInterface = async (hostname: string,

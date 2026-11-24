@@ -3,8 +3,9 @@
 Change the config osapi has of a network interface.
 
 Writes the interface's netplan file over the one osapi has, as create writes it,
-and applies it. An interface osapi does not configure is not found: create
-configures it.
+and applies it. Without type dummy, the config goes in the section that netplan
+status gives, which is dummy-devices for a dummy, so a dummy stays a dummy. An
+interface osapi does not configure is not found: create configures it.
 
 ```bash
 osapi client node interface update [flags]
@@ -14,7 +15,7 @@ osapi client node interface update [flags]
 
 ```bash
 # Move an interface to DHCP
-osapi client node interface update --target web-01 --name osapi0 --dhcp4
+osapi client node interface update --target web-01 --name osapi0 --type dummy --dhcp4
 ```
 
 ## Result
@@ -22,7 +23,7 @@ osapi client node interface update --target web-01 --name osapi0 --dhcp4
 Move an interface to DHCP, on one host:
 
 ```ansi
-$ osapi client node interface update --target web-01 --name osapi0 --dhcp4
+$ osapi client node interface update --target web-01 --name osapi0 --type dummy --dhcp4
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mNAME[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  [1mosapi0[0m
@@ -33,7 +34,7 @@ $ osapi client node interface update --target web-01 --name osapi0 --dhcp4
 On each host, where one cannot run it:
 
 ```ansi
-$ osapi client node interface update --target _all --name osapi0 --dhcp4
+$ osapi client node interface update --target _all --name osapi0 --type dummy --dhcp4
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mNAME[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  [1mosapi0[0m
@@ -63,9 +64,9 @@ With `--json`, the API's response:
 
 With the default settings, each example does this on the host:
 
-| Example                   | On the host                                                                                                                                                                        |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Move an interface to DHCP | runs `netplan generate`; runs `netplan apply`; writes `/etc/netplan/osapi-osapi0.yaml`: `network:\n  version: 2\n  ethernets:\n    osapi0:\n      dhcp4: true\n      dhcp6: false` |
+| Example                   | On the host                                                                                                                                                                            |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Move an interface to DHCP | runs `netplan generate`; runs `netplan apply`; writes `/etc/netplan/osapi-osapi0.yaml`: `network:\n  version: 2\n  dummy-devices:\n    osapi0:\n      dhcp4: true\n      dhcp6: false` |
 
 The command fails in these cases:
 
@@ -80,6 +81,7 @@ The command fails in these cases:
 | An MTU above 9000                     | `--name osapi0 --mtu 9001`                                                                                                                                                                                                                                                                                                                                                                                                              | MTU        |
 | A MAC address netplan does not take   | `--name osapi0 --mac-address 0000.5e00.5301`                                                                                                                                                                                                                                                                                                                                                                                            | MACAddress |
 | A name that is not an interface name  | `--name "eth0;reboot"`                                                                                                                                                                                                                                                                                                                                                                                                                  | Name       |
+| A type osapi does not know            | `--name osapi0 --type vlan`                                                                                                                                                                                                                                                                                                                                                                                                             | Type       |
 
 ## Permission
 
@@ -88,18 +90,19 @@ It needs the `interface:write` permission.
 
 ## Flags
 
-| Flag            | Description                                                                       | Default |
-| --------------- | --------------------------------------------------------------------------------- | ------- |
-| `--addresses`   | The static addresses, in CIDR notation, such as 10.0.0.5/24                       |         |
-| `--dhcp4`       | Take an IPv4 address from DHCP                                                    |         |
-| `--dhcp6`       | Take an IPv6 address from DHCP                                                    |         |
-| `--gateway4`    | The IPv4 default gateway                                                          |         |
-| `--gateway6`    | The IPv6 default gateway                                                          |         |
-| `--mac-address` | The MAC address to set                                                            |         |
-| `--mtu`         | The MTU, from 68 to 9000                                                          |         |
-| `--name`        | The interface, such as eth0, or a fact such as @fact.interface.primary (required) |         |
-| `-T, --target`  | Target: _all, _any, hostname, or label (group:web.dev)                            | `_all`  |
-| `--wakeonlan`   | Turn on wake-on-LAN                                                               |         |
+| Flag            | Description                                                                                                                         | Default |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `--addresses`   | The static addresses, in CIDR notation, such as 10.0.0.5/24                                                                         |         |
+| `--dhcp4`       | Take an IPv4 address from DHCP                                                                                                      |         |
+| `--dhcp6`       | Take an IPv6 address from DHCP                                                                                                      |         |
+| `--gateway4`    | The IPv4 default gateway                                                                                                            |         |
+| `--gateway6`    | The IPv6 default gateway                                                                                                            |         |
+| `--mac-address` | The MAC address to set                                                                                                              |         |
+| `--mtu`         | The MTU, from 68 to 9000                                                                                                            |         |
+| `--name`        | The interface, such as eth0, or a fact such as @fact.interface.primary (required)                                                   |         |
+| `-T, --target`  | Target: _all, _any, hostname, or label (group:web.dev)                                                                              | `_all`  |
+| `--type`        | The type: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes (ethernet, dummy) |         |
+| `--wakeonlan`   | Turn on wake-on-LAN                                                                                                                 |         |
 
 ## Global flags
 

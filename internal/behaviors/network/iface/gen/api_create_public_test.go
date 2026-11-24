@@ -28,11 +28,11 @@ func (s *APICreatePublicTestSuite) SetupSuite() {
 func (s *APICreatePublicTestSuite) TestCreate() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
-			Name: "when the example \"A static address\" is sent, the host's result is returned",
+			Name: "when the example \"A dummy interface with a static address\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   `{"name":"osapi0","addresses":["10.0.1.5/24"]}`,
+				Body:   `{"name":"osapi0","type":"dummy","addresses":["10.0.1.5/24"]}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -41,6 +41,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				iface.CreateInput{
 					Addresses: []string{"10.0.1.5/24"},
 					Name:      "osapi0",
+					Type:      "dummy",
 				},
 				servertest.Completed("server1", `{"name":"osapi0","changed":true}`),
 			),
@@ -48,11 +49,11 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapi0","status":"ok"}]}`,
 		},
 		{
-			Name: "when the example \"A static address\" is broadcast, every host's result is returned",
+			Name: "when the example \"A dummy interface with a static address\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/_all/interface/osapi0",
-				Body:   `{"name":"osapi0","addresses":["10.0.1.5/24"]}`,
+				Body:   `{"name":"osapi0","type":"dummy","addresses":["10.0.1.5/24"]}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -61,6 +62,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				iface.CreateInput{
 					Addresses: []string{"10.0.1.5/24"},
 					Name:      "osapi0",
+					Type:      "dummy",
 				},
 				servertest.Completed("server1", `{"name":"osapi0","changed":true}`),
 				servertest.Skipped("server2"),
@@ -74,7 +76,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   `{"name":"osapi0","dhcp6":true,"addresses":["2001:db8::5/64"],"mtu":9000,"mac_address":"52:54:00:aa:bb:cc","wakeonlan":true}`,
+				Body:   `{"name":"osapi0","type":"dummy","dhcp6":true,"addresses":["2001:db8::5/64"],"mtu":9000,"mac_address":"52:54:00:aa:bb:cc"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -86,7 +88,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 					MACAddress: "52:54:00:aa:bb:cc",
 					MTU:        9000,
 					Name:       "osapi0",
-					WakeOnLAN:  true,
+					Type:       "dummy",
 				},
 				servertest.Completed("server1", `{"name":"osapi0","changed":true}`),
 			),
@@ -98,7 +100,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/_all/interface/osapi0",
-				Body:   `{"name":"osapi0","dhcp6":true,"addresses":["2001:db8::5/64"],"mtu":9000,"mac_address":"52:54:00:aa:bb:cc","wakeonlan":true}`,
+				Body:   `{"name":"osapi0","type":"dummy","dhcp6":true,"addresses":["2001:db8::5/64"],"mtu":9000,"mac_address":"52:54:00:aa:bb:cc"}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -110,7 +112,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 					MACAddress: "52:54:00:aa:bb:cc",
 					MTU:        9000,
 					Name:       "osapi0",
-					WakeOnLAN:  true,
+					Type:       "dummy",
 				},
 				servertest.Completed("server1", `{"name":"osapi0","changed":true}`),
 				servertest.Skipped("server2"),
@@ -120,11 +122,55 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"osapi0","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
 		},
 		{
+			Name: "when the example \"An interface the host has\" is sent, the host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/interface/eth1",
+				Body:   `{"name":"eth1","dhcp4":true,"wakeonlan":true}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"server1",
+				"interface.create",
+				iface.CreateInput{
+					DHCP4:     true,
+					Name:      "eth1",
+					WakeOnLAN: true,
+				},
+				servertest.Completed("server1", `{"name":"eth1","changed":true}`),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"eth1","status":"ok"}]}`,
+		},
+		{
+			Name: "when the example \"An interface the host has\" is broadcast, every host's result is returned",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/_all/interface/eth1",
+				Body:   `{"name":"eth1","dhcp4":true,"wakeonlan":true}`,
+			},
+			Token: servertest.Write,
+			Job: servertest.Modify(
+				"_all",
+				"interface.create",
+				iface.CreateInput{
+					DHCP4:     true,
+					Name:      "eth1",
+					WakeOnLAN: true,
+				},
+				servertest.Completed("server1", `{"name":"eth1","changed":true}`),
+				servertest.Skipped("server2"),
+				servertest.Failed("server3", "boom"),
+			),
+			WantCode: http.StatusOK,
+			WantBody: `{"job_id":"job-1","results":[{"changed":true,"hostname":"server1","name":"eth1","status":"ok"},{"error":"unsupported","hostname":"server2","status":"skipped"},{"error":"boom","hostname":"server3","status":"failed"}]}`,
+		},
+		{
 			Name: "when the example \"An interface osapi already configures\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   `{"name":"osapi0","addresses":["10.0.1.5/24"]}`,
+				Body:   `{"name":"osapi0","type":"dummy","addresses":["10.0.1.5/24"]}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -133,6 +179,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				iface.CreateInput{
 					Addresses: []string{"10.0.1.5/24"},
 					Name:      "osapi0",
+					Type:      "dummy",
 				},
 				servertest.Completed("server1", `{"name":"osapi0","changed":false}`),
 			),
@@ -144,7 +191,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/_all/interface/osapi0",
-				Body:   `{"name":"osapi0","addresses":["10.0.1.5/24"]}`,
+				Body:   `{"name":"osapi0","type":"dummy","addresses":["10.0.1.5/24"]}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -153,6 +200,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				iface.CreateInput{
 					Addresses: []string{"10.0.1.5/24"},
 					Name:      "osapi0",
+					Type:      "dummy",
 				},
 				servertest.Completed("server1", `{"name":"osapi0","changed":false}`),
 				servertest.Skipped("server2"),
@@ -166,7 +214,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   `{"name":"osapi0","addresses":["10.0.1.5/24"]}`,
+				Body:   `{"name":"osapi0","type":"dummy","addresses":["10.0.1.5/24"]}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -175,6 +223,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				iface.CreateInput{
 					Addresses: []string{"10.0.1.5/24"},
 					Name:      "osapi0",
+					Type:      "dummy",
 				},
 				servertest.Skipped("server1"),
 			),
@@ -186,7 +235,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   `{"name":"osapi0","addresses":["10.0.1.5/24"]}`,
+				Body:   `{"name":"osapi0","type":"dummy","addresses":["10.0.1.5/24"]}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -195,6 +244,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				iface.CreateInput{
 					Addresses: []string{"10.0.1.5/24"},
 					Name:      "osapi0",
+					Type:      "dummy",
 				},
 				servertest.Failed("server1", "boom"),
 			),
@@ -206,7 +256,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   `{"name":"osapi0","addresses":["10.0.1.5/24"]}`,
+				Body:   `{"name":"osapi0","type":"dummy","addresses":["10.0.1.5/24"]}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -215,6 +265,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				iface.CreateInput{
 					Addresses: []string{"10.0.1.5/24"},
 					Name:      "osapi0",
+					Type:      "dummy",
 				},
 				servertest.TimedOut("server1"),
 			),
@@ -226,7 +277,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   `{"name":"osapi0","addresses":["10.0.1.5/24"]}`,
+				Body:   `{"name":"osapi0","type":"dummy","addresses":["10.0.1.5/24"]}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -235,6 +286,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				iface.CreateInput{
 					Addresses: []string{"10.0.1.5/24"},
 					Name:      "osapi0",
+					Type:      "dummy",
 				},
 			).Fails(servertest.ErrUnreachable),
 			WantCode: http.StatusInternalServerError,
@@ -244,7 +296,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/_all/interface/osapi0",
-				Body:   `{"name":"osapi0","addresses":["10.0.1.5/24"]}`,
+				Body:   `{"name":"osapi0","type":"dummy","addresses":["10.0.1.5/24"]}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -253,6 +305,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				iface.CreateInput{
 					Addresses: []string{"10.0.1.5/24"},
 					Name:      "osapi0",
+					Type:      "dummy",
 				},
 			).Fails(servertest.ErrUnreachable),
 			WantCode: http.StatusInternalServerError,
@@ -262,7 +315,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   `{"name":"osapi0","addresses":["10.0.1.5/24"]}`,
+				Body:   `{"name":"osapi0","type":"dummy","addresses":["10.0.1.5/24"]}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
@@ -271,6 +324,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 				iface.CreateInput{
 					Addresses: []string{"10.0.1.5/24"},
 					Name:      "osapi0",
+					Type:      "dummy",
 				},
 			).Fails(servertest.NotFound("server1")),
 			WantCode: http.StatusNotFound,
@@ -287,7 +341,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/nowhere/interface/osapi0",
-				Body:   `{"name":"osapi0","addresses":["10.0.1.5/24"]}`,
+				Body:   `{"name":"osapi0","type":"dummy","addresses":["10.0.1.5/24"]}`,
 			},
 			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
@@ -297,7 +351,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node//interface/osapi0",
-				Body:   `{"name":"osapi0","addresses":["10.0.1.5/24"]}`,
+				Body:   `{"name":"osapi0","type":"dummy","addresses":["10.0.1.5/24"]}`,
 			},
 			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
@@ -313,11 +367,11 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			WantCode: http.StatusBadRequest,
 		},
 		{
-			Name: "when dhcp4 has the wrong type, it is a 400",
+			Name: "when type has the wrong type, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   `{"dhcp4":[]}`,
+				Body:   `{"type":[]}`,
 			},
 			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
@@ -402,6 +456,16 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Token:    servertest.Write,
 			WantCode: http.StatusBadRequest,
 		},
+		{
+			Name: "when sent a type osapi does not know, it is a 400",
+			Request: servertest.Request{
+				Method: http.MethodPost,
+				Path:   "/api/node/server1/interface/osapi0",
+				Body:   `{"name":"osapi0","type":"vlan"}`,
+			},
+			Token:    servertest.Write,
+			WantCode: http.StatusBadRequest,
+		},
 	})
 }
 
@@ -413,7 +477,7 @@ func (s *APICreatePublicTestSuite) TestCreateRBACHTTP() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   `{"name":"osapi0","addresses":["10.0.1.5/24"]}`,
+				Body:   `{"name":"osapi0","type":"dummy","addresses":["10.0.1.5/24"]}`,
 			},
 			Token:    servertest.NoToken,
 			WantCode: http.StatusUnauthorized,
@@ -423,7 +487,7 @@ func (s *APICreatePublicTestSuite) TestCreateRBACHTTP() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   `{"name":"osapi0","addresses":["10.0.1.5/24"]}`,
+				Body:   `{"name":"osapi0","type":"dummy","addresses":["10.0.1.5/24"]}`,
 			},
 			Token:    servertest.Lacking,
 			WantCode: http.StatusForbidden,
@@ -433,7 +497,7 @@ func (s *APICreatePublicTestSuite) TestCreateRBACHTTP() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   `{"name":"osapi0","addresses":["10.0.1.5/24"]}`,
+				Body:   `{"name":"osapi0","type":"dummy","addresses":["10.0.1.5/24"]}`,
 			},
 			Token:    servertest.Read,
 			WantCode: http.StatusForbidden,
@@ -443,7 +507,7 @@ func (s *APICreatePublicTestSuite) TestCreateRBACHTTP() {
 			Request: servertest.Request{
 				Method: http.MethodPost,
 				Path:   "/api/node/server1/interface/osapi0",
-				Body:   `{"name":"osapi0","addresses":["10.0.1.5/24"]}`,
+				Body:   `{"name":"osapi0","type":"dummy","addresses":["10.0.1.5/24"]}`,
 			},
 			Token: servertest.Admin,
 			Job: servertest.Modify(
@@ -452,6 +516,7 @@ func (s *APICreatePublicTestSuite) TestCreateRBACHTTP() {
 				iface.CreateInput{
 					Addresses: []string{"10.0.1.5/24"},
 					Name:      "osapi0",
+					Type:      "dummy",
 				},
 				servertest.Skipped("server1"),
 			),

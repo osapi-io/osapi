@@ -138,6 +138,18 @@ func (s *DebianPublicTestSuite) TestFailedStepIsInTheTree() {
 			wantError: "so its content was put back",
 			wantSteps: "netplan update (failed) → (managedfile update (changed), managedfile update (changed))",
 		},
+		{
+			name:     "when netplan generate refuses the file, the error has what it said",
+			previous: "network:\n  version: 2\n",
+			expect: func(files *managedfilemocks.MockProvider, exec *hostmocks.MockExec) {
+				files.EXPECT().Write(gomock.Any(), gomock.Any()).Return(true, nil).Times(2)
+				exec.EXPECT().RunPrivilegedCmd(gomock.Any(), "netplan", []string{"generate"}).
+					Return("Error in network definition: unknown key 'dummy-devices'\n",
+						errors.New("exit status 1"))
+			},
+			wantError: "exit status 1: Error in network definition: unknown key 'dummy-devices'",
+			wantSteps: "netplan update (failed) → (managedfile update (changed), managedfile update (changed))",
+		},
 	}
 	for _, tc := range tests {
 		s.Run(tc.name, func() {

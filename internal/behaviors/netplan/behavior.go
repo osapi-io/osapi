@@ -98,6 +98,17 @@ var Behavior = behavior.Register(behavior.Define(
 			},
 			behavior.Prints("netplan status --format json", status),
 		).
+		Example("A dummy", GetInput{Name: "osapi0"},
+			Interface{
+				Name:    "osapi0",
+				Type:    "dummy-device",
+				Section: "dummy-devices",
+				ID:      "osapi0",
+				Matches: []string{"osapi0"},
+			},
+			behavior.Prints("netplan status --format json",
+				`{"osapi0":{"type":"dummy-device","id":"osapi0"}}`),
+		).
 		Example("An interface a match defines, as cloud-init's all for en*", GetInput{Name: "enp0s1"},
 			Interface{
 				Name: "enp0s1", Type: "ethernet", Section: "ethernets", ID: "all",

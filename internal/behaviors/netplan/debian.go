@@ -81,7 +81,11 @@ func (d *debian) Apply(
 	if err != nil || !result.Changed {
 		return false, err
 	}
-	if _, err := d.exec.RunPrivilegedCmd(ctx, "netplan", []string{"generate"}); err != nil {
+	if out, err := d.exec.RunPrivilegedCmd(ctx, "netplan", []string{"generate"}); err != nil {
+		// netplan generate tells in its output which key it refused.
+		if msg := strings.TrimSpace(out); msg != "" {
+			err = fmt.Errorf("%w: %s", err, msg)
+		}
 		if readErr == nil {
 			_, _ = behavior.Call(ctx, managedfile.Behavior, managedfile.Update, d.files,
 				managedfile.UpdateInput{
@@ -201,6 +205,8 @@ func Section(
 		return "bonds"
 	case "tunnel", "vxlan":
 		return "tunnels"
+	case "dummy-device":
+		return "dummy-devices"
 	default:
 		return "ethernets"
 	}

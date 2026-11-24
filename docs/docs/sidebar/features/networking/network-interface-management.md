@@ -32,6 +32,15 @@ the Debian family, through the internal
   `false` unless you give them, so the interface has only the addresses that you
   give. A gateway is a default route: Netplan deprecates `gateway4` and
   `gateway6`.
+- **Dummy interfaces**: `create` and `update` take `--type`, `ethernet` (the
+  default) or `dummy`. An `ethernet` is an interface that the host has, and its
+  config goes in the Netplan section that `netplan status` gives for it. A
+  `dummy` goes under `dummy-devices`, and `netplan apply` makes the link. Thus
+  the host does not have to have a dummy before the call. `delete` of a dummy
+  removes its file, runs `netplan apply`, and then removes the link with
+  `ip link delete`, because `netplan apply` does not remove it. Netplan 0.107
+  added `dummy-devices`. On an older Netplan, such as the 0.106 of Debian 12,
+  the call fails with an error that tells this.
 - **Routes**: `osapi-{name}-routes.yaml` has the static routes of the named
   interface. Each call is one route, as `ip route add` and `ip route del` are:
   `--destination` in CIDR notation, `--via` an address of the same family, and
@@ -125,6 +134,13 @@ osapi client node interface update \
 # Delete an interface config
 osapi client node interface delete \
   --target web-01 --name eth1
+
+# Create a dummy interface with a static address, and delete it
+osapi client node interface create \
+  --target web-01 --name osapi0 --type dummy \
+  --addresses 10.0.1.5/24
+osapi client node interface delete \
+  --target web-01 --name osapi0
 
 # List the routes of an interface
 osapi client node interface route list --target web-01 --name eth0

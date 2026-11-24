@@ -34,13 +34,14 @@ type SectionPublicTestSuite struct {
 
 func (s *SectionPublicTestSuite) TestSection() {
 	for t, want := range map[string]string{
-		"wifi":     "wifis",
-		"bridge":   "bridges",
-		"bond":     "bonds",
-		"tunnel":   "tunnels",
-		"vxlan":    "tunnels",
-		"ethernet": "ethernets",
-		"":         "ethernets",
+		"wifi":         "wifis",
+		"bridge":       "bridges",
+		"bond":         "bonds",
+		"tunnel":       "tunnels",
+		"vxlan":        "tunnels",
+		"dummy-device": "dummy-devices",
+		"ethernet":     "ethernets",
+		"":             "ethernets",
 	} {
 		s.Equal(want, netplan.Section(t), t)
 	}
