@@ -183,6 +183,9 @@ encryption on for a server that has data.
 - **Keep a copy of the key.** Without the key, or with a different key, the
   server cannot read the store and does not start. Keep the copy apart from the
   backup of `store_dir`.
+- **Only the accounts that the server loads are encrypted.** A directory under
+  `store_dir` of an account that the server no longer has stays plain, such as
+  `$G` from before you used operator mode. Remove it yourself.
 - **Only file storage is encrypted.** A stream or a bucket with
   `storage: memory` is not on the disk.
 - **The key protects the disk, not the bus.** The server decrypts each message
