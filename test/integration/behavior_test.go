@@ -252,18 +252,18 @@ func (s *BehaviorSmokeSuite) refreshIndex() {
 // changes nothing when the target has it.
 func (s *BehaviorSmokeSuite) prepare() {
 	s.makeDummy()
-	s.results([]string{
+	s.results(call{args: []string{
 		"client", "node", "package", "create", "--name", "chrony",
 		"--target", target, "--json",
-	})
+	}})
 }
 
 // makeDummy makes dummy on the target, and notes that the suite made it.
 func (s *BehaviorSmokeSuite) makeDummy() {
-	for _, r := range s.results([]string{
+	for _, r := range s.results(call{args: []string{
 		"client", "node", "interface", "create", "--name", dummy, "--type", "dummy",
 		"--target", target, "--json",
-	}) {
+	}}) {
 		if r["changed"] == true {
 			s.madeDummy = true
 		}
@@ -275,10 +275,10 @@ func (s *BehaviorSmokeSuite) dropDummy() {
 	if !s.madeDummy {
 		return
 	}
-	s.results([]string{
+	s.results(call{args: []string{
 		"client", "node", "interface", "delete", "--name", dummy,
 		"--target", target, "--json",
-	})
+	}})
 }
 
 // methodFor is the method whose input type is input's, and its behavior:
