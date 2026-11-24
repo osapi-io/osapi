@@ -37,16 +37,12 @@ of role names, such as `admin`, `operator` or `read`.
 
 ### RBAC model
 
-Three built-in roles have permissions in levels:
+The UI shows and hides each control by the permissions of the token's roles.
+[Roles and permissions](../features/platform/authentication.md#roles-and-permissions)
+lists the built-in roles and the rule that gives each role its permissions.
 
-| Role     | JWT value | Permissions                            |
-| -------- | --------- | -------------------------------------- |
-| Admin    | `admin`   | All permissions, `audit:read` included |
-| Operator | `write`   | Read, write and execute, but not audit |
-| Viewer   | `read`    | Read only                              |
-
-Each role can read traces with `trace:read`. The Traces page in the Admin menu
-shows the span tree of a trace by its ID.
+The Traces page in the Admin menu shows the span tree of a trace by its ID. It
+needs `trace:read`.
 
 A permission has the form `resource:verb`, as in the Go model of osapi, for
 example `agent:read`, `file:write`, `command:execute` and `docker:execute`. The
