@@ -93,6 +93,19 @@ func generate(
 	if err != nil {
 		return err
 	}
+	declared, err := declaredTypes(filepath.Join(root, typesDir))
+	if err != nil {
+		return err
+	}
+	if err := checkShared(m, declared); err != nil {
+		return err
+	}
+	// The pages write a call as the examples do, so both refer to a type of
+	// pkg/sdk/types as types.Name.
+	shared = map[string]bool{}
+	for name := range declared {
+		shared[name] = true
+	}
 	if docs {
 		return runPages(root, m)
 	}
@@ -105,21 +118,12 @@ func run(
 	root string,
 	m *sdkmodel.Model,
 ) error {
-	declared, err := declaredTypes(filepath.Join(root, typesDir))
-	if err != nil {
-		return err
-	}
-	if err := checkShared(m, declared); err != nil {
-		return err
-	}
 	w := &genfile.Writer{Root: root}
 	written, err := clean(w, root)
 	if err != nil {
 		return err
 	}
-	shared = map[string]bool{}
-	for name := range declared {
-		shared[name] = true
+	for name := range shared {
 		written[name] = true
 	}
 	out := map[string]*jen.File{}

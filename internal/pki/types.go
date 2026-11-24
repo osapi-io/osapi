@@ -70,23 +70,6 @@ const (
 	PKIRotateSuffix = "pki.rotate"
 )
 
-// EnrollmentState represents the agent's PKI enrollment state.
-type EnrollmentState string
-
-const (
-	// StateUnregistered indicates the agent has not yet enrolled.
-	StateUnregistered EnrollmentState = "unregistered"
-
-	// StatePending indicates the agent has submitted an enrollment request.
-	StatePending EnrollmentState = "pending"
-
-	// StateAccepted indicates the controller has accepted the agent.
-	StateAccepted EnrollmentState = "accepted"
-
-	// StateRejected indicates the controller has rejected the agent.
-	StateRejected EnrollmentState = "rejected"
-)
-
 // EnrollmentRequest is sent by the agent to the controller. It carries both
 // public keys: the Ed25519 signing key and the X25519 encryption key, in the
 // nkeys form that starts with "X".
