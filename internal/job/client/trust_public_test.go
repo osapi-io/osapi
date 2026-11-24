@@ -209,11 +209,11 @@ func (s *RegistrationTrustPublicTestSuite) TestListAgentsTrust() {
 			},
 		},
 		{
-			name:    "with no store wired every registration is trusted as before",
+			name:    "with no store wired no registration is trusted",
 			reg:     func() job.AgentRegistration { return s.base() },
 			noStore: true,
 			validateFunc: func(a job.AgentInfo) {
-				s.True(a.Verified)
+				s.False(a.Verified)
 				s.False(a.KeyStored)
 			},
 		},

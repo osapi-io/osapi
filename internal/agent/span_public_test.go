@@ -212,7 +212,7 @@ func (s *SpanPublicTestSuite) TestJobProcessJoinsTheTrace() {
 	agent.ExportIdentityAttrs(a, "web-01", "abc123", nil)
 
 	jobs.EXPECT().HasJobResponse(gomock.Any(), "trace-job", gomock.Any()).Return(false, nil)
-	jobs.EXPECT().GetJobData(gomock.Any(), "jobs.trace-job").Return([]byte(`{
+	jobs.EXPECT().GetJobData(gomock.Any(), "jobs.trace-job").Return(signedJob(`{
 		"id": "trace-job",
 		"operation": {"type": "network.ping.do", "data": {"address": "1.1.1.1"}}
 	}`), nil)

@@ -662,7 +662,7 @@ func (s *ConsumerPublicTestSuite) TestHandleJobMessageJS() {
 				// Mock successful job data retrieval and processing
 				s.mockJobClient.EXPECT().
 					GetJobData(gomock.Any(), "jobs.test-job-key").
-					Return([]byte(`{
+					Return(signedJob(`{
 						"id": "test-job-123",
 						"operation": {
 							"type": "network.ping.do",

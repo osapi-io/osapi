@@ -130,8 +130,8 @@ func New(
 
 // SetPKISigner wires the signer used to sign outgoing job and response
 // payloads and to verify incoming ones. See the JobClient interface for why
-// this is separate from construction. Passing nil disables signing and
-// verification.
+// this is separate from construction. With nil, the job client writes no
+// job and no response, and reads no job record.
 func (c *Client) SetPKISigner(
 	signer PKISigner,
 ) {
@@ -139,8 +139,9 @@ func (c *Client) SetPKISigner(
 }
 
 // SetAgentKeyStore wires the store used to verify agent responses. See the
-// JobClient interface for why this is separate from construction. Passing nil
-// leaves responses unverified.
+// JobClient interface for why this is separate from construction. With nil,
+// the job client refuses each response of an agent and trusts no
+// registration.
 func (c *Client) SetAgentKeyStore(
 	store AgentKeyStore,
 ) {
@@ -303,13 +304,9 @@ func (c *Client) publishAndWait(
 	jobJSON, _ := json.Marshal(jobData)
 
 	// Sign the job data with the key of the controller.
-	kvPayload := jobJSON
-	if c.pkiSigner != nil {
-		signed, signErr := wrapInSignedEnvelope(c.pkiSigner, c.machineID, jobJSON)
-		if signErr != nil {
-			return "", nil, endSpan(pubSpan, fmt.Errorf("failed to sign job data: %w", signErr))
-		}
-		kvPayload = signed
+	kvPayload, err := c.sign(jobJSON)
+	if err != nil {
+		return "", nil, endSpan(pubSpan, fmt.Errorf("failed to sign job data: %w", err))
 	}
 
 	kvKey := "jobs." + jobID
@@ -372,49 +369,14 @@ func (c *Client) publishAndWait(
 				continue
 			}
 
-			// Unwrap signed envelope if present. A verification failure
-			// means the response cannot be trusted, so it is treated as a
-			// job failure rather than fallen through as unverified data
-			// that happens to fail to unmarshal into a useful response.
-			responseData := entry.Value()
-
-			switch {
-			case c.agentKeyStore != nil:
-				// Enforcing: the response is verified against the key
-				// stored for the agent that claims to have sent it, and
-				// the job fails rather than returning unverified data.
-				verified, verifyErr := verifyAgentResponse(
-					ctx,
-					c.agentKeyStore,
-					responseData,
-				)
-				if verifyErr != nil {
-					return "", nil, endSpan(colSpan, fmt.Errorf(
-						"response verification failed for job %s: %w",
-						jobID, verifyErr,
-					))
-				}
-				responseData = verified
-			case c.pkiSigner != nil:
-				unwrapped, _, unwrapErr := unwrapSignedEnvelope(
-					responseData,
-					c.pkiSigner.ControllerPublicKey(),
-				)
-				if unwrapErr != nil {
-					return "", nil, endSpan(colSpan, fmt.Errorf(
-						"response signature verification failed for job %s: %w",
-						jobID, unwrapErr,
-					))
-				}
-				responseData = unwrapped
-			}
-
-			var response job.Response
-			if err := json.Unmarshal(responseData, &response); err != nil {
-				return "", nil, endSpan(
-					colSpan,
-					fmt.Errorf("failed to unmarshal response: %w", err),
-				)
+			// A response that does not verify cannot be trusted, so it is
+			// a job failure, not data.
+			response, verifyErr := c.verifyResponse(ctx, entry.Value())
+			if verifyErr != nil {
+				return "", nil, endSpan(colSpan, fmt.Errorf(
+					"response verification failed for job %s: %w",
+					jobID, verifyErr,
+				))
 			}
 
 			c.logger.InfoContext(
@@ -423,13 +385,13 @@ func (c *Client) publishAndWait(
 				slog.String("status", string(response.Status)),
 			)
 
-			endCollectSpan(colSpan, 1, map[string]*job.Response{response.Hostname: &response})
+			endCollectSpan(colSpan, 1, map[string]*job.Response{response.Hostname: response})
 
 			// The audit entry of the request records the chain of the
 			// job, also when the job failed on the host.
 			audit.RecordSteps(ctx, jobID, response.Hostname, response.Steps)
 
-			return jobID, &response, nil
+			return jobID, response, nil
 		}
 	}
 }
@@ -471,13 +433,9 @@ func (c *Client) publishAndCollect(
 	jobJSON, _ := json.Marshal(jobData)
 
 	// Sign the job data with the key of the controller.
-	kvPayload := jobJSON
-	if c.pkiSigner != nil {
-		signed, signErr := wrapInSignedEnvelope(c.pkiSigner, c.machineID, jobJSON)
-		if signErr != nil {
-			return "", nil, endSpan(pubSpan, fmt.Errorf("failed to sign job data: %w", signErr))
-		}
-		kvPayload = signed
+	kvPayload, err := c.sign(jobJSON)
+	if err != nil {
+		return "", nil, endSpan(pubSpan, fmt.Errorf("failed to sign job data: %w", err))
 	}
 
 	kvKey := "jobs." + jobID
@@ -587,59 +545,18 @@ func (c *Client) publishAndCollect(
 				continue
 			}
 
-			// Unwrap signed envelope if present. A verification failure
-			// means this response cannot be trusted, so it is dropped
-			// rather than kept as unverified data — same treatment as an
-			// unmarshalable response below. The agent that sent it then
-			// shows as missing rather than answered, and surfaces as a
-			// timeout for that hostname if it never sends a good response.
-			responseData := entry.Value()
-
-			switch {
-			case c.agentKeyStore != nil:
-				// Enforcing: a response that does not verify is not this
-				// agent's reply. It is dropped, so the agent shows as not
-				// having answered rather than as answered by whoever sent
-				// it.
-				verified, verifyErr := verifyAgentResponse(
-					ctx,
-					c.agentKeyStore,
-					responseData,
-				)
-				if verifyErr != nil {
-					c.logger.WarnContext(
-						ctx, "broadcast response verification failed",
-						slog.String("job_id", jobID),
-						slog.String("error", verifyErr.Error()),
-					)
-
-					continue
-				}
-				responseData = verified
-			case c.pkiSigner != nil:
-				unwrapped, _, unwrapErr := unwrapSignedEnvelope(
-					responseData,
-					c.pkiSigner.ControllerPublicKey(),
-				)
-				if unwrapErr != nil {
-					c.logger.WarnContext(
-						ctx, "broadcast response signature verification failed",
-						slog.String("job_id", jobID),
-						slog.String("error", unwrapErr.Error()),
-					)
-
-					continue
-				}
-				responseData = unwrapped
-			}
-
-			var response job.Response
-			if err := json.Unmarshal(responseData, &response); err != nil {
+			// A response that does not verify cannot be trusted, so it is
+			// dropped. The agent that sent it then shows as missing rather
+			// than answered, and surfaces as a timeout for that hostname if
+			// it never sends a good response.
+			response, verifyErr := c.verifyResponse(ctx, entry.Value())
+			if verifyErr != nil {
 				c.logger.WarnContext(
-					ctx, "failed to unmarshal broadcast response",
+					ctx, "broadcast response verification failed",
 					slog.String("job_id", jobID),
-					slog.String("error", err.Error()),
+					slog.String("error", verifyErr.Error()),
 				)
+
 				continue
 			}
 
@@ -655,7 +572,7 @@ func (c *Client) publishAndCollect(
 				slog.String("status", string(response.Status)),
 			)
 
-			responses[hostname] = &response
+			responses[hostname] = response
 			audit.RecordSteps(ctx, jobID, hostname, response.Steps)
 
 			// Return early when all expected agents have responded.
@@ -758,4 +675,32 @@ func (c *Client) request(
 	}
 
 	return req, nil
+}
+
+// sign is payload in a signed envelope, with the key of this job client.
+// A job client with no signer writes nothing: PKI is always on, and a
+// reader refuses an unsigned value.
+func (c *Client) sign(
+	payload []byte,
+) ([]byte, error) {
+	if c.pkiSigner == nil {
+		return nil, ErrNoSigner
+	}
+
+	return wrapInSignedEnvelope(c.pkiSigner, c.machineID, payload)
+}
+
+// verifyResponse is the response of an agent, verified against the key
+// stored for the agent that claims to have sent it. A job client with no
+// agent keys refuses each response, so no unsigned response is read as an
+// answer.
+func (c *Client) verifyResponse(
+	ctx context.Context,
+	data []byte,
+) (*job.Response, error) {
+	if c.agentKeyStore == nil {
+		return nil, ErrNoAgentKeys
+	}
+
+	return verifyAgentResponse(ctx, c.agentKeyStore, data)
 }

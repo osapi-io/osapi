@@ -83,17 +83,15 @@ func extractChanged(
 }
 
 // unwrapJobEnvelope unwraps a SignedEnvelope from job data and verifies its
-// signature. Before Start loads the keys (pkiManager is nil), the raw data
-// passes through unchanged; the agent consumes no job until then, and only
-// tests call it so. Verification is fail-closed: a missing or
-// malformed envelope, an agent with no cached controller key, and a bad
-// signature are each rejected with a distinct error rather than executed.
+// signature. Verification is fail-closed: a missing or malformed envelope,
+// an agent with no keys or no cached controller key, and a bad signature
+// are each rejected with an error rather than executed.
 // Returns the inner payload or one of the Err* sentinels above.
 func (a *Agent) unwrapJobEnvelope(
 	data []byte,
 ) ([]byte, error) {
 	if a.pkiManager == nil {
-		return data, nil
+		return nil, ErrControllerKeyUnknown
 	}
 
 	var envelope job.SignedEnvelope

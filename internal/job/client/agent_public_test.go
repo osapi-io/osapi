@@ -61,7 +61,7 @@ func (s *AgentPublicTestSuite) SetupTest() {
 		JobsBucket: "jobs",
 	}
 	var err error
-	s.jobsClient, err = client.New(slog.Default(), s.mockNATSClient, opts)
+	s.jobsClient, err = newTrusted(s.mockNATSClient, opts)
 	s.Require().NoError(err)
 }
 
@@ -301,7 +301,10 @@ func (s *AgentPublicTestSuite) TestWriteJobResponse() {
 			s.mockNATSClient.EXPECT().
 				KVPut(gomock.Any(), "jobs", gomock.Any(), gomock.Any()).
 				DoAndReturn(func(_ context.Context, _, _ string, value []byte) (uint64, error) {
-					s.Require().NoError(json.Unmarshal(value, &stored))
+					// The agent stores its response signed.
+					var envelope job.SignedEnvelope
+					s.Require().NoError(json.Unmarshal(value, &envelope))
+					s.Require().NoError(json.Unmarshal(envelope.Payload, &stored))
 					return uint64(0), tt.kvError
 				})
 
@@ -521,7 +524,8 @@ func (s *AgentPublicTestSuite) TestGetJobData() {
 			},
 			validateFunc: func(data []byte, err error) {
 				s.NoError(err)
-				s.Equal([]byte(`{"test": "data"}`), data)
+				// The job as the controller wrote it: the agent verifies it.
+				s.Equal(controllerSigned([]byte(`{"test": "data"}`)), data)
 			},
 		},
 		{
@@ -773,7 +777,7 @@ func (s *AgentPublicTestSuite) TestCreateOrUpdateConsumer() {
 			jobsClient := s.jobsClient
 			if tt.withStore {
 				var err error
-				jobsClient, err = client.New(slog.Default(), s.mockNATSClient, &client.Options{
+				jobsClient, err = newTrusted(s.mockNATSClient, &client.Options{
 					JobsBucket: "jobs",
 					Consumers:  store,
 				})
@@ -886,7 +890,7 @@ func (s *AgentPublicTestSuite) newClientWithAllKVs(
 		FactsBucket:    factsBucket,
 		StateBucket:    stateBucket,
 	}
-	c, err := client.New(slog.Default(), s.mockNATSClient, opts)
+	c, err := newTrusted(s.mockNATSClient, opts)
 	s.Require().NoError(err)
 	return c
 }

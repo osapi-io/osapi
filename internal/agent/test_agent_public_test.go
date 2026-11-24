@@ -29,6 +29,7 @@ import (
 	"log/slog"
 
 	"github.com/avfs/avfs"
+	"github.com/avfs/avfs/vfs/memfs"
 	"go.uber.org/mock/gomock"
 
 	"github.com/osapi-io/osapi/internal/agent"
@@ -37,6 +38,7 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/job/client"
 	"github.com/osapi-io/osapi/internal/job/mocks"
+	"github.com/osapi-io/osapi/internal/pki"
 	"github.com/osapi-io/osapi/internal/provider/node/disk"
 	nodeHost "github.com/osapi-io/osapi/internal/provider/node/host"
 	"github.com/osapi-io/osapi/internal/provider/node/load"
@@ -92,7 +94,7 @@ func newTestAgent(
 		},
 	)
 
-	return agent.New(
+	a := agent.New(
 		p.appFs,
 		p.appConfig,
 		logger,
@@ -109,6 +111,38 @@ func newTestAgent(
 		p.execManager,
 		p.natsClient,
 	)
+	// The agent is enrolled: it trusts testControllerKey, and verifies
+	// each job that signedJob signs with it.
+	agent.SetAgentPKIManager(a, trustedPKI())
+
+	return a
+}
+
+// testControllerKey signs the jobs of the tests, as the controller does.
+var testControllerPub, testControllerPriv, _ = ed25519.GenerateKey(rand.Reader)
+
+// trustedPKI is the keys of an enrolled agent, which trusts
+// testControllerKey.
+func trustedPKI() *pki.Manager {
+	m := pki.New(memfs.New(), keyDir, "agent", pki.WithEncryptionKey())
+	_ = m.LoadOrGenerate()
+	m.SetControllerPublicKey(testControllerPub)
+
+	return m
+}
+
+// signedJob is the job data payload in the envelope that the controller
+// writes, signed with testControllerKey.
+func signedJob(
+	payload string,
+) []byte {
+	data, _ := json.Marshal(job.SignedEnvelope{
+		Payload:     []byte(payload),
+		Signature:   ed25519.Sign(testControllerPriv, []byte(payload)),
+		Fingerprint: "SHA256:test-controller",
+	})
+
+	return data
 }
 
 // keyDir is the PKI key directory of the test agents.

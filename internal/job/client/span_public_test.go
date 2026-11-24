@@ -23,7 +23,6 @@ package client_test
 import (
 	"context"
 	"errors"
-	"log/slog"
 	"testing"
 	"time"
 
@@ -128,7 +127,7 @@ func (s *SpanPublicTestSuite) TestQuery() {
 			if tc.timeout {
 				timeout = 50 * time.Millisecond
 			}
-			jobs, err := client.New(slog.Default(), s.nats, &client.Options{
+			jobs, err := newTrusted(s.nats, &client.Options{
 				Timeout: timeout, JobsBucket: "jobs", StreamName: "JOBS",
 				// The controller resolves a hostname to the agent's machine ID.
 				TargetResolver: func(context.Context, string) string { return "mid1" },
@@ -283,7 +282,7 @@ func (s *SpanPublicTestSuite) TestReads() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			jobs, err := client.New(slog.Default(), s.nats, &client.Options{
+			jobs, err := newTrusted(s.nats, &client.Options{
 				Timeout: time.Second, JobsBucket: "jobs", StreamName: "JOBS",
 				// One bucket for the jobs and the registry, so one mock serves both.
 				RegistryBucket: "jobs",
