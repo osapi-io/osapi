@@ -53,9 +53,6 @@ input always does the same thing.
   OpenTelemetry traces. A secret input never goes to a log or a trace.
 - 🔐 Root is a decision, not a default. Command exec is off until you turn it on.
   Work is under way so that the agent does not run as root.
-- 🔑 Secrets stay out of NATS (planned). A request names a secret as
-  `secret://<vault>/<key>`, and the agent gets the value sealed to its own key.
-  [Secrets] has the plan.
 - 🖥️ A dashboard, an API, a CLI and a Go SDK, from one binary.
 
 osapi manages the hostname, DNS, network interfaces and routes, NTP, the
@@ -159,7 +156,6 @@ The [MIT] License.
 [osapi-lab]: https://github.com/osapi-io/osapi-lab
 [osapi-orchestrator]: https://github.com/osapi-io/osapi-orchestrator
 [sdk]: https://osapi-io.github.io/osapi/sidebar/sdk
-[secrets]: https://osapi-io.github.io/osapi/sidebar/features/platform/secrets
 [specs]: https://github.com/osapi-io/specs
 [usage]: https://osapi-io.github.io/osapi/sidebar/usage
 [webmin]: https://webmin.com/

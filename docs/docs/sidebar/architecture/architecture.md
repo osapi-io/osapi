@@ -38,17 +38,17 @@ to behaviors one at a time. A behavior and a domain look the same to a client.
 
 ## This section
 
-| Page                                  | What it explains                                                             |
-| ------------------------------------- | ---------------------------------------------------------------------------- |
-| [Components](components.md)           | The NATS server, the controller and the agent: what each runs and needs      |
-| [How a request runs](request-flow.md) | From a command to a result: auth, targeting, jobs, statuses, broadcast       |
-| [Behaviors](behaviors.md)             | What a behavior is and what is built from one                                |
-| [State and storage](state.md)         | Every stream and bucket osapi keeps, and what losing each one means          |
-| [Security](security.md)               | Tokens and roles, agent identity, signing, privileges, audit                 |
-| [Secrets](secrets.md)                 | Vaults, secret references, and how the controller seals a value for an agent |
-| [Observability](observability.md)     | Traces, metrics, logs, health, heartbeats and conditions                     |
-| [Deployment](deployment.md)           | One host, many hosts, an external NATS cluster, namespaces                   |
-| [UI](ui.md)                           | The embedded management dashboard                                            |
+| Page                                  | What it explains                                                        |
+| ------------------------------------- | ----------------------------------------------------------------------- |
+| [Components](components.md)           | The NATS server, the controller and the agent: what each runs and needs |
+| [How a request runs](request-flow.md) | From a command to a result: auth, targeting, jobs, statuses, broadcast  |
+| [Behaviors](behaviors.md)             | What a behavior is and what is built from one                           |
+| [State and storage](state.md)         | Every stream and bucket osapi keeps, and what losing each one means     |
+| [Security](security.md)               | Tokens and roles, agent identity, signing, privileges, audit            |
+| [Secrets](secrets.md)                 | Where osapi keeps a secret now, and what is in progress                 |
+| [Observability](observability.md)     | Traces, metrics, logs, health, heartbeats and conditions                |
+| [Deployment](deployment.md)           | One host, many hosts, an external NATS cluster, namespaces              |
+| [UI](ui.md)                           | The embedded management dashboard                                       |
 
 These pages tell how an operator runs the system. The design of each part, and
 the reason for it, is in the
