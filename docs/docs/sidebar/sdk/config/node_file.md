@@ -13,14 +13,14 @@ to the host.
 
 | Method                                    | Returns                                   | Permission   | Description                                          |
 | ----------------------------------------- | ----------------------------------------- | ------------ | ---------------------------------------------------- |
-| [`Status(ctx, hostname, path)`](#status)  | `*Response[Collection[FileStatus]]`       | `file:read`  | Show whether a deployed file holds what osapi wrote. |
+| [`Get(ctx, hostname, path)`](#get)        | `*Response[Collection[FileStatus]]`       | `file:read`  | Show whether a deployed file holds what osapi wrote. |
 | [`Update(ctx, hostname, input)`](#update) | `*Response[Collection[FileUpdateResult]]` | `file:write` | Deploy an object of the object store to a path.      |
 | [`Delete(ctx, hostname, input)`](#delete) | `*Response[Collection[FileDeleteResult]]` | `file:write` | Remove a file that osapi deployed.                   |
 
-### Status
+### Get
 
 ```go
-func (s *NodeFileService) Status(
+func (s *NodeFileService) Get(
 	ctx context.Context,
 	hostname string,
 	path string,
@@ -38,10 +38,10 @@ It sends `GET /api/node/{hostname}/file`, and needs the permission `file:read`.
 
 The examples of the method's definition:
 
-A deployed file, `go run node_file.go status`:
+A deployed file, `go run node_file.go get`:
 
 ```go
-resp, err := c.NodeFile.Status(ctx, target, "/etc/osapi/file-example.conf")
+resp, err := c.NodeFile.Get(ctx, target, "/etc/osapi/file-example.conf")
 ```
 
 ### Update

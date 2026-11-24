@@ -31,6 +31,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/cli/reference"
 )
@@ -57,6 +58,15 @@ func (g group) CommandPath() []string {
 
 	return []string{g.name}
 }
+
+// areaGroup is a group whose operations are in an area, as an endpoint
+// group is.
+type areaGroup struct {
+	group
+	area area.Name
+}
+
+func (g areaGroup) GroupArea() area.Name { return g.area }
 
 type input struct {
 	Name string
@@ -251,6 +261,54 @@ func (s *CommandPublicTestSuite) TestAttachUnderPrefix() {
 	s.Equal("Zznode commands", found.Parent().Parent().Short, "a missing segment is made")
 	s.Same(node, found.Parent().Parent().Parent(), "a segment the parent has is used")
 	s.Equal("See its page.", found.Parent().Annotations[reference.Notes])
+}
+
+// TestGroupByArea: the help of a command lists each group under the label of
+// its area, in the order of area.All, and a parent whose child came first
+// still gets its own help and area.
+func (s *CommandPublicTestSuite) TestGroupByArea() {
+	child := areaGroup{
+		group: group{
+			name: "zzpassword",
+			doc:  "The password",
+			path: []string{"zzarea", "zzuser", "zzpassword"},
+		},
+		area: area.Security,
+	}
+	command.AddCommands(child, &cobra.Command{Use: "update"})
+	user := areaGroup{
+		group: group{name: "zzuser", doc: "The users", path: []string{"zzarea", "zzuser"}},
+		area:  area.Security,
+	}
+	command.AddCommands(user, &cobra.Command{Use: "list"})
+	svc := areaGroup{
+		group: group{name: "zzservice", doc: "The services", path: []string{"zzarea", "zzservice"}},
+		area:  area.Services,
+	}
+	command.AddCommands(svc, &cobra.Command{Use: "list"})
+	plain := group{name: "zzplain", doc: "No area", path: []string{"zzarea", "zzplain"}}
+	command.AddCommands(plain, &cobra.Command{Use: "list"})
+
+	parent := &cobra.Command{Use: "client"}
+	s.Require().NoError(command.Attach(parent, command.Deps{}))
+	node, _, err := parent.Find([]string{"zzarea"})
+	s.Require().NoError(err)
+	command.GroupByArea(node)
+
+	found, _, err := parent.Find([]string{"zzarea", "zzuser"})
+	s.Require().NoError(err)
+	s.Equal("The users", found.Short, "the parent's group fills in the command its child made")
+	s.Equal(string(area.Security), found.GroupID)
+
+	found, _, err = parent.Find([]string{"zzarea", "zzplain"})
+	s.Require().NoError(err)
+	s.Empty(found.GroupID, "a group of no area stays under Additional Commands")
+
+	titles := make([]string, 0, len(node.Groups()))
+	for _, g := range node.Groups() {
+		titles = append(titles, g.Title)
+	}
+	s.Equal([]string{"Services:", "Security:"}, titles, "the areas in the order of area.All")
 }
 
 func (s *CommandPublicTestSuite) TestAttach() {

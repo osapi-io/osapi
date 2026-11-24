@@ -23,15 +23,15 @@ func (s *APIDeletePublicTestSuite) SetupSuite() {
 	s.api = servertest.New(s.T(), "internal/behaviors/container/docker/gen/api.yaml", gen.Routes)
 }
 
-// TestDelete sends DELETE /api/node/{hostname}/container/docker/{name} and
-// checks each answer's response.
+// TestDelete sends DELETE /api/node/{hostname}/docker/{name} and checks each
+// answer's response.
 func (s *APIDeletePublicTestSuite) TestDelete() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when the example \"Remove a container\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/server1/container/docker/osapitest",
+				Path:   "/api/node/server1/docker/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token: servertest.Write,
@@ -48,7 +48,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 			Name: "when the example \"Remove a container\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/_all/container/docker/osapitest",
+				Path:   "/api/node/_all/docker/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token: servertest.Write,
@@ -67,7 +67,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 			Name: "when the example \"A container that the host does not have\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/server1/container/docker/osapitest",
+				Path:   "/api/node/server1/docker/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token: servertest.Write,
@@ -84,7 +84,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 			Name: "when the example \"A container that the host does not have\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/_all/container/docker/osapitest",
+				Path:   "/api/node/_all/docker/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token: servertest.Write,
@@ -103,7 +103,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/server1/container/docker/osapitest",
+				Path:   "/api/node/server1/docker/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token: servertest.Write,
@@ -120,7 +120,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 			Name: "when the host fails it, its row says failed",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/server1/container/docker/osapitest",
+				Path:   "/api/node/server1/docker/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token: servertest.Write,
@@ -137,7 +137,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 			Name: "when the host never answers, its row says timeout",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/server1/container/docker/osapitest",
+				Path:   "/api/node/server1/docker/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token: servertest.Write,
@@ -154,7 +154,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 			Name: "when the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/server1/container/docker/osapitest",
+				Path:   "/api/node/server1/docker/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token: servertest.Write,
@@ -169,7 +169,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 			Name: "when broadcast and the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/_all/container/docker/osapitest",
+				Path:   "/api/node/_all/docker/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token: servertest.Write,
@@ -184,7 +184,7 @@ func (s *APIDeletePublicTestSuite) TestDelete() {
 			Name: "when the host does not have it, it is a 404",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/server1/container/docker/osapitest",
+				Path:   "/api/node/server1/docker/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token: servertest.Write,
@@ -206,7 +206,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteValidationHTTP() {
 			Name: "when the target is not an agent, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/nowhere/container/docker/osapitest",
+				Path:   "/api/node/nowhere/docker/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token:    servertest.Write,
@@ -216,7 +216,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteValidationHTTP() {
 			Name: "when the target is empty, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node//container/docker/osapitest",
+				Path:   "/api/node//docker/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token:    servertest.Write,
@@ -226,7 +226,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteValidationHTTP() {
 			Name: "when sent a name that is an option, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/server1/container/docker/-f",
+				Path:   "/api/node/server1/docker/-f",
 				Body:   `{"name":"-f"}`,
 			},
 			Token:    servertest.Write,
@@ -242,7 +242,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteRBACHTTP() {
 			Name: "when there is no token, it is a 401",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/server1/container/docker/osapitest",
+				Path:   "/api/node/server1/docker/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token:    servertest.NoToken,
@@ -252,7 +252,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteRBACHTTP() {
 			Name: "when the token lacks docker:write, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/server1/container/docker/osapitest",
+				Path:   "/api/node/server1/docker/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token:    servertest.Lacking,
@@ -262,7 +262,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteRBACHTTP() {
 			Name: "when the token has only the read role, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/server1/container/docker/osapitest",
+				Path:   "/api/node/server1/docker/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token:    servertest.Read,
@@ -272,7 +272,7 @@ func (s *APIDeletePublicTestSuite) TestDeleteRBACHTTP() {
 			Name: "when the token has the admin role, the request runs",
 			Request: servertest.Request{
 				Method: http.MethodDelete,
-				Path:   "/api/node/server1/container/docker/osapitest",
+				Path:   "/api/node/server1/docker/osapitest",
 				Body:   `{"name":"osapitest"}`,
 			},
 			Token: servertest.Admin,

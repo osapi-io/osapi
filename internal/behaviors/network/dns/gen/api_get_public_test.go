@@ -23,15 +23,15 @@ func (s *APIGetPublicTestSuite) SetupSuite() {
 	s.api = servertest.New(s.T(), "internal/behaviors/network/dns/gen/api.yaml", gen.Routes)
 }
 
-// TestGet sends GET /api/node/{hostname}/network/dns/{interface_name} and
-// checks each answer's response.
+// TestGet sends GET /api/node/{hostname}/dns/{interface_name} and checks each
+// answer's response.
 func (s *APIGetPublicTestSuite) TestGet() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when the example \"An interface with servers and a domain\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -47,7 +47,7 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			Name: "when the example \"An interface with servers and a domain\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/_all/network/dns/osapi0",
+				Path:   "/api/node/_all/dns/osapi0",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -65,7 +65,7 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			Name: "when the example \"A container with no resolvers per interface\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -81,7 +81,7 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			Name: "when the example \"A container with no resolvers per interface\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/_all/network/dns/osapi0",
+				Path:   "/api/node/_all/dns/osapi0",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -99,7 +99,7 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			Name: "when the example \"A Mac\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/network/dns/en0",
+				Path:   "/api/node/server1/dns/en0",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -115,7 +115,7 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			Name: "when the example \"A Mac\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/_all/network/dns/en0",
+				Path:   "/api/node/_all/dns/en0",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -133,7 +133,7 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -149,7 +149,7 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			Name: "when the host fails it, its row says failed",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -165,7 +165,7 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			Name: "when the host never answers, its row says timeout",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -181,7 +181,7 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			Name: "when the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -195,7 +195,7 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			Name: "when broadcast and the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/_all/network/dns/osapi0",
+				Path:   "/api/node/_all/dns/osapi0",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -209,7 +209,7 @@ func (s *APIGetPublicTestSuite) TestGet() {
 			Name: "when the host does not have it, it is a 404",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
@@ -230,7 +230,7 @@ func (s *APIGetPublicTestSuite) TestGetValidationHTTP() {
 			Name: "when the target is not an agent, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/nowhere/network/dns/osapi0",
+				Path:   "/api/node/nowhere/dns/osapi0",
 			},
 			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
@@ -239,7 +239,7 @@ func (s *APIGetPublicTestSuite) TestGetValidationHTTP() {
 			Name: "when the target is empty, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node//network/dns/osapi0",
+				Path:   "/api/node//dns/osapi0",
 			},
 			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
@@ -248,7 +248,7 @@ func (s *APIGetPublicTestSuite) TestGetValidationHTTP() {
 			Name: "when sent an interface name that is not alphanumeric, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/network/dns/osapi0%3Breboot",
+				Path:   "/api/node/server1/dns/osapi0%3Breboot",
 			},
 			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
@@ -263,7 +263,7 @@ func (s *APIGetPublicTestSuite) TestGetRBACHTTP() {
 			Name: "when there is no token, it is a 401",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 			},
 			Token:    servertest.NoToken,
 			WantCode: http.StatusUnauthorized,
@@ -272,7 +272,7 @@ func (s *APIGetPublicTestSuite) TestGetRBACHTTP() {
 			Name: "when the token lacks dns:read, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 			},
 			Token:    servertest.Lacking,
 			WantCode: http.StatusForbidden,
@@ -281,7 +281,7 @@ func (s *APIGetPublicTestSuite) TestGetRBACHTTP() {
 			Name: "when the token has the admin role, the request runs",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/network/dns/osapi0",
+				Path:   "/api/node/server1/dns/osapi0",
 			},
 			Token: servertest.Admin,
 			Job: servertest.Query(

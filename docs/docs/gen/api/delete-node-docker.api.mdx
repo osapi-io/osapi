@@ -1,0 +1,69 @@
+---
+id: delete-node-docker
+title: "Remove a container"
+description: "Runs docker rm -f, which also removes a container that runs: a delete leaves no container of the name. A container that the host does not have reports changed: false."
+sidebar_label: "Remove a container"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "delete api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Remove a container"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"delete"}
+  path={"/api/node/{hostname}/docker/{name}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Runs docker rm -f, which also removes a container that runs: a delete leaves no container of the name. A container that the host does not have reports changed: false.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./delete-node-docker.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./delete-node-docker.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./delete-node-docker.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

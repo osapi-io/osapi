@@ -1,0 +1,69 @@
+---
+id: get-node-docker
+title: "List the containers of the host"
+description: "Reads each container through gohai's docker collector, which runs docker ps and docker inspect. state limits the list to the running or the stopped ones. A host whose docker does not answer reports skipped. The environment of a container shows only the names of its variables: osapi never reads their values."
+sidebar_label: "List the containers of the host"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "get api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"List the containers of the host"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/api/node/{hostname}/docker"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Reads each container through gohai's docker collector, which runs docker ps and docker inspect. state limits the list to the running or the stopped ones. A host whose docker does not answer reports skipped. The environment of a container shows only the names of its variables: osapi never reads their values.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./get-node-docker.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./get-node-docker.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./get-node-docker.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

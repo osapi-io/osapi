@@ -23,15 +23,15 @@ func (s *APIExecPublicTestSuite) SetupSuite() {
 	s.api = servertest.New(s.T(), "internal/behaviors/container/docker/gen/api.yaml", gen.Routes)
 }
 
-// TestExec sends POST /api/node/{hostname}/container/docker/{name}/exec and
-// checks each answer's response.
+// TestExec sends POST /api/node/{hostname}/docker/{name}/exec and checks each
+// answer's response.
 func (s *APIExecPublicTestSuite) TestExec() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when the example \"Run a command\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/exec",
+				Path:   "/api/node/server1/docker/osapitest/exec",
 				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
 			},
 			Token: servertest.Admin,
@@ -51,7 +51,7 @@ func (s *APIExecPublicTestSuite) TestExec() {
 			Name: "when the example \"Run a command\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/_all/container/docker/osapitest/exec",
+				Path:   "/api/node/_all/docker/osapitest/exec",
 				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
 			},
 			Token: servertest.Admin,
@@ -73,7 +73,7 @@ func (s *APIExecPublicTestSuite) TestExec() {
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/exec",
+				Path:   "/api/node/server1/docker/osapitest/exec",
 				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
 			},
 			Token: servertest.Admin,
@@ -93,7 +93,7 @@ func (s *APIExecPublicTestSuite) TestExec() {
 			Name: "when the host fails it, its row says failed",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/exec",
+				Path:   "/api/node/server1/docker/osapitest/exec",
 				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
 			},
 			Token: servertest.Admin,
@@ -113,7 +113,7 @@ func (s *APIExecPublicTestSuite) TestExec() {
 			Name: "when the host never answers, its row says timeout",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/exec",
+				Path:   "/api/node/server1/docker/osapitest/exec",
 				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
 			},
 			Token: servertest.Admin,
@@ -133,7 +133,7 @@ func (s *APIExecPublicTestSuite) TestExec() {
 			Name: "when the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/exec",
+				Path:   "/api/node/server1/docker/osapitest/exec",
 				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
 			},
 			Token: servertest.Admin,
@@ -151,7 +151,7 @@ func (s *APIExecPublicTestSuite) TestExec() {
 			Name: "when broadcast and the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/_all/container/docker/osapitest/exec",
+				Path:   "/api/node/_all/docker/osapitest/exec",
 				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
 			},
 			Token: servertest.Admin,
@@ -169,7 +169,7 @@ func (s *APIExecPublicTestSuite) TestExec() {
 			Name: "when the host does not have it, it is a 404",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/exec",
+				Path:   "/api/node/server1/docker/osapitest/exec",
 				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
 			},
 			Token: servertest.Admin,
@@ -194,7 +194,7 @@ func (s *APIExecPublicTestSuite) TestExecValidationHTTP() {
 			Name: "when the target is not an agent, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/nowhere/container/docker/osapitest/exec",
+				Path:   "/api/node/nowhere/docker/osapitest/exec",
 				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
 			},
 			Token:    servertest.Admin,
@@ -204,7 +204,7 @@ func (s *APIExecPublicTestSuite) TestExecValidationHTTP() {
 			Name: "when the target is empty, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node//container/docker/osapitest/exec",
+				Path:   "/api/node//docker/osapitest/exec",
 				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
 			},
 			Token:    servertest.Admin,
@@ -214,7 +214,7 @@ func (s *APIExecPublicTestSuite) TestExecValidationHTTP() {
 			Name: "when command is missing, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/exec",
+				Path:   "/api/node/server1/docker/osapitest/exec",
 				Body:   `{"name":"osapitest","command":null}`,
 			},
 			Token:    servertest.Admin,
@@ -224,7 +224,7 @@ func (s *APIExecPublicTestSuite) TestExecValidationHTTP() {
 			Name: "when the body is not JSON, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/exec",
+				Path:   "/api/node/server1/docker/osapitest/exec",
 				Body:   `{`,
 			},
 			Token:    servertest.Admin,
@@ -234,7 +234,7 @@ func (s *APIExecPublicTestSuite) TestExecValidationHTTP() {
 			Name: "when command has the wrong type, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/exec",
+				Path:   "/api/node/server1/docker/osapitest/exec",
 				Body:   `{"command":"one"}`,
 			},
 			Token:    servertest.Admin,
@@ -244,7 +244,7 @@ func (s *APIExecPublicTestSuite) TestExecValidationHTTP() {
 			Name: "when sent an empty command, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/exec",
+				Path:   "/api/node/server1/docker/osapitest/exec",
 				Body:   `{"name":"osapitest","command":[]}`,
 			},
 			Token:    servertest.Admin,
@@ -254,7 +254,7 @@ func (s *APIExecPublicTestSuite) TestExecValidationHTTP() {
 			Name: "when sent no command, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/exec",
+				Path:   "/api/node/server1/docker/osapitest/exec",
 				Body:   `{"name":"osapitest","command":null}`,
 			},
 			Token:    servertest.Admin,
@@ -264,7 +264,7 @@ func (s *APIExecPublicTestSuite) TestExecValidationHTTP() {
 			Name: "when sent a name that is an option, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/-f/exec",
+				Path:   "/api/node/server1/docker/-f/exec",
 				Body:   `{"name":"-f","command":["true"]}`,
 			},
 			Token:    servertest.Admin,
@@ -274,7 +274,7 @@ func (s *APIExecPublicTestSuite) TestExecValidationHTTP() {
 			Name: "when sent a working directory that is not absolute, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/exec",
+				Path:   "/api/node/server1/docker/osapitest/exec",
 				Body:   `{"name":"osapitest","command":["pwd"],"working_dir":"tmp"}`,
 			},
 			Token:    servertest.Admin,
@@ -290,7 +290,7 @@ func (s *APIExecPublicTestSuite) TestExecRBACHTTP() {
 			Name: "when there is no token, it is a 401",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/exec",
+				Path:   "/api/node/server1/docker/osapitest/exec",
 				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
 			},
 			Token:    servertest.NoToken,
@@ -300,7 +300,7 @@ func (s *APIExecPublicTestSuite) TestExecRBACHTTP() {
 			Name: "when the token lacks docker:exec, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/exec",
+				Path:   "/api/node/server1/docker/osapitest/exec",
 				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
 			},
 			Token:    servertest.Lacking,
@@ -310,7 +310,7 @@ func (s *APIExecPublicTestSuite) TestExecRBACHTTP() {
 			Name: "when the token has only the read role, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/exec",
+				Path:   "/api/node/server1/docker/osapitest/exec",
 				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
 			},
 			Token:    servertest.Read,
@@ -320,7 +320,7 @@ func (s *APIExecPublicTestSuite) TestExecRBACHTTP() {
 			Name: "when the token has the write role, it is a 403: the method is admin only",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/exec",
+				Path:   "/api/node/server1/docker/osapitest/exec",
 				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
 			},
 			Token:    servertest.Write,
@@ -330,7 +330,7 @@ func (s *APIExecPublicTestSuite) TestExecRBACHTTP() {
 			Name: "when the token has the admin role, the request runs",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker/osapitest/exec",
+				Path:   "/api/node/server1/docker/osapitest/exec",
 				Body:   `{"name":"osapitest","command":["echo","hello"]}`,
 			},
 			Token: servertest.Admin,

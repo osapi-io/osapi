@@ -82,7 +82,6 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 	tests := []struct {
 		name         string
 		setup        func() string
-		group        string
 		bname        string
 		goPackage    string
 		doc          string
@@ -168,40 +167,6 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 			},
 		},
 		{
-			name:  "when a group is given, it nests the behavior under it",
-			setup: func() string { return s.checkout(allGo) },
-			group: "network",
-			bname: "neighbors",
-			doc:   "The host's ARP neighbors",
-			validateFunc: func(root string, files []string) {
-				s.Contains(files, "internal/behaviors/network/neighbors/behavior.go")
-
-				def, err := os.ReadFile(
-					filepath.Join(root, "internal/behaviors/network/neighbors/behavior.go"))
-				s.Require().NoError(err)
-				s.Contains(string(def), `behavior.Under(behavior.GroupNetwork),`)
-
-				test, err := os.ReadFile(
-					filepath.Join(
-						root,
-						"internal/behaviors/network/neighbors/behavior_public_test.go",
-					),
-				)
-				s.Require().NoError(err)
-				s.Contains(
-					string(test),
-					`"github.com/osapi-io/osapi/internal/behaviors/network/neighbors"`,
-				)
-
-				all, err := os.ReadFile(filepath.Join(root, "internal/behaviors/all/all.go"))
-				s.Require().NoError(err)
-				s.Contains(
-					string(all),
-					`_ "github.com/osapi-io/osapi/internal/behaviors/network/neighbors"`,
-				)
-			},
-		},
-		{
 			name:     "when a behavior is required, it writes the wiring of each",
 			setup:    func() string { return s.checkout(allGo) },
 			bname:    "motd",
@@ -243,22 +208,6 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 			doc:      "x",
 			requires: []string{"empty"},
 			wantErr:  `requires "empty", which has no method to call`,
-		},
-		{
-			name:    "when the group is not a Go package name",
-			setup:   func() string { return s.checkout(allGo) },
-			group:   "Net-work",
-			bname:   "neighbors",
-			doc:     "x",
-			wantErr: "group \"Net-work\" must be lowercase",
-		},
-		{
-			name:    "when the group is not one of KnownGroups",
-			setup:   func() string { return s.checkout(allGo) },
-			group:   "storage",
-			bname:   "neighbors",
-			doc:     "x",
-			wantErr: "group \"storage\" is not one of KnownGroups",
 		},
 		{
 			name:    "when the name is not a Go package name",
@@ -379,7 +328,7 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 			root := tc.setup()
 
 			files, err := behavior.Scaffold(
-				root, tc.group, tc.bname, tc.goPackage, tc.doc, tc.requires)
+				root, tc.bname, tc.goPackage, tc.doc, tc.requires)
 
 			if tc.wantErr != "" {
 				s.ErrorContains(err, tc.wantErr)
@@ -399,7 +348,6 @@ func (s *ScaffoldPublicTestSuite) TestScaffold() {
 func (s *ScaffoldPublicTestSuite) TestGolden() {
 	tests := []struct {
 		name     string
-		group    string
 		bname    string
 		doc      string
 		requires []string
@@ -408,12 +356,6 @@ func (s *ScaffoldPublicTestSuite) TestGolden() {
 			name:  "motd",
 			bname: "motd",
 			doc:   `The "message" shown at login`,
-		},
-		{
-			name:  "neighbors",
-			group: "network",
-			bname: "neighbors",
-			doc:   "The neighbor table",
 		},
 		{
 			name:     "ntpconf",
@@ -427,7 +369,7 @@ func (s *ScaffoldPublicTestSuite) TestGolden() {
 		s.Run(tc.name, func() {
 			root := s.checkout(allGo)
 
-			files, err := behavior.Scaffold(root, tc.group, tc.bname, "", tc.doc, tc.requires)
+			files, err := behavior.Scaffold(root, tc.bname, "", tc.doc, tc.requires)
 			s.Require().NoError(err)
 
 			for _, rel := range files {

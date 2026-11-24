@@ -48,7 +48,7 @@ func check(
 	_, dest, _ := net.ParseCIDR(r.To)
 	if ones, _ := dest.Mask.Size(); ones == 0 {
 		return fmt.Errorf("%s is a default route, which osapi does not write: "+
-			"give the interface a gateway with osapi client node network interface", r.To)
+			"give the interface a gateway with osapi client node interface", r.To)
 	}
 	if (net.ParseIP(r.Via).To4() == nil) != (dest.IP.To4() == nil) {
 		return fmt.Errorf("the gateway %s is not an address of the family of %s", r.Via, r.To)

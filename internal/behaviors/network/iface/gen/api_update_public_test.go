@@ -23,15 +23,15 @@ func (s *APIUpdatePublicTestSuite) SetupSuite() {
 	s.api = servertest.New(s.T(), "internal/behaviors/network/iface/gen/api.yaml", gen.Routes)
 }
 
-// TestUpdate sends PUT /api/node/{hostname}/network/interface/{name} and
-// checks each answer's response.
+// TestUpdate sends PUT /api/node/{hostname}/interface/{name} and checks each
+// answer's response.
 func (s *APIUpdatePublicTestSuite) TestUpdate() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when the example \"Move an interface to DHCP\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/network/interface/osapi0",
+				Path:   "/api/node/server1/interface/osapi0",
 				Body:   `{"name":"osapi0","dhcp4":true}`,
 			},
 			Token: servertest.Write,
@@ -51,7 +51,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Name: "when the example \"Move an interface to DHCP\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/_all/network/interface/osapi0",
+				Path:   "/api/node/_all/interface/osapi0",
 				Body:   `{"name":"osapi0","dhcp4":true}`,
 			},
 			Token: servertest.Write,
@@ -73,7 +73,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/network/interface/osapi0",
+				Path:   "/api/node/server1/interface/osapi0",
 				Body:   `{"name":"osapi0","dhcp4":true}`,
 			},
 			Token: servertest.Write,
@@ -93,7 +93,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Name: "when the host fails it, its row says failed",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/network/interface/osapi0",
+				Path:   "/api/node/server1/interface/osapi0",
 				Body:   `{"name":"osapi0","dhcp4":true}`,
 			},
 			Token: servertest.Write,
@@ -113,7 +113,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Name: "when the host never answers, its row says timeout",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/network/interface/osapi0",
+				Path:   "/api/node/server1/interface/osapi0",
 				Body:   `{"name":"osapi0","dhcp4":true}`,
 			},
 			Token: servertest.Write,
@@ -133,7 +133,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Name: "when the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/network/interface/osapi0",
+				Path:   "/api/node/server1/interface/osapi0",
 				Body:   `{"name":"osapi0","dhcp4":true}`,
 			},
 			Token: servertest.Write,
@@ -151,7 +151,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Name: "when broadcast and the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/_all/network/interface/osapi0",
+				Path:   "/api/node/_all/interface/osapi0",
 				Body:   `{"name":"osapi0","dhcp4":true}`,
 			},
 			Token: servertest.Write,
@@ -169,7 +169,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Name: "when the host does not have it, it is a 404",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/network/interface/osapi0",
+				Path:   "/api/node/server1/interface/osapi0",
 				Body:   `{"name":"osapi0","dhcp4":true}`,
 			},
 			Token: servertest.Write,
@@ -194,7 +194,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Name: "when the target is not an agent, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/nowhere/network/interface/osapi0",
+				Path:   "/api/node/nowhere/interface/osapi0",
 				Body:   `{"name":"osapi0","dhcp4":true}`,
 			},
 			Token:    servertest.Write,
@@ -204,7 +204,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Name: "when the target is empty, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node//network/interface/osapi0",
+				Path:   "/api/node//interface/osapi0",
 				Body:   `{"name":"osapi0","dhcp4":true}`,
 			},
 			Token:    servertest.Write,
@@ -214,7 +214,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Name: "when the body is not JSON, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/network/interface/osapi0",
+				Path:   "/api/node/server1/interface/osapi0",
 				Body:   `{`,
 			},
 			Token:    servertest.Write,
@@ -224,7 +224,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Name: "when dhcp4 has the wrong type, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/network/interface/osapi0",
+				Path:   "/api/node/server1/interface/osapi0",
 				Body:   `{"dhcp4":[]}`,
 			},
 			Token:    servertest.Write,
@@ -234,7 +234,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Name: "when sent an address without a prefix, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/network/interface/osapi0",
+				Path:   "/api/node/server1/interface/osapi0",
 				Body:   `{"name":"osapi0","addresses":["10.0.1.5"]}`,
 			},
 			Token:    servertest.Write,
@@ -244,7 +244,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Name: "when sent more than 16 addresses, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/network/interface/osapi0",
+				Path:   "/api/node/server1/interface/osapi0",
 				Body:   `{"name":"osapi0","addresses":["10.0.1.5/24","10.0.1.5/24","10.0.1.5/24","10.0.1.5/24","10.0.1.5/24","10.0.1.5/24","10.0.1.5/24","10.0.1.5/24","10.0.1.5/24","10.0.1.5/24","10.0.1.5/24","10.0.1.5/24","10.0.1.5/24","10.0.1.5/24","10.0.1.5/24","10.0.1.5/24","10.0.1.5/24"]}`,
 			},
 			Token:    servertest.Write,
@@ -254,7 +254,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Name: "when sent an IPv4 gateway that is not IPv4, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/network/interface/osapi0",
+				Path:   "/api/node/server1/interface/osapi0",
 				Body:   `{"name":"osapi0","gateway4":"fe80::1"}`,
 			},
 			Token:    servertest.Write,
@@ -264,7 +264,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Name: "when sent an IPv6 gateway that is not IPv6, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/network/interface/osapi0",
+				Path:   "/api/node/server1/interface/osapi0",
 				Body:   `{"name":"osapi0","gateway6":"10.0.1.1"}`,
 			},
 			Token:    servertest.Write,
@@ -274,7 +274,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Name: "when sent an MTU below 68, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/network/interface/osapi0",
+				Path:   "/api/node/server1/interface/osapi0",
 				Body:   `{"name":"osapi0","mtu":10}`,
 			},
 			Token:    servertest.Write,
@@ -284,7 +284,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Name: "when sent an MTU above 9000, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/network/interface/osapi0",
+				Path:   "/api/node/server1/interface/osapi0",
 				Body:   `{"name":"osapi0","mtu":9001}`,
 			},
 			Token:    servertest.Write,
@@ -294,7 +294,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Name: "when sent a MAC address netplan does not take, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/network/interface/osapi0",
+				Path:   "/api/node/server1/interface/osapi0",
 				Body:   `{"name":"osapi0","mac_address":"0000.5e00.5301"}`,
 			},
 			Token:    servertest.Write,
@@ -304,7 +304,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Name: "when sent a name that is not an interface name, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/network/interface/eth0%3Breboot",
+				Path:   "/api/node/server1/interface/eth0%3Breboot",
 				Body:   `{"name":"eth0;reboot"}`,
 			},
 			Token:    servertest.Write,
@@ -320,7 +320,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateRBACHTTP() {
 			Name: "when there is no token, it is a 401",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/network/interface/osapi0",
+				Path:   "/api/node/server1/interface/osapi0",
 				Body:   `{"name":"osapi0","dhcp4":true}`,
 			},
 			Token:    servertest.NoToken,
@@ -330,7 +330,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateRBACHTTP() {
 			Name: "when the token lacks interface:write, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/network/interface/osapi0",
+				Path:   "/api/node/server1/interface/osapi0",
 				Body:   `{"name":"osapi0","dhcp4":true}`,
 			},
 			Token:    servertest.Lacking,
@@ -340,7 +340,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateRBACHTTP() {
 			Name: "when the token has only the read role, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/network/interface/osapi0",
+				Path:   "/api/node/server1/interface/osapi0",
 				Body:   `{"name":"osapi0","dhcp4":true}`,
 			},
 			Token:    servertest.Read,
@@ -350,7 +350,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateRBACHTTP() {
 			Name: "when the token has the admin role, the request runs",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/network/interface/osapi0",
+				Path:   "/api/node/server1/interface/osapi0",
 				Body:   `{"name":"osapi0","dhcp4":true}`,
 			},
 			Token: servertest.Admin,

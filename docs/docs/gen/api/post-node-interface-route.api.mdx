@@ -1,0 +1,69 @@
+---
+id: post-node-interface-route
+title: "Add a static route to an interface"
+description: "Adds the route to the interface's netplan file, such as /etc/netplan/osapi-osapi0-routes.yaml for osapi0, under a netplan definition that is the interface's own, and applies it. A route osapi already has, the same, does not change; one to the same destination by another gateway or metric is refused: update changes it. A default route is refused: the interface behavior sets the gateway. An interface the host does not have is not found. An interface that a match defines, such as cloud-init's all for en*, is refused, because the route would go on each interface the match takes. It runs on the Debian family, and elsewhere, and in a container, reports skipped."
+sidebar_label: "Add a static route to an interface"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "post api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Add a static route to an interface"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/api/node/{hostname}/interface/{name}/route"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Adds the route to the interface's netplan file, such as /etc/netplan/osapi-osapi0-routes.yaml for osapi0, under a netplan definition that is the interface's own, and applies it. A route osapi already has, the same, does not change; one to the same destination by another gateway or metric is refused: update changes it. A default route is refused: the interface behavior sets the gateway. An interface the host does not have is not found. An interface that a match defines, such as cloud-init's all for en*, is refused, because the route would go on each interface the match takes. It runs on the Debian family, and elsewhere, and in a container, reports skipped.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./post-node-interface-route.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./post-node-interface-route.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./post-node-interface-route.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

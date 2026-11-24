@@ -10,14 +10,13 @@ title: User
 
 ## Methods
 
-| Method                                    | Returns                              | Permission     | Description                 |
-| ----------------------------------------- | ------------------------------------ | -------------- | --------------------------- |
-| [`List(ctx, hostname)`](#list)            | `*Response[Collection[UserAccount]]` | `user:read`    | List the users of the host. |
-| [`Create(ctx, hostname, input)`](#create) | `*Response[Collection[UserResult]]`  | `user:write`   | Add a user.                 |
-| [`Get(ctx, hostname, name)`](#get)        | `*Response[Collection[UserAccount]]` | `user:read`    | Get one user.               |
-| [`Update(ctx, hostname, input)`](#update) | `*Response[Collection[UserResult]]`  | `user:write`   | Change a user.              |
-| [`Delete(ctx, hostname, name)`](#delete)  | `*Response[Collection[UserResult]]`  | `user:write`   | Remove a user.              |
-| [`Passwd(ctx, hostname, input)`](#passwd) | `*Response[Collection[UserResult]]`  | `user:execute` | Set the password of a user. |
+| Method                                    | Returns                              | Permission   | Description                 |
+| ----------------------------------------- | ------------------------------------ | ------------ | --------------------------- |
+| [`List(ctx, hostname)`](#list)            | `*Response[Collection[UserAccount]]` | `user:read`  | List the users of the host. |
+| [`Create(ctx, hostname, input)`](#create) | `*Response[Collection[UserResult]]`  | `user:write` | Add a user.                 |
+| [`Get(ctx, hostname, name)`](#get)        | `*Response[Collection[UserAccount]]` | `user:read`  | Get one user.               |
+| [`Update(ctx, hostname, input)`](#update) | `*Response[Collection[UserResult]]`  | `user:write` | Change a user.              |
+| [`Delete(ctx, hostname, name)`](#delete)  | `*Response[Collection[UserResult]]`  | `user:write` | Remove a user.              |
 
 ### List
 
@@ -202,38 +201,6 @@ Remove a user, `go run user.go delete`:
 resp, err := c.User.Delete(ctx, target, "osapitest")
 ```
 
-### Passwd
-
-```go
-func (s *UserService) Passwd(
-	ctx context.Context,
-	hostname string,
-	input UserPasswdInput,
-) (*Response[Collection[UserResult]], error)
-```
-
-Set the password of a user.
-
-Sets the password with chpasswd -e, from its hash on standard input. The
-controller hashes the password, so the job and NATS have only the hash. Each run
-makes a new hash, so it always reports changed: true. A user that the host does
-not have is not found. It runs on the Debian family only, and elsewhere reports
-skipped.
-
-It sends `POST /api/node/{hostname}/user/{name}/passwd`, and needs the
-permission `user:execute`.
-
-The examples of the method's definition:
-
-Set a password, `go run user.go passwd`:
-
-```go
-resp, err := c.User.Passwd(ctx, target, client.UserPasswdInput{
-	Name:     "osapitest",
-	Password: "osapi-test-password",
-})
-```
-
 ## Types
 
 The fields of each type are the properties of its schema in the API's spec.
@@ -266,13 +233,6 @@ The fields of each type are the properties of its schema in the API's spec.
 | `System`   | `bool`     | Add it as a system user, with an ID from the system range.           |
 | `UID`      | `int`      | Its numeric user ID; the system assigns one when it is 0.            |
 
-### UserPasswdInput
-
-| Field      | Type     | Description                                             |
-| ---------- | -------- | ------------------------------------------------------- |
-| `Name`     | `string` | The name of the path. The user, such as alice.          |
-| `Password` | `string` | The new password, which osapi hashes on the controller. |
-
 ### UserResult
 
 | Field      | Type     | Description                                                                            |
@@ -287,7 +247,7 @@ The fields of each type are the properties of its schema in the API's spec.
 
 | Field    | Type       | Description                                                                                                            |
 | -------- | ---------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `Name`   | `string`   | The name of the path. The user, such as alice.                                                                         |
+| `Name`   | `string`   | The name of the path. The user to remove, with its home directory, such as alice.                                      |
 | `Groups` | `[]string` | The groups it is a member of, which replace the groups it has.                                                         |
 | `Home`   | `string`   | Its home directory, which usermod moves the files to.                                                                  |
 | `Lock`   | `string`   | Whether to refuse logins with its password: locked refuses them, unlocked allows them. It is one of: locked, unlocked. |

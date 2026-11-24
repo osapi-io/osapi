@@ -31,5 +31,4 @@ type Provider interface {
 	Create(ctx context.Context, in CreateInput) (bool, error)
 	Update(ctx context.Context, in UpdateInput) (bool, error)
 	Delete(ctx context.Context, name string) (bool, error)
-	SetPassword(ctx context.Context, name string, hash string) error
 }

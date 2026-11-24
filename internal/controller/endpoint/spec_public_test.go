@@ -76,6 +76,7 @@ var notDSL = map[string]bool{
 	"Input":                   true,
 	"GroupName:Group":         true,
 	"GroupDoc:Group":          true,
+	"GroupArea:Group":         true,
 	"GroupNotes:Group":        true,
 	"GroupLong:Group":         true,
 	"SubDoc:Group":            true,

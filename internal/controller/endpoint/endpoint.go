@@ -324,6 +324,12 @@ func (g *Group) GroupName() string {
 	return g.Name
 }
 
+// GroupArea is the group's Area, for the command layer: the heading that
+// its command is under in the help of its parent.
+func (g *Group) GroupArea() area.Name {
+	return g.Area
+}
+
 // GroupDoc is the group's Doc, for the command layer.
 func (g *Group) GroupDoc() string {
 	return g.Doc

@@ -4,11 +4,10 @@ Write a new behavior's standard layout in an osapi checkout.
 
 Before you change anything, the result builds, validates and passes every test.
 Then change the types, the provider and the examples to what the behavior
-manages. Writes nothing when the name is taken. A behavior that belongs to a
-group, such as `network`, is nested under it: its routes are
-`/api/node/{hostname}/network/<name>`, its commands
-`osapi client node network <name>`, and its directory
-`internal/behaviors/network/<name>/`. \[Your first
+manages. Writes nothing when the name is taken. The behavior is directly under
+node: its routes are `/api/node/{hostname}/<name>` and its commands
+`osapi client node <name>`. To nest it under a parent, add `behavior.Of` or
+`behavior.Under` to its definition. \[Your first
 behavior](../../../../development/your-first-behavior.md) walks through the
 rest.
 
@@ -32,7 +31,6 @@ osapi dsl behavior create [flags]
 ```bash
 osapi dsl behavior create --name motd --description "The message shown at login"
 osapi dsl behavior create --name motd --description "The message shown at login" --root ~/src/osapi
-osapi dsl behavior create --group network --name neighbors --description "The host's ARP neighbors"
 osapi dsl behavior create --name ntpconf --description "The NTP config" --requires managedfile
 ```
 
@@ -113,7 +111,6 @@ With `--json`, the command prints:
 | Flag            | Description                                                                                                          | Default |
 | --------------- | -------------------------------------------------------------------------------------------------------------------- | ------- |
 | `--description` | What it manages, in one line (required)                                                                              |         |
-| `--group`       | Nest it under a group, such as network: its routes, commands and directory                                           |         |
 | `--name`        | The behavior's name: lowercase letters and digits (required)                                                         |         |
 | `--package`     | The Go package and directory, when it is not the name: package is a Go keyword, so --name package --package packages |         |
 | `--requires`    | Behaviors it is built on, such as managedfile: it writes the Requires, the host.Require and a provider field of each |         |

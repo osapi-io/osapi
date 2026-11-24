@@ -27,7 +27,7 @@ func (s *APIPublicTestSuite) TestRoutes() {
 	}{
 		{
 			method:     http.MethodPost,
-			path:       "/api/node/:hostname/network/connectivity/ping",
+			path:       "/api/node/:hostname/connectivity/ping",
 			permission: "connectivity:execute",
 		},
 	}

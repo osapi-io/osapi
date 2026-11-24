@@ -118,19 +118,24 @@ func Example() {
 	//    osapi client node motd update
 }
 
-// Under nests a behavior in a group. Its permission keeps the behavior's name.
+// Under puts a behavior under the collection of a parent, with no key of
+// the parent. Its permission is the parent's.
 func ExampleUnder() {
-	dns := behavior.Define("dns", "Resolver settings",
+	log := behavior.Define("log", "The entries of the journal",
 		behavior.Node,
-		behavior.Under("network"),
-		behavior.Read("get", getMotd).Describe("Get the resolvers"),
+		behavior.Read("list", getMotd).Describe("List the entries"),
+	)
+	source := behavior.Define("source", "The sources of the journal",
+		behavior.Node,
+		behavior.Under(log),
+		behavior.Read("list", getMotd).Describe("List the sources"),
 	)
 
-	m := dns.Methods[0]
-	fmt.Println(dns.Path(m), dns.Permission(m.PermissionVerb()))
+	m := source.Methods[0]
+	fmt.Println(source.Path(m), source.Permission(m.PermissionVerb()))
 
 	// Output:
-	// /api/node/{hostname}/network/dns dns:read
+	// /api/node/{hostname}/log/source log:read
 }
 
 // Key puts an input field in the path, for a method that addresses one item.

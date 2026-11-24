@@ -101,10 +101,10 @@ var Group = command.Register(command.Define(
 		Short("Write a new behavior's standard layout in an osapi checkout").
 		Long("Before you change anything, the result builds, validates and passes every\n"+
 			"test. Then change the types, the provider and the examples to what the\n"+
-			"behavior manages. Writes nothing when the name is taken. A behavior that\n"+
-			"belongs to a group, such as `network`, is nested under it: its routes are\n"+
-			"`/api/node/{hostname}/network/<name>`, its commands `osapi client node\n"+
-			"network <name>`, and its directory `internal/behaviors/network/<name>/`.\n"+
+			"behavior manages. Writes nothing when the name is taken. The behavior is\n"+
+			"directly under node: its routes are `/api/node/{hostname}/<name>` and its\n"+
+			"commands `osapi client node <name>`. To nest it under a parent, add\n"+
+			"`behavior.Of` or `behavior.Under` to its definition.\n"+
 			"[Your first behavior](../../../../development/your-first-behavior.md) walks\n"+
 			"through the rest.\n\n"+
 			"A new behavior is one an operator calls, with an API and commands. Work\n"+
@@ -119,7 +119,6 @@ var Group = command.Register(command.Define(
 		Example(`--name motd --description "The message shown at login"`).
 		Prints(sampleCreate).
 		Example(`--name motd --description "The message shown at login" --root ~/src/osapi`).
-		Example(`--group network --name neighbors --description "The host's ARP neighbors"`).
 		Example(`--name ntpconf --description "The NTP config" --requires managedfile`).
 		Fails("no name", CreateInput{Description: "x"}).
 		Fails("no description", CreateInput{Name: "x"}).

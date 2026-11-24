@@ -45,6 +45,7 @@ type SpecPublicTestSuite struct {
 var notDSL = map[string]bool{
 	"Attach":                       true,
 	"AttachLocal":                  true,
+	"GroupByArea":                  true,
 	"AddCommands":                  true,
 	"Origin":                       true,
 	"Output":                       true,

@@ -1,0 +1,69 @@
+---
+id: post-node-image-pull
+title: "Pull an image"
+description: "Runs docker pull, and answers the ID and the size of the image that the host has after it. A pull that gets nothing new, because the host had the image of that reference already, reports changed: false."
+sidebar_label: "Pull an image"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "post api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Pull an image"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/api/node/{hostname}/image/pull"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Runs docker pull, and answers the ID and the size of the image that the host has after it. A pull that gets nothing new, because the host had the image of that reference already, reports changed: false.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./post-node-image-pull.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./post-node-image-pull.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./post-node-image-pull.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

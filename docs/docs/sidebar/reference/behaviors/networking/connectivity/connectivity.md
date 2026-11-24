@@ -17,7 +17,6 @@ show the same.
 | Name        | connectivity                                      |
 | Description | Whether the host reaches an address, by ICMP ping |
 | Placement   | node                                              |
-| Group       | network                                           |
 | Area        | networking                                        |
 | Internal    | no                                                |
 | API         | yes                                               |
@@ -33,9 +32,9 @@ show the same.
 
 ### Methods (1)
 
-| NAME                 | VERB  | HTTP | ROUTE                                                    | PERMISSION         | DESCRIPTION                   |
-| -------------------- | ----- | ---- | -------------------------------------------------------- | ------------------ | ----------------------------- |
-| [ping](#method-ping) | write | POST | /api/node/&#123;hostname&#125;/network/connectivity/ping | connectivity:write | Ping an address from the host |
+| NAME                 | VERB  | HTTP | ROUTE                                            | PERMISSION         | DESCRIPTION                   |
+| -------------------- | ----- | ---- | ------------------------------------------------ | ------------------ | ----------------------------- |
+| [ping](#method-ping) | write | POST | /api/node/&#123;hostname&#125;/connectivity/ping | connectivity:write | Ping an address from the host |
 
 ### Types (1)
 
@@ -66,9 +65,9 @@ None. Declare them with behavior.Config.
 | Description | Ping an address from the host                                                                                                                                                                                                                                                                             |
 | Detail      | Sends three ICMP echo requests from the host and reports how many came back, and their round-trip times. A host that does not answer is 100% loss, not an error. It changes nothing, so it reports changed: false. On Linux the agent pings without root when net.ipv4.ping_group_range admits its group. |
 | HTTP        | POST                                                                                                                                                                                                                                                                                                      |
-| Route       | /api/node/&#123;hostname&#125;/network/connectivity/ping                                                                                                                                                                                                                                                  |
+| Route       | /api/node/&#123;hostname&#125;/connectivity/ping                                                                                                                                                                                                                                                          |
 | Permission  | connectivity:execute                                                                                                                                                                                                                                                                                      |
-| Command     | [osapi client node network connectivity ping](../../../../usage/cli/client/node/network/connectivity/ping.md)                                                                                                                                                                                             |
+| Command     | [osapi client node connectivity ping](../../../../usage/cli/client/node/connectivity/ping.md)                                                                                                                                                                                                             |
 | Input type  | PingInput                                                                                                                                                                                                                                                                                                 |
 | Output type | PingResult                                                                                                                                                                                                                                                                                                |
 

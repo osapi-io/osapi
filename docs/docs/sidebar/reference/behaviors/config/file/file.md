@@ -35,7 +35,7 @@ examples make.
 
 | NAME                     | VERB  | HTTP   | ROUTE                               | PERMISSION | DESCRIPTION                                         |
 | ------------------------ | ----- | ------ | ----------------------------------- | ---------- | --------------------------------------------------- |
-| [status](#method-status) | read  | GET    | /api/node/&#123;hostname&#125;/file | file:read  | Show whether a deployed file holds what osapi wrote |
+| [get](#method-get)       | read  | GET    | /api/node/&#123;hostname&#125;/file | file:read  | Show whether a deployed file holds what osapi wrote |
 | [update](#method-update) | write | PUT    | /api/node/&#123;hostname&#125;/file | file:write | Deploy an object of the object store to a path      |
 | [delete](#method-delete) | write | DELETE | /api/node/&#123;hostname&#125;/file | file:write | Remove a file that osapi deployed                   |
 
@@ -43,7 +43,7 @@ examples make.
 
 | NAME                     | INPUT                                                                                   | OUTPUT                                           |
 | ------------------------ | --------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| [status](#method-status) | StatusInput &#123; path\* &#125;                                                        | Status &#123; path, state, sha256 &#125;         |
+| [get](#method-get)       | StatusInput &#123; path\* &#125;                                                        | Status &#123; path, state, sha256 &#125;         |
 | [update](#method-update) | UpdateInput &#123; object_name\*, path\*, mode, owner, group, content_type, vars &#125; | UpdateResult &#123; path, sha256, changed &#125; |
 | [delete](#method-delete) | DeleteInput &#123; path\* &#125;                                                        | DeleteResult &#123; path, changed &#125;         |
 
@@ -61,18 +61,18 @@ None. Declare them with behavior.Config.
 | Attributes      | osapi.behavior.name, osapi.behavior.method, osapi.behavior.verb, osapi.behavior.outcome, osapi.behavior.changed                                 |
 | Recorded inputs | path (update, delete)                                                                                                                           |
 
-## Method status
+## Method get
 
 |             |                                                                                                                                                                                                                                                                                                                      |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Name        | status                                                                                                                                                                                                                                                                                                               |
+| Name        | get                                                                                                                                                                                                                                                                                                                  |
 | Verb        | read                                                                                                                                                                                                                                                                                                                 |
 | Description | Show whether a deployed file holds what osapi wrote                                                                                                                                                                                                                                                                  |
 | Detail      | Compares the file on the host with the record that osapi keeps of what it deployed: in-sync when they agree, drifted when something changed the file, missing when osapi deployed the file and it is gone, and unmanaged when osapi did not deploy the path or undeployed it. A path that is a directory is refused. |
 | HTTP        | GET                                                                                                                                                                                                                                                                                                                  |
 | Route       | /api/node/&#123;hostname&#125;/file                                                                                                                                                                                                                                                                                  |
 | Permission  | file:read                                                                                                                                                                                                                                                                                                            |
-| Command     | [osapi client node file status](../../../../usage/cli/client/node/file/status.md)                                                                                                                                                                                                                                    |
+| Command     | [osapi client node file get](../../../../usage/cli/client/node/file/get.md)                                                                                                                                                                                                                                          |
 | Input type  | StatusInput                                                                                                                                                                                                                                                                                                          |
 | Output type | Status                                                                                                                                                                                                                                                                                                               |
 

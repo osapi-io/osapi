@@ -14,7 +14,7 @@ const method: CatalogMethod = {
   kind: "write",
   doc: "Set the servers",
   httpMethod: "PUT",
-  path: "/api/node/{hostname}/network/dns/{interface_name}",
+  path: "/api/node/{hostname}/dns/{interface_name}",
   permission: "network:write",
   platforms: ["debian"],
   runsOn: ["debian"],
@@ -42,7 +42,7 @@ describe("a method's request", () => {
       interface_name: "@fact.interface.primary",
       servers: ["1.1.1.1", "8.8.8.8"],
     });
-    expect(url).toBe("/api/node/web-01/network/dns/@fact.interface.primary");
+    expect(url).toBe("/api/node/web-01/dns/@fact.interface.primary");
     expect(init.method).toBe("PUT");
     expect(JSON.parse(String(init.body))).toEqual({
       servers: ["1.1.1.1", "8.8.8.8"],

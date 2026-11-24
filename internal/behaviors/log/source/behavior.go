@@ -25,17 +25,18 @@ package source
 import (
 	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/behaviors/log/entry"
 )
 
-// Behavior is the sources of the systemd journal: each syslog identifier
-// that has an entry. They are what journald holds now, not a fact of the
+// Behavior is the sources of the systemd journal, under the log: each
+// syslog identifier that has an entry. They are what journald holds now, not a fact of the
 // host, so journalctl reads them, not gohai. It runs on each Linux host;
 // macOS has no journal, and reports skipped.
 var Behavior = behavior.Register(behavior.Define(
 	"source", "The sources that write to the systemd journal",
 	behavior.Title("Log source"),
 	behavior.Node,
-	behavior.Under(behavior.GroupLog),
+	behavior.Under(entry.Behavior),
 	behavior.API,
 	behavior.Area(area.Logs),
 	behavior.CLI,
@@ -45,7 +46,7 @@ var Behavior = behavior.Register(behavior.Define(
 		Runs("journalctl").
 		Describe("List the sources of the journal").
 		Explain("Runs journalctl --field=SYSLOG_IDENTIFIER: each syslog identifier "+
-			"that has an entry, once, sorted. A name here is what log entry list "+
+			"that has an entry, once, sorted. A name here is what log list "+
 			"takes as unit when the source is a systemd unit.").
 		Example("The sources", ListInput{}, []Source{{Name: "cron"}, {Name: "nginx"}, {Name: "sshd"}},
 			behavior.Prints("journalctl --field=SYSLOG_IDENTIFIER", "sshd\nnginx\ncron\n\n"),

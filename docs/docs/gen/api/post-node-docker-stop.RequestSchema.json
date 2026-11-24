@@ -1,0 +1,1 @@
+{"title":"Body","body":{"content":{"application/json":{"schema":{"properties":{"timeout":{"description":"Seconds to wait before docker kills it; docker's default when 0","maximum":300,"minimum":0,"type":"integer","x-oapi-codegen-extra-tags":{"validate":"omitempty,min=0,max=300"}}},"type":"object","title":"DockerStopRequest"}}},"required":true}}

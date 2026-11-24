@@ -150,25 +150,6 @@ func (d *debian) Delete(
 	return true, nil
 }
 
-// SetPassword sets the password of the user from its hash.
-func (d *debian) SetPassword(
-	ctx context.Context,
-	name string,
-	hash string,
-) error {
-	if hash == "" {
-		return fmt.Errorf("no password for user %s: give the password", name)
-	}
-	if err := checkHash(hash); err != nil {
-		return err
-	}
-	if _, err := d.Get(ctx, name); err != nil {
-		return err
-	}
-
-	return d.chpasswd(ctx, name, hash)
-}
-
 // chpasswd sets the password of name from hash, on standard input, so the
 // hash is in no argument list.
 func (d *debian) chpasswd(

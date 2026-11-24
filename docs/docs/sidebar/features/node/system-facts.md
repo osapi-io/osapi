@@ -71,7 +71,7 @@ is. The agent resolves it before it runs the operation.
 Get the DNS configuration of the primary network interface:
 
 ```bash
-osapi client node network dns get \
+osapi client node dns get \
   --interface-name @fact.interface.primary
 ```
 
@@ -133,7 +133,7 @@ This includes:
 
 ```bash
 # Fact reference in an array field
-osapi client node network dns update \
+osapi client node dns update \
   --servers 1.1.1.1 --servers @fact.custom.backup_dns \
   --interface-name @fact.interface.primary
 

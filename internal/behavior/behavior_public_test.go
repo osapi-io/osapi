@@ -124,10 +124,15 @@ func top() *behavior.Behavior {
 	)
 }
 
-func grouped() *behavior.Behavior {
-	return behavior.Define("dns", "Resolver settings",
+// underLog is a behavior under the collection of a parent with no key: the
+// sources under the log.
+func underLog() *behavior.Behavior {
+	return behavior.Define("source", "The sources of the log",
 		behavior.Node,
-		behavior.Under("network"),
+		behavior.Under(behavior.Define("log", "The log",
+			behavior.Node,
+			behavior.Read("list", get),
+		)),
 		behavior.Read("get", get),
 	)
 }
@@ -176,15 +181,16 @@ func (s *BehaviorPublicTestSuite) TestDefine() {
 				assert.Equal(s.T(), "sysctl", b.Name)
 				assert.Equal(s.T(), "Kernel parameters", b.Doc)
 				assert.Equal(s.T(), behavior.NodePlacement, b.Placement)
-				assert.Empty(s.T(), b.Group)
+				assert.Nil(s.T(), b.Parent)
 				assert.Len(s.T(), b.Methods, 8)
 			},
 		},
 		{
-			name: "when nested under a group",
-			b:    grouped(),
+			name: "when under the collection of a parent",
+			b:    underLog(),
 			validateFunc: func(b *behavior.Behavior) {
-				assert.Equal(s.T(), "network", b.Group)
+				assert.Equal(s.T(), "log", b.Parent.Name)
+				assert.True(s.T(), b.UnderCollection)
 			},
 		},
 		{
@@ -282,16 +288,16 @@ func (s *BehaviorPublicTestSuite) TestPermission() {
 			want: "sysctl:write",
 		},
 		{
-			name: "when under a group the behavior's name is the prefix",
-			b:    grouped(),
+			name: "when under the collection of a parent the parent's permission is the child's",
+			b:    underLog(),
 			verb: behavior.VerbRead,
-			want: "dns:read",
+			want: "log:read",
 		},
 		{
-			name: "when under a parent the parent's permission is the child's",
-			b:    child(grouped()),
+			name: "when under an item of a parent the parent's permission is the child's",
+			b:    child(top()),
 			verb: behavior.VerbWrite,
-			want: "dns:write",
+			want: "sysctl:write",
 		},
 	}
 
@@ -345,10 +351,10 @@ func (s *BehaviorPublicTestSuite) TestPath() {
 			want:   "/api/node/{hostname}/sysctl/{key}",
 		},
 		{
-			name:   "when under a group",
-			b:      grouped(),
+			name:   "when under the collection of a parent",
+			b:      underLog(),
 			method: "get",
-			want:   "/api/node/{hostname}/network/dns",
+			want:   "/api/node/{hostname}/log/source",
 		},
 		{
 			name:   "when an action on one item",
@@ -375,18 +381,18 @@ func (s *BehaviorPublicTestSuite) TestPath() {
 			want:   "/api/node/{hostname}/sysctl/{key}/part/{part}",
 		},
 		{
-			name: "when under a parent that is under a group, the group comes first",
+			name: "when under a parent that is under the collection of another, its parent comes first",
 			b: child(
 				behavior.Define(
 					"iface",
 					"x",
 					behavior.Node,
-					behavior.Under("network"),
+					behavior.Under(top()),
 					behavior.Read("get", get).Key("key"),
 				),
 			),
 			method: "restart",
-			want:   "/api/node/{hostname}/network/iface/{key}/part/{part}/restart",
+			want:   "/api/node/{hostname}/sysctl/iface/{key}/part/{part}/restart",
 		},
 	}
 
@@ -407,7 +413,8 @@ func (s *BehaviorPublicTestSuite) TestServedAt() {
 // TestChildTypeName: a child's names in the spec start with its parent's.
 func (s *BehaviorPublicTestSuite) TestChildTypeName() {
 	s.Equal("SysctlPart", child(top()).TypeName())
-	s.Equal("NetworkDnsPart", child(grouped()).TypeName())
+	s.Equal("LogSourcePart", child(underLog()).TypeName())
+	s.Empty(behavior.Define("", "x").TypeName(), "a behavior with no name has no type name")
 }
 
 // TestPathKeys: a child's methods put the parent's key in the path before
@@ -422,7 +429,9 @@ func (s *BehaviorPublicTestSuite) TestPathKeys() {
 	s.Equal([]string{"key"}, top().Method("get").PathKeys())
 	s.Empty(top().Method("list").PathKeys())
 	s.Empty(top().ParentKey(), "a behavior of the host has no parent key")
-	s.Empty(child(grouped()).ParentKey(), "a parent with no keyed method gives no key")
+	s.Empty(child(underLog()).ParentKey(), "a parent with no keyed method gives no key")
+	s.Empty(underLog().ParentKey(), "a child under the collection has no parent key")
+	s.Empty(underLog().Method("get").PathKeys())
 	s.Empty(
 		behavior.Read("get", get).Key("key").PathKeys()[1:],
 		"a method of no behavior has its own key only",
@@ -441,7 +450,11 @@ func (s *BehaviorPublicTestSuite) TestCommand() {
 		want string
 	}{
 		{name: "when at the top level", b: top(), want: "osapi client node sysctl get"},
-		{name: "when under a group", b: grouped(), want: "osapi client node network dns get"},
+		{
+			name: "when under the collection of a parent",
+			b:    underLog(),
+			want: "osapi client node log source get",
+		},
 	}
 	s.Equal("osapi client node sysctl part list", child(top()).Command(child(top()).Method("list")),
 		"a child's command is under its parent's")

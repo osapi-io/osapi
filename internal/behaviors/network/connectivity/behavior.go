@@ -64,7 +64,6 @@ round-trip min/avg/max/stddev = 0.081/0.135/0.173/0.040 ms
 var Behavior = behavior.Register(behavior.Define(
 	"connectivity", "Whether the host reaches an address, by ICMP ping",
 	behavior.Node,
-	behavior.Under(behavior.GroupNetwork),
 	behavior.API,
 	behavior.Area(area.Networking),
 	behavior.CLI,

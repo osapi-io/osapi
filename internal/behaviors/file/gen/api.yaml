@@ -92,6 +92,22 @@ components:
         - hostname
         - status
       type: object
+    FileGetResponse:
+      properties:
+        job_id:
+          description: The job ID used to process this request.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          format: uuid
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: uuid
+        results:
+          items:
+            $ref: '#/components/schemas/FileStatus'
+          type: array
+      required:
+        - results
+      type: object
     FileStatus:
       properties:
         error:
@@ -122,22 +138,6 @@ components:
       required:
         - hostname
         - status
-      type: object
-    FileStatusResponse:
-      properties:
-        job_id:
-          description: The job ID used to process this request.
-          example: 550e8400-e29b-41d4-a716-446655440000
-          format: uuid
-          type: string
-          x-oapi-codegen-extra-tags:
-            validate: uuid
-        results:
-          items:
-            $ref: '#/components/schemas/FileStatus'
-          type: array
-      required:
-        - results
       type: object
     FileUpdateRequest:
       properties:
@@ -336,7 +336,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FileStatusResponse'
+                $ref: '#/components/schemas/FileGetResponse'
           description: Each target host's result.
         "400":
           content:
@@ -386,7 +386,7 @@ paths:
           input:
             hostname: web-01
             path: /etc/osapi/file-example.conf
-      x-osapi-method: status
+      x-osapi-method: get
     put:
       description: 'Writes the object at the path with its mode and ownership, and keeps a record of it. A template object, or content_type template, is rendered first with .Facts, .Vars and .Hostname. The record keeps the SHA-256 of the object as it was read. A file that holds the content, mode and owner already, from the same object, does not change and reports changed: false. osapi client file stale list compares the object now with that SHA-256, so it shows the deployments whose object changed since.'
       operationId: PutNodeFile

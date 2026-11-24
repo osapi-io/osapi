@@ -23,15 +23,15 @@ func (s *APIPullPublicTestSuite) SetupSuite() {
 	s.api = servertest.New(s.T(), "internal/behaviors/container/image/gen/api.yaml", gen.Routes)
 }
 
-// TestPull sends POST /api/node/{hostname}/container/image/pull and checks
-// each answer's response.
+// TestPull sends POST /api/node/{hostname}/image/pull and checks each answer's
+// response.
 func (s *APIPullPublicTestSuite) TestPull() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when the example \"Pull an image\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/image/pull",
+				Path:   "/api/node/server1/image/pull",
 				Body:   `{"image":"alpine:3.20"}`,
 			},
 			Token: servertest.Write,
@@ -48,7 +48,7 @@ func (s *APIPullPublicTestSuite) TestPull() {
 			Name: "when the example \"Pull an image\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/_all/container/image/pull",
+				Path:   "/api/node/_all/image/pull",
 				Body:   `{"image":"alpine:3.20"}`,
 			},
 			Token: servertest.Write,
@@ -67,7 +67,7 @@ func (s *APIPullPublicTestSuite) TestPull() {
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/image/pull",
+				Path:   "/api/node/server1/image/pull",
 				Body:   `{"image":"alpine:3.20"}`,
 			},
 			Token: servertest.Write,
@@ -84,7 +84,7 @@ func (s *APIPullPublicTestSuite) TestPull() {
 			Name: "when the host fails it, its row says failed",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/image/pull",
+				Path:   "/api/node/server1/image/pull",
 				Body:   `{"image":"alpine:3.20"}`,
 			},
 			Token: servertest.Write,
@@ -101,7 +101,7 @@ func (s *APIPullPublicTestSuite) TestPull() {
 			Name: "when the host never answers, its row says timeout",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/image/pull",
+				Path:   "/api/node/server1/image/pull",
 				Body:   `{"image":"alpine:3.20"}`,
 			},
 			Token: servertest.Write,
@@ -118,7 +118,7 @@ func (s *APIPullPublicTestSuite) TestPull() {
 			Name: "when the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/image/pull",
+				Path:   "/api/node/server1/image/pull",
 				Body:   `{"image":"alpine:3.20"}`,
 			},
 			Token: servertest.Write,
@@ -133,7 +133,7 @@ func (s *APIPullPublicTestSuite) TestPull() {
 			Name: "when broadcast and the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/_all/container/image/pull",
+				Path:   "/api/node/_all/image/pull",
 				Body:   `{"image":"alpine:3.20"}`,
 			},
 			Token: servertest.Write,
@@ -155,7 +155,7 @@ func (s *APIPullPublicTestSuite) TestPullValidationHTTP() {
 			Name: "when the target is not an agent, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/nowhere/container/image/pull",
+				Path:   "/api/node/nowhere/image/pull",
 				Body:   `{"image":"alpine:3.20"}`,
 			},
 			Token:    servertest.Write,
@@ -165,7 +165,7 @@ func (s *APIPullPublicTestSuite) TestPullValidationHTTP() {
 			Name: "when the target is empty, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node//container/image/pull",
+				Path:   "/api/node//image/pull",
 				Body:   `{"image":"alpine:3.20"}`,
 			},
 			Token:    servertest.Write,
@@ -175,7 +175,7 @@ func (s *APIPullPublicTestSuite) TestPullValidationHTTP() {
 			Name: "when image is missing, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/image/pull",
+				Path:   "/api/node/server1/image/pull",
 				Body:   `{"image":""}`,
 			},
 			Token:    servertest.Write,
@@ -185,7 +185,7 @@ func (s *APIPullPublicTestSuite) TestPullValidationHTTP() {
 			Name: "when the body is not JSON, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/image/pull",
+				Path:   "/api/node/server1/image/pull",
 				Body:   `{`,
 			},
 			Token:    servertest.Write,
@@ -195,7 +195,7 @@ func (s *APIPullPublicTestSuite) TestPullValidationHTTP() {
 			Name: "when image has the wrong type, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/image/pull",
+				Path:   "/api/node/server1/image/pull",
 				Body:   `{"image":[]}`,
 			},
 			Token:    servertest.Write,
@@ -205,7 +205,7 @@ func (s *APIPullPublicTestSuite) TestPullValidationHTTP() {
 			Name: "when sent an image that is an option, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/image/pull",
+				Path:   "/api/node/server1/image/pull",
 				Body:   `{"image":"--all-tags"}`,
 			},
 			Token:    servertest.Write,
@@ -215,7 +215,7 @@ func (s *APIPullPublicTestSuite) TestPullValidationHTTP() {
 			Name: "when sent no image, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/image/pull",
+				Path:   "/api/node/server1/image/pull",
 				Body:   `{"image":""}`,
 			},
 			Token:    servertest.Write,
@@ -231,7 +231,7 @@ func (s *APIPullPublicTestSuite) TestPullRBACHTTP() {
 			Name: "when there is no token, it is a 401",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/image/pull",
+				Path:   "/api/node/server1/image/pull",
 				Body:   `{"image":"alpine:3.20"}`,
 			},
 			Token:    servertest.NoToken,
@@ -241,7 +241,7 @@ func (s *APIPullPublicTestSuite) TestPullRBACHTTP() {
 			Name: "when the token lacks image:execute, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/image/pull",
+				Path:   "/api/node/server1/image/pull",
 				Body:   `{"image":"alpine:3.20"}`,
 			},
 			Token:    servertest.Lacking,
@@ -251,7 +251,7 @@ func (s *APIPullPublicTestSuite) TestPullRBACHTTP() {
 			Name: "when the token has only the read role, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/image/pull",
+				Path:   "/api/node/server1/image/pull",
 				Body:   `{"image":"alpine:3.20"}`,
 			},
 			Token:    servertest.Read,
@@ -261,7 +261,7 @@ func (s *APIPullPublicTestSuite) TestPullRBACHTTP() {
 			Name: "when the token has the admin role, the request runs",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/image/pull",
+				Path:   "/api/node/server1/image/pull",
 				Body:   `{"image":"alpine:3.20"}`,
 			},
 			Token: servertest.Admin,

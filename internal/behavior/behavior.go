@@ -75,7 +75,7 @@ var adminVerbs = []Verb{VerbShell, VerbExec}
 // parameters or DNS resolver settings.
 type Behavior struct {
 	// Name is the behavior's name: the path segment, the CLI command and the
-	// permission prefix. A group does not change the permission prefix.
+	// permission prefix. A child has its parent's permission prefix.
 	Name string
 	// Doc says what the behavior manages, in one line.
 	Doc string
@@ -85,16 +85,18 @@ type Behavior struct {
 	Title string
 	// Placement is where the work runs.
 	Placement Placement
-	// Group nests the behavior under another path and command, such as
-	// network for dns. Empty sits it directly under node.
-	Group string
 	// Area is the area of the behavior's operations, one of area.All. Area
 	// sets it.
 	Area area.Name
-	// Parent is the behavior whose items this one's items are under, set
-	// with Of: a user's SSH keys are under the user. Nil for a behavior of
+	// Parent is the behavior this one is nested under, set with Of or
+	// Under: a user's SSH keys are under the user. Nil for a behavior of
 	// the host.
 	Parent *Behavior
+	// UnderCollection is true for a child declared with Under: it is under
+	// the parent's collection, with no key of the parent in its path, as
+	// the log sources are under the log. A child declared with Of is under
+	// an item of the parent.
+	UnderCollection bool
 	// API serves the behavior over REST: routes, the OpenAPI spec and its
 	// API docs. Without it the behavior is reachable only through another
 	// behavior or the job system.
@@ -168,37 +170,6 @@ var API Option = optionFunc(func(b *Behavior) { b.API = true })
 // docs pages. It needs API, because the commands call it.
 var CLI Option = optionFunc(func(b *Behavior) { b.CLI = true })
 
-// GroupName is a group that behaviors nest under. The group is a path
-// segment and a CLI command. It is not in a permission: dns under network
-// needs dns:read. Thus a misspelled group makes a new route and command with
-// no error, and dsl behavior validate refuses a name outside KnownGroups.
-type GroupName string
-
-// The groups that behaviors nest under.
-const (
-	// GroupNetwork holds the network behaviors: dns, iface and route.
-	GroupNetwork GroupName = "network"
-	// GroupContainer holds the container behaviors: docker and image.
-	GroupContainer GroupName = "container"
-)
-
-// GroupLog holds the journal behaviors: entry and source.
-const GroupLog GroupName = "log"
-
-// KnownGroups are the groups that a behavior can be Under. Add a constant
-// here to make a new group.
-func KnownGroups() []GroupName {
-	return []GroupName{GroupNetwork, GroupLog, GroupContainer}
-}
-
-// Under nests a behavior inside a group: Under(GroupNetwork) puts dns at
-// /api/node/{hostname}/network/dns and `osapi client node network dns`.
-func Under(
-	group GroupName,
-) Option {
-	return optionFunc(func(b *Behavior) { b.Group = string(group) })
-}
-
 // Area puts a served behavior in an area, one of area.All:
 // Area(area.Hardware) puts disk under Hardware on the UI's Behaviors page,
 // and its SDK page under Hardware. dsl behavior validate
@@ -211,9 +182,9 @@ func Area(
 }
 
 // Title gives a behavior the title that a person reads, such as "Package
-// updates" for updatepackages, when its capitalized name does not read well:
-// an initialism such as DNS, two words, a group such as Container image, or
-// the parent of a behavior that Of nests, such as User SSH key.
+// updates" for updates, when its capitalized name does not read well: an
+// initialism such as DNS, two words such as Container image, or the parent
+// of a child, such as User SSH key.
 func Title(
 	title string,
 ) Option {
@@ -228,14 +199,32 @@ func Title(
 func Of(
 	parent *Behavior,
 ) Option {
-	return optionFunc(func(b *Behavior) { b.Parent = parent })
+	return optionFunc(func(b *Behavior) {
+		b.Parent = parent
+		b.UnderCollection = false
+	})
+}
+
+// Under puts a behavior under the collection of parent, with no key of the
+// parent: Under(log.Behavior) puts source at /api/node/{hostname}/log/source
+// and `osapi client node log source`. Its permissions are the parent's, so
+// the sources of the log need log:read. Use it for a child of a parent whose
+// items have no key, or that is about the whole collection, as the updates
+// of the packages are. Of puts a child under an item of the parent.
+func Under(
+	parent *Behavior,
+) Option {
+	return optionFunc(func(b *Behavior) {
+		b.Parent = parent
+		b.UnderCollection = true
+	})
 }
 
 // ParentKey is the key of the parent's items, such as name for a user: the
 // key that the parent's keyed methods have. Empty for a behavior with no
-// parent, or a parent with no keyed method.
+// parent, a child declared with Under, or a parent with no keyed method.
 func (b *Behavior) ParentKey() string {
-	if b.Parent == nil {
+	if b.Parent == nil || b.UnderCollection {
 		return ""
 	}
 	for _, m := range b.Parent.Methods {
@@ -247,26 +236,24 @@ func (b *Behavior) ParentKey() string {
 	return ""
 }
 
-// base is the route of the behavior's collection: the group and the name,
-// or the parent's item and the name.
+// base is the route of the behavior's collection: the name, after the
+// parent's collection for a child declared with Under, or after the parent's
+// item for a child declared with Of.
 func (b *Behavior) base() string {
-	if b.Parent != nil {
+	switch {
+	case b.Parent == nil:
+		return b.Name
+	case b.UnderCollection:
+		return b.Parent.base() + "/" + b.Name
+	default:
 		return b.Parent.base() + "/{" + b.ParentKey() + "}/" + b.Name
 	}
-	if b.Group != "" {
-		return b.Group + "/" + b.Name
-	}
-
-	return b.Name
 }
 
 // words are the words of the behavior's command after osapi client node.
 func (b *Behavior) words() string {
 	if b.Parent != nil {
 		return b.Parent.words() + " " + b.Name
-	}
-	if b.Group != "" {
-		return b.Group + " " + b.Name
 	}
 
 	return b.Name
@@ -294,8 +281,8 @@ func Define(
 }
 
 // Permission is the permission a method needs: the behavior's name and the
-// verb. A group does not change it, so sysctl get needs sysctl:read and dns
-// under network needs dns:read. A child has its parent's permission.
+// verb, so sysctl get needs sysctl:read. A child has its parent's
+// permission: the sources of the log need log:read.
 func (b *Behavior) Permission(
 	v Verb,
 ) client.Permission {
@@ -346,7 +333,7 @@ type Method struct {
 	// Action is true for a write declared with Action: it is named for what
 	// it does, such as restart, and its route ends in its name.
 	Action bool
-	// Always is true for an action declared with .Always: it changes the
+	// Always is true for a method declared with .Always: it changes the
 	// host each time it runs, as restart does, so no run is unchanged.
 	AlwaysChanges bool
 	// Disruptive is true for a method declared with .Disrupts: it takes the
@@ -494,10 +481,12 @@ func covers(
 	return p == platform || (p == PlatformLinux && platform != PlatformDarwin)
 }
 
-// Always marks an action that changes the host each time it runs, such as
-// restart: it reports changed: true on each run, and the generated test does
-// not run it a second time to see changed: false. dsl behavior validate refuses it
-// on a method that is not an action.
+// Always marks a method that changes the host each time it runs: an action
+// such as restart, or an update whose input the host cannot compare with
+// what it has, such as the password of a user, which the controller hashes
+// with a new salt on each call. It reports changed: true on each run, and
+// the generated test does not run it a second time to see changed: false.
+// dsl behavior validate refuses it on a create, a delete and a read.
 func (m *Method) Always() *Method {
 	m.AlwaysChanges = true
 
@@ -759,7 +748,7 @@ func (b *Behavior) Path(
 }
 
 // Command is the method's CLI command, such as
-// osapi client node network dns get.
+// osapi client node dns get.
 func (b *Behavior) Command(
 	m *Method,
 ) string {

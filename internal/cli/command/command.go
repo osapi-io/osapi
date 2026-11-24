@@ -42,6 +42,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/osapi-io/osapi/internal/area"
 	"github.com/osapi-io/osapi/internal/cli/reference"
 )
 
@@ -263,6 +264,10 @@ func attach(
 			if next == nil {
 				next = &cobra.Command{Use: w, Short: strings.ToUpper(w[:1]) + w[1:] + " commands"}
 				into.AddCommand(next)
+				// A child's group can come before its parent's, as
+				// password comes before user: the parent's group fills
+				// this command in when it comes.
+				placeholders[next] = true
 			}
 			into = next
 		}
@@ -286,14 +291,19 @@ func attach(
 			}
 		}
 		if group == nil {
-			group = &cobra.Command{
-				Use:   name,
-				Short: e.group.GroupDoc(),
-				Long:  e.group.GroupLong(),
-			}
-			annotate(group, reference.Notes, e.group.GroupNotes())
-			annotate(group, reference.Permission, string(permissionOf(e.group, "")))
+			group = &cobra.Command{Use: name}
 			into.AddCommand(group)
+			placeholders[group] = true
+		}
+		if placeholders[group] {
+			delete(placeholders, group)
+			group.Short = e.group.GroupDoc()
+			group.Long = e.group.GroupLong()
+			annotate(group, reference.Notes, e.group.GroupNotes())
+			if ag, ok := e.group.(areaGroup); ok && ag.GroupArea() != "" {
+				areas[group] = ag.GroupArea()
+			}
+			annotate(group, reference.Permission, string(permissionOf(e.group, "")))
 		}
 		for _, c := range e.cmds {
 			parent := group
@@ -342,6 +352,41 @@ func prefix(
 
 // origins is the group that made each attached command.
 var origins = map[*cobra.Command]Group{}
+
+// areaGroup is a group whose operations are in an area, one of area.All,
+// as each endpoint group is.
+type areaGroup interface {
+	GroupArea() area.Name
+}
+
+// areas is the area of each group's command that Attach made.
+var areas = map[*cobra.Command]area.Name{}
+
+// placeholders are the commands that Attach made for a word of a command
+// path whose group it has not attached yet.
+var placeholders = map[*cobra.Command]bool{}
+
+// GroupByArea puts each command under cmd that Attach made for a group in a
+// cobra command group of the group's area, so the help of cmd lists them
+// under the label of each area, in the order of area.All: osapi client node
+// --help lists dns and interface under Networking. A command of no area
+// stays under Additional Commands. Call it after Attach.
+func GroupByArea(
+	cmd *cobra.Command,
+) {
+	used := map[area.Name]bool{}
+	for _, c := range cmd.Commands() {
+		if a, ok := areas[c]; ok {
+			c.GroupID = string(a)
+			used[a] = true
+		}
+	}
+	for _, a := range area.All {
+		if used[a.Name] && !cmd.ContainsGroup(string(a.Name)) {
+			cmd.AddGroup(&cobra.Group{ID: string(a.Name), Title: a.Label + ":"})
+		}
+	}
+}
 
 // Origin is the group whose definition made c, a command that Attach or
 // AttachLocal added, and false for a command that a person wrote.

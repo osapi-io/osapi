@@ -72,7 +72,6 @@ type scaffoldSource struct {
 
 // scaffold is what a new behavior is called and where it lives.
 type scaffold struct {
-	group string
 	// name is the behavior's name, in its routes, commands and docs.
 	name string
 	// goPackage is the Go package and directory it lives in.
@@ -278,9 +277,6 @@ func (sc scaffold) behaviorFile() *jen.File {
 	example := func(value string) jen.Code { return field("Value", jen.Lit(value)) }
 
 	opts := []jen.Code{jen.Lit(sc.name).Op(",").Lit(sc.doc), b("Node")}
-	if sc.group != "" {
-		opts = append(opts, b("Under").Call(b("Group"+title(sc.group))))
-	}
 	opts = append(opts,
 		b("API"),
 		// The scaffold writes a config file, so its blocks go under Config in

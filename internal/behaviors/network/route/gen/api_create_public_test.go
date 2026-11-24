@@ -23,15 +23,15 @@ func (s *APICreatePublicTestSuite) SetupSuite() {
 	s.api = servertest.New(s.T(), "internal/behaviors/network/route/gen/api.yaml", gen.Routes)
 }
 
-// TestCreate sends POST /api/node/{hostname}/network/interface/{name}/route
-// and checks each answer's response.
+// TestCreate sends POST /api/node/{hostname}/interface/{name}/route and checks
+// each answer's response.
 func (s *APICreatePublicTestSuite) TestCreate() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when the example \"A route\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
 			},
 			Token: servertest.Write,
@@ -52,7 +52,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Name: "when the example \"A route\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/_all/network/interface/osapi0/route",
+				Path:   "/api/node/_all/interface/osapi0/route",
 				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
 			},
 			Token: servertest.Write,
@@ -75,7 +75,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Name: "when the example \"A second route, with a metric\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   `{"name":"osapi0","destination":"2001:db8:1::/48","via":"2001:db8::1","metric":200}`,
 			},
 			Token: servertest.Write,
@@ -97,7 +97,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Name: "when the example \"A second route, with a metric\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/_all/network/interface/osapi0/route",
+				Path:   "/api/node/_all/interface/osapi0/route",
 				Body:   `{"name":"osapi0","destination":"2001:db8:1::/48","via":"2001:db8::1","metric":200}`,
 			},
 			Token: servertest.Write,
@@ -121,7 +121,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Name: "when the example \"A route osapi already has\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
 			},
 			Token: servertest.Write,
@@ -142,7 +142,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Name: "when the example \"A route osapi already has\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/_all/network/interface/osapi0/route",
+				Path:   "/api/node/_all/interface/osapi0/route",
 				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
 			},
 			Token: servertest.Write,
@@ -165,7 +165,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
 			},
 			Token: servertest.Write,
@@ -186,7 +186,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Name: "when the host fails it, its row says failed",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
 			},
 			Token: servertest.Write,
@@ -207,7 +207,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Name: "when the host never answers, its row says timeout",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
 			},
 			Token: servertest.Write,
@@ -228,7 +228,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Name: "when the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
 			},
 			Token: servertest.Write,
@@ -247,7 +247,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Name: "when broadcast and the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/_all/network/interface/osapi0/route",
+				Path:   "/api/node/_all/interface/osapi0/route",
 				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
 			},
 			Token: servertest.Write,
@@ -273,7 +273,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when the target is not an agent, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/nowhere/network/interface/osapi0/route",
+				Path:   "/api/node/nowhere/interface/osapi0/route",
 				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
 			},
 			Token:    servertest.Write,
@@ -283,7 +283,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when the target is empty, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node//network/interface/osapi0/route",
+				Path:   "/api/node//interface/osapi0/route",
 				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
 			},
 			Token:    servertest.Write,
@@ -293,7 +293,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when destination is missing, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   `{"name":"osapi0","destination":"","via":"192.0.2.1"}`,
 			},
 			Token:    servertest.Write,
@@ -303,7 +303,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when via is missing, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":""}`,
 			},
 			Token:    servertest.Write,
@@ -313,7 +313,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when the body is not JSON, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   `{`,
 			},
 			Token:    servertest.Write,
@@ -323,7 +323,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when destination has the wrong type, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   `{"destination":[]}`,
 			},
 			Token:    servertest.Write,
@@ -333,7 +333,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when sent a destination that is not CIDR, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   `{"name":"osapi0","destination":"10.0.0.0","via":"192.0.2.1"}`,
 			},
 			Token:    servertest.Write,
@@ -343,7 +343,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when sent a gateway that is not an address, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"gateway"}`,
 			},
 			Token:    servertest.Write,
@@ -353,7 +353,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when sent a metric below 0, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1","metric":-1}`,
 			},
 			Token:    servertest.Write,
@@ -363,7 +363,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when sent a metric over 4294967295, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1","metric":4294967296}`,
 			},
 			Token:    servertest.Write,
@@ -373,7 +373,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when sent a name that is not an interface name, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/interface/eth0%3Breboot/route",
+				Path:   "/api/node/server1/interface/eth0%3Breboot/route",
 				Body:   `{"name":"eth0;reboot","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
 			},
 			Token:    servertest.Write,
@@ -389,7 +389,7 @@ func (s *APICreatePublicTestSuite) TestCreateRBACHTTP() {
 			Name: "when there is no token, it is a 401",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
 			},
 			Token:    servertest.NoToken,
@@ -399,7 +399,7 @@ func (s *APICreatePublicTestSuite) TestCreateRBACHTTP() {
 			Name: "when the token lacks interface:write, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
 			},
 			Token:    servertest.Lacking,
@@ -409,7 +409,7 @@ func (s *APICreatePublicTestSuite) TestCreateRBACHTTP() {
 			Name: "when the token has only the read role, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
 			},
 			Token:    servertest.Read,
@@ -419,7 +419,7 @@ func (s *APICreatePublicTestSuite) TestCreateRBACHTTP() {
 			Name: "when the token has the admin role, the request runs",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/interface/osapi0/route",
+				Path:   "/api/node/server1/interface/osapi0/route",
 				Body:   `{"name":"osapi0","destination":"198.51.100.0/24","via":"192.0.2.1"}`,
 			},
 			Token: servertest.Admin,

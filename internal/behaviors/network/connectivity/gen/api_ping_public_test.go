@@ -23,15 +23,15 @@ func (s *APIPingPublicTestSuite) SetupSuite() {
 	s.api = servertest.New(s.T(), "internal/behaviors/network/connectivity/gen/api.yaml", gen.Routes)
 }
 
-// TestPing sends POST /api/node/{hostname}/network/connectivity/ping and
-// checks each answer's response.
+// TestPing sends POST /api/node/{hostname}/connectivity/ping and checks each
+// answer's response.
 func (s *APIPingPublicTestSuite) TestPing() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when the example \"A host that answers\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/connectivity/ping",
+				Path:   "/api/node/server1/connectivity/ping",
 				Body:   `{"address":"127.0.0.1"}`,
 			},
 			Token: servertest.Write,
@@ -48,7 +48,7 @@ func (s *APIPingPublicTestSuite) TestPing() {
 			Name: "when the example \"A host that answers\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/_all/network/connectivity/ping",
+				Path:   "/api/node/_all/connectivity/ping",
 				Body:   `{"address":"127.0.0.1"}`,
 			},
 			Token: servertest.Write,
@@ -67,7 +67,7 @@ func (s *APIPingPublicTestSuite) TestPing() {
 			Name: "when the example \"A host that answers, on macOS\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/connectivity/ping",
+				Path:   "/api/node/server1/connectivity/ping",
 				Body:   `{"address":"127.0.0.1"}`,
 			},
 			Token: servertest.Write,
@@ -84,7 +84,7 @@ func (s *APIPingPublicTestSuite) TestPing() {
 			Name: "when the example \"A host that answers, on macOS\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/_all/network/connectivity/ping",
+				Path:   "/api/node/_all/connectivity/ping",
 				Body:   `{"address":"127.0.0.1"}`,
 			},
 			Token: servertest.Write,
@@ -103,7 +103,7 @@ func (s *APIPingPublicTestSuite) TestPing() {
 			Name: "when the example \"A host that does not answer\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/connectivity/ping",
+				Path:   "/api/node/server1/connectivity/ping",
 				Body:   `{"address":"192.0.2.1"}`,
 			},
 			Token: servertest.Write,
@@ -120,7 +120,7 @@ func (s *APIPingPublicTestSuite) TestPing() {
 			Name: "when the example \"A host that does not answer\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/_all/network/connectivity/ping",
+				Path:   "/api/node/_all/connectivity/ping",
 				Body:   `{"address":"192.0.2.1"}`,
 			},
 			Token: servertest.Write,
@@ -139,7 +139,7 @@ func (s *APIPingPublicTestSuite) TestPing() {
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/connectivity/ping",
+				Path:   "/api/node/server1/connectivity/ping",
 				Body:   `{"address":"127.0.0.1"}`,
 			},
 			Token: servertest.Write,
@@ -156,7 +156,7 @@ func (s *APIPingPublicTestSuite) TestPing() {
 			Name: "when the host fails it, its row says failed",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/connectivity/ping",
+				Path:   "/api/node/server1/connectivity/ping",
 				Body:   `{"address":"127.0.0.1"}`,
 			},
 			Token: servertest.Write,
@@ -173,7 +173,7 @@ func (s *APIPingPublicTestSuite) TestPing() {
 			Name: "when the host never answers, its row says timeout",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/connectivity/ping",
+				Path:   "/api/node/server1/connectivity/ping",
 				Body:   `{"address":"127.0.0.1"}`,
 			},
 			Token: servertest.Write,
@@ -190,7 +190,7 @@ func (s *APIPingPublicTestSuite) TestPing() {
 			Name: "when the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/connectivity/ping",
+				Path:   "/api/node/server1/connectivity/ping",
 				Body:   `{"address":"127.0.0.1"}`,
 			},
 			Token: servertest.Write,
@@ -205,7 +205,7 @@ func (s *APIPingPublicTestSuite) TestPing() {
 			Name: "when broadcast and the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/_all/network/connectivity/ping",
+				Path:   "/api/node/_all/connectivity/ping",
 				Body:   `{"address":"127.0.0.1"}`,
 			},
 			Token: servertest.Write,
@@ -227,7 +227,7 @@ func (s *APIPingPublicTestSuite) TestPingValidationHTTP() {
 			Name: "when the target is not an agent, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/nowhere/network/connectivity/ping",
+				Path:   "/api/node/nowhere/connectivity/ping",
 				Body:   `{"address":"127.0.0.1"}`,
 			},
 			Token:    servertest.Write,
@@ -237,7 +237,7 @@ func (s *APIPingPublicTestSuite) TestPingValidationHTTP() {
 			Name: "when the target is empty, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node//network/connectivity/ping",
+				Path:   "/api/node//connectivity/ping",
 				Body:   `{"address":"127.0.0.1"}`,
 			},
 			Token:    servertest.Write,
@@ -247,7 +247,7 @@ func (s *APIPingPublicTestSuite) TestPingValidationHTTP() {
 			Name: "when address is missing, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/connectivity/ping",
+				Path:   "/api/node/server1/connectivity/ping",
 				Body:   `{"address":""}`,
 			},
 			Token:    servertest.Write,
@@ -257,7 +257,7 @@ func (s *APIPingPublicTestSuite) TestPingValidationHTTP() {
 			Name: "when the body is not JSON, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/connectivity/ping",
+				Path:   "/api/node/server1/connectivity/ping",
 				Body:   `{`,
 			},
 			Token:    servertest.Write,
@@ -267,7 +267,7 @@ func (s *APIPingPublicTestSuite) TestPingValidationHTTP() {
 			Name: "when address has the wrong type, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/connectivity/ping",
+				Path:   "/api/node/server1/connectivity/ping",
 				Body:   `{"address":[]}`,
 			},
 			Token:    servertest.Write,
@@ -277,7 +277,7 @@ func (s *APIPingPublicTestSuite) TestPingValidationHTTP() {
 			Name: "when sent a name, not an address, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/connectivity/ping",
+				Path:   "/api/node/server1/connectivity/ping",
 				Body:   `{"address":"example.com"}`,
 			},
 			Token:    servertest.Write,
@@ -293,7 +293,7 @@ func (s *APIPingPublicTestSuite) TestPingRBACHTTP() {
 			Name: "when there is no token, it is a 401",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/connectivity/ping",
+				Path:   "/api/node/server1/connectivity/ping",
 				Body:   `{"address":"127.0.0.1"}`,
 			},
 			Token:    servertest.NoToken,
@@ -303,7 +303,7 @@ func (s *APIPingPublicTestSuite) TestPingRBACHTTP() {
 			Name: "when the token lacks connectivity:execute, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/connectivity/ping",
+				Path:   "/api/node/server1/connectivity/ping",
 				Body:   `{"address":"127.0.0.1"}`,
 			},
 			Token:    servertest.Lacking,
@@ -313,7 +313,7 @@ func (s *APIPingPublicTestSuite) TestPingRBACHTTP() {
 			Name: "when the token has only the read role, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/connectivity/ping",
+				Path:   "/api/node/server1/connectivity/ping",
 				Body:   `{"address":"127.0.0.1"}`,
 			},
 			Token:    servertest.Read,
@@ -323,7 +323,7 @@ func (s *APIPingPublicTestSuite) TestPingRBACHTTP() {
 			Name: "when the token has the admin role, the request runs",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/network/connectivity/ping",
+				Path:   "/api/node/server1/connectivity/ping",
 				Body:   `{"address":"127.0.0.1"}`,
 			},
 			Token: servertest.Admin,

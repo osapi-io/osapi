@@ -16,7 +16,6 @@ The Docker images of the host. `osapi dsl behavior get --name image` and
 | Name        | image                         |
 | Description | The Docker images of the host |
 | Placement   | node                          |
-| Group       | container                     |
 | Area        | containers                    |
 | Internal    | no                            |
 | API         | yes                           |
@@ -32,11 +31,11 @@ The Docker images of the host. `osapi dsl behavior get --name image` and
 
 ### Methods (3)
 
-| NAME                     | VERB  | HTTP   | ROUTE                                                            | PERMISSION  | DESCRIPTION                 |
-| ------------------------ | ----- | ------ | ---------------------------------------------------------------- | ----------- | --------------------------- |
-| [list](#method-list)     | read  | GET    | /api/node/&#123;hostname&#125;/container/image                   | image:read  | List the images of the host |
-| [pull](#method-pull)     | write | POST   | /api/node/&#123;hostname&#125;/container/image/pull              | image:write | Pull an image               |
-| [delete](#method-delete) | write | DELETE | /api/node/&#123;hostname&#125;/container/image/&#123;image&#125; | image:write | Remove an image             |
+| NAME                     | VERB  | HTTP   | ROUTE                                                  | PERMISSION  | DESCRIPTION                 |
+| ------------------------ | ----- | ------ | ------------------------------------------------------ | ----------- | --------------------------- |
+| [list](#method-list)     | read  | GET    | /api/node/&#123;hostname&#125;/image                   | image:read  | List the images of the host |
+| [pull](#method-pull)     | write | POST   | /api/node/&#123;hostname&#125;/image/pull              | image:write | Pull an image               |
+| [delete](#method-delete) | write | DELETE | /api/node/&#123;hostname&#125;/image/&#123;image&#125; | image:write | Remove an image             |
 
 ### Types (3)
 
@@ -69,9 +68,9 @@ None. Declare them with behavior.Config.
 | Description | List the images of the host                                                                                                       |
 | Detail      | Reads each image through gohai's docker collector, which runs docker images. A host whose docker does not answer reports skipped. |
 | HTTP        | GET                                                                                                                               |
-| Route       | /api/node/&#123;hostname&#125;/container/image                                                                                    |
+| Route       | /api/node/&#123;hostname&#125;/image                                                                                              |
 | Permission  | image:read                                                                                                                        |
-| Command     | [osapi client node container image list](../../../../usage/cli/client/node/container/image/list.md)                               |
+| Command     | [osapi client node image list](../../../../usage/cli/client/node/image/list.md)                                                   |
 | Input type  | ListInput                                                                                                                         |
 | Output type | \[]Entry                                                                                                                          |
 
@@ -103,9 +102,9 @@ None. The method takes no input; its command needs only --target.
 | Description | Pull an image                                                                                                                                                                                              |
 | Detail      | Runs docker pull, and answers the ID and the size of the image that the host has after it. A pull that gets nothing new, because the host had the image of that reference already, reports changed: false. |
 | HTTP        | POST                                                                                                                                                                                                       |
-| Route       | /api/node/&#123;hostname&#125;/container/image/pull                                                                                                                                                        |
+| Route       | /api/node/&#123;hostname&#125;/image/pull                                                                                                                                                                  |
 | Permission  | image:execute                                                                                                                                                                                              |
-| Command     | [osapi client node container image pull](../../../../usage/cli/client/node/container/image/pull.md)                                                                                                        |
+| Command     | [osapi client node image pull](../../../../usage/cli/client/node/image/pull.md)                                                                                                                            |
 | Input type  | PullInput                                                                                                                                                                                                  |
 | Output type | PullResult                                                                                                                                                                                                 |
 
@@ -139,9 +138,9 @@ None. The method takes no input; its command needs only --target.
 | Description | Remove an image                                                                                                                                        |
 | Detail      | Runs docker rmi, with -f when force is set, which removes an image that a container uses. An image that the host does not have reports changed: false. |
 | HTTP        | DELETE                                                                                                                                                 |
-| Route       | /api/node/&#123;hostname&#125;/container/image/&#123;image&#125;                                                                                       |
+| Route       | /api/node/&#123;hostname&#125;/image/&#123;image&#125;                                                                                                 |
 | Permission  | image:write                                                                                                                                            |
-| Command     | [osapi client node container image delete](../../../../usage/cli/client/node/container/image/delete.md)                                                |
+| Command     | [osapi client node image delete](../../../../usage/cli/client/node/image/delete.md)                                                                    |
 | Input type  | DeleteInput                                                                                                                                            |
 | Output type | Result                                                                                                                                                 |
 

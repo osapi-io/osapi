@@ -266,9 +266,9 @@ func (s *TelemetryPublicTestSuite) TestCall() {
 	s.Run("a function that is not a method of the behavior is an error", func() {
 		s.SetupTest()
 
-		_, err := behavior.Call(context.Background(), grouped(), set, fakeProvider{}, getIn{})
+		_, err := behavior.Call(context.Background(), underLog(), set, fakeProvider{}, getIn{})
 
-		s.ErrorContains(err, "is not a method of behavior dns")
+		s.ErrorContains(err, "is not a method of behavior source")
 		s.Empty(s.spans.Ended())
 	})
 }

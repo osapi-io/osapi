@@ -18,7 +18,6 @@ examples make.
 | Name        | dns                                             |
 | Description | The DNS resolvers of each interface of the host |
 | Placement   | node                                            |
-| Group       | network                                         |
 | Area        | networking                                      |
 | Internal    | no                                              |
 | API         | yes                                             |
@@ -34,11 +33,11 @@ examples make.
 
 ### Methods (3)
 
-| NAME                     | VERB  | HTTP   | ROUTE                                                                 | PERMISSION | DESCRIPTION                                      |
-| ------------------------ | ----- | ------ | --------------------------------------------------------------------- | ---------- | ------------------------------------------------ |
-| [get](#method-get)       | read  | GET    | /api/node/&#123;hostname&#125;/network/dns/&#123;interface_name&#125; | dns:read   | Get the DNS resolvers of an interface            |
-| [update](#method-update) | write | PUT    | /api/node/&#123;hostname&#125;/network/dns/&#123;interface_name&#125; | dns:write  | Set the DNS resolvers of an interface            |
-| [delete](#method-delete) | write | DELETE | /api/node/&#123;hostname&#125;/network/dns/&#123;interface_name&#125; | dns:write  | Drop the DNS resolvers osapi set on an interface |
+| NAME                     | VERB  | HTTP   | ROUTE                                                         | PERMISSION | DESCRIPTION                                      |
+| ------------------------ | ----- | ------ | ------------------------------------------------------------- | ---------- | ------------------------------------------------ |
+| [get](#method-get)       | read  | GET    | /api/node/&#123;hostname&#125;/dns/&#123;interface_name&#125; | dns:read   | Get the DNS resolvers of an interface            |
+| [update](#method-update) | write | PUT    | /api/node/&#123;hostname&#125;/dns/&#123;interface_name&#125; | dns:write  | Set the DNS resolvers of an interface            |
+| [delete](#method-delete) | write | DELETE | /api/node/&#123;hostname&#125;/dns/&#123;interface_name&#125; | dns:write  | Drop the DNS resolvers osapi set on an interface |
 
 ### Types (3)
 
@@ -71,9 +70,9 @@ None. Declare them with behavior.Config.
 | Description | Get the DNS resolvers of an interface                                                                                                                                                     |
 | Detail      | Reads the servers and the search domains of the interface: resolvectl on Linux, with resolv.conf on a host that has no resolvers per interface, such as a container, and scutil on macOS. |
 | HTTP        | GET                                                                                                                                                                                       |
-| Route       | /api/node/&#123;hostname&#125;/network/dns/&#123;interface_name&#125;                                                                                                                     |
+| Route       | /api/node/&#123;hostname&#125;/dns/&#123;interface_name&#125;                                                                                                                             |
 | Permission  | dns:read                                                                                                                                                                                  |
-| Command     | [osapi client node network dns get](../../../../usage/cli/client/node/network/dns/get.md)                                                                                                 |
+| Command     | [osapi client node dns get](../../../../usage/cli/client/node/dns/get.md)                                                                                                                 |
 | Input type  | GetInput                                                                                                                                                                                  |
 | Output type | Entry                                                                                                                                                                                     |
 
@@ -107,9 +106,9 @@ None. Declare them with behavior.Config.
 | Description | Set the DNS resolvers of an interface                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | Detail      | Writes a netplan file of the interface's own, such as /etc/netplan/osapi-dns-eth0.yaml for eth0, under the netplan definition that matches the interface, and applies it. A definition that matches several interfaces, such as cloud-init's all for en\*, gives each of them the resolvers. An empty list keeps the interface's servers or domains, and an interface with no resolvers yet starts from none. override_dhcp drops the servers DHCP gives. It runs on the Debian family, and elsewhere, and in a container, reports skipped. |
 | HTTP        | PUT                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| Route       | /api/node/&#123;hostname&#125;/network/dns/&#123;interface_name&#125;                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Route       | /api/node/&#123;hostname&#125;/dns/&#123;interface_name&#125;                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | Permission  | dns:write                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| Command     | [osapi client node network dns update](../../../../usage/cli/client/node/network/dns/update.md)                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Command     | [osapi client node dns update](../../../../usage/cli/client/node/dns/update.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | Input type  | UpdateInput                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | Output type | Result                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
@@ -146,9 +145,9 @@ None. Declare them with behavior.Config.
 | Description | Drop the DNS resolvers osapi set on an interface                                                                  |
 | Detail      | Removes the interface's netplan file and applies what is left. An interface osapi set nothing on does not change. |
 | HTTP        | DELETE                                                                                                            |
-| Route       | /api/node/&#123;hostname&#125;/network/dns/&#123;interface_name&#125;                                             |
+| Route       | /api/node/&#123;hostname&#125;/dns/&#123;interface_name&#125;                                                     |
 | Permission  | dns:write                                                                                                         |
-| Command     | [osapi client node network dns delete](../../../../usage/cli/client/node/network/dns/delete.md)                   |
+| Command     | [osapi client node dns delete](../../../../usage/cli/client/node/dns/delete.md)                                   |
 | Input type  | DeleteInput                                                                                                       |
 | Output type | Result                                                                                                            |
 

@@ -11,9 +11,9 @@ systemd journal.
 
 ## Methods
 
-| Method                         | Returns                                  | Permission    | Description                      |
-| ------------------------------ | ---------------------------------------- | ------------- | -------------------------------- |
-| [`List(ctx, hostname)`](#list) | `*Response[Collection[LogSourceSource]]` | `source:read` | List the sources of the journal. |
+| Method                         | Returns                                  | Permission | Description                      |
+| ------------------------------ | ---------------------------------------- | ---------- | -------------------------------- |
+| [`List(ctx, hostname)`](#list) | `*Response[Collection[LogSourceSource]]` | `log:read` | List the sources of the journal. |
 
 ### List
 
@@ -27,11 +27,11 @@ func (s *LogSourceService) List(
 List the sources of the journal.
 
 Runs journalctl --field=SYSLOG_IDENTIFIER: each syslog identifier that has an
-entry, once, sorted. A name here is what log entry list takes as unit when the
-source is a systemd unit.
+entry, once, sorted. A name here is what log list takes as unit when the source
+is a systemd unit.
 
 It sends `GET /api/node/{hostname}/log/source`, and needs the permission
-`source:read`.
+`log:read`.
 
 The examples of the method's definition:
 

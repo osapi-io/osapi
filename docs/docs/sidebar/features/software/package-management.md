@@ -5,7 +5,7 @@ on the Debian family. It is two behaviors:
 
 - [package](../../reference/behaviors/software/package/package.md): the
   installed packages.
-- [updatepackages](../../reference/behaviors/software/updatepackages/updatepackages.md):
+- [package updates](../../reference/behaviors/software/package/updates/updates.md):
   the updates that the package index has, and the refresh of the index.
 
 ## How it works
@@ -32,7 +32,11 @@ version.
 ### The package index
 
 The index is not a fact about the host. It is what the repositories have, so
-`apt` reads it, not gohai. It runs on the Debian family.
+`apt` reads it, not gohai. It runs on the Debian family. Its commands are under
+the packages, `osapi client node package updates`, at
+`/api/node/{hostname}/package/updates`, and they need `package:read` and
+`package:write`. The route of the updates comes before the route of one package.
+Thus `get` cannot read a package with the name `updates`.
 
 - The list runs `apt list --upgradable`: each package with its installed version
   and the version that the index has.
@@ -46,7 +50,7 @@ The index is not a fact about the host. It is what the repositories have, so
 The generated page of each behavior gives the permission, the platforms and the
 route of each method:
 [package](../../reference/behaviors/software/package/package.md),
-[updatepackages](../../reference/behaviors/software/updatepackages/updatepackages.md).
+[package updates](../../reference/behaviors/software/package/updates/updates.md).
 The pages come from the definitions, so they stay true when a method changes,
 and this page does not copy them.
 [Authentication](../platform/authentication.md) tells which permissions each
@@ -68,10 +72,10 @@ osapi client node package create --target web-01 --name nginx
 osapi client node package delete --target web-01 --name nginx
 
 # Refresh the package index (apt-get update)
-osapi client node updatepackages update --target web-01
+osapi client node package updates update --target web-01
 
 # List available updates
-osapi client node updatepackages list --target web-01
+osapi client node package updates list --target web-01
 
 # Broadcast install to all hosts
 osapi client node package create --target _all --name htop

@@ -8,11 +8,11 @@ describes each part of a behavior.
 
 The rules:
 
-- `name`: The behavior, its group and each method have a name of lowercase
-  letters and digits, starting with a letter: the generators make Go names of
-  it, so a dash does not compile. No behavior or group is named all. Fix: Rename
-  it, such as sysctl or updatepackages. A name that is a Go keyword, such as
-  package, takes osapi dsl behavior create --package for its Go package.
+- `name`: The behavior and each method have a name of lowercase letters and
+  digits, starting with a letter: the generators make Go names of it, so a dash
+  does not compile. No behavior is named all. Fix: Rename it, such as sysctl or
+  connectivity. A name that is a Go keyword, such as package, takes osapi dsl
+  behavior create --package for its Go package.
 - `placement`: The behavior has a placement. Fix: Add behavior.Node to Define.
 - `doc`: The behavior and each method have a description. No description or
   .Explain text has &lt; &gt; &#123; or &#125;: the docs site reads them as
@@ -37,11 +37,14 @@ The rules:
   JSON name of an input field, or add the field to the input, and tag it
   validate:"required,...". When the message names a type, rename the type, such
   as Part to PartEntry.
-- `parent`: A behavior declared with Of is under a registered behavior whose
-  items have a key, such as name for a user, and is not also under a group: the
-  parent's path is its group. Fix: Give Of a behavior that has a keyed method,
-  such as user, and drop Under; the child takes the parent's path, command and
-  permissions.
+- `parent`: A child is under a registered behavior. A child declared with Of is
+  under an item of the parent, so the parent's items have a key, such as name
+  for a user. A child declared with Under is under the parent's collection, and
+  its name is not the name of an action of the parent, whose route it would
+  take. Fix: Give Of a behavior that has a keyed method, such as user, or use
+  Under for a parent whose items have no key, such as log. Rename a child of
+  Under that has the name of an action of the parent. The child takes the
+  parent's path, command and permissions.
 - `schema`: Each input is a struct, and each input and output type has a JSON
   Schema. A struct that an input or output holds is named in one spec for every
   behavior, so no two behaviors have a different type of the same name. Fix: Use

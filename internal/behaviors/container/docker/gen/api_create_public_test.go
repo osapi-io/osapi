@@ -23,15 +23,15 @@ func (s *APICreatePublicTestSuite) SetupSuite() {
 	s.api = servertest.New(s.T(), "internal/behaviors/container/docker/gen/api.yaml", gen.Routes)
 }
 
-// TestCreate sends POST /api/node/{hostname}/container/docker and checks each
-// answer's response.
+// TestCreate sends POST /api/node/{hostname}/docker and checks each answer's
+// response.
 func (s *APICreatePublicTestSuite) TestCreate() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when the example \"Create a container\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
 			Token: servertest.Write,
@@ -52,7 +52,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Name: "when the example \"Create a container\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/_all/container/docker",
+				Path:   "/api/node/_all/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
 			Token: servertest.Write,
@@ -75,7 +75,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Name: "when the example \"A container that the host has\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
 			Token: servertest.Write,
@@ -96,7 +96,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Name: "when the example \"A container that the host has\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/_all/container/docker",
+				Path:   "/api/node/_all/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
 			Token: servertest.Write,
@@ -119,7 +119,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
 			Token: servertest.Write,
@@ -140,7 +140,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Name: "when the host fails it, its row says failed",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
 			Token: servertest.Write,
@@ -161,7 +161,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Name: "when the host never answers, its row says timeout",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
 			Token: servertest.Write,
@@ -182,7 +182,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Name: "when the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
 			Token: servertest.Write,
@@ -201,7 +201,7 @@ func (s *APICreatePublicTestSuite) TestCreate() {
 			Name: "when broadcast and the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/_all/container/docker",
+				Path:   "/api/node/_all/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
 			Token: servertest.Write,
@@ -227,7 +227,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when the target is not an agent, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/nowhere/container/docker",
+				Path:   "/api/node/nowhere/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
 			Token:    servertest.Write,
@@ -237,7 +237,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when the target is empty, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node//container/docker",
+				Path:   "/api/node//docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
 			Token:    servertest.Write,
@@ -247,7 +247,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when name is missing, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
 			Token:    servertest.Write,
@@ -257,7 +257,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when image is missing, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"","command":["sleep","300"]}`,
 			},
 			Token:    servertest.Write,
@@ -267,7 +267,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when the body is not JSON, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   `{`,
 			},
 			Token:    servertest.Write,
@@ -277,7 +277,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when name has the wrong type, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   `{"name":[]}`,
 			},
 			Token:    servertest.Write,
@@ -287,7 +287,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when sent a name that is an option, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"-f","image":"alpine:3.20"}`,
 			},
 			Token:    servertest.Write,
@@ -297,7 +297,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when sent no image, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":""}`,
 			},
 			Token:    servertest.Write,
@@ -307,7 +307,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when sent an image that is an option, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"--privileged"}`,
 			},
 			Token:    servertest.Write,
@@ -317,7 +317,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when sent a hostname that is an option, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","container_hostname":"-x"}`,
 			},
 			Token:    servertest.Write,
@@ -327,7 +327,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when sent a hostname longer than 253 characters, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","container_hostname":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
 			},
 			Token:    servertest.Write,
@@ -337,7 +337,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when sent a DNS server that is not an address, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","dns":["nameserver"]}`,
 			},
 			Token:    servertest.Write,
@@ -347,7 +347,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when sent a port that is not host:container, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","ports":["80"]}`,
 			},
 			Token:    servertest.Write,
@@ -357,7 +357,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when sent a bind mount that is not two absolute paths, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","volumes":["data:/data"]}`,
 			},
 			Token:    servertest.Write,
@@ -367,7 +367,7 @@ func (s *APICreatePublicTestSuite) TestCreateValidationHTTP() {
 			Name: "when sent no name, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"","image":"alpine:3.20"}`,
 			},
 			Token:    servertest.Write,
@@ -383,7 +383,7 @@ func (s *APICreatePublicTestSuite) TestCreateRBACHTTP() {
 			Name: "when there is no token, it is a 401",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
 			Token:    servertest.NoToken,
@@ -393,7 +393,7 @@ func (s *APICreatePublicTestSuite) TestCreateRBACHTTP() {
 			Name: "when the token lacks docker:write, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
 			Token:    servertest.Lacking,
@@ -403,7 +403,7 @@ func (s *APICreatePublicTestSuite) TestCreateRBACHTTP() {
 			Name: "when the token has only the read role, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
 			Token:    servertest.Read,
@@ -413,7 +413,7 @@ func (s *APICreatePublicTestSuite) TestCreateRBACHTTP() {
 			Name: "when the token has the admin role, the request runs",
 			Request: servertest.Request{
 				Method: http.MethodPost,
-				Path:   "/api/node/server1/container/docker",
+				Path:   "/api/node/server1/docker",
 				Body:   `{"name":"osapitest","image":"alpine:3.20","command":["sleep","300"]}`,
 			},
 			Token: servertest.Admin,

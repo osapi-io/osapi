@@ -77,20 +77,6 @@ func Delete(
 	return Result{Name: in.Name, Changed: changed}, err
 }
 
-// SetPassword sets the password of a user. A new hash differs each time,
-// so it always changes the host.
-func SetPassword(
-	ctx context.Context,
-	p Provider,
-	in PasswordInput,
-) (Result, error) {
-	if err := p.SetPassword(ctx, in.Name, in.PasswordHash); err != nil {
-		return Result{Name: in.Name}, err
-	}
-
-	return Result{Name: in.Name, Changed: true}, nil
-}
-
 // hashFn hashes a password; a test swaps it to make the hash fail.
 var hashFn = password.Hash
 
@@ -106,23 +92,6 @@ func hashCreate(
 	hash, err := hashFn(in.Password)
 	if err != nil {
 		return CreateInput{}, err
-	}
-	in.PasswordHash, in.Password = hash, ""
-
-	return in, nil
-}
-
-// hashPassword is the password action's controller step.
-func hashPassword(
-	_ context.Context,
-	in PasswordInput,
-) (PasswordInput, error) {
-	if in.Password == "" {
-		return in, nil
-	}
-	hash, err := hashFn(in.Password)
-	if err != nil {
-		return PasswordInput{}, err
 	}
 	in.PasswordHash, in.Password = hash, ""
 

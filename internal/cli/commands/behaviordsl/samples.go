@@ -42,9 +42,14 @@ var (
 		},
 		{
 			Name:    "dns",
-			Group:   "network",
 			Methods: []string{"get", "update", "delete"},
 			Doc:     "The DNS resolvers of an interface",
+		},
+		{
+			Name:    "source",
+			Under:   "log",
+			Methods: []string{"list"},
+			Doc:     "The sources that write to the systemd journal",
 		},
 		{
 			Name:    "sysctl",
@@ -53,7 +58,7 @@ var (
 		},
 		{
 			Name:    "user",
-			Methods: []string{"list", "get", "create", "update", "delete", "passwd"},
+			Methods: []string{"list", "get", "create", "update", "delete"},
 			Doc:     "The users of the host",
 		},
 		{
@@ -61,6 +66,12 @@ var (
 			Of:      "user",
 			Methods: []string{"list", "create", "delete"},
 			Doc:     "The authorized SSH keys of a user",
+		},
+		{
+			Name:    "password",
+			Of:      "user",
+			Methods: []string{"update"},
+			Doc:     "The password of a user",
 		},
 	}}
 

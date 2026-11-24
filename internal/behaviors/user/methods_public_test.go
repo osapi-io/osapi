@@ -79,20 +79,6 @@ func (s *MethodsPublicTestSuite) TestMethods() {
 	res, err = user.Delete(ctx, s.mock, user.DeleteInput{Name: "alice"})
 	s.NoError(err)
 	s.Equal(user.Result{Name: "alice", Changed: true}, res)
-
-	s.mock.EXPECT().SetPassword(gomock.Any(), "alice", "$6$x$y").Return(nil)
-	res, err = user.SetPassword(
-		ctx,
-		s.mock,
-		user.PasswordInput{Name: "alice", PasswordHash: "$6$x$y"},
-	)
-	s.NoError(err)
-	s.Equal(user.Result{Name: "alice", Changed: true}, res)
-
-	s.mock.EXPECT().SetPassword(gomock.Any(), "alice", "").Return(boom)
-	res, err = user.SetPassword(ctx, s.mock, user.PasswordInput{Name: "alice"})
-	s.ErrorIs(err, boom)
-	s.Equal(user.Result{Name: "alice"}, res)
 }
 
 func TestMethodsPublicTestSuite(

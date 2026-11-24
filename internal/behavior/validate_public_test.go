@@ -244,14 +244,6 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 			wantRules: []string{behavior.RuleSurface},
 		},
 		{
-			name: "when a behavior is Under a group that is not one of KnownGroups",
-			b: behavior.Define("dns", "Resolvers", behavior.Node, onDebian,
-				behavior.Under("netwrok"),
-				behavior.Read("list", readList).Describe("List"),
-			),
-			wantRules: []string{behavior.RuleName},
-		},
-		{
 			name: "when a served behavior's area is not one of Areas",
 			b: behavior.Define("sysctl", "Kernel parameters", behavior.Node, onDebian, behavior.API,
 				behavior.Area("kitchen"),
@@ -269,14 +261,14 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 		},
 		{
 			name: "when names are not lowercase",
-			b: behavior.Define("Sysctl", "x", behavior.Node, onDebian, behavior.Under("Net"),
+			b: behavior.Define("Sysctl", "x", behavior.Node, onDebian,
 				behavior.Read("Get", get).Describe("Get"),
 			),
-			wantRules: []string{behavior.RuleName, behavior.RuleName, behavior.RuleName},
+			wantRules: []string{behavior.RuleName, behavior.RuleName},
 		},
 		{
-			name: "when a behavior or its group is named all",
-			b: behavior.Define("all", "x", behavior.Node, onDebian, behavior.Under("all"),
+			name: "when a behavior is named all",
+			b: behavior.Define("all", "x", behavior.Node, onDebian,
 				behavior.Read("get", get).Describe("Get"),
 			),
 			wantRules: []string{behavior.RuleName},
@@ -436,21 +428,34 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 			wantRules: []string{behavior.RuleKey},
 		},
 		{
-			name: "when a child is also under a group",
+			name: "when a child under the collection has the name of an action of its parent",
+			b: behavior.Define(
+				"reboot",
+				"x",
+				behavior.Node,
+				onDebian,
+				behavior.Under(
+					behavior.Define(
+						"item",
+						"x",
+						behavior.Node,
+						behavior.Action("reboot", set).Describe("Reboot"),
+					),
+				),
+				behavior.Read("list", get).Describe("List"),
+			),
+			wantRules: []string{behavior.RuleParent},
+		},
+		{
+			name: "when a child under the collection's parent is not registered",
 			b: behavior.Define(
 				"part",
 				"x",
 				behavior.Node,
 				onDebian,
-				behavior.Of(
-					behavior.Define(
-						"item",
-						"x",
-						behavior.Node,
-						behavior.Read("get", get).Key("key"),
-					),
+				behavior.Under(
+					behavior.Define("item", "x", behavior.Node, behavior.Read("list", get)),
 				),
-				behavior.Under("network"),
 				behavior.Read("list", get).Describe("List"),
 			),
 			wantRules: []string{behavior.RuleParent},
@@ -489,11 +494,17 @@ func (s *ValidatePublicTestSuite) TestValidateBehavior() {
 			wantRules: []string{behavior.RuleParent},
 		},
 		{
-			name: "when a write that is not an action always changes",
+			name: "when a delete always changes",
+			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
+				behavior.Write("delete", set).Key("key").Describe("Delete").Always(),
+			),
+			wantRules: []string{behavior.RuleVerb},
+		},
+		{
+			name: "when an update always changes, as a password does",
 			b: behavior.Define("sysctl", "x", behavior.Node, onDebian,
 				behavior.Write("update", set).Key("key").Describe("Update").Always(),
 			),
-			wantRules: []string{behavior.RuleVerb},
 		},
 		{
 			name: "when a method disrupts the host with no reason",

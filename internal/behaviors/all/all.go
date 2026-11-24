@@ -46,6 +46,7 @@ import (
 	_ "github.com/osapi-io/osapi/internal/behaviors/object"
 	_ "github.com/osapi-io/osapi/internal/behaviors/os"
 	_ "github.com/osapi-io/osapi/internal/behaviors/packages"
+	_ "github.com/osapi-io/osapi/internal/behaviors/password"
 	_ "github.com/osapi-io/osapi/internal/behaviors/power"
 	_ "github.com/osapi-io/osapi/internal/behaviors/process"
 	_ "github.com/osapi-io/osapi/internal/behaviors/schedule"

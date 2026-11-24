@@ -74,13 +74,12 @@ List, describe and validate the behaviors this binary has.
 | Description | Write a new behavior's standard layout in an osapi checkout |
 | Refuses     | no name, no description                                     |
 
-### Flags (6)
+### Flags (5)
 
 | FLAG          | TYPE      | VALIDATE  | HELP                                                                                                                 |
 | ------------- | --------- | --------- | -------------------------------------------------------------------------------------------------------------------- |
 | --name        | string    | required  | The behavior's name: lowercase letters and digits                                                                    |
 | --description | string    | required  | What it manages, in one line                                                                                         |
-| --group       | string    | omitempty | Nest it under a group, such as network: its routes, commands and directory                                           |
 | --package     | string    | omitempty | The Go package and directory, when it is not the name: package is a Go keyword, so --name package --package packages |
 | --requires    | \[]string | omitempty | Behaviors it is built on, such as managedfile: it writes the Requires, the host.Require and a provider field of each |
 | --root        | string    | omitempty | The osapi checkout to write into                                                                                     |

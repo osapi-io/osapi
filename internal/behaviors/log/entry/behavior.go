@@ -18,8 +18,9 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package entry is the entry behavior: the entries of the systemd journal of
-// the host, read with journalctl on each Linux host.
+// Package entry is the log behavior: the entries of the systemd journal of
+// the host, read with journalctl on each Linux host. The Go package keeps the
+// name entry, so it does not hide the standard library's log.
 package entry
 
 import (
@@ -51,10 +52,8 @@ var (
 // holds now, not a fact of the host, so journalctl reads them, not gohai. It
 // runs on each Linux host; macOS has no journal, and reports skipped.
 var Behavior = behavior.Register(behavior.Define(
-	"entry", "The entries of the systemd journal",
-	behavior.Title("Log entry"),
+	"log", "The entries of the systemd journal",
 	behavior.Node,
-	behavior.Under(behavior.GroupLog),
 	behavior.API,
 	behavior.Area(area.Logs),
 	behavior.CLI,

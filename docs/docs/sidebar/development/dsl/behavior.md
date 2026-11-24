@@ -52,8 +52,8 @@ and on its steps of a plan. Without it, the title is the name with a capital
 letter, such as Sysctl.
 
 Use: When the name does not read well with a capital letter: an initialism such
-as DNS, two words such as Package updates, a group such as Container image, or a
-behavior that Of nests, which names its parent, such as User SSH key.
+as DNS, two words such as Package updates or Container image, or a child, which
+names its parent, such as User SSH key.
 
 ### `Of(parent.Behavior)`
 
@@ -64,8 +64,8 @@ which goes in the path before the method's own key. The permissions are the
 parent's: the keys of a user need user:read and user:write. The parent's
 provider is not required: a child that needs it declares Requires too.
 
-Use: For a resource that exists only inside another, such as the SSH keys of a
-user. Not with Under: the parent's path is the group.
+Use: For a resource that exists only inside an item of another, such as the SSH
+keys of a user. For a child of the whole collection, use Under.
 
 ### `Area(area.Name)`
 
@@ -78,15 +78,18 @@ area.Config or area.Hardware. area.All has the label and the order of each area.
 Use: On each behavior with API. dsl behavior validate refuses a served behavior
 with none.
 
-### `Under(GroupName)`
+### `Under(parent.Behavior)`
 
-Nests the behavior in a group: its routes, commands and directory. The
-permissions keep the behavior's name: dns under network needs dns:read. Use a
-constant, such as GroupNetwork; dsl behavior validate refuses a group outside
-KnownGroups, because a misspelled group makes a new route and command.
+Puts the behavior under the collection of another behavior, with no key of the
+parent: Under(log.Behavior) puts source at
+/api/node/&#123;hostname&#125;/log/source and osapi client node log source. The
+permissions are the parent's: the sources of the log need log:read. A behavior
+with neither Of nor Under is directly under node, by its own name.
 
-Use: When the behavior belongs to a group, such as network. Add the group's
-constant to KnownGroups first.
+Use: For a resource of a parent whose items have no key, such as the sources of
+the log, or that is about the whole collection, such as the updates of the
+packages. Not for a category: a behavior is never nested only to sort it,
+because the area sorts it.
 
 ### `Internal`
 
@@ -188,14 +191,14 @@ Use: When no standard validate tag checks a value.
 
 ### `Read("name", fn)`
 
-A method that reads the host: GET and &lt;group&gt;:read. Named list, get or
+A method that reads the host: GET and &lt;name&gt;:read. Named list, get or
 status.
 
 Use: For each read. fn is func(ctx, p Provider, in In) (Out, error).
 
 ### `Write("name", fn)`
 
-A method that changes the host: POST, PUT or DELETE, and &lt;group&gt;:write.
+A method that changes the host: POST, PUT or DELETE, and &lt;name&gt;:write.
 Named create, update or delete. Out has Changed bool.
 
 Use: For each change. fn is func(ctx, p Provider, in In) (Out, error).
@@ -203,7 +206,7 @@ Use: For each change. fn is func(ctx, p Provider, in In) (Out, error).
 ### `Action("name", fn)`
 
 A write named for what it does, such as restart: POST on the method's path with
-the name after it, /service/&#123;name&#125;/restart, and &lt;group&gt;:execute,
+the name after it, /service/&#123;name&#125;/restart, and &lt;name&gt;:execute,
 which the operator role gets and automation does not. Named with one of the
 CLI's actions. Out has Changed bool.
 
@@ -252,13 +255,15 @@ Use: For an action that runs a shell command line, such as command shell.
 
 ### `.Always()`
 
-Marks an action that changes the host each time it runs, such as restart. Its
-output reports changed: true on each run, and the generated test does not run it
-again to see changed: false. dsl behavior validate refuses it on a method that
-is not an action.
+Marks a method that changes the host each time it runs: an action such as
+restart, or an update whose input the host cannot compare with what it has, such
+as a password that the controller hashes with a new salt. Its output reports
+changed: true on each run, and the generated test does not run it again to see
+changed: false. dsl behavior validate refuses it on a create, a delete and a
+read.
 
-Use: On an action that has no state to compare, so a second run is not
-unchanged.
+Use: On an action that has no state to compare, or an update of a secret that
+the host keeps only as a hash, so a second run is not unchanged.
 
 ### `.Disrupts("why")`
 
@@ -432,7 +437,7 @@ CI runs each write example as root on a throwaway Linux runner, with
 OSAPI_INTEGRATION_WRITE_BEHAVIORS=1, and the lab can run it too. Each example
 starts with its item deleted, runs the calls of After, then must report its
 changed, and changed: false when it runs again. The test uploads each object of
-Stored first, and runs an .Always() action once. Prints, PrintsAfter and Exists
+Stored first, and runs an .Always() method once. Prints, PrintsAfter and Exists
 only answer the fake host.
 
 Use: For each write example: give the state that it starts from with After,

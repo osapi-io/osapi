@@ -26,8 +26,15 @@ the job system.
   or unlock the password. The values that the user has already do not change it
 - **Delete**: remove a user and its home with `userdel -r`. A user that the host
   does not have reports `changed: false`
-- **Passwd**: set the password of a user with `chpasswd -e`. Each run reports
-  `changed: true`
+
+### Passwords
+
+The
+[password behavior](../../reference/behaviors/security/user/password/password.md)
+sets the password of a user with `chpasswd -e`. It is under the user:
+`osapi client node user password update`. Each run reports `changed: true`. It
+runs on the Debian family only, and needs `user:write`, which only the admin
+role has.
 
 The controller hashes each password before it makes the job. Thus the job, NATS
 and the agent have only the hash, never the password.
@@ -84,7 +91,7 @@ $ osapi client node user create --target web-01 \
 $ osapi client node user update --target web-01 --name deploy --lock locked
 
 # Set the password of a user
-$ osapi client node user passwd --target web-01 \
+$ osapi client node user password update --target web-01 \
     --name deploy --password 'newpass123'
 
 # Delete a user
@@ -163,4 +170,5 @@ not fail.
 - [CLI Reference: SSH Key](../../usage/cli/client/node/user/sshkey/sshkey.mdx)
 - [CLI Reference: Group](../../usage/cli/client/node/group/group.mdx)
 - [SDK: User](../../sdk/security/user.md)
+- [SDK: UserPassword](../../sdk/security/user_password.md)
 - [SDK: Group](../../sdk/security/group.md)

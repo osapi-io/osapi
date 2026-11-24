@@ -1,1 +1,0 @@
-{"title":"Body","body":{"content":{"application/json":{"schema":{"properties":{"address":{"description":"The IPv4 or IPv6 address to ping, or an @fact. reference that the agent resolves","type":"string","x-oapi-codegen-extra-tags":{"validate":"required,ip_or_fact"}}},"required":["address"],"type":"object","title":"NetworkConnectivityPingRequest"}}},"required":true}}

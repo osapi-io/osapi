@@ -38,7 +38,6 @@ var examples = []struct {
 	{"update-2", "Move the home, set the groups and lock it", runUpdate2},
 	{"update-3", "Unlock it", runUpdate3},
 	{"delete", "Remove a user", runDelete},
-	{"passwd", "Set a password", runPasswd},
 }
 
 // runList runs the example list: a host with users.
@@ -182,23 +181,6 @@ func runDelete(
 	target string,
 ) error {
 	resp, err := c.User.Delete(ctx, target, "osapitest")
-	if err != nil {
-		return err
-	}
-
-	return show(resp.Data)
-}
-
-// runPasswd runs the example passwd: set a password.
-func runPasswd(
-	ctx context.Context,
-	c *client.Client,
-	target string,
-) error {
-	resp, err := c.User.Passwd(ctx, target, client.UserPasswdInput{
-		Name:     "osapitest",
-		Password: "osapi-test-password",
-	})
 	if err != nil {
 		return err
 	}

@@ -131,15 +131,6 @@ func (s *CLIPublicTestSuite) TestCommands() {
 				Body:   "",
 			},
 		},
-		{
-			name: "when the example \"Set a password\" is run",
-			args: []string{"node", "user", "passwd", "--target", "server1", "--name", "osapitest", "--password", "osapi-test-password"},
-			want: commandtest.Request{
-				Method: "POST",
-				Path:   "/api/node/server1/user/osapitest/passwd",
-				Body:   "{\"password\":\"osapi-test-password\"}",
-			},
-		},
 	}
 
 	for _, tc := range tests {

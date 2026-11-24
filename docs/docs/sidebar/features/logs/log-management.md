@@ -1,15 +1,15 @@
 # Log management
 
 osapi reads the systemd journal of a host: its entries, and the sources that
-wrote them. Two behaviors under the `log` group do it, `entry` and `source`.
-Each runs `journalctl` on the host. The journal is what journald holds now, not
-a fact of the host, so gohai does not read it. Both are read-only.
+wrote them. Two behaviors do it: `log`, and `source` under it. Each runs
+`journalctl` on the host. The journal is what journald holds now, not a fact of
+the host, so gohai does not read it. Both are read-only.
 
 ## Entries
 
-`log entry list` runs `journalctl --output=json`, and returns the newest entries
-last. Each entry has its time in RFC 3339, the syslog identifier that wrote it,
-its priority by name, its message and its process ID. These filters select the
+`log list` runs `journalctl --output=json`, and returns the newest entries last.
+Each entry has its time in RFC 3339, the syslog identifier that wrote it, its
+priority by name, its message and its process ID. These filters select the
 entries, and each one is optional:
 
 | Filter     | Selects                                                                |
@@ -33,20 +33,20 @@ name before you query the entries of a unit.
 
 ```bash
 # The 100 newest entries of a host
-osapi client node log entry list --target web-01
+osapi client node log list --target web-01
 
 # The 50 newest errors of the last hour
-osapi client node log entry list --target web-01 \
+osapi client node log list --target web-01 \
   --lines 50 --since "1 hour ago" --priority err
 
 # The entries of one unit
-osapi client node log entry list --target web-01 --unit sshd.service
+osapi client node log list --target web-01 --unit sshd.service
 
 # The sources of the journal
 osapi client node log source list --target web-01
 
 # The 20 newest entries of each host
-osapi client node log entry list --target _all --lines 20
+osapi client node log list --target _all --lines 20
 ```
 
 Each command takes `--json` for the response body.
@@ -71,14 +71,14 @@ Linux families. The behaviors read each Linux host.
 
 ## Permissions
 
-The [log entry](../../reference/behaviors/logs/entry/entry.md) and
-[log source](../../reference/behaviors/logs/source/source.md) reference pages
-give the permission of each method.
+The [log](../../reference/behaviors/logs/log/log.md) and
+[log source](../../reference/behaviors/logs/log/source/source.md) reference
+pages give the permission of each method.
 
 ## Related
 
 - [CLI reference](../../usage/cli/client/node/log/log.mdx): the log commands
-- [SDK reference](../../sdk/logs/log_entry.md): the LogEntry service, and
+- [SDK reference](../../sdk/logs/log.md): the Log service, and
   [LogSource](../../sdk/logs/log_source.md)
 - [Platform detection](../../sdk/library/platform-detection.md): how osapi finds
   the platform of a host

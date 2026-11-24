@@ -1,0 +1,1 @@
+{"title":"Body","body":{"content":{"application/json":{"schema":{"properties":{"destination":{"description":"The destination of the route, in CIDR notation, such as 10.0.0.0/8","format":"cidr","type":"string","x-oapi-codegen-extra-tags":{"validate":"required,cidr"}}},"required":["destination"],"type":"object","title":"InterfaceRouteDeleteRequest"}}},"required":true}}

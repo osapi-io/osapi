@@ -68,7 +68,7 @@ func (suite *ClientPublicTestSuite) TestNew() {
 				suite.NotNil(c)
 				suite.NotNil(c.Status)
 				suite.NotNil(c.Hostname)
-				suite.NotNil(c.NetworkDNS)
+				suite.NotNil(c.DNS)
 				suite.NotNil(c.NodeFile)
 				suite.NotNil(c.File)
 				suite.NotNil(c.Job)

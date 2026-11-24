@@ -16,7 +16,6 @@ The Docker containers of the host. `osapi dsl behavior get --name docker` and
 | Name        | docker                            |
 | Description | The Docker containers of the host |
 | Placement   | node                              |
-| Group       | container                         |
 | Area        | containers                        |
 | Internal    | no                                |
 | API         | yes                               |
@@ -32,15 +31,15 @@ The Docker containers of the host. `osapi dsl behavior get --name docker` and
 
 ### Methods (7)
 
-| NAME                     | VERB  | HTTP   | ROUTE                                                                  | PERMISSION   | DESCRIPTION                     |
-| ------------------------ | ----- | ------ | ---------------------------------------------------------------------- | ------------ | ------------------------------- |
-| [list](#method-list)     | read  | GET    | /api/node/&#123;hostname&#125;/container/docker                        | docker:read  | List the containers of the host |
-| [get](#method-get)       | read  | GET    | /api/node/&#123;hostname&#125;/container/docker/&#123;name&#125;       | docker:read  | Get one container               |
-| [create](#method-create) | write | POST   | /api/node/&#123;hostname&#125;/container/docker                        | docker:write | Create a container              |
-| [delete](#method-delete) | write | DELETE | /api/node/&#123;hostname&#125;/container/docker/&#123;name&#125;       | docker:write | Remove a container              |
-| [start](#method-start)   | write | POST   | /api/node/&#123;hostname&#125;/container/docker/&#123;name&#125;/start | docker:write | Start a container               |
-| [stop](#method-stop)     | write | POST   | /api/node/&#123;hostname&#125;/container/docker/&#123;name&#125;/stop  | docker:write | Stop a container                |
-| [exec](#method-exec)     | write | POST   | /api/node/&#123;hostname&#125;/container/docker/&#123;name&#125;/exec  | docker:write | Run a command in a container    |
+| NAME                     | VERB  | HTTP   | ROUTE                                                        | PERMISSION   | DESCRIPTION                     |
+| ------------------------ | ----- | ------ | ------------------------------------------------------------ | ------------ | ------------------------------- |
+| [list](#method-list)     | read  | GET    | /api/node/&#123;hostname&#125;/docker                        | docker:read  | List the containers of the host |
+| [get](#method-get)       | read  | GET    | /api/node/&#123;hostname&#125;/docker/&#123;name&#125;       | docker:read  | Get one container               |
+| [create](#method-create) | write | POST   | /api/node/&#123;hostname&#125;/docker                        | docker:write | Create a container              |
+| [delete](#method-delete) | write | DELETE | /api/node/&#123;hostname&#125;/docker/&#123;name&#125;       | docker:write | Remove a container              |
+| [start](#method-start)   | write | POST   | /api/node/&#123;hostname&#125;/docker/&#123;name&#125;/start | docker:write | Start a container               |
+| [stop](#method-stop)     | write | POST   | /api/node/&#123;hostname&#125;/docker/&#123;name&#125;/stop  | docker:write | Stop a container                |
+| [exec](#method-exec)     | write | POST   | /api/node/&#123;hostname&#125;/docker/&#123;name&#125;/exec  | docker:write | Run a command in a container    |
 
 ### Types (7)
 
@@ -77,9 +76,9 @@ None. Declare them with behavior.Config.
 | Description | List the containers of the host                                                                                                                                                                                                                                                                                      |
 | Detail      | Reads each container through gohai's docker collector, which runs docker ps and docker inspect. state limits the list to the running or the stopped ones. A host whose docker does not answer reports skipped. The environment of a container shows only the names of its variables: osapi never reads their values. |
 | HTTP        | GET                                                                                                                                                                                                                                                                                                                  |
-| Route       | /api/node/&#123;hostname&#125;/container/docker                                                                                                                                                                                                                                                                      |
+| Route       | /api/node/&#123;hostname&#125;/docker                                                                                                                                                                                                                                                                                |
 | Permission  | docker:read                                                                                                                                                                                                                                                                                                          |
-| Command     | [osapi client node container docker list](../../../../usage/cli/client/node/container/docker/list.md)                                                                                                                                                                                                                |
+| Command     | [osapi client node docker list](../../../../usage/cli/client/node/docker/list.md)                                                                                                                                                                                                                                    |
 | Input type  | ListInput                                                                                                                                                                                                                                                                                                            |
 | Output type | \[]Entry                                                                                                                                                                                                                                                                                                             |
 
@@ -121,9 +120,9 @@ None. Declare them with behavior.Config.
 | Description | Get one container                                                                                                     |
 | Detail      | Reads one container by its name, its ID or the start of its ID. A container that the host does not have is not found. |
 | HTTP        | GET                                                                                                                   |
-| Route       | /api/node/&#123;hostname&#125;/container/docker/&#123;name&#125;                                                      |
+| Route       | /api/node/&#123;hostname&#125;/docker/&#123;name&#125;                                                                |
 | Permission  | docker:read                                                                                                           |
-| Command     | [osapi client node container docker get](../../../../usage/cli/client/node/container/docker/get.md)                   |
+| Command     | [osapi client node docker get](../../../../usage/cli/client/node/docker/get.md)                                       |
 | Input type  | GetInput                                                                                                              |
 | Output type | Entry                                                                                                                 |
 
@@ -164,9 +163,9 @@ None. Declare them with behavior.Config.
 | Description | Create a container                                                                                                                                                                                                                                                                                                                       |
 | Detail      | Runs docker create, which pulls the image when the host does not have it. The environment goes on docker's standard input, not in its arguments, which each user of the host can read. auto_start starts the container once it is made. A container of the name that the host has already is not made again, and reports changed: false. |
 | HTTP        | POST                                                                                                                                                                                                                                                                                                                                     |
-| Route       | /api/node/&#123;hostname&#125;/container/docker                                                                                                                                                                                                                                                                                          |
+| Route       | /api/node/&#123;hostname&#125;/docker                                                                                                                                                                                                                                                                                                    |
 | Permission  | docker:write                                                                                                                                                                                                                                                                                                                             |
-| Command     | [osapi client node container docker create](../../../../usage/cli/client/node/container/docker/create.md)                                                                                                                                                                                                                                |
+| Command     | [osapi client node docker create](../../../../usage/cli/client/node/docker/create.md)                                                                                                                                                                                                                                                    |
 | Input type  | CreateInput                                                                                                                                                                                                                                                                                                                              |
 | Output type | Result                                                                                                                                                                                                                                                                                                                                   |
 
@@ -208,9 +207,9 @@ None. Declare them with behavior.Config.
 | Description | Remove a container                                                                                                                                                     |
 | Detail      | Runs docker rm -f, which also removes a container that runs: a delete leaves no container of the name. A container that the host does not have reports changed: false. |
 | HTTP        | DELETE                                                                                                                                                                 |
-| Route       | /api/node/&#123;hostname&#125;/container/docker/&#123;name&#125;                                                                                                       |
+| Route       | /api/node/&#123;hostname&#125;/docker/&#123;name&#125;                                                                                                                 |
 | Permission  | docker:write                                                                                                                                                           |
-| Command     | [osapi client node container docker delete](../../../../usage/cli/client/node/container/docker/delete.md)                                                              |
+| Command     | [osapi client node docker delete](../../../../usage/cli/client/node/docker/delete.md)                                                                                  |
 | Input type  | DeleteInput                                                                                                                                                            |
 | Output type | Result                                                                                                                                                                 |
 
@@ -244,9 +243,9 @@ None. Declare them with behavior.Config.
 | Description | Start a container                                                                                                          |
 | Detail      | Runs docker start. A container that runs already reports changed: false, and one that the host does not have is not found. |
 | HTTP        | POST                                                                                                                       |
-| Route       | /api/node/&#123;hostname&#125;/container/docker/&#123;name&#125;/start                                                     |
+| Route       | /api/node/&#123;hostname&#125;/docker/&#123;name&#125;/start                                                               |
 | Permission  | docker:execute                                                                                                             |
-| Command     | [osapi client node container docker start](../../../../usage/cli/client/node/container/docker/start.md)                    |
+| Command     | [osapi client node docker start](../../../../usage/cli/client/node/docker/start.md)                                        |
 | Input type  | StartInput                                                                                                                 |
 | Output type | Result                                                                                                                     |
 
@@ -280,9 +279,9 @@ None. Declare them with behavior.Config.
 | Description | Stop a container                                                                                                                                                               |
 | Detail      | Runs docker stop, which waits timeout seconds before docker kills the container, or docker's default of 10 when it is 0. A container that does not run reports changed: false. |
 | HTTP        | POST                                                                                                                                                                           |
-| Route       | /api/node/&#123;hostname&#125;/container/docker/&#123;name&#125;/stop                                                                                                          |
+| Route       | /api/node/&#123;hostname&#125;/docker/&#123;name&#125;/stop                                                                                                                    |
 | Permission  | docker:execute                                                                                                                                                                 |
-| Command     | [osapi client node container docker stop](../../../../usage/cli/client/node/container/docker/stop.md)                                                                          |
+| Command     | [osapi client node docker stop](../../../../usage/cli/client/node/docker/stop.md)                                                                                              |
 | Input type  | StopInput                                                                                                                                                                      |
 | Output type | Result                                                                                                                                                                         |
 
@@ -317,9 +316,9 @@ None. Declare them with behavior.Config.
 | Description | Run a command in a container                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | Detail      | Runs docker exec, and answers what the command wrote to standard output and to standard error, and its exit code. A command that exits with a code other than 0 is an answer, not a failure. It changes what the command changes, which osapi cannot tell, so it reports changed: true. Its permission is docker:exec, which only the admin role gets, apart from the docker:execute of start and stop. An agent with agent.command.enabled false refuses it, as it refuses a command. |
 | HTTP        | POST                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| Route       | /api/node/&#123;hostname&#125;/container/docker/&#123;name&#125;/exec                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Route       | /api/node/&#123;hostname&#125;/docker/&#123;name&#125;/exec                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | Permission  | docker:exec                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| Command     | [osapi client node container docker exec](../../../../usage/cli/client/node/container/docker/exec.md)                                                                                                                                                                                                                                                                                                                                                                                  |
+| Command     | [osapi client node docker exec](../../../../usage/cli/client/node/docker/exec.md)                                                                                                                                                                                                                                                                                                                                                                                                      |
 | Input type  | ExecInput                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | Output type | ExecResult                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 

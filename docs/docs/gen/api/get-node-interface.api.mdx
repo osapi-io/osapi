@@ -1,0 +1,69 @@
+---
+id: get-node-interface
+title: "List the network interfaces of the host"
+description: "Reads each interface but the loopback, in the order of its index: /sys/class/net and ip on Linux, ifconfig and netstat on macOS. dhcp4 is true when a route of the interface has proto dhcp, and primary when it has the default route."
+sidebar_label: "List the network interfaces of the host"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "get api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"List the network interfaces of the host"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/api/node/{hostname}/interface"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Reads each interface but the loopback, in the order of its index: /sys/class/net and ip on Linux, ifconfig and netstat on macOS. dhcp4 is true when a route of the interface has proto dhcp, and primary when it has the default route.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./get-node-interface.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./get-node-interface.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./get-node-interface.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

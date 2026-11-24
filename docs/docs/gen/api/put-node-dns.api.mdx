@@ -1,0 +1,69 @@
+---
+id: put-node-dns
+title: "Set the DNS resolvers of an interface"
+description: "Writes a netplan file of the interface's own, such as /etc/netplan/osapi-dns-eth0.yaml for eth0, under the netplan definition that matches the interface, and applies it. A definition that matches several interfaces, such as cloud-init's all for en*, gives each of them the resolvers. An empty list keeps the interface's servers or domains, and an interface with no resolvers yet starts from none. override_dhcp drops the servers DHCP gives. It runs on the Debian family, and elsewhere, and in a container, reports skipped."
+sidebar_label: "Set the DNS resolvers of an interface"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "put api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Set the DNS resolvers of an interface"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"put"}
+  path={"/api/node/{hostname}/dns/{interface_name}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Writes a netplan file of the interface's own, such as /etc/netplan/osapi-dns-eth0.yaml for eth0, under the netplan definition that matches the interface, and applies it. A definition that matches several interfaces, such as cloud-init's all for en*, gives each of them the resolvers. An empty list keeps the interface's servers or domains, and an interface with no resolvers yet starts from none. override_dhcp drops the servers DHCP gives. It runs on the Debian family, and elsewhere, and in a container, reports skipped.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./put-node-dns.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./put-node-dns.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./put-node-dns.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

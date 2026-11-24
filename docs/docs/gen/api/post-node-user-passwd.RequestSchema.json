@@ -1,1 +1,0 @@
-{"title":"Body","body":{"content":{"application/json":{"schema":{"properties":{"password":{"description":"The new password, which osapi hashes on the controller","format":"password","pattern":"^[^\\r\\n]*$","type":"string","writeOnly":true,"x-oapi-codegen-extra-tags":{"validate":"omitempty,no_linebreak"}}},"type":"object","title":"UserPasswdRequest"}}},"required":true}}

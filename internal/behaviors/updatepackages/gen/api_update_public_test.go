@@ -23,7 +23,7 @@ func (s *APIUpdatePublicTestSuite) SetupSuite() {
 	s.api = servertest.New(s.T(), "internal/behaviors/updatepackages/gen/api.yaml", gen.Routes)
 }
 
-// TestUpdate sends PUT /api/node/{hostname}/updatepackages and checks each
+// TestUpdate sends PUT /api/node/{hostname}/package/updates and checks each
 // answer's response.
 func (s *APIUpdatePublicTestSuite) TestUpdate() {
 	s.api.Run(s.T(), []servertest.Case{
@@ -31,13 +31,13 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Name: "when the example \"The repositories are unchanged since the last refresh\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/updatepackages",
+				Path:   "/api/node/server1/package/updates",
 				Body:   `{}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
-				"updatepackages.update",
+				"updates.update",
 				updatepackages.UpdateInput{},
 				servertest.Completed("server1", `{"changed":false}`),
 			),
@@ -48,13 +48,13 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Name: "when the example \"The repositories are unchanged since the last refresh\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/_all/updatepackages",
+				Path:   "/api/node/_all/package/updates",
 				Body:   `{}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"_all",
-				"updatepackages.update",
+				"updates.update",
 				updatepackages.UpdateInput{},
 				servertest.Completed("server1", `{"changed":false}`),
 				servertest.Skipped("server2"),
@@ -67,13 +67,13 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/updatepackages",
+				Path:   "/api/node/server1/package/updates",
 				Body:   `{}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
-				"updatepackages.update",
+				"updates.update",
 				updatepackages.UpdateInput{},
 				servertest.Skipped("server1"),
 			),
@@ -84,13 +84,13 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Name: "when the host fails it, its row says failed",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/updatepackages",
+				Path:   "/api/node/server1/package/updates",
 				Body:   `{}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
-				"updatepackages.update",
+				"updates.update",
 				updatepackages.UpdateInput{},
 				servertest.Failed("server1", "boom"),
 			),
@@ -101,13 +101,13 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Name: "when the host never answers, its row says timeout",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/updatepackages",
+				Path:   "/api/node/server1/package/updates",
 				Body:   `{}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
-				"updatepackages.update",
+				"updates.update",
 				updatepackages.UpdateInput{},
 				servertest.TimedOut("server1"),
 			),
@@ -118,13 +118,13 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Name: "when the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/updatepackages",
+				Path:   "/api/node/server1/package/updates",
 				Body:   `{}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"server1",
-				"updatepackages.update",
+				"updates.update",
 				updatepackages.UpdateInput{},
 			).Fails(servertest.ErrUnreachable),
 			WantCode: http.StatusInternalServerError,
@@ -133,13 +133,13 @@ func (s *APIUpdatePublicTestSuite) TestUpdate() {
 			Name: "when broadcast and the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/_all/updatepackages",
+				Path:   "/api/node/_all/package/updates",
 				Body:   `{}`,
 			},
 			Token: servertest.Write,
 			Job: servertest.Modify(
 				"_all",
-				"updatepackages.update",
+				"updates.update",
 				updatepackages.UpdateInput{},
 			).Fails(servertest.ErrUnreachable),
 			WantCode: http.StatusInternalServerError,
@@ -155,7 +155,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Name: "when the target is not an agent, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/nowhere/updatepackages",
+				Path:   "/api/node/nowhere/package/updates",
 				Body:   `{}`,
 			},
 			Token:    servertest.Write,
@@ -165,7 +165,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 			Name: "when the target is empty, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node//updatepackages",
+				Path:   "/api/node//package/updates",
 				Body:   `{}`,
 			},
 			Token:    servertest.Write,
@@ -174,24 +174,24 @@ func (s *APIUpdatePublicTestSuite) TestUpdateValidationHTTP() {
 	})
 }
 
-// TestUpdateRBACHTTP sends tokens that do not grant updatepackages:write.
+// TestUpdateRBACHTTP sends tokens that do not grant package:write.
 func (s *APIUpdatePublicTestSuite) TestUpdateRBACHTTP() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when there is no token, it is a 401",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/updatepackages",
+				Path:   "/api/node/server1/package/updates",
 				Body:   `{}`,
 			},
 			Token:    servertest.NoToken,
 			WantCode: http.StatusUnauthorized,
 		},
 		{
-			Name: "when the token lacks updatepackages:write, it is a 403",
+			Name: "when the token lacks package:write, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/updatepackages",
+				Path:   "/api/node/server1/package/updates",
 				Body:   `{}`,
 			},
 			Token:    servertest.Lacking,
@@ -201,7 +201,7 @@ func (s *APIUpdatePublicTestSuite) TestUpdateRBACHTTP() {
 			Name: "when the token has only the read role, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/updatepackages",
+				Path:   "/api/node/server1/package/updates",
 				Body:   `{}`,
 			},
 			Token:    servertest.Read,
@@ -211,13 +211,13 @@ func (s *APIUpdatePublicTestSuite) TestUpdateRBACHTTP() {
 			Name: "when the token has the admin role, the request runs",
 			Request: servertest.Request{
 				Method: http.MethodPut,
-				Path:   "/api/node/server1/updatepackages",
+				Path:   "/api/node/server1/package/updates",
 				Body:   `{}`,
 			},
 			Token: servertest.Admin,
 			Job: servertest.Modify(
 				"server1",
-				"updatepackages.update",
+				"updates.update",
 				updatepackages.UpdateInput{},
 				servertest.Skipped("server1"),
 			),

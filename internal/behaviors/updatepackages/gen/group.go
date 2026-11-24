@@ -12,13 +12,13 @@ import (
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 )
 
-// ListRequest is the request of updatepackages list: its target and its input.
+// ListRequest is the request of updates list: its target and its input.
 type ListRequest struct {
 	Hostname string `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
 }
 
-// UpdatepackagesAvailable is the result of updatepackages on one host.
-type UpdatepackagesAvailable struct {
+// PackageUpdatesAvailable is the result of updates on one host.
+type PackageUpdatesAvailable struct {
 	Hostname       string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
 	Status         string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
 	Name           *string `doc:"The package" json:"name,omitempty"`
@@ -27,80 +27,80 @@ type UpdatepackagesAvailable struct {
 	Error          *string `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
-// UpdatepackagesCollectionResponse is each target host's result.
-type UpdatepackagesCollectionResponse struct {
+// PackageUpdatesCollectionResponse is each target host's result.
+type PackageUpdatesCollectionResponse struct {
 	JobID   string                    `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
-	Results []UpdatepackagesAvailable `json:"results"`
+	Results []PackageUpdatesAvailable `json:"results"`
 }
 
-// HandleList runs updatepackages list on the target, for the endpoint server.
+// HandleList runs updates list on the target, for the endpoint server.
 func HandleList(
 	ctx context.Context,
 	d dispatch.Deps,
 	in ListRequest,
-) (UpdatepackagesCollectionResponse, error) {
-	return dispatch.Run[UpdatepackagesCollectionResponse](ctx, d, updatepackages.Behavior, "list", in.Hostname, updatepackages.ListInput{})
+) (PackageUpdatesCollectionResponse, error) {
+	return dispatch.Run[PackageUpdatesCollectionResponse](ctx, d, updatepackages.Behavior, "list", in.Hostname, updatepackages.ListInput{})
 }
 
-// UpdateRequest is the request of updatepackages update: its target and its input.
+// UpdateRequest is the request of updates update: its target and its input.
 type UpdateRequest struct {
 	Hostname string `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
 }
 
-// UpdatepackagesResult is the result of updatepackages on one host.
-type UpdatepackagesResult struct {
+// PackageUpdatesResult is the result of updates on one host.
+type PackageUpdatesResult struct {
 	Hostname string  `doc:"Hostname of the agent that produced this result." json:"hostname"`
 	Status   string  `doc:"The status of the operation for this host." json:"status" validate:"oneof=ok failed skipped timeout"`
 	Changed  *bool   `doc:"Whether the refresh got new index data" json:"changed,omitempty"`
 	Error    *string `doc:"Error message if the agent failed." json:"error,omitempty"`
 }
 
-// UpdatepackagesUpdateResponse is each target host's result.
-type UpdatepackagesUpdateResponse struct {
+// PackageUpdatesUpdateResponse is each target host's result.
+type PackageUpdatesUpdateResponse struct {
 	JobID   string                 `doc:"The job ID used to process this request." example:"550e8400-e29b-41d4-a716-446655440000" json:"job_id,omitempty" validate:"uuid"`
-	Results []UpdatepackagesResult `json:"results"`
+	Results []PackageUpdatesResult `json:"results"`
 }
 
-// HandleUpdate runs updatepackages update on the target, for the endpoint server.
+// HandleUpdate runs updates update on the target, for the endpoint server.
 func HandleUpdate(
 	ctx context.Context,
 	d dispatch.Deps,
 	in UpdateRequest,
-) (UpdatepackagesUpdateResponse, error) {
-	return dispatch.Run[UpdatepackagesUpdateResponse](ctx, d, updatepackages.Behavior, "update", in.Hostname, updatepackages.UpdateInput{})
+) (PackageUpdatesUpdateResponse, error) {
+	return dispatch.Run[PackageUpdatesUpdateResponse](ctx, d, updatepackages.Behavior, "update", in.Hostname, updatepackages.UpdateInput{})
 }
 
-// Group is updatepackages as an endpoint group, which its spec comes from.
+// Group is updates as an endpoint group, which its spec comes from.
 var Group = endpoint.Define(
-	"updatepackages",
+	"updates",
 	"The updates the package index has for the host",
 	endpoint.Area(area.Software),
-	endpoint.Prefix("node/{hostname}"),
+	endpoint.Prefix("node/{hostname}/package"),
 	endpoint.Uses[dispatch.Deps](),
-	endpoint.Tag("updatepackages_operations", "Package updates", "The updates the package index has for the host"),
-	endpoint.CommandNotes("The [updatepackages behavior](../../../../../reference/behaviors/software/updatepackages/updatepackages.md) page tells where the behavior runs, what it is built on and its settings."),
-	endpoint.Get[ListRequest, UpdatepackagesCollectionResponse]("list").
+	endpoint.Tag("updates_operations", "Package updates", "The updates the package index has for the host"),
+	endpoint.CommandNotes("The [updates behavior](../../../../../../reference/behaviors/software/package/updates/updates.md) page tells where the behavior runs, what it is built on and its settings."),
+	endpoint.Get[ListRequest, PackageUpdatesCollectionResponse]("list").
 		Handle(HandleList).
-		ID("GetNodeUpdatepackages").
+		ID("GetNodePackageUpdates").
 		Describe("List the packages the index has newer versions of").
-		Permission("updatepackages:read").
+		Permission("package:read").
 		Returns("Each target host's result.").
 		Explain("Runs apt list --upgradable: each package with its installed version and the version the index has. Refresh the index first for what the repositories have now.").
 		Example("--target web-01", "Two updates").
-		Result("Two updates, on one host:\n\n```ansi\n$ osapi client node updatepackages list --target web-01\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mNAME     \x1b[0m\x1b[38;2;10;143;176mCURRENT VERSION  \x1b[0m\x1b[38;2;10;143;176mNEW VERSION\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[1mcurl\x1b[0m     8.5.0-2ubuntu10  8.5.0-2ubuntu10.1\n  \x1b[38;2;138;138;138mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[1mopenssl\x1b[0m  3.0.13-0ubuntu3  3.0.13-0ubuntu3.1\n\n  1 host: \x1b[38;2;103;234;147m1 ok\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nOn each host, where one cannot run it:\n\n```ansi\n$ osapi client node updatepackages list --target _all\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mNAME     \x1b[0m\x1b[38;2;10;143;176mCURRENT VERSION  \x1b[0m\x1b[38;2;10;143;176mNEW VERSION\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[1mcurl\x1b[0m     8.5.0-2ubuntu10  8.5.0-2ubuntu10.1\n  \x1b[38;2;138;138;138mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[1mopenssl\x1b[0m  3.0.13-0ubuntu3  3.0.13-0ubuntu3.1\n  \x1b[1mweb-02\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[1mcurl\x1b[0m     8.5.0-2ubuntu10  8.5.0-2ubuntu10.1\n  \x1b[38;2;138;138;138mweb-02\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[1mopenssl\x1b[0m  3.0.13-0ubuntu3  3.0.13-0ubuntu3.1\n\n  3 hosts: \x1b[38;2;103;234;147m2 ok\x1b[0m, \x1b[38;5;222m1 skipped\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n\n\x1b[1;38;2;255;0;255mDetails:\x1b[0m\n  \x1b[1mmac-01\x1b[0m  \x1b[38;5;222mskipped\x1b[0m  operation not supported on this OS family\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"current_version\": \"8.5.0-2ubuntu10\",\n      \"hostname\": \"web-01\",\n      \"name\": \"curl\",\n      \"new_version\": \"8.5.0-2ubuntu10.1\",\n      \"status\": \"ok\"\n    },\n    {\n      \"current_version\": \"3.0.13-0ubuntu3\",\n      \"hostname\": \"web-01\",\n      \"name\": \"openssl\",\n      \"new_version\": \"3.0.13-0ubuntu3.1\",\n      \"status\": \"ok\"\n    }\n  ]\n}\n```").
+		Result("Two updates, on one host:\n\n```ansi\n$ osapi client node package updates list --target web-01\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mNAME     \x1b[0m\x1b[38;2;10;143;176mCURRENT VERSION  \x1b[0m\x1b[38;2;10;143;176mNEW VERSION\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[1mcurl\x1b[0m     8.5.0-2ubuntu10  8.5.0-2ubuntu10.1\n  \x1b[38;2;138;138;138mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[1mopenssl\x1b[0m  3.0.13-0ubuntu3  3.0.13-0ubuntu3.1\n\n  1 host: \x1b[38;2;103;234;147m1 ok\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nOn each host, where one cannot run it:\n\n```ansi\n$ osapi client node package updates list --target _all\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS  \x1b[0m\x1b[38;2;10;143;176mNAME     \x1b[0m\x1b[38;2;10;143;176mCURRENT VERSION  \x1b[0m\x1b[38;2;10;143;176mNEW VERSION\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[1mcurl\x1b[0m     8.5.0-2ubuntu10  8.5.0-2ubuntu10.1\n  \x1b[38;2;138;138;138mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[1mopenssl\x1b[0m  3.0.13-0ubuntu3  3.0.13-0ubuntu3.1\n  \x1b[1mweb-02\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[1mcurl\x1b[0m     8.5.0-2ubuntu10  8.5.0-2ubuntu10.1\n  \x1b[38;2;138;138;138mweb-02\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m      \x1b[1mopenssl\x1b[0m  3.0.13-0ubuntu3  3.0.13-0ubuntu3.1\n\n  3 hosts: \x1b[38;2;103;234;147m2 ok\x1b[0m, \x1b[38;5;222m1 skipped\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n\n\x1b[1;38;2;255;0;255mDetails:\x1b[0m\n  \x1b[1mmac-01\x1b[0m  \x1b[38;5;222mskipped\x1b[0m  operation not supported on this OS family\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"current_version\": \"8.5.0-2ubuntu10\",\n      \"hostname\": \"web-01\",\n      \"name\": \"curl\",\n      \"new_version\": \"8.5.0-2ubuntu10.1\",\n      \"status\": \"ok\"\n    },\n    {\n      \"current_version\": \"3.0.13-0ubuntu3\",\n      \"hostname\": \"web-01\",\n      \"name\": \"openssl\",\n      \"new_version\": \"3.0.13-0ubuntu3.1\",\n      \"status\": \"ok\"\n    }\n  ]\n}\n```").
 		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host does not have what the request names, such as the object of a deploy."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotManaged), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotInstalled), endpoint.Invalid(dispatch.ErrInvalid, "The request is not valid, or the host refuses the input, such as a path that is a directory.")),
-	endpoint.Put[UpdateRequest, UpdatepackagesUpdateResponse]("update").
+	endpoint.Put[UpdateRequest, PackageUpdatesUpdateResponse]("update").
 		Handle(HandleUpdate).
-		ID("PutNodeUpdatepackages").
+		ID("PutNodePackageUpdates").
 		Describe("Refresh the package index").
-		Permission("updatepackages:write").
+		Permission("package:write").
 		Returns("Each target host's result, with whether it changed.").
 		Explain("Runs apt-get update. It reports changed: true when the Release file of a repository under /var/lib/apt/lists changed, and changed: false when each repository was unchanged.").
 		Example("--target web-01", "The repositories are unchanged since the last refresh").
-		Result("The repositories are unchanged since the last refresh, on one host:\n\n```ansi\n$ osapi client node updatepackages update --target web-01\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m\n\n  1 host: \x1b[38;2;103;234;147m1 ok\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nOn each host, where one cannot run it:\n\n```ansi\n$ osapi client node updatepackages update --target _all\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m\n  \x1b[1mweb-02\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m\n\n  3 hosts: \x1b[38;2;103;234;147m2 ok\x1b[0m, \x1b[38;5;222m1 skipped\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n\n\x1b[1;38;2;255;0;255mDetails:\x1b[0m\n  \x1b[1mmac-01\x1b[0m  \x1b[38;5;222mskipped\x1b[0m  operation not supported on this OS family\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"changed\": false,\n      \"hostname\": \"web-01\",\n      \"status\": \"ok\"\n    }\n  ]\n}\n```").
+		Result("The repositories are unchanged since the last refresh, on one host:\n\n```ansi\n$ osapi client node package updates update --target web-01\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m\n\n  1 host: \x1b[38;2;103;234;147m1 ok\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n```\n\nOn each host, where one cannot run it:\n\n```ansi\n$ osapi client node package updates update --target _all\n\x1b[1;38;2;0;213;255mResults:\x1b[0m\n  \x1b[38;2;10;143;176mHOSTNAME  \x1b[0m\x1b[38;2;10;143;176mSTATUS\x1b[0m\n  \x1b[1mweb-01\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m\n  \x1b[1mweb-02\x1b[0m    \x1b[38;2;103;234;147mok\x1b[0m\n\n  3 hosts: \x1b[38;2;103;234;147m2 ok\x1b[0m, \x1b[38;5;222m1 skipped\x1b[0m   \x1b[38;2;138;138;138mjob 550e8400-e29b-41d4-a716-446655440000\x1b[0m   \x1b[38;2;138;138;138mtrace 26e448c9dbe1c4a8d216a98c675079c9\x1b[0m\n\n\x1b[1;38;2;255;0;255mDetails:\x1b[0m\n  \x1b[1mmac-01\x1b[0m  \x1b[38;5;222mskipped\x1b[0m  operation not supported on this OS family\n```\n\nWith `--json`, the API's response:\n\n```json\n{\n  \"job_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"results\": [\n    {\n      \"changed\": false,\n      \"hostname\": \"web-01\",\n      \"status\": \"ok\"\n    }\n  ]\n}\n```").
 		Errors(endpoint.NotFound(behavior.ErrNotFound, "The host does not have what the request names, such as the object of a deploy."), endpoint.Conflict(behavior.ErrNotManaged, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotManaged), endpoint.Conflict(behavior.ErrNotInstalled, "osapi did not deploy the item, so it does not change it, or the host does not have a program that the method needs.").Because(endpoint.ReasonNotInstalled), endpoint.Invalid(dispatch.ErrInvalid, "The request is not valid, or the host refuses the input, such as a path that is a directory.")),
 )
 
 func init() {
-	behavior.RegisterGroup("updatepackages", Group)
+	behavior.RegisterGroup("updates", Group)
 }

@@ -70,16 +70,16 @@ func (s *CommandtestPublicTestSuite) TestSent() {
 // list, the bool and the string that the first sets are not in the second.
 func (s *CommandtestPublicTestSuite) TestFlagsDoNotCarryOver() {
 	first := commandtest.Sent(s.T(), []string{
-		"node", "network", "dns", "update", "--target", "server1", "--interface-name", "eth0",
+		"node", "dns", "update", "--target", "server1", "--interface-name", "eth0",
 		"--servers", "9.9.9.9", "--override-dhcp",
 	})
 	s.Equal(`{"servers":["9.9.9.9"],"override_dhcp":true}`, first.Body)
 
 	second := commandtest.Sent(s.T(), []string{
-		"node", "network", "dns", "update", "--target", "server1", "--interface-name", "eth1",
+		"node", "dns", "update", "--target", "server1", "--interface-name", "eth1",
 		"--search-domains", "corp.example",
 	})
-	s.Equal("/api/node/server1/network/dns/eth1", second.Path)
+	s.Equal("/api/node/server1/dns/eth1", second.Path)
 	s.Equal(`{"search_domains":["corp.example"]}`, second.Body)
 }
 

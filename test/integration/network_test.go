@@ -32,7 +32,7 @@ type NetworkSmokeSuite struct {
 	suite.Suite
 }
 
-func (s *NetworkSmokeSuite) TestNetworkDnsGet() {
+func (s *NetworkSmokeSuite) TestDnsGet() {
 	tests := []struct {
 		name         string
 		args         []string
@@ -43,7 +43,6 @@ func (s *NetworkSmokeSuite) TestNetworkDnsGet() {
 			args: []string{
 				"client",
 				"node",
-				"network",
 				"dns",
 				"get",
 				"--target",

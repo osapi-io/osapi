@@ -25,19 +25,19 @@ func (s *CLIPublicTestSuite) TestCommands() {
 	}{
 		{
 			name: "when the example \"Two updates\" is run",
-			args: []string{"node", "updatepackages", "list", "--target", "server1"},
+			args: []string{"node", "package", "updates", "list", "--target", "server1"},
 			want: commandtest.Request{
 				Method: "GET",
-				Path:   "/api/node/server1/updatepackages",
+				Path:   "/api/node/server1/package/updates",
 				Body:   "",
 			},
 		},
 		{
 			name: "when the example \"The repositories are unchanged since the last refresh\" is run",
-			args: []string{"node", "updatepackages", "update", "--target", "server1"},
+			args: []string{"node", "package", "updates", "update", "--target", "server1"},
 			want: commandtest.Request{
 				Method: "PUT",
-				Path:   "/api/node/server1/updatepackages",
+				Path:   "/api/node/server1/package/updates",
 				Body:   "",
 			},
 		},

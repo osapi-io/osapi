@@ -18,25 +18,25 @@ The behaviors that file calls, and each call that its examples make.
 | Calls    | [object](../../behaviors/internal/object/object.md), [managedfile](../../behaviors/internal/managedfile/managedfile.md) |
 | Used by  | none                                                                                                                    |
 
-## A deployed file (status)
+## A deployed file (get)
 
 | CALL               | SENDS                             | GETS                                                                   |
 | ------------------ | --------------------------------- | ---------------------------------------------------------------------- |
-| file status        | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf sha256=0083dacc561dfd01081d8554269e… |
+| file get           | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf sha256=0083dacc561dfd01081d8554269e… |
 | └─ managedfile get | path=/etc/osapi/file-example.conf | object_sha256=0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde8… |
 
-## A path that osapi did not deploy (status)
+## A path that osapi did not deploy (get)
 
 | CALL               | SENDS                             | GETS                                              |
 | ------------------ | --------------------------------- | ------------------------------------------------- |
-| file status        | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf state=unmanaged |
+| file get           | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf state=unmanaged |
 | └─ managedfile get | path=/etc/osapi/file-example.conf | error: /etc/osapi/file-example.conf: not managed  |
 
-## A file that osapi undeployed (status)
+## A file that osapi undeployed (get)
 
 | CALL               | SENDS                             | GETS                                                                   |
 | ------------------ | --------------------------------- | ---------------------------------------------------------------------- |
-| file status        | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf state=unmanaged                      |
+| file get           | path=/etc/osapi/file-example.conf | path=/etc/osapi/file-example.conf state=unmanaged                      |
 | └─ managedfile get | path=/etc/osapi/file-example.conf | object_sha256=0083dacc561dfd01081d8554269e201f4b60fe597ab9892977bfde8… |
 
 ## Deploy a file (update)

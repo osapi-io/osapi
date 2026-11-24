@@ -27,7 +27,7 @@ can set the file permissions (mode, owner, group) and can render a Go template.
 Deploy, undeploy and status are the update, delete and status methods of the
 [file behavior](../../reference/behaviors/config/file/file.md):
 `osapi client node file update`, `osapi client node file delete` and
-`osapi client node file status`. They run on each Linux host and on macOS.
+`osapi client node file get`. They run on each Linux host and on macOS.
 
 **Undeploy** makes an asynchronous job that removes a deployed file from the
 filesystem of the agent. The file-state KV record stays. Thus you can audit the

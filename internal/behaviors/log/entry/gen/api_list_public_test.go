@@ -23,7 +23,7 @@ func (s *APIListPublicTestSuite) SetupSuite() {
 	s.api = servertest.New(s.T(), "internal/behaviors/log/entry/gen/api.yaml", gen.Routes)
 }
 
-// TestList sends GET /api/node/{hostname}/log/entry and checks each answer's
+// TestList sends GET /api/node/{hostname}/log and checks each answer's
 // response.
 func (s *APIListPublicTestSuite) TestList() {
 	s.api.Run(s.T(), []servertest.Case{
@@ -31,12 +31,12 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the example \"The newest entries\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/log/entry",
+				Path:   "/api/node/server1/log",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
 				"server1",
-				"entry.list",
+				"log.list",
 				entry.ListInput{},
 				servertest.Completed("server1", `[{"timestamp":"2024-03-31T23:50:45.123456Z","unit":"nginx","priority":"info","message":"Started nginx","pid":1234},{"timestamp":"2024-03-31T23:50:46Z","unit":"sshd","priority":"notice","message":"Accepted key","pid":5678}]`),
 			),
@@ -47,12 +47,12 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the example \"The newest entries\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/_all/log/entry",
+				Path:   "/api/node/_all/log",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
 				"_all",
-				"entry.list",
+				"log.list",
 				entry.ListInput{},
 				servertest.Completed("server1", `[{"timestamp":"2024-03-31T23:50:45.123456Z","unit":"nginx","priority":"info","message":"Started nginx","pid":1234},{"timestamp":"2024-03-31T23:50:46Z","unit":"sshd","priority":"notice","message":"Accepted key","pid":5678}]`),
 				servertest.Skipped("server2"),
@@ -65,12 +65,12 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the example \"The last entry of one unit at info or above\" is sent, the host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/log/entry?lines=1&priority=info&since=1+hour+ago&unit=nginx.service",
+				Path:   "/api/node/server1/log?lines=1&priority=info&since=1+hour+ago&unit=nginx.service",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
 				"server1",
-				"entry.list",
+				"log.list",
 				entry.ListInput{
 					Lines:    1,
 					Priority: "info",
@@ -86,12 +86,12 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the example \"The last entry of one unit at info or above\" is broadcast, every host's result is returned",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/_all/log/entry?lines=1&priority=info&since=1+hour+ago&unit=nginx.service",
+				Path:   "/api/node/_all/log?lines=1&priority=info&since=1+hour+ago&unit=nginx.service",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
 				"_all",
-				"entry.list",
+				"log.list",
 				entry.ListInput{
 					Lines:    1,
 					Priority: "info",
@@ -109,12 +109,12 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the host skips it, its row says skipped",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/log/entry",
+				Path:   "/api/node/server1/log",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
 				"server1",
-				"entry.list",
+				"log.list",
 				entry.ListInput{},
 				servertest.Skipped("server1"),
 			),
@@ -125,12 +125,12 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the host fails it, its row says failed",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/log/entry",
+				Path:   "/api/node/server1/log",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
 				"server1",
-				"entry.list",
+				"log.list",
 				entry.ListInput{},
 				servertest.Failed("server1", "boom"),
 			),
@@ -141,12 +141,12 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the host never answers, its row says timeout",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/log/entry",
+				Path:   "/api/node/server1/log",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
 				"server1",
-				"entry.list",
+				"log.list",
 				entry.ListInput{},
 				servertest.TimedOut("server1"),
 			),
@@ -157,12 +157,12 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/log/entry",
+				Path:   "/api/node/server1/log",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
 				"server1",
-				"entry.list",
+				"log.list",
 				entry.ListInput{},
 			).Fails(servertest.ErrUnreachable),
 			WantCode: http.StatusInternalServerError,
@@ -171,12 +171,12 @@ func (s *APIListPublicTestSuite) TestList() {
 			Name: "when broadcast and the job client fails, it is a 500",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/_all/log/entry",
+				Path:   "/api/node/_all/log",
 			},
 			Token: servertest.Read,
 			Job: servertest.Query(
 				"_all",
-				"entry.list",
+				"log.list",
 				entry.ListInput{},
 			).Fails(servertest.ErrUnreachable),
 			WantCode: http.StatusInternalServerError,
@@ -192,7 +192,7 @@ func (s *APIListPublicTestSuite) TestListValidationHTTP() {
 			Name: "when the target is not an agent, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/nowhere/log/entry",
+				Path:   "/api/node/nowhere/log",
 			},
 			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
@@ -201,7 +201,7 @@ func (s *APIListPublicTestSuite) TestListValidationHTTP() {
 			Name: "when the target is empty, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node//log/entry",
+				Path:   "/api/node//log",
 			},
 			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
@@ -210,7 +210,7 @@ func (s *APIListPublicTestSuite) TestListValidationHTTP() {
 			Name: "when sent lines below one, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/log/entry?lines=-1",
+				Path:   "/api/node/server1/log?lines=-1",
 			},
 			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
@@ -219,7 +219,7 @@ func (s *APIListPublicTestSuite) TestListValidationHTTP() {
 			Name: "when sent more than 10000 lines, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/log/entry?lines=10001",
+				Path:   "/api/node/server1/log?lines=10001",
 			},
 			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
@@ -228,7 +228,7 @@ func (s *APIListPublicTestSuite) TestListValidationHTTP() {
 			Name: "when sent a priority that journald does not have, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/log/entry?priority=loud",
+				Path:   "/api/node/server1/log?priority=loud",
 			},
 			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
@@ -237,7 +237,7 @@ func (s *APIListPublicTestSuite) TestListValidationHTTP() {
 			Name: "when sent a unit with a space in it, it is a 400",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/log/entry?unit=nginx+service",
+				Path:   "/api/node/server1/log?unit=nginx+service",
 			},
 			Token:    servertest.Read,
 			WantCode: http.StatusBadRequest,
@@ -245,23 +245,23 @@ func (s *APIListPublicTestSuite) TestListValidationHTTP() {
 	})
 }
 
-// TestListRBACHTTP sends tokens that do not grant entry:read.
+// TestListRBACHTTP sends tokens that do not grant log:read.
 func (s *APIListPublicTestSuite) TestListRBACHTTP() {
 	s.api.Run(s.T(), []servertest.Case{
 		{
 			Name: "when there is no token, it is a 401",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/log/entry",
+				Path:   "/api/node/server1/log",
 			},
 			Token:    servertest.NoToken,
 			WantCode: http.StatusUnauthorized,
 		},
 		{
-			Name: "when the token lacks entry:read, it is a 403",
+			Name: "when the token lacks log:read, it is a 403",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/log/entry",
+				Path:   "/api/node/server1/log",
 			},
 			Token:    servertest.Lacking,
 			WantCode: http.StatusForbidden,
@@ -270,12 +270,12 @@ func (s *APIListPublicTestSuite) TestListRBACHTTP() {
 			Name: "when the token has the admin role, the request runs",
 			Request: servertest.Request{
 				Method: http.MethodGet,
-				Path:   "/api/node/server1/log/entry",
+				Path:   "/api/node/server1/log",
 			},
 			Token: servertest.Admin,
 			Job: servertest.Query(
 				"server1",
-				"entry.list",
+				"log.list",
 				entry.ListInput{},
 				servertest.Skipped("server1"),
 			),

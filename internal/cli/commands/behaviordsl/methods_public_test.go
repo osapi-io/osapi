@@ -289,11 +289,11 @@ func (s *MethodsPublicTestSuite) TestCreate() {
 		[]byte("// Package all registers every behavior.\npackage all\n\nimport (\n)\n"), 0o644))
 
 	got, err := behaviordsl.Create(context.Background(), s.deps(), behaviordsl.CreateInput{
-		Name: "neighbors", Description: "The neighbor table", Group: "network", Root: root,
+		Name: "neighbors", Description: "The neighbor table", Root: root,
 	})
 	s.Require().NoError(err)
 	s.NotEmpty(got.Files)
-	s.Contains(got.Next[1].Step, "internal/behaviors/network/neighbors")
+	s.Contains(got.Next[1].Step, "internal/behaviors/neighbors")
 
 	wd, _ := os.Getwd()
 	s.Require().NoError(os.Chdir(root))

@@ -82,15 +82,15 @@ func (s *SendPublicTestSuite) TestSend() {
 					`"results":[{"hostname":"web-01","status":"ok","servers":["1.1.1.1"]}]}`))
 			},
 			call: func(c *client.Client) (any, error) {
-				return c.NetworkDNS.Get(s.ctx, "web-01", "eth 0")
+				return c.DNS.Get(s.ctx, "web-01", "eth 0")
 			},
 			validateFunc: func(got any, err error, seen *http.Request, body string) {
 				s.Require().NoError(err)
-				resp := got.(*client.Response[client.Collection[client.NetworkDnsEntry]])
+				resp := got.(*client.Response[client.Collection[client.DnsEntry]])
 				s.Equal("7c9e6679-7425-40de-944b-e07fc1f90ae7", resp.Data.JobID)
 				r, ok := resp.Data.First()
 				s.Require().True(ok)
-				s.Equal(client.NetworkDnsEntry{
+				s.Equal(client.DnsEntry{
 					Hostname: "web-01",
 					Status:   "ok",
 					Servers:  []string{"1.1.1.1"},
@@ -98,7 +98,7 @@ func (s *SendPublicTestSuite) TestSend() {
 				s.Equal("26e448c9dbe1c4a8d216a98c675079c9", resp.TraceID())
 				s.Contains(string(resp.RawJSON()), `"web-01"`)
 				s.Equal(http.MethodGet, seen.Method)
-				s.Equal("/api/node/web-01/network/dns/eth%200", seen.URL.EscapedPath())
+				s.Equal("/api/node/web-01/dns/eth%200", seen.URL.EscapedPath())
 				s.Empty(body)
 			},
 		},
@@ -108,7 +108,7 @@ func (s *SendPublicTestSuite) TestSend() {
 				_, _ = w.Write([]byte(`{"job_id":"j","results":[]}`))
 			},
 			call: func(c *client.Client) (any, error) {
-				return c.NetworkDNS.Update(s.ctx, "_all", client.NetworkDNSUpdateInput{
+				return c.DNS.Update(s.ctx, "_all", client.DNSUpdateInput{
 					InterfaceName: "eth0",
 					Servers:       []string{"9.9.9.9"},
 				})
@@ -116,7 +116,7 @@ func (s *SendPublicTestSuite) TestSend() {
 			validateFunc: func(_ any, err error, seen *http.Request, body string) {
 				s.Require().NoError(err)
 				s.Equal(http.MethodPut, seen.Method)
-				s.Equal("/api/node/_all/network/dns/eth0", seen.URL.Path)
+				s.Equal("/api/node/_all/dns/eth0", seen.URL.Path)
 				s.Equal("application/json", seen.Header.Get("Content-Type"))
 				s.JSONEq(`{"servers":["9.9.9.9"]}`, body)
 			},
@@ -140,10 +140,10 @@ func (s *SendPublicTestSuite) TestSend() {
 				_, _ = w.Write([]byte(`{"job_id":7}`))
 			},
 			call: func(c *client.Client) (any, error) {
-				return c.NetworkDNS.Get(s.ctx, "web-01", "eth0")
+				return c.DNS.Get(s.ctx, "web-01", "eth0")
 			},
 			validateFunc: func(_ any, err error, _ *http.Request, _ string) {
-				s.ErrorContains(err, "GET /api/node/web-01/network/dns/eth0: decode response")
+				s.ErrorContains(err, "GET /api/node/web-01/dns/eth0: decode response")
 			},
 		},
 		{
@@ -153,7 +153,7 @@ func (s *SendPublicTestSuite) TestSend() {
 				_, _ = w.Write([]byte(`{"error":"no interface eth9","reason":"not_found"}`))
 			},
 			call: func(c *client.Client) (any, error) {
-				return c.NetworkDNS.Get(s.ctx, "web-01", "eth9")
+				return c.DNS.Get(s.ctx, "web-01", "eth9")
 			},
 			validateFunc: func(_ any, err error, _ *http.Request, _ string) {
 				var notFound *client.NotFoundError

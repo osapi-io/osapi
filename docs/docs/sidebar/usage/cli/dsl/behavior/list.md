@@ -21,14 +21,16 @@ The command prints:
 
 ```ansi
 $ osapi dsl behavior list
-[1;38;2;0;213;255mBehaviors (6):[0m
-  [38;2;10;143;176mNAME         [0m[38;2;10;143;176mGROUP    [0m[38;2;10;143;176mOF    [0m[38;2;10;143;176mMETHODS                                    [0m[38;2;10;143;176mDESCRIPTION                                               [0m[38;2;10;143;176mINTERNAL[0m
-  [1mhostname[0m                    get, update                                The hostname of the host
-  [1mmanagedfile[0m                 get, update, delete                        The files that osapi writes and tracks                    yes
-  [1mdns[0m          network        get, update, delete                        The DNS resolvers of an interface
-  [1msysctl[0m                      list, get, create, update, delete          Kernel parameters, written to sysctl.d files and applied
-  [1muser[0m                        list, get, create, update, delete, passwd  The users of the host
-  [1msshkey[0m                user  list, create, delete                       The authorized SSH keys of a user
+[1;38;2;0;213;255mBehaviors (8):[0m
+  [38;2;10;143;176mNAME         [0m[38;2;10;143;176mUNDER  [0m[38;2;10;143;176mOF    [0m[38;2;10;143;176mMETHODS                            [0m[38;2;10;143;176mDESCRIPTION                                               [0m[38;2;10;143;176mINTERNAL[0m
+  [1mhostname[0m                  get, update                        The hostname of the host
+  [1mmanagedfile[0m               get, update, delete                The files that osapi writes and tracks                    yes
+  [1mdns[0m                       get, update, delete                The DNS resolvers of an interface
+  [1msource[0m       log          list                               The sources that write to the systemd journal
+  [1msysctl[0m                    list, get, create, update, delete  Kernel parameters, written to sysctl.d files and applied
+  [1muser[0m                      list, get, create, update, delete  The users of the host
+  [1msshkey[0m              user  list, create, delete               The authorized SSH keys of a user
+  [1mpassword[0m            user  update                             The password of a user
 ```
 
 With `--json`, the command prints:
@@ -49,9 +51,14 @@ With `--json`, the command prints:
     },
     {
       "name": "dns",
-      "group": "network",
       "methods": ["get", "update", "delete"],
       "doc": "The DNS resolvers of an interface"
+    },
+    {
+      "name": "source",
+      "under": "log",
+      "methods": ["list"],
+      "doc": "The sources that write to the systemd journal"
     },
     {
       "name": "sysctl",
@@ -60,7 +67,7 @@ With `--json`, the command prints:
     },
     {
       "name": "user",
-      "methods": ["list", "get", "create", "update", "delete", "passwd"],
+      "methods": ["list", "get", "create", "update", "delete"],
       "doc": "The users of the host"
     },
     {
@@ -68,6 +75,12 @@ With `--json`, the command prints:
       "of": "user",
       "methods": ["list", "create", "delete"],
       "doc": "The authorized SSH keys of a user"
+    },
+    {
+      "name": "password",
+      "of": "user",
+      "methods": ["update"],
+      "doc": "The password of a user"
     }
   ]
 }

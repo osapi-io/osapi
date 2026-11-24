@@ -1,0 +1,69 @@
+---
+id: get-node-log
+title: "List the entries of the journal"
+description: "Runs journalctl --output=json, the newest entries last: the last 100 unless lines says, of one unit when unit says, since a time when since says, and at a priority or above when priority says. A priority is its name, such as err or info. The hand-written log domain read the Debian family only; this reads each Linux host that has journald."
+sidebar_label: "List the entries of the journal"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "get api-method"
+info_path: gen/api/osapi
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"List the entries of the journal"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/api/node/{hostname}/log"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Runs journalctl --output=json, the newest entries last: the last 100 unless lines says, of one unit when unit says, since a time when since says, and at a priority or above when priority says. A priority is its name, such as err or info. The hand-written log domain read the Debian family only; this reads each Linux host that has journald.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./get-node-log.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./get-node-log.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./get-node-log.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

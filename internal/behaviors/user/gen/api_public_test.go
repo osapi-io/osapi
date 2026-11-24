@@ -50,11 +50,6 @@ func (s *APIPublicTestSuite) TestRoutes() {
 			path:       "/api/node/:hostname/user/:name",
 			permission: "user:write",
 		},
-		{
-			method:     http.MethodPost,
-			path:       "/api/node/:hostname/user/:name/passwd",
-			permission: "user:execute",
-		},
 	}
 
 	s.Require().Len(routes, len(want))

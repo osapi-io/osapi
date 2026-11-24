@@ -102,20 +102,21 @@ func (s *RegistryPublicTestSuite) TestAll() {
 	)
 	behavior.Register(behavior.Define("sysctl", "x", behavior.Node))
 	behavior.Register(behavior.Define("sshkey", "x", behavior.Node, behavior.Of(user)))
-	behavior.Register(behavior.Define("dns", "x", behavior.Node, behavior.Under("network")))
+	log := behavior.Define("log", "x", behavior.Node)
+	behavior.Register(behavior.Define("source", "x", behavior.Node, behavior.Under(log)))
 	behavior.Register(user)
 	behavior.Register(behavior.Define("apt", "x", behavior.Node))
-	behavior.Register(behavior.Define("route", "x", behavior.Node, behavior.Under("network")))
+	behavior.Register(log)
 
 	all := behavior.All()
 	names := make([]string, 0, len(all))
 	for _, b := range all {
-		names = append(names, b.Group+"/"+b.Name)
+		names = append(names, b.Name)
 	}
 
 	assert.Equal(
 		s.T(),
-		[]string{"/apt", "network/dns", "network/route", "/sysctl", "/user", "/sshkey"},
+		[]string{"apt", "log", "source", "sysctl", "user", "sshkey"},
 		names,
 	)
 }
