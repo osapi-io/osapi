@@ -75,7 +75,11 @@ func (s *NodeSmokeSuite) TestNodeHostnameUpdate() {
 	skipWriteOp(s.T(), "HOSTNAME_UPDATE")
 
 	// Use the current hostname to ensure idempotency (Changed: false).
-	stdout, _, exitCode := runCLI("client", "node", "hostname", "get", "--json")
+	// Both calls go to the one target: on a fleet, _any can send the get and
+	// the update to two hosts, and the update then renames the second.
+	stdout, _, exitCode := runCLI(
+		"client", "node", "hostname", "get", "--target", target, "--json",
+	)
 	s.Require().Equal(0, exitCode)
 
 	var getResult map[string]any
@@ -102,6 +106,7 @@ func (s *NodeSmokeSuite) TestNodeHostnameUpdate() {
 			args: []string{
 				"client", "node", "hostname", "update",
 				"--name", currentHostname,
+				"--target", target,
 				"--json",
 			},
 			validateFunc: func(
