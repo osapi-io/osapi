@@ -47,7 +47,7 @@ resp, err := c.Admission.List(ctx, client.AdmissionListParams{})
 List admission records, with --state pending, `go run admission.go list-2`:
 
 ```go
-resp, err := c.Admission.List(ctx, client.AdmissionListParams{State: client.AdmissionState("pending")})
+resp, err := c.Admission.List(ctx, client.AdmissionListParams{State: types.AdmissionState("pending")})
 ```
 
 ### Get

@@ -15,11 +15,11 @@ import (
 
 // ListRequest is the request of log list: its target and its input.
 type ListRequest struct {
-	Hostname string `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
-	Unit     string `doc:"Only the entries of this systemd unit, such as nginx.service" in:"query" json:"unit,omitempty" validate:"omitempty,unit_name"`
-	Lines    int    `doc:"How many of the newest entries; 100 when it is not set" in:"query" json:"lines,omitempty" validate:"omitempty,min=1,max=10000"`
-	Since    string `doc:"Only the entries since this time, in any form that journalctl --since takes, such as 1 hour ago" in:"query" json:"since,omitempty" validate:"omitempty"`
-	Priority string `doc:"Only the entries at this priority or above" in:"query" json:"priority,omitempty" validate:"omitempty,oneof=emerg alert crit err warning notice info debug"`
+	Hostname string         `default:"_all" doc:"Target: _all, _any, hostname, or label (group:web.dev)." flag:"target" in:"path" json:"hostname" param:"Hostname" short:"T" validate:"required,min=1,valid_target"`
+	Unit     string         `doc:"Only the entries of this systemd unit, such as nginx.service" in:"query" json:"unit,omitempty" validate:"omitempty,unit_name"`
+	Lines    int            `doc:"How many of the newest entries; 100 when it is not set" in:"query" json:"lines,omitempty" validate:"omitempty,min=1,max=10000"`
+	Since    string         `doc:"Only the entries since this time, in any form that journalctl --since takes, such as 1 hour ago" in:"query" json:"since,omitempty" validate:"omitempty"`
+	Priority entry.Priority `doc:"Only the entries at this priority or above" in:"query" json:"priority,omitempty" validate:"omitempty,oneof=emerg alert crit err warning notice info debug"`
 }
 
 // LogEntry is the result of log on one host.
@@ -28,7 +28,7 @@ type LogEntry struct {
 	Status    types.RowStatus `doc:"The status of the operation for this host." json:"status"`
 	Timestamp *string         `doc:"When journald recorded it, in RFC 3339" json:"timestamp,omitempty"`
 	Unit      *string         `doc:"The syslog identifier that wrote it" json:"unit,omitempty"`
-	Priority  *string         `doc:"Its priority, by name" json:"priority,omitempty"`
+	Priority  *entry.Priority `doc:"Its priority, by name" json:"priority,omitempty"`
 	Message   *string         `doc:"The message" json:"message,omitempty"`
 	PID       *int            `doc:"The process that wrote it" json:"pid,omitempty"`
 	Error     *string         `doc:"Error message if the agent failed." json:"error,omitempty"`
