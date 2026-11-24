@@ -32,12 +32,13 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/cli"
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/secret"
-	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // Flag is one CLI flag derived from an input field.
@@ -244,7 +245,7 @@ func Table(
 		if e, ok := res["error"].(string); ok && e != "" {
 			row.Error = &e
 		}
-		if m.Verb == behavior.VerbWrite {
+		if m.Verb == types.VerbWrite {
 			if c, ok := res["changed"].(bool); ok {
 				row.Changed = &c
 			}
@@ -256,7 +257,7 @@ func Table(
 	}
 
 	tr := cli.BuildBroadcastTable(rows, headers)
-	if m.Verb == behavior.VerbWrite {
+	if m.Verb == types.VerbWrite {
 		tr = cli.BuildMutationTable(rows, headers)
 	}
 

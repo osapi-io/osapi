@@ -9,7 +9,7 @@ import {
   methodLabel,
   type CatalogBehavior,
   type CatalogMethod,
-  type MethodKind,
+  MethodKind,
 } from "@/lib/catalog";
 import { rolesOf, type RoleDefinition } from "@/lib/permissions";
 import type { Tones } from "@/lib/status";
@@ -85,7 +85,11 @@ const CONTROLLER_STEPS: {
 /** The kind of a permission: its verb read, write, or a verb of an action. */
 export function permissionKind(permission: string): MethodKind {
   const verb = permission.slice(permission.indexOf(":") + 1);
-  return verb === "read" ? "read" : verb === "write" ? "write" : "action";
+  return verb === "read"
+    ? MethodKind.read
+    : verb === "write"
+      ? MethodKind.write
+      : MethodKind.action;
 }
 
 /** The run name of a method of a behavior: dns.update. */

@@ -109,7 +109,7 @@ type CatalogBehavior struct { //nolint:revive // the schema name is part of the 
 // CatalogMethod is one method of a behavior, as the UI shows and runs it.
 type CatalogMethod struct { //nolint:revive // the schema name is part of the API
 	Name       string           `json:"name"                  doc:"The name of the method."                                                                                                          example:"update"`
-	Kind       string           `json:"kind"                  doc:"What the method does to a host, by the verb of its permission: read, write or action."                                            example:"write"  validate:"oneof=read write action"`
+	Kind       types.MethodKind `json:"kind"                  doc:"What the method does to a host, by the verb of its permission: read, write or action."                                            example:"write"`
 	Doc        string           `json:"doc"                   doc:"What the method does."`
 	Long       string           `json:"long,omitempty"        doc:"The rest of what the method does."`
 	HTTPMethod string           `json:"http_method,omitempty" doc:"The HTTP method of the route. An internal behavior has no route."                                                                 example:"PUT"`

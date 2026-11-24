@@ -41,35 +41,10 @@ type Placement string
 // system. What the controller answers itself is not a behavior.
 const NodePlacement Placement = "node"
 
-// Verb says whether a method reads the host or changes it. It decides the HTTP
-// method, the permission, and whether the result carries changed.
-type Verb string
-
-const (
-	// VerbRead reads the host and changes nothing.
-	VerbRead Verb = "read"
-	// VerbWrite changes the host. Its output reports whether it did.
-	VerbWrite Verb = "write"
-	// VerbExecute is the permission verb of an action, such as a restart or
-	// a reboot: it makes something happen on the host, but it does not change
-	// what the host is configured to be. An action is a write in each other
-	// way; only its permission is <name>:execute, which the operator role
-	// gets and the automation role does not.
-	VerbExecute Verb = "execute"
-	// VerbShell is the permission verb of an action declared with .Shell:
-	// it runs a shell command line, which reaches anything the host can
-	// do. Only the admin role gets a shell permission.
-	VerbShell Verb = "shell"
-	// VerbExec is the permission verb of an action that runs a command
-	// that the caller gives inside something on the host, such as docker
-	// exec in a container. Only the admin role gets an exec permission.
-	VerbExec Verb = "exec"
-)
-
 // adminVerbs are the permission verbs that only the admin role gets. An
 // action declared with .PermitAs takes one of them, so its permission is
 // apart from the <name>:execute of the other actions of its behavior.
-var adminVerbs = []Verb{VerbShell, VerbExec}
+var adminVerbs = []types.Verb{types.VerbShell, types.VerbExec}
 
 // Behavior is one area of a host that osapi manages, such as kernel
 // parameters or DNS resolver settings.
@@ -284,13 +259,13 @@ func Define(
 // verb, so sysctl get needs sysctl:read. A child has its parent's
 // permission: the sources of the log need log:read.
 func (b *Behavior) Permission(
-	v Verb,
+	v types.Verb,
 ) types.Permission {
 	if b.Parent != nil {
 		return b.Parent.Permission(v)
 	}
 
-	return types.Permission(b.Name + ":" + string(v))
+	return types.NewPermission(b.Name, v)
 }
 
 // Method returns the method with the given name, or nil.
@@ -326,7 +301,7 @@ type Method struct {
 	// and the body of its docs page. Optional.
 	Long string
 	// Verb is read or write. An action is a write.
-	Verb Verb
+	Verb types.Verb
 	// Admin is true for a method declared with .AdminOnly: only the admin
 	// role gets its permission, not write or read.
 	Admin bool
@@ -345,7 +320,7 @@ type Method struct {
 	// .PermitAs or .Shell, such as exec: its permission is <name>:exec in
 	// place of <name>:execute, which only the admin role gets. Empty for
 	// each other method.
-	PermitVerb Verb
+	PermitVerb types.Verb
 	// NonFact is why a read runs a command outside gohai, set with
 	// .NotAFact: what it reads is not a fact of the host.
 	NonFact string
@@ -532,11 +507,11 @@ func (m *Method) Explain(
 // PermitAs makes an action's permission <name>:<verb>, in place of
 // <name>:execute, such as docker:exec for docker exec. Thus the action
 // does not share a permission with the other actions of its behavior. The
-// verb is one that only the admin role gets: VerbShell or VerbExec.
+// verb is one that only the admin role gets: types.VerbShell or types.VerbExec.
 // dsl behavior validate refuses it on a method that is not an action, and a
 // verb that is not one of these.
 func (m *Method) PermitAs(
-	verb Verb,
+	verb types.Verb,
 ) *Method {
 	m.PermitVerb = verb
 
@@ -545,9 +520,9 @@ func (m *Method) PermitAs(
 
 // Shell makes an action's permission <name>:shell, in place of
 // <name>:execute: the action runs a shell command line. It is
-// PermitAs(VerbShell).
+// PermitAs(types.VerbShell).
 func (m *Method) Shell() *Method {
-	return m.PermitAs(VerbShell)
+	return m.PermitAs(types.VerbShell)
 }
 
 // AdminOnly makes the method's permission one that only the admin role
@@ -634,7 +609,7 @@ func Read[P any, In any, Out any](
 	name string,
 	fn func(ctx context.Context, p P, in In) (Out, error),
 ) *Method {
-	return newMethod(name, VerbRead, fn)
+	return newMethod(name, types.VerbRead, fn)
 }
 
 // Write declares a method that changes the host. Its output type reports
@@ -644,7 +619,7 @@ func Write[P any, In any, Out any](
 	name string,
 	fn func(ctx context.Context, p P, in In) (Out, error),
 ) *Method {
-	return newMethod(name, VerbWrite, fn)
+	return newMethod(name, types.VerbWrite, fn)
 }
 
 // Action declares a write named for what it does to the host, such as
@@ -657,7 +632,7 @@ func Action[P any, In any, Out any](
 	name string,
 	fn func(ctx context.Context, p P, in In) (Out, error),
 ) *Method {
-	m := newMethod(name, VerbWrite, fn)
+	m := newMethod(name, types.VerbWrite, fn)
 	m.Action = true
 
 	return m
@@ -665,7 +640,7 @@ func Action[P any, In any, Out any](
 
 func newMethod[P any, In any, Out any](
 	name string,
-	verb Verb,
+	verb types.Verb,
 	fn func(ctx context.Context, p P, in In) (Out, error),
 ) *Method {
 	return &Method{
@@ -700,12 +675,12 @@ func newMethod[P any, In any, Out any](
 
 // PermissionVerb is the verb of the method's permission: the verb of
 // .PermitAs, else execute for an action, else its verb.
-func (m *Method) PermissionVerb() Verb {
+func (m *Method) PermissionVerb() types.Verb {
 	if m.PermitVerb != "" {
 		return m.PermitVerb
 	}
 	if m.Action {
-		return VerbExecute
+		return types.VerbExecute
 	}
 
 	return m.Verb
@@ -714,7 +689,7 @@ func (m *Method) PermissionVerb() Verb {
 // HTTPMethod is the method's HTTP verb: GET for a read, POST for an action,
 // and for a write POST, PUT or DELETE by the method's name.
 func (m *Method) HTTPMethod() string {
-	if m.Verb == VerbRead {
+	if m.Verb == types.VerbRead {
 		return "GET"
 	}
 	if m.Action {

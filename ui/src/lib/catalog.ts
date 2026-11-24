@@ -17,8 +17,8 @@ import type {
   CatalogExample,
   CatalogField,
   CatalogMethod,
-  CatalogMethodKind,
 } from "@/sdk/gen/schemas";
+import { MethodKind } from "@/sdk/gen/schemas";
 
 export type {
   CatalogBehavior,
@@ -34,7 +34,7 @@ export type {
  * the host is configured to be, and an action makes something happen, such
  * as a restart or a reboot. It is the verb of the method's permission.
  */
-export type MethodKind = CatalogMethodKind;
+export { MethodKind };
 
 export const methodKindLabels: Record<MethodKind, string> = {
   read: "Read",

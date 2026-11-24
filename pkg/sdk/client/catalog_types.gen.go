@@ -186,9 +186,9 @@ type CatalogMethod struct {
 	// The input type and its fields, a required one marked *.
 	Input string `json:"input"`
 
-	// What the method does to a host, by the verb of its permission: read, write
-	// or action. It is one of: read, write, action.
-	Kind CatalogMethodKind `json:"kind"`
+	// What a method does to a host, by the verb of its permission: read, write or
+	// action.
+	Kind types.MethodKind `json:"kind"`
 
 	// The rest of what the method does.
 	Long string `json:"long,omitempty"`
@@ -213,17 +213,6 @@ type CatalogMethod struct {
 	// a Linux host whose platform gohai has no family for.
 	RunsOn []string `json:"runs_on"`
 }
-
-// CatalogMethodKind: What the method does to a host, by the verb of its
-// permission: read, write or action.
-type CatalogMethodKind string
-
-// The values of CatalogMethodKind.
-const (
-	CatalogMethodKindRead   CatalogMethodKind = "read"
-	CatalogMethodKindWrite  CatalogMethodKind = "write"
-	CatalogMethodKindAction CatalogMethodKind = "action"
-)
 
 // CatalogOperation is the CatalogOperation of the spec.
 type CatalogOperation struct {

@@ -30,6 +30,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/validation"
 
 	"github.com/osapi-io/osapi/internal/behavior"
@@ -136,7 +138,7 @@ func checkExample(
 
 	var problems []string
 	before, gets := h.calls, h.gets
-	h.read = m.Verb == behavior.VerbRead && m.NonFact == ""
+	h.read = m.Verb == types.VerbRead && m.NonFact == ""
 	out, err := call(m, p, ex.Input)
 	h.read = false
 	if err != nil {
@@ -149,7 +151,7 @@ func checkExample(
 	problems = append(problems, effects(h, ex.Effects)...)
 	problems = append(problems, h.undeclared...)
 
-	if m.Verb == behavior.VerbWrite {
+	if m.Verb == types.VerbWrite {
 		if changed, _ := behavior.Changed(ex.Output); changed && len(ex.Effects) == 0 {
 			problems = append(problems,
 				behavior.TestFailure(behavior.TestEffects, "a write declares no effects"))

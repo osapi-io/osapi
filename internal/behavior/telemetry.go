@@ -27,6 +27,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/osapi-io/osapi/internal/telemetry/instruments"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -214,7 +216,7 @@ func (m *Method) run(
 	i.calls.Add(ctx, 1, metric.WithAttributes(append(base, AttrOutcome.String(outcome))...))
 	i.duration.Record(ctx, elapsed, attrs)
 
-	if changed, ok := Changed(out); ok && m.Verb == VerbWrite {
+	if changed, ok := Changed(out); ok && m.Verb == types.VerbWrite {
 		span.SetAttributes(AttrChanged.Bool(changed))
 		if changed {
 			i.changes.Add(ctx, 1, attrs)

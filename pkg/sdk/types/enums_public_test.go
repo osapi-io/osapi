@@ -47,6 +47,8 @@ func (s *EnumsPublicTestSuite) TestValid() {
 		{name: "when a permission is not listed", valid: types.Permission("helth:read").Valid},
 		{name: "when a job status is listed", valid: types.JobStatusSkipped.Valid, want: true},
 		{name: "when a job status is not listed", valid: types.JobStatus("done").Valid},
+		{name: "when a method kind is listed", valid: types.KindAction.Valid, want: true},
+		{name: "when a method kind is not listed", valid: types.MethodKind("delete").Valid},
 		{name: "when an agent state is listed", valid: types.AgentDraining.Valid, want: true},
 		{name: "when an agent state is not listed", valid: types.AgentState("Busy").Valid},
 		{name: "when a condition is listed", valid: types.ConditionDrainStuck.Valid, want: true},

@@ -47,7 +47,7 @@ such as the tests of `internal/controller/endpoints/all` and
 a rule.
 
 A value that selects from a fixed set is a named type with constants, such as
-`behavior.Verb`, `behavior.PlatformName`, `behavior.GroupName`, `command.Parent`
+`types.Verb`, `behavior.PlatformName`, `behavior.GroupName`, `command.Parent`
 and `endpoint.Reason`. Go converts an untyped string literal to a named type.
 Thus `behavior.Platform("debain", ...)` compiles, and a validate rule must
 refuse a value outside the set, such as `behavior.KnownPlatforms()`. Names,

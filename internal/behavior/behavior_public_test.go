@@ -25,6 +25,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
@@ -246,17 +248,17 @@ func (s *BehaviorPublicTestSuite) TestPermissionVerb() {
 	tests := []struct {
 		name   string
 		method string
-		want   behavior.Verb
+		want   types.Verb
 	}{
 		{
 			name:   "when the method is an action, its permission is execute",
 			method: "restart",
-			want:   behavior.VerbExecute,
+			want:   types.VerbExecute,
 		},
 		{
 			name:   "when the method is a read, its permission is read",
 			method: "get",
-			want:   behavior.VerbRead,
+			want:   types.VerbRead,
 		},
 	}
 
@@ -273,31 +275,31 @@ func (s *BehaviorPublicTestSuite) TestPermission() {
 	tests := []struct {
 		name string
 		b    *behavior.Behavior
-		verb behavior.Verb
+		verb types.Verb
 		want string
 	}{
 		{
 			name: "when a read at the top level",
 			b:    top(),
-			verb: behavior.VerbRead,
+			verb: types.VerbRead,
 			want: "sysctl:read",
 		},
 		{
 			name: "when a write at the top level",
 			b:    top(),
-			verb: behavior.VerbWrite,
+			verb: types.VerbWrite,
 			want: "sysctl:write",
 		},
 		{
 			name: "when under the collection of a parent the parent's permission is the child's",
 			b:    underLog(),
-			verb: behavior.VerbRead,
+			verb: types.VerbRead,
 			want: "log:read",
 		},
 		{
 			name: "when under an item of a parent the parent's permission is the child's",
 			b:    child(top()),
-			verb: behavior.VerbWrite,
+			verb: types.VerbWrite,
 			want: "sysctl:write",
 		},
 	}
@@ -491,7 +493,7 @@ func (s *BehaviorPublicTestSuite) TestHTTPMethod() {
 func (s *BehaviorPublicTestSuite) TestAction() {
 	m := behavior.Action("restart", set)
 	s.True(m.Action)
-	s.Equal(behavior.VerbWrite, m.Verb, "an action is a write: <group>:write and a modify job")
+	s.Equal(types.VerbWrite, m.Verb, "an action is a write: <group>:write and a modify job")
 	s.False(behavior.Write("update", set).Action)
 	s.True(behavior.Action("restart", set).Always().AlwaysChanges)
 }
@@ -520,24 +522,24 @@ func (s *BehaviorPublicTestSuite) TestAdminRole() {
 	tests := []struct {
 		name      string
 		m         *behavior.Method
-		want      behavior.Verb
+		want      types.Verb
 		wantAdmin bool
 	}{
-		{name: "when a read", m: behavior.Read("get", get), want: behavior.VerbRead},
-		{name: "when a write", m: behavior.Write("update", set), want: behavior.VerbWrite},
-		{name: "when an action", m: behavior.Action("exec", set), want: behavior.VerbExecute},
+		{name: "when a read", m: behavior.Read("get", get), want: types.VerbRead},
+		{name: "when a write", m: behavior.Write("update", set), want: types.VerbWrite},
+		{name: "when an action", m: behavior.Action("exec", set), want: types.VerbExecute},
 		{
 			name: "when an admin-only action", m: behavior.Action("exec", set).AdminOnly(),
-			want: behavior.VerbExecute, wantAdmin: true,
+			want: types.VerbExecute, wantAdmin: true,
 		},
 		{
 			name: "when a shell action, only the admin role gets its verb",
-			m:    behavior.Action("shell", set).Shell(), want: behavior.VerbShell, wantAdmin: true,
+			m:    behavior.Action("shell", set).Shell(), want: types.VerbShell, wantAdmin: true,
 		},
 		{
 			name: "when an exec action, only the admin role gets its verb",
-			m:    behavior.Action("exec", set).PermitAs(behavior.VerbExec),
-			want: behavior.VerbExec, wantAdmin: true,
+			m:    behavior.Action("exec", set).PermitAs(types.VerbExec),
+			want: types.VerbExec, wantAdmin: true,
 		},
 	}
 	for _, tc := range tests {
@@ -555,7 +557,7 @@ func (s *BehaviorPublicTestSuite) TestProviderType() {
 func (s *BehaviorPublicTestSuite) TestRead() {
 	m := behavior.Read("get", get)
 
-	assert.Equal(s.T(), behavior.VerbRead, m.Verb)
+	assert.Equal(s.T(), types.VerbRead, m.Verb)
 	assert.Equal(s.T(), "getIn", m.In.Name())
 	assert.Equal(s.T(), "entry", m.Out.Name())
 }
@@ -563,7 +565,7 @@ func (s *BehaviorPublicTestSuite) TestRead() {
 func (s *BehaviorPublicTestSuite) TestWrite() {
 	m := behavior.Write("create", set)
 
-	assert.Equal(s.T(), behavior.VerbWrite, m.Verb)
+	assert.Equal(s.T(), types.VerbWrite, m.Verb)
 	assert.Equal(s.T(), "result", m.Out.Name())
 }
 

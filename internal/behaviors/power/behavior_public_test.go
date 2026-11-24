@@ -23,6 +23,8 @@ package power_test
 import (
 	"testing"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/behavior"
@@ -38,7 +40,7 @@ func (s *BehaviorPublicTestSuite) TestBehavior() {
 	s.Same(power.Behavior, behavior.Lookup("power"))
 	s.Empty(behavior.ValidateBehavior(power.Behavior))
 	for _, m := range power.Behavior.Methods {
-		s.Equal(behavior.VerbExecute, m.PermissionVerb(), "%s is an action", m.Name)
+		s.Equal(types.VerbExecute, m.PermissionVerb(), "%s is an action", m.Name)
 		s.True(m.Disruptive, "%s never runs on a live host", m.Name)
 	}
 }

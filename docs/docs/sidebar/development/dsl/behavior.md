@@ -235,10 +235,10 @@ own it. A fact that gohai does not read is a change to gohai first.
 ### `.PermitAs(verb) on an action`
 
 Makes the action's permission &lt;name&gt;:&lt;verb&gt; in place of
-&lt;name&gt;:execute, such as docker:exec with behavior.VerbExec. Thus the
-action does not share a permission with the other actions of its behavior, which
-the operator role gets. Only the admin role gets the verb: behavior.VerbExec or
-behavior.VerbShell. dsl behavior validate refuses it on a method that is not an
+&lt;name&gt;:execute, such as docker:exec with types.VerbExec. Thus the action
+does not share a permission with the other actions of its behavior, which the
+operator role gets. Only the admin role gets the verb: types.VerbExec or
+types.VerbShell. dsl behavior validate refuses it on a method that is not an
 action, and a different verb.
 
 Use: For an action that runs a command that the caller gives, such as docker
@@ -247,7 +247,7 @@ docker start.
 
 ### `.Shell() on an action`
 
-Is .PermitAs(behavior.VerbShell): the action's permission is &lt;name&gt;:shell.
+Is .PermitAs(types.VerbShell): the action's permission is &lt;name&gt;:shell.
 Only the admin role gets a shell permission. dsl behavior validate refuses it on
 a method that is not an action.
 

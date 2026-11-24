@@ -278,9 +278,9 @@ func (g *Group) Permission(
 	case m.permission != "":
 		return m.permission
 	case m.verb == http.MethodGet:
-		return types.Permission(g.Name + ":read")
+		return types.NewPermission(g.Name, types.VerbRead)
 	default:
-		return types.Permission(g.Name + ":write")
+		return types.NewPermission(g.Name, types.VerbWrite)
 	}
 }
 

@@ -20,7 +20,11 @@
 
 package behavior
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+)
 
 // TypeName is the prefix of every schema, parameter and operation name the
 // spec gives this behavior: sysctl is Sysctl, and a route under the
@@ -40,7 +44,7 @@ func (b *Behavior) OperationID(
 	m *Method,
 ) string {
 	id := title(strings.ToLower(m.HTTPMethod())) + title(string(b.Placement)) + b.TypeName()
-	if m.Verb == VerbRead && m.KeyField != "" {
+	if m.Verb == types.VerbRead && m.KeyField != "" {
 		id += "ByKey"
 	}
 	if m.Action {
