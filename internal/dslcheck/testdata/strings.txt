@@ -130,7 +130,6 @@ command.LocalGroup.Doc string	free text	prose for a page or a message
 command.LocalGroup.Long string	free text	prose for a page or a message
 command.LocalGroup.Method(name string)	identity	a name that the registry, the route or the command path holds
 command.LocalGroup.Name string	identity	a name that the registry, the route or the command path holds
-command.LocalGroup.Parents []string	checked	set only by Under, which takes a Parent; validate checks KnownParents
 command.LocalGroup.SubDoc(segment string)	identity	a name that the registry, the route or the command path holds
 command.LocalGroup.SubDocs map[string]string	identity	Sub segments; the subdoc rule checks each
 command.LocalMethod.Example(doc []string)	free text	prose for a page or a message

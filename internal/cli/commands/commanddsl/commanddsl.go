@@ -27,6 +27,9 @@ package commanddsl
 import "github.com/osapi-io/osapi/internal/cli/command"
 
 // Group is the command group's definition.
+// notAParent is a word that no group goes under, for the Fails of create.
+const notAParent = "client"
+
 var Group = command.Register(command.Define(
 	"command",
 	"List, describe and validate the local commands, and print their DSL",
@@ -89,11 +92,11 @@ var Group = command.Register(command.Define(
 			"needs no wiring. `osapi dsl command spec get` lists each part of the DSL.").
 		Example(`--name widget --description "The widgets of this host" --under controller`).
 		Prints(sampleCreate).
-		Fails("no name", CreateInput{Description: "x", Under: "dsl"}).
-		Fails("no description", CreateInput{Name: "x", Under: "dsl"}).
+		Fails("no name", CreateInput{Description: "x", Under: command.ParentDSL}).
+		Fails("no description", CreateInput{Name: "x", Under: command.ParentDSL}).
 		Fails("no under", CreateInput{Name: "x", Description: "x"}).
 		Fails("an under that is not a parent", CreateInput{
-			Name: "x", Description: "x", Under: "client",
+			Name: "x", Description: "x", Under: notAParent,
 		}).
 		Handle(Create),
 	command.Method[SpecInput, SpecOutput]("get").
