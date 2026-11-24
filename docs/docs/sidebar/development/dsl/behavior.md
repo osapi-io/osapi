@@ -302,9 +302,9 @@ for a hostname update.
 Runs fn, func(ctx context.Context, in In) (In, error), on the controller in the
 method's route, in a span of its own, before osapi queues the job. It changes
 what the caller sent into what the agent gets, such as a password into its hash
-with password.Hash. Each field tagged secret:"true" must be empty after it: else
-the job is not queued, so the plain secret never goes in the job data, NATS or
-the job KV.
+with password.Hash. Each secret.Value field must be empty after it: else the job
+is not queued, so the plain secret never goes in the job data, NATS or the job
+KV.
 
 Use: When the agent must not see a secret in plain text. Tag the field that the
 step fills before:"set", and clear the secret in the step.
@@ -718,12 +718,24 @@ does not give. Each such method gets a generated 400 test.
 Use: On an input that holds a template, such as the content of a file. Render it
 with Render.
 
-### `secret:"true"`
+### `secret.Value`
 
-Redacted from the audit log, write-only with the password format in the spec
-that ships, never recorded on a span.
+Not a tag: the type of an input field that holds a secret, from internal/secret;
+map\[string]secret.Value is a map of them, such as the env of a container. It is
+a reference, secret://&lt;vault&gt;/&lt;key&gt;, or the value. Redacted from the
+audit log by name, but a reference stays; a string of format password, writeOnly
+and x-osapi-secret in the spec, with a description that says what it takes;
+never recorded on a span; its reference or \[redacted] in a chain record. Its
+flag takes a reference, or - to read the value from standard input, and refuses
+a value; an example with a value shows -. The provider reads it with Reveal. The
+route refuses a reference until a vault exists, and the job has the value until
+the controller seals it. The secret rule refuses one with telemetry:"attr", one
+that is the key, and one in a read, which goes in the query. A chain gives a
+secret only to a secret.Value of the behavior it calls: the tests of the
+examples check it.
 
-Use: On each input that holds a password, a key or a token.
+Use: On each input that holds a password, a key or a token. Not a string: a
+string whose name is on the audit denylist fails TestSecretsAreTyped.
 
 ### `before:"set"`
 

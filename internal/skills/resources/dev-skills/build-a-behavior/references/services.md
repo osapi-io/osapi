@@ -40,8 +40,17 @@ them:
 - a span and metrics for each method
 - messages
 - `@fact.<name>` references
-- permissions and audit A secret input is tagged `secret:"true"` and reaches a
-  program on stdin, never as an argument.
+- permissions and audit
+
+A secret input has the type `secret.Value` (`internal/secret`), or
+`map[string]secret.Value` for a map, such as an environment. No tag makes a
+secret. The type keeps it out of the audit log, the spans and the chain records,
+and makes its flag take a reference, `secret://<vault>/<key>`, or `-` for
+standard input. The provider reads it with `Reveal`, and gives it to a program
+on stdin, never as an argument. Give it only to a `secret.Value` field of a
+behavior that you call: the tests of the examples fail a chain that gives it to
+a `string`. Do not make it the key or an input of a read: those go in the URL,
+and `dsl behavior validate` refuses them under the rule `secret`.
 
 ## Where a behavior's state lives
 

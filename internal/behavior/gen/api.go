@@ -35,6 +35,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/command"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 // statusNames are the net/http names of the codes a behavior answers.
@@ -365,7 +366,12 @@ func validationCases(
 		// A refusal the API cannot see, such as a parameter osapi does not
 		// manage, is the provider's, which behaviortest checks; and a keyed
 		// method with no key has no route.
-		if data, _ := json.Marshal(r.Input); m.Check(context.Background(), data) == nil {
+		if data, _ := json.Marshal(
+			secret.Plain(r.Input),
+		); m.Check(
+			context.Background(),
+			data,
+		) == nil {
 			continue
 		}
 		if emptyKey(m, r.Input) {
@@ -450,7 +456,7 @@ func request(
 	}
 
 	if m.Verb == behavior.VerbWrite {
-		data, err := json.Marshal(input)
+		data, err := json.Marshal(secret.Plain(input))
 		if err != nil {
 			return c, err
 		}

@@ -29,6 +29,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/cli/command"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 // roleIn has a rule after dive, which breaks on an item.
@@ -402,6 +403,21 @@ func (s *ValidatePublicTestSuite) TestValidate() {
 			},
 		},
 		{
+			name: "when a secret is recorded on a span",
+			group: command.Define("zzsecret", "Secret",
+				command.Under(command.ParentDSL),
+				command.Uses[localDeps](),
+				command.Method[spanSecretIn, greetOut]("get").Short("X").Example("--token -").
+					Prints(greetOut{}).
+					Handle(func(context.Context, localDeps, spanSecretIn) (greetOut, error) {
+						return greetOut{}, nil
+					}),
+			),
+			want: []string{
+				`input field token is a secret and tagged telemetry:"attr"; a secret is never recorded on a span.`,
+			},
+		},
+		{
 			name: "when Prints comes first, gives another type, or no example prints",
 			group: command.Define("zzprints", "Prints",
 				command.Under(command.ParentDSL),
@@ -557,4 +573,9 @@ func TestValidatePublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(ValidatePublicTestSuite))
+}
+
+// spanSecretIn records its secret on a span, which the secret rule refuses.
+type spanSecretIn struct {
+	Token secret.Value `json:"token" validate:"omitempty" doc:"The token" telemetry:"attr"`
 }

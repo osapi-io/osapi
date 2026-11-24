@@ -19,7 +19,7 @@ export interface DockerCreateRequest {
   container_hostname?: string;
   /** The DNS servers of the container */
   dns?: string[];
-  /** The environment variables of the container */
+  /** The environment variables of the container. A secret: a reference, secret://<vault>/<key>, or the value. */
   env?: DockerCreateRequestEnv;
   /**
      * The image to run, such as alpine:3.20; docker pulls it when the host does not have it

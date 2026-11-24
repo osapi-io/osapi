@@ -23,6 +23,11 @@ The rules:
 - `used`: An example calls each behavior that a behavior requires. A requirement
   that no example calls is not tested, or is not needed. Fix: Add an example
   whose provider calls the required behavior, or remove the requirement.
+- `secret`: A call gives a secret of its input only to a secret.Value field of
+  the behavior that it calls. A field of another type, such as a string, records
+  the value in its chain record, its span or an audit entry. The examples run
+  each chain, so their tests check it. Fix: Give the field of the called
+  behavior the type secret.Value, and read it there with Reveal.
 
 ```bash
 osapi dsl chain validate

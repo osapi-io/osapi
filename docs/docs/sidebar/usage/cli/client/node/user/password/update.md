@@ -16,7 +16,7 @@ osapi client node user password update [flags]
 
 ```bash
 # Set a password
-osapi client node user password update --target web-01 --name osapitest --password osapi-test-password
+osapi client node user password update --target web-01 --name osapitest --password -
 ```
 
 ## Result
@@ -24,7 +24,7 @@ osapi client node user password update --target web-01 --name osapitest --passwo
 Set a password, on one host:
 
 ```ansi
-$ osapi client node user password update --target web-01 --name osapitest --password osapi-test-password
+$ osapi client node user password update --target web-01 --name osapitest --password -
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mNAME[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  [1mosapitest[0m
@@ -35,7 +35,7 @@ $ osapi client node user password update --target web-01 --name osapitest --pass
 On each host, where one cannot run it:
 
 ```ansi
-$ osapi client node user password update --target _all --name osapitest --password osapi-test-password
+$ osapi client node user password update --target _all --name osapitest --password -
 [1;38;2;0;213;255mResults:[0m
   [38;2;10;143;176mHOSTNAME  [0m[38;2;10;143;176mSTATUS   [0m[38;2;10;143;176mNAME[0m
   [1mweb-01[0m    [38;2;103;234;147mchanged[0m  [1mosapitest[0m
@@ -78,7 +78,7 @@ The command fails in these cases:
 | A hash that is not a crypt hash    | `--name alice`                             | crypt hash        |
 | A name that is an option           | `--name -r`                                | account_name      |
 | A name longer than 32 characters   | `--name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` | max               |
-| A password with a line break       | `--name alice --password "a\nb"`           | no_linebreak      |
+| A password with a line break       | `--name alice --password -`                | no_linebreak      |
 
 ## Permission
 
@@ -87,11 +87,11 @@ shows what a role grants.
 
 ## Flags
 
-| Flag           | Description                                                                                           | Default |
-| -------------- | ----------------------------------------------------------------------------------------------------- | ------- |
-| `--name`       | The user, such as alice (required)                                                                    |         |
-| `--password`   | The new password, which osapi hashes on the controller (secret: kept out of the audit log and traces) |         |
-| `-T, --target` | Target: _all, _any, hostname, or label (group:web.dev)                                                | `_all`  |
+| Flag           | Description                                                                                                                                | Default |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
+| `--name`       | The user, such as alice (required)                                                                                                         |         |
+| `--password`   | The new password, which osapi hashes on the controller (a secret: secret://&lt;vault&gt;/&lt;key&gt;, or - to read it from standard input) |         |
+| `-T, --target` | Target: _all, _any, hostname, or label (group:web.dev)                                                                                     | `_all`  |
 
 ## Global flags
 

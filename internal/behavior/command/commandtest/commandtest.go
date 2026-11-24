@@ -26,6 +26,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -70,6 +71,16 @@ func Sent(
 	t *testing.T,
 	args []string,
 ) Request {
+	return SentWith(t, args, "")
+}
+
+// SentWith is Sent with stdin as the command's standard input, which a
+// secret flag reads for -.
+func SentWith(
+	t *testing.T,
+	args []string,
+	stdin string,
+) Request {
 	var sent Request
 	root := &cobra.Command{Use: "client"}
 	endpointcommand.Use(func() endpointcommand.Caller { return caller{sent: &sent} })
@@ -80,6 +91,7 @@ func Sent(
 		Error: func(error) {},
 	}))
 	reset(root)
+	root.SetIn(strings.NewReader(stdin))
 	root.SetArgs(args)
 	require.NoError(t, root.Execute())
 

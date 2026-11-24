@@ -21,9 +21,10 @@
 package behavior
 
 import (
-	"reflect"
 	"sort"
 	"sync"
+
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 var (
@@ -94,19 +95,15 @@ func Reset() {
 	duplicates = nil
 }
 
-// SecretFields are the JSON names of every input field tagged secret, across
-// every registered behavior's methods. The audit log redacts each by name.
+// SecretFields are the JSON names of every secret.Value input field, at
+// each depth, across every registered behavior's methods. The audit log
+// redacts each by name.
 func SecretFields() map[string]bool {
 	names := map[string]bool{}
 	for _, b := range All() {
 		for _, m := range b.Methods {
-			if m.In.Kind() != reflect.Struct {
-				continue
-			}
-			for i := range m.In.NumField() {
-				if f := m.In.Field(i); Secret(f) {
-					names[JSONName(f)] = true
-				}
+			for _, name := range secret.Fields(m.In) {
+				names[name] = true
 			}
 		}
 	}

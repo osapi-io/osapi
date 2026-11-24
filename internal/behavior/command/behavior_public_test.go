@@ -42,6 +42,7 @@ import (
 	"github.com/osapi-io/osapi/internal/cli"
 	"github.com/osapi-io/osapi/internal/cli/reference"
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 type provider struct{}
@@ -85,8 +86,8 @@ type BehaviorcmdPublicTestSuite struct {
 // sets is not the caller's to send, so it has no flag.
 func (s *BehaviorcmdPublicTestSuite) TestFlagsLeaveOutWhatTheStepSets() {
 	type in struct {
-		Password string `json:"password" doc:"The password" secret:"true"`
-		Hash     string `json:"hash"     doc:"The hash"                   before:"set"`
+		Password secret.Value `json:"password" doc:"The password"`
+		Hash     string       `json:"hash"     doc:"The hash"     before:"set"`
 	}
 	flags := command.Flags(reflect.TypeFor[in]())
 	s.Require().Len(flags, 1)
@@ -129,13 +130,25 @@ func (s *BehaviorcmdPublicTestSuite) TestFlags() {
 		{
 			name: "when a field is secret, its help says so",
 			t: reflect.TypeFor[struct {
-				Token string `json:"token" doc:"The token" secret:"true"`
+				Token secret.Value `json:"token" doc:"The token"`
 			}](),
 			want: []command.Flag{{
 				Name:  "token",
 				JSON:  "token",
 				Kind:  reflect.String,
-				Usage: "The token (secret: kept out of the audit log and traces)",
+				Usage: "The token" + clicommand.SecretHelp,
+			}},
+		},
+		{
+			name: "when a field is a map of secrets, its help says so",
+			t: reflect.TypeFor[struct {
+				Env map[string]secret.Value `json:"env" doc:"The env"`
+			}](),
+			want: []command.Flag{{
+				Name:  "env",
+				JSON:  "env",
+				Kind:  reflect.Map,
+				Usage: "The env" + clicommand.SecretsHelp,
 			}},
 		},
 		{name: "when the input is not a struct", t: reflect.TypeFor[string]()},
@@ -162,6 +175,27 @@ func (s *BehaviorcmdPublicTestSuite) TestArgs() {
 		}{Vars: map[string]string{"b": "2", "a": "1"}}),
 		"a map is one flag for each key, in order",
 	)
+	type secrets struct {
+		Password secret.Value            `json:"password"`
+		Token    secret.Value            `json:"token"`
+		Env      map[string]secret.Value `json:"env"`
+	}
+	in := secrets{
+		Password: "hunter2",
+		Token:    "secret://default/token",
+		Env:      map[string]secret.Value{"B": "b", "A": "secret://default/a"},
+	}
+	s.Equal(
+		[]string{
+			"--password", "-", "--token", "secret://default/token",
+			"--env", "A=secret://default/a", "--env", "B=-",
+		},
+		command.Args(in),
+		"a secret is its reference, or - for a value, which standard input gives",
+	)
+	s.Equal("hunter2", command.Stdin(in), "standard input gives the value of the first secret")
+	s.Empty(command.Stdin(secrets{Token: "secret://default/token"}), "a reference reads nothing")
+	s.Empty(command.Stdin(nil))
 }
 
 func (s *BehaviorcmdPublicTestSuite) TestColumns() {

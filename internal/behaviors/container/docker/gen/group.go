@@ -10,6 +10,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/dispatch"
 	docker "github.com/osapi-io/osapi/internal/behaviors/container/docker"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	secret "github.com/osapi-io/osapi/internal/secret"
 )
 
 // ListRequest is the request of docker list: its target and its input.
@@ -80,15 +81,15 @@ type CreateRequest struct {
 
 // DockerCreateRequest is the body of docker create.
 type DockerCreateRequest struct {
-	Name      string            `doc:"The container's name" json:"name" validate:"required,container_id"`
-	Image     string            `doc:"The image to run, such as alpine:3.20; docker pulls it when the host does not have it" json:"image" validate:"required,image_ref"`
-	HostName  string            `doc:"The hostname inside the container" json:"container_hostname,omitempty" validate:"omitempty,dns_name,max=253"`
-	DNS       []string          `doc:"The DNS servers of the container" json:"dns,omitempty" validate:"omitempty,dive,ip"`
-	Command   []string          `doc:"The command, in place of the image's own" json:"command,omitempty" validate:"omitempty"`
-	Env       map[string]string `doc:"The environment variables of the container" json:"env,omitempty" secret:"true" validate:"omitempty"`
-	Ports     []string          `doc:"The published ports, each host:container, such as 8080:80" json:"ports,omitempty" validate:"omitempty,dive,port_mapping"`
-	Volumes   []string          `doc:"The bind mounts, each host:container, such as /srv/data:/data" json:"volumes,omitempty" validate:"omitempty,dive,volume_mapping"`
-	AutoStart bool              `doc:"Start the container once it is created" json:"auto_start,omitempty" validate:"omitempty"`
+	Name      string                  `doc:"The container's name" json:"name" validate:"required,container_id"`
+	Image     string                  `doc:"The image to run, such as alpine:3.20; docker pulls it when the host does not have it" json:"image" validate:"required,image_ref"`
+	HostName  string                  `doc:"The hostname inside the container" json:"container_hostname,omitempty" validate:"omitempty,dns_name,max=253"`
+	DNS       []string                `doc:"The DNS servers of the container" json:"dns,omitempty" validate:"omitempty,dive,ip"`
+	Command   []string                `doc:"The command, in place of the image's own" json:"command,omitempty" validate:"omitempty"`
+	Env       map[string]secret.Value `doc:"The environment variables of the container" json:"env,omitempty" validate:"omitempty"`
+	Ports     []string                `doc:"The published ports, each host:container, such as 8080:80" json:"ports,omitempty" validate:"omitempty,dive,port_mapping"`
+	Volumes   []string                `doc:"The bind mounts, each host:container, such as /srv/data:/data" json:"volumes,omitempty" validate:"omitempty,dive,volume_mapping"`
+	AutoStart bool                    `doc:"Start the container once it is created" json:"auto_start,omitempty" validate:"omitempty"`
 }
 
 // DockerResult is the result of docker on one host.
@@ -194,9 +195,9 @@ type ExecRequest struct {
 
 // DockerExecRequest is the body of docker exec.
 type DockerExecRequest struct {
-	Command    []string          `doc:"The command and its arguments" json:"command" validate:"required,min=1"`
-	Env        map[string]string `doc:"Environment variables for the command" json:"env,omitempty" secret:"true" validate:"omitempty"`
-	WorkingDir string            `doc:"The directory the command runs in" json:"working_dir,omitempty" validate:"omitempty,startswith=/"`
+	Command    []string                `doc:"The command and its arguments" json:"command" validate:"required,min=1"`
+	Env        map[string]secret.Value `doc:"Environment variables for the command" json:"env,omitempty" validate:"omitempty"`
+	WorkingDir string                  `doc:"The directory the command runs in" json:"working_dir,omitempty" validate:"omitempty,startswith=/"`
 }
 
 // DockerExecResult is the result of docker on one host.

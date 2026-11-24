@@ -112,3 +112,10 @@ func ResetNewFn() {
 
 // ExportEndCollectSpan exposes endCollectSpan for testing.
 var ExportEndCollectSpan = endCollectSpan
+
+// ExportMarshalData exposes the private marshalData for testing.
+func ExportMarshalData(
+	data any,
+) ([]byte, error) {
+	return marshalData(data)
+}

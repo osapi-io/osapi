@@ -51,6 +51,8 @@ var notDSL = map[string]bool{
 	"Output":                       true,
 	"Report":                       true,
 	"ReadFile":                     true,
+	"Secret":                       true,
+	"Secrets":                      true,
 	"SetTraceID":                   true,
 	"TraceID":                      true,
 	"Lookup":                       true,

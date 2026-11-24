@@ -50,7 +50,7 @@ func SetByBefore(
 // func(ctx context.Context, in In) (In, error). It changes the input that
 // the caller sent into the input that the agent gets, such as a password
 // into its hash. The job data, which NATS and the job KV keep, then has no
-// plain secret: each field tagged secret:"true" must be empty after the
+// plain secret: each secret.Value field must be empty after the
 // step, and the job is not queued when one is not. dsl behavior validate checks
 // fn's signature.
 func (m *Method) Before(
@@ -166,18 +166,18 @@ func beforeProblems(
 			"the method has a .Before step, but the behavior is not served: the step runs in its route",
 		)
 	}
-	secret := false
+	hasSecret := false
 	if m.In.Kind() == reflect.Struct {
 		for i := range m.In.NumField() {
 			if Secret(m.In.Field(i)) {
-				secret = true
+				hasSecret = true
 			}
 		}
 	}
-	if !secret {
+	if !hasSecret {
 		out = append(
 			out,
-			"the method has a .Before step, but no input field is secret:\"true\" for it to keep out of the job",
+			"the method has a .Before step, but no input field is a secret.Value for it to keep out of the job",
 		)
 	}
 

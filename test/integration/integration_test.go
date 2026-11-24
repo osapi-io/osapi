@@ -275,9 +275,19 @@ func stopServer() {
 func runCLI(
 	args ...string,
 ) (string, string, int) {
+	return runCLIStdin("", args...)
+}
+
+// runCLIStdin is runCLI with stdin as the command's standard input, which a
+// secret flag of - reads.
+func runCLIStdin(
+	stdin string,
+	args ...string,
+) (string, string, int) {
 	fullArgs := append([]string{"-f", configPath}, args...)
 	cmd := exec.Command(binaryPath, fullArgs...)
 	cmd.Env = clientEnv()
+	cmd.Stdin = strings.NewReader(stdin)
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout

@@ -29,7 +29,7 @@ export interface UserCreateRequest {
      */
   name: string;
   /**
-     * Its password, which osapi hashes on the controller; none when empty
+     * Its password, which osapi hashes on the controller; none when empty. A secret: a reference, secret://<vault>/<key>, or the value.
      * @pattern ^[^\r\n]*$
      */
   password?: string;

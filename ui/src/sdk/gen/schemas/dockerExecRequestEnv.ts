@@ -6,6 +6,6 @@
  */
 
 /**
- * Environment variables for the command
+ * Environment variables for the command. A secret: a reference, secret://<vault>/<key>, or the value.
  */
 export type DockerExecRequestEnv = {[key: string]: string};

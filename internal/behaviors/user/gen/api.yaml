@@ -140,13 +140,14 @@ components:
           x-oapi-codegen-extra-tags:
             validate: required,max=32,account_name
         password:
-          description: Its password, which osapi hashes on the controller; none when empty
+          description: 'Its password, which osapi hashes on the controller; none when empty. A secret: a reference, secret://<vault>/<key>, or the value.'
           format: password
           pattern: ^[^\r\n]*$
           type: string
           writeOnly: true
           x-oapi-codegen-extra-tags:
             validate: omitempty,no_linebreak
+          x-osapi-secret: true
         shell:
           description: Its login shell, such as /bin/bash; the system's default when empty
           pattern: ^[^\r\n]*$
@@ -435,7 +436,7 @@ paths:
               - root
             hostname: web-01
             name: osapitest
-            password: osapi-test-password
+            password: '-'
             shell: /bin/sh
         - doc: Add a system user with its IDs and its home
           input:

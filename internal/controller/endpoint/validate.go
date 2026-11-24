@@ -38,6 +38,7 @@ import (
 	"github.com/osapi-io/osapi/internal/validation/rule"
 
 	"github.com/osapi-io/osapi/internal/guide"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 // name is a group, a method, a sub-path or an action: lowercase letters and
@@ -84,6 +85,9 @@ const (
 	// method's output type, and Prints follows an Example. Prints takes any
 	// value, so a sample of another type compiles.
 	RulePrints = "prints"
+	// RuleSecret: a secret.Value input field is not in the path or the
+	// query, which logs keep with the URL, and is not recorded on a span.
+	RuleSecret = "secret"
 )
 
 // inValues are the values of the in tag: where a field of a request comes
@@ -113,6 +117,11 @@ func hasField(
 // rule, so an author or an agent can read the rules before breaking one.
 // The tests trigger each rule, and fail on a rule without a check.
 var Checks = guide.Checks{
+	{
+		Rule:     RuleSecret,
+		Requires: "No secret.Value input field is tagged in:\"path\" or in:\"query\", or telemetry:\"attr\": a URL goes in logs, and a span is no place for a secret.",
+		Fix:      "Send the secret in the body: drop its in tag, or tag it in:\"body\" or in:\"form\". Remove telemetry:\"attr\" from it.",
+	},
 	{
 		Rule:     RuleExample,
 		Requires: "Each flag that an Example names is a flag of the method's command: a field of its input, a field of the struct that in:\"body\" names, or --json, --debug or --osapi-file.",
@@ -300,6 +309,19 @@ func Validate(
 				add(m.Name, RuleIn, fmt.Sprintf(
 					"input field %s is tagged in:%q; the values are path, query, form and body.",
 					jsonName(f), v))
+			}
+			if !secret.Is(f.Type) {
+				continue
+			}
+			if in := f.Tag.Get("in"); in == "path" || in == "query" {
+				add(m.Name, RuleSecret, fmt.Sprintf(
+					"input field %s is a secret in the %s; a URL goes in logs.", jsonName(f), in))
+			}
+			if f.Tag.Get("telemetry") == "attr" {
+				add(m.Name, RuleSecret, fmt.Sprintf(
+					"input field %s is a secret and tagged telemetry:\"attr\"; a secret is never recorded on a span.",
+					jsonName(f),
+				))
 			}
 		}
 		if m.unprinted {

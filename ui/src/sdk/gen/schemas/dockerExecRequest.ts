@@ -12,7 +12,7 @@ export interface DockerExecRequest {
      * @minItems 1
      */
   command: string[];
-  /** Environment variables for the command */
+  /** Environment variables for the command. A secret: a reference, secret://<vault>/<key>, or the value. */
   env?: DockerExecRequestEnv;
   /**
      * The directory the command runs in

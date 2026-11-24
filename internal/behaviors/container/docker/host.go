@@ -34,6 +34,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 // cli reads the containers through gohai's docker collector, and changes
@@ -248,7 +249,7 @@ func (c *cli) Exec(
 	}
 	args := []string{"exec"}
 	for _, k := range slices.Sorted(maps.Keys(in.Env)) {
-		args = append(args, "-e", k+"="+in.Env[k])
+		args = append(args, "-e", k+"="+in.Env[k].Reveal())
 	}
 	if in.WorkingDir != "" {
 		args = append(args, "-w", in.WorkingDir)
@@ -265,11 +266,11 @@ func (c *cli) Exec(
 // envFile is env as docker's --env-file reads it: one KEY=value a line,
 // by name.
 func envFile(
-	env map[string]string,
+	env map[string]secret.Value,
 ) string {
 	var b strings.Builder
 	for _, k := range slices.Sorted(maps.Keys(env)) {
-		b.WriteString(k + "=" + env[k] + "\n")
+		b.WriteString(k + "=" + env[k].Reveal() + "\n")
 	}
 
 	return b.String()

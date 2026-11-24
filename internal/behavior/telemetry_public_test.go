@@ -38,6 +38,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/behavior"
 
+	"github.com/osapi-io/osapi/internal/secret"
 	"github.com/osapi-io/osapi/internal/telemetry/instruments"
 )
 
@@ -57,8 +58,8 @@ func (s *TelemetryPublicTestSuite) SetupTest() {
 
 // secretKey has a key that is a secret, beside a tagged field.
 type secretKey struct {
-	Key  string `json:"key"  secret:"true"`
-	Name string `json:"name"               telemetry:"attr"`
+	Key  secret.Value `json:"key"`
+	Name string       `json:"name" telemetry:"attr"`
 }
 
 func readTagged(context.Context, fakeProvider, tagged) (entry, error) {
@@ -70,13 +71,13 @@ func readSecretKey(context.Context, fakeProvider, secretKey) (entry, error) {
 }
 
 type tagged struct {
-	Key    string  `json:"key"    telemetry:"attr"`
-	On     bool    `json:"on"     telemetry:"attr"`
-	Count  int     `json:"count"  telemetry:"attr"`
-	Ratio  float64 `json:"ratio"  telemetry:"attr"`
-	List   []int   `json:"list"   telemetry:"attr"`
-	Secret string  `json:"secret"`
-	Token  string  `json:"token"  telemetry:"attr" secret:"true"`
+	Key    string       `json:"key"    telemetry:"attr"`
+	On     bool         `json:"on"     telemetry:"attr"`
+	Count  int          `json:"count"  telemetry:"attr"`
+	Ratio  float64      `json:"ratio"  telemetry:"attr"`
+	List   []int        `json:"list"   telemetry:"attr"`
+	Secret string       `json:"secret"`
+	Token  secret.Value `json:"token"  telemetry:"attr"`
 }
 
 func (s *TelemetryPublicTestSuite) metrics() map[string]int64 {

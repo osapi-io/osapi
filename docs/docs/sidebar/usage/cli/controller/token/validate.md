@@ -9,7 +9,7 @@ osapi controller token validate [flags]
 ## Examples
 
 ```bash
-osapi controller token validate --token eyJhbGciOiJIUzI1NiIs...
+osapi controller token validate --token -
 ```
 
 ## Result
@@ -17,7 +17,7 @@ osapi controller token validate --token eyJhbGciOiJIUzI1NiIs...
 The command prints:
 
 ```ansi
-$ osapi controller token validate --token eyJhbGciOiJIUzI1NiIs...
+$ osapi controller token validate --token -
 [1;38;2;0;213;255mToken:[0m
   [38;2;10;143;176mKey ID:[0m                 2026-11
   [38;2;10;143;176mSubject:[0m                user123
@@ -44,9 +44,9 @@ With `--json`, the command prints:
 
 ## Flags
 
-| Flag          | Description                 | Default |
-| ------------- | --------------------------- | ------- |
-| `-t, --token` | The Token string (required) |         |
+| Flag          | Description                                                                                              | Default |
+| ------------- | -------------------------------------------------------------------------------------------------------- | ------- |
+| `-t, --token` | The token (a secret: secret://&lt;vault&gt;/&lt;key&gt;, or - to read it from standard input) (required) |         |
 
 ## Global flags
 

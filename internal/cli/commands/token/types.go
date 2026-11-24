@@ -20,7 +20,11 @@
 
 package token
 
-import "time"
+import (
+	"time"
+
+	"github.com/osapi-io/osapi/internal/secret"
+)
 
 // GenerateInput is what a new token carries.
 type GenerateInput struct {
@@ -43,7 +47,7 @@ type GenerateOutput struct {
 
 // ValidateInput is the token to check.
 type ValidateInput struct {
-	Token string `json:"token" short:"t" validate:"required" doc:"The Token string"`
+	Token secret.Value `json:"token" short:"t" validate:"required" doc:"The token"`
 }
 
 // Claims are what a valid token carries.

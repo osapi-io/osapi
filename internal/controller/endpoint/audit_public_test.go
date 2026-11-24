@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 // AuditPublicTestSuite covers what the DSL audit added to the endpoint
@@ -70,9 +71,11 @@ func (s *AuditPublicTestSuite) TestSentEmptyThroughAPointerBody() {
 }
 
 type secretIn struct {
-	Password string   `json:"password" validate:"required"                   secret:"true"`
-	Tags     []string `json:"tags"     validate:"omitempty,max=3,dive,max=9"`
-	Bare     string   `json:"bare"     validate:"omitempty,dive,max=9"`
+	Password secret.Value            `json:"password" validate:"required"`
+	Env      map[string]secret.Value `json:"env"      validate:"omitempty"`
+	Vars     map[string]secret.Value `json:"vars"`
+	Tags     []string                `json:"tags"     validate:"omitempty,max=3,dive,max=9"`
+	Bare     string                  `json:"bare"     validate:"omitempty,dive,max=9"`
 }
 
 func (s *AuditPublicTestSuite) TestSecretAndDiveInTheSpec() {
@@ -85,6 +88,13 @@ func (s *AuditPublicTestSuite) TestSecretAndDiveInTheSpec() {
 		pw := schema.Properties["password"].Value
 		s.True(pw.WriteOnly, "a secret is write-only")
 		s.Equal("password", pw.Format)
+		s.Equal(true, pw.Extensions[endpoint.SecretExtension])
+		s.Equal(secret.Takes, pw.Description, "its description says what it takes")
+		env := schema.Properties["env"].Value
+		s.True(env.WriteOnly, "a map of secrets is write-only")
+		s.Equal("password", env.AdditionalProperties.Schema.Value.Format, "each value is a secret")
+		s.Equal(true, schema.Properties["vars"].Value.Extensions[endpoint.SecretExtension],
+			"a field with no validate tag is marked too")
 		tags := schema.Properties["tags"].Value
 		s.Equal(uint64(3), *tags.MaxItems, "max before dive is the list's")
 		s.Equal(uint64(9), *tags.Items.Value.MaxLength, "max after dive is each item's")
@@ -92,6 +102,15 @@ func (s *AuditPublicTestSuite) TestSecretAndDiveInTheSpec() {
 		body = map[string]any{"ok": true}
 	}
 	s.NotNil(body)
+}
+
+func (s *AuditPublicTestSuite) TestSecretFields() {
+	endpoint.Register(endpoint.Define("zzsecretfields", "Secret fields",
+		endpoint.Post[secretIn, Node]("create")))
+	got := endpoint.SecretFields()
+	s.True(got["password"], "a secret.Value field")
+	s.True(got["env"], "a map of them")
+	s.False(got["tags"], "a field of another type")
 }
 
 func TestAuditPublicTestSuite(

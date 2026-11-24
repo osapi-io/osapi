@@ -34,6 +34,7 @@ import (
 	"github.com/osapi-io/osapi/internal/job"
 
 	"github.com/osapi-io/osapi/internal/audit"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 // Client provides methods for publishing job requests and retrieving responses.
@@ -173,7 +174,7 @@ func (c *Client) Query(
 	operation job.OperationType,
 	data any,
 ) (string, *job.Response, error) {
-	dataBytes, err := json.Marshal(data)
+	dataBytes, err := marshalData(data)
 	if err != nil {
 		return "", nil, fmt.Errorf("marshal data: %w", err)
 	}
@@ -210,7 +211,7 @@ func (c *Client) QueryBroadcast(
 	operation job.OperationType,
 	data any,
 ) (string, map[string]*job.Response, error) {
-	dataBytes, err := json.Marshal(data)
+	dataBytes, err := marshalData(data)
 	if err != nil {
 		return "", nil, fmt.Errorf("marshal data: %w", err)
 	}
@@ -240,7 +241,7 @@ func (c *Client) Modify(
 	operation job.OperationType,
 	data any,
 ) (string, *job.Response, error) {
-	dataBytes, err := json.Marshal(data)
+	dataBytes, err := marshalData(data)
 	if err != nil {
 		return "", nil, fmt.Errorf("marshal data: %w", err)
 	}
@@ -277,7 +278,7 @@ func (c *Client) ModifyBroadcast(
 	operation job.OperationType,
 	data any,
 ) (string, map[string]*job.Response, error) {
-	dataBytes, err := json.Marshal(data)
+	dataBytes, err := marshalData(data)
 	if err != nil {
 		return "", nil, fmt.Errorf("marshal data: %w", err)
 	}
@@ -710,4 +711,14 @@ func (c *Client) publishAndCollect(
 			}
 		}
 	}
+}
+
+// marshalData is the JSON of a job's data. A secret.Value marshals its
+// value, which the agent gives to the provider, and not [redacted]: until
+// the controller seals each secret of the job (osapi #1247), the job and
+// the job KV keep it as the caller sent it.
+func marshalData(
+	data any,
+) ([]byte, error) {
+	return json.Marshal(secret.Plain(data))
 }

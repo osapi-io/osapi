@@ -30,14 +30,15 @@ import (
 
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/behavior/host"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 type fakeProvider struct{ prefix string }
 
 // secretIn has a field that carries a secret.
 type secretIn struct {
-	Name       string `json:"name"       doc:"test"`
-	Passphrase string `json:"passphrase" doc:"test" secret:"true"`
+	Name       string       `json:"name"       doc:"test"`
+	Passphrase secret.Value `json:"passphrase" doc:"test"`
 }
 
 func readSecret(
@@ -50,7 +51,7 @@ func readSecret(
 
 // leakyIn records a secret on the span, which validate refuses.
 type leakyIn struct {
-	Token string `json:"token" secret:"true" telemetry:"attr" validate:"omitempty" doc:"test"`
+	Token secret.Value `json:"token" telemetry:"attr" validate:"omitempty" doc:"test"`
 }
 
 func readLeaky(

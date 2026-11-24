@@ -41,6 +41,7 @@ import (
 
 	clicommand "github.com/osapi-io/osapi/internal/cli/command"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
+	"github.com/osapi-io/osapi/internal/secret"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -141,7 +142,7 @@ func Build(
 				hasForm = true
 				formPart(parts, name, value)
 			default:
-				body[name] = value.Interface()
+				body[name] = secret.Plain(value.Interface())
 			}
 		}
 	}
@@ -155,7 +156,9 @@ func Build(
 
 		return path, form.Bytes(), parts.FormDataContentType(), nil
 	case whole != nil:
-		data, err := json.Marshal(whole)
+		// A secret is sent as the caller gave it: a reference, or the
+		// value that standard input gave.
+		data, err := json.Marshal(secret.Plain(whole))
 
 		return path, data, jsonType, err
 	case len(body) > 0:

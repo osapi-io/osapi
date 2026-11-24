@@ -30,6 +30,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 type SchemaPublicTestSuite struct {
@@ -59,7 +60,7 @@ type everything struct {
 	Labels    map[string]string `doc:"test"        json:"labels"`
 	Child     *nested           `doc:"test"        json:"child"`
 	Items     [2]nested         `doc:"test"        json:"items"           validate:"dive"`
-	Pass      string            `doc:"test"        json:"pass"                                             secret:"true"`
+	Pass      secret.Value      `doc:"test"        json:"pass"`
 	Dir       string            `doc:"test"        json:"dir"             validate:"startswith=/etc"`
 }
 

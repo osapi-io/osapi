@@ -171,17 +171,17 @@ None. Declare them with behavior.Config.
 
 ### Input (9)
 
-| FIELD              | TYPE    | REQUIRED | CONSTRAINTS                                            | DESCRIPTION                                                                           |
-| ------------------ | ------- | -------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| name               | string  | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9_.-]\*$                | The container's name                                                                  |
-| image              | string  | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9._/:@-]\*$             | The image to run, such as alpine:3.20; docker pulls it when the host does not have it |
-| container_hostname | string  | no       | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9.-]\*$, max length 253 | The hostname inside the container                                                     |
-| dns                | array   | no       |                                                        | The DNS servers of the container                                                      |
-| command            | array   | no       |                                                        | The command, in place of the image's own                                              |
-| env                | object  | no       | format password                                        | The environment variables of the container                                            |
-| ports              | array   | no       |                                                        | The published ports, each host:container, such as 8080:80                             |
-| volumes            | array   | no       |                                                        | The bind mounts, each host:container, such as /srv/data:/data                         |
-| auto_start         | boolean | no       |                                                        | Start the container once it is created                                                |
+| FIELD              | TYPE    | REQUIRED | CONSTRAINTS                                            | DESCRIPTION                                                                                                          |
+| ------------------ | ------- | -------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| name               | string  | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9_.-]\*$                | The container's name                                                                                                 |
+| image              | string  | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9._/:@-]\*$             | The image to run, such as alpine:3.20; docker pulls it when the host does not have it                                |
+| container_hostname | string  | no       | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9.-]\*$, max length 253 | The hostname inside the container                                                                                    |
+| dns                | array   | no       |                                                        | The DNS servers of the container                                                                                     |
+| command            | array   | no       |                                                        | The command, in place of the image's own                                                                             |
+| env                | object  | no       |                                                        | The environment variables of the container. A secret: a reference, secret://&lt;vault&gt;/&lt;key&gt;, or the value. |
+| ports              | array   | no       |                                                        | The published ports, each host:container, such as 8080:80                                                            |
+| volumes            | array   | no       |                                                        | The bind mounts, each host:container, such as /srv/data:/data                                                        |
+| auto_start         | boolean | no       |                                                        | Start the container once it is created                                                                               |
 
 ### Output (3)
 
@@ -324,12 +324,12 @@ None. Declare them with behavior.Config.
 
 ### Input (4)
 
-| FIELD       | TYPE   | REQUIRED | CONSTRAINTS                             | DESCRIPTION                           |
-| ----------- | ------ | -------- | --------------------------------------- | ------------------------------------- |
-| name        | string | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9_.-]\*$ | The container's name or ID            |
-| command     | array  | yes      |                                         | The command and its arguments         |
-| env         | object | no       | format password                         | Environment variables for the command |
-| working_dir | string | no       | pattern ^/                              | The directory the command runs in     |
+| FIELD       | TYPE   | REQUIRED | CONSTRAINTS                             | DESCRIPTION                                                                                                     |
+| ----------- | ------ | -------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| name        | string | yes      | pattern ^\[a-zA-Z0-9]\[a-zA-Z0-9_.-]\*$ | The container's name or ID                                                                                      |
+| command     | array  | yes      |                                         | The command and its arguments                                                                                   |
+| env         | object | no       |                                         | Environment variables for the command. A secret: a reference, secret://&lt;vault&gt;/&lt;key&gt;, or the value. |
+| working_dir | string | no       | pattern ^/                              | The directory the command runs in                                                                               |
 
 ### Output (4)
 

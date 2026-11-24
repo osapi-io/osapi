@@ -14,6 +14,24 @@ A password is the exception. `osapi client node user create` and
 `osapi client node user password update` send the password to the controller,
 which hashes it before it queues the job. The job and NATS have only the hash.
 
+The flag of a secret does not take the value. The shell history keeps a flag,
+and `ps` shows it to each user of the host. Give `-`, and send the value on
+standard input:
+
+```bash
+osapi client node user password update --target web-01 \
+    --name deploy --password - < password.txt
+```
+
+The flag also takes a reference, `secret://<vault>/<key>`. No vault exists yet,
+so the controller refuses each reference with 400. The flag of a map of secrets,
+such as `--env` of `osapi client node docker create`, takes only
+`NAME=secret://<vault>/<key>`. Thus until a vault exists, give the environment
+of a container in the request body of the API, not from the CLI.
+
+The audit log records a reference as it is, so an entry shows which secret a
+request used. It records `[redacted]` in place of a value.
+
 The settings that are secrets, such as the JWT signing keys and the NATS
 passwords, are in `osapi.yaml` or in the environment. `osapi config list` and
 `osapi config get` print them as `********`. Refer to

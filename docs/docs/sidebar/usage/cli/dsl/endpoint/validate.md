@@ -8,6 +8,10 @@ describes each part of a group.
 
 The rules:
 
+- `secret`: No secret.Value input field is tagged in:"path" or in:"query", or
+  telemetry:"attr": a URL goes in logs, and a span is no place for a secret.
+  Fix: Send the secret in the body: drop its in tag, or tag it in:"body" or
+  in:"form". Remove telemetry:"attr" from it.
 - `example`: Each flag that an Example names is a flag of the method's command:
   a field of its input, a field of the struct that in:"body" names, or --json,
   --debug or --osapi-file. Fix: Spell each flag of the example as the command

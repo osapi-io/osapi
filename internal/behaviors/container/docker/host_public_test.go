@@ -33,6 +33,7 @@ import (
 	"github.com/osapi-io/osapi/internal/behavior/host"
 	hostmocks "github.com/osapi-io/osapi/internal/behavior/host/mocks"
 	"github.com/osapi-io/osapi/internal/behaviors/container/docker"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 const (
@@ -114,7 +115,7 @@ func (s *HostPublicTestSuite) TestCreate() {
 	full := docker.CreateInput{
 		Name: "web", Image: "nginx", HostName: "box", DNS: []string{"1.1.1.1"},
 		Ports: []string{"8080:80"}, Volumes: []string{"/a:/b"},
-		Env: map[string]string{"B": "2", "A": "1"}, Command: []string{"run"}, AutoStart: true,
+		Env: map[string]secret.Value{"B": "2", "A": "1"}, Command: []string{"run"}, AutoStart: true,
 	}
 
 	s.Run("each option goes to docker create, the environment on standard input", func() {
@@ -230,7 +231,7 @@ func (s *HostPublicTestSuite) TestExec() {
 			})
 			got, err := p.Exec(ctx, docker.ExecInput{
 				Name: "web", Command: []string{"false"}, WorkingDir: "/tmp",
-				Env: map[string]string{"B": "2", "A": "1"},
+				Env: map[string]secret.Value{"B": "2", "A": "1"},
 			})
 			s.Require().NoError(err)
 			s.Equal(

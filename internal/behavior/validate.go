@@ -69,8 +69,10 @@ const (
 	// RuleRequires: every behavior required is registered, and none
 	// requires itself through others.
 	RuleRequires = "requires"
-	// RuleSecret: an input field tagged secret is not also recorded on the
-	// method's span.
+	// RuleSecret: a secret.Value input field is not recorded on the
+	// method's span, and is not in the URL of its route: not its key, and
+	// not an input of a read. When the examples run, a chain gives a secret
+	// only to a secret.Value field of a child.
 	RuleSecret = "secret"
 	// RuleValidate: each input field has a validate tag. The endpoint DSL
 	// holds its inputs to the same check, from package rule.
@@ -104,9 +106,8 @@ const (
 	// names an input field of type map[string]string.
 	RuleTemplate = "template"
 	// RuleTag: each struct tag of an input field has a known key
-	// (command.KnownTags), and secret is "true" and telemetry is "attr" on an
-	// input or an output field. A typo of either drops what
-	// the tag does with no error: a secret reaches the audit log.
+	// (command.KnownTags), and telemetry is "attr" on an input or an output
+	// field. A typo drops what the tag does with no error.
 	RuleTag = "tag"
 	// RuleBefore: a .Before step is func(context.Context, In) (In, error),
 	// on a served method with a secret field, and each field tagged before
@@ -143,12 +144,6 @@ func tagProblems(
 					fmt.Sprintf("field %s has the tag key %q, which nothing reads", name, key),
 				)
 			}
-		}
-		if v, ok := f.Tag.Lookup("secret"); ok && v != "true" {
-			out = append(
-				out,
-				fmt.Sprintf("field %s is tagged secret:%q; the only value is \"true\"", name, v),
-			)
 		}
 		if v, ok := f.Tag.Lookup("telemetry"); ok && v != "attr" {
 			out = append(
@@ -375,8 +370,8 @@ func ValidateBehavior(
 			for _, name := range unflaggable(m.In) {
 				add(m.Name, RuleSurface,
 					"input field %s cannot be a CLI flag; a flag holds a string, bool, int, "+
-						"[]string, map[string]string or []byte (a file), so give it one of those "+
-						"types or leave CLI off", name)
+						"[]string, map[string]string, []byte (a file), secret.Value or "+
+						"map[string]secret.Value, so give it one of those types or leave CLI off", name)
 			}
 		}
 	}
@@ -559,6 +554,23 @@ func ValidateBehavior(
 						m.Name,
 						RuleSecret,
 						"input field %s is secret and tagged telemetry:\"attr\"; a secret is never recorded on a span",
+						JSONName(f),
+					)
+				}
+				switch {
+				case !Secret(f) || !b.API:
+				case m.InPath(JSONName(f)):
+					add(
+						m.Name,
+						RuleSecret,
+						"input field %s is secret and the key of the method; the key goes in the URL, which logs keep",
+						JSONName(f),
+					)
+				case m.Verb == VerbRead:
+					add(
+						m.Name,
+						RuleSecret,
+						"input field %s is secret and an input of a read; a read sends its input in the query, which logs keep",
 						JSONName(f),
 					)
 				}

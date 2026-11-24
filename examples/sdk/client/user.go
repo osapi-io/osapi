@@ -77,7 +77,7 @@ func runCreate2(
 	resp, err := c.User.Create(ctx, target, client.UserCreateInput{
 		Groups:   []string{"root"},
 		Name:     "osapitest",
-		Password: "osapi-test-password",
+		Password: "-",
 		Shell:    "/bin/sh",
 	})
 	if err != nil {

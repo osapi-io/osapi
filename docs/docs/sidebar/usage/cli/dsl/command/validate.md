@@ -39,9 +39,15 @@ The rules:
   spell each flag of an example as the command has it.
 - `flag`: Each value is a flag: the input is a struct, each field has a json
   name that is its flag with _ as -, no flag or in tag, and a type a flag holds
-  (string, bool, int, \[]string, map\[string]string or \[]byte). A command takes
-  no positional argument. Fix: Make the input a struct, tag each field
-  json:"name", drop the flag and in tags, and use one of the flag types.
+  (string, bool, int, \[]string, map\[string]string, \[]byte, secret.Value or
+  map\[string]secret.Value). A command takes no positional argument. Fix: Make
+  the input a struct, tag each field json:"name", drop the flag and in tags, and
+  use one of the flag types.
+- `secret`: No secret.Value input field is tagged telemetry:"attr": a span is no
+  place for a secret. A secret flag takes a reference,
+  secret://&lt;vault&gt;/&lt;key&gt;, or - to read the value from standard
+  input, and the command resolves a reference itself. Fix: Remove
+  telemetry:"attr" from the secret field.
 - `doc`: Each input field has a doc tag: the help of its flag. Fix: Add
   doc:"..." to the field: a capital letter first and no period at the end.
 - `validate`: Each input field has a validate tag: its rules, or omitempty for

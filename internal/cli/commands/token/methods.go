@@ -88,7 +88,7 @@ func Validate(
 	d Deps,
 	in ValidateInput,
 ) (Claims, error) {
-	claims, err := d.Tokens.Validate(in.Token, d.Config.SigningKeys())
+	claims, err := d.Tokens.Validate(in.Token.Reveal(), d.Config.SigningKeys())
 	if err != nil {
 		return Claims{}, fmt.Errorf("failed to validate token: %w", err)
 	}

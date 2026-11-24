@@ -32,14 +32,16 @@ import (
 
 	"github.com/osapi-io/osapi/internal/audit"
 	"github.com/osapi-io/osapi/internal/behavior"
+	"github.com/osapi-io/osapi/internal/secret"
 	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
-// vaultIn is a behavior's input with a field it tags secret, under a name the
-// fixed list does not have.
+// vaultIn is a behavior's input with a secret.Value field, under a name the
+// fixed list does not have, and a map of them.
 type vaultIn struct {
-	Name       string `json:"name"`
-	Passphrase string `json:"passphrase" secret:"true"`
+	Name       string                  `json:"name"`
+	Passphrase secret.Value            `json:"passphrase"`
+	Env        map[string]secret.Value `json:"env"`
 }
 
 type vaultOut struct{}
@@ -91,13 +93,33 @@ func (s *SummaryPublicTestSuite) TestSummarize() {
 			},
 		},
 		{
-			name:        "a field a behavior tags secret is not recorded",
+			name:        "a secret.Value field of a behavior is not recorded",
 			body:        `{"name":"main","passphrase":"correct horse"}`,
 			contentType: "application/json",
 			validateFunc: func(got string) {
 				s.NotContains(got, "correct horse")
 				s.Contains(got, "[redacted]")
 				s.Contains(got, "main")
+			},
+		},
+		{
+			name:        "a reference is recorded, so the entry shows which secret was used",
+			body:        `{"passphrase":"secret://default/vault","password":"secret://default/pw"}`,
+			contentType: "application/json",
+			validateFunc: func(got string) {
+				s.Contains(got, `"passphrase":"secret://default/vault"`)
+				s.Contains(got, `"password":"secret://default/pw"`)
+			},
+		},
+		{
+			name:        "a map of secrets keeps its names and references, and redacts each value",
+			body:        `{"env":{"A":"hunter2","B":"secret://default/b","C":1}}`,
+			contentType: "application/json",
+			validateFunc: func(got string) {
+				s.NotContains(got, "hunter2")
+				s.Contains(got, `"A":"[redacted]"`)
+				s.Contains(got, `"B":"secret://default/b"`)
+				s.Contains(got, `"C":"[redacted]"`)
 			},
 		},
 		{

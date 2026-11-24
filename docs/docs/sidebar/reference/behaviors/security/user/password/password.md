@@ -75,11 +75,11 @@ None. Declare them with behavior.Config.
 
 ### Input (3)
 
-| FIELD         | TYPE   | REQUIRED | CONSTRAINTS                                      | DESCRIPTION                                                      |
-| ------------- | ------ | -------- | ------------------------------------------------ | ---------------------------------------------------------------- |
-| name          | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user, such as alice                                          |
-| password      | string | no       | pattern ^\[^\r\n]\*$, format password            | The new password, which osapi hashes on the controller           |
-| password_hash | string | no       |                                                  | The sha512-crypt hash of the password, which the controller sets |
+| FIELD         | TYPE   | REQUIRED | CONSTRAINTS                                      | DESCRIPTION                                                                                                                      |
+| ------------- | ------ | -------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| name          | string | yes      | pattern ^\[a-z_]\[a-z0-9_-]\*\$?$, max length 32 | The user, such as alice                                                                                                          |
+| password      | string | no       | pattern ^\[^\r\n]\*$, format password            | The new password, which osapi hashes on the controller. A secret: a reference, secret://&lt;vault&gt;/&lt;key&gt;, or the value. |
+| password_hash | string | no       |                                                  | The sha512-crypt hash of the password, which the controller sets                                                                 |
 
 ### Output (2)
 
@@ -90,6 +90,6 @@ None. Declare them with behavior.Config.
 
 ### Examples (1)
 
-| EXAMPLE        | INPUT                                                                                                                                                           | OUTPUT                       |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| Set a password | name=osapitest, password=osapi-test-password, password_hash=$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1 | name=osapitest, changed=true |
+| EXAMPLE        | INPUT                                                                                                                                                   | OUTPUT                       |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| Set a password | name=osapitest, password=\[redacted], password_hash=$6$osapitest$ixskR1vdsZl2JBlRPn/2rqKZK4DltHGVEnTxDn.wN68cQnKpsMNWzH5Hxu6jZgEHWjcnzvFneyk/KHl6bEYtj1 | name=osapitest, changed=true |

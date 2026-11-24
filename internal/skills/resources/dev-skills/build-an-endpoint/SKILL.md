@@ -147,8 +147,10 @@ Without it the client sends `""` or `0`, and the field's other rules refuse it.
 The `optional` rule fails such a field; the behavior DSL asks the same check of
 its writes. A list's rules after `dive` are each item's:
 `validate:"max=10,dive,max=255"` is at most 10 items of at most 255 characters,
-in the server and in the spec. A field tagged `secret:"true"` is write-only in
-the spec.
+in the server and in the spec. A secret is a field of type `secret.Value`
+(`internal/secret`), not a tag: it is write-only in the spec, the audit redacts
+it, and its flag takes a reference or `-` for standard input. Send it in the
+body: the `secret` rule refuses one `in:"path"` or `in:"query"`.
 
 The generated route checks these rules before the handler runs. Do not write the
 check in the handler; declare the rule. Do not call a handler from other code:

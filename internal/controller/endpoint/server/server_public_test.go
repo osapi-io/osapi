@@ -35,6 +35,7 @@ import (
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/controller/endpoint"
 	"github.com/osapi-io/osapi/internal/controller/endpoint/server"
+	"github.com/osapi-io/osapi/internal/secret"
 )
 
 var signingKey = authtoken.Key{ID: "test", Secret: "test-signing-key-for-the-endpoint-server"}
@@ -281,6 +282,62 @@ func (s *ServerPublicTestSuite) TestServe() {
 				s.Empty(rec.Body.String())
 			}
 			s.Equal(tc.wantLoc, rec.Header().Get("Location"))
+		})
+	}
+}
+
+type loginInput struct {
+	Password secret.Value `json:"password" validate:"required"`
+}
+
+// TestServeRefusesAReference: no vault exists, so a reference names a vault
+// that does not exist. The route refuses it, and never gives it to the
+// handler as the value.
+func (s *ServerPublicTestSuite) TestServeRefusesAReference() {
+	g := endpoint.Define("login", "Logins",
+		endpoint.Uses[deps](),
+		endpoint.Post[loginInput, thing]("make").Public().
+			Handle(func(context.Context, deps, loginInput) (thing, error) { return thing{}, nil }),
+	)
+	tests := []struct {
+		name     string
+		password secret.Value
+		wantCode int
+		wantBody string
+	}{
+		{
+			name:     "when the secret is a reference, it is a 400 that names the vault",
+			password: "secret://default/pw",
+			wantCode: http.StatusBadRequest,
+			wantBody: `{"error":"secret://default/pw: the vault \"default\" does not exist","reason":"invalid_request"}`,
+		},
+		{
+			name:     "when the secret is a value, the handler gets it",
+			password: "hunter2",
+			wantCode: http.StatusOK,
+			wantBody: `{"name":""}`,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			srv := server.New(slog.Default(), authtoken.Keys{signingKey}, nil, deps{})
+			e := echo.New()
+			m := g.Method("make")
+			srv.Mount(e, []server.Route{{
+				Method: m.HTTPMethod(),
+				Path:   server.Path(g, m),
+				Handler: server.Serve(srv, g, "make",
+					func(context.Context, deps, loginInput) (thing, error) { return thing{}, nil },
+					func(*echo.Context) (loginInput, string, bool) {
+						return loginInput{Password: tc.password}, "", true
+					}),
+			}})
+			rec := httptest.NewRecorder()
+			e.ServeHTTP(rec, httptest.NewRequest(m.HTTPMethod(), "/api/login", nil))
+
+			s.Equal(tc.wantCode, rec.Code, rec.Body.String())
+			s.JSONEq(tc.wantBody, rec.Body.String())
 		})
 	}
 }

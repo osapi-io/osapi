@@ -18,6 +18,33 @@ Each kind of secret has its own solution:
 - A behavior input that is a secret, such as a password or the environment of a
   container, stays out of the audit log, the spans and the chain records.
 
+## A secret is a type
+
+An input field that holds a secret has the type `secret.Value` of
+`internal/secret`, in the behavior, endpoint and command DSLs. A map of secrets
+is `map[string]secret.Value`. No tag makes a secret. A tag with a typo makes an
+ordinary field, and nothing reports it. A type cannot have a typo.
+
+A `secret.Value` holds a reference, `secret://<vault>/<key>`, or a value. Its
+`String`, `Format`, `MarshalJSON` and `LogValue` give the reference, or
+`[redacted]` for a value. Only `Reveal` gives the value. The DSLs do these
+things with the type:
+
+- The spec makes it a string of format `password`, `writeOnly`, with
+  `x-osapi-secret: true`. Its description tells what it takes.
+- The audit redacts each field of the type by name, and keeps a reference.
+- A span never records it, and a chain record has the reference or `[redacted]`.
+- The CLI flag takes a reference, or `-` to read the value from standard input.
+  It refuses a value.
+- `validate` refuses one with `telemetry:"attr"`, one in the path or the query
+  of a route, and a chain that gives one to a field of a different type.
+- `TestSecretsAreTyped` fails a `string` input field whose name is on the audit
+  denylist.
+
+No vault exists yet, so the route of each method refuses a reference with 400.
+The CLI sends the request, and the controller queues the job, with
+`secret.Plain`, which gives each value.
+
 A behavior input that is a secret is not kept out of NATS. The input of a
 behavior is the data of its job, and JetStream keeps that data. Thus a token in
 the environment of a container is plain text to each NATS user that can read the

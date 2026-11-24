@@ -55,11 +55,14 @@ as JSON. osapi replaces the values of sensitive fields with `[redacted]`.
 - **Redacted fields.** osapi finds them by name, at all levels, and upper case
   or lower case does not matter. Thus it also redacts a password in a list of
   users: `password`, `password_hash`, `secret`, `token`, `private_key`,
-  `key_data`, `stdin`, `content`, `authorization`.
+  `key_data`, `stdin`, `content`, `authorization`. It also redacts each input
+  field of type `secret.Value`, by its name. A reference,
+  `secret://<vault>/<key>`, stays, so the entry shows which secret a request
+  used.
 - **The list is a deny list, not an allow list.** osapi records new fields by
   default. A summary with only the fields that somebody remembered does not help
-  after an incident. When a change adds a field with a secret, the same change
-  adds the field to the list.
+  after an incident. A field with a secret has the type `secret.Value`, and a
+  test fails a `string` input field with a name on the list.
 - **A summary has a limit** of 2 KB. When osapi cuts it, it adds `…[truncated]`.
   osapi does not read a body of more than 64 KB. The entry says so. It does not
   keep the upload.

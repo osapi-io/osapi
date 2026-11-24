@@ -52,7 +52,7 @@ var Group = command.Register(command.Define(
 		Handle(Generate),
 	command.Method[ValidateInput, Claims]("validate").
 		Short("Validate a token for authenticity and claims").
-		Example("--token eyJhbGciOiJIUzI1NiIs...").
+		Example("--token -").
 		Prints(sampleClaims).
 		Fails("no token", ValidateInput{}).
 		Handle(Validate),

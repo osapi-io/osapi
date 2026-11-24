@@ -50,7 +50,7 @@ func hashPassword(
 	if in.Password == "" {
 		return in, nil
 	}
-	hash, err := hashFn(in.Password)
+	hash, err := hashFn(in.Password.Reveal())
 	if err != nil {
 		return UpdateInput{}, err
 	}
