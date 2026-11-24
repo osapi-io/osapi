@@ -18,13 +18,6 @@ inputs:
       ui/dist, not the built UI, and no Go test reads it. A release builds the
       UI in goreleaser's before hook.
     default: "false"
-  cache:
-    description: >-
-      The name of the Go build cache of this job, such as unit-3 or lint. Each
-      job keeps its own cache, saved for each commit, and starts from the
-      newest one: setup-go's cache is keyed on go.sum alone, so it was saved
-      once and every job compiled from cold.
-    required: true
 
 runs:
   using: composite
@@ -33,19 +26,6 @@ runs:
       uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
       with:
         go-version-file: go.mod
-        cache: false
-    # A job on main saves it as its last step (go.yml), so a pull request
-    # starts from main's newest cache and uploads none.
-    - name: Restore the Go build cache
-      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: go-${{ inputs.cache }}-${{ hashFiles('go.sum') }}-${{ github.sha }}
-        restore-keys: |
-          go-${{ inputs.cache }}-${{ hashFiles('go.sum') }}-
-          go-${{ inputs.cache }}-
     - name: Set up Node.js
       if: inputs.js == 'true'
       uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
