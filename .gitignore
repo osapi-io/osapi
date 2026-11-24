@@ -7,7 +7,7 @@ dist/
 docs/node_modules/
 .just/remote/*
 .nats/jetstream/
-pki/
+/pki/
 result.xml
 test/vendor/
 tmp/
