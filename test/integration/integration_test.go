@@ -161,7 +161,7 @@ func TestMain(
 		os.Exit(1)
 	}
 
-	code := m.Run()
+	code := runPrepared(m)
 
 	// Each request and response went through the spec: one that broke it
 	// fails the run, even when its own test passed.
@@ -353,6 +353,31 @@ func writeTempFile(
 	return path
 }
 
+// runPrepared runs the tests on a target that prepare made ready, when the
+// write examples run, and puts back what prepare changed after them. A
+// prepare that fails stops the run: each test would fail for what is
+// missing, not for what it tests.
+func runPrepared(
+	m *testing.M,
+) int {
+	if !prepareWrites() {
+		return m.Run()
+	}
+	if err := prepare(); err != nil {
+		fmt.Fprintf(os.Stderr, "prepare the target: %v\n", err)
+		_ = unprepare()
+
+		return 1
+	}
+	code := m.Run()
+	if err := unprepare(); err != nil {
+		fmt.Fprintf(os.Stderr, "put back the target: %v\n", err)
+		code = 1
+	}
+
+	return code
+}
+
 // runAgainst runs the suite against a controller that is already running,
 // such as the lab's, and returns its exit code. file is an osapi client
 // config: its controller.client URL and bearer token are the controller and
@@ -404,7 +429,7 @@ func runAgainst(
 		return 1
 	}
 
-	code := m.Run()
+	code := runPrepared(m)
 	if v := proxy.Violations(); len(v) > 0 {
 		fmt.Fprintf(os.Stderr, "\n%d requests or responses break the full spec:\n", len(v))
 		for _, line := range v {

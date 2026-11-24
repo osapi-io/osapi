@@ -29,6 +29,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -48,10 +49,6 @@ import (
 // and run again must report changed: false.
 type BehaviorSmokeSuite struct {
 	suite.Suite
-
-	// madeDummy is true once the suite made dummy on the target, so it
-	// deletes it at the end.
-	madeDummy bool
 }
 
 // call is a command line and what it reads from standard input.
@@ -59,11 +56,6 @@ type call struct {
 	args  []string
 	stdin string
 }
-
-// dummy is the dummy interface that the dns, interface and route write
-// examples run on. The suite makes it through osapi, so the CI runner and a
-// lab VM need no setup of their own.
-const dummy = "osapi0"
 
 // commandLine is the generated command line for one method, with input's flags:
 // the docs pages' command without the binary's name. A secret of input with a
@@ -104,6 +96,28 @@ func (s *BehaviorSmokeSuite) results(
 // reports them, so this checks the host the behaviors run on: the CI runner,
 // or each lab VM.
 func (s *BehaviorSmokeSuite) TestPrograms() {
+	// The agent finds its missing programs again on each heartbeat, so a
+	// program that TestMain's prepare installed, such as chrony, leaves the
+	// list at the next one. Wait for it, for up to two heartbeats.
+	var missing map[string][]string
+	deadline := time.Now().Add(25 * time.Second)
+	for {
+		missing = s.missingPrograms()
+		if len(missing) == 0 || time.Now().After(deadline) {
+			break
+		}
+		time.Sleep(time.Second)
+	}
+	for host, programs := range missing {
+		s.Empty(programs,
+			"%s lacks programs that its behaviors run: install their packages in the "+
+				"suite's prepare in test/integration/prepare_test.go", host)
+	}
+}
+
+// missingPrograms is the missing programs of each agent that the suite
+// targets that lacks one.
+func (s *BehaviorSmokeSuite) missingPrograms() map[string][]string {
 	out, stderr, code := runCLI("client", "agent", "list", "--json")
 	s.Require().Zero(code, stderr)
 	var resp struct {
@@ -115,16 +129,19 @@ func (s *BehaviorSmokeSuite) TestPrograms() {
 	s.Require().NoError(parseJSON(out, &resp))
 
 	checked := 0
+	missing := map[string][]string{}
 	for _, a := range resp.Items {
 		if target != "_any" && a.Hostname != target {
 			continue
 		}
 		checked++
-		s.Empty(a.MissingPrograms,
-			"%s lacks programs that its behaviors run: install their packages on the "+
-				"CI runner in .github/workflows/go-int.yml, or in the lab's image", a.Hostname)
+		if len(a.MissingPrograms) > 0 {
+			missing[a.Hostname] = a.MissingPrograms
+		}
 	}
-	s.NotZero(checked, "no agent matches the target %s", target)
+	s.Require().NotZero(checked, "no agent matches the target %s", target)
+
+	return missing
 }
 
 func (s *BehaviorSmokeSuite) TestReads() {
@@ -169,12 +186,11 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 	}
 
 	s.refreshIndex()
-	s.prepare()
 	var examples []made
 	defer func() { s.leftNothing(examples) }()
 	// Before leftNothing, which requires that the interface examples left
-	// no config of dummy.
-	defer s.dropDummy()
+	// no config of dummy. TestMain's prepare made it.
+	defer func() { s.NoError(dropDummy()) }()
 
 	for _, b := range behavior.All() {
 		if !b.CLI {
@@ -195,7 +211,7 @@ func (s *BehaviorSmokeSuite) TestWrites() {
 					// examples after it need. This runs last, after the
 					// example's own remove.
 					if b.Name == "interface" {
-						defer s.makeDummy()
+						defer func() { s.NoError(makeDummy()) }()
 					}
 					defer s.restore(b)()
 					s.reset(b, ex.Input)
@@ -245,40 +261,6 @@ func (s *BehaviorSmokeSuite) refreshIndex() {
 	}
 	m := b.Method("update")
 	s.results(commandLine(b, m, reflect.New(m.In).Elem().Interface()))
-}
-
-// prepare makes on the target what the write examples need, through osapi:
-// the dummy interface, and chrony, which the ntp examples run. Each call
-// changes nothing when the target has it.
-func (s *BehaviorSmokeSuite) prepare() {
-	s.makeDummy()
-	s.results(call{args: []string{
-		"client", "node", "package", "create", "--name", "chrony",
-		"--target", target, "--json",
-	}})
-}
-
-// makeDummy makes dummy on the target, and notes that the suite made it.
-func (s *BehaviorSmokeSuite) makeDummy() {
-	for _, r := range s.results(call{args: []string{
-		"client", "node", "interface", "create", "--name", dummy, "--type", "dummy",
-		"--target", target, "--json",
-	}}) {
-		if r["changed"] == true {
-			s.madeDummy = true
-		}
-	}
-}
-
-// dropDummy deletes dummy at the end, only when the suite made it.
-func (s *BehaviorSmokeSuite) dropDummy() {
-	if !s.madeDummy {
-		return
-	}
-	s.results(call{args: []string{
-		"client", "node", "interface", "delete", "--name", dummy,
-		"--target", target, "--json",
-	}})
 }
 
 // methodFor is the method whose input type is input's, and its behavior:
