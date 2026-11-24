@@ -4,6 +4,8 @@ import type { JobDetailResponse, Step } from "@/sdk/gen/schemas";
 export interface StepRow {
   depth: number;
   step: Step;
+  /** Its place in the tree, such as 0.1: a stable key for a row. */
+  path: string;
 }
 
 /**
@@ -11,11 +13,18 @@ export interface StepRow {
  * it, as osapi client job get prints them: dns update, then netplan update
  * under it, then managedfile update under that.
  */
-export function stepRows(steps: readonly Step[], depth = 0): StepRow[] {
-  return steps.flatMap((step) => [
-    { depth, step },
-    ...stepRows(step.steps ?? [], depth + 1),
-  ]);
+export function stepRows(
+  steps: readonly Step[],
+  depth = 0,
+  parent = "",
+): StepRow[] {
+  return steps.flatMap((step, i) => {
+    const path = parent ? `${parent}.${i}` : `${i}`;
+    return [
+      { depth, step, path },
+      ...stepRows(step.steps ?? [], depth + 1, path),
+    ];
+  });
 }
 
 /** The steps of one host. */

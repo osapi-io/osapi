@@ -52,9 +52,9 @@ export function DataTable<T>({
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-border/40 text-left text-text-muted">
-              {columns.map((col, i) => (
+              {columns.map((col) => (
                 <th
-                  key={i}
+                  key={col.header}
                   className={cn(
                     hPad,
                     hVPad,

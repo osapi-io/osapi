@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Card } from "@/components/ui/card";
 import { Code, Trash2, Copy, Check } from "lucide-react";
 import { SearchBox } from "@/components/ui/search-box";
 import type { FileInfo, FileUploadResponse } from "@/sdk/gen/schemas";
@@ -107,7 +108,7 @@ function ResultShell({
   data: unknown;
 }) {
   return (
-    <div className="rounded-lg border border-border/60 bg-surface shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+    <Card variant="inset">
       <div className="flex items-center gap-2 border-b border-border/40 px-4 py-2.5">
         {summary ??
           (resultsOf(data).length > 0 && (
@@ -125,7 +126,7 @@ function ResultShell({
       {jobId && <JobDetail jobId={jobId} panel />}
       {children}
       <RawJsonToggle data={data} />
-    </div>
+    </Card>
   );
 }
 
@@ -377,9 +378,9 @@ function GenericRowsResult({
               <HostError>{host.error}</HostError>
             )}
             {!(def.httpMethod !== "GET") &&
-              visible.map((r, i) => (
+              visible.map((r) => (
                 <div
-                  key={i}
+                  key={JSON.stringify(r)}
                   className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border/30 px-4 py-2 pl-9 last:border-0"
                 >
                   <Pairs cols={shown} item={r} strongFirst />
@@ -444,9 +445,9 @@ export function ResultCard({
         label={`${files.length} file${files.length !== 1 ? "s" : ""}`}
         data={data}
       >
-        {files.map((f, i) => (
+        {files.map((f) => (
           <div
-            key={i}
+            key={f.name}
             className="flex items-center gap-4 border-b border-border/50 px-4 py-2 last:border-0"
           >
             <StatusIcon status="ok" />
@@ -494,9 +495,9 @@ export function ResultCard({
         summary={<HealthDot status={entries.length > 0 ? "error" : "ok"} />}
         data={data}
       >
-        {entries.map((e, i) => (
+        {entries.map((e) => (
           <div
-            key={i}
+            key={`${e.hostname}:${e.path}`}
             className="flex items-center gap-4 border-b border-border/50 px-4 py-2 last:border-0"
           >
             <StatusIcon status="failed" />

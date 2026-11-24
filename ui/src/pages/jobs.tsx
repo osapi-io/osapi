@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Pagination } from "@/components/ui/pagination";
 import { unwrap, usePolling } from "@/hooks/use-polling";
 import { useJob } from "@/hooks/use-job";
 import { enumLabel } from "@/lib/format";
@@ -19,8 +20,6 @@ import { Modal } from "@/components/ui/modal";
 import {
   Loader2,
   Briefcase,
-  ChevronLeft,
-  ChevronRight,
   Trash2,
   RefreshCw,
   ChevronDown,
@@ -163,8 +162,6 @@ export function Jobs() {
 
   const items = data?.items ?? [];
   const totalItems = data?.total_items ?? 0;
-  const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
-  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
 
   return (
     <ContentArea>
@@ -225,7 +222,7 @@ export function Jobs() {
             </SectionLabel>
             <DataTable
               rows={items}
-              getRowKey={(job, i) => job.id ?? i}
+              getRowKey={(job) => job.id ?? ""}
               onRowClick={(job) => job.id && handleExpand(job.id)}
               expanded={(job) =>
                 expandedId !== job.id ? undefined : expandLoading ? (
@@ -324,33 +321,12 @@ export function Jobs() {
           </div>
 
           {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between">
-              <Text variant="muted">
-                Page {currentPage} of {totalPages}
-              </Text>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={offset === 0}
-                  onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Previous
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={offset + PAGE_SIZE >= totalItems}
-                  onClick={() => setOffset(offset + PAGE_SIZE)}
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
+          <Pagination
+            offset={offset}
+            limit={PAGE_SIZE}
+            total={totalItems}
+            onChange={setOffset}
+          />
         </>
       )}
 

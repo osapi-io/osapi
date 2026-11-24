@@ -1,4 +1,5 @@
 import { useJob } from "@/hooks/use-job";
+import { Card } from "@/components/ui/card";
 import { ChainSection } from "@/components/domain/step-tree";
 import { hostSteps } from "@/lib/steps";
 
@@ -16,8 +17,8 @@ export function JobChain({ jobId }: { jobId: string }) {
   const hosts = hostSteps(job);
   if (hosts.length === 0) return null;
   return (
-    <div className="rounded-lg border border-border/60 bg-surface px-4 py-3">
+    <Card variant="inset" className="px-4 py-3">
       <ChainSection hosts={hosts} />
-    </div>
+    </Card>
   );
 }

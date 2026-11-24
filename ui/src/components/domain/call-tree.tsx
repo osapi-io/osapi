@@ -22,9 +22,9 @@ export function CallTree({
   return (
     <ul className="space-y-0.5 font-mono text-xs">
       <li className="text-text">{runName(behavior, method)}</li>
-      {callRows(calls).map(({ depth, call }, i) => (
+      {callRows(calls).map(({ depth, call, path }) => (
         <li
-          key={i}
+          key={path}
           className="flex items-center gap-2"
           style={{ paddingLeft: `${depth * 1.25}rem` }}
         >

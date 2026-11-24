@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { ListBox } from "@/components/ui/list-box";
 import { ChevronRight, CornerDownRight, Lock } from "lucide-react";
 import { SectionLabel } from "@/components/ui/section-label";
 import { Text } from "@/components/ui/text";
@@ -42,11 +43,11 @@ export function BehaviorList({
           {note}
         </Text>
       )}
-      <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
+      <ListBox divided>
         {behaviors.map((b) => (
           <BehaviorRow key={b.name} behavior={b} allowed={allowed} />
         ))}
-      </ul>
+      </ListBox>
     </section>
   );
 }

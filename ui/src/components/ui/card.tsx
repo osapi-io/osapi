@@ -19,6 +19,10 @@ const cardVariants = cva(
         warn: "border-status-pending/60",
         error:
           "border-status-error/60 shadow-[0_4px_16px_rgba(239,68,68,0.12)]",
+        // A panel inside a card, such as a result or a chain: a step lighter
+        // than the card, and padded by what it holds.
+        inset:
+          "border-border/60 bg-surface p-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]",
       },
     },
     defaultVariants: {

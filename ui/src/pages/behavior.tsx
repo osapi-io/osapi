@@ -316,8 +316,8 @@ function MethodCard({
             className="-mx-3"
           >
             <div className="space-y-3 px-3 pb-2">
-              {m.examples.map((ex, i) => (
-                <div key={i}>
+              {m.examples.map((ex) => (
+                <div key={ex.doc}>
                   <Text as="p" size="sm" className="mb-1">
                     {ex.doc}
                   </Text>

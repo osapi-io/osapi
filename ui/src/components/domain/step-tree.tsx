@@ -13,9 +13,9 @@ import type { Step } from "@/sdk/gen/schemas";
 function StepTree({ steps }: { steps: Step[] }) {
   return (
     <ul className="space-y-0.5 text-xs">
-      {stepRows(steps).map(({ depth, step }, i) => (
+      {stepRows(steps).map(({ depth, step, path }) => (
         <li
-          key={i}
+          key={path}
           className="flex items-center gap-2"
           style={{ paddingLeft: `${depth * 1.25}rem` }}
         >

@@ -308,7 +308,7 @@ export function JobView({ job }: { job: JobDetailResponse }) {
         <SectionLabel>Timeline</SectionLabel>
         <DataTable
           rows={job.timeline ?? []}
-          getRowKey={(_, i) => i}
+          getRowKey={(e) => `${e.timestamp}-${e.event}-${e.hostname ?? ""}`}
           columns={[
             {
               header: "Timestamp",
