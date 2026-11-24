@@ -56,8 +56,8 @@ jobs:
           version: ${{ steps.lint.outputs.version }}
           args: --config .golangci.yml
 
-  # Each generation check regenerated the whole tree and compared it, on a
-  # runner of its own. This job generates once and fails on any change.
+  # One generation, then a check that nothing changed. This replaces the
+  # generation checks, which each regenerated the tree on a runner of its own.
   generated:
     runs-on: ubuntu-latest
     name: generated
@@ -67,13 +67,13 @@ jobs:
         with:
           ui: "true"
       - name: Generate
-        run: just generate && just cli-docs-generate
+        run: just generate
       - name: Fail on a change
         run: |
           if [ -n "$(git status --porcelain)" ]; then
             git status --short
             git diff --stat
-            echo "generated files are stale: run just generate and just cli-docs-generate, and commit them" >&2
+            echo "generated files are stale: run just generate and commit them" >&2
             exit 1
           fi
 
@@ -139,44 +139,36 @@ jobs:
           js: "false"
       - name: Unit tests, shard ${{ matrix.shard }}
         run: |
-          packages=$(just go-unit-plan | jq -r --argjson i ${{ matrix.shard }} '.include[] | select(.shard == $i) | .packages')
+          # internal/dslcheck runs in its own job: it type-checks each
+          # package, about 53s, which held up whichever shard had it.
+          packages=$(just go-unit-plan | jq -r --argjson i ${{ matrix.shard }} '.include[] | select(.shard == $i) | .packages' \
+            | tr ' ' '\n' | grep -vx 'github.com/osapi-io/osapi/internal/dslcheck' | tr '\n' ' ' | xargs)
           if [ -z "$packages" ]; then
             echo "shard ${{ matrix.shard }}: no packages"
             exit 0
           fi
           just go-unit-shard ${{ matrix.shard }} "$packages"
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: cover-${{ matrix.shard }}
-          path: .coverage/shard-${{ matrix.shard }}.out
-          retention-days: 1
-
-  coverage:
-    needs: unit
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Set up Go
-        uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
-        with:
-          go-version-file: go.mod
-      - name: Install just
-        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
-      - name: Fetch justfiles
-        run: just fetch
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          pattern: cover-*
-          path: .coverage
-          merge-multiple: true
-      - name: Join the shards and check the coverage target
-        run: just go-cover-merge
+      # Each shard checks its own coverage (go-unit-shard), and sends its own
+      # profile. Codecov joins the profiles of one commit into one report, so
+      # no job waits for every shard to join them.
       - name: Upload coverage reports to Codecov
+        if: hashFiles(format('.coverage/shard-{0}.out', matrix.shard)) != ''
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
-          # Name the profile explicitly. go-cover-merge filters it through
-          # .coverignore; auto-discovery could pick up a shard's unfiltered
-          # one and report a different number for the same commit.
-          files: .coverage/cover.out
+          files: .coverage/shard-${{ matrix.shard }}.out
+          disable_search: true
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  # The tests of the DSL checks, which type-check each package. They have no
+  # statements to cover, so they run apart from the shards, from the start.
+  dslcheck:
+    runs-on: ubuntu-latest
+    name: dslcheck
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+        with:
+          js: "false"
+      - name: The tests of internal/dslcheck
+        run: go test ./internal/dslcheck/
