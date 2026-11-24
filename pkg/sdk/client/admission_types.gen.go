@@ -2,7 +2,11 @@
 
 package client
 
-import "time"
+import (
+	"time"
+
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
+)
 
 // Admission is the Admission of the spec.
 type Admission struct {
@@ -30,9 +34,9 @@ type Admission struct {
 	// Whether the node is running now: it is in the registry.
 	Online bool `json:"online"`
 
-	// On a pending record, the state of the node's earlier record: a returning
-	// node.
-	Previous string `json:"previous,omitempty"`
+	// The state of a node's admission record: pending, admitted, rejected or
+	// revoked.
+	Previous types.AdmissionState `json:"previous,omitzero"`
 
 	// On a pending record, the fingerprint of the earlier record; a different one
 	// is a new key.
@@ -44,21 +48,10 @@ type Admission struct {
 	// When the node asked to join.
 	RequestedAt time.Time `json:"requested_at,omitzero"`
 
-	// pending, admitted, rejected or revoked.
-	State string `json:"state"`
+	// The state of a node's admission record: pending, admitted, rejected or
+	// revoked.
+	State types.AdmissionState `json:"state"`
 }
-
-// GetAdmissionsState: Only the records in this state: pending, admitted,
-// rejected or revoked.
-type GetAdmissionsState string
-
-// The values of GetAdmissionsState.
-const (
-	GetAdmissionsStatePending  GetAdmissionsState = "pending"
-	GetAdmissionsStateAdmitted GetAdmissionsState = "admitted"
-	GetAdmissionsStateRejected GetAdmissionsState = "rejected"
-	GetAdmissionsStateRevoked  GetAdmissionsState = "revoked"
-)
 
 // ListAdmissionResponse is the ListAdmissionResponse of the spec.
 type ListAdmissionResponse struct {

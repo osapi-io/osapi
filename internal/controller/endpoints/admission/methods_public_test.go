@@ -26,6 +26,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
@@ -49,6 +51,23 @@ func TestMethodsPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(MethodsPublicTestSuite))
+}
+
+// TestSpecAdmissionState: the state filter and the state of a record are
+// the spec's AdmissionState, an enum, so the SDK and the UI get one type.
+func (s *MethodsPublicTestSuite) TestSpecAdmissionState() {
+	doc, err := endpoint.OpenAPI(admission.Group)
+	s.Require().NoError(err)
+
+	s.NotEmpty(doc.Components.Schemas["AdmissionState"].Value.Enum)
+	s.Equal(
+		"#/components/schemas/AdmissionState",
+		doc.Paths.Find("/api/admission").Get.Parameters.GetByInAndName("query", "state").Schema.Ref,
+	)
+	s.Equal(
+		"#/components/schemas/AdmissionState",
+		doc.Components.Schemas["Admission"].Value.Properties["state"].Ref,
+	)
 }
 
 func (s *MethodsPublicTestSuite) SetupSubTest() {
@@ -88,15 +107,15 @@ func (s *MethodsPublicTestSuite) TestList() {
 		{
 			MachineID:  "m-on",
 			Hostname:   "web-01",
-			State:      store.StateAdmitted,
+			State:      types.AdmissionAdmitted,
 			AdmittedAt: time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC),
 		},
-		{MachineID: "m-off", Hostname: "web-02", State: store.StateAdmitted},
+		{MachineID: "m-off", Hostname: "web-02", State: types.AdmissionAdmitted},
 		{
 			MachineID:           "m-new",
 			Hostname:            "web-03",
-			State:               store.StatePending,
-			Previous:            store.StateRevoked,
+			State:               types.AdmissionPending,
+			Previous:            types.AdmissionRevoked,
 			PreviousFingerprint: "SHA256:old",
 		},
 	}
@@ -116,7 +135,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 		s.Equal(s.at.Add(-time.Hour), *got.Items[1].LastSeen, "an offline node's is the stored one")
 		s.Nil(got.Items[1].AdmittedAt, "an unset time is absent")
 		s.Nil(got.Items[2].LastSeen, "a node never seen has none")
-		s.Equal(store.StateRevoked, got.Items[2].Previous)
+		s.Equal(types.AdmissionRevoked, got.Items[2].Previous)
 		s.Equal("SHA256:old", got.Items[2].PreviousFingerprint)
 	})
 
@@ -127,7 +146,7 @@ func (s *MethodsPublicTestSuite) TestList() {
 		got, err := admission.List(
 			context.Background(),
 			s.deps(),
-			admission.ListInput{State: store.StatePending},
+			admission.ListInput{State: types.AdmissionPending},
 		)
 
 		s.Require().NoError(err)
@@ -176,7 +195,7 @@ func (s *MethodsPublicTestSuite) TestGet() {
 	s.Run("when the machine has a record returns it", func() {
 		s.store.EXPECT().
 			Get(gomock.Any(), "m-on").
-			Return(store.Record{MachineID: "m-on", State: store.StateAdmitted}, nil)
+			Return(store.Record{MachineID: "m-on", State: types.AdmissionAdmitted}, nil)
 		s.fleet()
 
 		got, err := admission.Get(

@@ -23,12 +23,12 @@ package admission
 import (
 	"time"
 
-	"github.com/osapi-io/osapi/internal/controller/admission"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // ListInput filters the records by state.
 type ListInput struct {
-	State admission.State `json:"state" in:"query" validate:"omitempty,oneof=pending admitted rejected revoked" doc:"Only the records in this state: pending, admitted, rejected or revoked."`
+	State types.AdmissionState `json:"state" in:"query" validate:"omitempty,oneof=pending admitted rejected revoked" doc:"Only the records in this state: pending, admitted, rejected or revoked."`
 }
 
 // MachineInput names a machine.
@@ -67,17 +67,17 @@ type ListAdmissionResponse struct {
 
 // Admission is one machine's admission record.
 type Admission struct {
-	MachineID           string          `json:"machine_id"                     doc:"The machine ID of the node."                                                               example:"d530664edc1c431eb5ef1e9dfd6617a5"`
-	Hostname            string          `json:"hostname"                       doc:"The hostname the node gave."                                                               example:"web-01"`
-	State               admission.State `json:"state"                          doc:"pending, admitted, rejected or revoked."                                                   example:"admitted"`
-	Online              bool            `json:"online"                         doc:"Whether the node is running now: it is in the registry."`
-	LastSeen            *time.Time      `json:"last_seen,omitempty"            doc:"When the node last reported."                                                                                                                                                render:"age"      none:"never"`
-	Fingerprint         string          `json:"fingerprint"                    doc:"The fingerprint of the node's two public keys: signing and encryption."                    example:"SHA256:1f53dea6dba17ae38388b931df5c6370076c8236018d6e8a2adecc8474ae93ef" render:"short=20"`
-	EncryptionKey       string          `json:"encryption_key,omitempty"       doc:"The node's public X25519 encryption key, which the fingerprint covers."                    example:"XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM"                                               table:"-"`
-	RequestedAt         *time.Time      `json:"requested_at,omitempty"         doc:"When the node asked to join."                                                                                                                                                render:"age"                   table:"-"`
-	AdmittedAt          *time.Time      `json:"admitted_at,omitempty"          doc:"When the node was admitted."                                                                                                                                                 render:"age"                   table:"-"`
-	DecidedAt           *time.Time      `json:"decided_at,omitempty"           doc:"When the node was rejected or revoked."                                                                                                                                      render:"age"                   table:"-"`
-	Reason              string          `json:"reason,omitempty"               doc:"Why the node was rejected."                                                                                                                                                                                 table:"-"`
-	Previous            admission.State `json:"previous,omitempty"             doc:"On a pending record, the state of the node's earlier record: a returning node."            example:"revoked"                                                                                                table:"-"`
-	PreviousFingerprint string          `json:"previous_fingerprint,omitempty" doc:"On a pending record, the fingerprint of the earlier record; a different one is a new key."                                                                                                                  table:"-"`
+	MachineID           string               `json:"machine_id"                     doc:"The machine ID of the node."                                                               example:"d530664edc1c431eb5ef1e9dfd6617a5"`
+	Hostname            string               `json:"hostname"                       doc:"The hostname the node gave."                                                               example:"web-01"`
+	State               types.AdmissionState `json:"state"                          doc:"pending, admitted, rejected or revoked."                                                   example:"admitted"`
+	Online              bool                 `json:"online"                         doc:"Whether the node is running now: it is in the registry."`
+	LastSeen            *time.Time           `json:"last_seen,omitempty"            doc:"When the node last reported."                                                                                                                                                render:"age"      none:"never"`
+	Fingerprint         string               `json:"fingerprint"                    doc:"The fingerprint of the node's two public keys: signing and encryption."                    example:"SHA256:1f53dea6dba17ae38388b931df5c6370076c8236018d6e8a2adecc8474ae93ef" render:"short=20"`
+	EncryptionKey       string               `json:"encryption_key,omitempty"       doc:"The node's public X25519 encryption key, which the fingerprint covers."                    example:"XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM"                                               table:"-"`
+	RequestedAt         *time.Time           `json:"requested_at,omitempty"         doc:"When the node asked to join."                                                                                                                                                render:"age"                   table:"-"`
+	AdmittedAt          *time.Time           `json:"admitted_at,omitempty"          doc:"When the node was admitted."                                                                                                                                                 render:"age"                   table:"-"`
+	DecidedAt           *time.Time           `json:"decided_at,omitempty"           doc:"When the node was rejected or revoked."                                                                                                                                      render:"age"                   table:"-"`
+	Reason              string               `json:"reason,omitempty"               doc:"Why the node was rejected."                                                                                                                                                                                 table:"-"`
+	Previous            types.AdmissionState `json:"previous,omitempty"             doc:"On a pending record, the state of the node's earlier record: a returning node."            example:"revoked"                                                                                                table:"-"`
+	PreviousFingerprint string               `json:"previous_fingerprint,omitempty" doc:"On a pending record, the fingerprint of the earlier record; a different one is a new key."                                                                                                                  table:"-"`
 }

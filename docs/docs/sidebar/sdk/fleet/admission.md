@@ -47,7 +47,7 @@ resp, err := c.Admission.List(ctx, client.AdmissionListParams{})
 List admission records, with --state pending, `go run admission.go list-2`:
 
 ```go
-resp, err := c.Admission.List(ctx, client.AdmissionListParams{State: client.GetAdmissionsState("pending")})
+resp, err := c.Admission.List(ctx, client.AdmissionListParams{State: client.AdmissionState("pending")})
 ```
 
 ### Get
@@ -188,21 +188,21 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### Admission
 
-| Field                 | Type        | Description                                                                               |
-| --------------------- | ----------- | ----------------------------------------------------------------------------------------- |
-| `AdmittedAt`          | `time.Time` | When the node was admitted.                                                               |
-| `DecidedAt`           | `time.Time` | When the node was rejected or revoked.                                                    |
-| `EncryptionKey`       | `string`    | The node's public X25519 encryption key, which the fingerprint covers.                    |
-| `Fingerprint`         | `string`    | The fingerprint of the node's two public keys: signing and encryption.                    |
-| `Hostname`            | `string`    | The hostname the node gave.                                                               |
-| `LastSeen`            | `time.Time` | When the node last reported.                                                              |
-| `MachineID`           | `string`    | The machine ID of the node.                                                               |
-| `Online`              | `bool`      | Whether the node is running now: it is in the registry.                                   |
-| `Previous`            | `string`    | On a pending record, the state of the node's earlier record: a returning node.            |
-| `PreviousFingerprint` | `string`    | On a pending record, the fingerprint of the earlier record; a different one is a new key. |
-| `Reason`              | `string`    | Why the node was rejected.                                                                |
-| `RequestedAt`         | `time.Time` | When the node asked to join.                                                              |
-| `State`               | `string`    | pending, admitted, rejected or revoked.                                                   |
+| Field                 | Type             | Description                                                                               |
+| --------------------- | ---------------- | ----------------------------------------------------------------------------------------- |
+| `AdmittedAt`          | `time.Time`      | When the node was admitted.                                                               |
+| `DecidedAt`           | `time.Time`      | When the node was rejected or revoked.                                                    |
+| `EncryptionKey`       | `string`         | The node's public X25519 encryption key, which the fingerprint covers.                    |
+| `Fingerprint`         | `string`         | The fingerprint of the node's two public keys: signing and encryption.                    |
+| `Hostname`            | `string`         | The hostname the node gave.                                                               |
+| `LastSeen`            | `time.Time`      | When the node last reported.                                                              |
+| `MachineID`           | `string`         | The machine ID of the node.                                                               |
+| `Online`              | `bool`           | Whether the node is running now: it is in the registry.                                   |
+| `Previous`            | `AdmissionState` | The state of a node's admission record: pending, admitted, rejected or revoked.           |
+| `PreviousFingerprint` | `string`         | On a pending record, the fingerprint of the earlier record; a different one is a new key. |
+| `Reason`              | `string`         | Why the node was rejected.                                                                |
+| `RequestedAt`         | `time.Time`      | When the node asked to join.                                                              |
+| `State`               | `AdmissionState` | The state of a node's admission record: pending, admitted, rejected or revoked.           |
 
 ### AdmissionAdmitInput
 
@@ -218,9 +218,9 @@ The fields of each type are the properties of its schema in the API's spec.
 | `MachineID` | `string` | The machine_id of the path. The machine ID of the node.          |
 | `Reason`    | `string` | Why the machine is rejected; the machine and the record keep it. |
 
-### GetAdmissionsState
+### AdmissionState
 
-Only the records in this state: pending, admitted, rejected or revoked.
+The state of a node's admission record: pending, admitted, rejected or revoked.
 
 A `string`, one of `pending`, `admitted`, `rejected`, `revoked`.
 

@@ -5,10 +5,13 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type GetAdmissionsState = typeof GetAdmissionsState[keyof typeof GetAdmissionsState];
+/**
+ * The state of a node's admission record: pending, admitted, rejected or revoked.
+ */
+export type AdmissionState = typeof AdmissionState[keyof typeof AdmissionState];
 
 
-export const GetAdmissionsState = {
+export const AdmissionState = {
   pending: 'pending',
   admitted: 'admitted',
   rejected: 'rejected',

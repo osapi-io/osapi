@@ -30,6 +30,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osapi-io/osapi/pkg/sdk/types"
+
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -191,20 +193,20 @@ func (s *StorePublicTestSuite) TestList() {
 			s.Require().Len(got, 4)
 			s.Equal([]string{"web-01", "web-02", "web-03", "web-04"},
 				[]string{got[0].Hostname, got[1].Hostname, got[2].Hostname, got[3].Hostname})
-			s.Equal(admission.StateAdmitted, got[0].State)
+			s.Equal(types.AdmissionAdmitted, got[0].State)
 			s.Equal(s.at, got[0].AdmittedAt)
 			s.Equal("XADMITTED", got[0].EncryptionKey)
-			s.Equal(admission.StateRejected, got[1].State)
+			s.Equal(types.AdmissionRejected, got[1].State)
 			s.Equal("unknown host", got[1].Reason)
-			s.Equal(admission.StatePending, got[2].State)
+			s.Equal(types.AdmissionPending, got[2].State)
 			s.Equal(s.fp, got[2].Fingerprint, "the fingerprint of the keys the request carries")
 			s.Equal(
 				"XA7NTLWJ2ECILFDLHORNVYROXOK65ONQ2SJYHRNAWRJZ3UXMVXIGUVJM",
 				got[2].EncryptionKey,
 			)
 			s.Empty(got[2].Previous)
-			s.Equal(admission.StatePending, got[3].State)
-			s.Equal(admission.StateRevoked, got[3].Previous)
+			s.Equal(types.AdmissionPending, got[3].State)
+			s.Equal(types.AdmissionRevoked, got[3].Previous)
 			s.Equal("SHA256:old", got[3].PreviousFingerprint)
 		},
 	)
@@ -239,7 +241,7 @@ func (s *StorePublicTestSuite) TestGet() {
 		got, err := s.watcher.Get(context.Background(), "m-ok")
 
 		s.Require().NoError(err)
-		s.Equal(admission.StateAdmitted, got.State)
+		s.Equal(types.AdmissionAdmitted, got.State)
 	})
 
 	s.Run("when the machine has no record returns ErrNotFound", func() {
@@ -278,7 +280,7 @@ func (s *StorePublicTestSuite) TestAdmit() {
 
 			got, err := s.watcher.Get(context.Background(), "m-1")
 			s.Require().NoError(err)
-			s.Equal(admission.StateAdmitted, got.State)
+			s.Equal(types.AdmissionAdmitted, got.State)
 			s.Equal(s.fp, got.Fingerprint)
 			s.NotContains(s.kv.data, "rejected.m-1")
 			s.NotContains(s.kv.data, "revoked.m-1")
@@ -340,7 +342,7 @@ func (s *StorePublicTestSuite) TestReject() {
 
 		got, err := s.watcher.Get(context.Background(), "m-1")
 		s.Require().NoError(err)
-		s.Equal(admission.StateRejected, got.State)
+		s.Equal(types.AdmissionRejected, got.State)
 		s.Equal("unknown host", got.Reason)
 		s.Equal(s.fp, got.Fingerprint)
 		s.Equal(s.at, got.DecidedAt)
@@ -390,7 +392,7 @@ func (s *StorePublicTestSuite) TestRevoke() {
 
 		got, err := s.watcher.Get(context.Background(), "m-1")
 		s.Require().NoError(err)
-		s.Equal(admission.StateRevoked, got.State)
+		s.Equal(types.AdmissionRevoked, got.State)
 		s.Equal(s.fp, got.Fingerprint)
 		s.Equal(s.at, got.AdmittedAt)
 		_, err = s.watcher.LookupAgentKey(context.Background(), "m-1")

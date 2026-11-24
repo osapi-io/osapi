@@ -6,6 +6,8 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+
+	types "github.com/osapi-io/osapi/pkg/sdk/types"
 )
 
 // AdmissionService calls the API's Admission group: admit, reject and revoke
@@ -19,7 +21,7 @@ type AdmissionService struct {
 type AdmissionListParams struct {
 	// State is the state of the query: only the records in this state: pending,
 	// admitted, rejected or revoked. The zero value leaves it out.
-	State GetAdmissionsState
+	State types.AdmissionState
 }
 
 // List is the operation GetAdmissions: list admission records.
