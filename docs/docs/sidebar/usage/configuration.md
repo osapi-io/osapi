@@ -203,6 +203,10 @@ vault, with its type. osapi has one type, `nats`. It encrypts each value with
 AES-256-GCM under the vault key, and keeps it in the KV bucket of
 `nats.secrets`. `osapi nats setup` and `osapi nats start` make the bucket.
 
+A config with no `controller.secrets.vaults` has one vault, `default`, of type
+`nats`, with its key in `/etc/osapi/secrets.key`. Thus `secret://default/<key>`
+works with no config. A list in the config replaces the default vault:
+
 ```yaml
 controller:
   secrets:
@@ -212,8 +216,13 @@ controller:
         key_file: /etc/osapi/secrets.key
 ```
 
-Make the key on the controller host before you start the controller. The
-controller does not start when the key of a vault is not there:
+At start, the controller makes the `key_file` of each `nats` vault when the file
+is not there, with the mode 0600, and logs `vault key created`. It never
+replaces a key that is there, because each value under the old key would then
+not decrypt. A key in `key_env` gets no file. The controller does not start when
+it cannot make a key, or when a key that is there does not load.
+
+`create` makes the key before the first start, and `rotate` changes it:
 
 ```bash
 osapi controller vault key create --name default
@@ -225,19 +234,19 @@ osapi controller vault key rotate --name default
 
 <!-- osapi:config controller.secrets nats.secrets -->
 
-| Key                                    | Type   | Default   | Environment                       | Description                                                                                                                                |
-| -------------------------------------- | ------ | --------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `controller.secrets.vaults`            | list   | none      | `OSAPI_CONTROLLER_SECRETS_VAULTS` | The vaults that a reference such as secret://default/registry-token names, each with name, type, targets, key_file or key_env, and config. |
-| `nats.secrets.bucket`                  | string | `secrets` | `OSAPI_NATS_SECRETS_BUCKET`       | KV bucket for the encrypted values of each nats vault.                                                                                     |
-| `nats.secrets.history`                 | int    | `10`      | `OSAPI_NATS_SECRETS_HISTORY`      | How many versions of each secret the bucket keeps, from 1 to 64.                                                                           |
-| `nats.secrets.storage`                 | string | `file`    | `OSAPI_NATS_SECRETS_STORAGE`      | Storage backend: 'file' or 'memory'.                                                                                                       |
-| `nats.secrets.replicas`                | int    | `1`       | `OSAPI_NATS_SECRETS_REPLICAS`     | Number of KV replicas.                                                                                                                     |
-| `controller.secrets.vaults[].name`     | string | none      | none                              | The name that a reference gives, such as default in secret://default/registry-token.                                                       |
-| `controller.secrets.vaults[].type`     | string | none      | none                              | The type of the vault, such as nats.                                                                                                       |
-| `controller.secrets.vaults[].targets`  | list   | none      | none                              | The targets that the secrets of the vault can go to, such as group:prod. Empty is each host.                                               |
-| `controller.secrets.vaults[].key_file` | string | none      | none                              | For a type that encrypts, such as nats: the file of the vault key. osapi controller vault key create writes it.                            |
-| `controller.secrets.vaults[].key_env`  | string | none      | none                              | For a type that encrypts, such as nats: the environment variable of the vault key, in place of key_file.                                   |
-| `controller.secrets.vaults[].config`   | map    | none      | none                              | The settings of the type. The struct of the type gives its keys.                                                                           |
+| Key                                    | Type   | Default                                                                  | Environment                       | Description                                                                                                                                |
+| -------------------------------------- | ------ | ------------------------------------------------------------------------ | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `controller.secrets.vaults`            | list   | `[{"key_file":"/etc/osapi/secrets.key","name":"default","type":"nats"}]` | `OSAPI_CONTROLLER_SECRETS_VAULTS` | The vaults that a reference such as secret://default/registry-token names, each with name, type, targets, key_file or key_env, and config. |
+| `nats.secrets.bucket`                  | string | `secrets`                                                                | `OSAPI_NATS_SECRETS_BUCKET`       | KV bucket for the encrypted values of each nats vault.                                                                                     |
+| `nats.secrets.history`                 | int    | `10`                                                                     | `OSAPI_NATS_SECRETS_HISTORY`      | How many versions of each secret the bucket keeps, from 1 to 64.                                                                           |
+| `nats.secrets.storage`                 | string | `file`                                                                   | `OSAPI_NATS_SECRETS_STORAGE`      | Storage backend: 'file' or 'memory'.                                                                                                       |
+| `nats.secrets.replicas`                | int    | `1`                                                                      | `OSAPI_NATS_SECRETS_REPLICAS`     | Number of KV replicas.                                                                                                                     |
+| `controller.secrets.vaults[].name`     | string | none                                                                     | none                              | The name that a reference gives, such as default in secret://default/registry-token.                                                       |
+| `controller.secrets.vaults[].type`     | string | none                                                                     | none                              | The type of the vault, such as nats.                                                                                                       |
+| `controller.secrets.vaults[].targets`  | list   | none                                                                     | none                              | The targets that the secrets of the vault can go to, such as group:prod. Empty is each host.                                               |
+| `controller.secrets.vaults[].key_file` | string | none                                                                     | none                              | For a type that encrypts, such as nats: the file of the vault key. osapi controller vault key create writes it.                            |
+| `controller.secrets.vaults[].key_env`  | string | none                                                                     | none                              | For a type that encrypts, such as nats: the environment variable of the vault key, in place of key_file.                                   |
+| `controller.secrets.vaults[].config`   | map    | none                                                                     | none                              | The settings of the type. The struct of the type gives its keys.                                                                           |
 
 <!-- /osapi:config -->
 

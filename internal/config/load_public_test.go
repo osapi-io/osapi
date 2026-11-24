@@ -34,6 +34,7 @@ import (
 	"github.com/osapi-io/osapi/internal/authtoken"
 	"github.com/osapi-io/osapi/internal/behavior"
 	"github.com/osapi-io/osapi/internal/config"
+	"github.com/osapi-io/osapi/internal/secret/vault"
 )
 
 // validConfig is a config file holding the two required keys, then extra.
@@ -407,6 +408,25 @@ func (s *LoadPublicTestSuite) TestSource() {
 		})
 	}
 	s.Equal("web-01", c.Agent.Hostname, "an environment variable applies with no key in the file")
+}
+
+func (s *LoadPublicTestSuite) TestDefaultVault() {
+	v := viper.New()
+	var c config.Config
+	s.Require().NoError(config.Load(v, s.write(validConfig()), &c))
+	s.Equal([]vault.Spec{{Name: "default", Type: "nats", KeyFile: config.DefaultVaultKeyFile}},
+		c.Controller.Secrets.Vaults, "a config with no vault has the default vault")
+
+	v = viper.New()
+	c = config.Config{}
+	s.Require().NoError(config.Load(v, s.write(strings.Replace(
+		validConfig(),
+		"controller:\n",
+		"controller:\n  secrets:\n    vaults:\n      - name: prod\n        type: nats\n        key_file: /tmp/prod.key\n",
+		1,
+	)), &c))
+	s.Equal([]vault.Spec{{Name: "prod", Type: "nats", KeyFile: "/tmp/prod.key"}},
+		c.Controller.Secrets.Vaults, "the vaults of the config replace the default")
 }
 
 func (s *LoadPublicTestSuite) TestValue() {

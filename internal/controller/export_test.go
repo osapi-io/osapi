@@ -25,6 +25,8 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/avfs/avfs"
+
 	secretEndpoint "github.com/osapi-io/osapi/internal/controller/endpoints/secret"
 	"github.com/osapi-io/osapi/internal/secret/vault"
 
@@ -115,6 +117,16 @@ func ExportSecretDeps(
 	vaults *vault.Set,
 ) secretEndpoint.Deps {
 	return secretDeps(handlerDeps{vaults: vaults})
+}
+
+// ExportMakeVaultKeys calls makeVaultKeys.
+func ExportMakeVaultKeys(
+	ctx context.Context,
+	log *slog.Logger,
+	vfs avfs.VFS,
+	specs []vault.Spec,
+) error {
+	return makeVaultKeys(ctx, log, vfs, specs)
 }
 
 // ExportHandlers calls handlers with the parts that a test sets.

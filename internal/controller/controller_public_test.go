@@ -244,13 +244,24 @@ func (s *ControllerPublicTestSuite) TestNew() {
 			wantErr: `the value of secret://default/jwt breaks its rule "signing_key"`,
 		},
 		{
-			name: "when the key of a vault is not there returns the error",
+			name: "when the key of a vault is not there makes it, and opens the vault",
 			cfg: func() config.Config {
 				cfg := withVault(s.T(), startServer(s.T()))
 				cfg.Controller.Secrets.Vaults[0].KeyFile = filepath.Join(s.T().TempDir(), "none")
 				return cfg
 			},
-			wantErr: `vault "default": read the vault key: `,
+			wantVaults: []string{"default"},
+		},
+		{
+			name: "when the key of a vault cannot be made returns the error",
+			cfg: func() config.Config {
+				cfg := withVault(s.T(), startServer(s.T()))
+				blocked := filepath.Join(s.T().TempDir(), "file")
+				s.Require().NoError(os.WriteFile(blocked, nil, 0o600))
+				cfg.Controller.Secrets.Vaults[0].KeyFile = filepath.Join(blocked, "secrets.key")
+				return cfg
+			},
+			wantErr: `vault "default": make its key: `,
 		},
 		{
 			name: "when no secrets bucket is named and a vault needs it returns the error",
