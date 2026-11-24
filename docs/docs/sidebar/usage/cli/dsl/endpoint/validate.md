@@ -62,7 +62,7 @@ The rules:
 - `subdoc`: Each Sub segment that makes a command of its own, such as stale in
   osapi client file stale list, has a SubDoc: the one line of help of that
   command. Fix: Add endpoint.SubDoc("segment", "...") to Define, with what the
-  segment's commands do, such as Read a trace from the tracing backend.
+  segment's commands do, such as Read the deployments whose file changed since.
 - `validate`: Each input field has a validate tag: its rules, or omitempty for
   an optional field with none. The spec carries the whole tag, and the server
   answers 400 to a value that breaks it. Fix: Add validate:"..." to the field,
