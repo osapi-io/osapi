@@ -111,10 +111,11 @@ The rules:
 - `surface`: A behavior with CLI also has API, and a behavior with API has an
   Area of the UI. An internal behavior has no API or CLI. Each input field of a
   CLI behavior has a type a flag holds: string, bool, int, \[]string,
-  map\[string]string or \[]byte (a file). The CLI owns the list; its generator
-  builds each. Fix: Add behavior.API, add behavior.Area(...) to a served
-  behavior, remove API and CLI from the internal behavior, or give the field a
-  type that a flag can hold.
+  map\[string]string, \[]byte (a file), secret.Value or
+  map\[string]secret.Value. The CLI owns the list; its generator builds each.
+  Fix: Add behavior.API, add behavior.Area(...) to a served behavior, remove API
+  and CLI from the internal behavior, or give the field a type that a flag can
+  hold.
 - `example`: Each method of a CLI behavior has an example. Each example and
   refusal has a description, and the input and output types of its method. A
   refusal has error text and no effects. Fix: Add .Example("...",
@@ -203,6 +204,11 @@ checks these. Each failure ends with its fix:
 - `used`: An example calls each behavior that a behavior requires. A requirement
   that no example calls is not tested, or is not needed. Fix: Add an example
   whose provider calls the required behavior, or remove the requirement.
+- `secret`: A call gives a secret of its input only to a secret.Value field of
+  the behavior that it calls. A field of another type, such as a string, records
+  the value in its chain record, its span or an audit entry. The examples run
+  each chain, so their tests check it. Fix: Give the field of the called
+  behavior the type secret.Value, and read it there with Reveal.
 
 ```bash
 osapi dsl behavior validate

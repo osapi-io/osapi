@@ -155,7 +155,8 @@ var Group = command.Register(command.Define(
 func runChainChecks() guide.Checks {
 	var out guide.Checks
 	for _, c := range behavior.ChainChecks {
-		if c.Rule == behavior.RuleCalled || c.Rule == behavior.RuleUsed {
+		if c.Rule == behavior.RuleCalled || c.Rule == behavior.RuleUsed ||
+			c.Rule == behavior.RuleSecret {
 			out = append(out, c)
 		}
 	}

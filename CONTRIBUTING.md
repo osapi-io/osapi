@@ -798,11 +798,14 @@ to make the change. The page behind each link gives the reason.
   context of each command. A caller can ask for less time, but it cannot ask for
   more. A job that needs twenty minutes does not get them.
   [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/exec.md)
-- **Put each field that holds a secret in the audit denylist.** Redaction
-  matches on the field name. Thus the audit log records a new field as sent,
-  until you add the field to `sensitiveFields`. No test fails if you forget. A
-  behavior tags the field `secret:"true"` instead. The tag redacts the field,
-  and you do not edit the list.
+- **Give each field that holds a secret the type `secret.Value`.** Redaction
+  matches on the field name, and the audit redacts each `secret.Value` field of
+  a behavior or an endpoint group by its name, with the fixed denylist in
+  `sensitiveFields`. The type also keeps the value out of the spans and the
+  chain records, and out of a flag. `TestSecretsAreTyped` in `internal/dslcheck`
+  fails a `string` input field whose name is on the denylist. A field with a
+  secret under a different name, such as `passphrase`, gets nothing without the
+  type.
   [Why](https://github.com/osapi-io/specs/blob/main/components/osapi/audit.md)
 
 ## UI contributions

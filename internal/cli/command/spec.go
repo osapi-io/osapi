@@ -373,7 +373,7 @@ var Spec = guide.Spec{
 		{
 			Kind: KindCheck,
 			Name: "Flaggable(type)",
-			Does: "Whether a flag holds a value of the type: string, bool, int, []string, map[string]string or []byte, a file. The command generator builds a flag of each, and dsl behavior validate asks it of each CLI behavior's input, so the two agree.",
+			Does: "Whether a flag holds a value of the type: string, bool, int, []string, map[string]string, []byte, a file, secret.Value or map[string]secret.Value. The command generator builds a flag of each, and dsl behavior validate asks it of each CLI behavior's input, so the two agree.",
 			When: "Give an input field one of those types.",
 		},
 		{

@@ -370,8 +370,8 @@ func ValidateBehavior(
 			for _, name := range unflaggable(m.In) {
 				add(m.Name, RuleSurface,
 					"input field %s cannot be a CLI flag; a flag holds a string, bool, int, "+
-						"[]string, map[string]string or []byte (a file), so give it one of those "+
-						"types or leave CLI off", name)
+						"[]string, map[string]string, []byte (a file), secret.Value or "+
+						"map[string]secret.Value, so give it one of those types or leave CLI off", name)
 			}
 		}
 	}

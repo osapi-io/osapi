@@ -503,9 +503,9 @@ decision of the owner.
 ### `Flaggable(type)`
 
 Whether a flag holds a value of the type: string, bool, int, \[]string,
-map\[string]string or \[]byte, a file. The command generator builds a flag of
-each, and dsl behavior validate asks it of each CLI behavior's input, so the two
-agree.
+map\[string]string, \[]byte, a file, secret.Value or map\[string]secret.Value.
+The command generator builds a flag of each, and dsl behavior validate asks it
+of each CLI behavior's input, so the two agree.
 
 Use: Give an input field one of those types.
 

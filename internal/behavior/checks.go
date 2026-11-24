@@ -138,7 +138,7 @@ var Checks = guide.Checks{
 	},
 	{
 		Rule:     RuleSurface,
-		Requires: "A behavior with CLI also has API, and a behavior with API has an Area of the UI. An internal behavior has no API or CLI. Each input field of a CLI behavior has a type a flag holds: string, bool, int, []string, map[string]string or []byte (a file). The CLI owns the list; its generator builds each.",
+		Requires: "A behavior with CLI also has API, and a behavior with API has an Area of the UI. An internal behavior has no API or CLI. Each input field of a CLI behavior has a type a flag holds: string, bool, int, []string, map[string]string, []byte (a file), secret.Value or map[string]secret.Value. The CLI owns the list; its generator builds each.",
 		Fix:      "Add behavior.API, add behavior.Area(...) to a served behavior, remove API and CLI from the internal behavior, or give the field a type that a flag can hold.",
 	},
 	{
