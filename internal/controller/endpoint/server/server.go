@@ -200,8 +200,8 @@ func Serve[D, In, Out any](
 				endpoint.ErrorResponse{Error: msg, Reason: endpoint.ReasonInvalidRequest})
 		}
 		// Each reference becomes its value here, so the handler, and the
-		// job that it queues, get the value. The job keeps it until the
-		// controller seals it (osapi #1247).
+		// job that it queues, get the value. The job client seals it for
+		// the target agents.
 		if len(secret.References(in)) > 0 {
 			if r := resolve(c, s, &in); r != nil {
 				return c.JSON(r.code, r.resp)

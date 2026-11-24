@@ -71,16 +71,49 @@ Each refusal gives the reference, never the value. The middleware puts the
 resolved permissions of the token in the context with
 `authtoken.WithPermissions`, and `authtoken.Granted` reads them.
 
-The handler then gets the value. A `.Before` step runs on it, and the job keeps
-what the step leaves. The audit entry keeps the reference, because it records
-the body of the request. A chain record of the agent has `[redacted]`, because
-the job has the value.
+The handler then gets the value. A `.Before` step runs on it, and the job gets
+what the step leaves, sealed. The audit entry keeps the reference, because it
+records the body of the request. A chain record of the agent has `[redacted]`,
+because the dispatch gives the provider the value.
 
-A behavior input that is a secret is not kept out of NATS, also when it is a
-reference. The input of a behavior is the data of its job, and JetStream keeps
-that data. Thus a token in the environment of a container is plain text to each
-NATS user that can read the stream. A password is the exception: the controller
-hashes it before it queues the job, so the job has only the hash.
+## A sealed job
+
+The input of a behavior is the data of its job, and JetStream and the job KV
+keep that data. Thus the job client seals each secret of the data before it
+stores the job (`request` in `internal/job/client`, and `internal/secret/seal`):
+
+1. It makes a new random job key, and encrypts each `secret.Value` that is not
+   empty with it, with XChaCha20-Poly1305 and a new nonce for each value. The
+   job ID is the additional data, so a value that somebody copies to a different
+   job does not open. `secret.PlainFunc` writes each value as `sealed:` and the
+   nonce and the ciphertext, in base64.
+2. It makes a new X25519 key for the job, and seals the job key to the X25519
+   key of each agent that the target can reach, with NaCl `box` (nkeys xkeys
+   `Seal`). `job.Recipients` gives the agents: each agent that takes jobs for
+   `_all`, `_any` or a label, and the agent of one host. The admission store
+   gives the X25519 key of each agent.
+3. The operation of the job has `sealed_keys`, a map from machine ID to the
+   sealed job key, and `sealed_from`, the public X25519 key that sealed them.
+   The controller signs the job as before, so an agent knows that the controller
+   sealed it.
+
+The agent opens its own job key with its X25519 key when it takes the job
+(`openJob` in `internal/agent`). The dispatch of a behavior decodes the input
+into the type of the method, opens each `secret.Value` with `secret.Map`, and
+gives the provider the input. The values live only in that call.
+
+An agent with no key in `sealed_keys` fails the job with
+`seal.ErrNotSealedToAgent`, "the job was not sealed to this agent", and does not
+run it. Such an agent joined after the controller queued the job, or has no
+X25519 key.
+
+The job client seals only when the controller verifies its agents
+(`controller.pki.enabled`), because only then has the admission store an X25519
+key for each agent. Without PKI, the job keeps each value as plain text, as the
+caller sent it.
+
+A `.Before` step can still change a secret to a value made from it, such as a
+password to its hash. A secret that the step leaves set is sealed, not refused.
 
 ## The store on the disk
 

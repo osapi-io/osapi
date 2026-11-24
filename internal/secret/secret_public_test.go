@@ -242,6 +242,39 @@ func (s *SecretPublicTestSuite) TestResolve() {
 	)
 }
 
+func (s *SecretPublicTestSuite) TestMapAndHas() {
+	in := &input{
+		Password: "hunter2",
+		Env:      map[string]secret.Value{"A": "a", "B": ""},
+		Inner:    inner{Token: "secret://v/token"},
+	}
+	s.True(secret.Has(in))
+	s.False(secret.Has(&input{Plain: "x"}), "an empty secret is no secret")
+	s.False(secret.Has(nil))
+
+	s.Require().NoError(secret.Map(in, func(v secret.Value) (secret.Value, error) {
+		return "<" + v + ">", nil
+	}))
+	s.Equal(secret.Value("<hunter2>"), in.Password)
+	s.Equal(map[string]secret.Value{"A": "<a>", "B": ""}, in.Env, "an empty value is not mapped")
+	s.Equal(secret.Value("<secret://v/token>"), in.Inner.Token)
+
+	s.EqualError(secret.Map(in, func(secret.Value) (secret.Value, error) {
+		return "", errors.New("does not open")
+	}), "does not open")
+}
+
+func (s *SecretPublicTestSuite) TestPlainFunc() {
+	out := secret.PlainFunc(input{Password: "hunter2", Plain: "p"}, func(v secret.Value) string {
+		return "sealed(" + v.Reveal() + ")"
+	})
+	data, err := json.Marshal(out)
+	s.Require().NoError(err)
+	s.Contains(string(data), `"password":"sealed(hunter2)"`)
+	s.Contains(string(data), `"plain":"p"`, "a field that is not a secret stays")
+	s.NotContains(string(data), `"key"`, "an empty secret stays empty")
+}
+
 func (s *SecretPublicTestSuite) TestParse() {
 	tests := []struct {
 		name      string

@@ -1285,6 +1285,64 @@ func (suite *SubjectsPublicTestSuite) TestCountExpectedAgents() {
 	}
 }
 
+func (suite *SubjectsPublicTestSuite) TestRecipients() {
+	agents := []job.AgentInfo{
+		{MachineID: "m-web1", Hostname: "web-01", Labels: map[string]string{"group": "web.prod"}},
+		{
+			MachineID: "m-web2",
+			Hostname:  "web-02",
+			Labels:    map[string]string{"group": "web"},
+			State:     job.AgentStateCordoned,
+		},
+		{MachineID: "m-db", Hostname: "db-01", Labels: map[string]string{"group": "db"}},
+	}
+	tests := []struct {
+		name     string
+		target   string
+		resolved string
+		want     []string
+	}{
+		{
+			name:   "when the target is _all, it is each agent that takes jobs",
+			target: "_all",
+			want:   []string{"m-web1", "m-db"},
+		},
+		{
+			name:   "when the target is _any, it is each agent that takes jobs",
+			target: "_any",
+			want:   []string{"m-web1", "m-db"},
+		},
+		{
+			name:   "when the target is a label, it is each agent under it",
+			target: "group:web",
+			want:   []string{"m-web1"},
+		},
+		{
+			name:     "when the target is a host, it is the agent of its machine ID",
+			target:   "web-02",
+			resolved: "m-web2",
+			want:     []string{"m-web2"},
+		},
+		{
+			name:     "when the target is a hostname that did not resolve, it is that agent",
+			target:   "db-01",
+			resolved: "db-01",
+			want:     []string{"m-db"},
+		},
+		{name: "when no agent matches, it is none", target: "other", resolved: "other"},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			var got []string
+			for _, a := range job.Recipients(agents, tt.target, tt.resolved) {
+				got = append(got, a.MachineID)
+			}
+			suite.Equal(tt.want, got)
+		})
+	}
+}
+
 func (suite *SubjectsPublicTestSuite) TestExpectedAgentHostnames() {
 	agents := []job.AgentInfo{
 		{Hostname: "web-01", Labels: map[string]string{"group": "web.dev.us-east"}},

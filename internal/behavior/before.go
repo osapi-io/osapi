@@ -49,10 +49,9 @@ func SetByBefore(
 // on the controller, before osapi queues the job, as
 // func(ctx context.Context, in In) (In, error). It changes the input that
 // the caller sent into the input that the agent gets, such as a password
-// into its hash. The job data, which NATS and the job KV keep, then has no
-// plain secret: each secret.Value field must be empty after the
-// step, and the job is not queued when one is not. dsl behavior validate checks
-// fn's signature.
+// into its hash. A secret.Value field that the step leaves set goes to the
+// job sealed to the target agents, when the controller has PKI. dsl
+// behavior validate checks fn's signature.
 func (m *Method) Before(
 	fn any,
 ) *Method {
@@ -68,8 +67,7 @@ func (m *Method) HasBefore() bool {
 
 // RunBefore is in after the controller step of b's method m, in a span of
 // its own on the controller. Without a step, it is in. It fails when the
-// step fails, or when the step leaves a secret field set, so the secret does
-// not reach the job.
+// step fails.
 func (b *Behavior) RunBefore(
 	ctx context.Context,
 	m *Method,
@@ -93,20 +91,6 @@ func (b *Behavior) RunBefore(
 		return nil, fmt.Errorf("the controller step of %s %s: %w", b.Name, m.Name, err)
 	}
 	result := out[0]
-	for i := range result.NumField() {
-		f := result.Type().Field(i)
-		if Secret(f) && !result.Field(i).IsZero() {
-			err := fmt.Errorf(
-				"the controller step of %s %s left the secret field %s set, so the job would keep it",
-				b.Name,
-				m.Name,
-				JSONName(f),
-			)
-			span.SetStatus(codes.Error, err.Error())
-
-			return nil, err
-		}
-	}
 
 	return result.Interface(), nil
 }

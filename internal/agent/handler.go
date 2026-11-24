@@ -39,6 +39,7 @@ import (
 
 	"github.com/osapi-io/osapi/internal/job"
 	"github.com/osapi-io/osapi/internal/provider"
+	"github.com/osapi-io/osapi/internal/secret/seal"
 )
 
 // Errors returned by unwrapJobEnvelope. Each names a distinct rejection
@@ -404,6 +405,19 @@ func (a *Agent) handleJobMessage(
 		}
 	}
 
+	// A job with sealed secrets has the job key sealed to each target
+	// agent. This agent opens its own, so the dispatch of the behavior can
+	// open each value. A job with no key for this agent fails, and does
+	// not run.
+	if resolveFactsErr == nil && len(jobRequest.SealedKeys) > 0 {
+		opener, err := a.openJob(jobRequest)
+		if err != nil {
+			resolveFactsErr = err
+		} else {
+			ctx = seal.WithOpener(ctx, opener)
+		}
+	}
+
 	// Process the job
 	a.logger.InfoContext(
 		ctx,
@@ -634,4 +648,19 @@ func classifyProviderError(
 	}
 
 	return ""
+}
+
+// openJob is the Opener of the sealed secrets of req: the job key that the
+// controller sealed to this agent, opened with its X25519 key. A job with
+// no key for this agent, or an agent with no X25519 key, is
+// seal.ErrNotSealedToAgent.
+func (a *Agent) openJob(
+	req job.Request,
+) (*seal.Opener, error) {
+	sealed, ok := req.SealedKeys[a.machineID]
+	if !ok || a.pkiManager == nil || a.pkiManager.EncryptionKey() == nil {
+		return nil, seal.ErrNotSealedToAgent
+	}
+
+	return seal.Open(req.JobID, sealed, req.SealedFrom, a.pkiManager.EncryptionKey())
 }

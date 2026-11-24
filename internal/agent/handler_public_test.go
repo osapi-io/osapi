@@ -50,6 +50,7 @@ import (
 	hostMocks "github.com/osapi-io/osapi/internal/provider/node/host/mocks"
 	loadMocks "github.com/osapi-io/osapi/internal/provider/node/load/mocks"
 	memoryMocks "github.com/osapi-io/osapi/internal/provider/node/memory/mocks"
+	"github.com/osapi-io/osapi/internal/secret/seal"
 	"github.com/osapi-io/osapi/internal/telemetry/metrics"
 	processMocks "github.com/osapi-io/osapi/internal/telemetry/process/mocks"
 )
@@ -1301,6 +1302,86 @@ func (s *HandlerPublicTestSuite) TestUnwrapJobEnvelope() {
 
 			s.NoError(err)
 			tt.validateFunc(string(result))
+		})
+	}
+}
+
+// TestHandleJobMessageWithSealedSecrets: an agent opens the job key that
+// the controller sealed to it, and fails a job that has no key for it.
+func (s *HandlerPublicTestSuite) TestHandleJobMessageWithSealedSecrets() {
+	controllerPub, controllerPriv, err := ed25519.GenerateKey(rand.Reader)
+	s.Require().NoError(err)
+	m := pki.New(memfs.New(), "/tmp/pki", "agent", pki.WithEncryptionKey())
+	s.Require().NoError(m.LoadOrGenerate())
+	m.SetControllerPublicKey(controllerPub)
+
+	// jobData is the job jobID with its job key sealed to the agent m.
+	jobData := func(jobID string, sign bool) []byte {
+		sealer, err := seal.New(jobID)
+		s.Require().NoError(err)
+		key, err := sealer.KeyFor(m.EncryptionPublicKey())
+		s.Require().NoError(err)
+		payload, _ := json.Marshal(map[string]any{
+			"id": jobID,
+			"operation": map[string]any{
+				"type":        "network.ping.do",
+				"data":        map[string]any{"address": "1.1.1.1"},
+				"sealed_keys": map[string]string{"m-1": key},
+				"sealed_from": sealer.From(),
+			},
+		})
+		if !sign {
+			return payload
+		}
+		envelope, _ := json.Marshal(job.SignedEnvelope{
+			Payload:     payload,
+			Signature:   ed25519.Sign(controllerPriv, payload),
+			Fingerprint: "SHA256:ctrl",
+		})
+
+		return envelope
+	}
+
+	tests := []struct {
+		name       string
+		jobID      string
+		pki        *pki.Manager
+		wantStatus string
+	}{
+		{
+			name:       "when the job key is sealed to this agent, the job runs",
+			jobID:      "sealed-ok",
+			pki:        m,
+			wantStatus: "completed",
+		},
+		{
+			name:       "when the agent has no encryption key, the job fails and does not run",
+			jobID:      "sealed-none",
+			wantStatus: "failed",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			agent.SetAgentPKIManager(s.testAgent, tt.pki)
+			agent.SetAgentMachineID(s.testAgent, "m-1")
+			defer agent.SetAgentPKIManager(s.testAgent, nil)
+
+			s.expectNotAnswered(tt.jobID)
+			s.mockJobClient.EXPECT().
+				GetJobData(gomock.Any(), "jobs."+tt.jobID).
+				Return(jobData(tt.jobID, tt.pki != nil), nil)
+			for _, event := range []string{"acknowledged", "started", tt.wantStatus} {
+				s.mockJobClient.EXPECT().
+					WriteStatusEvent(gomock.Any(), tt.jobID, event, gomock.Any(), gomock.Any()).
+					Return(nil)
+			}
+			s.mockJobClient.EXPECT().
+				WriteJobResponse(gomock.Any(), tt.jobID, gomock.Any(), gomock.Any(), tt.wantStatus, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(nil)
+
+			msg := newTestMsg(s.mockCtrl, "jobs.query.test-agent", []byte(tt.jobID))
+			s.NoError(agent.ExportHandleJobMessage(context.Background(), s.testAgent, msg))
 		})
 	}
 }

@@ -66,5 +66,6 @@ func (s clientKeyStore) LookupAgentKey(
 		PublicKey:       record.PublicKey,
 		SupersededKey:   record.SupersededKey,
 		SupersededUntil: record.SupersededUntil,
+		EncryptionKey:   record.EncryptionKey,
 	}, nil
 }
