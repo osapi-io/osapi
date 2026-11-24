@@ -321,7 +321,7 @@ func (s *ServerPublicTestSuite) TestServeRefusesAReference() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			srv := server.New(slog.Default(), signingKey, nil, deps{})
+			srv := server.New(slog.Default(), authtoken.Keys{signingKey}, nil, deps{})
 			e := echo.New()
 			m := g.Method("make")
 			srv.Mount(e, []server.Route{{
