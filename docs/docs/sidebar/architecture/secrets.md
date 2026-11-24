@@ -161,6 +161,5 @@ them:
 ## What comes next
 
 The `secret` commands and values sealed to the agent that uses them are in
-progress, in
-[osapi #1065](https://github.com/osapi-io/osapi/issues/1065). This page tells
-each part when it is built.
+progress, in [osapi #1065](https://github.com/osapi-io/osapi/issues/1065). This
+page tells each part when it is built.
