@@ -164,18 +164,18 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (10)
 
-| FIELD       | TYPE    | REQUIRED | CONSTRAINTS                                                                  | DESCRIPTION                                                                                             |
-| ----------- | ------- | -------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| name        | string  | yes      | pattern ^(@fact\.\[a-z0-9_.]+\|\[a-zA-Z0-9]\[a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary                                  |
-| type        | string  | no       | one of ethernet dummy                                                        | ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes |
-| dhcp4       | boolean | no       |                                                                              | Take an IPv4 address from DHCP                                                                          |
-| dhcp6       | boolean | no       |                                                                              | Take an IPv6 address from DHCP                                                                          |
-| addresses   | array   | no       |                                                                              | The static addresses, in CIDR notation, such as 10.0.0.5/24                                             |
-| gateway4    | string  | no       | format ipv4                                                                  | The IPv4 default gateway                                                                                |
-| gateway6    | string  | no       | format ipv6                                                                  | The IPv6 default gateway                                                                                |
-| mtu         | integer | no       | min 68, max 9000                                                             | The MTU, from 68 to 9000                                                                                |
-| mac_address | string  | no       | pattern ^(\[0-9A-Fa-f]&#123;2&#125;:)&#123;5&#125;\[0-9A-Fa-f]&#123;2&#125;$ | The MAC address to set                                                                                  |
-| wakeonlan   | boolean | no       |                                                                              | Turn on wake-on-LAN                                                                                     |
+| FIELD       | TYPE    | REQUIRED | CONSTRAINTS                                                                  | DESCRIPTION                                                                                                       |
+| ----------- | ------- | -------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| name        | string  | yes      | pattern ^(@fact\.\[a-z0-9_.]+\|\[a-zA-Z0-9]\[a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary                                            |
+| type        | string  | no       | one of ethernet dummy                                                        | The type: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes |
+| dhcp4       | boolean | no       |                                                                              | Take an IPv4 address from DHCP                                                                                    |
+| dhcp6       | boolean | no       |                                                                              | Take an IPv6 address from DHCP                                                                                    |
+| addresses   | array   | no       |                                                                              | The static addresses, in CIDR notation, such as 10.0.0.5/24                                                       |
+| gateway4    | string  | no       | format ipv4                                                                  | The IPv4 default gateway                                                                                          |
+| gateway6    | string  | no       | format ipv6                                                                  | The IPv6 default gateway                                                                                          |
+| mtu         | integer | no       | min 68, max 9000                                                             | The MTU, from 68 to 9000                                                                                          |
+| mac_address | string  | no       | pattern ^(\[0-9A-Fa-f]&#123;2&#125;:)&#123;5&#125;\[0-9A-Fa-f]&#123;2&#125;$ | The MAC address to set                                                                                            |
+| wakeonlan   | boolean | no       |                                                                              | Turn on wake-on-LAN                                                                                               |
 
 ### Output (2)
 
@@ -210,18 +210,18 @@ None. The method takes no input; its command needs only --target.
 
 ### Input (10)
 
-| FIELD       | TYPE    | REQUIRED | CONSTRAINTS                                                                  | DESCRIPTION                                                                                             |
-| ----------- | ------- | -------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| name        | string  | yes      | pattern ^(@fact\.\[a-z0-9_.]+\|\[a-zA-Z0-9]\[a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary                                  |
-| type        | string  | no       | one of ethernet dummy                                                        | ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes |
-| dhcp4       | boolean | no       |                                                                              | Take an IPv4 address from DHCP                                                                          |
-| dhcp6       | boolean | no       |                                                                              | Take an IPv6 address from DHCP                                                                          |
-| addresses   | array   | no       |                                                                              | The static addresses, in CIDR notation, such as 10.0.0.5/24                                             |
-| gateway4    | string  | no       | format ipv4                                                                  | The IPv4 default gateway                                                                                |
-| gateway6    | string  | no       | format ipv6                                                                  | The IPv6 default gateway                                                                                |
-| mtu         | integer | no       | min 68, max 9000                                                             | The MTU, from 68 to 9000                                                                                |
-| mac_address | string  | no       | pattern ^(\[0-9A-Fa-f]&#123;2&#125;:)&#123;5&#125;\[0-9A-Fa-f]&#123;2&#125;$ | The MAC address to set                                                                                  |
-| wakeonlan   | boolean | no       |                                                                              | Turn on wake-on-LAN                                                                                     |
+| FIELD       | TYPE    | REQUIRED | CONSTRAINTS                                                                  | DESCRIPTION                                                                                                       |
+| ----------- | ------- | -------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| name        | string  | yes      | pattern ^(@fact\.\[a-z0-9_.]+\|\[a-zA-Z0-9]\[a-zA-Z0-9._-]&#123;0,14&#125;)$ | The interface, such as eth0, or a fact such as @fact.interface.primary                                            |
+| type        | string  | no       | one of ethernet dummy                                                        | The type: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes |
+| dhcp4       | boolean | no       |                                                                              | Take an IPv4 address from DHCP                                                                                    |
+| dhcp6       | boolean | no       |                                                                              | Take an IPv6 address from DHCP                                                                                    |
+| addresses   | array   | no       |                                                                              | The static addresses, in CIDR notation, such as 10.0.0.5/24                                                       |
+| gateway4    | string  | no       | format ipv4                                                                  | The IPv4 default gateway                                                                                          |
+| gateway6    | string  | no       | format ipv6                                                                  | The IPv6 default gateway                                                                                          |
+| mtu         | integer | no       | min 68, max 9000                                                             | The MTU, from 68 to 9000                                                                                          |
+| mac_address | string  | no       | pattern ^(\[0-9A-Fa-f]&#123;2&#125;:)&#123;5&#125;\[0-9A-Fa-f]&#123;2&#125;$ | The MAC address to set                                                                                            |
+| wakeonlan   | boolean | no       |                                                                              | Turn on wake-on-LAN                                                                                               |
 
 ### Output (2)
 

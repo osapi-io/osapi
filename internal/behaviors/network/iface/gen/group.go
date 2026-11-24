@@ -78,7 +78,7 @@ type CreateRequest struct {
 
 // InterfaceCreateRequest is the body of interface create.
 type InterfaceCreateRequest struct {
-	Type       string   `doc:"ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes" json:"type,omitempty" validate:"omitempty,oneof=ethernet dummy"`
+	Type       string   `doc:"The type: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes" json:"type,omitempty" validate:"omitempty,oneof=ethernet dummy"`
 	DHCP4      bool     `doc:"Take an IPv4 address from DHCP" json:"dhcp4,omitempty" validate:"omitempty"`
 	DHCP6      bool     `doc:"Take an IPv6 address from DHCP" json:"dhcp6,omitempty" validate:"omitempty"`
 	Addresses  []string `doc:"The static addresses, in CIDR notation, such as 10.0.0.5/24" json:"addresses,omitempty" validate:"omitempty,max=16,dive,cidr"`
@@ -122,7 +122,7 @@ type UpdateRequest struct {
 
 // InterfaceUpdateRequest is the body of interface update.
 type InterfaceUpdateRequest struct {
-	Type       string   `doc:"ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes" json:"type,omitempty" validate:"omitempty,oneof=ethernet dummy"`
+	Type       string   `doc:"The type: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes" json:"type,omitempty" validate:"omitempty,oneof=ethernet dummy"`
 	DHCP4      bool     `doc:"Take an IPv4 address from DHCP" json:"dhcp4,omitempty" validate:"omitempty"`
 	DHCP6      bool     `doc:"Take an IPv6 address from DHCP" json:"dhcp6,omitempty" validate:"omitempty"`
 	Addresses  []string `doc:"The static addresses, in CIDR notation, such as 10.0.0.5/24" json:"addresses,omitempty" validate:"omitempty,max=16,dive,cidr"`

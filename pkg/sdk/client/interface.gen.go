@@ -74,8 +74,8 @@ type InterfaceCreateInput struct {
 	// The MTU, from 68 to 9000.
 	MTU int `json:"mtu,omitempty"`
 
-	// ethernet, the default, for an interface the host has, or dummy for a dummy
-	// interface that netplan makes. It is one of: ethernet, dummy.
+	// The type: ethernet, the default, for an interface the host has, or dummy for
+	// a dummy interface that netplan makes. It is one of: ethernet, dummy.
 	Type string `json:"type,omitempty"`
 
 	// Turn on wake-on-LAN.
@@ -136,8 +136,8 @@ type InterfaceUpdateInput struct {
 	// The MTU, from 68 to 9000.
 	MTU int `json:"mtu,omitempty"`
 
-	// ethernet, the default, for an interface the host has, or dummy for a dummy
-	// interface that netplan makes. It is one of: ethernet, dummy.
+	// The type: ethernet, the default, for an interface the host has, or dummy for
+	// a dummy interface that netplan makes. It is one of: ethernet, dummy.
 	Type string `json:"type,omitempty"`
 
 	// Turn on wake-on-LAN.

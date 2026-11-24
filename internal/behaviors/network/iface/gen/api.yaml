@@ -110,7 +110,7 @@ components:
           x-oapi-codegen-extra-tags:
             validate: omitempty,min=68,max=9000
         type:
-          description: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes
+          description: 'The type: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes'
           enum:
             - ethernet
             - dummy
@@ -297,7 +297,7 @@ components:
           x-oapi-codegen-extra-tags:
             validate: omitempty,min=68,max=9000
         type:
-          description: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes
+          description: 'The type: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes'
           enum:
             - ethernet
             - dummy

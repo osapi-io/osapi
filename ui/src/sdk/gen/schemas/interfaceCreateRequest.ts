@@ -31,7 +31,7 @@ export interface InterfaceCreateRequest {
      * @maximum 9000
      */
   mtu?: number;
-  /** ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes */
+  /** The type: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes */
   type?: InterfaceCreateRequestType;
   /** Turn on wake-on-LAN */
   wakeonlan?: boolean;

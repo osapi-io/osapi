@@ -33,7 +33,7 @@ type GetInput struct {
 // writes the interface under netplan's dummy-devices, and netplan makes it.
 type Config struct {
 	Name       string   `json:"name"                  validate:"required,interface_name"        doc:"The interface, such as eth0, or a fact such as @fact.interface.primary"                                  telemetry:"attr"`
-	Type       string   `json:"type,omitempty"        validate:"omitempty,oneof=ethernet dummy" doc:"ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes"`
+	Type       string   `json:"type,omitempty"        validate:"omitempty,oneof=ethernet dummy" doc:"The type: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes"`
 	DHCP4      bool     `json:"dhcp4,omitempty"       validate:"omitempty"                      doc:"Take an IPv4 address from DHCP"`
 	DHCP6      bool     `json:"dhcp6,omitempty"       validate:"omitempty"                      doc:"Take an IPv6 address from DHCP"`
 	Addresses  []string `json:"addresses,omitempty"   validate:"omitempty,max=16,dive,cidr"     doc:"The static addresses, in CIDR notation, such as 10.0.0.5/24"`

@@ -90,19 +90,19 @@ It needs the `interface:write` permission.
 
 ## Flags
 
-| Flag            | Description                                                                                                               | Default |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `--addresses`   | The static addresses, in CIDR notation, such as 10.0.0.5/24                                                               |         |
-| `--dhcp4`       | Take an IPv4 address from DHCP                                                                                            |         |
-| `--dhcp6`       | Take an IPv6 address from DHCP                                                                                            |         |
-| `--gateway4`    | The IPv4 default gateway                                                                                                  |         |
-| `--gateway6`    | The IPv6 default gateway                                                                                                  |         |
-| `--mac-address` | The MAC address to set                                                                                                    |         |
-| `--mtu`         | The MTU, from 68 to 9000                                                                                                  |         |
-| `--name`        | The interface, such as eth0, or a fact such as @fact.interface.primary (required)                                         |         |
-| `-T, --target`  | Target: _all, _any, hostname, or label (group:web.dev)                                                                    | `_all`  |
-| `--type`        | ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes (ethernet, dummy) |         |
-| `--wakeonlan`   | Turn on wake-on-LAN                                                                                                       |         |
+| Flag            | Description                                                                                                                         | Default |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `--addresses`   | The static addresses, in CIDR notation, such as 10.0.0.5/24                                                                         |         |
+| `--dhcp4`       | Take an IPv4 address from DHCP                                                                                                      |         |
+| `--dhcp6`       | Take an IPv6 address from DHCP                                                                                                      |         |
+| `--gateway4`    | The IPv4 default gateway                                                                                                            |         |
+| `--gateway6`    | The IPv6 default gateway                                                                                                            |         |
+| `--mac-address` | The MAC address to set                                                                                                              |         |
+| `--mtu`         | The MTU, from 68 to 9000                                                                                                            |         |
+| `--name`        | The interface, such as eth0, or a fact such as @fact.interface.primary (required)                                                   |         |
+| `-T, --target`  | Target: _all, _any, hostname, or label (group:web.dev)                                                                              | `_all`  |
+| `--type`        | The type: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes (ethernet, dummy) |         |
+| `--wakeonlan`   | Turn on wake-on-LAN                                                                                                                 |         |
 
 ## Global flags
 

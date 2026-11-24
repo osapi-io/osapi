@@ -204,18 +204,18 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### InterfaceCreateInput
 
-| Field        | Type       | Description                                                                                                                             |
-| ------------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `Name`       | `string`   | The name of the path. The interface, such as eth0, or a fact such as @fact.interface.primary.                                           |
-| `Addresses`  | `[]string` | The static addresses, in CIDR notation, such as 10.0.0.5/24.                                                                            |
-| `DHCP4`      | `bool`     | Take an IPv4 address from DHCP.                                                                                                         |
-| `DHCP6`      | `bool`     | Take an IPv6 address from DHCP.                                                                                                         |
-| `Gateway4`   | `string`   | The IPv4 default gateway.                                                                                                               |
-| `Gateway6`   | `string`   | The IPv6 default gateway.                                                                                                               |
-| `MACAddress` | `string`   | The MAC address to set.                                                                                                                 |
-| `MTU`        | `int`      | The MTU, from 68 to 9000.                                                                                                               |
-| `Type`       | `string`   | ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes. It is one of: ethernet, dummy. |
-| `Wakeonlan`  | `bool`     | Turn on wake-on-LAN.                                                                                                                    |
+| Field        | Type       | Description                                                                                                                                       |
+| ------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Name`       | `string`   | The name of the path. The interface, such as eth0, or a fact such as @fact.interface.primary.                                                     |
+| `Addresses`  | `[]string` | The static addresses, in CIDR notation, such as 10.0.0.5/24.                                                                                      |
+| `DHCP4`      | `bool`     | Take an IPv4 address from DHCP.                                                                                                                   |
+| `DHCP6`      | `bool`     | Take an IPv6 address from DHCP.                                                                                                                   |
+| `Gateway4`   | `string`   | The IPv4 default gateway.                                                                                                                         |
+| `Gateway6`   | `string`   | The IPv6 default gateway.                                                                                                                         |
+| `MACAddress` | `string`   | The MAC address to set.                                                                                                                           |
+| `MTU`        | `int`      | The MTU, from 68 to 9000.                                                                                                                         |
+| `Type`       | `string`   | The type: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes. It is one of: ethernet, dummy. |
+| `Wakeonlan`  | `bool`     | Turn on wake-on-LAN.                                                                                                                              |
 
 ### InterfaceEntry
 
@@ -246,18 +246,18 @@ The fields of each type are the properties of its schema in the API's spec.
 
 ### InterfaceUpdateInput
 
-| Field        | Type       | Description                                                                                                                             |
-| ------------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `Name`       | `string`   | The name of the path. The interface, such as eth0, or a fact such as @fact.interface.primary.                                           |
-| `Addresses`  | `[]string` | The static addresses, in CIDR notation, such as 10.0.0.5/24.                                                                            |
-| `DHCP4`      | `bool`     | Take an IPv4 address from DHCP.                                                                                                         |
-| `DHCP6`      | `bool`     | Take an IPv6 address from DHCP.                                                                                                         |
-| `Gateway4`   | `string`   | The IPv4 default gateway.                                                                                                               |
-| `Gateway6`   | `string`   | The IPv6 default gateway.                                                                                                               |
-| `MACAddress` | `string`   | The MAC address to set.                                                                                                                 |
-| `MTU`        | `int`      | The MTU, from 68 to 9000.                                                                                                               |
-| `Type`       | `string`   | ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes. It is one of: ethernet, dummy. |
-| `Wakeonlan`  | `bool`     | Turn on wake-on-LAN.                                                                                                                    |
+| Field        | Type       | Description                                                                                                                                       |
+| ------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Name`       | `string`   | The name of the path. The interface, such as eth0, or a fact such as @fact.interface.primary.                                                     |
+| `Addresses`  | `[]string` | The static addresses, in CIDR notation, such as 10.0.0.5/24.                                                                                      |
+| `DHCP4`      | `bool`     | Take an IPv4 address from DHCP.                                                                                                                   |
+| `DHCP6`      | `bool`     | Take an IPv6 address from DHCP.                                                                                                                   |
+| `Gateway4`   | `string`   | The IPv4 default gateway.                                                                                                                         |
+| `Gateway6`   | `string`   | The IPv6 default gateway.                                                                                                                         |
+| `MACAddress` | `string`   | The MAC address to set.                                                                                                                           |
+| `MTU`        | `int`      | The MTU, from 68 to 9000.                                                                                                                         |
+| `Type`       | `string`   | The type: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes. It is one of: ethernet, dummy. |
+| `Wakeonlan`  | `bool`     | Turn on wake-on-LAN.                                                                                                                              |
 
 ## Example
 

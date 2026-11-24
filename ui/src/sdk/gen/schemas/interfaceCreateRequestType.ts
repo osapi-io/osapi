@@ -6,7 +6,7 @@
  */
 
 /**
- * ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes
+ * The type: ethernet, the default, for an interface the host has, or dummy for a dummy interface that netplan makes
  */
 export type InterfaceCreateRequestType = typeof InterfaceCreateRequestType[keyof typeof InterfaceCreateRequestType];
 
