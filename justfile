@@ -352,6 +352,15 @@ behavior-gen-check:
 # Write the SDK's reference pages under docs/ from the spec and the SDK's
 # source, and format them as the site formatter does. go generate writes the
 # SDK first, so the pages show its methods.
+# Write the SDK's typed services and its examples from the full spec
+#
+# It runs after go generate, which writes the spec, and is not a go:generate
+# directive: go generate lists the files of each package before it runs, so
+# removing the file of a group that is gone made go generate fail on that
+# file (osapi-io/osapi#1261).
+sdk-generate:
+    go run ./internal/sdk/gen --root .
+
 sdk-docs-generate:
     just _docs-bun-install
     go run ./internal/sdk/gen --docs
@@ -366,14 +375,14 @@ sdk-gen-check:
     #!/usr/bin/env bash
     set -euo pipefail
     generated() {
-        find examples/sdk/client docs/docs/sidebar/sdk -type f -print | sort | xargs shasum
+        find pkg/sdk/client examples/sdk/client docs/docs/sidebar/sdk -type f -print | sort | xargs shasum
     }
     before=$(generated)
-    go generate ./pkg/sdk/client
+    just sdk-generate
     just sdk-docs-generate
     if [ "$before" != "$(generated)" ]; then
         diff <(echo "$before") <(generated) || true
-        echo "the SDK's examples or pages are stale: run just generate and commit the result" >&2
+        echo "the SDK, its examples or its pages are stale: run just generate and commit the result" >&2
         exit 1
     fi
 
@@ -384,6 +393,7 @@ sdk-gen-check:
 # Generate code
 generate:
     just go-generate
+    just sdk-generate
     just sdk-docs-generate
     just cli-docs-generate
     just docs-generate
