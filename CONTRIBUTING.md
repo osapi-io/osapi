@@ -591,12 +591,12 @@ the tests that write, set `OSAPI_INTEGRATION_WRITES=1`.
 
 `just go-unit-int` runs the suite. These variables change what it does:
 
-| Variable                            | Effect                                                                                                                                    |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `OSAPI_INTEGRATION_OSAPIFILE`       | An osapi client config. The suite starts nothing, and tests the controller that the file's `controller.client` URL and bearer token name  |
-| `OSAPI_INTEGRATION_TARGET`          | The host that a test sends one host's job to. The default is `_any`. Against several agents, name one host, so a read and its write match |
-| `OSAPI_INTEGRATION_WRITE_BEHAVIORS` | `1` runs the write examples of each behavior. CI sets it, and runs the suite as root on its runner                                        |
-| `OSAPI_INTEGRATION_WRITES`          | `1` runs the write tests of the hand-written domains                                                                                      |
+| Variable                            | Effect                                                                                                                                                                                                                                                                                                                |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OSAPI_INTEGRATION_OSAPIFILE`       | An osapi client config. The suite starts nothing, and tests the controller that the file's `controller.client` URL and bearer token name                                                                                                                                                                              |
+| `OSAPI_INTEGRATION_TARGET`          | The host that a test sends one host's job to. The default is `_any`. Against several agents, name one host, so a read and its write match                                                                                                                                                                             |
+| `OSAPI_INTEGRATION_WRITE_BEHAVIORS` | `1` runs the write examples of each behavior. Before the tests, the suite prepares the target through osapi: the ping parameter, chrony and the dummy interface `osapi0`. After them, it puts back the parameter and removes `osapi0`. CI sets it, and runs the suite as root on its runner, with no other host setup |
+| `OSAPI_INTEGRATION_WRITES`          | `1` runs the write tests of the hand-written domains                                                                                                                                                                                                                                                                  |
 
 To test the lab from this checkout:
 

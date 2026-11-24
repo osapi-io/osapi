@@ -54,26 +54,9 @@ jobs:
         run: just react-lint
       - name: Build UI
         run: just react-build
-      - name: Linux tuning
-        run: just linux-tune
-      # The ntp examples run chronyc and write to /etc/chrony/sources.d. The
-      # suite installs chrony through osapi too, but the agent reads its
-      # missing programs once, when it starts, and TestPrograms and the ntp
-      # reads run before the write examples. Thus the runner has chrony
-      # before the agent starts (osapi-io/osapi#1290).
-      - name: chrony
-        run: sudo apt-get update && sudo apt-get install -y chrony
-      # The user create examples run useradd --create-home, which copies
-      # /etc/skel. The runner's /etc/skel holds its toolchains for new users,
-      # and the first copy took more than the job's 30 seconds. The examples
-      # need a home, not the toolchains. This is a quirk of the runner's
-      # image, not a need of the suite, so the suite does not do it through
-      # osapi: a lab VM has an /etc/skel of its own size.
-      - name: Empty /etc/skel
-        run: |
-          sudo du -sh /etc/skel || true
-          sudo find /etc/skel -mindepth 1 -delete
       # As root, with the behavior write examples on: the runner is thrown
       # away after the job, so they may change its kernel parameters and /etc.
+      # The suite prepares the runner through osapi, as it prepares a lab VM
+      # (test/integration/prepare_test.go), so the job has no host setup.
       - name: Integration
         run: sudo -E env "PATH=$PATH" "HOME=$HOME" OSAPI_INTEGRATION_WRITE_BEHAVIORS=1 just go-unit-int
